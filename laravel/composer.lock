@@ -128,16 +128,16 @@
         },
         {
             "name": "bezhansalleh/filament-panel-switch",
-            "version": "1.0.6",
+            "version": "1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bezhanSalleh/filament-panel-switch.git",
-                "reference": "91f9b2a7149bcc2564d68e3decb5771287105620"
+                "reference": "ff16445ca70551954bd1c6d4a257f13c6f30af47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bezhanSalleh/filament-panel-switch/zipball/91f9b2a7149bcc2564d68e3decb5771287105620",
-                "reference": "91f9b2a7149bcc2564d68e3decb5771287105620",
+                "url": "https://api.github.com/repos/bezhanSalleh/filament-panel-switch/zipball/ff16445ca70551954bd1c6d4a257f13c6f30af47",
+                "reference": "ff16445ca70551954bd1c6d4a257f13c6f30af47",
                 "shasum": ""
             },
             "require": {
@@ -202,7 +202,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-08-07T23:51:12+00:00"
+            "time": "2024-10-10T18:11:49+00:00"
         },
         {
             "name": "bezhansalleh/filament-shield",
