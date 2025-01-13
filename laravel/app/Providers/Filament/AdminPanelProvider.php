@@ -41,8 +41,8 @@ class AdminPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/logo-dark.svg'))
             ->brandLogoHeight('2rem')
             ->favicon(asset('images/favicon.ico'))
-            ->login(AdminLogin::class)
-            ->passwordReset()
+            // ->login(AdminLogin::class)
+            // ->passwordReset()
             ->emailVerification()
             ->colors([
                 'primary' => Color::Amber,

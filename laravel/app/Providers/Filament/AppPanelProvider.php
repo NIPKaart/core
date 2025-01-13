@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\CustomRegister;
 use App\Filament\Auth\UserLogin;
+use App\Http\Middleware\RedirectToPanel;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -83,8 +84,9 @@ class AppPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ])
-            ->authMiddleware([
+                ])
+                ->authMiddleware([
+                RedirectToPanel::class,
                 Authenticate::class,
             ]);
         // ->renderHook(
