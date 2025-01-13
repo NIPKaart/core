@@ -79,7 +79,7 @@ services:
         image: 'redislabs/redisinsight:latest'
         restart: unless-stopped
         ports:
-            - '5540:5540'
+            - '${FORWARD_INSIGHT_PORT:-5540}:5540'
         depends_on:
             - redis
         volumes:
