@@ -119,7 +119,7 @@ Distributed under the **MIT** License. See [`LICENSE`](LICENSE) for more informa
 [sail]: https://laravel.com/docs/11.x/sail
 [shield]: https://github.com/bezhanSalleh/filament-shield
 
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2024.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2025.svg?style=for-the-badge
 [contributors-shield]: https://img.shields.io/github/contributors/nipkaart/core.svg?style=for-the-badge
 [contributors-url]: https://github.com/nipkaart/core/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/nipkaart/core.svg?style=for-the-badge
