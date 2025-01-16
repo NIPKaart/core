@@ -2361,16 +2361,16 @@
         },
         {
             "name": "jeffgreco13/filament-breezy",
-            "version": "2.5.0",
+            "version": "v2.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jeffgreco13/filament-breezy.git",
-                "reference": "1f0e91fdf13a06919e4eae5fb95904bf8daae6cd"
+                "reference": "2265bc2f8f8216884a36bc325ff40c464d6cbc6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jeffgreco13/filament-breezy/zipball/1f0e91fdf13a06919e4eae5fb95904bf8daae6cd",
-                "reference": "1f0e91fdf13a06919e4eae5fb95904bf8daae6cd",
+                "url": "https://api.github.com/repos/jeffgreco13/filament-breezy/zipball/2265bc2f8f8216884a36bc325ff40c464d6cbc6f",
+                "reference": "2265bc2f8f8216884a36bc325ff40c464d6cbc6f",
                 "shasum": ""
             },
             "require": {
@@ -2431,9 +2431,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jeffgreco13/filament-breezy/issues",
-                "source": "https://github.com/jeffgreco13/filament-breezy/tree/2.5.0"
+                "source": "https://github.com/jeffgreco13/filament-breezy/tree/v2.5.1"
             },
-            "time": "2025-01-14T19:06:00+00:00"
+            "time": "2025-01-15T18:23:49+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",
