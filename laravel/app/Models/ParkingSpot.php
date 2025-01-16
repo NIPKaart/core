@@ -71,6 +71,7 @@ class ParkingSpot extends Model
 
     /**
      * Scope a query to only include approved parking spots.
+     *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
