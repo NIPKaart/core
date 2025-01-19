@@ -8,6 +8,7 @@ return [
                 'resource' => [
                     'role' => ['view', 'view_any', 'create', 'update', 'delete', 'delete_any'],
                     'user' => ['view', 'view_any', 'create', 'update', 'delete', 'delete_any', 'restore', 'restore_any', 'replicate', 'reorder', 'force_delete', 'force_delete_any'],
+                    'parking-spot' => ['view', 'view_any', 'create', 'update', 'delete', 'delete_any', 'restore', 'restore_any', 'force_delete', 'force_delete_any'],
                 ],
                 'special' => [
                     'download-backup',
