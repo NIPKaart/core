@@ -2,7 +2,7 @@
 
 @plugin 'flowbite/plugin';
 
-@source '../../node_modules/flowbite/**/*.js';
+@source './node_modules/flowbite/**/*.js';
 
 @custom-variant dark (&:is(.dark *));
 
