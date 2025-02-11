@@ -20,7 +20,7 @@ class ProvinceFactory extends Factory
         return [
             'country_id' => Country::factory(),
             'name' => fake()->name(),
-            'geocode' => fake()->countryCode(),
+            'geocode' => strtoupper(fake()->bothify('??-##')),
         ];
     }
 }

@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('provinces', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('country_id')->constrained();
+            $table->foreignId('country_id')->constrained('countries');
             $table->string('name');
-            $table->string('geocode'); // ISO 3166-2
+            // ISO 3166-2 code
+            $table->string('geocode');
             $table->timestamps();
+
+            $table->unique(['country_id', 'geocode']);
         });
     }
 

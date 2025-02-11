@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('countries', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
+            // ISO 3166-1 alpha-2 code
             $table->string('code', 2)->unique();
             $table->timestamps();
         });
