@@ -114,5 +114,4 @@ jobs:
         uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./laravel/coverage.xml
           flags: pest
