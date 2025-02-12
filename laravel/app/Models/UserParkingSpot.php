@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ParkingSpot extends Model
+class UserParkingSpot extends Model
 {
+    /** @use HasFactory<\Database\Factories\UserParkingSpotFactory> */
     use HasFactory, SoftDeletes;
 
-    protected $table = 'parking_spots';
+    protected $table = 'user_parking_spots';
 
     protected $guarded = ['id'];
 
