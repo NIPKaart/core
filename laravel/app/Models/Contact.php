@@ -18,7 +18,7 @@ class Contact extends Model
         'phone',
         'contact_type',
         'subject',
-        'message'
+        'message',
     ];
 
     /**
