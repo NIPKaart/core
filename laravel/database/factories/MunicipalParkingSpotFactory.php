@@ -20,16 +20,16 @@ class MunicipalParkingSpotFactory extends Factory
     public function definition(): array
     {
         return [
-            'id'             => fake()->unique()->bothify('##??##'),
-            'country_id'     => Country::factory(),
-            'province_id'    => Province::factory(),
-            'municipality'   => fake()->city,
-            'street'         => fake()->streetName,
-            'orientation'    => fake()->randomElement(ParkingOrientation::toArray()),
-            'number'         => fake()->numberBetween(1, 10),
-            'longitude'      => fake()->longitude,
-            'latitude'       => fake()->latitude,
-            'visibility'     => fake()->boolean,
+            'id' => fake()->unique()->bothify('##??##'),
+            'country_id' => Country::factory(),
+            'province_id' => Province::factory(),
+            'municipality' => fake()->city,
+            'street' => fake()->streetName,
+            'orientation' => fake()->randomElement(ParkingOrientation::toArray()),
+            'number' => fake()->numberBetween(1, 10),
+            'longitude' => fake()->longitude,
+            'latitude' => fake()->latitude,
+            'visibility' => fake()->boolean,
         ];
     }
 }
