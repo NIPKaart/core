@@ -40,9 +40,9 @@ class UserParkingSpotFactory extends Factory
             'latitude' => fake()->latitude,
             'parking_time' => fake()->optional()->numberBetween(30, 300),
             'orientation' => fake()->randomElement(ParkingOrientation::toArray()),
-            'parking_disc' => $this->faker->boolean,
-            'window_times' => $this->faker->boolean,
-            'description' => $this->faker->optional()->sentence,
+            'parking_disc' => fake()->boolean,
+            'window_times' => fake()->boolean,
+            'description' => fake()->optional()->sentence,
         ];
     }
 }
