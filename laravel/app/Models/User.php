@@ -97,4 +97,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->hasMany(UserParkingSpot::class);
     }
+
+    /**
+     * Get the contacts for the user.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
 }
