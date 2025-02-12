@@ -18,7 +18,9 @@ class ParkingRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'country_id' => Country::factory(),
+            'country_id' => function (): mixed {
+                return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
+            },
             'municipality' => fake()->city,
             'url' => fake()->url,
             'nationwide' => fake()->boolean,
