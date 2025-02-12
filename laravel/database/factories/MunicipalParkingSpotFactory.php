@@ -21,8 +21,17 @@ class MunicipalParkingSpotFactory extends Factory
     {
         return [
             'id' => fake()->unique()->bothify('##??##'),
-            'country_id' => Country::factory(),
-            'province_id' => Province::factory(),
+            'country_id' => function (): mixed {
+                return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
+            },
+            'province_id' => function (): mixed {
+                $countryId = Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
+
+                return Province::where('country_id', $countryId)
+                    ->inRandomOrder()
+                    ->value('id')
+                    ?? Province::factory()->create(['country_id' => $countryId])->id;
+            },
             'municipality' => fake()->city,
             'street' => fake()->streetName,
             'orientation' => fake()->randomElement(ParkingOrientation::toArray()),
