@@ -73,7 +73,7 @@ jobs:
         working-directory: ${{env.DEFAULT_FOLDER}}
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer update --prefer-stable --prefer-dist --no-interaction --no-suggest
+          composer update --prefer-stable --prefer-dist --no-interaction
 
       # - name: Show files in folder
       #   working-directory: ${{env.DEFAULT_FOLDER}}
