@@ -13,7 +13,7 @@ env:
 
 jobs:
   pest:
-    name: "🧹 Laravel Pest (PHP: ${{ matrix.php-versions }} - Laravel: ${{ matrix.laravel }})"
+    name: "🚀 Laravel Pest (P${{ matrix.php-versions }} - L${{ matrix.laravel }})"
     runs-on: ${{ matrix.operating-system }}
     # Service container MySQL
     services:
