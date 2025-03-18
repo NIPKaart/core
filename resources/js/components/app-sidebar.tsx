@@ -20,12 +20,19 @@ const footerNavItems: NavItem[] = [
         title: 'Repository',
         url: 'https://github.com/laravel/react-starter-kit',
         icon: Folder,
+        target: '_blank',
     },
     {
         title: 'Documentation',
         url: 'https://laravel.com/docs/starter-kits',
         icon: BookOpen,
+        target: '_blank',
     },
+    {
+        title: 'Back to Frontend',
+        url: route('home'),
+        icon: LayoutGrid,
+    }
 ];
 
 export function AppSidebar() {
