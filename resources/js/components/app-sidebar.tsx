@@ -10,7 +10,7 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        url: '/dashboard',
+        href: '/dashboard',
         icon: LayoutGrid,
     },
 ];
@@ -18,21 +18,21 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
+        href: 'https://github.com/laravel/react-starter-kit',
         icon: Folder,
         target: '_blank',
     },
     {
         title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
+        href: 'https://laravel.com/docs/starter-kits',
         icon: BookOpen,
         target: '_blank',
     },
     {
         title: 'Back to Frontend',
-        url: route('home'),
+        href: route('home'),
         icon: LayoutGrid,
-    }
+    },
 ];
 
 export function AppSidebar() {
