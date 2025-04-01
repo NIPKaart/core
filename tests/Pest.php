@@ -1,5 +1,8 @@
 <?php
 
+use Database\Seeders\PermissionsTableSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -12,7 +15,10 @@
 */
 
 pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function() {
+        $this->seed(PermissionsTableSeeder::class);
+    })
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
