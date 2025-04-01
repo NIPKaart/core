@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 */
 
 pest()->extend(Tests\TestCase::class)
-    ->beforeEach(function() {
+    ->beforeEach(function () {
         $this->seed(PermissionsTableSeeder::class);
     })
     ->use(RefreshDatabase::class)
