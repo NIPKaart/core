@@ -76,6 +76,10 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        Gate::authorize('delete', User::class);
+
+        $user->delete();
+
+        return redirect()->route('app.users.index');
     }
 }

@@ -76,6 +76,10 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+        Gate::authorize('delete', Role::class);
+
+        $role->delete();
+
+        return redirect()->route('app.roles.index');
     }
 }

@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Role } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -13,6 +14,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Index({ roles }: { roles: Role[] }) {
+    const deleteRole = (id: number) => {
+        if (confirm('Are you sure you want to delete this role?')) {
+            router.delete(route('app.roles.destroy', { id }));
+            toast.success('Role deleted successfully');
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Roles" />
@@ -44,12 +52,15 @@ export default function Index({ roles }: { roles: Role[] }) {
                                     <TableCell>{role.name}</TableCell>
                                     <TableCell>{role.guard_name}</TableCell>
                                     <TableCell>{new Date(role.created_at).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="flex justify-end gap-2">
                                         <Button asChild variant="secondary" size="sm">
                                             <Link href={route('app.roles.edit', role.id)}>
                                                 <Pencil className="mr-1 h-4 w-4" />
                                                 Edit
                                             </Link>
+                                        </Button>
+                                        <Button variant="destructive" size="sm" className="cursor-pointer" onClick={() => deleteRole(role.id)}>
+                                            Delete
                                         </Button>
                                     </TableCell>
                                 </TableRow>

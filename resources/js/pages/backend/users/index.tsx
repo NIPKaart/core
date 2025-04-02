@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Pencil, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -13,6 +14,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Index({ users }: { users: User[] }) {
+    const deleteUser = (id: number) => {
+        if (confirm('Are you sure you want to delete this user?')) {
+            router.delete(route('app.users.destroy', { id }));
+            toast.success('User deleted successfully');
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
@@ -47,12 +55,15 @@ export default function Index({ users }: { users: User[] }) {
                                     <TableCell></TableCell>
                                     {/* <TableCell>{user.roles.map((role) => role.name).join(', ')}</TableCell> */}
                                     <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="flex justify-end gap-2">
                                         <Button asChild variant="secondary" size="sm">
                                             <Link href={route('app.users.edit', user.id)}>
                                                 <Pencil className="mr-1 h-4 w-4" />
                                                 Edit
                                             </Link>
+                                        </Button>
+                                        <Button variant="destructive" size="sm" className="cursor-pointer" onClick={() => deleteUser(user.id)}>
+                                            Delete
                                         </Button>
                                     </TableCell>
                                 </TableRow>
