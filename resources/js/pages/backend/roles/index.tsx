@@ -35,7 +35,7 @@ export default function Index({ roles }: PageProps) {
             accessorKey: 'name',
             header: ({ column }) => {
                 return (
-                    <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                         Name
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
@@ -50,7 +50,7 @@ export default function Index({ roles }: PageProps) {
             accessorKey: 'created_at',
             header: ({ column }) => {
                 return (
-                    <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                         Created at
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
