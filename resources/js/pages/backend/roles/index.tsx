@@ -1,11 +1,12 @@
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Plus, Trash } from 'lucide-react';
+import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -64,21 +65,35 @@ export default function Index({ roles }: PageProps) {
                 const role = row.original;
 
                 return (
-                    <div className="flex justify-end gap-2">
-                        {can('role.update') && (
-                            <Button asChild variant="secondary" size="sm">
-                                <Link href={route('app.roles.edit', { role: role.id })}>
-                                    <Pencil className="mr-1 h-4 w-4" />
-                                    Edit
-                                </Link>
-                            </Button>
-                        )}
-                        {can('role.delete') && (
-                            <Button variant="destructive" size="sm" onClick={() => deleteRole(role.id)}>
-                                <Trash className="mr-1 h-4 w-4" />
-                                Delete
-                            </Button>
-                        )}
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-muted-foreground data-[state=open]:bg-muted flex size-8 cursor-pointer"
+                                >
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end" className="w-32">
+                                {can('role.update') && (
+                                    <div>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={route('app.roles.edit', { id: role.id })}>Edit</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </div>
+                                )}
+                                {can('role.delete') && (
+                                    <DropdownMenuItem onClick={() => deleteRole(role.id)} className="text-destructive cursor-pointer">
+                                        Delete
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 );
             },
@@ -93,7 +108,7 @@ export default function Index({ roles }: PageProps) {
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-bold">Roles</h1>
                         {can('role.create') && (
-                            <Button asChild>
+                            <Button variant="outline" asChild>
                                 <Link href={route('app.roles.create')}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     New Role

@@ -1,11 +1,13 @@
 import { DataTable } from '@/components/tables/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, User } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, Pencil, Plus, Trash } from 'lucide-react';
+import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -15,8 +17,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type UserWithRoles = User & {
+    roles: { id: number; name: string }[];
+};
+
 type PageProps = {
-    users: User[];
+    users: UserWithRoles[];
 };
 
 export default function Index({ users }: PageProps) {
@@ -29,7 +35,7 @@ export default function Index({ users }: PageProps) {
         }
     };
 
-    const columns: ColumnDef<User>[] = [
+    const columns: ColumnDef<UserWithRoles>[] = [
         {
             accessorKey: 'name',
             header: ({ column }) => {
@@ -48,6 +54,19 @@ export default function Index({ users }: PageProps) {
         {
             accessorKey: 'roles',
             header: 'Roles',
+            cell: ({ row }) => {
+                const roles = row.original.roles;
+
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {roles.map((role) => (
+                            <Badge key={typeof role === 'string' ? role : role.name} variant="outline" className="capitalize">
+                                {typeof role === 'string' ? role : role.name}
+                            </Badge>
+                        ))}
+                    </div>
+                );
+            },
         },
         {
             accessorKey: 'created_at',
@@ -67,21 +86,35 @@ export default function Index({ users }: PageProps) {
                 const user = row.original;
 
                 return (
-                    <div className="flex justify-end gap-2">
-                        {can('user.update') && (
-                            <Button asChild variant="secondary" size="sm">
-                                <Link href={route('app.users.edit', { user: user.id })}>
-                                    <Pencil className="mr-1 h-4 w-4" />
-                                    Edit
-                                </Link>
-                            </Button>
-                        )}
-                        {can('user.delete') && (
-                            <Button variant="destructive" size="sm" onClick={() => deleteUser(user.id)}>
-                                <Trash className="mr-1 h-4 w-4" />
-                                Delete
-                            </Button>
-                        )}
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-muted-foreground data-[state=open]:bg-muted flex size-8 cursor-pointer"
+                                >
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="end" className="w-32">
+                                {can('user.update') && (
+                                    <div>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={route('app.users.edit', { id: user.id })}>Edit</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </div>
+                                )}
+                                {can('user.delete') && (
+                                    <DropdownMenuItem onClick={() => deleteUser(user.id)} className="text-destructive cursor-pointer">
+                                        Delete
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 );
             },
@@ -96,7 +129,7 @@ export default function Index({ users }: PageProps) {
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-bold">Users</h1>
                         {can('user.create') && (
-                            <Button asChild>
+                            <Button variant="outline" asChild>
                                 <Link href={route('app.users.create')}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     New User
