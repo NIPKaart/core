@@ -15,7 +15,11 @@ type PageProps = {
 export default function Edit({ role, rolePermissions, allPermissions }: PageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: `Edit role - ${role.name}`,
+            title: 'Roles',
+            href: route('app.roles.index'),
+        },
+        {
+            title: `Edit role (${role.name})`,
             href: route('app.roles.edit', { role: role.id }),
         },
     ];
@@ -45,7 +49,7 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${role.name}`} />
             <div className="mb-6 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Edit Role</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Edit {role.name}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.roles.index')}>
@@ -56,13 +60,7 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
             </div>
 
             <div className="px-4 py-6 sm:px-6">
-                <RoleForm
-                    form={form}
-                    role={role}
-                    allPermissions={allPermissions}
-                    onSubmit={handleSubmit}
-                    submitting={form.formState.isSubmitting}
-                />
+                <RoleForm form={form} role={role} allPermissions={allPermissions} onSubmit={handleSubmit} submitting={form.formState.isSubmitting} />
             </div>
         </AppLayout>
     );
