@@ -1,4 +1,5 @@
 import { DataTable } from '@/components/tables/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
@@ -16,8 +17,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type UserWithRoles = User & {
+    roles: { id: number; name: string }[];
+};
+
 type PageProps = {
-    users: User[];
+    users: UserWithRoles[];
 };
 
 export default function Index({ users }: PageProps) {
@@ -30,7 +35,7 @@ export default function Index({ users }: PageProps) {
         }
     };
 
-    const columns: ColumnDef<User>[] = [
+    const columns: ColumnDef<UserWithRoles>[] = [
         {
             accessorKey: 'name',
             header: ({ column }) => {
@@ -49,6 +54,19 @@ export default function Index({ users }: PageProps) {
         {
             accessorKey: 'roles',
             header: 'Roles',
+            cell: ({ row }) => {
+                const roles = row.original.roles;
+
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {roles.map((role) => (
+                            <Badge key={typeof role === 'string' ? role : role.name} variant="outline" className="capitalize">
+                                {typeof role === 'string' ? role : role.name}
+                            </Badge>
+                        ))}
+                    </div>
+                );
+            },
         },
         {
             accessorKey: 'created_at',

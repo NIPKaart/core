@@ -17,7 +17,7 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         return Inertia::render('backend/users/index', [
-            'users' => User::all(),
+            'users' => User::with('roles:id,name')->get()
         ]);
     }
 
