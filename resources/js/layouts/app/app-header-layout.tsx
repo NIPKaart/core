@@ -1,7 +1,7 @@
 import { AppContent } from '@/components/app-content';
 import { AppHeader } from '@/components/app-header';
 import { AppShell } from '@/components/app-shell';
-import { Toaster } from '@/components/ui/sonner';
+import { Toast } from '@/components/toast';
 import { type BreadcrumbItem } from '@/types';
 import type { PropsWithChildren } from 'react';
 
@@ -10,7 +10,7 @@ export default function AppHeaderLayout({ children, breadcrumbs }: PropsWithChil
         <AppShell>
             <AppHeader breadcrumbs={breadcrumbs} />
             <AppContent>{children}</AppContent>
-            <Toaster position={'top-right'} />
+            <Toast position={'top-right'} />
         </AppShell>
     );
 }

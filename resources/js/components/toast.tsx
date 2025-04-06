@@ -2,7 +2,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast, Toaster } from 'sonner';
 
-export function Toast() {
+export function Toast({ ...props }) {
     const { flash } = usePage().props as {
         flash?: {
             success?: string;
@@ -27,5 +27,5 @@ export function Toast() {
         }
     }, [flash]);
 
-    return <Toaster position="top-right" />;
+    return <Toaster {...props} />;
 }
