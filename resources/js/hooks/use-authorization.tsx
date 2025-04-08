@@ -23,8 +23,11 @@ export function useAuthorization() {
         return auth?.can?.[permission] === true;
     };
 
-    const hasRole = (role: string): boolean => {
-        return auth?.roles?.includes(role);
+    const hasRole = (roles: string | string[]): boolean => {
+        if (!auth?.roles) return false;
+
+        const roleList = Array.isArray(roles) ? roles : [roles];
+        return roleList.some((role) => auth.roles.includes(role));
     };
 
     return { can, hasRole, user: auth.user };
