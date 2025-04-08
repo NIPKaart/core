@@ -1,9 +1,9 @@
 import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
+import { NavSections } from '@/components/nav/nav-sections';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { type NavItem } from '@/types';
+import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Shield, Users } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -29,25 +29,35 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { can } = useAuthorization();
+    const { can, hasRole } = useAuthorization();
 
-    const mainNavItems: NavItem[] = [
+    const navGroups: NavGroup[] = [
         {
-            title: 'Dashboard',
-            href: '/dashboard',
-            icon: LayoutGrid,
+            title: 'Platform',
+            items: [
+                {
+                    title: 'Dashboard',
+                    href: '/dashboard',
+                    icon: LayoutGrid,
+                },
+            ],
         },
-        can('user.view_any') && {
-            title: 'Users',
-            href: route('app.users.index'),
-            icon: Users,
+        hasRole(['admin', 'moderator']) && {
+            title: 'Administration',
+            items: [
+                can('user.view_any') && {
+                    title: 'Users',
+                    href: route('app.users.index'),
+                    icon: Users,
+                },
+                can('role.view_any') && {
+                    title: 'Roles',
+                    href: route('app.roles.index'),
+                    icon: Shield,
+                },
+            ].filter(Boolean),
         },
-        can('role.view_any') && {
-            title: 'Roles',
-            href: route('app.roles.index'),
-            icon: Shield,
-        },
-    ].filter(Boolean) as NavItem[];
+    ].filter(Boolean) as NavGroup[];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -64,7 +74,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {/* <NavSection group={mainNavGroup} /> */}
+                <NavSections groups={navGroups} />
             </SidebarContent>
 
             <SidebarFooter>
