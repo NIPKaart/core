@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, User } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { BreadcrumbItem, SharedData, User } from '@/types';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -26,7 +26,9 @@ type PageProps = {
 };
 
 export default function Index({ users }: PageProps) {
+    const page = usePage<SharedData>();
     const { can } = useAuthorization();
+    const { auth } = page.props;
 
     const deleteUser = (id: number) => {
         if (confirm('Are you sure you want to delete this user?')) {
@@ -69,6 +71,13 @@ export default function Index({ users }: PageProps) {
             },
         },
         {
+            id: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                return row.original.suspended_at ? <Badge variant="destructive">Suspended</Badge> : <Badge variant="secondary">Active</Badge>;
+            },
+        },
+        {
             accessorKey: 'created_at',
             header: ({ column }) => {
                 return (
@@ -84,6 +93,37 @@ export default function Index({ users }: PageProps) {
             id: 'actions',
             cell: ({ row }) => {
                 const user = row.original;
+
+                const isSelf = user.id === auth.user?.id;
+                const isSuspended = !!user.suspended_at;
+
+                const handleSuspendToggle = () => {
+                    if (isSelf) {
+                        toast.error("You can't suspend yourself");
+                        return;
+                    }
+
+                    const confirmed = confirm(isSuspended ? 'Unsuspend this user?' : 'Suspend this user?');
+
+                    if (!confirmed) return;
+
+                    router.put(
+                        route('app.users.suspend', { id: user.id }),
+                        {
+                            suspended_at: isSuspended ? null : new Date().toISOString(),
+                        },
+                        {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                                toast.success(isSuspended ? 'User unsuspended' : 'User suspended');
+                            },
+                            onError: (errors) => {
+                                console.error('Error updating suspension:', errors);
+                                toast.error('Failed to update suspension status');
+                            },
+                        },
+                    );
+                };
 
                 return (
                     <div className="flex justify-end">
@@ -106,6 +146,11 @@ export default function Index({ users }: PageProps) {
                                             <Link href={route('app.users.edit', { id: user.id })}>Edit</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
+                                        {!isSelf && (
+                                            <DropdownMenuItem className="cursor-pointer" onClick={handleSuspendToggle}>
+                                                {isSuspended ? 'Unsuspend' : 'Suspend'}
+                                            </DropdownMenuItem>
+                                        )}
                                     </div>
                                 )}
                                 {can('user.delete') && (
