@@ -6,6 +6,7 @@ use App\Http\Requests\App\StoreUserRequest;
 use App\Http\Requests\App\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -116,5 +117,20 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('app.users.index');
+    }
+
+    /**
+     * Suspend or unsuspend the specified user.
+     */
+    public function suspend(User $user)
+    {
+        if (auth()->id() === $user->id) {
+            return redirect()->back()->with('error', 'You cannot suspend yourself.');
+        }
+
+        $user->suspended_at = $user->suspended_at ? null : now();
+        $user->save();
+
+        return redirect()->back();
     }
 }
