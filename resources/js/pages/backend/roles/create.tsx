@@ -8,6 +8,10 @@ import { useForm } from 'react-hook-form';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
+        title: 'Roles',
+        href: route('app.roles.index'),
+    },
+    {
         title: 'Create new Role',
         href: route('app.roles.create'),
     },
