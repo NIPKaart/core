@@ -6,7 +6,6 @@ use App\Http\Requests\App\StoreUserRequest;
 use App\Http\Requests\App\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;

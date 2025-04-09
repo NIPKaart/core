@@ -1,5 +1,5 @@
-import { NavGroup } from "@/types";
-import { NavSection } from "@/components/nav/nav-section";
+import { NavSection } from '@/components/nav/nav-section';
+import { NavGroup } from '@/types';
 
 export function NavSections({ groups }: { groups: NavGroup[] }) {
     return (
@@ -8,5 +8,5 @@ export function NavSections({ groups }: { groups: NavGroup[] }) {
                 <NavSection key={group.title} group={group} />
             ))}
         </>
-    )
+    );
 }
