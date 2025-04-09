@@ -48,6 +48,7 @@ export default function Index({ users }: PageProps) {
                     </Button>
                 );
             },
+            enableSorting: true,
         },
         {
             accessorKey: 'email',
@@ -72,10 +73,19 @@ export default function Index({ users }: PageProps) {
         },
         {
             id: 'status',
-            header: 'Status',
+            header: ({ column }) => {
+                return (
+                    <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                        Status
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                );
+            },
+            accessorFn: (row) => (row.suspended_at ? 'Suspended' : 'Active'),
             cell: ({ row }) => {
                 return row.original.suspended_at ? <Badge variant="destructive">Suspended</Badge> : <Badge variant="secondary">Active</Badge>;
             },
+            enableSorting: true,
         },
         {
             accessorKey: 'created_at',
@@ -88,6 +98,7 @@ export default function Index({ users }: PageProps) {
                 );
             },
             cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleDateString(),
+            enableSorting: true,
         },
         {
             id: 'actions',
@@ -104,7 +115,6 @@ export default function Index({ users }: PageProps) {
                     }
 
                     const confirmed = confirm(isSuspended ? 'Unsuspend this user?' : 'Suspend this user?');
-
                     if (!confirmed) return;
 
                     router.put(
@@ -117,8 +127,8 @@ export default function Index({ users }: PageProps) {
                             onSuccess: () => {
                                 toast.success(isSuspended ? 'User unsuspended' : 'User suspended');
                             },
-                            onError: (errors) => {
-                                console.error('Error updating suspension:', errors);
+                            onError: () => {
+                                // console.error('Error updating suspension:', errors);
                                 toast.error('Failed to update suspension status');
                             },
                         },
