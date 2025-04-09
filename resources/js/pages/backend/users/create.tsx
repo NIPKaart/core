@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import UserForm, { FormValues } from '@/pages/backend/form-user';
 import { BreadcrumbItem, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import UserForm, { FormValues } from '@/pages/backend/form-user';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -44,7 +44,7 @@ export default function Create({ roles }: PageProps) {
                 });
             },
         });
-    })
+    });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -61,8 +61,8 @@ export default function Create({ roles }: PageProps) {
             </div>
 
             <div className="px-4 py-6 sm:px-6">
-                    <UserForm form={form} roles={roles} onSubmit={handleSubmit} submitting={false} />
-                </div>
+                <UserForm form={form} roles={roles} onSubmit={handleSubmit} submitting={false} />
+            </div>
         </AppLayout>
     );
 }

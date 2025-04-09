@@ -18,6 +18,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('app')->as('app.')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('roles', RoleController::class);
+
+        // This route is used to suspend a user
+        Route::put('/users/{user}/suspend', [UserController::class, 'suspend'])
+            ->name('users.suspend')
+            ->middleware(['can:user.update']);
     });
 });
 
