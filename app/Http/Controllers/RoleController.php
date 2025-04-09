@@ -48,7 +48,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->validated('permissions'));
 
-        return to_route('app.roles.index')->with('success', 'Role created successfully.');
+        return redirect()->route('app.roles.index')->with('success', 'Role created successfully.');
     }
 
     /**
@@ -90,7 +90,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->validated('permissions'));
 
-        return to_route('app.roles.index')->with('success', 'Role updated successfully.');
+        return redirect()->route('app.roles.index')->with('success', 'Role updated successfully.');
     }
 
     /**
