@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -7,6 +8,7 @@ import { BreadcrumbItem, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -23,12 +25,23 @@ type PageProps = {
 export default function Index({ roles }: PageProps) {
     const { can } = useAuthorization();
 
+    const [dialogRole, setDialogRole] = useState<Role | null>(null);
+    const [dialogType, setDialogType] = useState<'delete' | null>(null);
+
+    const openDialog = (role: Role, type: 'delete') => {
+        setDialogRole(null);
+        setDialogType(null);
+        setTimeout(() => {
+            setDialogRole(role);
+            setDialogType(type);
+        }, 0);
+    };
+
     const deleteRole = (id: number) => {
-        if (confirm('Are you sure you want to delete this role?')) {
-            router.delete(route('app.roles.destroy', { role: id }), {
-                onSuccess: () => toast.success('Role deleted successfully'),
-            });
-        }
+        router.delete(route('app.roles.destroy', { id }), {
+            onSuccess: () => toast.success('Role deleted successfully'),
+            onError: () => toast.error('Failed to delete role'),
+        });
     };
 
     const columns: ColumnDef<Role>[] = [
@@ -88,7 +101,13 @@ export default function Index({ roles }: PageProps) {
                                     </div>
                                 )}
                                 {can('role.delete') && (
-                                    <DropdownMenuItem onClick={() => deleteRole(role.id)} className="text-destructive cursor-pointer">
+                                    <DropdownMenuItem
+                                        onSelect={(e) => {
+                                            e.preventDefault();
+                                            openDialog(role, 'delete');
+                                        }}
+                                        className="text-destructive cursor-pointer"
+                                    >
                                         Delete
                                     </DropdownMenuItem>
                                 )}
@@ -120,6 +139,22 @@ export default function Index({ roles }: PageProps) {
                     <DataTable columns={columns} data={roles} />
                 </div>
             </div>
+
+            {dialogRole && dialogType === 'delete' && (
+                <ConfirmDialog
+                    title="Delete role?"
+                    description={`Are you sure you want to delete the role "${dialogRole.name}"?`}
+                    confirmText="Delete"
+                    variant="destructive"
+                    onConfirm={() => {
+                        deleteRole(dialogRole.id);
+                    }}
+                    onClose={() => {
+                        setDialogRole(null);
+                        setDialogType(null);
+                    }}
+                />
+            )}
         </AppLayout>
     );
 }
