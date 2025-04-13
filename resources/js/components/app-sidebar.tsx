@@ -5,31 +5,31 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Shield, Users } from 'lucide-react';
+import { LayoutGrid, Logs, Shield, Users } from 'lucide-react';
 import AppLogo from './app-logo';
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-        target: '_blank',
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
-        target: '_blank',
-    },
-    {
-        title: 'Back to Frontend',
-        href: route('home'),
-        icon: LayoutGrid,
-    },
-];
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
+
+    const footerNavItems: NavItem[] = [
+        // {
+        //     title: 'Repository',
+        //     href: route('log-viewer.index'),
+        //     target: '_blank',
+        //     icon: Folder,
+        // },
+        hasRole('admin') && {
+            title: 'Logs',
+            href: route('log-viewer.index'),
+            target: '_blank',
+            icon: Logs,
+        },
+        {
+            title: 'Back to Frontend',
+            href: route('home'),
+            icon: LayoutGrid,
+        },
+    ].filter(Boolean) as NavItem[];
 
     const navGroups: NavGroup[] = [
         {
@@ -37,7 +37,7 @@ export function AppSidebar() {
             items: [
                 {
                     title: 'Dashboard',
-                    href: '/dashboard',
+                    href: route('dashboard'),
                     icon: LayoutGrid,
                 },
             ],
