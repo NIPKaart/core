@@ -1,14 +1,26 @@
-import AppLogoIcon from './app-logo-icon';
+import { ImgHTMLAttributes } from 'react';
 
-export default function AppLogo() {
+interface AppLogoProps extends ImgHTMLAttributes<HTMLImageElement> {
+    size?: 'sm' | 'md' | 'lg';
+}
+
+export default function AppLogo({ size = 'md', className = '', ...props }: AppLogoProps) {
+    const heightClass = size === 'sm' ? 'h-6' : size === 'lg' ? 'h-10' : 'h-8';
+
     return (
         <>
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
-            </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-none font-semibold">NIPKaart</span>
-            </div>
+            <img
+                {...props}
+                src="/assets/images/logo-light.svg"
+                alt="NIPKaart logo"
+                className={`block w-auto dark:hidden ${heightClass} ${className}`}
+            />
+            <img
+                {...props}
+                src="/assets/images/logo-dark.svg"
+                alt="NIPKaart logo"
+                className={`hidden w-auto dark:block ${heightClass} ${className}`}
+            />
         </>
     );
 }
