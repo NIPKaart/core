@@ -6,7 +6,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Logs, Shield, Users } from 'lucide-react';
-import AppLogo from './app-logo';
+import AppLogoSwitcher from './app-logo-switcher';
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
@@ -66,7 +66,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard" prefetch>
-                                <AppLogo />
+                                <AppLogoSwitcher />
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
