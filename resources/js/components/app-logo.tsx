@@ -13,13 +13,13 @@ export default function AppLogo({ size = 'md', className = '', ...props }: AppLo
                 {...props}
                 src="/assets/images/logo-light.svg"
                 alt="NIPKaart logo"
-                className={`block dark:hidden w-auto ${heightClass} ${className}`}
+                className={`block w-auto dark:hidden ${heightClass} ${className}`}
             />
             <img
                 {...props}
                 src="/assets/images/logo-dark.svg"
                 alt="NIPKaart logo"
-                className={`hidden dark:block w-auto ${heightClass} ${className}`}
+                className={`hidden w-auto dark:block ${heightClass} ${className}`}
             />
         </>
     );
