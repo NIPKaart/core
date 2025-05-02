@@ -1,12 +1,12 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
-import { NavSections } from '@/components/nav/nav-sections';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { LayoutGrid, Logs, Shield, Users } from 'lucide-react';
 import AppLogoSwitcher from './app-logo-switcher';
+import { NavSection } from './nav/nav-section';
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
@@ -31,33 +31,32 @@ export function AppSidebar() {
         },
     ].filter(Boolean) as NavItem[];
 
-    const navGroups: NavGroup[] = [
-        {
-            title: 'Platform',
-            items: [
-                {
-                    title: 'Dashboard',
-                    href: route('dashboard'),
-                    icon: LayoutGrid,
-                },
-            ],
-        },
-        hasRole(['admin', 'moderator']) && {
-            title: 'Administration',
-            items: [
-                can('user.view_any') && {
-                    title: 'Users',
-                    href: route('app.users.index'),
-                    icon: Users,
-                },
-                can('role.view_any') && {
-                    title: 'Roles',
-                    href: route('app.roles.index'),
-                    icon: Shield,
-                },
-            ].filter(Boolean),
-        },
-    ].filter(Boolean) as NavGroup[];
+    const platformNavGroup: NavGroup = {
+        title: 'Platform',
+        items: [
+            {
+                title: 'Dashboard',
+                href: route('dashboard'),
+                icon: LayoutGrid,
+            },
+        ].filter(Boolean) as NavItem[],
+    }
+
+    const adminNavGroup: NavGroup = {
+        title: 'Administration',
+        items: [
+            can('user.view_any') && {
+                title: 'Users',
+                href: route('app.users.index'),
+                icon: Users,
+            },
+            can('role.view_any') && {
+                title: 'Roles',
+                href: route('app.roles.index'),
+                icon: Shield,
+            },
+        ].filter(Boolean) as NavItem[],
+    }
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -74,8 +73,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* <NavSection group={mainNavGroup} /> */}
-                <NavSections groups={navGroups} />
+                <NavSection group={platformNavGroup} />
+                {hasRole(['admin', 'super-admin']) && <NavSection group={adminNavGroup} />}
             </SidebarContent>
 
             <SidebarFooter>

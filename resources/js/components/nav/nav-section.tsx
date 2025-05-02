@@ -7,7 +7,7 @@ export function NavSection({ group }: { group: NavGroup }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarGroupLabel className="group-data-[state=collapsed]:hidden">{group.title}</SidebarGroupLabel>
             <SidebarMenu>
                 {group.items.map((item) => (
                     <SidebarMenuItem key={item.title}>
