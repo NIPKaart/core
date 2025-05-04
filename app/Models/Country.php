@@ -57,4 +57,20 @@ class Country extends Model
     {
         return $this->hasMany(ParkingRule::class);
     }
+
+    /**
+     * Get national parking rules in the country.
+     */
+    public function nationalParkingRules(): HasMany
+    {
+        return $this->hasMany(ParkingRule::class)->where('nationwide', true);
+    }
+
+    /**
+     * Get municipal parking rules in the country.
+     */
+    public function municipalParkingRules(): HasMany
+    {
+        return $this->hasMany(ParkingRule::class)->where('nationwide', false);
+    }
 }
