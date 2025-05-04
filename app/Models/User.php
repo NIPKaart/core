@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -47,5 +48,13 @@ class User extends Authenticatable
             'password' => 'hashed',
             'suspended_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the parking spots for the user.
+     */
+    public function parkingSpots(): HasMany
+    {
+        return $this->hasMany(UserParkingSpot::class);
     }
 }
