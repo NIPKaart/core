@@ -41,4 +41,12 @@ class Province extends Model
     {
         return $this->hasMany(ParkingOffstreet::class);
     }
+
+    /**
+     * Get parking spots provided by municipalities in the province.
+     */
+    public function municipalParkingSpots(): HasMany
+    {
+        return $this->hasMany(MunicipalParkingSpot::class);
+    }
 }

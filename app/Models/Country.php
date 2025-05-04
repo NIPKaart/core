@@ -41,4 +41,12 @@ class Country extends Model
     {
         return $this->hasMany(ParkingOffstreet::class);
     }
+
+    /**
+     * Get parking spots provided by municipalities in the country.
+     */
+    public function municipalParkingSpots(): HasMany
+    {
+        return $this->hasMany(MunicipalParkingSpot::class);
+    }
 }
