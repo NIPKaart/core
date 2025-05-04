@@ -49,4 +49,12 @@ class Country extends Model
     {
         return $this->hasMany(MunicipalParkingSpot::class);
     }
+
+    /**
+     * Get parking rules in the country.
+     */
+    public function parkingRules(): HasMany
+    {
+        return $this->hasMany(ParkingRule::class);
+    }
 }
