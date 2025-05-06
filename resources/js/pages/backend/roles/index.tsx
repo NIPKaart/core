@@ -1,10 +1,11 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, Role } from '@/types';
+import { BreadcrumbItem, PaginatedResponse, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
@@ -19,7 +20,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type PageProps = {
-    roles: Role[];
+    roles: PaginatedResponse<Role>;
 };
 
 export default function Index({ roles }: PageProps) {
@@ -51,7 +52,7 @@ export default function Index({ roles }: PageProps) {
                 return (
                     <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                         Name
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
                     </Button>
                 );
             },
@@ -66,7 +67,7 @@ export default function Index({ roles }: PageProps) {
                 return (
                     <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                         Created at
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
                     </Button>
                 );
             },
@@ -92,6 +93,11 @@ export default function Index({ roles }: PageProps) {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
+                                {/* {can('role.view') && (
+                                    <DropdownMenuItem asChild className="cursor-pointer">
+                                        <Link href={route('app.roles.show', { id: role.id })}>View</Link>
+                                    </DropdownMenuItem>
+                                )} */}
                                 {can('role.update') && (
                                     <div>
                                         <DropdownMenuItem asChild className="cursor-pointer">
@@ -129,14 +135,15 @@ export default function Index({ roles }: PageProps) {
                         {can('role.create') && (
                             <Button variant="outline" asChild>
                                 <Link href={route('app.roles.create')}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    New Role
+                                    <Plus className="mr-1 h-4 w-4" />
+                                    Role
                                 </Link>
                             </Button>
                         )}
                     </div>
 
-                    <DataTable columns={columns} data={roles} />
+                    <DataTable columns={columns} data={roles.data} />
+                    <DataTablePagination pagination={roles} />
                 </div>
             </div>
 

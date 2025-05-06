@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, SharedData, User } from '@/types';
+import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
+import { DataTablePagination } from '@/components/tables/data-paginate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,7 +26,7 @@ type UserWithRoles = User & {
 };
 
 type PageProps = {
-    users: UserWithRoles[];
+    users: PaginatedResponse<UserWithRoles>;
 };
 
 export default function Index({ users }: PageProps) {
@@ -77,7 +78,7 @@ export default function Index({ users }: PageProps) {
             header: ({ column }) => (
                 <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                     Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-4 w-4" />
                 </Button>
             ),
             enableSorting: true,
@@ -104,7 +105,7 @@ export default function Index({ users }: PageProps) {
             header: ({ column }) => (
                 <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                     Status
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-4 w-4" />
                 </Button>
             ),
             accessorFn: (row) => (row.suspended_at ? 'Suspended' : 'Active'),
@@ -117,7 +118,7 @@ export default function Index({ users }: PageProps) {
             header: ({ column }) => (
                 <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
                     Created at
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-4 w-4" />
                 </Button>
             ),
             cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleDateString(),
@@ -145,6 +146,11 @@ export default function Index({ users }: PageProps) {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
+                                {/* {can('user.view') && (
+                                    <DropdownMenuItem asChild className="cursor-pointer">
+                                        <Link href={route('app.users.show', { id: user.id })}>View</Link>
+                                    </DropdownMenuItem>
+                                )} */}
                                 {can('user.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
@@ -195,14 +201,15 @@ export default function Index({ users }: PageProps) {
                         {can('user.create') && (
                             <Button variant="outline" asChild>
                                 <Link href={route('app.users.create')}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    New User
+                                    <Plus className="mr-1 h-4 w-4" />
+                                    User
                                 </Link>
                             </Button>
                         )}
                     </div>
 
-                    <DataTable columns={columns} data={users} />
+                    <DataTable columns={columns} data={users.data} />
+                    <DataTablePagination pagination={users} />
                 </div>
             </div>
 
