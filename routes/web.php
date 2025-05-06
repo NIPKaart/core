@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,11 +15,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::prefix('app')->as('app.')->group(function () {
-        Route::resource('users', UserController::class);
-        Route::resource('roles', RoleController::class);
+        Route::resource('users', Admin\UserController::class);
+        Route::resource('roles', Admin\RoleController::class);
 
         // This route is used to suspend a user
-        Route::put('/users/{user}/suspend', [UserController::class, 'suspend'])
+        Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])
             ->name('users.suspend')
             ->middleware(['can:user.update']);
     });
