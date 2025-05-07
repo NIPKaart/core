@@ -35,7 +35,7 @@ class ParkingRuleController extends Controller
         Gate::authorize('create', ParkingRule::class);
 
         $countries = Country::all();
-        $existingMunicipalities = ParkingRule::pluck('country_id')->toArray();
+        $existingMunicipalities = ParkingRule::pluck('municipality')->toArray();
 
         $userSpots = UserParkingSpot::whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality');
