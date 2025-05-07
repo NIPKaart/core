@@ -52,6 +52,14 @@ export interface PaginatedResponse<T = Task | null> {
     total: number;
 }
 
+export interface Country {
+    id: number;
+    name: string;
+    code: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface User {
     id: number;
     name: string;
