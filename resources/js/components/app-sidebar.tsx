@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Logs, Shield, Users } from 'lucide-react';
+import { icons } from 'lucide-react';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
 
@@ -42,8 +42,19 @@ export function AppSidebar() {
         ].filter(Boolean) as NavItem[],
     }
 
-    const adminNavGroup: NavGroup = {
-        title: 'Administration',
+    const moderatorNavGroup: NavGroup = {
+        title: 'Moderator',
+        items: [
+            can('parking-rule.view_any') && {
+                title: 'Parking Rules',
+                href: route('app.parking-rules.index'),
+                icon: icons.Gavel,
+            }
+        ].filter(Boolean) as NavItem[],
+    }
+
+    const managementNavGroup: NavGroup = {
+        title: 'Management',
         items: [
             can('user.view_any') && {
                 title: 'Users',
@@ -74,7 +85,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavSection group={platformNavGroup} />
-                {hasRole(['admin', 'super-admin']) && <NavSection group={adminNavGroup} />}
+                {moderatorNavGroup.items.length > 0 && <NavSection group={moderatorNavGroup} />}
+                {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 
             <SidebarFooter>
