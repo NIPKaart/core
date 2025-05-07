@@ -21,7 +21,7 @@ class UserController extends Controller
         Gate::authorize('viewAny', User::class);
 
         return Inertia::render('backend/users/index', [
-            'users' => User::with('roles:id,name')->paginate(25),
+            'users' => User::with('roles:id,name')->paginate(20),
         ]);
     }
 

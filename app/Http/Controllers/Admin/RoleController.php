@@ -20,7 +20,7 @@ class RoleController extends Controller
         Gate::authorize('viewAny', Role::class);
 
         return Inertia::render('backend/roles/index', [
-            'roles' => Role::paginate(25),
+            'roles' => Role::paginate(20),
         ]);
     }
 

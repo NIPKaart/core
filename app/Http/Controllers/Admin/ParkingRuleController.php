@@ -23,7 +23,7 @@ class ParkingRuleController extends Controller
         Gate::authorize('viewAny', ParkingRule::class);
 
         return Inertia::render('backend/parking-rules/index', [
-            'parkingRules' => ParkingRule::with('country')->paginate(25),
+            'parkingRules' => ParkingRule::with('country')->paginate(20),
         ]);
     }
 
