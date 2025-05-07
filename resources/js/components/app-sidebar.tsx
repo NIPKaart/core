@@ -22,12 +22,12 @@ export function AppSidebar() {
             title: 'Logs',
             href: route('log-viewer.index'),
             target: '_blank',
-            icon: Logs,
+            icon: icons.Logs,
         },
         {
             title: 'Back to Frontend',
             href: route('home'),
-            icon: LayoutGrid,
+            icon: icons.LayoutGrid,
         },
     ].filter(Boolean) as NavItem[];
 
@@ -37,7 +37,7 @@ export function AppSidebar() {
             {
                 title: 'Dashboard',
                 href: route('dashboard'),
-                icon: LayoutGrid,
+                icon: icons.LayoutGrid,
             },
         ].filter(Boolean) as NavItem[],
     }
@@ -59,12 +59,12 @@ export function AppSidebar() {
             can('user.view_any') && {
                 title: 'Users',
                 href: route('app.users.index'),
-                icon: Users,
+                icon: icons.Users,
             },
             can('role.view_any') && {
                 title: 'Roles',
                 href: route('app.roles.index'),
-                icon: Shield,
+                icon: icons.Shield,
             },
         ].filter(Boolean) as NavItem[],
     }
