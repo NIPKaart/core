@@ -4,7 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Logs, Shield, Users } from 'lucide-react';
+import { icons } from 'lucide-react';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
 
@@ -22,12 +22,12 @@ export function AppSidebar() {
             title: 'Logs',
             href: route('log-viewer.index'),
             target: '_blank',
-            icon: Logs,
+            icon: icons.Logs,
         },
         {
             title: 'Back to Frontend',
             href: route('home'),
-            icon: LayoutGrid,
+            icon: icons.LayoutGrid,
         },
     ].filter(Boolean) as NavItem[];
 
@@ -37,23 +37,34 @@ export function AppSidebar() {
             {
                 title: 'Dashboard',
                 href: route('dashboard'),
-                icon: LayoutGrid,
+                icon: icons.LayoutGrid,
             },
         ].filter(Boolean) as NavItem[],
     }
 
-    const adminNavGroup: NavGroup = {
-        title: 'Administration',
+    const moderatorNavGroup: NavGroup = {
+        title: 'Moderator',
+        items: [
+            can('parking-rule.view_any') && {
+                title: 'Parking Rules',
+                href: route('app.parking-rules.index'),
+                icon: icons.Gavel,
+            }
+        ].filter(Boolean) as NavItem[],
+    }
+
+    const managementNavGroup: NavGroup = {
+        title: 'Management',
         items: [
             can('user.view_any') && {
                 title: 'Users',
                 href: route('app.users.index'),
-                icon: Users,
+                icon: icons.Users,
             },
             can('role.view_any') && {
                 title: 'Roles',
                 href: route('app.roles.index'),
-                icon: Shield,
+                icon: icons.Shield,
             },
         ].filter(Boolean) as NavItem[],
     }
@@ -74,7 +85,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavSection group={platformNavGroup} />
-                {hasRole(['admin', 'super-admin']) && <NavSection group={adminNavGroup} />}
+                {moderatorNavGroup.items.length > 0 && <NavSection group={moderatorNavGroup} />}
+                {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 
             <SidebarFooter>
