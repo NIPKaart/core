@@ -17,13 +17,18 @@ class ParkingRuleFactory extends Factory
      */
     public function definition(): array
     {
+        $municipality = fake()->city();
+
         return [
-            'country_id' => function (): mixed {
-                return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
-            },
-            'municipality' => fake()->city,
-            'url' => fake()->url,
+            'country_id' => fn () => Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id,
+            'municipality' => $municipality,
+            'url' => "https://{$this->slugify($municipality)}.gov.example/parking-rules",
             'nationwide' => fake()->boolean,
         ];
+    }
+
+    protected function slugify(string $value): string
+    {
+        return strtolower(preg_replace('/\s+/', '-', $value));
     }
 }
