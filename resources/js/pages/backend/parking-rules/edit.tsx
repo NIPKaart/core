@@ -55,7 +55,7 @@ export default function Edit({ parkingRule, countries, municipalities }: PagePro
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.parking-rules.index')}>
                         <ArrowLeft className="h-4 w-4" />
-                        Back to parking rules
+                        Back
                     </Link>
                 </Button>
             </div>

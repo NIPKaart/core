@@ -25,7 +25,7 @@ type Props = {
 export default function ParkingRuleForm({ form, countries, municipalities, isEdit = false, onSubmit, submitting }: Props) {
     return (
         <Form {...form}>
-            <form onSubmit={onSubmit} className="w-full max-w-2xl space-y-10">
+            <form onSubmit={onSubmit} className="w-full sm:w-[50%] space-y-10">
                 {/* === Country + Municipality === */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {/* Country */}
