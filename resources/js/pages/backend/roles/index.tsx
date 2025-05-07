@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -48,33 +48,24 @@ export default function Index({ roles }: PageProps) {
     const columns: ColumnDef<Role>[] = [
         {
             accessorKey: 'name',
-            header: ({ column }) => {
-                return (
-                    <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Name
-                        <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </Button>
-                );
-            },
+            header: 'Name',
+            enableSorting: true,
         },
         {
             accessorKey: 'guard_name',
             header: 'Guard',
+            enableSorting: false,
         },
         {
             accessorKey: 'created_at',
-            header: ({ column }) => {
-                return (
-                    <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                        Created at
-                        <ArrowUpDown className="ml-1 h-4 w-4" />
-                    </Button>
-                );
-            },
-            cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleDateString(),
+            header: 'Created at',
+            enableSorting: true,
+            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
         },
         {
             id: 'actions',
+            enableSorting: false,
+            meta: { align: 'right' },
             cell: ({ row }) => {
                 const role = row.original;
 

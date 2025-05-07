@@ -1,6 +1,8 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from '@tanstack/react-table';
+import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, Header, SortingState, useReactTable } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -9,15 +11,16 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
+
     const table = useReactTable({
         data,
         columns,
-        getCoreRowModel: getCoreRowModel(),
-        onSortingChange: setSorting,
-        getSortedRowModel: getSortedRowModel(),
         state: {
             sorting,
         },
+        onSortingChange: setSorting,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
     });
 
     return (
@@ -27,13 +30,11 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                     <TableHeader className="bg-muted sticky top-0 z-10">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id} colSpan={header.colSpan}>
-                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                        </TableHead>
-                                    );
-                                })}
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead key={header.id} colSpan={header.colSpan}>
+                                        {header.isPlaceholder ? null : <TableHeadWrapper header={header} />}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -42,7 +43,9 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                        <TableCell key={cell.id} className={getCellAlignment(cell.column.columnDef.meta)}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </TableCell>
                                     ))}
                                 </TableRow>
                             ))
@@ -58,4 +61,52 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
             </div>
         </div>
     );
+}
+
+function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TValue> }) {
+    const isSortable = header.column.getCanSort();
+    const isSorted = header.column.getIsSorted();
+    const alignment = getAlignment(header.column.columnDef.meta);
+
+    return (
+        <div
+            onClick={isSortable ? () => header.column.toggleSorting(isSorted === 'asc') : undefined}
+            className={`text-muted-foreground flex items-center gap-1 text-sm font-medium ${
+                isSortable ? 'hover:text-foreground cursor-pointer' : ''
+            } ${alignment}`}
+        >
+            {flexRender(header.column.columnDef.header, header.getContext())}
+            {isSortable &&
+                (isSorted === 'asc' ? (
+                    <ArrowUp className="h-4 w-4" />
+                ) : isSorted === 'desc' ? (
+                    <ArrowDown className="h-4 w-4" />
+                ) : (
+                    <ArrowUpDown className="h-4 w-4" />
+                ))}
+        </div>
+    );
+}
+
+// Helpers for alignment
+function getAlignment(meta?: { align?: 'left' | 'center' | 'right' }) {
+    switch (meta?.align) {
+        case 'center':
+            return 'justify-center text-center';
+        case 'right':
+            return 'justify-end text-right';
+        default:
+            return 'justify-start text-left';
+    }
+}
+
+function getCellAlignment(meta?: { align?: 'left' | 'center' | 'right' }) {
+    switch (meta?.align) {
+        case 'center':
+            return 'text-center';
+        case 'right':
+            return 'text-right';
+        default:
+            return 'text-left';
+    }
 }

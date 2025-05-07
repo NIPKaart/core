@@ -1,10 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
-import { DataTablePagination } from '@/components/tables/data-paginate';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -75,21 +75,18 @@ export default function Index({ users }: PageProps) {
     const columns: ColumnDef<UserWithRoles>[] = [
         {
             accessorKey: 'name',
-            header: ({ column }) => (
-                <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Name
-                    <ArrowUpDown className="ml-1 h-4 w-4" />
-                </Button>
-            ),
+            header: 'Name',
             enableSorting: true,
         },
         {
             accessorKey: 'email',
             header: 'Email',
+            enableSorting: false,
         },
         {
             accessorKey: 'roles',
             header: 'Roles',
+            enableSorting: false,
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1">
                     {row.original.roles.map((role) => (
@@ -102,30 +99,22 @@ export default function Index({ users }: PageProps) {
         },
         {
             id: 'status',
-            header: ({ column }) => (
-                <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Status
-                    <ArrowUpDown className="ml-1 h-4 w-4" />
-                </Button>
-            ),
+            header: 'Status',
             accessorFn: (row) => (row.suspended_at ? 'Suspended' : 'Active'),
+            enableSorting: true,
             cell: ({ row }) =>
                 row.original.suspended_at ? <Badge variant="destructive">Suspended</Badge> : <Badge variant="secondary">Active</Badge>,
-            enableSorting: true,
         },
         {
             accessorKey: 'created_at',
-            header: ({ column }) => (
-                <Button className="cursor-pointer" variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Created at
-                    <ArrowUpDown className="ml-1 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => new Date(row.getValue('created_at')).toLocaleDateString(),
+            header: 'Created at',
             enableSorting: true,
+            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
         },
         {
             id: 'actions',
+            enableSorting: false,
+            meta: { align: 'right' },
             cell: ({ row }) => {
                 const user = row.original;
                 const isSelf = user.id === auth.user?.id;
