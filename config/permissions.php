@@ -8,6 +8,7 @@ return [
                 'resource' => [
                     'role' => ['view', 'view_any', 'create', 'update', 'delete'],
                     'user' => ['view', 'view_any', 'create', 'update', 'delete'],
+                    'parking-rule' => ['view', 'view_any', 'create', 'update', 'delete'],
                 ],
             ],
         ],
@@ -17,6 +18,7 @@ return [
                 'resource' => [
                     'role' => ['view', 'view_any'],
                     'user' => ['view', 'view_any'],
+                    'parking-rule' => ['view', 'view_any'],
                 ],
             ],
         ],
