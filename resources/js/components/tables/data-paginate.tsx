@@ -25,7 +25,7 @@ export function DataTablePagination({ pagination, preserveScroll = true }: Props
                     size="sm"
                     onClick={() => goTo(pagination.prev_page_url)}
                     disabled={!pagination.prev_page_url}
-                    className="px-2"
+                    className="px-2 cursor-pointer"
                 >
                     <ChevronLeft className="h-4 w-4" />
                     <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
@@ -40,7 +40,7 @@ export function DataTablePagination({ pagination, preserveScroll = true }: Props
                             size="sm"
                             disabled={!link.url}
                             onClick={() => goTo(link.url)}
-                            className="min-w-[32px] px-2 text-sm"
+                            className="min-w-[32px] px-2 text-sm cursor-pointer"
                         >
                             <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>
@@ -51,7 +51,7 @@ export function DataTablePagination({ pagination, preserveScroll = true }: Props
                     size="sm"
                     onClick={() => goTo(pagination.next_page_url)}
                     disabled={!pagination.next_page_url}
-                    className="px-2"
+                    className="px-2 cursor-pointer"
                 >
                     <span className="sr-only sm:not-sr-only sm:mr-1">Next</span>
                     <ChevronRight className="h-4 w-4" />
