@@ -79,3 +79,17 @@ export interface Permission {
     created_at: string;
     updated_at: string;
 }
+
+export type ParkingRule = {
+    id: number;
+    country_id: number;
+    municipality: string;
+    url: string;
+    nationwide: boolean;
+    created_at: string;
+    country?: {
+        id: number;
+        name: string;
+        code: string;
+    };
+};
