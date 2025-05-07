@@ -1,8 +1,18 @@
-import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, Header, SortingState, useReactTable } from '@tanstack/react-table';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getSortedRowModel,
+    Header,
+    Row,
+    SortingState,
+    useReactTable,
+} from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
-
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -11,21 +21,30 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
+    const [globalFilter, setGlobalFilter] = useState('');
 
     const table = useReactTable({
         data,
         columns,
         state: {
             sorting,
+            globalFilter,
         },
         onSortingChange: setSorting,
+        onGlobalFilterChange: setGlobalFilter,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        globalFilterFn: customGlobalFilterFn,
     });
 
     return (
-        <div>
-            <div className="rounded-md border">
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <Input placeholder="Search..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="max-w-sm" />
+            </div>
+
+            <div className="overflow-x-auto rounded-md border">
                 <Table>
                     <TableHeader className="bg-muted sticky top-0 z-10">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -39,7 +58,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
+                        {table.getRowModel().rows.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                                     {row.getVisibleCells().map((cell) => (
@@ -88,7 +107,6 @@ function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TVa
     );
 }
 
-// Helpers for alignment
 function getAlignment(meta?: { align?: 'left' | 'center' | 'right' }) {
     switch (meta?.align) {
         case 'center':
@@ -109,4 +127,24 @@ function getCellAlignment(meta?: { align?: 'left' | 'center' | 'right' }) {
         default:
             return 'text-left';
     }
+}
+
+function customGlobalFilterFn<TData>(row: Row<TData>, _columnId: string, filterValue: string) {
+    const search = filterValue.toLowerCase();
+
+    return row.getAllCells().some((cell) => {
+        const value = cell.getValue();
+
+        if (typeof value === 'string' || typeof value === 'number') {
+            return String(value).toLowerCase().includes(search);
+        }
+
+        if (typeof value === 'object' && value !== null) {
+            return Object.values(value)
+                .filter((v) => typeof v === 'string')
+                .some((v) => v.toLowerCase().includes(search));
+        }
+
+        return false;
+    });
 }

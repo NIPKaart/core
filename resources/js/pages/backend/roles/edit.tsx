@@ -54,7 +54,7 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.roles.index')}>
                         <ArrowLeft className="h-4 w-4" />
-                        Back to roles
+                        Back
                     </Link>
                 </Button>
             </div>

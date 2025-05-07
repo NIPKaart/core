@@ -55,7 +55,7 @@ export default function Create({ roles }: PageProps) {
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.users.index')}>
                         <ArrowLeft className="h-4 w-4" />
-                        Back to users
+                        Back
                     </Link>
                 </Button>
             </div>
