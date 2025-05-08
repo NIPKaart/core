@@ -1,5 +1,5 @@
 import { useAppearance } from '@/hooks/use-appearance';
-import { Laptop, Moon, Sun } from 'lucide-react';
+import { Contrast, MoonStar, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
     const { appearance, updateAppearance } = useAppearance();
@@ -21,8 +21,8 @@ export function ThemeToggle() {
 
     const icon = {
         light: <Sun className="h-5 w-5" />,
-        dark: <Moon className="h-5 w-5" />,
-        system: <Laptop className="h-5 w-5" />,
+        dark: <MoonStar className="h-5 w-5" />,
+        system: <Contrast className="h-5 w-5" />,
     };
 
     const label = {
