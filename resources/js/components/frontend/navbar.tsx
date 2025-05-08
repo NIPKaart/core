@@ -92,8 +92,8 @@ export default function Navbar() {
                     <div className="flex items-center justify-between">
                         <a href={route('home')} className="-m-1.5 p-1.5">
                             <span className="sr-only">NIPKaart</span>
-                            <img alt="NIPKaart" src="/assets/images/logo-light.svg" className="h-8 w-auto dark:hidden" />
-                            <img alt="NIPKaart" src="/assets/images/logo-dark.svg" className="hidden h-8 w-auto dark:block" />
+                            <img src="/assets/images/logo-light.svg" className="h-8 w-auto dark:hidden" alt="NIPKaart" />
+                            <img src="/assets/images/logo-dark.svg" className="hidden h-8 w-auto dark:block" alt="NIPKaart" />
                         </a>
                         <button
                             type="button"
@@ -104,8 +104,10 @@ export default function Navbar() {
                             <Icon iconNode={X} className="size-6" />
                         </button>
                     </div>
+
                     <div className="mt-6 flow-root">
                         <div className="-my-6 divide-y divide-gray-500/10 dark:divide-gray-700/30">
+                            {/* Navigatie-items */}
                             <div className="space-y-2 py-6">
                                 {navigation.map((item) => (
                                     <a
@@ -117,15 +119,22 @@ export default function Navbar() {
                                     </a>
                                 ))}
                             </div>
-                            <div className="space-y-4 py-6">
-                                <ThemeToggle />
-                                <div>
-                                    <a
-                                        href={route('login')}
-                                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-neutral-800"
-                                    >
-                                        Log in
-                                    </a>
+
+                            <div className="py-6">
+                                <div className="flex items-center justify-between">
+                                    {auth.user ? (
+                                        <a
+                                            href={route('dashboard')}
+                                            className="text-base font-semibold text-gray-900 hover:underline dark:text-white"
+                                        >
+                                            Dashboard
+                                        </a>
+                                    ) : (
+                                        <a href={route('login')} className="text-sm font-semibold text-gray-900 dark:text-white">
+                                            Log in →
+                                        </a>
+                                    )}
+                                    <ThemeToggle />
                                 </div>
                             </div>
                         </div>
