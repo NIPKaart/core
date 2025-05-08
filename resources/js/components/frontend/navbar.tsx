@@ -5,7 +5,7 @@ import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { ThemeToggle } from './theme-toggle';
 
 const navigation = [
@@ -21,6 +21,18 @@ export default function Navbar() {
     const page = usePage<SharedData>();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { auth } = page.props;
+
+    // Prevent page scroll when menu is open
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [mobileMenuOpen]);
 
     return (
         <>
