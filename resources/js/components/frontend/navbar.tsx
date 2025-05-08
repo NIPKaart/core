@@ -1,17 +1,18 @@
 import { Icon } from '@/components/icon';
-import { NavigationMenu, NavigationMenuItem, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
-import { cn } from '@/lib/utils';
+import { NavigationMenu, NavigationMenuItem } from '@/components/ui/navigation-menu';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
+import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
 const navigation = [
     { name: 'Home', href: route('home'), routeName: 'home' },
-    { name: 'Features', href: '#', routeName: 'features' },
-    { name: 'Marketplace', href: '#', routeName: 'marketplace' },
+    { name: 'Map', href: '#', routeName: 'map' },
+    { name: 'Garages', href: '#', routeName: 'garages' },
+    { name: 'About', href: '#', routeName: 'about' },
     { name: 'Contact', href: route('contact'), routeName: 'contact' },
 ];
 
@@ -59,24 +60,11 @@ export default function Navbar() {
                     {/* Desktop nav */}
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch gap-x-2">
-                            {navigation.map((item) => {
-                                const isActive = route().current(item.routeName);
-
-                                return (
-                                    <NavigationMenuItem key={item.name} className="relative flex h-full items-center">
-                                        <Link
-                                            href={item.href}
-                                            className={cn(
-                                                navigationMenuTriggerStyle(),
-                                                'h-10 rounded-md bg-transparent px-6 text-base transition hover:bg-gray-100 dark:bg-transparent dark:hover:bg-neutral-800',
-                                                isActive && 'font-semibold text-orange-600 dark:text-orange-400',
-                                            )}
-                                        >
-                                            {item.name}
-                                        </Link>
-                                    </NavigationMenuItem>
-                                );
-                            })}
+                            {navigation.map((item) => (
+                                <NavigationMenuItem key={item.name} className="relative flex h-full items-center">
+                                    <NavItem name={item.name} href={item.href} routeName={item.routeName} className="h-10 px-6 text-base" />
+                                </NavigationMenuItem>
+                            ))}
                         </NavigationMenu>
                     </div>
 
@@ -111,25 +99,15 @@ export default function Navbar() {
                 >
                     <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
                         <div className="space-y-2">
-                            {navigation.map((item) => {
-                                const isActive = route().current(item.routeName);
-
-                                return (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={cn(
-                                            'block rounded px-4 py-2 text-base font-medium transition',
-                                            isActive
-                                                ? 'font-semibold text-orange-600 dark:text-orange-400'
-                                                : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-800',
-                                        )}
-                                    >
-                                        {item.name}
-                                    </Link>
-                                );
-                            })}
+                            {navigation.map((item) => (
+                                <NavItem
+                                    key={item.name}
+                                    name={item.name}
+                                    href={item.href}
+                                    routeName={item.routeName}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                />
+                            ))}
                         </div>
                         <div className="mt-4 flex items-center justify-between border-t border-gray-200 px-4 pt-4 dark:border-gray-700">
                             {auth.user ? (
