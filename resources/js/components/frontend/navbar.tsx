@@ -9,13 +9,11 @@ import { Fragment, useEffect, useState } from 'react';
 import { ThemeToggle } from './theme-toggle';
 
 const navigation = [
-    { name: 'Home', href: route('home') },
-    { name: 'Features', href: '#' },
-    { name: 'Marketplace', href: '#' },
-    { name: 'Contact', href: route('contact') },
+    { name: 'Home', href: route('home'), routeName: 'home' },
+    { name: 'Features', href: '#', routeName: 'features' },
+    { name: 'Marketplace', href: '#', routeName: 'marketplace' },
+    { name: 'Contact', href: route('contact'), routeName: 'contact' },
 ];
-
-const activeItemStyles = 'text-orange-600 dark:text-orange-400 font-semibold';
 
 export default function Navbar() {
     const page = usePage<SharedData>();
@@ -61,21 +59,24 @@ export default function Navbar() {
                     {/* Desktop nav */}
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch gap-x-2">
-                            {navigation.map((item) => (
-                                <NavigationMenuItem key={item.name} className="relative flex h-full items-center">
-                                    <Link
-                                        href={item.href}
-                                        className={cn(
-                                            navigationMenuTriggerStyle(),
-                                            'bg-transparent dark:bg-transparent',
-                                            page.url === item.href && activeItemStyles,
-                                            'h-10 rounded-md px-6 text-base transition hover:bg-gray-100 dark:hover:bg-neutral-800',
-                                        )}
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </NavigationMenuItem>
-                            ))}
+                            {navigation.map((item) => {
+                                const isActive = route().current(item.routeName);
+
+                                return (
+                                    <NavigationMenuItem key={item.name} className="relative flex h-full items-center">
+                                        <Link
+                                            href={item.href}
+                                            className={cn(
+                                                navigationMenuTriggerStyle(),
+                                                'h-10 rounded-md bg-transparent px-6 text-base transition hover:bg-gray-100 dark:bg-transparent dark:hover:bg-neutral-800',
+                                                isActive && 'font-semibold text-orange-600 dark:text-orange-400',
+                                            )}
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    </NavigationMenuItem>
+                                );
+                            })}
                         </NavigationMenu>
                     </div>
 
@@ -110,16 +111,25 @@ export default function Navbar() {
                 >
                     <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
                         <div className="space-y-2">
-                            {navigation.map((item) => (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="block rounded px-4 py-2 text-base font-medium text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-800"
-                                >
-                                    {item.name}
-                                </Link>
-                            ))}
+                            {navigation.map((item) => {
+                                const isActive = route().current(item.routeName);
+
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={cn(
+                                            'block rounded px-4 py-2 text-base font-medium transition',
+                                            isActive
+                                                ? 'font-semibold text-orange-600 dark:text-orange-400'
+                                                : 'text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-800',
+                                        )}
+                                    >
+                                        {item.name}
+                                    </Link>
+                                );
+                            })}
                         </div>
                         <div className="mt-4 flex items-center justify-between border-t border-gray-200 px-4 pt-4 dark:border-gray-700">
                             {auth.user ? (
