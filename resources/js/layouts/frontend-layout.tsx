@@ -1,4 +1,4 @@
-import Navbar from '@/components/frontend/navbar';
+import Navbar from '@/components/frontend/nav/nav-bar';
 
 interface FrontendLayoutProps {
     children: React.ReactNode;
