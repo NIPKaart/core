@@ -1,9 +1,11 @@
 import Navbar from '@/components/frontend/nav/nav-bar';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Head } from '@inertiajs/react';
-import type { LatLngExpression } from 'leaflet';
+import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 
 const orangeIcon = new L.Icon({
@@ -15,10 +17,10 @@ const orangeIcon = new L.Icon({
     shadowSize: [41, 41],
 });
 
-function ClickHandler({ onClick }: { onClick: (latlng: LatLngExpression) => void }) {
+function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
     useMapEvents({
         click(e) {
-            onClick(e.latlng);
+            onMapClick(e);
         },
     });
     return null;
@@ -26,18 +28,29 @@ function ClickHandler({ onClick }: { onClick: (latlng: LatLngExpression) => void
 
 export default function AddLocation() {
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
 
-    // Handle map click to set marker position
-    const handleMapClick = useCallback((latlng: LatLngExpression) => {
-        setMarkerPosition(latlng);
-    }, []);
+    const handleMapClick = (e: LeafletMouseEvent) => {
+        setMarkerPosition([e.latlng.lat, e.latlng.lng]);
+    };
 
-    // Handle marker drag end to update position
-    const handleDragEnd = useCallback((e: L.LeafletEvent) => {
+    const handleMarkerClick = () => {
+        setModalOpen(true);
+    };
+
+    const handleDragEnd = (e: L.LeafletEvent) => {
         const marker = e.target as L.Marker;
-        const position = marker.getLatLng();
-        setMarkerPosition([position.lat, position.lng]);
-    }, []);
+        const pos = marker.getLatLng();
+        setMarkerPosition([pos.lat, pos.lng]);
+    };
+
+    const formatLatLng = (pos: LatLngExpression | null) => {
+        if (Array.isArray(pos)) {
+            const [lat, lng] = pos;
+            return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        }
+        return '';
+    };
 
     return (
         <>
@@ -46,10 +59,36 @@ export default function AddLocation() {
                 <Navbar />
                 <MapContainer center={[52.3676, 4.9041]} zoom={15} scrollWheelZoom className="z-0 h-full w-full">
                     <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <ClickHandler onClick={handleMapClick} />
-                    {markerPosition && <Marker position={markerPosition} icon={orangeIcon} draggable eventHandlers={{ dragend: handleDragEnd }} />}
+                    <ClickHandler onMapClick={handleMapClick} />
+                    {markerPosition && (
+                        <Marker
+                            position={markerPosition}
+                            icon={orangeIcon}
+                            draggable
+                            eventHandlers={{
+                                dragend: handleDragEnd,
+                                click: handleMarkerClick,
+                            }}
+                        />
+                    )}
                 </MapContainer>
             </div>
+
+            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add new location</DialogTitle>
+                        <DialogDescription>
+                            You have clicked on the map at the following coordinates:
+                            <br />
+                            <code className="font-mono text-sm">{formatLatLng(markerPosition)}</code>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-4 flex justify-end">
+                        <Button onClick={() => setModalOpen(false)}>Close</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
