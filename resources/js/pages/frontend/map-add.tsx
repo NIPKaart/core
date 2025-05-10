@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 
 const orangeIcon = new L.Icon({
@@ -29,9 +29,11 @@ function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => vo
 export default function AddLocation() {
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [address, setAddress] = useState<string | null>(null);
 
     const handleMapClick = (e: LeafletMouseEvent) => {
         setMarkerPosition([e.latlng.lat, e.latlng.lng]);
+        setModalOpen(false);
     };
 
     const handleMarkerClick = () => {
@@ -51,6 +53,34 @@ export default function AddLocation() {
         }
         return '';
     };
+
+    useEffect(() => {
+        if (!markerPosition || !Array.isArray(markerPosition)) return;
+
+        const [lat, lng] = markerPosition;
+
+        const fetchAddress = async () => {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+                    headers: {
+                        'User-Agent': 'NIPKaart (https://nipkaart.nl)',
+                    },
+                });
+                const data = await res.json();
+                if (data?.address) {
+                    const { road, postcode, city, town, village, state, country } = data.address;
+                    setAddress([road, postcode, city || town || village, state, country].filter(Boolean).join(', '));
+                } else {
+                    setAddress(null);
+                }
+            } catch (error) {
+                console.error('Reverse geocoding failed:', error);
+                setAddress(null);
+            }
+        };
+
+        fetchAddress();
+    }, [markerPosition]);
 
     return (
         <>
@@ -79,9 +109,17 @@ export default function AddLocation() {
                     <DialogHeader>
                         <DialogTitle>Add new location</DialogTitle>
                         <DialogDescription>
-                            You have clicked on the map at the following coordinates:
+                            You selected the following coordinates:
                             <br />
                             <code className="font-mono text-sm">{formatLatLng(markerPosition)}</code>
+                            <br />
+                            {address ? (
+                                <div className="text-muted-foreground mt-2 text-sm">
+                                    <strong>Address:</strong> {address}
+                                </div>
+                            ) : (
+                                <div className="text-muted-foreground mt-2 text-sm italic">Loading address...</div>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="mt-4 flex justify-end">
