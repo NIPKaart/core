@@ -1,12 +1,18 @@
 .leaflet-legend {
+    position: relative;
     padding: 6px 8px;
     font:
         14px Arial,
         Helvetica,
         sans-serif;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 1);
     line-height: 24px;
     color: #555;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    max-width: 220px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    background-clip: padding-box;
 }
 
 .leaflet-legend h4 {
@@ -32,7 +38,35 @@
     background-repeat: no-repeat;
 }
 
-.leaflet-legend i.icon {
-    background-size: 18px;
-    background-color: rgba(255, 255, 255, 1);
+.legend-content {
+    margin-top: 6px;
+}
+
+.legend-toggle {
+    all: unset;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #555;
+    display: block;
+}
+
+.legend-close {
+    all: unset;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: #888;
+}
+
+.legend-close:hover {
+    color: #000;
+}
+
+.leaflet-legend.collapsed .legend-content,
+.leaflet-legend.collapsed .legend-close {
+    display: none;
 }

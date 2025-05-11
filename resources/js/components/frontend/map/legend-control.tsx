@@ -14,20 +14,42 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
             options: { position },
             onAdd: () => {
                 const div = L.DomUtil.create('div', 'leaflet-legend');
-                div.innerHTML += `<h4>Legenda</h4>`;
-                div.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>Genoeg plek</span><br>`;
-                div.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>Bijna VOL</span><br>`;
-                div.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>VOL</span><br>`;
-                div.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>Geen data</span><br>`;
-                div.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>Invalide parkeerplek</span><br>`;
+
+                // Add a class to collapse the legend on mobile
+                if (window.innerWidth <= 640) {
+                    div.classList.add('collapsed');
+                }
+
+                // Toggle button
+                const toggle = L.DomUtil.create('button', 'legend-toggle', div);
+                toggle.innerText = 'Legenda';
+                toggle.onclick = () => {
+                    div.classList.toggle('collapsed');
+                };
+
+                // Close button
+                const close = L.DomUtil.create('button', 'legend-close', div);
+                close.innerHTML = '&times;';
+                close.onclick = () => {
+                    div.classList.add('collapsed');
+                };
+
+                const content = L.DomUtil.create('div', 'legend-content', div);
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>Genoeg plek</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>Bijna VOL</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>VOL</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>Geen data</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>Invalide parkeerplek</span><br>`;
+
                 return div;
-            }
+            },
         });
+
         const legend: L.Control = new Legend();
         legend.addTo(map);
 
         return () => {
-            legend.remove();
+            map.removeControl(legend);
         };
     }, [map, position]);
 
