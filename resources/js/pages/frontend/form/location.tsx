@@ -4,6 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { NominatimAddress } from '@/types';
 import { router } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
@@ -19,11 +20,12 @@ type FormValues = {
 type AddLocationFormProps = {
     lat: number;
     lng: number;
+    nominatim: NominatimAddress | null;
     onClose: () => void;
     orientationOptions: Record<string, string>;
 };
 
-export function AddLocationForm({ lat, lng, onClose, orientationOptions }: AddLocationFormProps) {
+export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptions }: AddLocationFormProps) {
     const form = useForm<FormValues>({
         defaultValues: {
             parking_hours: '',
@@ -41,6 +43,7 @@ export function AddLocationForm({ lat, lng, onClose, orientationOptions }: AddLo
                 ...data,
                 latitude: lat,
                 longitude: lng,
+                nominatim: JSON.stringify(nominatim),
             },
             {
                 onSuccess: () => {
@@ -177,7 +180,7 @@ export function AddLocationForm({ lat, lng, onClose, orientationOptions }: AddLo
                     <Button className="cursor-pointer" variant="ghost" type="button" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button className="cursor-pointer" type="submit">
+                    <Button className="cursor-pointer" type="submit" disabled={!nominatim}>
                         Send
                     </Button>
                 </div>

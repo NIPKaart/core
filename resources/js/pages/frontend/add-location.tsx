@@ -1,6 +1,7 @@
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { NominatimAddress } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
@@ -33,7 +34,9 @@ export default function AddLocation() {
     const selectOptions = props.selectOptions as {
         orientation: Record<string, string>;
     };
+    const generalError = props.errors?.general;
 
+    const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [addressValid, setAddressValid] = useState<boolean>(false);
@@ -65,13 +68,17 @@ export default function AddLocation() {
         })
             .then((res) => res.json())
             .then((data) => {
+                // console.log(data.address);
                 if (data?.address && data.address.country_code) {
+                    setNominatimData(data.address as NominatimAddress);
                     setAddressValid(true);
                 } else {
+                    setNominatimData(null);
                     setAddressValid(false);
                 }
             })
             .catch(() => {
+                setNominatimData(null);
                 setAddressValid(false);
             });
     }, [markerPosition]);
@@ -116,9 +123,18 @@ export default function AddLocation() {
                             </Alert>
                         )}
 
+                        {generalError && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Submission failed</AlertTitle>
+                                <AlertDescription>{generalError}</AlertDescription>
+                            </Alert>
+                        )}
+
                         <AddLocationForm
                             lat={markerPosition[0]}
                             lng={markerPosition[1]}
+                            nominatim={nominatimData}
                             onClose={() => setModalOpen(false)}
                             orientationOptions={selectOptions.orientation}
                         />
