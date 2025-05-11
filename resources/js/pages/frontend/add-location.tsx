@@ -1,9 +1,11 @@
 import Navbar from '@/components/frontend/nav/nav-bar';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import { AddLocationForm } from './form/location';
@@ -105,9 +107,13 @@ export default function AddLocation() {
                         </DialogHeader>
 
                         {!addressValid && (
-                            <div className="border-destructive bg-destructive/10 text-destructive mb-4 rounded-md border p-3 text-sm">
-                                We could not determine the address for this location. Try moving the pin slightly.
-                            </div>
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Address lookup failed</AlertTitle>
+                                <AlertDescription>
+                                    We could not determine the address for this location. Try moving the pin slightly.
+                                </AlertDescription>
+                            </Alert>
                         )}
 
                         <AddLocationForm
