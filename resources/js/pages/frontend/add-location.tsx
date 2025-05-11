@@ -1,3 +1,4 @@
+import LegendControl from '@/components/frontend/map/legend-control';
 import LocateControl from '@/components/frontend/map/locate-control';
 import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
@@ -128,6 +129,7 @@ export default function AddLocation() {
                         />
                     )}
 
+                    <LegendControl />
                     <LocateControl />
                     <ZoomControl />
                 </MapContainer>
