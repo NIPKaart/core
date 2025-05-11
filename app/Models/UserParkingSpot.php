@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,11 +16,37 @@ class UserParkingSpot extends Model
 
     protected $table = 'user_parking_spots';
 
-    protected $guarded = ['id'];
-
     protected $keyType = 'string';
 
     public $incrementing = false;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<string>
+     */
+    protected $fillable = [
+        'id',
+        'user_id',
+        'ip_address',
+        'latitude',
+        'longitude',
+        'orientation',
+        'parking_time',
+        'parking_disc',
+        'window_times',
+        'description',
+        'status',
+        'country_id',
+        'province_id',
+        'municipality',
+        'city',
+        'suburb',
+        'neighbourhood',
+        'postcode',
+        'street',
+        'amenity',
+    ];
 
     /**
      * The attributes that should be cast to native types.
