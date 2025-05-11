@@ -63,6 +63,7 @@
         "react-hook-form": "^7.55.0",
         "react-leaflet": "^5.0.0",
         "sonner": "^2.0.3",
+        "sweetalert2": "^11.21.0",
         "tailwind-merge": "^3.0.1",
         "tailwindcss": "^4.0.0",
         "tailwindcss-animate": "^1.0.7",
