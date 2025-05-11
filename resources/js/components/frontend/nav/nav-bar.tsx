@@ -10,7 +10,7 @@ import { ThemeToggle } from './theme-toggle';
 
 const navigation = [
     { name: 'Home', href: route('home'), routeName: 'home' },
-    { name: 'Map', href: '#', routeName: 'map' },
+    { name: 'Map', href: route('map'), routeName: 'map' },
     { name: 'Garages', href: '#', routeName: 'garages' },
     { name: 'About', href: '#', routeName: 'about' },
     { name: 'Contact', href: route('contact'), routeName: 'contact' },
@@ -36,7 +36,7 @@ export default function Navbar() {
     return (
         <>
             <header className="relative z-50 bg-white dark:bg-neutral-900">
-                <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-[18px] lg:px-8 lg:py-5" aria-label="Global">
                     {/* Logo */}
                     <div className="z-50 flex lg:flex-1">
                         <Link href={route('home')} className="-m-1.5 p-1.5">
@@ -97,7 +97,7 @@ export default function Navbar() {
                     leaveFrom="translate-y-0 opacity-100"
                     leaveTo="-translate-y-2 opacity-0"
                 >
-                    <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-6 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
                         <div className="space-y-2">
                             {navigation.map((item) => (
                                 <NavItem

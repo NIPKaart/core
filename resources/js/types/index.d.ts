@@ -101,3 +101,24 @@ export type ParkingRule = {
         code: string;
     };
 };
+
+export type NominatimAddress = {
+    country_code: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    road?: string;
+    street?: string;
+    postcode?: string;
+    suburb?: string;
+    hamlet?: string;
+    neighbourhood?: string;
+    quarter?: string;
+    house_number?: string;
+    'ISO3166-2-lvl4'?: string;
+    'ISO3166-2-lvl6'?: string;
+    [key: string]: unknown;
+};

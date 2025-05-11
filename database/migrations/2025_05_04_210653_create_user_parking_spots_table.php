@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('municipality');
             $table->string('city');
             $table->string('suburb')->nullable();
-            $table->string('neighborhood')->nullable();
+            $table->string('neighbourhood')->nullable();
             $table->string('postcode');
             $table->string('street');
             $table->string('amenity')->nullable();
