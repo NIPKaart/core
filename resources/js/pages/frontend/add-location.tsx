@@ -1,3 +1,6 @@
+import LegendControl from '@/components/frontend/map/legend-control';
+import LocateControl from '@/components/frontend/map/locate-control';
+import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,8 +11,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import { AddLocationForm } from './form/location';
+
+const { BaseLayer } = LayersControl;
 
 const orangeIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
@@ -83,13 +88,34 @@ export default function AddLocation() {
             });
     }, [markerPosition]);
 
+    const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+
     return (
         <>
             <Head title="Add Location" />
             <div className="flex h-[100dvh] flex-col">
                 <Navbar />
-                <MapContainer center={[52.3676, 4.9041]} zoom={15} scrollWheelZoom className="z-0 h-full w-full">
-                    <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                    <LayersControl position="topright">
+                        <BaseLayer name="Mapbox Streets">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                                url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                                tileSize={512}
+                                zoomOffset={-1}
+                            />
+                        </BaseLayer>
+
+                        <BaseLayer checked name="Google Hybrid">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                                maxZoom={20}
+                            />
+                        </BaseLayer>
+                    </LayersControl>
+
                     <ClickHandler onMapClick={handleMapClick} />
                     {markerPosition && (
                         <Marker
@@ -102,6 +128,10 @@ export default function AddLocation() {
                             }}
                         />
                     )}
+
+                    <LegendControl />
+                    <LocateControl />
+                    <ZoomControl />
                 </MapContainer>
             </div>
 
