@@ -1,12 +1,12 @@
 import Navbar from '@/components/frontend/nav/nav-bar';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { AddLocationForm } from './form/location';
 
 const orangeIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
@@ -27,9 +27,14 @@ function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => vo
 }
 
 export default function AddLocation() {
+    const { props } = usePage();
+    const selectOptions = props.selectOptions as {
+        orientation: Record<string, string>;
+    };
+
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [address, setAddress] = useState<string | null>(null);
+    const [addressValid, setAddressValid] = useState<boolean>(false);
 
     const handleMapClick = (e: LeafletMouseEvent) => {
         setMarkerPosition([e.latlng.lat, e.latlng.lng]);
@@ -46,40 +51,27 @@ export default function AddLocation() {
         setMarkerPosition([pos.lat, pos.lng]);
     };
 
-    const formatLatLng = (pos: LatLngExpression | null) => {
-        if (Array.isArray(pos)) {
-            const [lat, lng] = pos;
-            return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-        }
-        return '';
-    };
-
     useEffect(() => {
         if (!markerPosition || !Array.isArray(markerPosition)) return;
 
         const [lat, lng] = markerPosition;
 
-        const fetchAddress = async () => {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-                    headers: {
-                        'User-Agent': 'NIPKaart (https://nipkaart.nl)',
-                    },
-                });
-                const data = await res.json();
-                if (data?.address) {
-                    const { road, postcode, city, town, village, state, country } = data.address;
-                    setAddress([road, postcode, city || town || village, state, country].filter(Boolean).join(', '));
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+            headers: {
+                'User-Agent': 'NIPKaart (https://nipkaart.nl)',
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data?.address && data.address.country_code) {
+                    setAddressValid(true);
                 } else {
-                    setAddress(null);
+                    setAddressValid(false);
                 }
-            } catch (error) {
-                console.error('Reverse geocoding failed:', error);
-                setAddress(null);
-            }
-        };
-
-        fetchAddress();
+            })
+            .catch(() => {
+                setAddressValid(false);
+            });
     }, [markerPosition]);
 
     return (
@@ -104,29 +96,29 @@ export default function AddLocation() {
                 </MapContainer>
             </div>
 
-            <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add new location</DialogTitle>
-                        <DialogDescription>
-                            You selected the following coordinates:
-                            <br />
-                            <code className="font-mono text-sm">{formatLatLng(markerPosition)}</code>
-                            <br />
-                            {address ? (
-                                <div className="text-muted-foreground mt-2 text-sm">
-                                    <strong>Address:</strong> {address}
-                                </div>
-                            ) : (
-                                <div className="text-muted-foreground mt-2 text-sm italic">Loading address...</div>
-                            )}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="mt-4 flex justify-end">
-                        <Button onClick={() => setModalOpen(false)}>Close</Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {modalOpen && markerPosition && Array.isArray(markerPosition) && (
+                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                    <DialogContent className="max-h-[95dvh] overflow-y-auto sm:max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Add new location</DialogTitle>
+                            <DialogDescription>Fill in the form below to add a new location.</DialogDescription>
+                        </DialogHeader>
+
+                        {!addressValid && (
+                            <div className="border-destructive bg-destructive/10 text-destructive mb-4 rounded-md border p-3 text-sm">
+                                We could not determine the address for this location. Try moving the pin slightly.
+                            </div>
+                        )}
+
+                        <AddLocationForm
+                            lat={markerPosition[0]}
+                            lng={markerPosition[1]}
+                            onClose={() => setModalOpen(false)}
+                            orientationOptions={selectOptions.orientation}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
         </>
     );
 }
