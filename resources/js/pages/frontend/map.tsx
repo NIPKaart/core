@@ -1,3 +1,4 @@
+import LocateControl from '@/components/frontend/map/locate-control';
 import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Head } from '@inertiajs/react';
@@ -58,6 +59,7 @@ export default function Map() {
                             <Popup>This is Amsterdam! 🇳🇱</Popup>
                         </Marker>
 
+                        <LocateControl />
                         <ZoomControl />
                     </MapContainer>
                 </div>

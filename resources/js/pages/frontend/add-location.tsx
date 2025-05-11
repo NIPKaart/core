@@ -1,3 +1,4 @@
+import LocateControl from '@/components/frontend/map/locate-control';
 import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -126,6 +127,8 @@ export default function AddLocation() {
                             }}
                         />
                     )}
+
+                    <LocateControl />
                     <ZoomControl />
                 </MapContainer>
             </div>
