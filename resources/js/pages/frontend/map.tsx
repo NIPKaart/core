@@ -1,10 +1,11 @@
+import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Head } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LayersControl, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
-import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -22,8 +23,7 @@ const defaultIcon = L.icon({
 });
 
 export default function Map() {
-    const position: LatLngTuple = [52.3676, 4.9041];
-
+    const position: LatLngTuple = [52.3676, 4.9041]; // Amsterdam
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
     return (
@@ -33,7 +33,7 @@ export default function Map() {
                 <Navbar />
 
                 <div className="flex-1">
-                    <MapContainer center={position} zoom={13} scrollWheelZoom className="z-0 h-full w-full">
+                    <MapContainer center={position} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                         <LayersControl position="topright">
                             <BaseLayer checked name="Mapbox Streets">
                                 <TileLayer
@@ -57,6 +57,8 @@ export default function Map() {
                         <Marker position={position} icon={defaultIcon}>
                             <Popup>This is Amsterdam! 🇳🇱</Popup>
                         </Marker>
+
+                        <ZoomControl />
                     </MapContainer>
                 </div>
             </div>

@@ -1,3 +1,4 @@
+import ZoomControl from '@/components/frontend/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -92,7 +93,7 @@ export default function AddLocation() {
             <Head title="Add Location" />
             <div className="flex h-[100dvh] flex-col">
                 <Navbar />
-                <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom className="z-0 h-full w-full">
+                <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <LayersControl position="topright">
                         <BaseLayer name="Mapbox Streets">
                             <TileLayer
@@ -125,6 +126,7 @@ export default function AddLocation() {
                             }}
                         />
                     )}
+                    <ZoomControl />
                 </MapContainer>
             </div>
 
