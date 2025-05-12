@@ -11,26 +11,6 @@ import { NavSection } from './nav/nav-section';
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
 
-    const footerNavItems: NavItem[] = [
-        // {
-        //     title: 'Repository',
-        //     href: route('log-viewer.index'),
-        //     target: '_blank',
-        //     icon: Folder,
-        // },
-        hasRole('admin') && {
-            title: 'Logs',
-            href: route('log-viewer.index'),
-            target: '_blank',
-            icon: icons.Logs,
-        },
-        {
-            title: 'Back to Frontend',
-            href: route('home'),
-            icon: icons.LayoutGrid,
-        },
-    ].filter(Boolean) as NavItem[];
-
     const platformNavGroup: NavGroup = {
         title: 'Platform',
         items: [
@@ -39,6 +19,11 @@ export function AppSidebar() {
                 href: route('dashboard'),
                 icon: icons.LayoutGrid,
             },
+            {
+                title: 'Map',
+                href: route('map'),
+                icon: icons.Map,
+            }
         ].filter(Boolean) as NavItem[],
     }
 
@@ -68,6 +53,26 @@ export function AppSidebar() {
             },
         ].filter(Boolean) as NavItem[],
     }
+
+    const footerNavItems: NavItem[] = [
+        // {
+        //     title: 'Repository',
+        //     href: route('log-viewer.index'),
+        //     target: '_blank',
+        //     icon: Folder,
+        // },
+        hasRole('admin') && {
+            title: 'Logs',
+            href: route('log-viewer.index'),
+            target: '_blank',
+            icon: icons.Logs,
+        },
+        {
+            title: 'Back to Frontend',
+            href: route('home'),
+            icon: icons.ArrowLeft,
+        },
+    ].filter(Boolean) as NavItem[];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
