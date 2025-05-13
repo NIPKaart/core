@@ -8,6 +8,7 @@ import {
     getSortedRowModel,
     Header,
     Row,
+    RowSelectionState,
     SortingState,
     useReactTable,
 } from '@tanstack/react-table';
@@ -18,6 +19,8 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     filters?: React.ReactNode;
+    rowSelection?: RowSelectionState;
+    onRowSelectionChange?: (updater: RowSelectionState) => void;
 }
 
 export function DataTable<TData, TValue>({ columns, data, filters }: DataTableProps<TData, TValue>) {

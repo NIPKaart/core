@@ -123,7 +123,9 @@ export interface UserParkingSpot {
     ip_address: string | null;
 
     country_id: number;
+    country: Country;
     province_id: number;
+    province: Province;
 
     municipality: string;
     city: string;
