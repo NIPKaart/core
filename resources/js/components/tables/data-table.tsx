@@ -8,6 +8,7 @@ import {
     getSortedRowModel,
     Header,
     Row,
+    RowSelectionState,
     SortingState,
     useReactTable,
 } from '@tanstack/react-table';
@@ -17,9 +18,12 @@ import { useState } from 'react';
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    filters?: React.ReactNode;
+    rowSelection?: RowSelectionState;
+    onRowSelectionChange?: (updater: RowSelectionState) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, filters }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
 
@@ -40,8 +44,14 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <Input placeholder="Search..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="max-w-sm" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Input
+                    placeholder="Search..."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="w-full sm:max-w-sm"
+                />
+                {filters && <div className="w-full sm:w-auto">{filters}</div>}
             </div>
 
             <div className="overflow-x-auto rounded-md border">

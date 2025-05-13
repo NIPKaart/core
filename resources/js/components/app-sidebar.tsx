@@ -30,6 +30,11 @@ export function AppSidebar() {
     const moderatorNavGroup: NavGroup = {
         title: 'Moderator',
         items: [
+            can('user-parking-spot.view_any') && {
+                title: 'Parking Spots',
+                href: route('app.parking-spots.index'),
+                icon: icons.MapPin,
+            },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
                 href: route('app.parking-rules.index'),
