@@ -10,7 +10,7 @@ import { useState } from 'react';
 type Option = {
     label: string;
     value: string;
-    count: number;
+    count?: number;
 };
 
 interface DataTableFacetFilterProps {
