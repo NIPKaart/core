@@ -32,7 +32,7 @@ export function AppSidebar() {
         items: [
             can('user-parking-spot.view_any') && {
                 title: 'Parking Spots',
-                href: route('app.parking-spots.index'),
+                href: route('app.user-parking-spots.index'),
                 icon: icons.MapPin,
             },
             can('parking-rule.view_any') && {
