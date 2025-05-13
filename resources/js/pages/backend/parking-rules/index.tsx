@@ -3,7 +3,7 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, ParkingRule } from '@/types';
@@ -115,6 +115,7 @@ export default function Index({ parkingRules }: PageProps) {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 {can('parking-rule.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">

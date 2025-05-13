@@ -9,7 +9,7 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
@@ -135,6 +135,7 @@ export default function Index({ users }: PageProps) {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 {/* {can('user.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
                                         <Link href={route('app.users.show', { id: user.id })}>View</Link>

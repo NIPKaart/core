@@ -60,6 +60,15 @@ export interface Country {
     updated_at: string;
 }
 
+export interface Province {
+    id: number;
+    country_id: number;
+    name: string;
+    geocode: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface User {
     id: number;
     name: string;
@@ -101,6 +110,42 @@ export type ParkingRule = {
         code: string;
     };
 };
+
+export type ParkingStatus = 'pending' | 'approved' | 'rejected';
+export type ParkingOrientation = 'parallel' | 'perpendicular' | 'angle';
+
+export interface UserParkingSpot {
+    id: string;
+    user_id: number | null;
+    user?: User;
+
+    status: ParkingStatus;
+    ip_address: string | null;
+
+    country_id: number;
+    province_id: number;
+
+    municipality: string;
+    city: string;
+    suburb: string | null;
+    neighbourhood: string | null;
+    postcode: string;
+    street: string;
+    amenity: string | null;
+
+    longitude: number;
+    latitude: number;
+
+    parking_time: number | null;
+    orientation: ParkingOrientation;
+    parking_disc: boolean;
+    window_times: boolean;
+    description: string | null;
+
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+}
 
 export type NominatimAddress = {
     country_code: string;
