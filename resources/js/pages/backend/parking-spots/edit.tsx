@@ -1,0 +1,146 @@
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import UserParkingSpotForm, { FormValues } from '@/pages/backend/form-user-parking-spot';
+import type { BreadcrumbItem, Country, Province, UserParkingSpot } from '@/types';
+import type { ParkingStatusOption } from '@/types/enum';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
+import { FormProvider, useForm } from 'react-hook-form';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Parking Spots', href: route('app.user-parking-spots.index') },
+    { title: 'Edit Parking Spot', href: route('app.user-parking-spots.edit', { id: ':id' }) },
+];
+
+const iconMap = {
+    pending: TimerIcon,
+    approved: CheckCircle,
+    rejected: ThumbsDown,
+};
+
+type PageProps = {
+    spot: UserParkingSpot;
+    countries: Country[];
+    provinces: Province[];
+    selectOptions: {
+        statuses: { value: string; label: string; description: string }[];
+        orientation: Record<string, string>;
+    };
+};
+
+export default function Edit() {
+    const { spot, countries, provinces, selectOptions } = usePage<PageProps>().props;
+
+    const statusOptions: ParkingStatusOption[] = selectOptions.statuses.map((status) => ({
+        ...status,
+        icon: iconMap[status.value as keyof typeof iconMap],
+    }));
+
+    const form = useForm<FormValues, UserParkingSpot>({
+        defaultValues: {
+            country_id: spot.country.id,
+            province_id: spot.province.id,
+            municipality: spot.municipality,
+            city: spot.city,
+            suburb: spot.suburb ?? '',
+            neighbourhood: spot.neighbourhood ?? '',
+            postcode: spot.postcode,
+            street: spot.street,
+            amenity: spot.amenity ?? '',
+            parking_hours: Math.floor(spot.parking_time ?? 0 / 60),
+            parking_minutes: (spot.parking_time ?? 0) % 60,
+            orientation: spot.orientation,
+            window_times: spot.window_times,
+            latitude: spot.latitude,
+            longitude: spot.longitude,
+            message: spot.description ?? '',
+            status: spot.status,
+        },
+    });
+
+    const handleSubmit = form.handleSubmit((data) => {
+        console.log('Form data:', data);
+        // const payload = {
+        //     ...data,
+        //     parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
+        // };
+
+        // router.put(route('app.user-parking-spots.update', { id: spot.id }), payload, {
+        //     preserveScroll: true,
+        //     onError: (errors) => {
+        //         Object.entries(errors).forEach(([field, message]) => {
+        //             form.setError(field as keyof FormValues, {
+        //                 type: 'server',
+        //                 message: message as string,
+        //             });
+        //         });
+        //     },
+        // });
+    });
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title={`Edit ${spot.id}`} />
+
+            <div className="flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
+                <h1 className="text-2xl font-bold tracking-tight">Edit {spot.id}</h1>
+
+                <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
+                    <Button asChild variant="outline" className="w-1/2 sm:w-auto">
+                        <Link href={route('app.user-parking-spots.index')}>
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Link>
+                    </Button>
+
+                    <Button asChild className="w-1/2 bg-sky-600 text-white hover:bg-sky-700 sm:w-auto dark:bg-sky-500 dark:hover:bg-sky-400">
+                        <a
+                            href={`https://www.google.com/maps?q=&layer=c&cbll=${spot.latitude},${spot.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2"
+                        >
+                            <MapPinned className="h-4 w-4" />
+                            Street View
+                        </a>
+                    </Button>
+                </div>
+            </div>
+
+            <div className="space-y-6 px-4 py-6 sm:px-6">
+                <div className="bg-muted/40 rounded-md border p-4 text-sm">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-muted-foreground flex items-center gap-2">
+                            <UserIcon className="h-4 w-4" />
+                            {spot.user ? (
+                                <span>
+                                    <span className="text-foreground font-medium">Submitted by:</span> {spot.user.name} ({spot.user.email})
+                                </span>
+                            ) : (
+                                <span className="text-muted-foreground italic">Submitted anonymously</span>
+                            )}
+                        </div>
+                        <div className="text-muted-foreground flex items-center gap-2">
+                            <CalendarCheck className="h-4 w-4" />
+                            <span>
+                                <span className="text-foreground font-medium">Created:</span> {new Date(spot.created_at).toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <FormProvider {...form}>
+                    <UserParkingSpotForm
+                        form={form}
+                        countries={countries}
+                        provinces={provinces}
+                        statusOptions={statusOptions}
+                        orientationOptions={selectOptions.orientation}
+                        onSubmit={handleSubmit}
+                        submitting={false}
+                    />
+                </FormProvider>
+            </div>
+        </AppLayout>
+    );
+}
