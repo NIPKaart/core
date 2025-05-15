@@ -17,6 +17,15 @@ enum ParkingStatus: string
         };
     }
 
+    public function description(): string
+    {
+        return match ($this) {
+            self::PENDING => 'Location is pending review.',
+            self::APPROVED => 'Location is approved and visible on the map.',
+            self::REJECTED => 'Location is rejected and will be removed.',
+        };
+    }
+
     public static function all(): array
     {
         return array_column(self::cases(), 'value');

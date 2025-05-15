@@ -92,13 +92,13 @@ export function getParkingSpotColumns(statuses: Record<ParkingStatus, string>, c
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 {can('user-parking-spot.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.parking-spots.show', { id: spot.id })}>View</Link>
+                                        <Link href={route('app.user-parking-spots.show', { id: spot.id })}>View</Link>
                                     </DropdownMenuItem>
                                 )}
                                 {can('user-parking-spot.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.parking-spots.edit', { id: spot.id })}>Edit</Link>
+                                            <Link href={route('app.user-parking-spots.edit', { id: spot.id })}>Edit</Link>
                                         </DropdownMenuItem>
                                         {/* <DropdownMenuSeparator /> */}
                                     </>

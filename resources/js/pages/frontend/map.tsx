@@ -1,6 +1,6 @@
-import LegendControl from '@/components/frontend/map/legend-control';
-import LocateControl from '@/components/frontend/map/locate-control';
-import ZoomControl from '@/components/frontend/map/zoom-control';
+import LegendControl from '@/components/map/legend-control';
+import LocateControl from '@/components/map/locate-control';
+import ZoomControl from '@/components/map/zoom-control';
 import Navbar from '@/components/frontend/nav/nav-bar';
 import { Head } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';

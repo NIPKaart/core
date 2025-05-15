@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\App\UpdateUserParkingSpot;
+use App\Models\Country;
+use App\Models\Province;
 use App\Models\UserParkingSpot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -73,17 +77,53 @@ class ParkingSpotController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(UserParkingSpot $userParkingSpot)
     {
-        //
+        Gate::authorize('update', $userParkingSpot);
+
+        $spot = UserParkingSpot::with(['user', 'province', 'country'])->findOrFail($userParkingSpot->id);
+
+        $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'description' => $status->description(),
+        ])->values();
+
+        $countries = Country::select('id', 'name')->get();
+        $provinces = Province::select('id', 'name')->get();
+
+        return inertia('backend/parking-spots/edit', [
+            'spot' => $spot,
+            'countries' => $countries,
+            'provinces' => $provinces,
+            'selectOptions' => [
+                'statuses' => $statuses,
+                'orientation' => ParkingOrientation::options(),
+            ],
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserParkingSpot $request, UserParkingSpot $userParkingSpot)
     {
-        //
+        Gate::authorize('update', $userParkingSpot);
+
+        $parkingTime = ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0);
+
+        $data = [
+            ...$request->validated(),
+            'parking_time' => $parkingTime > 0 ? $parkingTime : null,
+            'parking_disc' => $parkingTime > 0,
+        ];
+        unset($data['parking_hours'], $data['parking_minutes']);
+
+        $userParkingSpot->update($data);
+
+        return redirect()
+            ->route('app.user-parking-spots.index')
+            ->with('success', 'Parking spot updated successfully.');
     }
 
     /**

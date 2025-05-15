@@ -22,7 +22,7 @@ type PageProps = {
     municipalities: string[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spots', href: route('app.parking-spots.index') }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spots', href: route('app.user-parking-spots.index') }];
 
 export default function Index({ spots, filters, statuses, municipalities }: PageProps) {
     const { can } = useAuthorization();
@@ -53,7 +53,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
     const updateFilters = (status: string[], municipality: string[]) => {
         router.get(
-            route('app.parking-spots.index'),
+            route('app.user-parking-spots.index'),
             {
                 status: status.join(','),
                 municipality: municipality.join(','),
