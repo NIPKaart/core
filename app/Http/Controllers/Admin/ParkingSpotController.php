@@ -110,13 +110,13 @@ class ParkingSpotController extends Controller
     {
         Gate::authorize('update', $userParkingSpot);
 
-        $validated = $request->validated();
+        $parkingTime = ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0);
 
         $data = [
-            ...$validated,
-            'parking_time' => ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0),
+            ...$request->validated(),
+            'parking_time' => $parkingTime > 0 ? $parkingTime : null,
+            'parking_disc' => $parkingTime > 0,
         ];
-
         unset($data['parking_hours'], $data['parking_minutes']);
 
         $userParkingSpot->update($data);
