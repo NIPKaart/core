@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import UserParkingSpotForm, { FormValues } from '@/pages/backend/form-user-parking-spot';
 import type { BreadcrumbItem, Country, Province, UserParkingSpot } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 
@@ -53,29 +53,28 @@ export default function Edit() {
             window_times: spot.window_times,
             latitude: spot.latitude,
             longitude: spot.longitude,
-            message: spot.description ?? '',
+            description: spot.description ?? '',
             status: spot.status,
         },
     });
 
     const handleSubmit = form.handleSubmit((data) => {
-        console.log('Form data:', data);
-        // const payload = {
-        //     ...data,
-        //     parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
-        // };
+        const payload = {
+            ...data,
+            parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
+        };
 
-        // router.put(route('app.user-parking-spots.update', { id: spot.id }), payload, {
-        //     preserveScroll: true,
-        //     onError: (errors) => {
-        //         Object.entries(errors).forEach(([field, message]) => {
-        //             form.setError(field as keyof FormValues, {
-        //                 type: 'server',
-        //                 message: message as string,
-        //             });
-        //         });
-        //     },
-        // });
+        router.put(route('app.user-parking-spots.update', { id: spot.id }), payload, {
+            preserveScroll: true,
+            onError: (errors) => {
+                Object.entries(errors).forEach(([field, message]) => {
+                    form.setError(field as keyof FormValues, {
+                        type: 'server',
+                        message: message as string,
+                    });
+                });
+            },
+        });
     });
 
     return (

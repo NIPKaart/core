@@ -28,7 +28,7 @@ export type FormValues = {
     window_times: boolean;
     latitude: number;
     longitude: number;
-    message: string;
+    description: string;
     status: string;
 };
 
@@ -207,11 +207,11 @@ export default function UserParkingSpotForm({ form, countries, provinces, status
                                     />
 
                                     <FormField
-                                        name="message"
+                                        name="description"
                                         control={form.control}
                                         render={({ field }) => (
                                             <FormItem className="md:col-span-2">
-                                                <FormLabel>Comment</FormLabel>
+                                                <FormLabel>Description</FormLabel>
                                                 <FormControl>
                                                     <textarea
                                                         className="min-h-[100px] w-full resize-y rounded-md border px-3 py-2 text-sm"
@@ -277,7 +277,7 @@ export default function UserParkingSpotForm({ form, countries, provinces, status
                     </div>
                 </div>
                 <div className="md:col-span-2">
-                    <Button type="submit" disabled={submitting} className="w-full md:w-auto">
+                    <Button type="submit" disabled={submitting} className="w-full cursor-pointer md:w-auto">
                         Save Changes
                     </Button>
                 </div>
