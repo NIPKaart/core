@@ -15,13 +15,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::prefix('app')->as('app.')->group(function () {
-        Route::resource('users', Admin\UserController::class);
-        Route::resource('roles', Admin\RoleController::class);
+        // Bulk update route for user parking spots
+        Route::patch('user-parking-spots/bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])
+            ->name('user-parking-spots.bulk-update');
 
-        // This route is used to suspend a user
+        // Suspend user route
         Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])
             ->name('users.suspend')
             ->middleware(['can:user.update']);
+
+        // Keep resource routes at the bottom to avoid conflicts with other routes
+        Route::resource('users', Admin\UserController::class);
+        Route::resource('roles', Admin\RoleController::class);
+        Route::resource('parking-rules', Admin\ParkingRuleController::class);
+        Route::resource('user-parking-spots', Admin\ParkingSpotController::class);
     });
 });
 

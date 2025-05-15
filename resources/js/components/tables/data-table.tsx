@@ -7,6 +7,7 @@ import {
     getFilteredRowModel,
     getSortedRowModel,
     Header,
+    OnChangeFn,
     Row,
     RowSelectionState,
     SortingState,
@@ -19,11 +20,11 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     filters?: React.ReactNode;
-    rowSelection?: RowSelectionState;
-    onRowSelectionChange?: (updater: RowSelectionState) => void;
+    rowSelection?: RowSelectionState
+    onRowSelectionChange?: OnChangeFn<RowSelectionState>
 }
 
-export function DataTable<TData, TValue>({ columns, data, filters }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, filters, rowSelection, onRowSelectionChange }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
 
@@ -33,12 +34,15 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
         state: {
             sorting,
             globalFilter,
+            rowSelection: rowSelection ?? {},
         },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
+        onRowSelectionChange,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        enableRowSelection: true,
         globalFilterFn: customGlobalFilterFn,
     });
 

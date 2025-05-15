@@ -11,6 +11,7 @@ use App\Models\Province;
 use App\Models\UserParkingSpot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ParkingSpotController extends Controller
@@ -132,5 +133,26 @@ class ParkingSpotController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Bulk update the specified resource in storage.
+     */
+    public function bulkUpdate(Request $request)
+    {
+        Gate::authorize('bulkUpdate', UserParkingSpot::class);
+
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string', 'exists:user_parking_spots,id'],
+            'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
+        ]);
+
+        UserParkingSpot::whereIn('id', $request->input('ids'))
+            ->update(['status' => $request->input('status')]);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Parking spots updated successfully.');
     }
 }
