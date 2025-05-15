@@ -1,23 +1,22 @@
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedResponse, UserParkingSpot } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { getParkingSpotColumns } from './columns';
 
 type ParkingStatus = 'pending' | 'approved' | 'rejected';
 
 type PageProps = {
     spots: PaginatedResponse<UserParkingSpot>;
-    filters: {
-        status: string | null;
-        municipality: string | null;
-        deletion_requested: boolean;
-    };
+    filters: { status: string | null; municipality: string | null; deletion_requested: boolean };
     statuses: Record<ParkingStatus, string>;
     municipalities: string[];
 };
@@ -28,8 +27,15 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+    const [selectedStatus, setSelectedStatus] = useState<ParkingStatus | ''>('');
+
     const [statusFilter, setStatusFilter] = useState<string[]>(filters.status ? filters.status.split(',') : []);
     const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality ? filters.municipality.split(',') : []);
+
+    useEffect(() => {
+        setSelectedStatus('');
+        setRowSelection({});
+    }, [statusFilter, municipalityFilter, spots.data]);
 
     const statusCounts = spots.data.reduce(
         (acc, spot) => {
@@ -54,18 +60,35 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
     const updateFilters = (status: string[], municipality: string[]) => {
         router.get(
             route('app.user-parking-spots.index'),
-            {
-                status: status.join(','),
-                municipality: municipality.join(','),
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-            },
+            { status: status.join(','), municipality: municipality.join(',') },
+            { preserveScroll: true, preserveState: true },
         );
     };
 
+    // Get the columns for the data table
     const columns = getParkingSpotColumns(statuses, can);
+
+    // Bulk update location status
+    const handleBulkUpdate = () => {
+        const ids = Object.keys(rowSelection);
+        if (!selectedStatus || ids.length === 0) return;
+
+        router.patch(
+            route('app.user-parking-spots.bulkUpdate'),
+            {
+                ids,
+                status: selectedStatus,
+            },
+            {
+                preserveState: true,
+                onSuccess: () => {
+                    setRowSelection({});
+                    setSelectedStatus('');
+                    toast.success('Status successfully updated for selected spots.');
+                },
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -74,8 +97,40 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="text-2xl font-bold">Parking Spots</h1>
 
-                {Object.keys(rowSelection).length > 0 && (
-                    <div className="text-muted-foreground text-sm">{Object.keys(rowSelection).length} selected</div>
+                {can('user-parking-spot.update') && Object.keys(rowSelection).length > 0 && (
+                    <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                        <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-muted-foreground text-sm">
+                                <span className="text-foreground font-medium">{Object.keys(rowSelection).length}</span> selected
+                            </div>
+
+                            <button
+                                onClick={() => setRowSelection({})}
+                                className="hover:text-foreground absolute top-0 right-0 text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
+                            >
+                                Clear
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                            <Select value={selectedStatus} onValueChange={(value: ParkingStatus) => setSelectedStatus(value)}>
+                                <SelectTrigger className="w-full sm:w-[200px]">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statusOptions.map(({ value, label }) => (
+                                        <SelectItem key={value} value={value}>
+                                            {label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full sm:w-auto">
+                                Update status
+                            </Button>
+                        </div>
+                    </div>
                 )}
 
                 <DataTable

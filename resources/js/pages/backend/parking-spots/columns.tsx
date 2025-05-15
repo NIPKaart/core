@@ -18,10 +18,16 @@ export function getParkingSpotColumns(statuses: Record<ParkingStatus, string>, c
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
                     aria-label="Select all"
+                    className="border-input bg-background data-[state=checked]:bg-primary cursor-pointer border"
                 />
             ),
             cell: ({ row }) => (
-                <Checkbox checked={row.getIsSelected()} onCheckedChange={(checked) => row.toggleSelected(!!checked)} aria-label="Select row" />
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(checked) => row.toggleSelected(!!checked)}
+                    aria-label="Select row"
+                    className="cursor-pointer"
+                />
             ),
             enableSorting: false,
             enableHiding: false,
