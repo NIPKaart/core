@@ -41,6 +41,14 @@ class UserParkingSpotPolicy
     }
 
     /**
+     * Determine whether the user can bulk update models.
+     */
+    public function bulkUpdate(User $user): bool
+    {
+        return $user->can('user-parking-spot.update');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, UserParkingSpot $userParkingSpot): bool

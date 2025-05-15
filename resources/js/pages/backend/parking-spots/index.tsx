@@ -70,11 +70,11 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
     // Bulk update location status
     const handleBulkUpdate = () => {
-        const ids = Object.keys(rowSelection);
+        const ids: string[] = spots.data.filter((_, index) => rowSelection[index]).map((spot) => spot.id);
         if (!selectedStatus || ids.length === 0) return;
 
         router.patch(
-            route('app.user-parking-spots.bulkUpdate'),
+            route('app.user-parking-spots.bulk-update'),
             {
                 ids,
                 status: selectedStatus,
@@ -84,7 +84,15 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedStatus('');
-                    toast.success('Status successfully updated for selected spots.');
+                },
+                onError: (errors) => {
+                    if (errors.ids) {
+                        toast.error('Invalid selection. Some items may no longer exist.');
+                    } else if (errors.status) {
+                        toast.error('Please select a valid status.');
+                    } else {
+                        toast.error('Something went wrong. Please try again.');
+                    }
                 },
             },
         );
