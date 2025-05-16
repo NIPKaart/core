@@ -130,9 +130,12 @@ class ParkingSpotController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(UserParkingSpot $userParkingSpot)
     {
-        //
+        Gate::authorize('delete', $userParkingSpot);
+        $userParkingSpot->delete();
+
+        return back();
     }
 
     /**
@@ -154,5 +157,51 @@ class ParkingSpotController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Parking spots updated successfully.');
+    }
+
+    /**
+     * Display a listing of the trashed resources.
+     */
+    public function trash(Request $request)
+    {
+        Gate::authorize('viewAny', UserParkingSpot::class);
+
+        $spots = UserParkingSpot::onlyTrashed()
+            ->with(['user','province','country'])
+            ->latest()
+            ->paginate(25)
+            ->withQueryString();
+
+        return inertia('backend/parking-spots/trash', [
+            'spots' => $spots,
+        ]);
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function restore(string $id)
+    {
+        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $spot);
+
+        $spot->restore();
+
+        return back();
+    }
+
+    /**
+     * Permanently delete the specified resource from storage.
+     */
+    public function forceDelete(string $id)
+    {
+        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('forceDelete', $spot);
+
+        $spot->forceDelete();
+
+        return back();
     }
 }
