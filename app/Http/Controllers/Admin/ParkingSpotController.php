@@ -204,4 +204,42 @@ class ParkingSpotController extends Controller
 
         return back();
     }
+
+    /**
+     * Bulk restore the specified resources from storage.
+     */
+    public function bulkRestore(Request $request)
+    {
+        Gate::authorize('bulkRestore', UserParkingSpot::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+        ]);
+
+        UserParkingSpot::onlyTrashed()
+            ->whereIn('id', $validated['ids'])
+            ->restore();
+
+        return back();
+    }
+
+    /**
+     * Permanently delete the specified resources from storage.
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        Gate::authorize('bulkForceDelete', UserParkingSpot::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+        ]);
+
+        UserParkingSpot::onlyTrashed()
+            ->whereIn('id', $validated['ids'])
+            ->forceDelete();
+
+        return back();
+    }
 }

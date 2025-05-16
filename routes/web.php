@@ -15,9 +15,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::prefix('app')->as('app.')->group(function () {
-        // Bulk update route for user parking spots
-        Route::patch('user-parking-spots/bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])
-            ->name('user-parking-spots.bulk-update');
+        // UserParkingSpot routes
+        Route::prefix('user-parking-spots')->as('user-parking-spots.')->group(function () {
+            // Delete and restore routes
+            Route::get('trash', [Admin\ParkingSpotController::class, 'trash'])->name('trash');
+
+            // Single actions
+            Route::patch('{user_parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
+            Route::delete('{user_parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
+
+            // Bulk actions
+            Route::patch('bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('bulk-update');
+            Route::patch('restore', [Admin\ParkingSpotController::class, 'bulkRestore'])->name('bulk-restore');
+            Route::delete('force', [Admin\ParkingSpotController::class, 'bulkForceDelete'])->name('bulk-force-delete');
+        });
 
         // Suspend user route
         Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])
