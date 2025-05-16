@@ -2,7 +2,14 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, Role } from '@/types';
@@ -91,23 +98,25 @@ export default function Index({ roles }: PageProps) {
                                     </DropdownMenuItem>
                                 )} */}
                                 {can('role.update') && (
-                                    <div>
+                                    <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
                                             <Link href={route('app.roles.edit', { id: role.id })}>Edit</Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                    </div>
+                                    </>
                                 )}
                                 {can('role.delete') && (
-                                    <DropdownMenuItem
-                                        onSelect={(e) => {
-                                            e.preventDefault();
-                                            openDialog(role, 'delete');
-                                        }}
-                                        className="text-destructive cursor-pointer"
-                                    >
-                                        Delete
-                                    </DropdownMenuItem>
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                openDialog(role, 'delete');
+                                            }}
+                                            className="text-destructive cursor-pointer"
+                                        >
+                                            Delete
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>

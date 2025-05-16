@@ -19,7 +19,7 @@ export function DataTablePagination({ pagination, preserveScroll = true }: Props
     return (
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:px-2">
             <div className="text-muted-foreground text-sm text-center sm:text-left">
-                Showing {pagination.from}–{pagination.to} of {pagination.total} result{pagination.total !== 1 && 's'}
+                Showing {pagination.from} – {pagination.to} of {pagination.total} result{pagination.total !== 1 && 's'}
             </div>
 
             {hasMultiplePages && (
