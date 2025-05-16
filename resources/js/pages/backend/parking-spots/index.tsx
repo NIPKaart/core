@@ -135,7 +135,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
                             <button
                                 onClick={() => setRowSelection({})}
-                                className="hover:text-foreground absolute top-0 right-0 text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
+                                className="hover:text-foreground absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
                                 Clear
                             </button>
@@ -155,7 +155,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
                                 </SelectContent>
                             </Select>
 
-                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full sm:w-auto">
+                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full cursor-pointer sm:w-auto">
                                 Update status
                             </Button>
                         </div>
