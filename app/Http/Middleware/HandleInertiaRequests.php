@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Models\UserParkingSpot;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -65,6 +67,15 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'counts' => function () {
+                return [
+                    'users' => User::count(),
+                    'parkingSpots' => [
+                        'active' => UserParkingSpot::count(),
+                        'trashed' => UserParkingSpot::onlyTrashed()->count(),
+                    ],
+                ];
+            },
         ];
     }
 }

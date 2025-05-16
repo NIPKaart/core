@@ -7,13 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedResponse, UserParkingSpot } from '@/types';
+import { ParkingStatus } from '@/types/enum';
 import { Head, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getParkingSpotColumns } from './columns';
-
-type ParkingStatus = 'pending' | 'approved' | 'rejected';
 
 type PageProps = {
     spots: PaginatedResponse<UserParkingSpot>;

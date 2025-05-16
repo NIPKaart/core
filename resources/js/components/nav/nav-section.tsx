@@ -1,4 +1,4 @@
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavGroup } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
@@ -7,11 +7,7 @@ export function NavSection({ group }: { group: NavGroup }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            {group.title && (
-                <SidebarGroupLabel className="group-data-[state=collapsed]:hidden">
-                    {group.title}
-                </SidebarGroupLabel>
-            )}
+            {group.title && <SidebarGroupLabel className="group-data-[state=collapsed]:hidden">{group.title}</SidebarGroupLabel>}
             <SidebarMenu>
                 {group.items.map((item) => (
                     <SidebarMenuItem key={item.title}>
@@ -21,6 +17,12 @@ export function NavSection({ group }: { group: NavGroup }) {
                                 <span>{item.title}</span>
                             </Link>
                         </SidebarMenuButton>
+
+                        {item.badge !== undefined && (
+                            <SidebarMenuBadge className="ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100">
+                                {item.badge}
+                            </SidebarMenuBadge>
+                        )}
                     </SidebarMenuItem>
                 ))}
             </SidebarMenu>

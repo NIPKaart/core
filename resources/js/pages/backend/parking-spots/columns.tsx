@@ -10,11 +10,10 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { UserParkingSpot } from '@/types';
+import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreVertical } from 'lucide-react';
-
-type ParkingStatus = 'pending' | 'approved' | 'rejected';
 
 export function getParkingSpotColumns(
     statuses: Record<ParkingStatus, string>,
