@@ -21,6 +21,7 @@ export interface NavItem {
     icon?: LucideIcon | null;
     isActive?: boolean;
     target?: string;
+    badge?: string | number | JSX.Element;
 }
 
 export interface SharedData {
@@ -29,6 +30,13 @@ export interface SharedData {
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    counts: {
+        users: number;
+        parkingSpots: {
+            active: number;
+            trashed: number;
+        }
+    };
     [key: string]: unknown;
 }
 
@@ -110,9 +118,6 @@ export type ParkingRule = {
         code: string;
     };
 };
-
-export type ParkingStatus = 'pending' | 'approved' | 'rejected';
-export type ParkingOrientation = 'parallel' | 'perpendicular' | 'angle';
 
 export interface UserParkingSpot {
     id: string;

@@ -2,14 +2,19 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { NavGroup, type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { NavGroup, SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
+    const { props } = usePage<SharedData>();
+
+    // Sidebar badge counts
+    const userCount = props.counts.users;
+    const { active, trashed } = props.counts.parkingSpots;
 
     const platformNavGroup: NavGroup = {
         title: 'Platform',
@@ -34,11 +39,13 @@ export function AppSidebar() {
                 title: 'Parking Spots',
                 href: route('app.user-parking-spots.index'),
                 icon: icons.MapPin,
+                badge: active,
             },
             can('user-parking-spot.restore') && {
                 title: 'Removed',
                 href: route('app.user-parking-spots.trash'),
                 icon: icons.Trash2,
+                badge: trashed,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
@@ -55,6 +62,7 @@ export function AppSidebar() {
                 title: 'Users',
                 href: route('app.users.index'),
                 icon: icons.Users,
+                badge: userCount,
             },
             can('role.view_any') && {
                 title: 'Roles',

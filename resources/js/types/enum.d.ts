@@ -4,3 +4,6 @@ export type ParkingStatusOption = {
     description: string;
     icon: LucideIcon;
 };
+
+export type ParkingStatus = 'pending' | 'approved' | 'rejected';
+export type ParkingOrientation = 'parallel' | 'perpendicular' | 'angle';
