@@ -59,7 +59,23 @@ class UserParkingSpotPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, UserParkingSpot $userParkingSpot): bool
+    public function trash(User $user): bool
+    {
+        return $user->can('user-parking-spot.restore');
+    }
+
+    /**
+     * Determine whether the user can restore the model.
+     */
+    public function restore(User $user, string $class): bool
+    {
+        return $user->can('user-parking-spot.restore');
+    }
+
+    /**
+     * Determine wether the user can bulk restore models.
+     */
+    public function bulkRestore(User $user): bool
     {
         return $user->can('user-parking-spot.restore');
     }
@@ -67,7 +83,15 @@ class UserParkingSpotPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, UserParkingSpot $userParkingSpot): bool
+    public function forceDelete(User $user, string $class): bool
+    {
+        return $user->can('user-parking-spot.force-delete');
+    }
+
+    /**
+     * Determine whether the user can bulk permanently delete models.
+     */
+    public function bulkForceDelete(User $user): bool
     {
         return $user->can('user-parking-spot.force-delete');
     }

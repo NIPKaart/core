@@ -23,25 +23,30 @@ export function AppSidebar() {
                 title: 'Map',
                 href: route('map'),
                 icon: icons.Map,
-            }
+            },
         ].filter(Boolean) as NavItem[],
-    }
+    };
 
-    const moderatorNavGroup: NavGroup = {
-        title: 'Moderator',
+    const parkingNavGroup: NavGroup = {
+        title: 'Parking',
         items: [
             can('user-parking-spot.view_any') && {
                 title: 'Parking Spots',
                 href: route('app.user-parking-spots.index'),
                 icon: icons.MapPin,
             },
+            can('user-parking-spot.restore') && {
+                title: 'Removed',
+                href: route('app.user-parking-spots.trash'),
+                icon: icons.Trash2,
+            },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
                 href: route('app.parking-rules.index'),
                 icon: icons.Gavel,
-            }
+            },
         ].filter(Boolean) as NavItem[],
-    }
+    };
 
     const managementNavGroup: NavGroup = {
         title: 'Management',
@@ -57,7 +62,7 @@ export function AppSidebar() {
                 icon: icons.Shield,
             },
         ].filter(Boolean) as NavItem[],
-    }
+    };
 
     const footerNavItems: NavItem[] = [
         // {
@@ -95,7 +100,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavSection group={platformNavGroup} />
-                {moderatorNavGroup.items.length > 0 && <NavSection group={moderatorNavGroup} />}
+                {parkingNavGroup.items.length > 0 && <NavSection group={parkingNavGroup} />}
                 {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 

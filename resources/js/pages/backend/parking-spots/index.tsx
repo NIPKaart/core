@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
@@ -32,6 +33,9 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
     const [statusFilter, setStatusFilter] = useState<string[]>(filters.status ? filters.status.split(',') : []);
     const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality ? filters.municipality.split(',') : []);
 
+    const [dialogSpot, setDialogSpot] = useState<UserParkingSpot | null>(null);
+    const [dialogType, setDialogType] = useState<'delete' | null>(null);
+
     useEffect(() => {
         setSelectedStatus('');
         setRowSelection({});
@@ -65,8 +69,25 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
         );
     };
 
+    const openDialog = (spot: UserParkingSpot, type: 'delete') => {
+        setDialogSpot(null);
+        setDialogType(null);
+        setTimeout(() => {
+            setDialogSpot(spot);
+            setDialogType(type);
+        }, 0);
+    };
+
+    const deleteSpot = (id: string) => {
+        router.delete(route('app.user-parking-spots.destroy', { user_parking_spot: id }), {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Parking spot moved to trash'),
+            onError: () => toast.error('Failed to move parking spot to trash'),
+        });
+    };
+
     // Get the columns for the data table
-    const columns = getParkingSpotColumns(statuses, can);
+    const columns = getParkingSpotColumns(statuses, can, openDialog);
 
     // Bulk update location status
     const handleBulkUpdate = () => {
@@ -114,7 +135,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
                             <button
                                 onClick={() => setRowSelection({})}
-                                className="hover:text-foreground absolute top-0 right-0 text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
+                                className="hover:text-foreground absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
                                 Clear
                             </button>
@@ -134,7 +155,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
                                 </SelectContent>
                             </Select>
 
-                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full sm:w-auto">
+                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full cursor-pointer sm:w-auto">
                                 Update status
                             </Button>
                         </div>
@@ -180,6 +201,22 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
                 <DataTablePagination pagination={spots} />
             </div>
+
+            {dialogSpot && dialogType === 'delete' && (
+                <ConfirmDialog
+                    title="Move to Trash?"
+                    description={`Are you sure you want to move the parking spot at "${dialogSpot.street}, ${dialogSpot.city}" to the trash?`}
+                    confirmText="Move to Trash"
+                    variant="destructive"
+                    onConfirm={() => {
+                        deleteSpot(dialogSpot.id);
+                    }}
+                    onClose={() => {
+                        setDialogSpot(null);
+                        setDialogType(null);
+                    }}
+                />
+            )}
         </AppLayout>
     );
 }

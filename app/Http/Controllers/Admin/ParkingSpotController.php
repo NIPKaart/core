@@ -130,9 +130,12 @@ class ParkingSpotController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(UserParkingSpot $userParkingSpot)
     {
-        //
+        Gate::authorize('delete', $userParkingSpot);
+        $userParkingSpot->delete();
+
+        return back();
     }
 
     /**
@@ -154,5 +157,89 @@ class ParkingSpotController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Parking spots updated successfully.');
+    }
+
+    /**
+     * Display a listing of the trashed resources.
+     */
+    public function trash(Request $request)
+    {
+        Gate::authorize('viewAny', UserParkingSpot::class);
+
+        $spots = UserParkingSpot::onlyTrashed()
+            ->with(['user','province','country'])
+            ->latest()
+            ->paginate(25)
+            ->withQueryString();
+
+        return inertia('backend/parking-spots/trash', [
+            'spots' => $spots,
+        ]);
+    }
+
+    /**
+     * Restore the specified resource from storage.
+     */
+    public function restore(string $id)
+    {
+        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $spot);
+
+        $spot->restore();
+
+        return back();
+    }
+
+    /**
+     * Permanently delete the specified resource from storage.
+     */
+    public function forceDelete(string $id)
+    {
+        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('forceDelete', $spot);
+
+        $spot->forceDelete();
+
+        return back();
+    }
+
+    /**
+     * Bulk restore the specified resources from storage.
+     */
+    public function bulkRestore(Request $request)
+    {
+        Gate::authorize('bulkRestore', UserParkingSpot::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+        ]);
+
+        UserParkingSpot::onlyTrashed()
+            ->whereIn('id', $validated['ids'])
+            ->restore();
+
+        return back();
+    }
+
+    /**
+     * Permanently delete the specified resources from storage.
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        Gate::authorize('bulkForceDelete', UserParkingSpot::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+        ]);
+
+        UserParkingSpot::onlyTrashed()
+            ->whereIn('id', $validated['ids'])
+            ->forceDelete();
+
+        return back();
     }
 }

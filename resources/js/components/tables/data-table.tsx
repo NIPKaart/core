@@ -20,13 +20,24 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     filters?: React.ReactNode;
-    rowSelection?: RowSelectionState
-    onRowSelectionChange?: OnChangeFn<RowSelectionState>
+    rowSelection?: RowSelectionState;
+    onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+    initialState?: {
+        sorting?: SortingState;
+        globalFilter?: string;
+    };
 }
 
-export function DataTable<TData, TValue>({ columns, data, filters, rowSelection, onRowSelectionChange }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState('');
+export function DataTable<TData, TValue>({
+    columns,
+    data,
+    filters,
+    rowSelection,
+    onRowSelectionChange,
+    initialState,
+}: DataTableProps<TData, TValue>) {
+    const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
+    const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
 
     const table = useReactTable({
         data,
