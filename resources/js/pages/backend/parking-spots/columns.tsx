@@ -1,7 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { UserParkingSpot } from '@/types';
 import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -9,7 +16,11 @@ import { MoreVertical } from 'lucide-react';
 
 type ParkingStatus = 'pending' | 'approved' | 'rejected';
 
-export function getParkingSpotColumns(statuses: Record<ParkingStatus, string>, can: (permission: string) => boolean): ColumnDef<UserParkingSpot>[] {
+export function getParkingSpotColumns(
+    statuses: Record<ParkingStatus, string>,
+    can: (permission: string) => boolean,
+    openDialog: (spot: UserParkingSpot, type: 'delete') => void,
+): ColumnDef<UserParkingSpot>[] {
     return [
         {
             id: 'select',
@@ -106,7 +117,21 @@ export function getParkingSpotColumns(statuses: Record<ParkingStatus, string>, c
                                         <DropdownMenuItem asChild className="cursor-pointer">
                                             <Link href={route('app.user-parking-spots.edit', { id: spot.id })}>Edit</Link>
                                         </DropdownMenuItem>
-                                        {/* <DropdownMenuSeparator /> */}
+                                    </>
+                                )}
+
+                                {can('user-parking-spot.delete') && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            className="text-destructive cursor-pointer"
+                                            onSelect={(e) => {
+                                                e.preventDefault();
+                                                openDialog(spot, 'delete');
+                                            }}
+                                        >
+                                            Move to Trash
+                                        </DropdownMenuItem>
                                     </>
                                 )}
                             </DropdownMenuContent>
