@@ -70,9 +70,24 @@ class ParkingSpotController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(UserParkingSpot $userParkingSpot)
     {
-        //
+        Gate::authorize('view', $userParkingSpot);
+
+        $spot = UserParkingSpot::with(['user', 'province', 'country'])->findOrFail($userParkingSpot->id);
+
+        $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'description' => $status->description(),
+        ])->values();
+
+        return inertia('backend/parking-spots/show', [
+            'spot' => $spot,
+            'selectOptions' => [
+                'statuses' => $statuses,
+            ],
+        ]);
     }
 
     /**
