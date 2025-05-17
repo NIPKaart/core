@@ -1,6 +1,6 @@
 import { RadioCardGroup } from '@/components/card-radio-group';
 import { SwitchCard } from '@/components/card-switch';
-import LocationPickerCard from '@/components/map/card-location-picker';
+import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -237,7 +237,7 @@ export default function UserParkingSpotForm({ form, countries, provinces, status
                                 <h2 className="text-lg font-semibold">Location</h2>
                                 <p className="text-muted-foreground text-sm">Drag the marker to fine-tune the exact spot on the map.</p>
                             </div>
-                            <LocationPickerCard
+                            <LocationMarkerCard
                                 latitude={form.watch('latitude')}
                                 longitude={form.watch('longitude')}
                                 onChange={(lat, lng) => {

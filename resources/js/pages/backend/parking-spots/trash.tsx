@@ -143,7 +143,7 @@ export default function Trash({ spots }: PageProps) {
                     rejected: 'destructive',
                 } as const;
 
-                return <Badge variant={variantMap[status] ?? 'default'}>{status}</Badge>;
+                return <Badge variant={variantMap[status as keyof typeof variantMap] ?? 'default'}>{status}</Badge>;
             },
         },
         {

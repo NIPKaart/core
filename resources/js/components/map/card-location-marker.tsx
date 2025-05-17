@@ -10,7 +10,8 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 type Props = {
     latitude: number;
     longitude: number;
-    onChange: (lat: number, lng: number) => void;
+    onChange?: (lat: number, lng: number) => void;
+    draggable?: boolean;
 };
 
 const { BaseLayer } = LayersControl;
@@ -25,14 +26,16 @@ const defaultIcon = L.icon({
     shadowSize: [41, 41],
 });
 
-export default function LocationPickerCard({ latitude, longitude, onChange }: Props) {
+export default function LocationMarkerCard({ latitude, longitude, onChange, draggable }: Props) {
+    const isDraggable = draggable ?? typeof onChange === 'function';
+
     return (
         <MapContainer
             center={[latitude, longitude]}
             zoom={19}
             scrollWheelZoom
             zoomControl={false}
-            className="h-full min-h-[300px] w-full rounded-md border md:min-h-[500px]"
+            className="w-full rounded-md border h-80 md:h-[500px]"
         >
             <LayersControl position="topright">
                 <BaseLayer checked name="Google Hybrid">
@@ -56,23 +59,21 @@ export default function LocationPickerCard({ latitude, longitude, onChange }: Pr
 
             <ZoomControl position="topleft" />
 
-            <DraggableMarker lat={latitude} lng={longitude} onChange={onChange} />
+            <Marker
+                position={[latitude, longitude]}
+                icon={defaultIcon}
+                draggable={isDraggable}
+                eventHandlers={
+                    isDraggable && onChange
+                        ? {
+                              dragend: (e) => {
+                                  const { lat, lng } = e.target.getLatLng();
+                                  onChange(lat, lng);
+                              },
+                          }
+                        : undefined
+                }
+            />
         </MapContainer>
-    );
-}
-
-function DraggableMarker({ lat, lng, onChange }: { lat: number; lng: number; onChange: (lat: number, lng: number) => void }) {
-    return (
-        <Marker
-            draggable
-            position={[lat, lng]}
-            icon={defaultIcon}
-            eventHandlers={{
-                dragend: (e) => {
-                    const { lat, lng } = e.target.getLatLng();
-                    onChange(lat, lng);
-                },
-            }}
-        />
     );
 }
