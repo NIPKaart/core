@@ -3,6 +3,7 @@ import LocationMarkerCard from '@/components/map/card-location-marker';
 import StreetViewCard from '@/components/map/card-location-streetview';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, UserParkingSpot } from '@/types';
 import { Head, Link } from '@inertiajs/react';
@@ -22,6 +23,7 @@ type PageProps = {
 
 export default function Show({ spot, selectOptions }: PageProps) {
     const { can } = useAuthorization();
+    const { openDialog, dialogElement } = useSpotActionDialog();
 
     const statusOpt = selectOptions.statuses.find((s) => s.value === spot.status)!;
     const variantMap: Record<string, BannerVariant> = {
@@ -35,7 +37,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Parking Spot" />
             {/* Header */}
-            <div className="flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6 mb-4">
+            <div className="mb-4 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
                 <h1 className="text-2xl font-bold tracking-tight">Parking spot ({spot.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
@@ -55,9 +57,9 @@ export default function Show({ spot, selectOptions }: PageProps) {
                     )}
 
                     {can('user-parking-spot.delete') && (
-                        <Button variant="destructive" className="w-1/2 sm:w-auto">
+                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', spot)}>
                             <Trash2 className="h-4 w-4" />
-                            Move to trash
+                            Move to Trash
                         </Button>
                     )}
                 </div>
@@ -156,6 +158,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
                     <StreetViewCard latitude={spot.latitude} longitude={spot.longitude} />
                 </div>
             </div>
+            {dialogElement}
         </AppLayout>
     );
 }

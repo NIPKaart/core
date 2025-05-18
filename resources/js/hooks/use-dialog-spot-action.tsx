@@ -1,5 +1,3 @@
-// src/hooks/use-spot-action-dialog.tsx
-
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { UserParkingSpot } from '@/types';
 import { router } from '@inertiajs/react';
@@ -18,7 +16,11 @@ export function useSpotActionDialog(options: Options = {}) {
     const [dialogType, setDialogType] = useState<DialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 
-    // API HANDLERS
+    const closeDialog = () => {
+        setDialogType(null);
+        setDialogSubject(null);
+    };
+
     const handlers: Record<DialogType, () => void> = {
         delete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
@@ -26,12 +28,12 @@ export function useSpotActionDialog(options: Options = {}) {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Parking spot moved to trash');
-                    close();
+                    closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
                     toast.error('Failed to move parking spot to trash');
-                    close();
+                    closeDialog();
                     options.onError?.();
                 },
             });
@@ -45,12 +47,12 @@ export function useSpotActionDialog(options: Options = {}) {
                     preserveScroll: true,
                     onSuccess: () => {
                         toast.success('Parking spot restored');
-                        close();
+                        closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
                         toast.error('Failed to restore parking spot');
-                        close();
+                        closeDialog();
                         options.onError?.();
                     },
                 },
@@ -62,18 +64,18 @@ export function useSpotActionDialog(options: Options = {}) {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Parking spot permanently deleted');
-                    close();
+                    closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
                     toast.error('Failed to permanently delete parking spot');
-                    close();
+                    closeDialog();
                     options.onError?.();
                 },
             });
         },
         bulkRestore: () => {
-            if (!dialogSubject || !('ids' in dialogSubject)) return;
+            if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
                 route('app.user-parking-spots.bulk-restore'),
                 { ids: dialogSubject.ids },
@@ -81,96 +83,86 @@ export function useSpotActionDialog(options: Options = {}) {
                     preserveScroll: true,
                     onSuccess: () => {
                         toast.success('Restored selected spots.');
-                        close();
+                        closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
                         toast.error('Restore failed.');
-                        close();
+                        closeDialog();
                         options.onError?.();
                     },
                 },
             );
         },
         bulkForceDelete: () => {
-            if (!dialogSubject || !('ids' in dialogSubject)) return;
+            if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.delete(route('app.user-parking-spots.bulk-force-delete'), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Deleted selected spots.');
-                    close();
+                    closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
                     toast.error('Delete failed.');
-                    close();
+                    closeDialog();
                     options.onError?.();
                 },
             });
         },
     };
 
-    // DIALOG PROPS
-    const dialogPropsMap: Record<DialogType, {
-        title: string;
-        description: (subject: DialogSubject) => string;
-        confirmText: string;
-        variant: 'destructive' | 'default';
-    }> = {
+    const dialogPropsMap: Record<
+        DialogType,
+        {
+            title: string;
+            description: (subject: DialogSubject) => string;
+            confirmText: string;
+            variant: 'destructive' | 'default';
+        }
+    > = {
         delete: {
             title: 'Move to Trash?',
-            description: (s) => s && 'id' in s
-                ? `Are you sure you want to move the parking spot at "${s.street}, ${s.city}" to the trash?`
-                : '',
+            description: (s) => (s && 'id' in s ? `Are you sure you want to move the parking spot at "${s.street}, ${s.city}" to the trash?` : ''),
             confirmText: 'Move to Trash',
             variant: 'destructive',
         },
         restore: {
             title: 'Restore Location?',
-            description: (s) => s && 'id' in s
-                ? `Are you sure you want to restore the parking spot at "${s.street}, ${s.city}"?`
-                : '',
+            description: (s) => (s && 'id' in s ? `Are you sure you want to restore the parking spot at "${s.street}, ${s.city}"?` : ''),
             confirmText: 'Restore',
             variant: 'default',
         },
         forceDelete: {
             title: 'Permanently Delete?',
-            description: (s) => s && 'id' in s
-                ? `Are you sure you want to permanently delete the parking spot at "${s.street}, ${s.city}"? This action cannot be undone.`
-                : '',
+            description: (s) =>
+                s && 'id' in s
+                    ? `Are you sure you want to permanently delete the parking spot at "${s.street}, ${s.city}"? This action cannot be undone.`
+                    : '',
             confirmText: 'Delete Forever',
             variant: 'destructive',
         },
         bulkRestore: {
             title: 'Restore Selected Locations?',
-            description: (s) => s && 'ids' in s
-                ? `Are you sure you want to restore ${s.ids.length} parking spots?`
-                : '',
+            description: (s) => (s && 'ids' in s ? `Are you sure you want to restore ${s.ids.length} parking spots?` : ''),
             confirmText: 'Restore',
             variant: 'default',
         },
         bulkForceDelete: {
             title: 'Permanently Delete Selected?',
-            description: (s) => s && 'ids' in s
-                ? `Are you sure you want to permanently delete ${s.ids.length} parking spots? This cannot be undone.`
-                : '',
+            description: (s) =>
+                s && 'ids' in s ? `Are you sure you want to permanently delete ${s.ids.length} parking spots? This cannot be undone.` : '',
             confirmText: 'Delete Forever',
             variant: 'destructive',
         },
     };
 
-    // OPEN/CLOSE
     const openDialog = (type: DialogType, subject: DialogSubject) => {
         setDialogType(type);
         setDialogSubject(subject);
     };
-    const closeDialog = () => {
-        setDialogType(null);
-        setDialogSubject(null);
-    };
 
-    // DIALOG JSX
     const dialogElement: ReactNode =
         dialogType && dialogSubject ? (
             <ConfirmDialog
@@ -179,7 +171,7 @@ export function useSpotActionDialog(options: Options = {}) {
                 confirmText={dialogPropsMap[dialogType].confirmText}
                 variant={dialogPropsMap[dialogType].variant}
                 onConfirm={handlers[dialogType]}
-                onClose={close}
+                onClose={closeDialog}
             />
         ) : null;
 
