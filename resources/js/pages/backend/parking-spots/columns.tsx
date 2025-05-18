@@ -9,6 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { DialogType } from '@/hooks/use-dialog-spot-action';
 import type { UserParkingSpot } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
@@ -18,7 +19,7 @@ import { MoreVertical } from 'lucide-react';
 export function getParkingSpotColumns(
     statuses: Record<ParkingStatus, string>,
     can: (permission: string) => boolean,
-    openDialog: (spot: UserParkingSpot, type: 'delete') => void,
+    openDialog: (type: DialogType, spot: UserParkingSpot) => void,
 ): ColumnDef<UserParkingSpot>[] {
     return [
         {
@@ -124,7 +125,7 @@ export function getParkingSpotColumns(
                                             className="text-destructive cursor-pointer"
                                             onSelect={(e) => {
                                                 e.preventDefault();
-                                                openDialog(spot, 'delete');
+                                                openDialog('delete', spot);
                                             }}
                                         >
                                             Move to Trash

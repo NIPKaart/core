@@ -1,17 +1,16 @@
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedResponse, UserParkingSpot } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { ColumnDef, RowSelectionState } from '@tanstack/react-table';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Parking Spots', href: route('app.user-parking-spots.index') },
@@ -25,67 +24,10 @@ type PageProps = {
 export default function Trash({ spots }: PageProps) {
     const { can } = useAuthorization();
 
-    const [dialogSpot, setDialogSpot] = useState<UserParkingSpot | null>(null);
-    const [dialogType, setDialogType] = useState<'restore' | 'forceDelete' | null>(null);
-    const [bulkDialogType, setBulkDialogType] = useState<'bulk-restore' | 'bulk-force-delete' | null>(null);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-    const openDialog = (spot: UserParkingSpot, type: 'restore' | 'forceDelete') => {
-        setDialogSpot(null);
-        setDialogType(null);
-        setTimeout(() => {
-            setDialogSpot(spot);
-            setDialogType(type);
-        }, 0);
-    };
+    const { openDialog, dialogElement } = useSpotActionDialog();
 
     const selectedIds = spots.data.filter((_, index) => rowSelection[index]).map((spot) => spot.id);
-
-    const restoreSpot = (id: string) => {
-        router.patch(
-            route('app.user-parking-spots.restore', { user_parking_spot: id }),
-            {},
-            {
-                onSuccess: () => toast.success('Parking spot restored.'),
-                onError: () => toast.error('Failed to restore spot.'),
-            },
-        );
-    };
-
-    const forceDeleteSpot = (id: string) => {
-        router.delete(route('app.user-parking-spots.force-delete', { user_parking_spot: id }), {
-            data: {},
-            onSuccess: () => toast.success('Parking spot permanently deleted.'),
-            onError: () => toast.error('Failed to delete spot.'),
-        });
-    };
-
-    const handleBulkRestore = () => {
-        router.patch(
-            route('app.user-parking-spots.bulk-restore'),
-            { ids: selectedIds },
-            {
-                onSuccess: () => {
-                    toast.success('Restored selected spots.');
-                    setRowSelection({});
-                    setBulkDialogType(null);
-                },
-                onError: () => toast.error('Restore failed.'),
-            },
-        );
-    };
-
-    const handleBulkForceDelete = () => {
-        router.delete(route('app.user-parking-spots.bulk-force-delete'), {
-            data: { ids: selectedIds },
-            onSuccess: () => {
-                toast.success('Deleted selected spots.');
-                setRowSelection({});
-                setBulkDialogType(null);
-            },
-            onError: () => toast.error('Delete failed.'),
-        });
-    };
 
     const columns: ColumnDef<UserParkingSpot>[] = [
         {
@@ -170,14 +112,14 @@ export default function Trash({ spots }: PageProps) {
                 return (
                     <div className="flex justify-end gap-2">
                         {can('user-parking-spot.restore') && (
-                            <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog(spot, 'restore')}>
+                            <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', spot)}>
                                 <RotateCcw className="h-4 w-4" />
                                 <span className="sr-only">Restore</span>
                             </Button>
                         )}
 
                         {can('user-parking-spot.force-delete') && (
-                            <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog(spot, 'forceDelete')}>
+                            <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', spot)}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete permanently</span>
                             </Button>
@@ -194,20 +136,24 @@ export default function Trash({ spots }: PageProps) {
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="text-2xl font-bold">Trashed Parking Spots</h1>
 
-                {Object.keys(rowSelection).length > 0 && (
+                {selectedIds.length > 0 && (
                     <div className="bg-muted/60 dark:border-muted/40 mb-4 flex flex-col rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-muted-foreground text-sm">
-                            <span className="text-foreground font-medium">{Object.keys(rowSelection).length}</span> selected
+                            <span className="text-foreground font-medium">{selectedIds.length}</span> selected
                         </div>
 
                         <div className="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row sm:items-center sm:gap-3">
                             {can('user-parking-spot.restore') && (
-                                <Button variant="outline" className="cursor-pointer" onClick={() => setBulkDialogType('bulk-restore')}>
+                                <Button variant="outline" className="cursor-pointer" onClick={() => openDialog('bulkRestore', { ids: selectedIds })}>
                                     Restore selected
                                 </Button>
                             )}
                             {can('user-parking-spot.force-delete') && (
-                                <Button variant="destructive" className="cursor-pointer" onClick={() => setBulkDialogType('bulk-force-delete')}>
+                                <Button
+                                    variant="destructive"
+                                    className="cursor-pointer"
+                                    onClick={() => openDialog('bulkForceDelete', { ids: selectedIds })}
+                                >
                                     Delete selected
                                 </Button>
                             )}
@@ -225,55 +171,8 @@ export default function Trash({ spots }: PageProps) {
                     }}
                 />
                 <DataTablePagination pagination={spots} />
+                {dialogElement}
             </div>
-
-            {dialogSpot && dialogType === 'restore' && (
-                <ConfirmDialog
-                    title="Restore Parking Spot"
-                    description={`Do you want to restore the spot at "${dialogSpot.street}, ${dialogSpot.city}"?`}
-                    confirmText="Restore"
-                    onConfirm={() => restoreSpot(dialogSpot.id)}
-                    onClose={() => {
-                        setDialogSpot(null);
-                        setDialogType(null);
-                    }}
-                />
-            )}
-
-            {dialogSpot && dialogType === 'forceDelete' && (
-                <ConfirmDialog
-                    title="Delete Permanently"
-                    description="Are you sure? This action cannot be undone."
-                    confirmText="Delete"
-                    variant="destructive"
-                    onConfirm={() => forceDeleteSpot(dialogSpot.id)}
-                    onClose={() => {
-                        setDialogSpot(null);
-                        setDialogType(null);
-                    }}
-                />
-            )}
-
-            {bulkDialogType === 'bulk-restore' && (
-                <ConfirmDialog
-                    title="Restore selected spots"
-                    description="Are you sure you want to restore the selected parking spots?"
-                    confirmText="Restore"
-                    onConfirm={handleBulkRestore}
-                    onClose={() => setBulkDialogType(null)}
-                />
-            )}
-
-            {bulkDialogType === 'bulk-force-delete' && (
-                <ConfirmDialog
-                    title="Delete selected spots permanently"
-                    description="This cannot be undone. Are you sure?"
-                    confirmText="Delete"
-                    variant="destructive"
-                    onConfirm={handleBulkForceDelete}
-                    onClose={() => setBulkDialogType(null)}
-                />
-            )}
         </AppLayout>
     );
 }
