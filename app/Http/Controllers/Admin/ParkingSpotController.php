@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\App\UpdateUserParkingSpot;
+use App\Http\Requests\App\UpdateParkingSpot;
 use App\Models\Country;
 use App\Models\Province;
-use App\Models\UserParkingSpot;
+use App\Models\ParkingSpot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -21,9 +21,9 @@ class ParkingSpotController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', UserParkingSpot::class);
+        Gate::authorize('viewAny', ParkingSpot::class);
 
-        $query = UserParkingSpot::query()
+        $query = ParkingSpot::query()
             ->with(['user', 'province', 'country']);
 
         if ($request->filled('status')) {
@@ -46,7 +46,7 @@ class ParkingSpotController extends Controller
                 'deletion_requested' => $request->boolean('deletion_requested'),
             ],
             'statuses' => ParkingStatus::options(),
-            'municipalities' => UserParkingSpot::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
+            'municipalities' => ParkingSpot::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
         ]);
     }
 
@@ -70,11 +70,11 @@ class ParkingSpotController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserParkingSpot $userParkingSpot)
+    public function show(ParkingSpot $parkingSpot)
     {
-        Gate::authorize('view', $userParkingSpot);
+        Gate::authorize('view', $parkingSpot);
 
-        $spot = UserParkingSpot::with(['user', 'province', 'country'])->findOrFail($userParkingSpot->id);
+        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -93,11 +93,11 @@ class ParkingSpotController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserParkingSpot $userParkingSpot)
+    public function edit(ParkingSpot $parkingSpot)
     {
-        Gate::authorize('update', $userParkingSpot);
+        Gate::authorize('update', $parkingSpot);
 
-        $spot = UserParkingSpot::with(['user', 'province', 'country'])->findOrFail($userParkingSpot->id);
+        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -122,9 +122,9 @@ class ParkingSpotController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserParkingSpot $request, UserParkingSpot $userParkingSpot)
+    public function update(UpdateParkingSpot $request, ParkingSpot $parkingSpot)
     {
-        Gate::authorize('update', $userParkingSpot);
+        Gate::authorize('update', $parkingSpot);
 
         $parkingTime = ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0);
 
@@ -135,20 +135,20 @@ class ParkingSpotController extends Controller
         ];
         unset($data['parking_hours'], $data['parking_minutes']);
 
-        $userParkingSpot->update($data);
+        $parkingSpot->update($data);
 
         return redirect()
-            ->route('app.user-parking-spots.index')
+            ->route('app.parking-spots.index')
             ->with('success', 'Parking spot updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserParkingSpot $userParkingSpot)
+    public function destroy(ParkingSpot $parkingSpot)
     {
-        Gate::authorize('delete', $userParkingSpot);
-        $userParkingSpot->delete();
+        Gate::authorize('delete', $parkingSpot);
+        $parkingSpot->delete();
 
         return back();
     }
@@ -158,15 +158,15 @@ class ParkingSpotController extends Controller
      */
     public function bulkUpdate(Request $request)
     {
-        Gate::authorize('bulkUpdate', UserParkingSpot::class);
+        Gate::authorize('bulkUpdate', ParkingSpot::class);
 
         $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['required', 'string', 'exists:user_parking_spots,id'],
+            'ids.*' => ['required', 'string', 'exists:parking_spots,id'],
             'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
         ]);
 
-        UserParkingSpot::whereIn('id', $request->input('ids'))
+        ParkingSpot::whereIn('id', $request->input('ids'))
             ->update(['status' => $request->input('status')]);
 
         return redirect()
@@ -179,9 +179,9 @@ class ParkingSpotController extends Controller
      */
     public function trash(Request $request)
     {
-        Gate::authorize('viewAny', UserParkingSpot::class);
+        Gate::authorize('viewAny', ParkingSpot::class);
 
-        $spots = UserParkingSpot::onlyTrashed()
+        $spots = ParkingSpot::onlyTrashed()
             ->with(['user','province','country'])
             ->latest()
             ->paginate(25)
@@ -197,7 +197,7 @@ class ParkingSpotController extends Controller
      */
     public function restore(string $id)
     {
-        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+        $spot = ParkingSpot::onlyTrashed()->findOrFail($id);
 
         Gate::authorize('restore', $spot);
 
@@ -211,7 +211,7 @@ class ParkingSpotController extends Controller
      */
     public function forceDelete(string $id)
     {
-        $spot = UserParkingSpot::onlyTrashed()->findOrFail($id);
+        $spot = ParkingSpot::onlyTrashed()->findOrFail($id);
 
         Gate::authorize('forceDelete', $spot);
 
@@ -225,14 +225,14 @@ class ParkingSpotController extends Controller
      */
     public function bulkRestore(Request $request)
     {
-        Gate::authorize('bulkRestore', UserParkingSpot::class);
+        Gate::authorize('bulkRestore', ParkingSpot::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+            'ids.*' => ['string', 'exists:parking_spots,id'],
         ]);
 
-        UserParkingSpot::onlyTrashed()
+        ParkingSpot::onlyTrashed()
             ->whereIn('id', $validated['ids'])
             ->restore();
 
@@ -244,14 +244,14 @@ class ParkingSpotController extends Controller
      */
     public function bulkForceDelete(Request $request)
     {
-        Gate::authorize('bulkForceDelete', UserParkingSpot::class);
+        Gate::authorize('bulkForceDelete', ParkingSpot::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:user_parking_spots,id'],
+            'ids.*' => ['string', 'exists:parking_spots,id'],
         ]);
 
-        UserParkingSpot::onlyTrashed()
+        ParkingSpot::onlyTrashed()
             ->whereIn('id', $validated['ids'])
             ->forceDelete();
 

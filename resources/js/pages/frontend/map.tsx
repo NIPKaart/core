@@ -2,7 +2,7 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import { UserParkingSpot } from '@/types';
+import { ParkingSpot } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
@@ -15,13 +15,13 @@ import { useMemo, useState } from 'react';
 const { BaseLayer } = LayersControl;
 
 type PageProps = {
-    userParkingSpots: UserParkingSpot[];
+    parkingSpots: ParkingSpot[];
 };
 
 export default function Map() {
     const position: LatLngTuple = [52.3667136, 4.9808665];
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { userParkingSpots } = usePage<PageProps>().props;
+    const { parkingSpots } = usePage<PageProps>().props;
 
     const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
@@ -30,7 +30,7 @@ export default function Map() {
 
     const parkingSpotMarkers = useMemo(
         () =>
-            userParkingSpots.map((spot) => (
+            parkingSpots.map((spot) => (
                 <Marker
                     key={spot.id}
                     position={[spot.latitude, spot.longitude]}
@@ -45,7 +45,7 @@ export default function Map() {
                     }}
                 />
             )),
-        [userParkingSpots],
+        [parkingSpots],
     );
 
     return (

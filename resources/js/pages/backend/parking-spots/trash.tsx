@@ -6,19 +6,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedResponse, UserParkingSpot } from '@/types';
+import type { BreadcrumbItem, PaginatedResponse, ParkingSpot } from '@/types';
 import { Head } from '@inertiajs/react';
 import { ColumnDef, RowSelectionState } from '@tanstack/react-table';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.user-parking-spots.index') },
-    { title: 'Trash', href: route('app.user-parking-spots.trash') },
+    { title: 'Parking Spots', href: route('app.parking-spots.index') },
+    { title: 'Trash', href: route('app.parking-spots.trash') },
 ];
 
 type PageProps = {
-    spots: PaginatedResponse<UserParkingSpot>;
+    spots: PaginatedResponse<ParkingSpot>;
 };
 
 export default function Trash({ spots }: PageProps) {
@@ -29,7 +29,7 @@ export default function Trash({ spots }: PageProps) {
 
     const selectedIds = spots.data.filter((_, index) => rowSelection[index]).map((spot) => spot.id);
 
-    const columns: ColumnDef<UserParkingSpot>[] = [
+    const columns: ColumnDef<ParkingSpot>[] = [
         {
             id: 'select',
             header: ({ table }) => (
@@ -111,14 +111,14 @@ export default function Trash({ spots }: PageProps) {
 
                 return (
                     <div className="flex justify-end gap-2">
-                        {can('user-parking-spot.restore') && (
+                        {can('parking-spot.restore') && (
                             <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', spot)}>
                                 <RotateCcw className="h-4 w-4" />
                                 <span className="sr-only">Restore</span>
                             </Button>
                         )}
 
-                        {can('user-parking-spot.force-delete') && (
+                        {can('parking-spot.force-delete') && (
                             <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', spot)}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete permanently</span>
@@ -143,12 +143,12 @@ export default function Trash({ spots }: PageProps) {
                         </div>
 
                         <div className="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row sm:items-center sm:gap-3">
-                            {can('user-parking-spot.restore') && (
+                            {can('parking-spot.restore') && (
                                 <Button variant="outline" className="cursor-pointer" onClick={() => openDialog('bulkRestore', { ids: selectedIds })}>
                                     Restore selected
                                 </Button>
                             )}
-                            {can('user-parking-spot.force-delete') && (
+                            {can('parking-spot.force-delete') && (
                                 <Button
                                     variant="destructive"
                                     className="cursor-pointer"

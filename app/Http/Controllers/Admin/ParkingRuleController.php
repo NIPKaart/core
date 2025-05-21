@@ -8,7 +8,7 @@ use App\Http\Requests\App\UpdateParkingRuleRequest;
 use App\Models\Country;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingRule;
-use App\Models\UserParkingSpot;
+use App\Models\ParkingSpot;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -36,13 +36,13 @@ class ParkingRuleController extends Controller
         $countries = Country::all();
         $existingMunicipalities = ParkingRule::pluck('municipality')->toArray();
 
-        $userSpots = UserParkingSpot::whereNotIn('municipality', $existingMunicipalities)
+        $parkingSpots = ParkingSpot::whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality');
 
         $municipalSpots = ParkingMunicipal::whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality');
 
-        $availableMunicipalities = $userSpots
+        $availableMunicipalities = $parkingSpots
             ->concat($municipalSpots)
             ->unique()
             ->sort()
@@ -85,7 +85,7 @@ class ParkingRuleController extends Controller
         $countries = Country::all();
         $existingMunicipalities = ParkingRule::where('id', '!=', $parkingRule->id)->pluck('municipality')->toArray();
 
-        $municipalities = UserParkingSpot::select('municipality')
+        $municipalities = ParkingSpot::select('municipality')
             ->whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality')
             ->merge(

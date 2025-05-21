@@ -42,7 +42,7 @@ type Props = {
     submitting: boolean;
 };
 
-export default function UserParkingSpotForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting }: Props) {
+export default function ParkingSpotForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting }: Props) {
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">

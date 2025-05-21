@@ -21,14 +21,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::prefix('app')->as('app.')->group(function () {
-        // UserParkingSpot routes
-        Route::prefix('user-parking-spots')->as('user-parking-spots.')->group(function () {
+        // ParkingSpot routes
+        Route::prefix('parking-spots')->as('parking-spots.')->group(function () {
             // Delete and restore routes
             Route::get('trash', [Admin\ParkingSpotController::class, 'trash'])->name('trash');
 
             // Single actions
-            Route::patch('{user_parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
-            Route::delete('{user_parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
+            Route::patch('{parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
+            Route::delete('{parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
 
             // Bulk actions
             Route::patch('bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('bulk-update');
@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', Admin\UserController::class);
         Route::resource('roles', Admin\RoleController::class);
         Route::resource('parking-rules', Admin\ParkingRuleController::class);
-        Route::resource('user-parking-spots', Admin\ParkingSpotController::class);
+        Route::resource('parking-spots', Admin\ParkingSpotController::class);
     });
 });
 

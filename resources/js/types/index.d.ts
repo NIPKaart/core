@@ -119,7 +119,7 @@ export type ParkingRule = {
     };
 };
 
-export interface UserParkingSpot {
+export interface ParkingSpot {
     id: string;
     user_id: number | null;
     user?: User;

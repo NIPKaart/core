@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_parking_spots', function (Blueprint $table) {
+        Schema::create('parking_spots', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')
                 ->nullable()
@@ -55,6 +55,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_parking_spots');
+        Schema::dropIfExists('parking_spots');
     }
 };

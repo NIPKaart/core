@@ -10,7 +10,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { DialogType } from '@/hooks/use-dialog-spot-action';
-import type { UserParkingSpot } from '@/types';
+import type { ParkingSpot } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -19,8 +19,8 @@ import { MoreVertical } from 'lucide-react';
 export function getParkingSpotColumns(
     statuses: Record<ParkingStatus, string>,
     can: (permission: string) => boolean,
-    openDialog: (type: DialogType, spot: UserParkingSpot) => void,
-): ColumnDef<UserParkingSpot>[] {
+    openDialog: (type: DialogType, spot: ParkingSpot) => void,
+): ColumnDef<ParkingSpot>[] {
     return [
         {
             id: 'select',
@@ -107,18 +107,18 @@ export function getParkingSpotColumns(
 
                             <DropdownMenuContent align="end" className="w-32">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                {can('user-parking-spot.view') && (
+                                {can('parking-spot.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.user-parking-spots.show', { id: spot.id })}>Show</Link>
+                                        <Link href={route('app.parking-spots.show', { id: spot.id })}>Show</Link>
                                     </DropdownMenuItem>
                                 )}
-                                {can('user-parking-spot.update') && (
+                                {can('parking-spot.update') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.user-parking-spots.edit', { id: spot.id })}>Edit</Link>
+                                        <Link href={route('app.parking-spots.edit', { id: spot.id })}>Edit</Link>
                                     </DropdownMenuItem>
                                 )}
 
-                                {can('user-parking-spot.delete') && (
+                                {can('parking-spot.delete') && (
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem

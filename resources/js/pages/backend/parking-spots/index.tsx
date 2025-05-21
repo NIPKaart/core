@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedResponse, UserParkingSpot } from '@/types';
+import type { BreadcrumbItem, PaginatedResponse, ParkingSpot } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Head, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
@@ -15,13 +15,13 @@ import { toast } from 'sonner';
 import { getParkingSpotColumns } from './columns';
 
 type PageProps = {
-    spots: PaginatedResponse<UserParkingSpot>;
+    spots: PaginatedResponse<ParkingSpot>;
     filters: { status: string | null; municipality: string | null; deletion_requested: boolean };
     statuses: Record<ParkingStatus, string>;
     municipalities: string[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spots', href: route('app.user-parking-spots.index') }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spots', href: route('app.parking-spots.index') }];
 
 export default function Index({ spots, filters, statuses, municipalities }: PageProps) {
     const { can } = useAuthorization();
@@ -59,7 +59,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
     const updateFilters = (status: string[], municipality: string[]) => {
         router.get(
-            route('app.user-parking-spots.index'),
+            route('app.parking-spots.index'),
             { status: status.join(','), municipality: municipality.join(',') },
             { preserveScroll: true, preserveState: true },
         );
@@ -74,7 +74,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
         if (!selectedStatus || ids.length === 0) return;
 
         router.patch(
-            route('app.user-parking-spots.bulk-update'),
+            route('app.parking-spots.bulk-update'),
             {
                 ids,
                 status: selectedStatus,
@@ -105,7 +105,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="text-2xl font-bold">Parking Spots</h1>
 
-                {can('user-parking-spot.update') && Object.keys(rowSelection).length > 0 && (
+                {can('parking-spot.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-muted-foreground text-sm">

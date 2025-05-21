@@ -35,15 +35,15 @@ export function AppSidebar() {
     const parkingNavGroup: NavGroup = {
         title: 'Parking',
         items: [
-            can('user-parking-spot.view_any') && {
+            can('parking-spot.view_any') && {
                 title: 'Parking Spots',
-                href: route('app.user-parking-spots.index'),
+                href: route('app.parking-spots.index'),
                 icon: icons.MapPin,
                 badge: active,
             },
-            can('user-parking-spot.restore') && {
+            can('parking-spot.restore') && {
                 title: 'Removed',
-                href: route('app.user-parking-spots.trash'),
+                href: route('app.parking-spots.trash'),
                 icon: icons.Trash2,
                 badge: trashed,
             },
