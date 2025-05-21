@@ -17,6 +17,15 @@ enum ParkingOrientation: string
         };
     }
 
+    public function description(): string
+    {
+        return match ($this) {
+            self::PARALLEL => 'Parked parallel to the curb.',
+            self::PERPENDICULAR => 'Parked perpendicular to the curb.',
+            self::ANGLE => 'Parked at an angle to the curb.',
+        };
+    }
+
     public static function all(): array
     {
         return array_column(self::cases(), 'value');
