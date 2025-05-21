@@ -1,32 +1,52 @@
+import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import Navbar from '@/components/frontend/nav/nav-bar';
-import { Head } from '@inertiajs/react';
+import { UserParkingSpot } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { LayersControl, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
 
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import LocationModal from '@/components/map/modal-location';
+import { getInvalidParkingIcon } from '@/lib/icon-factory';
+import { useMemo, useState } from 'react';
 
 const { BaseLayer } = LayersControl;
 
-const defaultIcon = L.icon({
-    iconRetinaUrl: markerIcon2x,
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-});
+type PageProps = {
+    userParkingSpots: UserParkingSpot[];
+};
 
 export default function Map() {
-    const position: LatLngTuple = [52.3676, 4.9041]; // Amsterdam
+    const position: LatLngTuple = [52.3667136, 4.9808665];
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+    const { userParkingSpots } = usePage<PageProps>().props;
+
+    const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+    const [selectedLat, setSelectedLat] = useState<number | null>(null);
+    const [selectedLng, setSelectedLng] = useState<number | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
+    const parkingSpotMarkers = useMemo(
+        () =>
+            userParkingSpots.map((spot) => (
+                <Marker
+                    key={spot.id}
+                    position={[spot.latitude, spot.longitude]}
+                    icon={getInvalidParkingIcon()}
+                    eventHandlers={{
+                        click: () => {
+                            setSelectedSpotId(spot.id);
+                            setSelectedLat(spot.latitude);
+                            setSelectedLng(spot.longitude);
+                            setModalOpen(true);
+                        },
+                    }}
+                />
+            )),
+        [userParkingSpots],
+    );
 
     return (
         <>
@@ -35,7 +55,7 @@ export default function Map() {
                 <Navbar />
 
                 <div className="flex-1">
-                    <MapContainer center={position} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                    <MapContainer center={position} zoom={8} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                         <LayersControl position="topright">
                             <BaseLayer checked name="Mapbox Streets">
                                 <TileLayer
@@ -56,15 +76,28 @@ export default function Map() {
                             </BaseLayer>
                         </LayersControl>
 
-                        <Marker position={position} icon={defaultIcon}>
-                            <Popup>This is Amsterdam! 🇳🇱</Popup>
-                        </Marker>
+                        <MarkerClusterGroup
+                            spiderfyOnMaxZoom={false}
+                            disableClusteringAtZoom={16}
+                            maxClusterRadius={80}
+                            removeOutsideVisibleBound={true}
+                        >
+                            {parkingSpotMarkers}
+                        </MarkerClusterGroup>
 
                         <LegendControl />
                         <LocateControl />
                         <ZoomControl />
                     </MapContainer>
                 </div>
+
+                <LocationModal
+                    spotId={selectedSpotId}
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    latitude={selectedLat}
+                    longitude={selectedLng}
+                />
             </div>
         </>
     );

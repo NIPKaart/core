@@ -8,7 +8,6 @@ import { NominatimAddress } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';

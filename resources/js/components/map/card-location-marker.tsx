@@ -1,5 +1,4 @@
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import ZoomControl from './zoom-control';
 

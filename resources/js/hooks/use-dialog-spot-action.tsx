@@ -40,7 +40,7 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         restore: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.put(
+            router.patch(
                 route('app.user-parking-spots.restore', { user_parking_spot: dialogSubject.id }),
                 {},
                 {
