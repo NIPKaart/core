@@ -1,15 +1,15 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import UserParkingSpotForm, { FormValues } from '@/pages/backend/form-user-parking-spot';
-import type { BreadcrumbItem, Country, Province, UserParkingSpot } from '@/types';
+import ParkingSpotForm, { FormValues } from '@/pages/backend/form-parking-spot';
+import type { BreadcrumbItem, Country, Province, ParkingSpot } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.user-parking-spots.index') },
-    { title: 'Edit Parking Spot', href: route('app.user-parking-spots.edit', { id: ':id' }) },
+    { title: 'Parking Spots', href: route('app.parking-spots.index') },
+    { title: 'Edit Parking Spot', href: route('app.parking-spots.edit', { id: ':id' }) },
 ];
 
 const iconMap = {
@@ -19,7 +19,7 @@ const iconMap = {
 };
 
 type PageProps = {
-    spot: UserParkingSpot;
+    spot: ParkingSpot;
     countries: Country[];
     provinces: Province[];
     selectOptions: {
@@ -36,7 +36,7 @@ export default function Edit() {
         icon: iconMap[status.value as keyof typeof iconMap],
     }));
 
-    const form = useForm<FormValues, UserParkingSpot>({
+    const form = useForm<FormValues, ParkingSpot>({
         defaultValues: {
             country_id: spot.country.id,
             province_id: spot.province.id,
@@ -64,7 +64,7 @@ export default function Edit() {
             parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
         };
 
-        router.put(route('app.user-parking-spots.update', { id: spot.id }), payload, {
+        router.put(route('app.parking-spots.update', { id: spot.id }), payload, {
             preserveScroll: true,
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
@@ -86,7 +86,7 @@ export default function Edit() {
 
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.user-parking-spots.index')}>
+                        <Link href={route('app.parking-spots.index')}>
                             <ArrowLeft className="h-4 w-4" />
                             Back
                         </Link>
@@ -129,7 +129,7 @@ export default function Edit() {
                 </div>
 
                 <FormProvider {...form}>
-                    <UserParkingSpotForm
+                    <ParkingSpotForm
                         form={form}
                         countries={countries}
                         provinces={provinces}

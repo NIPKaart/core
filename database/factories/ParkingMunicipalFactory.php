@@ -8,9 +8,9 @@ use App\Models\Province;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MunicipalParkingSpot>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingMunicipal>
  */
-class MunicipalParkingSpotFactory extends Factory
+class ParkingMunicipalFactory extends Factory
 {
     /**
      * Define the model's default state.

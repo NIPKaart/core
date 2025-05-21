@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\UserParkingSpot>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingSpot>
  */
-class UserParkingSpotFactory extends Factory
+class ParkingSpotFactory extends Factory
 {
     /**
      * Define the model's default state.

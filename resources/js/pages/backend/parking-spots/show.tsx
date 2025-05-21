@@ -5,17 +5,17 @@ import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, UserParkingSpot } from '@/types';
+import { BreadcrumbItem, ParkingSpot } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.user-parking-spots.index') },
-    { title: 'Show', href: route('app.user-parking-spots.show', { id: ':id' }) },
+    { title: 'Parking Spots', href: route('app.parking-spots.index') },
+    { title: 'Show', href: route('app.parking-spots.show', { id: ':id' }) },
 ];
 
 type PageProps = {
-    spot: UserParkingSpot;
+    spot: ParkingSpot;
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
     };
@@ -41,22 +41,22 @@ export default function Show({ spot, selectOptions }: PageProps) {
                 <h1 className="text-2xl font-bold tracking-tight">Parking spot ({spot.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.user-parking-spots.index')}>
+                        <Link href={route('app.parking-spots.index')}>
                             <ArrowLeft className="h-4 w-4" />
                             Back
                         </Link>
                     </Button>
 
-                    {can('user-parking-spot.update') && (
+                    {can('parking-spot.update') && (
                         <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                            <Link href={route('app.user-parking-spots.edit', { id: spot.id })}>
+                            <Link href={route('app.parking-spots.edit', { id: spot.id })}>
                                 <Edit className="h-4 w-4" />
                                 Edit
                             </Link>
                         </Button>
                     )}
 
-                    {can('user-parking-spot.delete') && (
+                    {can('parking-spot.delete') && (
                         <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', spot)}>
                             <Trash2 className="h-4 w-4" />
                             Move to Trash

@@ -1,11 +1,11 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { UserParkingSpot } from '@/types';
+import { ParkingSpot } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 
 export type DialogType = 'delete' | 'restore' | 'forceDelete' | 'bulkRestore' | 'bulkForceDelete';
-type DialogSubject = UserParkingSpot | { ids: string[] } | null;
+type DialogSubject = ParkingSpot | { ids: string[] } | null;
 
 type Options = {
     onSuccess?: () => void;
@@ -24,7 +24,7 @@ export function useSpotActionDialog(options: Options = {}) {
     const handlers: Record<DialogType, () => void> = {
         delete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.user-parking-spots.destroy', { user_parking_spot: dialogSubject.id }), {
+            router.delete(route('app.parking-spots.destroy', { parking_spot: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Parking spot moved to trash');
@@ -41,7 +41,7 @@ export function useSpotActionDialog(options: Options = {}) {
         restore: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
             router.patch(
-                route('app.user-parking-spots.restore', { user_parking_spot: dialogSubject.id }),
+                route('app.parking-spots.restore', { parking_spot: dialogSubject.id }),
                 {},
                 {
                     preserveScroll: true,
@@ -60,7 +60,7 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         forceDelete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.user-parking-spots.forceDelete', { user_parking_spot: dialogSubject.id }), {
+            router.delete(route('app.parking-spots.forceDelete', { parking_spot: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success('Parking spot permanently deleted');
@@ -77,7 +77,7 @@ export function useSpotActionDialog(options: Options = {}) {
         bulkRestore: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
-                route('app.user-parking-spots.bulk-restore'),
+                route('app.parking-spots.bulk-restore'),
                 { ids: dialogSubject.ids },
                 {
                     preserveScroll: true,
@@ -96,7 +96,7 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         bulkForceDelete: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
-            router.delete(route('app.user-parking-spots.bulk-force-delete'), {
+            router.delete(route('app.parking-spots.bulk-force-delete'), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {

@@ -7,7 +7,7 @@ use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
 use App\Models\Province;
-use App\Models\UserParkingSpot;
+use App\Models\ParkingSpot;
 use App\Traits\ParsesNominatimAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -22,10 +22,10 @@ class LocationController extends Controller
      */
     public function map()
     {
-        $userParkingSpots = UserParkingSpot::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
+        $parkingSpots = ParkingSpot::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
             ->where('status', ParkingStatus::APPROVED)->get();
         return Inertia::render('frontend/map', [
-            'userParkingSpots' => $userParkingSpots
+            'parkingSpots' => $parkingSpots
         ]);
     }
 
@@ -62,7 +62,7 @@ class LocationController extends Controller
                 'geocode' => $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
             ])->id;
 
-            $spot = new UserParkingSpot([
+            $spot = new ParkingSpot([
                 'id' => uniqid(),
                 'user_id' => Auth::id(),
                 'ip_address' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $request->getClientIp(),

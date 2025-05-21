@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('municipal_parking_spots', function (Blueprint $table) {
+        Schema::create('parking_municipal', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as string
             $table->string('municipality');
             $table->integer('number');
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('municipal_parking_spots');
+        Schema::dropIfExists('parking_municipal');
     }
 };

@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ParkingRule;
-use App\Models\UserParkingSpot;
+use App\Models\ParkingSpot;
 
 class LocationInfoController extends Controller
 {
     public function getLocationInfo(string $id)
     {
-        $location = UserParkingSpot::with(['country', 'province'])
+        $location = ParkingSpot::with(['country', 'province'])
             ->where('id', $id)
             ->where('status', ParkingStatus::APPROVED)
             ->firstOrFail();

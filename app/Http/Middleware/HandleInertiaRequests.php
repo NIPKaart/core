@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
-use App\Models\UserParkingSpot;
+use App\Models\ParkingSpot;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -71,8 +71,8 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'users' => User::count(),
                     'parkingSpots' => [
-                        'active' => UserParkingSpot::count(),
-                        'trashed' => UserParkingSpot::onlyTrashed()->count(),
+                        'active' => ParkingSpot::count(),
+                        'trashed' => ParkingSpot::onlyTrashed()->count(),
                     ],
                 ];
             },

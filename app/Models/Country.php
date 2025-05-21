@@ -31,7 +31,7 @@ class Country extends Model
      */
     public function parkingSpots(): HasMany
     {
-        return $this->hasMany(UserParkingSpot::class);
+        return $this->hasMany(ParkingSpot::class);
     }
 
     /**
@@ -47,7 +47,7 @@ class Country extends Model
      */
     public function municipalParkingSpots(): HasMany
     {
-        return $this->hasMany(MunicipalParkingSpot::class);
+        return $this->hasMany(ParkingMunicipal::class);
     }
 
     /**

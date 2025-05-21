@@ -35,7 +35,7 @@ export function SearchableSelect({ label, placeholder, options, value, onChange,
                         <Button
                             variant="outline"
                             role="combobox"
-                            className={cn('w-full cursor-pointer justify-between', !value && 'text-muted-foreground')}
+                            className={cn('w-full justify-between', !value && 'text-muted-foreground')}
                         >
                             {selectedLabel || placeholder || 'Select...'}
                             <ChevronsUpDown className="ml-2 size-4 opacity-50" />
