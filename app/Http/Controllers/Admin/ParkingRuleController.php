@@ -6,11 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\App\StoreParkingRuleRequest;
 use App\Http\Requests\App\UpdateParkingRuleRequest;
 use App\Models\Country;
-use App\Models\MunicipalParkingSpot;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingRule;
 use App\Models\UserParkingSpot;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ParkingRuleController extends Controller
@@ -40,7 +39,7 @@ class ParkingRuleController extends Controller
         $userSpots = UserParkingSpot::whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality');
 
-        $municipalSpots = MunicipalParkingSpot::whereNotIn('municipality', $existingMunicipalities)
+        $municipalSpots = ParkingMunicipal::whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality');
 
         $availableMunicipalities = $userSpots
@@ -90,7 +89,7 @@ class ParkingRuleController extends Controller
             ->whereNotIn('municipality', $existingMunicipalities)
             ->pluck('municipality')
             ->merge(
-                MunicipalParkingSpot::select('municipality')
+                ParkingMunicipal::select('municipality')
                     ->whereNotIn('municipality', $existingMunicipalities)
                     ->pluck('municipality')
             )
@@ -113,7 +112,7 @@ class ParkingRuleController extends Controller
         Gate::authorize('update', $parkingRule);
 
         $parkingRule->update($request->validated());
-    
+
         return redirect()
             ->route('app.parking-rules.index')
             ->with('success', 'Parking Rule updated successfully.');

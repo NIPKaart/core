@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MunicipalParkingSpot extends Model
+class ParkingMunicipal extends Model
 {
-    /** @use HasFactory<\Database\Factories\MunicipalParkingSpotFactory> */
+    /** @use HasFactory<\Database\Factories\ParkingMunicipalFactory> */
     use HasFactory;
 
-    protected $table = 'municipal_parking_spots';
+    protected $table = 'parking_municipal_spots';
 
     protected $primaryKey = 'id';
 

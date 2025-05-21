@@ -47,6 +47,6 @@ class Province extends Model
      */
     public function municipalParkingSpots(): HasMany
     {
-        return $this->hasMany(MunicipalParkingSpot::class);
+        return $this->hasMany(ParkingMunicipal::class);
     }
 }
