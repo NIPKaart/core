@@ -22,7 +22,11 @@ class LocationController extends Controller
      */
     public function map()
     {
-        return Inertia::render('frontend/map');
+        $userParkingSpots = UserParkingSpot::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
+            ->where('status', ParkingStatus::APPROVED)->get();
+        return Inertia::render('frontend/map', [
+            'userParkingSpots' => $userParkingSpots
+        ]);
     }
 
     /**

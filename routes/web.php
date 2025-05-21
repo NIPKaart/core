@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\LocationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Frontend
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
+// Map
+Route::get('map', [LocationController::class, 'map'])->name('map');
+Route::get('map/add', [LocationController::class, 'locationAdd'])->name('map.add');
+Route::post('map/add', [LocationController::class, 'store'])->name('map.store');
 
 // Backend
 Route::middleware(['auth', 'verified'])->group(function () {

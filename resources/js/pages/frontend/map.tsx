@@ -5,36 +5,48 @@ import ZoomControl from '@/components/map/zoom-control';
 import { UserParkingSpot } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-// import L from 'leaflet';
-import { LayersControl, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
-// import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-// import markerIcon from 'leaflet/dist/images/marker-icon.png';
-// import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import LocationModal from '@/components/map/modal-location';
 import { getInvalidParkingIcon } from '@/lib/icon-factory';
+import { useMemo, useState } from 'react';
 
 const { BaseLayer } = LayersControl;
-
-// const defaultIcon = L.icon({
-//     iconRetinaUrl: markerIcon2x,
-//     iconUrl: markerIcon,
-//     shadowUrl: markerShadow,
-//     iconSize: [25, 41],
-//     iconAnchor: [12, 41],
-//     popupAnchor: [1, -34],
-//     shadowSize: [41, 41],
-// });
 
 type PageProps = {
     userParkingSpots: UserParkingSpot[];
 };
 
 export default function Map() {
-    const position: LatLngTuple = [52.3667136,4.9808665];
+    const position: LatLngTuple = [52.3667136, 4.9808665];
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-
     const { userParkingSpots } = usePage<PageProps>().props;
+
+    const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+    const [selectedLat, setSelectedLat] = useState<number | null>(null);
+    const [selectedLng, setSelectedLng] = useState<number | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
+    const parkingSpotMarkers = useMemo(
+        () =>
+            userParkingSpots.map((spot) => (
+                <Marker
+                    key={spot.id}
+                    position={[spot.latitude, spot.longitude]}
+                    icon={getInvalidParkingIcon()}
+                    eventHandlers={{
+                        click: () => {
+                            setSelectedSpotId(spot.id);
+                            setSelectedLat(spot.latitude);
+                            setSelectedLng(spot.longitude);
+                            setModalOpen(true);
+                        },
+                    }}
+                />
+            )),
+        [userParkingSpots],
+    );
 
     return (
         <>
@@ -70,20 +82,7 @@ export default function Map() {
                             maxClusterRadius={80}
                             removeOutsideVisibleBound={true}
                         >
-                            {userParkingSpots.map((spot) => (
-                                <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={getInvalidParkingIcon()}>
-                                    <Popup>
-                                        <div>
-                                            <div>
-                                                <b>Orientation:</b> {spot.orientation}
-                                            </div>
-                                            <div>
-                                                <b>Added:</b> {new Date(spot.created_at).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    </Popup>
-                                </Marker>
-                            ))}
+                            {parkingSpotMarkers}
                         </MarkerClusterGroup>
 
                         <LegendControl />
@@ -91,6 +90,14 @@ export default function Map() {
                         <ZoomControl />
                     </MapContainer>
                 </div>
+
+                <LocationModal
+                    spotId={selectedSpotId}
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    latitude={selectedLat}
+                    longitude={selectedLng}
+                />
             </div>
         </>
     );
