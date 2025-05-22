@@ -57,10 +57,13 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
                     </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                    <SidebarMenu className="mt-1 gap-1 pr-0 pl-4">
-                        {(item.children ?? []).map((sub) => (
-                            <SimpleNavItem key={sub.title} item={sub} active={getPath(sub.href) === getPath(currentUrl)} />
-                        ))}
+                    <SidebarMenu className="relative mt-1">
+                        <span className="absolute top-0 bottom-0 left-4 w-px bg-gray-200 dark:bg-gray-700" aria-hidden="true" />
+                        <div className="pl-7">
+                            {(item.children ?? []).map((sub) => (
+                                <SimpleNavItem key={sub.title} item={sub} active={getPath(sub.href) === getPath(currentUrl)} />
+                            ))}
+                        </div>
                     </SidebarMenu>
                 </CollapsibleContent>
             </SidebarMenuItem>
