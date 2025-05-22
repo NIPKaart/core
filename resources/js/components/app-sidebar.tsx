@@ -33,7 +33,7 @@ export function AppSidebar() {
     };
 
     const parkingNavGroup: NavGroup = {
-        title: 'Parking',
+        title: 'Parking locations',
         items: [
             can('parking-spot.view_any') && {
                 title: 'Parking Spots',
@@ -42,10 +42,10 @@ export function AppSidebar() {
                 badge: active,
             },
             can('parking-spot.restore') && {
-                title: 'Removed',
+                title: 'Trash',
                 href: route('app.parking-spots.trash'),
                 icon: icons.Trash2,
-                badge: trashed,
+                badge: trashed ? trashed : undefined,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',

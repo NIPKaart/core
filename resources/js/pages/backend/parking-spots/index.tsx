@@ -105,6 +105,8 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="text-2xl font-bold">Parking Spots</h1>
 
+                <p className="text-muted-foreground">All the listed parking spots are added by the community and part of the own dataset of NIPKaart.</p>
+
                 {can('parking-spot.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
