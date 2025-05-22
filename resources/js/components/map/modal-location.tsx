@@ -108,9 +108,17 @@ export default function LocationModal({ spotId, open, onClose, latitude, longitu
     }
 
     function copyUrl() {
-        navigator.clipboard.writeText(window.location.href);
+        const shareUrl = getShareUrl(latitude, longitude, 18);
+        navigator.clipboard.writeText(shareUrl);
         setCopiedShare(true);
         setTimeout(() => setCopiedShare(false), 1400);
+    }
+
+    function getShareUrl(lat: number | null, lng: number | null, zoom = 18) {
+        if (lat !== null && lng !== null) {
+            return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
+        }
+        return window.location.href;
     }
 
     function MainInfo() {
