@@ -45,7 +45,7 @@ export function AppSidebar() {
                 title: 'Trash',
                 href: route('app.parking-spots.trash'),
                 icon: icons.Trash2,
-                badge: trashed,
+                badge: trashed ? trashed : undefined,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
