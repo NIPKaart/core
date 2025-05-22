@@ -8,6 +8,7 @@ import type { LatLngTuple } from 'leaflet';
 import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
+import { HashSync } from '@/components/map/hash-sync';
 import LocationModal from '@/components/map/modal-location';
 import { getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
@@ -18,8 +19,26 @@ type PageProps = {
     parkingSpots: ParkingSpot[];
 };
 
+function getInitialPosition(): [number, number, number] {
+    if (window.location.hash) {
+        const match = window.location.hash.match(/^#(\d+(\.\d+)?)\/(-?\d+(\.\d+)?)\/(-?\d+(\.\d+)?)/);
+        if (match) {
+            const zoom = parseFloat(match[1]);
+            const lat = parseFloat(match[3]);
+            const lng = parseFloat(match[5]);
+            if (!isNaN(zoom) && !isNaN(lat) && !isNaN(lng)) {
+                return [lat, lng, zoom];
+            }
+        }
+    }
+    return [52.3667136, 4.9808665, 8];
+}
+
 export default function Map() {
-    const position: LatLngTuple = [52.3667136, 4.9808665];
+    const initial = getInitialPosition();
+    const position: LatLngTuple = [initial[0], initial[1]];
+    const initialZoom = initial[2];
+
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     const { parkingSpots } = usePage<PageProps>().props;
 
@@ -55,7 +74,8 @@ export default function Map() {
                 <Navbar />
 
                 <div className="flex-1">
-                    <MapContainer center={position} zoom={8} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                    <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                        <HashSync />
                         <LayersControl position="topright">
                             <BaseLayer checked name="Mapbox Streets">
                                 <TileLayer
