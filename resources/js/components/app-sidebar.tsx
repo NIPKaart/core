@@ -33,7 +33,23 @@ export function AppSidebar() {
     };
 
     const parkingNavGroup: NavGroup = {
-        title: 'Parking locations',
+        title: 'Parking',
+        items: [
+            {
+                title: 'My Locations',
+                href: route('user.parking-spots.index'),
+                icon: icons.MapPin,
+            },
+            {
+                title: 'Favorites',
+                href: '#',
+                icon: icons.Heart,
+            }
+        ].filter(Boolean) as NavItem[],
+    }
+
+    const moderationNavGroup: NavGroup = {
+        title: 'Moderation',
         items: [
             can('parking-spot.view_any') && {
                 title: 'Parking Spots',
@@ -109,6 +125,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavSection group={platformNavGroup} />
                 {parkingNavGroup.items.length > 0 && <NavSection group={parkingNavGroup} />}
+                {moderationNavGroup.items.length > 0 && <NavSection group={moderationNavGroup} />}
                 {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 
