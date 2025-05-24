@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\User;
 use App\Http\Controllers\LocationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +21,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
+    // User routes
+    Route::prefix('user')->as('user.')->group(function () {
+        Route::get('parking-spots', [User\MyParkingSpotController::class, 'index'])->name('parking-spots.index');
+        Route::get('parking-spots/{parking_spot}', [User\MyParkingSpotController::class, 'show'])->name('parking-spots.show');
+    });
+
+    // Admin routes
     Route::prefix('app')->as('app.')->group(function () {
         // ParkingSpot routes
         Route::prefix('parking-spots')->as('parking-spots.')->group(function () {
