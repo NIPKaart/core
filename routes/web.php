@@ -24,7 +24,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // User routes
     Route::prefix('user')->as('user.')->group(function () {
         Route::get('parking-spots', [User\MyParkingSpotController::class, 'index'])->name('parking-spots.index');
-        Route::get('parking-spots/{parking_spot}', [User\MyParkingSpotController::class, 'show'])->name('parking-spots.show');
+        Route::get('parking-spots/{id}', [User\MyParkingSpotController::class, 'show'])->name('parking-spots.show');
+        Route::delete('parking-spots/{id}', [User\MyParkingSpotController::class, 'destroy'])->name('parking-spots.destroy');
     });
 
     // Admin routes
