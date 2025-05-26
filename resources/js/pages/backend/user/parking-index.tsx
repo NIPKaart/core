@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, ParkingSpot } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { AlertCircle, CheckCircle, MapPin, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, MapPin, Plus, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type PageProps = {
@@ -43,7 +43,19 @@ export default function UserParkingSpotsPage({ parkingSpots }: PageProps) {
                 </div>
 
                 {filteredSpots.length === 0 ? (
-                    <div className="text-muted-foreground mt-12 text-center">No parking spots found.</div>
+                    <div className="mt-16 flex flex-col items-center justify-center gap-4 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                            <MapPin className="text-primary mb-2 h-10 w-10" />
+                            <span className="text-muted-foreground text-lg font-semibold">You haven&apos;t added any parking spots yet.</span>
+                            <span className="text-muted-foreground text-sm">Start contributing and help others by adding your first location!</span>
+                        </div>
+                        <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
+                            <Link href={route('map.add')}>
+                                <Plus className="mr-2 h-5 w-5" />
+                                Add your first parking spot
+                            </Link>
+                        </Button>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
                         {filteredSpots.map((spot) => (
