@@ -19,8 +19,7 @@ class MyParkingSpotController extends Controller
 
         $locations = ParkingSpot::where('user_id', $user->id)
             ->latest()
-            ->paginate(12)
-            ->withQueryString();
+            ->get();
 
         return Inertia::render('backend/user/parking-index', [
             'parkingSpots' => $locations,

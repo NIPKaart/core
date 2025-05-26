@@ -81,7 +81,7 @@ export default function UserParkingShow({ spot, selectOptions }: PageProps) {
                         <h2 className="text-lg font-semibold">Details</h2>
                         <p className="text-muted-foreground text-sm">Information about the parking spot.</p>
                     </div>
-                    <div className="rounded-lg p-6 shadow">
+                    <div className="rounded-lg lg:p-6 sm:py-6 shadow">
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-left">
                                 <thead>
@@ -91,6 +91,10 @@ export default function UserParkingShow({ spot, selectOptions }: PageProps) {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Added At</th>
+                                        <td className="px-4 py-2">{spot.created_at ? formatDate(spot.created_at) : 'N/A'}</td>
+                                    </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Country</th>
                                         <td className="px-4 py-2">
@@ -159,4 +163,9 @@ export default function UserParkingShow({ spot, selectOptions }: PageProps) {
             )}
         </AppLayout>
     );
+}
+
+function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
