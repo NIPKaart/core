@@ -73,71 +73,80 @@ export default function Show({ spot, selectOptions }: PageProps) {
             {/* 2×2 grid met auto-rows-min */}
             <div className="grid auto-rows-min grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-2">
                 {/* Card 1: Details */}
-                <div className="rounded-lg p-6 shadow">
+                <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Details</h2>
                         <p className="text-muted-foreground text-sm">Information about the parking spot.</p>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-left">
-                            <tbody>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Country</th>
-                                    <td className="px-4 py-2">
-                                        {spot.country.name} ({spot.country.code})
-                                    </td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Province</th>
-                                    <td className="px-4 py-2">{spot.province.name}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">IP Address</th>
-                                    <td className="px-4 py-2">
-                                        <a
-                                            href={`https://whatismyipaddress.com/?s=${spot.ip_address}`}
-                                            target="_blank"
-                                            className="font-medium text-orange-600 hover:underline dark:text-orange-500"
-                                        >
-                                            {spot.ip_address}
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Municipality</th>
-                                    <td className="px-4 py-2">{spot.municipality}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">City</th>
-                                    <td className="px-4 py-2">{spot.city}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Postcode</th>
-                                    <td className="px-4 py-2">{spot.postcode}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Street</th>
-                                    <td className="px-4 py-2">{spot.street}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Amenity</th>
-                                    <td className="px-4 py-2">{spot.amenity}</td>
-                                </tr>
-                                <tr className="border-t">
-                                    <th className="px-4 py-2 font-medium">Orientation</th>
-                                    <td className="px-4 py-2">{spot.orientation}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div className="rounded-lg p-6 shadow">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th className="bg-muted px-4 py-2 font-bold">Field</th>
+                                        <th className="bg-muted px-4 py-2 font-bold">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Country</th>
+                                        <td className="px-4 py-2">
+                                            {spot.country.name} ({spot.country.code})
+                                        </td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Province</th>
+                                        <td className="px-4 py-2">{spot.province.name}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">IP Address</th>
+                                        <td className="px-4 py-2">
+                                            <a
+                                                href={`https://whatismyipaddress.com/?s=${spot.ip_address}`}
+                                                target="_blank"
+                                                className="font-medium text-orange-600 hover:underline dark:text-orange-500"
+                                            >
+                                                {spot.ip_address}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Municipality</th>
+                                        <td className="px-4 py-2">{spot.municipality}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">City</th>
+                                        <td className="px-4 py-2">{spot.city}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Postcode</th>
+                                        <td className="px-4 py-2">{spot.postcode}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Street</th>
+                                        <td className="px-4 py-2">{spot.street}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Amenity</th>
+                                        <td className="px-4 py-2">{spot.amenity}</td>
+                                    </tr>
+                                    <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Orientation</th>
+                                        <td className="px-4 py-2">{spot.orientation}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
                 {/* Card 2: Audit trail */}
-                <div className="rounded-lg p-6 shadow">
+                <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Audit trail</h2>
                         <p className="text-muted-foreground text-sm">TODO - show audit trail</p>
                     </div>
+                    <div className="rounded-lg p-6 shadow"></div>
                 </div>
 
                 {/* Card 3: Map */}
