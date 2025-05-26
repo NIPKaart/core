@@ -3,9 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { Eye, Heart, MapPin, Navigation, Share2, X } from 'lucide-react';
+import { Eye, MapPin, Navigation, Share2, X } from 'lucide-react';
 import * as React from 'react';
+import { FavoriteButton } from '../frontend/button/favorite';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type LocationDetail = {
@@ -20,9 +22,10 @@ type LocationDetail = {
     rule_url?: string | null;
     parking_time?: number | null;
     created_at: string;
+    is_favorited?: boolean;
 };
 
-type LocationModalProps = {
+type ParkingSpotModalProps = {
     spotId: string | null;
     open: boolean;
     onClose: () => void;
@@ -63,7 +66,10 @@ function getStreetViewUrl(lat: number | null, lng: number | null): string {
     return 'https://maps.google.com/';
 }
 
-export default function LocationModal({ spotId, open, onClose, latitude, longitude }: LocationModalProps) {
+export default function ParkingSpotModal({ spotId, open, onClose, latitude, longitude }: ParkingSpotModalProps) {
+    const { can, user } = useAuthorization();
+    const isLoggedIn = !!user;
+
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [data, setData] = React.useState<LocationDetail | null>(null);
     const [loading, setLoading] = React.useState(false);
@@ -339,9 +345,7 @@ export default function LocationModal({ spotId, open, onClose, latitude, longitu
                                 <DialogTitle className="text-lg font-semibold">Parking location</DialogTitle>
                             </div>
                             <div className="flex items-center gap-1 sm:gap-2">
-                                <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Favorite">
-                                    <Heart className="h-5 w-5" />
-                                </Button>
+                                {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
                                 {isDesktop ? (
                                     <TooltipProvider>
                                         <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
@@ -370,7 +374,15 @@ export default function LocationModal({ spotId, open, onClose, latitude, longitu
                     <div className="mt-2 max-h-[70vh] overflow-y-auto">
                         <Content withPadding={true} />
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="flex flex-row justify-between gap-2">
+                        {can('parking-spot.view') && data?.id && (
+                            <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
+                                <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
+                                    <Eye className="h-4 w-4" />
+                                    Show
+                                </Button>
+                            </a>
+                        )}
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
                             Close
                         </Button>
@@ -391,9 +403,7 @@ export default function LocationModal({ spotId, open, onClose, latitude, longitu
                             <DrawerTitle className="text-lg font-semibold">Parking location</DrawerTitle>
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <Button size="icon" variant="ghost" aria-label="Favorite">
-                                <Heart className="h-5 w-5" />
-                            </Button>
+                            {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
                             <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
                                 <Share2 className="h-5 w-5" />
                             </Button>
@@ -401,12 +411,20 @@ export default function LocationModal({ spotId, open, onClose, latitude, longitu
                     </div>
                 </DrawerHeader>
                 <div className="mt-2 max-h-[68vh] overflow-y-auto">
-                    <DrawerDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DrawerDescription>
+                    <DrawerDescription className="text-muted-foreground mb-2 text-center text-sm">{descriptionText}</DrawerDescription>
                     <Content withPadding={true} />
                 </div>
-                <DrawerFooter>
+                <DrawerFooter className="flex flex-row justify-between gap-2">
+                    {can('parking-spot.view') && data?.id && (
+                        <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener" className="w-1/2">
+                            <Button variant="outline" className="flex w-full items-center gap-2" title="Go to admin page">
+                                <Eye className="h-4 w-4" />
+                                Show
+                            </Button>
+                        </a>
+                    )}
                     <DrawerClose asChild>
-                        <Button variant="secondary" className="w-full">
+                        <Button variant="secondary" className="w-1/2">
                             Close
                         </Button>
                     </DrawerClose>

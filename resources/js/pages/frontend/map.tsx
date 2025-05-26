@@ -9,7 +9,7 @@ import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
-import LocationModal from '@/components/map/modal-location';
+import ParkingSpotModal from '@/components/map/modal-parking-spot';
 import { getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
 
@@ -111,7 +111,7 @@ export default function Map() {
                     </MapContainer>
                 </div>
 
-                <LocationModal
+                <ParkingSpotModal
                     spotId={selectedSpotId}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}

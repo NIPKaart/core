@@ -43,8 +43,8 @@ export function AppSidebar() {
                 badge: activeUserParkingSpots ? activeUserParkingSpots : undefined,
             },
             {
-                title: 'Favorites',
-                href: '#',
+                title: 'My Favorites',
+                href: route('user.favorites.index'),
                 icon: icons.Heart,
             },
         ].filter(Boolean) as NavItem[],
