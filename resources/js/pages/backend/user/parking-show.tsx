@@ -9,11 +9,6 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'My parking locations', href: route('user.parking-spots.index') },
-    { title: 'Show', href: route('user.parking-spots.show', { id: ':id' }) },
-];
-
 type PageProps = {
     spot: ParkingSpot;
     selectOptions: {
@@ -22,19 +17,22 @@ type PageProps = {
 };
 
 export default function UserParkingShow({ spot, selectOptions }: PageProps) {
-    const [dialogSpot, setDialogSpot] = useState<ParkingSpot | null>(null);
-    const [dialogType, setDialogType] = useState<'delete' | null>(null);
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'My parking locations', href: route('user.parking-spots.index') },
+        { title: 'Show', href: route('user.parking-spots.show', { id: spot.id }) },
+    ];
 
-    const openDialog = (parkingSpot: ParkingSpot, type: 'delete') => {
-        setDialogSpot(null);
-        setDialogType(null);
-        setTimeout(() => {
-            setDialogSpot(parkingSpot);
-            setDialogType(type);
-        }, 0);
+    const [dialogState, setDialogState] = useState<{ spot: ParkingSpot | null; type: 'delete' | null }>({ spot: null, type: null });
+
+    const openDialog = (spot: ParkingSpot, type: 'delete') => {
+        setDialogState({ spot, type });
     };
 
-    const deleteSpot = (id: string) => {
+    const closeDialog = () => {
+        setDialogState({ spot: null, type: null });
+    };
+
+    const deleteParkingSpot = (id: string) => {
         router.delete(route('user.parking-spots.destroy', { id }), {
             onSuccess: () => toast.success('Parking spot deleted permanently'),
             onError: () => toast.error('Failed to delete parking spot'),
@@ -81,7 +79,7 @@ export default function UserParkingShow({ spot, selectOptions }: PageProps) {
                         <h2 className="text-lg font-semibold">Details</h2>
                         <p className="text-muted-foreground text-sm">Information about the parking spot.</p>
                     </div>
-                    <div className="rounded-lg lg:p-6 sm:py-6 shadow">
+                    <div className="rounded-lg shadow sm:py-6 lg:p-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-left">
                                 <thead>
@@ -144,21 +142,17 @@ export default function UserParkingShow({ spot, selectOptions }: PageProps) {
                 </div>
             </div>
 
-            {dialogSpot && dialogType === 'delete' && (
+            {dialogState.spot && dialogState.type === 'delete' && (
                 <ConfirmDialog
                     title="Delete parking spot?"
                     description={`Are you sure you want to delete the parking spot at ${spot.street}, ${spot.city} (${spot.country.name} - ${spot.country.code})? This action cannot be undone.`}
                     confirmText="Yes, delete parking spot"
                     variant="destructive"
                     onConfirm={() => {
-                        deleteSpot(spot.id);
-                        setDialogSpot(null);
-                        setDialogType(null);
+                        deleteParkingSpot(dialogState.spot!.id);
+                        closeDialog();
                     }}
-                    onClose={() => {
-                        setDialogSpot(null);
-                        setDialogType(null);
-                    }}
+                    onClose={closeDialog}
                 />
             )}
         </AppLayout>

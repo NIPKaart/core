@@ -29,7 +29,7 @@ class MyParkingSpotController extends Controller
     /**
      * Display the specified location.
      */
-    public function show(String $id)
+    public function show(string $id)
     {
         $spot = ParkingSpot::with(['province', 'country'])->withTrashed()->findOrFail($id);
 
@@ -54,7 +54,7 @@ class MyParkingSpotController extends Controller
     /**
      * Destroy the specified location if it belongs to the authenticated user.
      */
-    public function destroy(String $id) 
+    public function destroy(string $id) 
     {
         $spot = ParkingSpot::withTrashed()->findOrFail($id);
         if ($spot->user_id !== auth()->id()) {
