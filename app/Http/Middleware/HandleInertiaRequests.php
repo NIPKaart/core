@@ -74,6 +74,9 @@ class HandleInertiaRequests extends Middleware
                         'active' => ParkingSpot::count(),
                         'trashed' => ParkingSpot::onlyTrashed()->count(),
                     ],
+                    'userParkingSpots' => [
+                        'active' => ParkingSpot::where('user_id', auth()->id())->count(),
+                    ]
                 ];
             },
         ];

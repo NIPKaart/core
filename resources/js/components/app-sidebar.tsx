@@ -14,7 +14,8 @@ export function AppSidebar() {
 
     // Sidebar badge counts
     const userCount = props.counts.users;
-    const { active, trashed } = props.counts.parkingSpots;
+    const { active: activeParkingSpots, trashed: trashedParkingSpots } = props.counts.parkingSpots;
+    const { active: activeUserParkingSpots } = props.counts.userParkingSpots;
 
     const platformNavGroup: NavGroup = {
         title: 'Platform',
@@ -39,14 +40,15 @@ export function AppSidebar() {
                 title: 'My Locations',
                 href: route('user.parking-spots.index'),
                 icon: icons.MapPin,
+                badge: activeUserParkingSpots ? activeUserParkingSpots : undefined,
             },
             {
                 title: 'Favorites',
                 href: '#',
                 icon: icons.Heart,
-            }
+            },
         ].filter(Boolean) as NavItem[],
-    }
+    };
 
     const moderationNavGroup: NavGroup = {
         title: 'Moderation',
@@ -55,13 +57,13 @@ export function AppSidebar() {
                 title: 'Parking Spots',
                 href: route('app.parking-spots.index'),
                 icon: icons.MapPin,
-                badge: active,
+                badge: activeParkingSpots,
             },
             can('parking-spot.restore') && {
                 title: 'Trash',
                 href: route('app.parking-spots.trash'),
                 icon: icons.Trash2,
-                badge: trashed ? trashed : undefined,
+                badge: trashedParkingSpots ? trashedParkingSpots : undefined,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
