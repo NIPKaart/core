@@ -8,12 +8,13 @@ use App\Traits\Favoritable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ParkingSpot extends Model
 {
     /** @use HasFactory<\Database\Factories\ParkingSpotFactory> */
-    use HasFactory, SoftDeletes, Favoritable;
+    use Favoritable, HasFactory, SoftDeletes;
 
     protected $table = 'parking_spots';
 
@@ -83,6 +84,18 @@ class ParkingSpot extends Model
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
+    }
+
+    /**
+     * Get the users who favorited this parking spot.
+     */
+    public function favoritedByUsers(): MorphToMany
+    {
+        return $this->morphToMany(
+            User::class,
+            'favoritable',
+            'favorites'
+        );
     }
 
     // /**
