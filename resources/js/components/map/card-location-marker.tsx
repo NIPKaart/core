@@ -29,50 +29,52 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
     const isDraggable = draggable ?? typeof onChange === 'function';
 
     return (
-        <MapContainer
-            center={[latitude, longitude]}
-            zoom={19}
-            scrollWheelZoom
-            zoomControl={false}
-            className="w-full rounded-md border h-80 md:h-[500px]"
-        >
-            <LayersControl position="topright">
-                <BaseLayer checked name="Google Hybrid">
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                        url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                        subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                        maxZoom={22}
-                    />
-                </BaseLayer>
+        <div className="relative z-0">
+            <MapContainer
+                center={[latitude, longitude]}
+                zoom={19}
+                scrollWheelZoom
+                zoomControl={false}
+                className="h-80 w-full rounded-md border md:h-[500px]"
+            >
+                <LayersControl position="topright">
+                    <BaseLayer checked name="Google Hybrid">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                            url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                            subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                            maxZoom={22}
+                        />
+                    </BaseLayer>
 
-                <BaseLayer name="Google Streets">
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                        url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-                        subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                        maxZoom={22}
-                    />
-                </BaseLayer>
-            </LayersControl>
+                    <BaseLayer name="Google Streets">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                            url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                            subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                            maxZoom={22}
+                        />
+                    </BaseLayer>
+                </LayersControl>
 
-            <ZoomControl position="topleft" />
+                <ZoomControl position="topleft" />
 
-            <Marker
-                position={[latitude, longitude]}
-                icon={defaultIcon}
-                draggable={isDraggable}
-                eventHandlers={
-                    isDraggable && onChange
-                        ? {
-                              dragend: (e) => {
-                                  const { lat, lng } = e.target.getLatLng();
-                                  onChange(lat, lng);
-                              },
-                          }
-                        : undefined
-                }
-            />
-        </MapContainer>
+                <Marker
+                    position={[latitude, longitude]}
+                    icon={defaultIcon}
+                    draggable={isDraggable}
+                    eventHandlers={
+                        isDraggable && onChange
+                            ? {
+                                  dragend: (e) => {
+                                      const { lat, lng } = e.target.getLatLng();
+                                      onChange(lat, lng);
+                                  },
+                              }
+                            : undefined
+                    }
+                />
+            </MapContainer>
+        </div>
     );
 }

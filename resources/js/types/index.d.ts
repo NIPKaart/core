@@ -36,7 +36,10 @@ export interface SharedData {
         parkingSpots: {
             active: number;
             trashed: number;
-        }
+        };
+        userParkingSpots: {
+            active: number;
+        };
     };
     [key: string]: unknown;
 }

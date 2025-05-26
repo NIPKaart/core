@@ -1,18 +1,13 @@
 import Banner, { BannerVariant } from '@/components/banner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import LocationMarkerCard from '@/components/map/card-location-marker';
-import StreetViewCard from '@/components/map/card-location-streetview';
 import { Button } from '@/components/ui/button';
-import { useAuthorization } from '@/hooks/use-authorization';
-import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, ParkingSpot } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.parking-spots.index') },
-    { title: 'Show', href: route('app.parking-spots.show', { id: ':id' }) },
-];
+import { Head, Link, router } from '@inertiajs/react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 type PageProps = {
     spot: ParkingSpot;
@@ -21,9 +16,28 @@ type PageProps = {
     };
 };
 
-export default function Show({ spot, selectOptions }: PageProps) {
-    const { can } = useAuthorization();
-    const { openDialog, dialogElement } = useSpotActionDialog();
+export default function UserParkingShow({ spot, selectOptions }: PageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'My parking locations', href: route('user.parking-spots.index') },
+        { title: 'Show', href: route('user.parking-spots.show', { id: spot.id }) },
+    ];
+
+    const [dialogState, setDialogState] = useState<{ spot: ParkingSpot | null; type: 'delete' | null }>({ spot: null, type: null });
+
+    const openDialog = (spot: ParkingSpot, type: 'delete') => {
+        setDialogState({ spot, type });
+    };
+
+    const closeDialog = () => {
+        setDialogState({ spot: null, type: null });
+    };
+
+    const deleteParkingSpot = (id: string) => {
+        router.delete(route('user.parking-spots.destroy', { id }), {
+            onSuccess: () => toast.success('Parking spot deleted permanently'),
+            onError: () => toast.error('Failed to delete parking spot'),
+        });
+    };
 
     const statusOpt = selectOptions.statuses.find((s) => s.value === spot.status)!;
     const variantMap: Record<string, BannerVariant> = {
@@ -35,33 +49,22 @@ export default function Show({ spot, selectOptions }: PageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Spot" />
+            <Head title="Parking Spot Details" />
             {/* Header */}
             <div className="mb-4 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
                 <h1 className="text-2xl font-bold tracking-tight">Parking spot ({spot.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.parking-spots.index')}>
+                        <Link href={route('user.parking-spots.index')}>
                             <ArrowLeft className="h-4 w-4" />
                             Back
                         </Link>
                     </Button>
 
-                    {can('parking-spot.update') && (
-                        <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                            <Link href={route('app.parking-spots.edit', { id: spot.id })}>
-                                <Edit className="h-4 w-4" />
-                                Edit
-                            </Link>
-                        </Button>
-                    )}
-
-                    {can('parking-spot.delete') && (
-                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', spot)}>
-                            <Trash2 className="h-4 w-4" />
-                            Move to Trash
-                        </Button>
-                    )}
+                    <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog(spot, 'delete')}>
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                    </Button>
                 </div>
             </div>
 
@@ -70,15 +73,13 @@ export default function Show({ spot, selectOptions }: PageProps) {
                 <Banner variant={variant} title={statusOpt.label} description={statusOpt.description} />
             </div>
 
-            {/* 2×2 grid met auto-rows-min */}
             <div className="grid auto-rows-min grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-2">
-                {/* Card 1: Details */}
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Details</h2>
                         <p className="text-muted-foreground text-sm">Information about the parking spot.</p>
                     </div>
-                    <div className="rounded-lg p-6 shadow">
+                    <div className="rounded-lg shadow sm:py-6 lg:p-6">
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-left">
                                 <thead>
@@ -89,6 +90,10 @@ export default function Show({ spot, selectOptions }: PageProps) {
                                 </thead>
                                 <tbody>
                                     <tr className="border-t">
+                                        <th className="px-4 py-2 font-medium">Added At</th>
+                                        <td className="px-4 py-2">{spot.created_at ? formatDate(spot.created_at) : 'N/A'}</td>
+                                    </tr>
+                                    <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Country</th>
                                         <td className="px-4 py-2">
                                             {spot.country.name} ({spot.country.code})
@@ -97,18 +102,6 @@ export default function Show({ spot, selectOptions }: PageProps) {
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Province</th>
                                         <td className="px-4 py-2">{spot.province.name}</td>
-                                    </tr>
-                                    <tr className="border-t">
-                                        <th className="px-4 py-2 font-medium">IP Address</th>
-                                        <td className="px-4 py-2">
-                                            <a
-                                                href={`https://whatismyipaddress.com/?s=${spot.ip_address}`}
-                                                target="_blank"
-                                                className="font-medium text-orange-600 hover:underline dark:text-orange-500"
-                                            >
-                                                {spot.ip_address}
-                                            </a>
-                                        </td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Municipality</th>
@@ -140,16 +133,6 @@ export default function Show({ spot, selectOptions }: PageProps) {
                     </div>
                 </div>
 
-                {/* Card 2: Audit trail */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">Audit trail</h2>
-                        <p className="text-muted-foreground text-sm">TODO - show audit trail</p>
-                    </div>
-                    <div className="rounded-lg p-6 shadow"></div>
-                </div>
-
-                {/* Card 3: Map */}
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Location</h2>
@@ -157,17 +140,26 @@ export default function Show({ spot, selectOptions }: PageProps) {
                     </div>
                     <LocationMarkerCard latitude={spot.latitude} longitude={spot.longitude} />
                 </div>
-
-                {/* Card 4: Street View */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">Street view</h2>
-                        <p className="text-muted-foreground text-sm">See the area around the parking spot.</p>
-                    </div>
-                    <StreetViewCard latitude={spot.latitude} longitude={spot.longitude} />
-                </div>
             </div>
-            {dialogElement}
+
+            {dialogState.spot && dialogState.type === 'delete' && (
+                <ConfirmDialog
+                    title="Delete parking spot?"
+                    description={`Are you sure you want to delete the parking spot at ${spot.street}, ${spot.city} (${spot.country.name} - ${spot.country.code})? This action cannot be undone.`}
+                    confirmText="Yes, delete parking spot"
+                    variant="destructive"
+                    onConfirm={() => {
+                        deleteParkingSpot(dialogState.spot!.id);
+                        closeDialog();
+                    }}
+                    onClose={closeDialog}
+                />
+            )}
         </AppLayout>
     );
+}
+
+function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
 }

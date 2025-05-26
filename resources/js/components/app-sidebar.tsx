@@ -14,7 +14,8 @@ export function AppSidebar() {
 
     // Sidebar badge counts
     const userCount = props.counts.users;
-    const { active, trashed } = props.counts.parkingSpots;
+    const { active: activeParkingSpots, trashed: trashedParkingSpots } = props.counts.parkingSpots;
+    const { active: activeUserParkingSpots } = props.counts.userParkingSpots;
 
     const platformNavGroup: NavGroup = {
         title: 'Platform',
@@ -33,19 +34,36 @@ export function AppSidebar() {
     };
 
     const parkingNavGroup: NavGroup = {
-        title: 'Parking locations',
+        title: 'Parking',
+        items: [
+            {
+                title: 'My Locations',
+                href: route('user.parking-spots.index'),
+                icon: icons.MapPin,
+                badge: activeUserParkingSpots ? activeUserParkingSpots : undefined,
+            },
+            {
+                title: 'Favorites',
+                href: '#',
+                icon: icons.Heart,
+            },
+        ].filter(Boolean) as NavItem[],
+    };
+
+    const moderationNavGroup: NavGroup = {
+        title: 'Moderation',
         items: [
             can('parking-spot.view_any') && {
                 title: 'Parking Spots',
                 href: route('app.parking-spots.index'),
                 icon: icons.MapPin,
-                badge: active,
+                badge: activeParkingSpots,
             },
             can('parking-spot.restore') && {
                 title: 'Trash',
                 href: route('app.parking-spots.trash'),
                 icon: icons.Trash2,
-                badge: trashed ? trashed : undefined,
+                badge: trashedParkingSpots ? trashedParkingSpots : undefined,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
@@ -109,6 +127,7 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavSection group={platformNavGroup} />
                 {parkingNavGroup.items.length > 0 && <NavSection group={parkingNavGroup} />}
+                {moderationNavGroup.items.length > 0 && <NavSection group={moderationNavGroup} />}
                 {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 
