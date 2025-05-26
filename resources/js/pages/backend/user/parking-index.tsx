@@ -89,7 +89,7 @@ export default function UserParkingSpotsPage({ parkingSpots }: PageProps) {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                <MapPin className="mr-1 h-4 w-4" />
+                                                <MapPin className="h-4 w-4" />
                                                 On map
                                             </a>
                                         </Button>

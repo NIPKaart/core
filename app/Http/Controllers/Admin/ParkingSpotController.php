@@ -150,7 +150,8 @@ class ParkingSpotController extends Controller
         Gate::authorize('delete', $parkingSpot);
         $parkingSpot->delete();
 
-        return back();
+        return redirect()->route('app.parking-spots.index')
+            ->with('success', 'Parking spot moved to trash successfully.');
     }
 
     /**
