@@ -1,6 +1,48 @@
 import L, { Icon } from 'leaflet';
 
 /**
+ * Icon for green markers.
+ */
+export function getGreenMarkerIcon(): Icon {
+    return L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+    });
+}
+
+/**
+ * Icon for orange markers.
+ */
+export function getOrangeMarkerIcon(): Icon {
+    return L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+    });
+}
+
+/**
+ * Icon for red markers.
+ */
+export function getRedMarkerIcon(): Icon {
+    return L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+    });
+}
+
+/**
  * Icon for invalid parking spots.
  */
 export function getInvalidParkingIcon(): Icon {
@@ -75,5 +117,21 @@ export function getGarageStatusIcon(status: 'green' | 'orange' | 'red' | 'grey')
         case 'red': return getGarageRedIcon();
         case 'grey': return getGarageGreyIcon();
         default: return getGarageGreyIcon();
+    }
+}
+
+/**
+ * Get the icon for a parking spot based on its status.
+ */
+export function getParkingStatusIcon(status: 'approved' | 'pending' | 'rejected' | string): Icon {
+    switch (status) {
+        case 'approved':
+            return getGreenMarkerIcon();
+        case 'pending':
+            return getOrangeMarkerIcon();
+        case 'rejected':
+            return getRedMarkerIcon();
+        default:
+            return getOrangeMarkerIcon();
     }
 }
