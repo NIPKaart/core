@@ -47,16 +47,4 @@ class ParkingMunicipal extends Model
     {
         return $this->belongsTo(Province::class);
     }
-
-    /**
-     * Get the users who favorited this parking municipal.
-     */
-    public function favoritedByUsers(): MorphToMany
-    {
-        return $this->morphToMany(
-            User::class,
-            'favoritable',
-            'favorites'
-        );
-    }
 }

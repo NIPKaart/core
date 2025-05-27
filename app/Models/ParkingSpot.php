@@ -86,18 +86,6 @@ class ParkingSpot extends Model
         return $this->belongsTo(Province::class);
     }
 
-    /**
-     * Get the users who favorited this parking spot.
-     */
-    public function favoritedByUsers(): MorphToMany
-    {
-        return $this->morphToMany(
-            User::class,
-            'favoritable',
-            'favorites'
-        );
-    }
-
     // /**
     //  * Scope a query to only include approved parking spots.
     //  *

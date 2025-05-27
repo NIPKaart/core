@@ -54,16 +54,4 @@ class ParkingOffstreet extends Model
     {
         return $this->belongsTo(Province::class);
     }
-
-    /**
-     * Get the users who favorited this parking offstreet.
-     */
-    public function favoritedByUsers(): MorphToMany
-    {
-        return $this->morphToMany(
-            User::class,
-            'favoritable',
-            'favorites'
-        );
-    }
 }
