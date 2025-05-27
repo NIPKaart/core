@@ -7,12 +7,11 @@ use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpot;
 use App\Models\Country;
-use App\Models\Province;
 use App\Models\ParkingSpot;
+use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 class ParkingSpotController extends Controller
 {
@@ -49,7 +48,6 @@ class ParkingSpotController extends Controller
             'municipalities' => ParkingSpot::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
         ]);
     }
-
 
     /**
      * Show the form for creating a new resource.
@@ -183,7 +181,7 @@ class ParkingSpotController extends Controller
         Gate::authorize('viewAny', ParkingSpot::class);
 
         $spots = ParkingSpot::onlyTrashed()
-            ->with(['user','province','country'])
+            ->with(['user', 'province', 'country'])
             ->latest()
             ->paginate(25)
             ->withQueryString();

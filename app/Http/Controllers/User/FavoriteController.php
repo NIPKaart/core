@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FavoriteResource;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpot;
@@ -31,47 +32,31 @@ class FavoriteController extends Controller
             ])
             ->get();
 
-        $favoritesForFrontend = $favorites->map(function ($fav) {
-            $type = class_basename($fav->favoritable_type);
-            $f = $fav->favoritable;
+        return Inertia::render('backend/user/favorites/index', [
+            'favorites' => FavoriteResource::collection($favorites)->toArray($request),
+        ]);
+    }
 
-            if (! $f) {
-                return [
-                    'id' => null,
-                    'type' => $type,
-                    'title' => '[removed]',
-                ];
-            }
+    /**
+     * List the user's favorites as JSON.
+     */
+    public function list(Request $request)
+    {
+        $user = $request->user();
+        $favorites = $user->favorites()
+            ->with([
+                'favoritable' => function ($morphTo) {
+                    $morphTo->morphWith([
+                        ParkingSpot::class => ['country'],
+                        ParkingMunicipal::class => [],
+                        ParkingOffstreet::class => [],
+                    ]);
+                },
+            ])
+            ->get();
 
-            return match ($type) {
-                'ParkingSpot' => [
-                    'id' => $f->id,
-                    'type' => $type,
-                    'title' => $f->street,
-                    'municipality' => $f->municipality,
-                    'country' => $f->country?->name,
-                    'latitude' => $f->latitude,
-                    'longitude' => $f->longitude,
-                ],
-                'ParkingMunicipal', 'ParkingOffstreet' => [
-                    'id' => $f->id,
-                    'type' => $type,
-                    'title' => $f->name,
-                    'address' => $f->address ?? null,
-                    'city' => $f->city ?? null,
-                    'latitude' => $f->latitude,
-                    'longitude' => $f->longitude,
-                ],
-                default => [
-                    'id' => $f->id,
-                    'type' => $type,
-                    'title' => '[unknown]',
-                ]
-            };
-        });
-
-        return Inertia::render('backend/favorites/index', [
-            'favorites' => $favoritesForFrontend,
+        return response()->json([
+            'favorites' => FavoriteResource::collection($favorites)->toArray($request),
         ]);
     }
 

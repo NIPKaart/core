@@ -21,7 +21,7 @@ class MyParkingSpotController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('backend/user/parking-index', [
+        return Inertia::render('backend/user/parking/index', [
             'parkingSpots' => $locations,
         ]);
     }
@@ -43,7 +43,7 @@ class MyParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
-        return Inertia::render('backend/user/parking-show', [
+        return Inertia::render('backend/user/parking/show', [
             'spot' => $spot,
             'selectOptions' => [
                 'statuses' => $statuses,
@@ -54,13 +54,14 @@ class MyParkingSpotController extends Controller
     /**
      * Destroy the specified location if it belongs to the authenticated user.
      */
-    public function destroy(string $id) 
+    public function destroy(string $id)
     {
         $spot = ParkingSpot::withTrashed()->findOrFail($id);
         if ($spot->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
         $spot->delete();
+
         return redirect()->route('user.parking-spots.index');
     }
 }
