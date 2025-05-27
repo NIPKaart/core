@@ -7,6 +7,7 @@ import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
+import { FavoritesNavButton } from './favorties-nav-item';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
@@ -127,7 +128,10 @@ export default function Navbar() {
 
                     {/* Desktop right side */}
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
-                        <ThemeToggle />
+                        <div className="flex items-center gap-2">
+                            {auth.user && <FavoritesNavButton />}
+                            <ThemeToggle />
+                        </div>
                         {auth.user ? (
                             <Link
                                 href={route('dashboard')}
@@ -217,7 +221,10 @@ export default function Navbar() {
                                     Log in →
                                 </Link>
                             )}
-                            <ThemeToggle />
+                            <div className="flex items-center gap-2">
+                                {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
+                                <ThemeToggle />
+                            </div>
                         </div>
                     </div>
                 </Transition>

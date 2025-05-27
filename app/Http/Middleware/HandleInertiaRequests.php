@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use App\Models\ParkingSpot;
+use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -76,7 +76,7 @@ class HandleInertiaRequests extends Middleware
                     ],
                     'userParkingSpots' => [
                         'active' => ParkingSpot::where('user_id', auth()->id())->count(),
-                    ]
+                    ],
                 ];
             },
         ];
