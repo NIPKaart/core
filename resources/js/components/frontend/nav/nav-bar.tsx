@@ -208,7 +208,7 @@ export default function Navbar() {
                                 <Link
                                     href={route('dashboard')}
                                     onClick={() => setMobileMenuOpen(false)}
-                                    className="text-sm font-semibold text-gray-900 hover:underline dark:text-white"
+                                    className="font-semibold text-gray-900 hover:underline dark:text-white"
                                 >
                                     Dashboard
                                 </Link>
@@ -216,7 +216,7 @@ export default function Navbar() {
                                 <Link
                                     href={route('login')}
                                     onClick={() => setMobileMenuOpen(false)}
-                                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                                    className="font-semibold text-gray-900 dark:text-white"
                                 >
                                     Log in →
                                 </Link>

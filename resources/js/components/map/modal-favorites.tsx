@@ -34,7 +34,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     }, [open]);
 
     const handleFavoriteClick = (fav: Favorite) => {
-        window.location.hash = `18/${fav.latitude}/${fav.longitude}`;
+        window.location.href = `/map#18/${fav.latitude}/${fav.longitude}`;
         onClose();
         onGotoLocation?.();
     };
