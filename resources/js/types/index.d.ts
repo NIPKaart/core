@@ -178,3 +178,17 @@ export type NominatimAddress = {
     'ISO3166-2-lvl6'?: string;
     [key: string]: unknown;
 };
+
+export type FavoriteType = 'ParkingSpot' | 'ParkingMunicipal' | 'ParkingOffstreet';
+
+export type Favorite = {
+    id: string | null;
+    type: FavoriteType;
+    title: string;
+    latitude: number;
+    longitude: number;
+    municipality?: string;
+    country?: string;
+    address?: string;
+    city?: string;
+};

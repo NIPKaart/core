@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\User;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,9 +23,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // User routes
     Route::prefix('user')->as('user.')->group(function () {
+        // Profile routes
         Route::get('parking-spots', [User\MyParkingSpotController::class, 'index'])->name('parking-spots.index');
         Route::get('parking-spots/{id}', [User\MyParkingSpotController::class, 'show'])->name('parking-spots.show');
         Route::delete('parking-spots/{id}', [User\MyParkingSpotController::class, 'destroy'])->name('parking-spots.destroy');
+
+        // Favorites routes
+        Route::get('favorites', [User\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::get('favorites/list', [User\FavoriteController::class, 'list'])->name('favorites.list');
+        Route::post('favorites', [User\FavoriteController::class, 'store'])->name('favorites.store');
+        Route::delete('favorites', [User\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
     // Admin routes

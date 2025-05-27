@@ -32,6 +32,9 @@ export default function UserParkingSpotsPage({ parkingSpots }: PageProps) {
             <Head title="My parking locations" />
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="mb-2 text-2xl font-bold">My parking locations</h1>
+                <p className="text-muted-foreground">
+                    Here you can manage your parking spots and view their details. You can also remove any of your parking spots if needed.
+                </p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                         className="w-full sm:max-w-sm"
@@ -83,16 +86,18 @@ export default function UserParkingSpotsPage({ parkingSpots }: PageProps) {
                                         <Button asChild size="sm" variant="outline" className="me-1">
                                             <Link href={route('user.parking-spots.show', { id: spot.id })}>Details</Link>
                                         </Button>
-                                        <Button asChild size="sm" variant="default" title="View on map">
-                                            <a
-                                                href={`/map#19/${spot.latitude.toFixed(5)}/${spot.longitude.toFixed(5)}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <MapPin className="mr-1 h-4 w-4" />
-                                                On map
-                                            </a>
-                                        </Button>
+                                        {spot.status === 'approved' && (
+                                            <Button asChild size="sm" variant="default" title="View on map">
+                                                <a
+                                                    href={`/map#19/${spot.latitude.toFixed(5)}/${spot.longitude.toFixed(5)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <MapPin className="h-4 w-4" />
+                                                    On map
+                                                </a>
+                                            </Button>
+                                        )}
                                     </div>
                                 </CardFooter>
                             </Card>

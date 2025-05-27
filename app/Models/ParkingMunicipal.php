@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Favoritable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class ParkingMunicipal extends Model
 {
     /** @use HasFactory<\Database\Factories\ParkingMunicipalFactory> */
-    use HasFactory;
+    use Favoritable, HasFactory;
 
     protected $table = 'parking_municipal';
 

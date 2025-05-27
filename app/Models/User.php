@@ -57,4 +57,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(ParkingSpot::class);
     }
+
+    /**
+     * Get the favorites for the user.
+     */
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
 }

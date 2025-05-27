@@ -6,8 +6,8 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
-use App\Models\Province;
 use App\Models\ParkingSpot;
+use App\Models\Province;
 use App\Traits\ParsesNominatimAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -24,8 +24,9 @@ class LocationController extends Controller
     {
         $parkingSpots = ParkingSpot::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
             ->where('status', ParkingStatus::APPROVED)->get();
+
         return Inertia::render('frontend/map', [
-            'parkingSpots' => $parkingSpots
+            'parkingSpots' => $parkingSpots,
         ]);
     }
 

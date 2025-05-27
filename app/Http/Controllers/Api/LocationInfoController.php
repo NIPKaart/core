@@ -21,9 +21,13 @@ class LocationInfoController extends Controller
         if (empty($rule)) {
             $rule = ParkingRule::where([
                 ['country_id', $location->country_id],
-                ['nationwide', 1]
+                ['nationwide', 1],
             ])->first();
         }
+
+        // Check if the user has favorited this location
+        $user = auth()->user();
+        $isFavorited = $user ? $location->favoritedByUsers()->where('user_id', $user->id)->exists() : false;
 
         return response()->json([
             'id' => $location->id,
@@ -37,6 +41,7 @@ class LocationInfoController extends Controller
             'rule_url' => $rule ? $rule->url : null,
             'parking_time' => $location->parking_time,
             'created_at' => $location->created_at,
+            'is_favorited' => $isFavorited,
         ]);
     }
 }

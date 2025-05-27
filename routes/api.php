@@ -8,5 +8,5 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['throttle:30,1'])
+Route::middleware(['throttle:30,1', 'web'])
     ->get('parking-spots/{id}', [Api\LocationInfoController::class, 'getLocationInfo']);
