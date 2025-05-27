@@ -30,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Favorites routes
         Route::get('favorites', [User\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::get('favorites/list', [User\FavoriteController::class, 'list'])->name('favorites.list');
         Route::post('favorites', [User\FavoriteController::class, 'store'])->name('favorites.store');
         Route::delete('favorites', [User\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });

@@ -8,7 +8,7 @@ import { Heart, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type PageProps = {
-    favorites: Favorite[];
+    favorites?: Favorite[];
 };
 
 const iconMap = {
@@ -19,7 +19,7 @@ const iconMap = {
 
 const breadcrumbs = [{ title: 'My Favorites', href: route('user.favorites.index') }];
 
-export default function FavoritesPage({ favorites }: PageProps) {
+export default function FavoritesPage({ favorites = [] }: PageProps) {
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
@@ -27,7 +27,7 @@ export default function FavoritesPage({ favorites }: PageProps) {
         const s = search.toLowerCase();
         return favorites.filter(
             (fav) =>
-                fav.title.toLowerCase().includes(s) ||
+                fav.title?.toLowerCase().includes(s) ||
                 (fav.municipality && fav.municipality.toLowerCase().includes(s)) ||
                 (fav.city && fav.city.toLowerCase().includes(s)),
         );
@@ -55,9 +55,7 @@ export default function FavoritesPage({ favorites }: PageProps) {
                         <span className="text-muted-foreground text-lg font-semibold">You haven&apos;t added any favorites yet.</span>
                         <span className="text-muted-foreground text-sm">Browse the map and click the heart icon to favorite locations.</span>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
-                            <Link href={route('map')}>
-                                Go to map
-                            </Link>
+                            <Link href={route('map')}>Go to map</Link>
                         </Button>
                     </div>
                 ) : (
