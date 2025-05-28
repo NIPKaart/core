@@ -39,7 +39,7 @@ function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => vo
  */
 function useJustDragged(timeout = 250): [boolean, () => void] {
     const [justDragged, setJustDragged] = useState(false);
-    const timer = useRef<NodeJS.Timeout | null>(null);
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const triggerDrag = useCallback(() => {
         setJustDragged(true);
