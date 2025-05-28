@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Country, Province } from '@/types';
+import { Country, ParkingSpot, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { FileText, Layers, MapPin } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
@@ -40,9 +40,10 @@ type Props = {
     orientationOptions: Record<string, string>;
     onSubmit: () => void;
     submitting: boolean;
+    nearbySpots?: ParkingSpot[];
 };
 
-export default function ParkingSpotForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting }: Props) {
+export default function ParkingSpotForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting, nearbySpots }: Props) {
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">
@@ -244,6 +245,7 @@ export default function ParkingSpotForm({ form, countries, provinces, statusOpti
                                     form.setValue('latitude', lat);
                                     form.setValue('longitude', lng);
                                 }}
+                                nearbySpots={nearbySpots}
                             />
                         </div>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

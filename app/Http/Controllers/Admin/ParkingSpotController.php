@@ -80,11 +80,34 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
+        // Get the 10 nearest parking spots
+        $limit = 10;
+        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpot->id)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderByRaw('
+                (6371 * acos(
+                    cos(radians(?)) *
+                    cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) *
+                    sin(radians(latitude))
+                ))
+            ', [
+                $spot->latitude,
+                $spot->longitude,
+                $spot->latitude,
+            ])
+            ->limit($limit)
+            ->get();
+
         return inertia('backend/parking-spots/show', [
             'spot' => $spot,
             'selectOptions' => [
                 'statuses' => $statuses,
             ],
+            'nearbySpots' => $nearbySpots,
         ]);
     }
 
@@ -103,6 +126,28 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
+        // Get the 10 nearest parking spots
+        $limit = 10;
+        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpot->id)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderByRaw('
+                (6371 * acos(
+                    cos(radians(?)) *
+                    cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) *
+                    sin(radians(latitude))
+                ))
+            ', [
+                $spot->latitude,
+                $spot->longitude,
+                $spot->latitude,
+            ])
+            ->limit($limit)
+            ->get();
+
         $countries = Country::select('id', 'name')->get();
         $provinces = Province::select('id', 'name')->get();
 
@@ -114,6 +159,7 @@ class ParkingSpotController extends Controller
                 'statuses' => $statuses,
                 'orientation' => ParkingOrientation::options(),
             ],
+            'nearbySpots' => $nearbySpots,
         ]);
     }
 

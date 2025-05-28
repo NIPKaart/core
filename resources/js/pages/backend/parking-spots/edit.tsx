@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpotForm, { FormValues } from '@/pages/backend/form-parking-spot';
-import type { BreadcrumbItem, Country, Province, ParkingSpot } from '@/types';
+import type { BreadcrumbItem, Country, ParkingSpot, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
@@ -26,10 +26,11 @@ type PageProps = {
         statuses: { value: string; label: string; description: string }[];
         orientation: Record<string, string>;
     };
+    nearbySpots?: ParkingSpot[];
 };
 
 export default function Edit() {
-    const { spot, countries, provinces, selectOptions } = usePage<PageProps>().props;
+    const { spot, countries, provinces, selectOptions, nearbySpots } = usePage<PageProps>().props;
 
     const statusOptions: ParkingStatusOption[] = selectOptions.statuses.map((status) => ({
         ...status,
@@ -137,6 +138,7 @@ export default function Edit() {
                         orientationOptions={selectOptions.orientation}
                         onSubmit={handleSubmit}
                         submitting={false}
+                        nearbySpots={nearbySpots}
                     />
                 </FormProvider>
             </div>

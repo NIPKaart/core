@@ -19,9 +19,10 @@ type PageProps = {
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
     };
+    nearbySpots: ParkingSpot[];
 };
 
-export default function Show({ spot, selectOptions }: PageProps) {
+export default function Show({ spot, selectOptions, nearbySpots }: PageProps) {
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpotActionDialog();
 
@@ -155,7 +156,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
                         <h2 className="text-lg font-semibold">Location</h2>
                         <p className="text-muted-foreground text-sm">Where the parking spot is located.</p>
                     </div>
-                    <LocationMarkerCard latitude={spot.latitude} longitude={spot.longitude} />
+                    <LocationMarkerCard latitude={spot.latitude} longitude={spot.longitude} nearbySpots={nearbySpots} />
                 </div>
 
                 {/* Card 4: Street View */}
