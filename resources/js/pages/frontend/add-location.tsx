@@ -1,28 +1,28 @@
+import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import Navbar from '@/components/frontend/nav/nav-bar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { NominatimAddress } from '@/types';
+import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
+import { NominatimAddress, ParkingSpot } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import { AlertCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
 import { AddLocationForm } from './form/location';
 
-const { BaseLayer } = LayersControl;
+const { BaseLayer, Overlay } = LayersControl;
 
-const orangeIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
-    iconSize: [33, 48],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-});
+type PageProps = {
+    selectOptions: {
+        orientation: Record<string, string>;
+    };
+    parkingSpots: ParkingSpot[];
+};
 
 function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
     useMapEvents({
@@ -33,17 +33,66 @@ function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => vo
     return null;
 }
 
+/**
+ * Custom hook to track if the user just dragged the marker.
+ * Resets after a specified timeout.
+ */
+function useJustDragged(timeout = 250): [boolean, () => void] {
+    const [justDragged, setJustDragged] = useState(false);
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const triggerDrag = useCallback(() => {
+        setJustDragged(true);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => setJustDragged(false), timeout);
+    }, [timeout]);
+
+    // Clean up timer on unmount
+    useEffect(
+        () => () => {
+            if (timer.current) clearTimeout(timer.current);
+        },
+        [],
+    );
+
+    return [justDragged, triggerDrag];
+}
+
+/**
+ * Clustered parking markers component.
+ * Uses MarkerClusterGroup to cluster parking spots on the map.
+ */
+const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ spots }: { spots: ParkingSpot[] }) {
+    const clusterMarkers = useMemo(
+        () =>
+            spots.map((spot) => (
+                <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={getParkingStatusIcon(spot.status)} interactive={false} />
+            )),
+        [spots],
+    );
+    return (
+        <MarkerClusterGroup
+            spiderfyOnMaxZoom={false}
+            disableClusteringAtZoom={16}
+            maxClusterRadius={100}
+            removeOutsideVisibleBounds={true}
+            chunkedLoading
+        >
+            {clusterMarkers}
+        </MarkerClusterGroup>
+    );
+});
+
 export default function AddLocation() {
-    const { props } = usePage();
-    const selectOptions = props.selectOptions as {
-        orientation: Record<string, string>;
-    };
+    const { props } = usePage<PageProps>();
+    const { selectOptions, parkingSpots } = props;
     const generalError = props.errors?.general;
 
     const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [addressValid, setAddressValid] = useState<boolean>(false);
+    const [justDragged, triggerDrag] = useJustDragged(50);
 
     const handleMapClick = (e: LeafletMouseEvent) => {
         setMarkerPosition([e.latlng.lat, e.latlng.lng]);
@@ -51,6 +100,7 @@ export default function AddLocation() {
     };
 
     const handleMarkerClick = () => {
+        if (justDragged) return;
         setModalOpen(true);
     };
 
@@ -58,8 +108,10 @@ export default function AddLocation() {
         const marker = e.target as L.Marker;
         const pos = marker.getLatLng();
         setMarkerPosition([pos.lat, pos.lng]);
+        triggerDrag();
     };
 
+    // Fetch address data from Nominatim when marker position changes
     useEffect(() => {
         if (!markerPosition || !Array.isArray(markerPosition)) return;
 
@@ -113,13 +165,19 @@ export default function AddLocation() {
                                 maxZoom={20}
                             />
                         </BaseLayer>
+
+                        {/* Overlay for nearby parking spots */}
+                        <Overlay checked={true} name="Nearby Parking Spots">
+                            <ClusteredParkingMarkers spots={parkingSpots} />
+                        </Overlay>
                     </LayersControl>
 
+                    {/* Click handler to set marker position */}
                     <ClickHandler onMapClick={handleMapClick} />
                     {markerPosition && (
                         <Marker
                             position={markerPosition}
-                            icon={orangeIcon}
+                            icon={getOrangeMarkerIcon()}
                             draggable
                             eventHandlers={{
                                 dragend: handleDragEnd,

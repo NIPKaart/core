@@ -72,7 +72,7 @@ class ParkingSpotController extends Controller
     {
         Gate::authorize('view', $parkingSpot);
 
-        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -80,11 +80,34 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
+        // Get the 10 nearest parking spots
+        $limit = 10;
+        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpot->id)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderByRaw('
+                (6371 * acos(
+                    cos(radians(?)) *
+                    cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) *
+                    sin(radians(latitude))
+                ))
+            ', [
+                $parkingSpot->latitude,
+                $parkingSpot->longitude,
+                $parkingSpot->latitude,
+            ])
+            ->limit($limit)
+            ->get();
+
         return inertia('backend/parking-spots/show', [
-            'spot' => $spot,
+            'parkingSpot' => $parkingSpot,
             'selectOptions' => [
                 'statuses' => $statuses,
             ],
+            'nearbySpots' => $nearbySpots,
         ]);
     }
 
@@ -95,7 +118,7 @@ class ParkingSpotController extends Controller
     {
         Gate::authorize('update', $parkingSpot);
 
-        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -103,17 +126,40 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
+        // Get the 10 nearest parking spots
+        $limit = 10;
+        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpot->id)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->orderByRaw('
+                (6371 * acos(
+                    cos(radians(?)) *
+                    cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) *
+                    sin(radians(latitude))
+                ))
+            ', [
+                $parkingSpot->latitude,
+                $parkingSpot->longitude,
+                $parkingSpot->latitude,
+            ])
+            ->limit($limit)
+            ->get();
+
         $countries = Country::select('id', 'name')->get();
         $provinces = Province::select('id', 'name')->get();
 
         return inertia('backend/parking-spots/edit', [
-            'spot' => $spot,
+            'parkingSpot' => $parkingSpot,
             'countries' => $countries,
             'provinces' => $provinces,
             'selectOptions' => [
                 'statuses' => $statuses,
                 'orientation' => ParkingOrientation::options(),
             ],
+            'nearbySpots' => $nearbySpots,
         ]);
     }
 

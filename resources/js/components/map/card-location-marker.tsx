@@ -1,31 +1,31 @@
-import L from 'leaflet';
-import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
+import { getBlueMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
+import { ParkingSpot } from '@/types';
+import React, { useMemo } from 'react';
+import { FeatureGroup, LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import ZoomControl from './zoom-control';
-
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 type Props = {
     latitude: number;
     longitude: number;
     onChange?: (lat: number, lng: number) => void;
     draggable?: boolean;
+    nearbySpots?: ParkingSpot[];
 };
 
-const { BaseLayer } = LayersControl;
+const { BaseLayer, Overlay } = LayersControl;
 
-const defaultIcon = L.icon({
-    iconRetinaUrl: markerIcon2x,
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
+const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({ spots }: { spots: ParkingSpot[] }) {
+    const markers = useMemo(
+        () =>
+            spots.map((spot) => (
+                <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={getParkingStatusIcon(spot.status)} interactive={false} />
+            )),
+        [spots],
+    );
+    return <FeatureGroup>{markers}</FeatureGroup>;
 });
 
-export default function LocationMarkerCard({ latitude, longitude, onChange, draggable }: Props) {
+export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpots }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
 
     return (
@@ -55,13 +55,19 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
                             maxZoom={22}
                         />
                     </BaseLayer>
+                    {/* Overlay for nearby parking spots */}
+                    {nearbySpots && nearbySpots.length > 0 && (
+                        <Overlay checked name="Nearby Parking Spots">
+                            <NearbyParkingMarkers spots={nearbySpots} />
+                        </Overlay>
+                    )}
                 </LayersControl>
 
                 <ZoomControl position="topleft" />
 
                 <Marker
                     position={[latitude, longitude]}
-                    icon={defaultIcon}
+                    icon={getBlueMarkerIcon()}
                     draggable={isDraggable}
                     eventHandlers={
                         isDraggable && onChange

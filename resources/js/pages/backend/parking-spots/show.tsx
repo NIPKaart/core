@@ -15,30 +15,31 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type PageProps = {
-    spot: ParkingSpot;
+    parkingSpot: ParkingSpot;
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
     };
+    nearbySpots: ParkingSpot[];
 };
 
-export default function Show({ spot, selectOptions }: PageProps) {
+export default function Show({ parkingSpot, selectOptions, nearbySpots }: PageProps) {
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpotActionDialog();
 
-    const statusOpt = selectOptions.statuses.find((s) => s.value === spot.status)!;
+    const statusOpt = selectOptions.statuses.find((s) => s.value === parkingSpot.status)!;
     const variantMap: Record<string, BannerVariant> = {
         pending: 'primary',
         approved: 'success',
         rejected: 'error',
     };
-    const variant = variantMap[spot.status] ?? 'info';
+    const variant = variantMap[parkingSpot.status] ?? 'info';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Parking Spot" />
             {/* Header */}
             <div className="mb-4 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Parking spot ({spot.id})</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Parking spot ({parkingSpot.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
                         <Link href={route('app.parking-spots.index')}>
@@ -49,7 +50,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
 
                     {can('parking-spot.update') && (
                         <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                            <Link href={route('app.parking-spots.edit', { id: spot.id })}>
+                            <Link href={route('app.parking-spots.edit', { id: parkingSpot.id })}>
                                 <Edit className="h-4 w-4" />
                                 Edit
                             </Link>
@@ -57,7 +58,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
                     )}
 
                     {can('parking-spot.delete') && (
-                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', spot)}>
+                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', parkingSpot)}>
                             <Trash2 className="h-4 w-4" />
                             Move to Trash
                         </Button>
@@ -91,48 +92,48 @@ export default function Show({ spot, selectOptions }: PageProps) {
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Country</th>
                                         <td className="px-4 py-2">
-                                            {spot.country.name} ({spot.country.code})
+                                            {parkingSpot.country.name} ({parkingSpot.country.code})
                                         </td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Province</th>
-                                        <td className="px-4 py-2">{spot.province.name}</td>
+                                        <td className="px-4 py-2">{parkingSpot.province.name}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">IP Address</th>
                                         <td className="px-4 py-2">
                                             <a
-                                                href={`https://whatismyipaddress.com/?s=${spot.ip_address}`}
+                                                href={`https://whatismyipaddress.com/?s=${parkingSpot.ip_address}`}
                                                 target="_blank"
                                                 className="font-medium text-orange-600 hover:underline dark:text-orange-500"
                                             >
-                                                {spot.ip_address}
+                                                {parkingSpot.ip_address}
                                             </a>
                                         </td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Municipality</th>
-                                        <td className="px-4 py-2">{spot.municipality}</td>
+                                        <td className="px-4 py-2">{parkingSpot.municipality}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">City</th>
-                                        <td className="px-4 py-2">{spot.city}</td>
+                                        <td className="px-4 py-2">{parkingSpot.city}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Postcode</th>
-                                        <td className="px-4 py-2">{spot.postcode}</td>
+                                        <td className="px-4 py-2">{parkingSpot.postcode}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Street</th>
-                                        <td className="px-4 py-2">{spot.street}</td>
+                                        <td className="px-4 py-2">{parkingSpot.street}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Amenity</th>
-                                        <td className="px-4 py-2">{spot.amenity}</td>
+                                        <td className="px-4 py-2">{parkingSpot.amenity}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Orientation</th>
-                                        <td className="px-4 py-2">{spot.orientation}</td>
+                                        <td className="px-4 py-2">{parkingSpot.orientation}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -155,7 +156,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
                         <h2 className="text-lg font-semibold">Location</h2>
                         <p className="text-muted-foreground text-sm">Where the parking spot is located.</p>
                     </div>
-                    <LocationMarkerCard latitude={spot.latitude} longitude={spot.longitude} />
+                    <LocationMarkerCard latitude={parkingSpot.latitude} longitude={parkingSpot.longitude} nearbySpots={nearbySpots} />
                 </div>
 
                 {/* Card 4: Street View */}
@@ -164,7 +165,7 @@ export default function Show({ spot, selectOptions }: PageProps) {
                         <h2 className="text-lg font-semibold">Street view</h2>
                         <p className="text-muted-foreground text-sm">See the area around the parking spot.</p>
                     </div>
-                    <StreetViewCard latitude={spot.latitude} longitude={spot.longitude} />
+                    <StreetViewCard latitude={parkingSpot.latitude} longitude={parkingSpot.longitude} />
                 </div>
             </div>
             {dialogElement}

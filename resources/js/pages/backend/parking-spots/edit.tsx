@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpotForm, { FormValues } from '@/pages/backend/form-parking-spot';
-import type { BreadcrumbItem, Country, Province, ParkingSpot } from '@/types';
+import type { BreadcrumbItem, Country, ParkingSpot, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
@@ -19,17 +19,18 @@ const iconMap = {
 };
 
 type PageProps = {
-    spot: ParkingSpot;
+    parkingSpot: ParkingSpot;
     countries: Country[];
     provinces: Province[];
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
         orientation: Record<string, string>;
     };
+    nearbySpots?: ParkingSpot[];
 };
 
 export default function Edit() {
-    const { spot, countries, provinces, selectOptions } = usePage<PageProps>().props;
+    const { parkingSpot, countries, provinces, selectOptions, nearbySpots } = usePage<PageProps>().props;
 
     const statusOptions: ParkingStatusOption[] = selectOptions.statuses.map((status) => ({
         ...status,
@@ -38,23 +39,23 @@ export default function Edit() {
 
     const form = useForm<FormValues, ParkingSpot>({
         defaultValues: {
-            country_id: spot.country.id,
-            province_id: spot.province.id,
-            municipality: spot.municipality,
-            city: spot.city,
-            suburb: spot.suburb ?? '',
-            neighbourhood: spot.neighbourhood ?? '',
-            postcode: spot.postcode,
-            street: spot.street,
-            amenity: spot.amenity ?? '',
-            parking_hours: Math.floor(spot.parking_time ?? 0 / 60),
-            parking_minutes: (spot.parking_time ?? 0) % 60,
-            orientation: spot.orientation,
-            window_times: spot.window_times,
-            latitude: spot.latitude,
-            longitude: spot.longitude,
-            description: spot.description ?? '',
-            status: spot.status,
+            country_id: parkingSpot.country.id,
+            province_id: parkingSpot.province.id,
+            municipality: parkingSpot.municipality,
+            city: parkingSpot.city,
+            suburb: parkingSpot.suburb ?? '',
+            neighbourhood: parkingSpot.neighbourhood ?? '',
+            postcode: parkingSpot.postcode,
+            street: parkingSpot.street,
+            amenity: parkingSpot.amenity ?? '',
+            parking_hours: Math.floor(parkingSpot.parking_time ?? 0 / 60),
+            parking_minutes: (parkingSpot.parking_time ?? 0) % 60,
+            orientation: parkingSpot.orientation,
+            window_times: parkingSpot.window_times,
+            latitude: parkingSpot.latitude,
+            longitude: parkingSpot.longitude,
+            description: parkingSpot.description ?? '',
+            status: parkingSpot.status,
         },
     });
 
@@ -64,7 +65,7 @@ export default function Edit() {
             parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
         };
 
-        router.put(route('app.parking-spots.update', { id: spot.id }), payload, {
+        router.put(route('app.parking-spots.update', { id: parkingSpot.id }), payload, {
             preserveScroll: true,
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
@@ -79,10 +80,10 @@ export default function Edit() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${spot.id}`} />
+            <Head title={`Edit ${parkingSpot.id}`} />
 
             <div className="flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Edit {spot.id}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Edit {parkingSpot.id}</h1>
 
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
@@ -94,7 +95,7 @@ export default function Edit() {
 
                     <Button asChild className="w-1/2 bg-sky-600 text-white hover:bg-sky-700 sm:w-auto dark:bg-sky-500 dark:hover:bg-sky-400">
                         <a
-                            href={`https://www.google.com/maps?q=&layer=c&cbll=${spot.latitude},${spot.longitude}`}
+                            href={`https://www.google.com/maps?q=&layer=c&cbll=${parkingSpot.latitude},${parkingSpot.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center gap-2"
@@ -111,9 +112,10 @@ export default function Edit() {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-muted-foreground flex items-center gap-2">
                             <UserIcon className="h-4 w-4" />
-                            {spot.user ? (
+                            {parkingSpot.user ? (
                                 <span>
-                                    <span className="text-foreground font-medium">Submitted by:</span> {spot.user.name} ({spot.user.email})
+                                    <span className="text-foreground font-medium">Submitted by:</span> {parkingSpot.user.name} (
+                                    {parkingSpot.user.email})
                                 </span>
                             ) : (
                                 <span className="text-muted-foreground italic">Submitted anonymously</span>
@@ -122,7 +124,7 @@ export default function Edit() {
                         <div className="text-muted-foreground flex items-center gap-2">
                             <CalendarCheck className="h-4 w-4" />
                             <span>
-                                <span className="text-foreground font-medium">Created:</span> {new Date(spot.created_at).toLocaleString()}
+                                <span className="text-foreground font-medium">Created:</span> {new Date(parkingSpot.created_at).toLocaleString()}
                             </span>
                         </div>
                     </div>
@@ -137,6 +139,7 @@ export default function Edit() {
                         orientationOptions={selectOptions.orientation}
                         onSubmit={handleSubmit}
                         submitting={false}
+                        nearbySpots={nearbySpots}
                     />
                 </FormProvider>
             </div>

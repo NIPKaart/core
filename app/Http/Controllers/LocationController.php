@@ -35,7 +35,10 @@ class LocationController extends Controller
      */
     public function locationAdd()
     {
+        $parkingSpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')->get();
+
         return Inertia::render('frontend/add-location', [
+            'parkingSpots' => $parkingSpots,
             'selectOptions' => [
                 'orientation' => ParkingOrientation::options(),
             ],
