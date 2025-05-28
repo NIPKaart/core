@@ -65,4 +65,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Favorite::class);
     }
+
+    /**
+     * Get the parking spot confirmations for the user.
+     */
+    public function parkingSpotConfirmations()
+    {
+        return $this->hasMany(ParkingSpotConfirmation::class);
+    }
 }

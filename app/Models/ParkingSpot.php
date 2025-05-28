@@ -8,6 +8,7 @@ use App\Traits\Favoritable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ParkingSpot extends Model
@@ -83,6 +84,14 @@ class ParkingSpot extends Model
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
+    }
+
+    /**
+     * Get the confirmations for the ParkingSpot
+     */
+    public function confirmations(): HasMany
+    {
+        return $this->hasMany(ParkingSpotConfirmation::class);
     }
 
     // /**
