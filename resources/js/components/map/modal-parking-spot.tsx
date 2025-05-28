@@ -414,9 +414,9 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                     <DrawerDescription className="text-muted-foreground mb-2 text-center text-sm">{descriptionText}</DrawerDescription>
                     <Content withPadding={true} />
                 </div>
-                <DrawerFooter className="flex flex-row justify-between gap-2">
+                <DrawerFooter className="flex flex-row gap-2">
                     {can('parking-spot.view') && data?.id && (
-                        <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener" className="w-1/2">
+                        <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener" className="flex-1">
                             <Button variant="outline" className="flex w-full items-center gap-2" title="Go to admin page">
                                 <Eye className="h-4 w-4" />
                                 Show
@@ -424,7 +424,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         </a>
                     )}
                     <DrawerClose asChild>
-                        <Button variant="secondary" className="w-1/2">
+                        <Button variant="secondary" className="flex-1">
                             Close
                         </Button>
                     </DrawerClose>

@@ -72,7 +72,7 @@ class ParkingSpotController extends Controller
     {
         Gate::authorize('view', $parkingSpot);
 
-        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -95,15 +95,15 @@ class ParkingSpotController extends Controller
                     sin(radians(latitude))
                 ))
             ', [
-                $spot->latitude,
-                $spot->longitude,
-                $spot->latitude,
+                $parkingSpot->latitude,
+                $parkingSpot->longitude,
+                $parkingSpot->latitude,
             ])
             ->limit($limit)
             ->get();
 
         return inertia('backend/parking-spots/show', [
-            'spot' => $spot,
+            'parkingSpot' => $parkingSpot,
             'selectOptions' => [
                 'statuses' => $statuses,
             ],
@@ -118,7 +118,7 @@ class ParkingSpotController extends Controller
     {
         Gate::authorize('update', $parkingSpot);
 
-        $spot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -141,9 +141,9 @@ class ParkingSpotController extends Controller
                     sin(radians(latitude))
                 ))
             ', [
-                $spot->latitude,
-                $spot->longitude,
-                $spot->latitude,
+                $parkingSpot->latitude,
+                $parkingSpot->longitude,
+                $parkingSpot->latitude,
             ])
             ->limit($limit)
             ->get();
@@ -152,7 +152,7 @@ class ParkingSpotController extends Controller
         $provinces = Province::select('id', 'name')->get();
 
         return inertia('backend/parking-spots/edit', [
-            'spot' => $spot,
+            'parkingSpot' => $parkingSpot,
             'countries' => $countries,
             'provinces' => $provinces,
             'selectOptions' => [
