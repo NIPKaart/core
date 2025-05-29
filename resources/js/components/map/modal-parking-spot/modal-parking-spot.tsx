@@ -214,7 +214,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
                     </DialogHeader>
                     <div className="mt-2 max-h-[70vh] overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
-                    <DialogFooter className="flex flex-row justify-between gap-2 pt-4">
+                    <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-spot.view') && data?.id && (
                             <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
                                 <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
