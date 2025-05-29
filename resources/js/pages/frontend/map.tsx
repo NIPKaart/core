@@ -16,6 +16,9 @@ import { useMemo, useState } from 'react';
 const { BaseLayer } = LayersControl;
 
 type PageProps = {
+    selectOptions: {
+        confirmationStatus: Record<string, string>;
+    };
     parkingSpots: ParkingSpot[];
 };
 
@@ -40,7 +43,7 @@ export default function Map() {
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { parkingSpots } = usePage<PageProps>().props;
+    const { parkingSpots, selectOptions } = usePage<PageProps>().props;
 
     const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
@@ -117,6 +120,7 @@ export default function Map() {
                     onClose={() => setModalOpen(false)}
                     latitude={selectedLat}
                     longitude={selectedLng}
+                    confirmationStatusOptions={selectOptions.confirmationStatus}
                 />
             </div>
         </>

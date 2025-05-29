@@ -1,13 +1,16 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { Eye, MapPin, Navigation, Share2, X } from 'lucide-react';
+import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
+import clsx from 'clsx';
+import { AlarmClock, Eye, FileText, Info as InfoIcon, Loader2, MapPin, MapPinCheckInside, Navigation, Share2, Users, X } from 'lucide-react';
 import * as React from 'react';
 import { FavoriteButton } from '../frontend/button/favorite';
+import { Separator } from '../ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 type LocationDetail = {
@@ -22,7 +25,12 @@ type LocationDetail = {
     rule_url?: string | null;
     parking_time?: number | null;
     created_at: string;
-    is_favorited?: boolean;
+    is_favorited: boolean;
+    confirmed_today: boolean;
+    confirmations_count?: {
+        confirmed: number;
+    };
+    last_confirmed_at?: string | null;
 };
 
 type ParkingSpotModalProps = {
@@ -31,6 +39,7 @@ type ParkingSpotModalProps = {
     onClose: () => void;
     latitude: number | null;
     longitude: number | null;
+    confirmationStatusOptions: Record<string, string>;
 };
 
 function getOrientationIllustration(orientation?: string | null) {
@@ -47,9 +56,10 @@ function formatParkingTime(minutes?: number | null) {
     if (minutes < 60) return `${minutes} min`;
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    if (h && m) return `${h} hour ${m} min`;
-    if (h) return `${h} hour`;
-    return `${m} min`;
+    if (h && m) return `${h} ${h === 1 ? 'hour' : 'hours'} ${m} min`;
+    if (h) return `${h} ${h === 1 ? 'hour' : 'hours'}`;
+    if (m) return `${m} min`;
+    return 'Unlimited';
 }
 
 function getGoogleMapsUrl(lat: number | null, lng: number | null): string {
@@ -66,17 +76,40 @@ function getStreetViewUrl(lat: number | null, lng: number | null): string {
     return 'https://maps.google.com/';
 }
 
-export default function ParkingSpotModal({ spotId, open, onClose, latitude, longitude }: ParkingSpotModalProps) {
+export function ConfirmedBadge({ count, className = '' }: { count: number; className?: string }) {
+    if (!count || count <= 0) return null;
+    return (
+        <div
+            className={clsx(
+                'flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm',
+                // Light mode
+                'border-green-200 bg-green-50 text-green-800',
+                // Dark mode
+                'dark:border-green-900 dark:bg-green-950/80 dark:text-green-300',
+                className,
+            )}
+            style={{
+                minWidth: 70,
+                justifyContent: 'center',
+                letterSpacing: '.01em',
+            }}
+        >
+            <Users className="mr-1 h-4 w-4 text-green-600 dark:text-green-300" />
+            {count}x confirmed
+        </div>
+    );
+}
+
+export default function ParkingSpotModal({ spotId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpotModalProps) {
     const { can, user } = useAuthorization();
     const isLoggedIn = !!user;
-
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [data, setData] = React.useState<LocationDetail | null>(null);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
-    const [accordionOpen, setAccordionOpen] = React.useState<string | undefined>(undefined);
     const [copiedLocationId, setCopiedLocationId] = React.useState(false);
     const [copiedShare, setCopiedShare] = React.useState(false);
+    const [tab, setTab] = React.useState('info');
 
     React.useEffect(() => {
         if (open && spotId) {
@@ -98,9 +131,9 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
 
     React.useEffect(() => {
         if (open) {
-            setAccordionOpen(undefined);
             setCopiedLocationId(false);
             setCopiedShare(false);
+            setTab('info');
         }
     }, [open, spotId]);
 
@@ -113,13 +146,6 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
         }
     }
 
-    function copyUrl() {
-        const shareUrl = getShareUrl(latitude, longitude, 18);
-        navigator.clipboard.writeText(shareUrl);
-        setCopiedShare(true);
-        setTimeout(() => setCopiedShare(false), 1400);
-    }
-
     function getShareUrl(lat: number | null, lng: number | null, zoom = 18) {
         if (lat !== null && lng !== null) {
             return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
@@ -127,37 +153,60 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
         return window.location.href;
     }
 
+    function copyUrl() {
+        const shareUrl = getShareUrl(latitude, longitude, 18);
+        navigator.clipboard.writeText(shareUrl);
+        setCopiedShare(true);
+        setTimeout(() => setCopiedShare(false), 1400);
+    }
+
+    function LoadingSkeleton() {
+        return (
+            <div className="flex flex-col items-center justify-center gap-4 py-10">
+                <Loader2 className="mb-2 h-6 w-6 animate-spin text-orange-400" />
+                <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
+            </div>
+        );
+    }
+
+    function ErrorBlock() {
+        return (
+            <div className="flex flex-col items-center justify-center gap-4 py-10 text-red-600">
+                Could not load location details.
+                <br />
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                    Try again
+                </Button>
+            </div>
+        );
+    }
+
     function MainInfo() {
         if (!data) return null;
         return (
-            <>
-                <div className="mb-3 flex w-full items-center justify-center">
-                    <div className="flex w-full justify-center" style={{ maxHeight: 120 }}>
-                        <img
-                            src={getOrientationIllustration(data.orientation)}
-                            alt="Orientation"
-                            className="max-h-40 w-full object-contain"
-                            style={{ aspectRatio: '3/1', maxWidth: 440 }}
-                        />
-                    </div>
-                </div>
-                <div className="mb-1 text-center">
-                    <span className="text-base font-bold">
-                        {data.street ? data.street + ',' : ''} {data.municipality}
+            <div className="mx-auto my-2 flex w-full max-w-lg flex-col items-center gap-2">
+                <img
+                    src={getOrientationIllustration(data.orientation)}
+                    alt="Orientation"
+                    className="max-h-28 w-auto object-contain"
+                    style={{ aspectRatio: '3/1', maxWidth: 300 }}
+                />
+                {/* Centered address + badge */}
+                <div className="flex w-full items-center justify-center gap-2">
+                    <MapPin className="h-5 w-5 flex-shrink-0 text-orange-400" aria-label="Location" />
+                    <span className="block truncate text-lg font-bold">
+                        {data.street}
+                        {data.street ? ',' : ''} {data.municipality}
                     </span>
-                    <br />
-                    <span className="text-xs text-zinc-500">
-                        {data.province}
-                        {data.country ? `, ${data.country}` : ''}
-                    </span>
+                    {data.confirmations_count?.confirmed ? <ConfirmedBadge count={data.confirmations_count.confirmed} /> : null}
                 </div>
-                {typeof data.parking_time === 'number' && data.parking_time > 0 && (
-                    <div className="mb-2 rounded bg-orange-50 px-2 py-1 text-center text-xs text-orange-700 dark:bg-orange-950/60 dark:text-orange-200">
-                        At this location you may park for a maximum of <strong>{formatParkingTime(data.parking_time)}</strong>. Don’t forget to
-                        display a <strong>parking disc</strong>.
-                    </div>
-                )}
-            </>
+                <div className="w-full truncate px-2 text-center text-xs text-zinc-500">
+                    {data.province}
+                    {data.country ? `, ${data.country}` : ''}
+                </div>
+            </div>
         );
     }
 
@@ -192,178 +241,241 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
         );
     }
 
-    function CompactTable() {
+    function InfoTable() {
         if (!data) return null;
+
+        const alwaysRows = [
+            {
+                label: 'Street',
+                value: data.street || '-',
+            },
+            {
+                label: <span className="flex items-center gap-1">Max. parking time</span>,
+                value:
+                    typeof data.parking_time === 'number' && data.parking_time > 0 ? (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="inline-flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-800 shadow-sm transition-colors dark:border-orange-900 dark:bg-orange-950/70 dark:text-orange-100">
+                                        <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />
+                                        {formatParkingTime(data.parking_time)}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" align="center">
+                                    Don’t forget your parking disc!
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ) : (
+                        <span className="text-zinc-400 italic">Unlimited</span>
+                    ),
+            },
+            { label: 'Orientation', value: data.orientation || '-' },
+            { label: 'Municipality', value: data.municipality || '-' },
+            {
+                label: 'Municipal regulations',
+                value: data.rule_url ? (
+                    <a href={data.rule_url} target="_blank" rel="noopener" className="text-orange-600 underline">
+                        Website
+                    </a>
+                ) : (
+                    <span className="text-zinc-400 italic">No information</span>
+                ),
+            },
+            {
+                label: 'Last confirmed',
+                value: data.last_confirmed_at ? (
+                    new Date(data.last_confirmed_at).toLocaleDateString()
+                ) : (
+                    <span className="text-zinc-400 italic">Never</span>
+                ),
+            },
+        ];
+
+        const privateRows = [
+            {
+                label: 'Area',
+                value: data.amenity || '-',
+            },
+            {
+                label: 'Location ID',
+                value: isDesktop ? (
+                    <TooltipProvider>
+                        <Tooltip open={copiedLocationId} onOpenChange={() => setCopiedLocationId(false)} delayDuration={0}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    variant="link"
+                                    onClick={copyLocationId}
+                                    className="cursor-pointer p-0 text-orange-600"
+                                    tabIndex={0}
+                                    type="button"
+                                    aria-label="Copy location ID"
+                                >
+                                    {data.id}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" align="center">
+                                Copied!
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                ) : (
+                    <Button
+                        size="sm"
+                        variant="link"
+                        onClick={copyLocationId}
+                        className="cursor-pointer p-0 text-orange-600"
+                        tabIndex={0}
+                        type="button"
+                        aria-label="Copy location ID"
+                    >
+                        {data.id}
+                    </Button>
+                ),
+            },
+            {
+                label: 'Added on',
+                value: new Date(data.created_at).toLocaleDateString(),
+            },
+        ];
+
+        const rows = isLoggedIn ? [...alwaysRows, ...privateRows] : alwaysRows;
+
         return (
-            <div className="my-3">
-                <Table>
+            <div className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <Table className="w-full">
                     <TableBody>
-                        <TableRow>
-                            <TableCell className="w-1/3 font-medium text-zinc-500">Maximum parking time</TableCell>
-                            <TableCell>
-                                {typeof data.parking_time === 'number' && data.parking_time > 0 ? formatParkingTime(data.parking_time) : 'Unlimited'}
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell className="font-medium text-zinc-500">Orientation</TableCell>
-                            <TableCell>{data.orientation || '-'}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell className="font-medium text-zinc-500">Municipal regulations</TableCell>
-                            <TableCell>
-                                {data.rule_url ? (
-                                    <a href={data.rule_url} target="_blank" rel="noopener" className="text-orange-600 underline">
-                                        Website
-                                    </a>
-                                ) : (
-                                    <span className="text-zinc-400 italic">No information</span>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                        <TableRow>
-                            <TableCell className="font-medium text-zinc-500">Added on</TableCell>
-                            <TableCell>{new Date(data.created_at).toLocaleDateString()}</TableCell>
-                        </TableRow>
+                        {rows.map((row, i) => (
+                            <TableRow key={i} className={i % 2 === 0 ? 'bg-white dark:bg-zinc-950' : 'bg-zinc-50 dark:bg-zinc-900'}>
+                                <TableCell className="w-1/3 px-4 py-2 font-medium text-zinc-500">{row.label}</TableCell>
+                                <TableCell className="px-4 py-2">{row.value}</TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </div>
         );
     }
 
-    function MoreInfoAccordion() {
-        if (!data) return null;
+    // Main component for the parking spot modal
+    function InfoTab() {
         return (
-            <Accordion
-                type="single"
-                collapsible
-                className="mt-4 w-full"
-                value={accordionOpen}
-                onValueChange={(v) => setAccordionOpen(v || undefined)}
-            >
-                <AccordionItem value="details">
-                    <AccordionTrigger className="cursor-pointer rounded-md border border-zinc-200 bg-white px-4 py-3 font-medium text-orange-700 transition-all hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-                        More information
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <Table>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell className="w-1/3 font-medium text-zinc-500">Municipality</TableCell>
-                                    <TableCell>{data.municipality || '-'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium text-zinc-500">Province</TableCell>
-                                    <TableCell>{data.province || '-'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium text-zinc-500">Country</TableCell>
-                                    <TableCell>{data.country || '-'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium text-zinc-500">Area</TableCell>
-                                    <TableCell>{data.amenity || '-'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell className="font-medium text-zinc-500">Location ID</TableCell>
-                                    <TableCell>
-                                        {isDesktop ? (
-                                            <TooltipProvider>
-                                                <Tooltip open={copiedLocationId} onOpenChange={() => setCopiedLocationId(false)} delayDuration={0}>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="link"
-                                                            onClick={copyLocationId}
-                                                            className="cursor-pointer p-0 text-orange-600"
-                                                            tabIndex={0}
-                                                            type="button"
-                                                            aria-label="Copy location ID"
-                                                        >
-                                                            {data.id}
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent side="right" align="center">
-                                                        Copied!
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        ) : (
-                                            <Button
-                                                size="sm"
-                                                variant="link"
-                                                onClick={copyLocationId}
-                                                className="cursor-pointer p-0 text-orange-600"
-                                                tabIndex={0}
-                                                type="button"
-                                                aria-label="Copy location ID"
-                                            >
-                                                {data.id}
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        {data.description && (
-                            <div className="mt-2 rounded-md bg-zinc-50 p-3 text-xs shadow-inner dark:bg-orange-950/60">
-                                <div className="mb-1 font-semibold">Description</div>
-                                <div>{data.description}</div>
-                            </div>
-                        )}
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+            <>
+                <MainInfo />
+                <ActionButtons />
+                <InfoTable />
+            </>
         );
     }
 
-    function Content({ withPadding = true }: { withPadding?: boolean }) {
-        if (loading) return <div className="py-4 text-center">Loading...</div>;
-        if (error) return <div className="py-2 text-red-500">{error}</div>;
+    // Confirm tab for logged-in users to confirm the parking spot
+    function ConfirmTab() {
         if (!data) return null;
-
         return (
-            <div className={withPadding ? 'px-4' : ''}>
+            <div className="py-3">
+                <ParkingConfirmForm
+                    spotId={data.id}
+                    onConfirmed={() => {
+                        fetch(`/api/parking-spots/${spotId}`)
+                            .then((res) => res.json())
+                            .then(setData);
+                    }}
+                    confirmationStatusOptions={confirmationStatusOptions}
+                    confirmedToday={data.confirmed_today}
+                />
+            </div>
+        );
+    }
+
+    // Description tab to show additional information about the parking spot
+    function DescriptionTab() {
+        if (!data?.description) return null;
+        return (
+            <div className="relative mb-2 rounded-xl border border-orange-100 bg-orange-50/70 px-6 py-4 shadow-sm dark:border-orange-900 dark:bg-orange-950/60">
+                <div className="absolute top-0 left-0 h-full w-1 rounded-tl-xl rounded-bl-xl bg-orange-400" />
+                <div className="flex items-start gap-3">
+                    <FileText className="mt-0.5 h-5 w-5 flex-shrink-0 text-orange-400" />
+                    <div>
+                        <div className="mb-1 text-base font-semibold text-orange-800 dark:text-orange-200">Description</div>
+                        <div className="text-sm text-orange-900 dark:text-orange-100">{data.description}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    function TabBlock() {
+        if (!isLoggedIn && !data?.description) return <InfoTab />;
+        return (
+            <>
                 <MainInfo />
                 <ActionButtons />
-                <CompactTable />
-                <MoreInfoAccordion />
-            </div>
+                <Separator />
+                <Tabs value={tab} onValueChange={setTab} className="mt-4 w-full">
+                    <TabsList className="mb-2 flex w-full">
+                        <TabsTrigger
+                            value="info"
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                        >
+                            <InfoIcon className="h-4 w-4" />
+                            Info
+                        </TabsTrigger>
+                        {isLoggedIn && (
+                            <TabsTrigger
+                                value="confirm"
+                                className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                            >
+                                <MapPinCheckInside className="h-4 w-4" />
+                                Confirm
+                            </TabsTrigger>
+                        )}
+                        {data?.description && (
+                            <TabsTrigger
+                                value="description"
+                                className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                            >
+                                <FileText className="h-4 w-4" />
+                                Description
+                            </TabsTrigger>
+                        )}
+                    </TabsList>
+                    <TabsContent value="info">
+                        <InfoTable />
+                    </TabsContent>
+                    <TabsContent value="confirm">{isLoggedIn && <ConfirmTab />}</TabsContent>
+                    <TabsContent value="description">{data?.description && <DescriptionTab />}</TabsContent>
+                </Tabs>
+            </>
         );
     }
 
     const descriptionText = 'Here you will find all the details of this parking location.';
 
-    // ---- Desktop Dialog ----
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={onClose}>
                 <DialogContent showClose={false} className="max-w-xl bg-white sm:rounded-xl dark:bg-zinc-950">
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                                 <MapPin className="h-6 w-6 text-orange-400" />
-                                <DialogTitle className="text-lg font-semibold">Parking location</DialogTitle>
-                            </div>
+                                Parking location
+                            </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
-                                {isDesktop ? (
-                                    <TooltipProvider>
-                                        <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
-                                            <TooltipTrigger asChild>
-                                                <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
-                                                    <Share2 className="h-5 w-5" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="top" align="center">
-                                                Copied!
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                ) : (
-                                    <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
-                                        <Share2 className="h-5 w-5" />
-                                    </Button>
-                                )}
+                                <TooltipProvider>
+                                    <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
+                                        <TooltipTrigger asChild>
+                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
+                                                <Share2 className="h-5 w-5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" align="center">
+                                            Copied!
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                                 <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
                                     <X className="h-5 w-5" />
                                 </Button>
@@ -371,10 +483,8 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         </div>
                         <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
                     </DialogHeader>
-                    <div className="mt-2 max-h-[70vh] overflow-y-auto">
-                        <Content withPadding={true} />
-                    </div>
-                    <DialogFooter className="flex flex-row justify-between gap-2">
+                    <div className="mt-2 max-h-[70vh] overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
+                    <DialogFooter className="flex flex-row justify-between gap-2 pt-4">
                         {can('parking-spot.view') && data?.id && (
                             <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
                                 <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
@@ -392,16 +502,15 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
         );
     }
 
-    // ---- Mobile Drawer ----
     return (
         <Drawer open={open} onOpenChange={onClose}>
             <DrawerContent className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                        <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
                             <MapPin className="h-6 w-6 text-orange-400" />
-                            <DrawerTitle className="text-lg font-semibold">Parking location</DrawerTitle>
-                        </div>
+                            Parking location
+                        </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
                             <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
@@ -410,9 +519,9 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         </div>
                     </div>
                 </DrawerHeader>
-                <div className="mt-2 max-h-[68vh] overflow-y-auto">
+                <div className="max-h-[70vh] overflow-y-auto">
                     <DrawerDescription className="text-muted-foreground mb-2 text-center text-sm">{descriptionText}</DrawerDescription>
-                    <Content withPadding={true} />
+                    <div className="px-4 sm:px-6">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">
                     {can('parking-spot.view') && data?.id && (
