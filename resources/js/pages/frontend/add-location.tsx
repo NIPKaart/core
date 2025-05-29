@@ -13,7 +13,7 @@ import { AlertCircle } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { AddLocationForm } from './form/location';
+import { AddLocationForm } from './form/form-create-location';
 
 const { BaseLayer, Overlay } = LayersControl;
 

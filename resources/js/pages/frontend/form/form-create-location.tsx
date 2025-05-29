@@ -17,7 +17,7 @@ type FormValues = {
     message: string;
 };
 
-type AddLocationFormProps = {
+type Props = {
     lat: number;
     lng: number;
     nominatim: NominatimAddress | null;
@@ -25,7 +25,7 @@ type AddLocationFormProps = {
     orientationOptions: Record<string, string>;
 };
 
-export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptions }: AddLocationFormProps) {
+export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptions }: Props) {
     const form = useForm<FormValues>({
         defaultValues: {
             parking_hours: '',
