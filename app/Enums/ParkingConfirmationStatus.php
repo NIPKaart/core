@@ -11,9 +11,18 @@ enum ParkingConfirmationStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::CONFIRMED => 'Confirmed',
-            self::MOVED => 'Moved',
+            self::CONFIRMED => 'Confirm availability',
+            self::MOVED => 'Location moved',
             self::UNAVAILABLE => 'Unavailable',
+        };
+    }
+
+    public function description(): string
+    {
+        return match ($this) {
+            self::CONFIRMED => 'The parking spot is confirmed to be available.',
+            self::MOVED => 'The parking spot has been moved to a different location.',
+            self::UNAVAILABLE => 'The parking spot is currently unavailable.',
         };
     }
 

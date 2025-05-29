@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
@@ -27,6 +28,9 @@ class LocationController extends Controller
 
         return Inertia::render('frontend/map', [
             'parkingSpots' => $parkingSpots,
+            'selectOptions' => [
+                'confirmationStatus' => ParkingConfirmationStatus::options(),
+            ]
         ]);
     }
 
