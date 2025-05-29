@@ -9,7 +9,7 @@ import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
-import ParkingSpotModal from '@/components/map/modal-parking-spot';
+import ParkingSpotModal from '@/components/map/modal-parking-spot/modal-parking-spot';
 import { getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
 
