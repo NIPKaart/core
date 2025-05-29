@@ -198,7 +198,7 @@ export function InfoTable({
     const rows = isLoggedIn ? [...alwaysRows, ...privateRows] : alwaysRows;
 
     return (
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-2 overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <Table className="w-full">
                 <TableBody>
                     {rows.map((row, i) => (

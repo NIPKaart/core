@@ -30,7 +30,7 @@ class LocationController extends Controller
             'parkingSpots' => $parkingSpots,
             'selectOptions' => [
                 'confirmationStatus' => ParkingConfirmationStatus::options(),
-            ]
+            ],
         ]);
     }
 

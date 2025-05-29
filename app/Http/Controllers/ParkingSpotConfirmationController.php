@@ -26,15 +26,15 @@ class ParkingSpotConfirmationController extends Controller
 
         if ($alreadyConfirmed) {
             return redirect()->back()->withErrors([
-                'general' => 'You already confirmed this spot today.'
+                'general' => 'You already confirmed this spot today.',
             ])->withInput();
         }
 
         $parkingSpot->confirmations()->create([
-            'user_id'     => $user->id,
-            'confirmed_at'=> now(),
-            'status'      => $request->input('status'),
-            'comment'     => $request->input('comment') ?? null,
+            'user_id' => $user->id,
+            'confirmed_at' => now(),
+            'status' => $request->input('status'),
+            'comment' => $request->input('comment') ?? null,
         ]);
 
         return redirect()->back()->with('success', 'Confirmation recorded successfully.');

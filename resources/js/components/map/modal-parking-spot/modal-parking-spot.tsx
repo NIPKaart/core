@@ -1,4 +1,5 @@
 import { FavoriteButton } from '@/components/frontend/button/favorite';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, Share2, X } from 'lucide-react';
+import { Eye, FileText, Info as InfoIcon, MapPin, MapPinCheckInside, Share2, X } from 'lucide-react';
 import * as React from 'react';
 import { ActionButtons, ConfirmTab, DescriptionTab, InfoTable, MainInfo } from './modal-parts';
 import { LocationDetail } from './types';
@@ -188,7 +189,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-                                <span className="inline-block align-middle">{/* <MapPin className="h-6 w-6 text-orange-400" /> */}</span>
+                                <MapPin className="h-6 w-6 text-orange-400" />
                                 Parking location
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
@@ -196,18 +197,18 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
-                                            <button className="cursor-pointer" aria-label="Share" onClick={copyUrl}>
+                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
                                                 <Share2 className="h-5 w-5" />
-                                            </button>
+                                            </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top" align="center">
                                             Copied!
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
-                                <button className="cursor-pointer" aria-label="Close" onClick={onClose}>
+                                <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
                                     <X className="h-5 w-5" />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                         <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
@@ -216,15 +217,15 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                     <DialogFooter className="flex flex-row justify-between gap-2 pt-4">
                         {can('parking-spot.view') && data?.id && (
                             <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
-                                <button className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-100">
+                                <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
                                     <Eye className="h-4 w-4" />
                                     Show
-                                </button>
+                                </Button>
                             </a>
                         )}
-                        <button className="cursor-pointer px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300" onClick={onClose}>
+                        <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
                             Close
-                        </button>
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -237,12 +238,15 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
             <DrawerContent className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">
-                        <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">Parking location</DrawerTitle>
+                        <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
+                            <MapPin className="h-6 w-6 text-orange-400" />
+                            Parking location
+                        </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
-                            <button aria-label="Share" className="cursor-pointer" onClick={copyUrl}>
+                            <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
                                 <Share2 className="h-5 w-5" />
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </DrawerHeader>
@@ -253,14 +257,16 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                 <DrawerFooter className="flex flex-row gap-2">
                     {can('parking-spot.view') && data?.id && (
                         <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener" className="flex-1">
-                            <button className="flex w-full items-center gap-2 px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-100">
+                            <Button variant="outline" className="flex w-full items-center gap-2" title="Go to admin page">
                                 <Eye className="h-4 w-4" />
                                 Show
-                            </button>
+                            </Button>
                         </a>
                     )}
                     <DrawerClose asChild>
-                        <button className="flex-1 px-4 py-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">Close</button>
+                        <Button variant="secondary" className="flex-1">
+                            Close
+                        </Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>

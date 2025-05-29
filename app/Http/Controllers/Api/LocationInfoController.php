@@ -41,7 +41,7 @@ class LocationInfoController extends Controller
             ->value('created_at');
 
         // If the user confirmed this location today
-        $confirmedToday =  $user ? $location->confirmations()
+        $confirmedToday = $user ? $location->confirmations()
             ->where('user_id', $user->id)
             ->whereDate('created_at', now()->toDateString())
             ->exists() : false;
