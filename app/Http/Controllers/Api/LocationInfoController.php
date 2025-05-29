@@ -29,6 +29,23 @@ class LocationInfoController extends Controller
         $user = auth()->user();
         $isFavorited = $user ? $location->favoritedByUsers()->where('user_id', $user->id)->exists() : false;
 
+        // Count the number of confirmed confirmations
+        $confirmedCount = $location->confirmations()
+            ->where('status', 'confirmed')
+            ->count();
+
+        // Get the last confirmed confirmation date
+        $lastConfirmed = $location->confirmations()
+            ->where('status', 'confirmed')
+            ->latest('confirmed_at')
+            ->value('confirmed_at');
+
+        // If the user confirmed this location today
+        $confirmedToday = $user ? $location->confirmations()
+            ->where('user_id', $user->id)
+            ->whereDate('confirmed_at', now()->toDateString())
+            ->exists() : false;
+
         return response()->json([
             'id' => $location->id,
             'orientation' => $location->orientation,
@@ -42,6 +59,11 @@ class LocationInfoController extends Controller
             'parking_time' => $location->parking_time,
             'created_at' => $location->created_at,
             'is_favorited' => $isFavorited,
+            'confirmed_today' => $confirmedToday,
+            'confirmations_count' => [
+                'confirmed' => $confirmedCount,
+            ],
+            'last_confirmed_at' => $lastConfirmed,
         ]);
     }
 }

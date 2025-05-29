@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Single actions
             Route::patch('{parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
             Route::delete('{parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
+            Route::post('{parking_spot}/confirm', [ParkingSpotConfirmationController::class, 'store'])->name('confirm');
 
             // Bulk actions
             Route::patch('bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('bulk-update');
