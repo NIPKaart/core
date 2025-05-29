@@ -24,7 +24,7 @@ class ParkingSpotConfirmation extends Model
     protected $dates = [
         'confirmed_at',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     public function parkingSpot(): BelongsTo

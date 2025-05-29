@@ -35,17 +35,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('favorites', [User\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
-    // Admin routes
+    // App routes
     Route::prefix('app')->as('app.')->group(function () {
         // ParkingSpot routes
         Route::prefix('parking-spots')->as('parking-spots.')->group(function () {
+            // Confirmations routes
+            Route::get('{parkingSpot}/confirmations', [ParkingSpotConfirmationController::class, 'index'])->name('confirmations.index');
+            Route::post('{parking_spot}/confirm', [ParkingSpotConfirmationController::class, 'store'])->name('confirm');
+
             // Delete and restore routes
             Route::get('trash', [Admin\ParkingSpotController::class, 'trash'])->name('trash');
 
             // Single actions
             Route::patch('{parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
             Route::delete('{parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
-            Route::post('{parking_spot}/confirm', [ParkingSpotConfirmationController::class, 'store'])->name('confirm');
 
             // Bulk actions
             Route::patch('bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('bulk-update');

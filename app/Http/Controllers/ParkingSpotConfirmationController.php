@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\ParkingConfirmationStatus;
 use App\Models\ParkingSpot;
+use App\Models\ParkingSpotConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class ParkingSpotConfirmationController extends Controller
 {
@@ -38,5 +41,20 @@ class ParkingSpotConfirmationController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Confirmation recorded successfully.');
+    }
+
+    public function index(Request $request, ParkingSpot $parkingSpot)
+    {
+        Gate::authorize('viewAny', [ParkingSpotConfirmation::class, $parkingSpot]);
+
+        $confirmations = ParkingSpotConfirmation::with('user')
+            ->where('parking_spot_id', $parkingSpot->id)
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return Inertia::render('backend/parking-spots/confirmations/index', [
+            'parkingSpot' => $parkingSpot->only('id', 'country_id', 'municipality', 'city', 'street'),
+            'confirmations' => $confirmations,
+        ]);
     }
 }
