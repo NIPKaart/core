@@ -37,13 +37,13 @@ class LocationInfoController extends Controller
         // Get the last confirmed confirmation date
         $lastConfirmed = $location->confirmations()
             ->where('status', 'confirmed')
-            ->latest('created_at')
-            ->value('created_at');
+            ->latest('confirmed_at')
+            ->value('confirmed_at');
 
         // If the user confirmed this location today
         $confirmedToday = $user ? $location->confirmations()
             ->where('user_id', $user->id)
-            ->whereDate('created_at', now()->toDateString())
+            ->whereDate('confirmed_at', now()->toDateString())
             ->exists() : false;
 
         return response()->json([

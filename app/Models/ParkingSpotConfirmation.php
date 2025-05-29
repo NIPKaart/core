@@ -21,6 +21,12 @@ class ParkingSpotConfirmation extends Model
         'confirmed_at' => 'datetime',
     ];
 
+    protected $dates = [
+        'confirmed_at',
+        'created_at',
+        'updated_at'
+    ];
+
     public function parkingSpot(): BelongsTo
     {
         return $this->belongsTo(ParkingSpot::class);
