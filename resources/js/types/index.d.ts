@@ -148,6 +148,8 @@ export interface ParkingSpot {
     latitude: number;
 
     parking_time: number | null;
+    parking_hours?: number;
+    parking_minutes?: number;
     orientation: ParkingOrientation;
     parking_disc: boolean;
     window_times: boolean;

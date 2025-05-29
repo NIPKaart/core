@@ -120,6 +120,9 @@ class ParkingSpotController extends Controller
 
         $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
+        $parkingSpot->parking_hours = $parkingSpot->parking_time ? floor($parkingSpot->parking_time / 60) : 0;
+        $parkingSpot->parking_minutes = $parkingSpot->parking_time ? $parkingSpot->parking_time % 60 : 0;
+
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
             'label' => $status->label(),
