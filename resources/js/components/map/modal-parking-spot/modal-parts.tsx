@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
-import { AlarmClock, FileText, MapPin, Users } from 'lucide-react';
+import { AlarmClock, Eye, FileText, MapPin, Navigation, Users } from 'lucide-react';
 import * as React from 'react';
 import { LocationDetail } from './types';
 import { formatParkingTime, getOrientationIllustration } from './utils';
@@ -72,22 +72,12 @@ export function ActionButtons({ latitude, longitude }: { latitude: number | null
         <div className="my-3 flex flex-row justify-center gap-2">
             <a href={getGoogleMapsUrl(latitude, longitude)} target="_blank" rel="noopener" tabIndex={hasCoords ? 0 : -1} aria-disabled={!hasCoords}>
                 <Button size="sm" className="cursor-pointer rounded-md bg-orange-500 text-white hover:bg-orange-600" disabled={!hasCoords}>
-                    <span className="mr-1">
-                        <svg width="16" height="16">
-                            <circle cx="8" cy="8" r="8" fill="#f97316" />
-                        </svg>
-                    </span>
-                    Navigate
+                    <Navigation className="mr-1 h-4 w-4" /> Navigate
                 </Button>
             </a>
             <a href={getStreetViewUrl(latitude, longitude)} target="_blank" rel="noopener" tabIndex={hasCoords ? 0 : -1} aria-disabled={!hasCoords}>
                 <Button variant="outline" size="sm" className="cursor-pointer rounded-md" disabled={!hasCoords}>
-                    <span className="mr-1">
-                        <svg width="16" height="16">
-                            <rect width="16" height="16" fill="#a3a3a3" />
-                        </svg>
-                    </span>
-                    Streetview
+                    <Eye className="mr-1 h-4 w-4" /> Streetview
                 </Button>
             </a>
         </div>
