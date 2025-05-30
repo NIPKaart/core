@@ -102,12 +102,20 @@ class ParkingSpotController extends Controller
             ->limit($limit)
             ->get();
 
+        // Fetch the 8 most recent confirmations
+        $recentConfirmations = $parkingSpot->confirmations()
+            ->with('user')
+            ->latest('confirmed_at')
+            ->take(8)
+            ->get();
+
         return inertia('backend/parking-spots/show', [
             'parkingSpot' => $parkingSpot,
             'selectOptions' => [
                 'statuses' => $statuses,
             ],
             'nearbySpots' => $nearbySpots,
+            'recentConfirmations' => $recentConfirmations,
         ]);
     }
 
