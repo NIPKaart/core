@@ -117,7 +117,6 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         <InfoTable
                             data={data}
                             isLoggedIn={isLoggedIn}
-                            isDesktop={isDesktop}
                             copiedLocationId={copiedLocationId}
                             setCopiedLocationId={setCopiedLocationId}
                             copyLocationId={copyLocationId}
@@ -132,18 +131,18 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                 <Separator />
                 <Tabs value={tab} onValueChange={setTab} className="mt-4 w-full">
                     <TabsList className="mb-2 flex w-full">
-                        <TabsTrigger value="info" className="flex flex-1 cursor-pointer items-center justify-center gap-1">
+                        <TabsTrigger value="info" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
                             <InfoIcon className="h-4 w-4" />
                             Info
                         </TabsTrigger>
                         {isLoggedIn && (
-                            <TabsTrigger value="confirm" className="flex flex-1 cursor-pointer items-center justify-center gap-1">
+                            <TabsTrigger value="confirm" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
                                 <MapPinCheckInside className="h-4 w-4" />
                                 Confirm
                             </TabsTrigger>
                         )}
                         {data?.description && (
-                            <TabsTrigger value="description" className="flex flex-1 cursor-pointer items-center justify-center gap-1">
+                            <TabsTrigger value="description" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
                                 <FileText className="h-4 w-4" />
                                 Description
                             </TabsTrigger>
@@ -154,7 +153,6 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                             <InfoTable
                                 data={data}
                                 isLoggedIn={isLoggedIn}
-                                isDesktop={isDesktop}
                                 copiedLocationId={copiedLocationId}
                                 setCopiedLocationId={setCopiedLocationId}
                                 copyLocationId={copyLocationId}
@@ -211,9 +209,10 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                                 </Button>
                             </div>
                         </div>
-                        <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
+                        {/* <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription> */}
                     </DialogHeader>
-                    <div className="mt-2 max-h-[70vh] overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
+                    <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
+                    <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-spot.view') && data?.id && (
                             <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
@@ -250,8 +249,8 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                         </div>
                     </div>
                 </DrawerHeader>
-                <div className="max-h-[70vh] overflow-y-auto">
-                    <DrawerDescription className="text-muted-foreground mb-2 text-center text-sm">{descriptionText}</DrawerDescription>
+                <div className="overflow-y-auto">
+                    <DrawerDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DrawerDescription>
                     <div className="px-4 sm:px-6">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">

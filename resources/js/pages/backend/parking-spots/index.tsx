@@ -74,7 +74,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
         if (!selectedStatus || ids.length === 0) return;
 
         router.patch(
-            route('app.parking-spots.bulk-update'),
+            route('app.parking-spots.bulk.update'),
             {
                 ids,
                 status: selectedStatus,

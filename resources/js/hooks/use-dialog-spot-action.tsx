@@ -77,7 +77,7 @@ export function useSpotActionDialog(options: Options = {}) {
         bulkRestore: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
-                route('app.parking-spots.bulk-restore'),
+                route('app.parking-spots.bulk.restore'),
                 { ids: dialogSubject.ids },
                 {
                     preserveScroll: true,
@@ -96,7 +96,7 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         bulkForceDelete: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
-            router.delete(route('app.parking-spots.bulk-force-delete'), {
+            router.delete(route('app.parking-spots.bulk.force-delete'), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {

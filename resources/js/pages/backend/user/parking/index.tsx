@@ -54,7 +54,7 @@ export default function UserParkingSpotsPage({ parkingSpots }: PageProps) {
                         </div>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
                             <Link href={route('map.add')}>
-                                <Plus className="mr-2 h-5 w-5" />
+                                <Plus className="h-5 w-5" />
                                 Add your first parking spot
                             </Link>
                         </Button>
