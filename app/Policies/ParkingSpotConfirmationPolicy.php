@@ -30,4 +30,12 @@ class ParkingSpotConfirmationPolicy
     {
         return $user->can('parking-spot-confirmation.delete');
     }
+
+    /**
+     * Determine whether the user can delete multiple models.
+     */
+    public function bulkDelete(User $user): bool
+    {
+        return $user->can('parking-spot-confirmation.delete');
+    }
 }
