@@ -69,7 +69,7 @@ class User extends Authenticatable
     /**
      * Get the parking spot confirmations for the user.
      */
-    public function parkingSpotConfirmations()
+    public function confirmations()
     {
         return $this->hasMany(ParkingSpotConfirmation::class);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
@@ -74,7 +75,13 @@ class ParkingSpotController extends Controller
 
         $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
 
-        $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
+        $parkingStatuses = collect(ParkingStatus::cases())->map(fn ($status) => [
+            'value' => $status->value,
+            'label' => $status->label(),
+            'description' => $status->description(),
+        ])->values();
+
+        $confirmationStatuses = collect(ParkingConfirmationStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
             'label' => $status->label(),
             'description' => $status->description(),
@@ -102,12 +109,21 @@ class ParkingSpotController extends Controller
             ->limit($limit)
             ->get();
 
+        // Fetch the 8 most recent confirmations
+        $recentConfirmations = $parkingSpot->confirmations()
+            ->with('user')
+            ->latest('confirmed_at')
+            ->take(8)
+            ->get();
+
         return inertia('backend/parking-spots/show', [
             'parkingSpot' => $parkingSpot,
             'selectOptions' => [
-                'statuses' => $statuses,
+                'parkingStatuses' => $parkingStatuses,
+                'confirmationStatuses' => $confirmationStatuses,
             ],
             'nearbySpots' => $nearbySpots,
+            'recentConfirmations' => $recentConfirmations,
         ]);
     }
 

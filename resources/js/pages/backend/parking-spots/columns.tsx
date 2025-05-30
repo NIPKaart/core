@@ -117,6 +117,14 @@ export function getParkingSpotColumns(
                                         <Link href={route('app.parking-spots.edit', { id: spot.id })}>Edit</Link>
                                     </DropdownMenuItem>
                                 )}
+                                {can('parking-spot-confirmation.view_any') && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={route('app.parking-spots.confirmations.index', { id: spot.id })}>Confirmations</Link>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
 
                                 {can('parking-spot.delete') && (
                                     <>

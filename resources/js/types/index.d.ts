@@ -194,3 +194,14 @@ export type Favorite = {
     address?: string;
     city?: string;
 };
+
+export type ParkingSpotConfirmation = {
+    id: number;
+    parking_spot_id: string;
+    status: string;
+    user: { id: number; name: string; email: string } | null;
+    comment: string | null;
+    confirmed_at: string;
+    created_at: string;
+    updated_at: string;
+};
