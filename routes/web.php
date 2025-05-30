@@ -40,8 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ParkingSpot routes
         Route::prefix('parking-spots')->as('parking-spots.')->group(function () {
             // Confirmations routes
-            Route::get('{parkingSpot}/confirmations', [ParkingSpotConfirmationController::class, 'index'])->name('confirmations.index');
             Route::post('{parking_spot}/confirm', [ParkingSpotConfirmationController::class, 'store'])->name('confirm');
+            Route::get('{parking_spot}/confirmations', [ParkingSpotConfirmationController::class, 'index'])->name('confirmations.index');
+            Route::delete('{parking_spot}/confirmations/{confirmation}', [ParkingSpotConfirmationController::class, 'destroy'])->name('confirmations.destroy');
+            Route::delete('{parking_spot}/confirmations/bulk/delete', [ParkingSpotConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');
 
             // Delete and restore routes
             Route::get('trash', [Admin\ParkingSpotController::class, 'trash'])->name('trash');
