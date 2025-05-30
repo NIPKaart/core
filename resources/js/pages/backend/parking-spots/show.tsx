@@ -20,7 +20,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 type PageProps = {
     parkingSpot: ParkingSpot;
     selectOptions: {
-        statuses: { value: string; label: string; description: string }[];
+        parkingStatuses: { value: string; label: string; description: string }[];
+        confirmationStatuses: { value: string; label: string; description: string }[];
     };
     nearbySpots: ParkingSpot[];
     recentConfirmations: ParkingSpotConfirmation[];
@@ -30,7 +31,7 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpotActionDialog();
 
-    const statusOpt = selectOptions.statuses.find((s) => s.value === parkingSpot.status)!;
+    const statusOpt = selectOptions.parkingStatuses.find((s) => s.value === parkingSpot.status)!;
     const variantMap: Record<string, BannerVariant> = {
         pending: 'primary',
         approved: 'success',
@@ -195,7 +196,7 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                             <>
                                 <ul>
                                     {recentConfirmations.map((confirmation, i) => {
-                                        const statusOpt = selectOptions.statuses.find((s) => s.value === confirmation.status);
+                                        const statusOpt = selectOptions.confirmationStatuses.find((s) => s.value === confirmation.status);
                                         const badgeVariant: 'default' | 'secondary' | 'destructive' =
                                             confirmation.status === 'confirmed'
                                                 ? 'secondary'

@@ -45,7 +45,7 @@ class ParkingSpotConfirmationController extends Controller
 
     public function index(Request $request, ParkingSpot $parkingSpot)
     {
-        Gate::authorize('viewAny', [ParkingSpotConfirmation::class, $parkingSpot]);
+        Gate::authorize('viewAny', ParkingSpotConfirmation::class);
 
         $confirmations = ParkingSpotConfirmation::with('user')
             ->where('parking_spot_id', $parkingSpot->id)

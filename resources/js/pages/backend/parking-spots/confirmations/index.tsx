@@ -30,7 +30,7 @@ export default function Index({ confirmations, parkingSpot, statuses }: PageProp
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Parking Spots', href: route('app.parking-spots.index') },
         { title: 'Show', href: route('app.parking-spots.show', { id: parkingSpot.id }) },
-        { title: 'Confirmations', href: route('app.parking-spots.confirmations.index', { id: ':id' }) },
+        { title: 'Confirmations', href: '' },
     ];
 
     useEffect(() => {
