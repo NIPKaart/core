@@ -98,7 +98,6 @@ export function SearchableCombobox({ label, placeholder = 'Select...', options, 
                     className="bg-popover animate-in fade-in-0 zoom-in-95 absolute left-0 z-50 mt-2 w-full rounded-md border shadow-lg outline-none"
                     onKeyDown={handleListKeyDown}
                 >
-                    {/* Subtiel zoekveld */}
                     <div className="relative p-2 pb-0">
                         <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-zinc-300">
                             <Search className="h-4 w-4" />
@@ -110,7 +109,6 @@ export function SearchableCombobox({ label, placeholder = 'Select...', options, 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             autoFocus
-                            // cursor-pointer niet op input, want je wilt tekst selecteren
                         />
                     </div>
                     <div className={cn('max-h-60 overflow-auto py-1', filteredOptions.length === 0 && 'py-2')}>
