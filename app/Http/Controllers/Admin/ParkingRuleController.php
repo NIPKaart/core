@@ -21,18 +21,6 @@ class ParkingRuleController extends Controller
     {
         Gate::authorize('viewAny', ParkingRule::class);
 
-        return Inertia::render('backend/parking-rules/index', [
-            'parkingRules' => ParkingRule::with('country')->paginate(20),
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        Gate::authorize('create', ParkingRule::class);
-
         $countries = Country::all();
         $existingMunicipalities = ParkingRule::pluck('municipality')->toArray();
 
@@ -48,10 +36,19 @@ class ParkingRuleController extends Controller
             ->sort()
             ->values();
 
-        return Inertia::render('backend/parking-rules/create', [
+        return Inertia::render('backend/parking-rules/index', [
+            'parkingRules' => ParkingRule::with('country')->paginate(20),
             'countries' => $countries,
             'municipalities' => $availableMunicipalities,
         ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        // Modal for creating a new parking rule
     }
 
     /**
@@ -63,8 +60,7 @@ class ParkingRuleController extends Controller
 
         ParkingRule::create($request->validated());
 
-        return redirect()->route('app.parking-rules.index')
-            ->with('success', 'Parking Rule created successfully.');
+        return redirect()->route('app.parking-rules.index');
     }
 
     /**
@@ -80,28 +76,7 @@ class ParkingRuleController extends Controller
      */
     public function edit(ParkingRule $parkingRule)
     {
-        Gate::authorize('update', $parkingRule);
-
-        $countries = Country::all();
-        $existingMunicipalities = ParkingRule::where('id', '!=', $parkingRule->id)->pluck('municipality')->toArray();
-
-        $municipalities = ParkingSpot::select('municipality')
-            ->whereNotIn('municipality', $existingMunicipalities)
-            ->pluck('municipality')
-            ->merge(
-                ParkingMunicipal::select('municipality')
-                    ->whereNotIn('municipality', $existingMunicipalities)
-                    ->pluck('municipality')
-            )
-            ->unique()
-            ->sort()
-            ->values();
-
-        return Inertia::render('backend/parking-rules/edit', [
-            'parkingRule' => $parkingRule->load('country'),
-            'countries' => $countries,
-            'municipalities' => $municipalities,
-        ]);
+        // Modal for editing an existing parking rule
     }
 
     /**
@@ -114,8 +89,7 @@ class ParkingRuleController extends Controller
         $parkingRule->update($request->validated());
 
         return redirect()
-            ->route('app.parking-rules.index')
-            ->with('success', 'Parking Rule updated successfully.');
+            ->route('app.parking-rules.index');
     }
 
     /**
