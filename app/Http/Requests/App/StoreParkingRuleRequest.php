@@ -24,9 +24,25 @@ class StoreParkingRuleRequest extends FormRequest
     {
         return [
             'country_id' => ['required', 'exists:countries,id'],
-            'municipality' => ['required', 'string'],
+            'municipality' => ['required_unless:nationwide,true', 'nullable', 'string'],
             'url' => ['required', 'url', 'max:2048'],
             'nationwide' => ['required', 'boolean'],
+        ];
+    }
+
+    public function validated($key = null, $default = null)
+    {
+        $data = parent::validated($key, $default);
+        if (isset($data['nationwide']) && $data['nationwide']) {
+            $data['municipality'] = '';
+        }
+        return $data;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'municipality.required_unless' => 'Please select a municipality unless this rule is nationwide.',
         ];
     }
 }
