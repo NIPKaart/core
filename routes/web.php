@@ -50,12 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Single actions
             Route::patch('{parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
-            Route::delete('{parking_spot}/force', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-delete');
+            Route::delete('{parking_spot}/force-delete', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-destroy');
 
             // Bulk actions
-            Route::patch('bulk-update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('bulk-update');
-            Route::patch('restore', [Admin\ParkingSpotController::class, 'bulkRestore'])->name('bulk-restore');
-            Route::delete('force', [Admin\ParkingSpotController::class, 'bulkForceDelete'])->name('bulk-force-delete');
+            Route::prefix('bulk')->as('bulk.')->group(function () {
+                Route::patch('update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('update');
+                Route::patch('restore', [Admin\ParkingSpotController::class, 'bulkRestore'])->name('restore');
+                Route::delete('force-delete', [Admin\ParkingSpotController::class, 'bulkForceDelete'])->name('force-delete');
+            });
         });
 
         // Suspend user route

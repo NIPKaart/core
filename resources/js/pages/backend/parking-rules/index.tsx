@@ -3,7 +3,14 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, ParkingRule } from '@/types';
@@ -152,23 +159,21 @@ export default function Index({ parkingRules }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Parking Rules" />
-            <div className="px-4 py-6 sm:px-6">
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold">Parking Rules</h1>
-                        {can('parking-rule.create') && (
-                            <Button variant="outline" asChild>
-                                <Link href={route('app.parking-rules.create')}>
-                                    <Plus className="mr-1 h-4 w-4" />
-                                    Parking Rule
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
-
-                    <DataTable columns={columns} data={parkingRules.data} />
-                    <DataTablePagination pagination={parkingRules} />
+            <div className="space-y-6 px-4 py-6 sm:px-6">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold">Parking Rules</h1>
+                    {can('parking-rule.create') && (
+                        <Button variant="outline" asChild>
+                            <Link href={route('app.parking-rules.create')}>
+                                <Plus className="mr-1 h-4 w-4" />
+                                Parking Rule
+                            </Link>
+                        </Button>
+                    )}
                 </div>
+
+                <DataTable columns={columns} data={parkingRules.data} />
+                <DataTablePagination pagination={parkingRules} />
             </div>
 
             {dialogParkingRule && dialogType === 'delete' && (

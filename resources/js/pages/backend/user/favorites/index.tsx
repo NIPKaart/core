@@ -55,7 +55,10 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                         <span className="text-muted-foreground text-lg font-semibold">You haven&apos;t added any favorites yet.</span>
                         <span className="text-muted-foreground text-sm">Browse the map and click the heart icon to favorite locations.</span>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
-                            <Link href={route('map')}>Go to map</Link>
+                            <Link href={route('map')}>
+                                <MapPin className="h-5 w-5" />
+                                Go to map
+                            </Link>
                         </Button>
                     </div>
                 ) : (
