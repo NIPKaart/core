@@ -14,16 +14,18 @@ trait ParsesNominatimAddress
         return $data['municipality']
             ?? $data['city']
             ?? $data['town']
+            ?? $data['city_district']
             ?? $data['village']
+            ?? $data['county']
             ?? 'unknown';
     }
 
     protected function getCity(array $data): string
     {
         return $data['city']
+            ?? $data['town']
             ?? $data['city_district']
             ?? $data['village']
-            ?? $data['town']
             ?? $data['municipality']
             ?? 'unknown';
     }

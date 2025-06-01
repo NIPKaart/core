@@ -46,4 +46,12 @@ class ParkingMunicipal extends Model
     {
         return $this->belongsTo(Province::class);
     }
+
+    /**
+     * Get the municipality that owns the ParkingMunicipal
+     */
+    public function municipality()
+    {
+        return $this->belongsTo(Municipality::class);
+    }
 }

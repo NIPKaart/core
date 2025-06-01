@@ -31,7 +31,7 @@ class MyParkingSpaceController extends Controller
      */
     public function show(string $id)
     {
-        $space = ParkingSpace::with(['province', 'country'])->withTrashed()->findOrFail($id);
+        $space = ParkingSpace::with(['province', 'country', 'municipality'])->withTrashed()->findOrFail($id);
 
         if ($space->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');

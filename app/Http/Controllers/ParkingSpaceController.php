@@ -8,7 +8,8 @@ use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
 use App\Models\ParkingSpace;
-use App\Models\Province;
+use App\Traits\FindsOrCreatesMunicipality;
+use App\Traits\FindsOrCreatesProvince;
 use App\Traits\ParsesNominatimAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,8 @@ use Inertia\Inertia;
 
 class ParkingSpaceController extends Controller
 {
+    use FindsOrCreatesMunicipality;
+    use FindsOrCreatesProvince;
     use ParsesNominatimAddress;
 
     /**
@@ -59,11 +62,16 @@ class ParkingSpaceController extends Controller
 
         try {
             $countryId = Country::where('code', strtoupper($address['country_code'] ?? ''))->value('id');
-            $provinceId = Province::firstOrCreate([
-                'country_id' => $countryId,
-                'name' => $address['state'] ?? $address['city'] ?? 'unknown',
-                'geocode' => $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
-            ])->id;
+            $province = $this->findOrCreateProvince(
+                $address['state'] ?? $address['city'] ?? 'unknown',
+                $countryId,
+                $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
+            );
+            $municipality = $this->findOrCreateMunicipality(
+                $this->getMunicipality($address),
+                $countryId,
+                $province->id
+            );
 
             $parkingSpace = new ParkingSpace([
                 'id' => uniqid(),
@@ -78,8 +86,8 @@ class ParkingSpaceController extends Controller
                 'description' => $validated['message'],
                 'status' => ParkingStatus::PENDING,
                 'country_id' => $countryId,
-                'province_id' => $provinceId,
-                'municipality' => $this->getMunicipality($address),
+                'province_id' => $province->id,
+                'municipality_id' => $municipality->id,
                 'city' => $this->getCity($address),
                 'suburb' => $this->getSuburb($address),
                 'neighbourhood' => $this->getNeighbourhood($address),
@@ -92,13 +100,13 @@ class ParkingSpaceController extends Controller
 
             return redirect()->route('map');
         } catch (\Throwable $e) {
-            Log::error('Error storing location', [
+            Log::error('Error storing parking location', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return back()->withErrors([
-                'general' => 'Something went wrong while saving the location. Please try again later.',
+                'general' => 'Something went wrong while saving the parking location. Please try again later.',
             ])->withInput();
         }
     }

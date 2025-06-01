@@ -18,7 +18,7 @@ class ParkingRule extends Model
      */
     protected $fillable = [
         'country_id',
-        'municipality',
+        'municipality_id',
         'url',
         'nationwide',
     ];
