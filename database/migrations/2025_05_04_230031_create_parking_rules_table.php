@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('parking_rules', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->foreignId('country_id')->constrained('countries');
-            $table->string('municipality');
+            $table->foreignId('municipality_id')->nullable()->constrained('municipalities');
             $table->string('url');
-            $table->boolean('nationwide');
+            $table->boolean('nationwide')->default(false);
             $table->timestamps();
 
-            $table->unique(['country_id', 'municipality']);
+            $table->unique(['country_id', 'municipality_id']);
         });
     }
 
