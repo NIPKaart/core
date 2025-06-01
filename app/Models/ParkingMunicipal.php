@@ -50,7 +50,7 @@ class ParkingMunicipal extends Model
     /**
      * Get the municipality that owns the ParkingMunicipal
      */
-    public function municipality()
+    public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);
     }

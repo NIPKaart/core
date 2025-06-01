@@ -38,7 +38,7 @@ class StoreParkingRuleRequest extends FormRequest
     {
         $data = parent::validated($key, $default);
         if (isset($data['nationwide']) && $data['nationwide']) {
-            $data['municipality_id'] = '';
+            $data['municipality_id'] = null;
         }
 
         return $data;
