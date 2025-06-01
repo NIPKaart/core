@@ -2,14 +2,14 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import { ParkingSpot } from '@/types';
+import { ParkingSpace } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
-import ParkingSpotModal from '@/components/map/modal-parking-spot/modal-parking-spot';
+import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-parking-space';
 import { getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
 
@@ -19,7 +19,7 @@ type PageProps = {
     selectOptions: {
         confirmationStatus: Record<string, string>;
     };
-    parkingSpots: ParkingSpot[];
+    parkingSpaces: ParkingSpace[];
 };
 
 function getInitialPosition(): [number, number, number] {
@@ -43,31 +43,31 @@ export default function Map() {
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { parkingSpots, selectOptions } = usePage<PageProps>().props;
+    const { parkingSpaces, selectOptions } = usePage<PageProps>().props;
 
-    const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
+    const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
     const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 
-    const parkingSpotMarkers = useMemo(
+    const parkingSpaceMarkers = useMemo(
         () =>
-            parkingSpots.map((spot) => (
+            parkingSpaces.map((space) => (
                 <Marker
-                    key={spot.id}
-                    position={[spot.latitude, spot.longitude]}
+                    key={space.id}
+                    position={[space.latitude, space.longitude]}
                     icon={getInvalidParkingIcon()}
                     eventHandlers={{
                         click: () => {
-                            setSelectedSpotId(spot.id);
-                            setSelectedLat(spot.latitude);
-                            setSelectedLng(spot.longitude);
+                            setSelectedSpaceId(space.id);
+                            setSelectedLat(space.latitude);
+                            setSelectedLng(space.longitude);
                             setModalOpen(true);
                         },
                     }}
                 />
             )),
-        [parkingSpots],
+        [parkingSpaces],
     );
 
     return (
@@ -105,7 +105,7 @@ export default function Map() {
                             maxClusterRadius={80}
                             removeOutsideVisibleBound={true}
                         >
-                            {parkingSpotMarkers}
+                            {parkingSpaceMarkers}
                         </MarkerClusterGroup>
 
                         <LegendControl />
@@ -114,8 +114,8 @@ export default function Map() {
                     </MapContainer>
                 </div>
 
-                <ParkingSpotModal
-                    spotId={selectedSpotId}
+                <ParkingSpaceModal
+                    spaceId={selectedSpaceId}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
                     latitude={selectedLat}

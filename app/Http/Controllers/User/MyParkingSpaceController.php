@@ -4,25 +4,25 @@ namespace App\Http\Controllers\User;
 
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
-use App\Models\ParkingSpot;
+use App\Models\ParkingSpace;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-class MyParkingSpotController extends Controller
+class MyParkingSpaceController extends Controller
 {
     /**
-     * Display a list of cards with the user's parking spots.
+     * Display a list of cards with the user's parking spaces.
      */
     public function index(Request $request)
     {
         $user = $request->user();
 
-        $locations = ParkingSpot::where('user_id', $user->id)
+        $parkingSpaces = ParkingSpace::where('user_id', $user->id)
             ->latest()
             ->get();
 
         return Inertia::render('backend/user/parking/index', [
-            'parkingSpots' => $locations,
+            'parkingSpaces' => $parkingSpaces,
         ]);
     }
 
@@ -31,9 +31,9 @@ class MyParkingSpotController extends Controller
      */
     public function show(string $id)
     {
-        $spot = ParkingSpot::with(['province', 'country'])->withTrashed()->findOrFail($id);
+        $space = ParkingSpace::with(['province', 'country'])->withTrashed()->findOrFail($id);
 
-        if ($spot->user_id !== auth()->id()) {
+        if ($space->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -44,7 +44,7 @@ class MyParkingSpotController extends Controller
         ])->values();
 
         return Inertia::render('backend/user/parking/show', [
-            'spot' => $spot,
+            'space' => $space,
             'selectOptions' => [
                 'statuses' => $statuses,
             ],
@@ -56,12 +56,12 @@ class MyParkingSpotController extends Controller
      */
     public function destroy(string $id)
     {
-        $spot = ParkingSpot::withTrashed()->findOrFail($id);
-        if ($spot->user_id !== auth()->id()) {
+        $space = ParkingSpace::withTrashed()->findOrFail($id);
+        if ($space->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
-        $spot->delete();
+        $space->delete();
 
-        return redirect()->route('user.parking-spots.index');
+        return redirect()->route('user.parking-spaces.index');
     }
 }

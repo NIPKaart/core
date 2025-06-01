@@ -4,32 +4,32 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
+import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedResponse, ParkingSpot } from '@/types';
+import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { Head } from '@inertiajs/react';
 import { ColumnDef, RowSelectionState } from '@tanstack/react-table';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.parking-spots.index') },
-    { title: 'Trash', href: route('app.parking-spots.trash') },
+    { title: 'Parking Spaces', href: route('app.parking-spaces.index') },
+    { title: 'Trash', href: route('app.parking-spaces.trash') },
 ];
 
 type PageProps = {
-    spots: PaginatedResponse<ParkingSpot>;
+    spaces: PaginatedResponse<ParkingSpace>;
 };
 
-export default function Trash({ spots }: PageProps) {
+export default function Trash({ spaces }: PageProps) {
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-    const { openDialog, dialogElement } = useSpotActionDialog();
+    const { openDialog, dialogElement } = useSpaceActionDialog();
 
-    const selectedIds = spots.data.filter((_, index) => rowSelection[index]).map((spot) => spot.id);
+    const selectedIds = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
 
-    const columns: ColumnDef<ParkingSpot>[] = [
+    const columns: ColumnDef<ParkingSpace>[] = [
         {
             id: 'select',
             header: ({ table }) => (
@@ -107,19 +107,19 @@ export default function Trash({ spots }: PageProps) {
             id: 'actions',
             enableSorting: false,
             cell: ({ row }) => {
-                const spot = row.original;
+                const space = row.original;
 
                 return (
                     <div className="flex justify-end gap-2">
-                        {can('parking-spot.restore') && (
-                            <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', spot)}>
+                        {can('parking-space.restore') && (
+                            <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', space)}>
                                 <RotateCcw className="h-4 w-4" />
                                 <span className="sr-only">Restore</span>
                             </Button>
                         )}
 
-                        {can('parking-spot.force-delete') && (
-                            <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', spot)}>
+                        {can('parking-space.force-delete') && (
+                            <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', space)}>
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Delete permanently</span>
                             </Button>
@@ -132,9 +132,9 @@ export default function Trash({ spots }: PageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Trash — Parking Spots" />
+            <Head title="Trash — Parking Spaces" />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">Trashed Parking Spots</h1>
+                <h1 className="text-2xl font-bold">Trashed Parking Spaces</h1>
 
                 {selectedIds.length > 0 && (
                     <div className="bg-muted/60 dark:border-muted/40 mb-4 flex flex-col rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -143,12 +143,12 @@ export default function Trash({ spots }: PageProps) {
                         </div>
 
                         <div className="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row sm:items-center sm:gap-3">
-                            {can('parking-spot.restore') && (
+                            {can('parking-space.restore') && (
                                 <Button variant="outline" className="cursor-pointer" onClick={() => openDialog('bulkRestore', { ids: selectedIds })}>
                                     Restore selected
                                 </Button>
                             )}
-                            {can('parking-spot.force-delete') && (
+                            {can('parking-space.force-delete') && (
                                 <Button
                                     variant="destructive"
                                     className="cursor-pointer"
@@ -163,14 +163,14 @@ export default function Trash({ spots }: PageProps) {
 
                 <DataTable
                     columns={columns}
-                    data={spots.data}
+                    data={spaces.data}
                     rowSelection={rowSelection}
                     onRowSelectionChange={setRowSelection}
                     initialState={{
                         sorting: [{ id: 'deleted_at', desc: true }],
                     }}
                 />
-                <DataTablePagination pagination={spots} />
+                <DataTablePagination pagination={spaces} />
                 {dialogElement}
             </div>
         </AppLayout>

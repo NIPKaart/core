@@ -13,7 +13,7 @@ type FavoritesDialogProps = {
 };
 
 const iconMap = {
-    ParkingSpot: MapPin,
+    ParkingSpace: MapPin,
     ParkingMunicipal: Landmark,
     ParkingOffstreet: Warehouse,
 };

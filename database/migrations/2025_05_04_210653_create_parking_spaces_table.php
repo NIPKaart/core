@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_spots', function (Blueprint $table) {
+        Schema::create('parking_spaces', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')
                 ->nullable()
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
 
-            // Parking spot details
+            // Parking spaces details
             $table->string('municipality');
             $table->string('city');
             $table->string('suburb')->nullable();
@@ -34,11 +34,11 @@ return new class extends Migration
             $table->string('street');
             $table->string('amenity')->nullable();
 
-            // Parking spot location
+            // Parking space location
             $table->decimal('longitude', 10, 7);
             $table->decimal('latitude', 10, 7);
 
-            // Parking spot availability
+            // Parking space availability
             $table->bigInteger('parking_time')->nullable();
             $table->enum('orientation', ParkingOrientation::all());
             $table->boolean('parking_disc')->default(false);
@@ -55,6 +55,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_spots');
+        Schema::dropIfExists('parking_spaces');
     }
 };

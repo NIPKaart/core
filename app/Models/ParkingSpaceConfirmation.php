@@ -6,10 +6,10 @@ use App\Enums\ParkingConfirmationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ParkingSpotConfirmation extends Model
+class ParkingSpaceConfirmation extends Model
 {
     protected $fillable = [
-        'parking_spot_id',
+        'parking_space_id',
         'user_id',
         'confirmed_at',
         'status',
@@ -27,9 +27,9 @@ class ParkingSpotConfirmation extends Model
         'updated_at',
     ];
 
-    public function parkingSpot(): BelongsTo
+    public function parkingSpace(): BelongsTo
     {
-        return $this->belongsTo(ParkingSpot::class);
+        return $this->belongsTo(ParkingSpace::class);
     }
 
     public function user(): BelongsTo

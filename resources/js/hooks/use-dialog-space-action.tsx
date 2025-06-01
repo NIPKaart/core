@@ -1,18 +1,18 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { ParkingSpot } from '@/types';
+import { ParkingSpace } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 
 export type DialogType = 'delete' | 'restore' | 'forceDelete' | 'bulkRestore' | 'bulkForceDelete';
-type DialogSubject = ParkingSpot | { ids: string[] } | null;
+type DialogSubject = ParkingSpace | { ids: string[] } | null;
 
 type Options = {
     onSuccess?: () => void;
     onError?: () => void;
 };
 
-export function useSpotActionDialog(options: Options = {}) {
+export function useSpaceActionDialog(options: Options = {}) {
     const [dialogType, setDialogType] = useState<DialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 
@@ -24,15 +24,15 @@ export function useSpotActionDialog(options: Options = {}) {
     const handlers: Record<DialogType, () => void> = {
         delete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.parking-spots.destroy', { parking_spot: dialogSubject.id }), {
+            router.delete(route('app.parking-spaces.destroy', { parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Parking spot moved to trash');
+                    toast.success('Parking space moved to trash');
                     closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
-                    toast.error('Failed to move parking spot to trash');
+                    toast.error('Failed to move parking space to trash');
                     closeDialog();
                     options.onError?.();
                 },
@@ -41,17 +41,17 @@ export function useSpotActionDialog(options: Options = {}) {
         restore: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
             router.patch(
-                route('app.parking-spots.restore', { parking_spot: dialogSubject.id }),
+                route('app.parking-spaces.restore', { parking_space: dialogSubject.id }),
                 {},
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Parking spot restored');
+                        toast.success('Parking space restored');
                         closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
-                        toast.error('Failed to restore parking spot');
+                        toast.error('Failed to restore parking space');
                         closeDialog();
                         options.onError?.();
                     },
@@ -60,15 +60,15 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         forceDelete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.parking-spots.forceDelete', { parking_spot: dialogSubject.id }), {
+            router.delete(route('app.parking-spaces.forceDelete', { parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Parking spot permanently deleted');
+                    toast.success('Parking space permanently deleted');
                     closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
-                    toast.error('Failed to permanently delete parking spot');
+                    toast.error('Failed to permanently delete parking space');
                     closeDialog();
                     options.onError?.();
                 },
@@ -77,12 +77,12 @@ export function useSpotActionDialog(options: Options = {}) {
         bulkRestore: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
-                route('app.parking-spots.bulk.restore'),
+                route('app.parking-spaces.bulk.restore'),
                 { ids: dialogSubject.ids },
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Restored selected spots.');
+                        toast.success('Restored selected spaces.');
                         closeDialog();
                         options.onSuccess?.();
                     },
@@ -96,11 +96,11 @@ export function useSpotActionDialog(options: Options = {}) {
         },
         bulkForceDelete: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
-            router.delete(route('app.parking-spots.bulk.force-delete'), {
+            router.delete(route('app.parking-spaces.bulk.force-delete'), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Deleted selected spots.');
+                    toast.success('Deleted selected spaces.');
                     closeDialog();
                     options.onSuccess?.();
                 },
@@ -124,13 +124,13 @@ export function useSpotActionDialog(options: Options = {}) {
     > = {
         delete: {
             title: 'Move to Trash?',
-            description: (s) => (s && 'id' in s ? `Are you sure you want to move the parking spot at "${s.street}, ${s.city}" to the trash?` : ''),
+            description: (s) => (s && 'id' in s ? `Are you sure you want to move the parking space at "${s.street}, ${s.city}" to the trash?` : ''),
             confirmText: 'Move to Trash',
             variant: 'destructive',
         },
         restore: {
             title: 'Restore Location?',
-            description: (s) => (s && 'id' in s ? `Are you sure you want to restore the parking spot at "${s.street}, ${s.city}"?` : ''),
+            description: (s) => (s && 'id' in s ? `Are you sure you want to restore the parking space at "${s.street}, ${s.city}"?` : ''),
             confirmText: 'Restore',
             variant: 'default',
         },
@@ -138,21 +138,21 @@ export function useSpotActionDialog(options: Options = {}) {
             title: 'Permanently Delete?',
             description: (s) =>
                 s && 'id' in s
-                    ? `Are you sure you want to permanently delete the parking spot at "${s.street}, ${s.city}"? This action cannot be undone.`
+                    ? `Are you sure you want to permanently delete the parking space at "${s.street}, ${s.city}"? This action cannot be undone.`
                     : '',
             confirmText: 'Delete Forever',
             variant: 'destructive',
         },
         bulkRestore: {
             title: 'Restore Selected Locations?',
-            description: (s) => (s && 'ids' in s ? `Are you sure you want to restore ${s.ids.length} parking spots?` : ''),
+            description: (s) => (s && 'ids' in s ? `Are you sure you want to restore ${s.ids.length} parking spaces?` : ''),
             confirmText: 'Restore',
             variant: 'default',
         },
         bulkForceDelete: {
             title: 'Permanently Delete Selected?',
             description: (s) =>
-                s && 'ids' in s ? `Are you sure you want to permanently delete ${s.ids.length} parking spots? This cannot be undone.` : '',
+                s && 'ids' in s ? `Are you sure you want to permanently delete ${s.ids.length} parking spaces? This cannot be undone.` : '',
             confirmText: 'Delete Forever',
             variant: 'destructive',
         },

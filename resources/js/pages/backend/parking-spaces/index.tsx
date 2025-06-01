@@ -4,28 +4,28 @@ import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filte
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
+import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, PaginatedResponse, ParkingSpot } from '@/types';
+import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Head, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getParkingSpotColumns } from './columns';
+import { getParkingSpaceColumns } from './columns';
 
 type PageProps = {
-    spots: PaginatedResponse<ParkingSpot>;
+    spaces: PaginatedResponse<ParkingSpace>;
     filters: { status: string | null; municipality: string | null; deletion_requested: boolean };
     statuses: Record<ParkingStatus, string>;
     municipalities: string[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spots', href: route('app.parking-spots.index') }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spaces', href: route('app.parking-spaces.index') }];
 
-export default function Index({ spots, filters, statuses, municipalities }: PageProps) {
+export default function Index({ spaces, filters, statuses, municipalities }: PageProps) {
     const { can } = useAuthorization();
-    const { openDialog, dialogElement } = useSpotActionDialog();
+    const { openDialog, dialogElement } = useSpaceActionDialog();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [selectedStatus, setSelectedStatus] = useState<ParkingStatus | ''>('');
@@ -35,11 +35,11 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
     useEffect(() => {
         setSelectedStatus('');
         setRowSelection({});
-    }, [statusFilter, municipalityFilter, spots.data]);
+    }, [statusFilter, municipalityFilter, spaces.data]);
 
-    const statusCounts = spots.data.reduce(
-        (acc, spot) => {
-            acc[spot.status] = (acc[spot.status] ?? 0) + 1;
+    const statusCounts = spaces.data.reduce(
+        (acc, space) => {
+            acc[space.status] = (acc[space.status] ?? 0) + 1;
             return acc;
         },
         {} as Record<string, number>,
@@ -54,27 +54,27 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
     const municipalityOptions = municipalities.map((name) => ({
         value: name,
         label: name,
-        count: spots.data.filter((spot) => spot.municipality === name).length,
+        count: spaces.data.filter((space) => space.municipality === name).length,
     }));
 
     const updateFilters = (status: string[], municipality: string[]) => {
         router.get(
-            route('app.parking-spots.index'),
+            route('app.parking-spaces.index'),
             { status: status.join(','), municipality: municipality.join(',') },
             { preserveScroll: true, preserveState: true },
         );
     };
 
     // Get the columns for the data table
-    const columns = getParkingSpotColumns(statuses, can, openDialog);
+    const columns = getParkingSpaceColumns(statuses, can, openDialog);
 
     // Bulk update location status
     const handleBulkUpdate = () => {
-        const ids: string[] = spots.data.filter((_, index) => rowSelection[index]).map((spot) => spot.id);
+        const ids: string[] = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
         if (!selectedStatus || ids.length === 0) return;
 
         router.patch(
-            route('app.parking-spots.bulk.update'),
+            route('app.parking-spaces.bulk.update'),
             {
                 ids,
                 status: selectedStatus,
@@ -100,14 +100,14 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Spots" />
+            <Head title="Parking Spaces" />
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">Parking Spots</h1>
+                <h1 className="text-2xl font-bold">Parking Spaces</h1>
 
-                <p className="text-muted-foreground">All the listed parking spots are added by the community and part of the own dataset of NIPKaart.</p>
+                <p className="text-muted-foreground">All the listed parking spaces are added by the community and part of the own dataset of NIPKaart.</p>
 
-                {can('parking-spot.update') && Object.keys(rowSelection).length > 0 && (
+                {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-muted-foreground text-sm">
@@ -145,7 +145,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
 
                 <DataTable
                     columns={columns}
-                    data={spots.data}
+                    data={spaces.data}
                     rowSelection={rowSelection}
                     onRowSelectionChange={setRowSelection}
                     filters={
@@ -180,7 +180,7 @@ export default function Index({ spots, filters, statuses, municipalities }: Page
                     }
                 />
 
-                <DataTablePagination pagination={spots} />
+                <DataTablePagination pagination={spaces} />
             </div>
             {dialogElement}
         </AppLayout>

@@ -1,5 +1,5 @@
 import { getBlueMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
-import { ParkingSpot } from '@/types';
+import { ParkingSpace } from '@/types';
 import React, { useMemo } from 'react';
 import { FeatureGroup, LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import ZoomControl from './zoom-control';
@@ -9,23 +9,23 @@ type Props = {
     longitude: number;
     onChange?: (lat: number, lng: number) => void;
     draggable?: boolean;
-    nearbySpots?: ParkingSpot[];
+    nearbySpaces?: ParkingSpace[];
 };
 
 const { BaseLayer, Overlay } = LayersControl;
 
-const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({ spots }: { spots: ParkingSpot[] }) {
+const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({ spaces }: { spaces: ParkingSpace[] }) {
     const markers = useMemo(
         () =>
-            spots.map((spot) => (
-                <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={getParkingStatusIcon(spot.status)} interactive={false} />
+            spaces.map((space) => (
+                <Marker key={space.id} position={[space.latitude, space.longitude]} icon={getParkingStatusIcon(space.status)} interactive={false} />
             )),
-        [spots],
+        [spaces],
     );
     return <FeatureGroup>{markers}</FeatureGroup>;
 });
 
-export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpots }: Props) {
+export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpaces }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
 
     return (
@@ -55,10 +55,10 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
                             maxZoom={22}
                         />
                     </BaseLayer>
-                    {/* Overlay for nearby parking spots */}
-                    {nearbySpots && nearbySpots.length > 0 && (
-                        <Overlay checked name="Nearby Parking Spots">
-                            <NearbyParkingMarkers spots={nearbySpots} />
+                    {/* Overlay for nearby parking spaces */}
+                    {nearbySpaces && nearbySpaces.length > 0 && (
+                        <Overlay checked name="Nearby Parking Spaces">
+                            <NearbyParkingMarkers spaces={nearbySpaces} />
                         </Overlay>
                     )}
                 </LayersControl>

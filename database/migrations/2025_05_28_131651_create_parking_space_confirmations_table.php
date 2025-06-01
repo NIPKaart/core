@@ -12,16 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_spot_confirmations', function (Blueprint $table) {
+        Schema::create('parking_space_confirmations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parking_spot_id')->constrained()->onDelete('cascade');
+            $table->foreignId('parking_space_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('confirmed_at');
             $table->enum('status', ParkingConfirmationStatus::all())->default(ParkingConfirmationStatus::CONFIRMED->value);
             $table->text('comment')->nullable();
             $table->timestamps();
 
-            $table->index(['parking_spot_id', 'user_id', 'confirmed_at']);
+            $table->index(['parking_space_id', 'user_id', 'confirmed_at']);
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_spot_confirmations');
+        Schema::dropIfExists('parking_space_confirmations');
     }
 };

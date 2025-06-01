@@ -4,7 +4,7 @@ import { router } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
 
-type FavoriteType = 'parking_spot' | 'parking_municipal' | 'parking_offstreet';
+type FavoriteType = 'parking_space' | 'parking_municipal' | 'parking_offstreet';
 
 type FavoriteButtonProps = {
     initial: boolean;

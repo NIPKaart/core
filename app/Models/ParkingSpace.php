@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ParkingSpot extends Model
+class ParkingSpace extends Model
 {
-    /** @use HasFactory<\Database\Factories\ParkingSpotFactory> */
+    /** @use HasFactory<\Database\Factories\ParkingSpaceFactory> */
     use Favoritable, HasFactory, SoftDeletes;
 
-    protected $table = 'parking_spots';
+    protected $table = 'parking_spaces';
 
     protected $keyType = 'string';
 
@@ -63,7 +63,7 @@ class ParkingSpot extends Model
     ];
 
     /**
-     * Get the user that owns the ParkingSpot
+     * Get the user that owns the ParkingSpace
      */
     public function user(): BelongsTo
     {
@@ -71,7 +71,7 @@ class ParkingSpot extends Model
     }
 
     /**
-     * Get the country that owns the ParkingSpot
+     * Get the country that owns the ParkingSpace
      */
     public function country(): BelongsTo
     {
@@ -79,7 +79,7 @@ class ParkingSpot extends Model
     }
 
     /**
-     * Get the province that owns the ParkingSpot
+     * Get the province that owns the ParkingSpace
      */
     public function province(): BelongsTo
     {
@@ -87,15 +87,15 @@ class ParkingSpot extends Model
     }
 
     /**
-     * Get the confirmations for the ParkingSpot
+     * Get the confirmations for the ParkingSpace
      */
     public function confirmations(): HasMany
     {
-        return $this->hasMany(ParkingSpotConfirmation::class);
+        return $this->hasMany(ParkingSpaceConfirmation::class);
     }
 
     // /**
-    //  * Scope a query to only include approved parking spots.
+    //  * Scope a query to only include approved parking spaces.
     //  *
     //  * @param  \Illuminate\Database\Eloquent\Builder  $query
     //  * @return \Illuminate\Database\Eloquent\Builder

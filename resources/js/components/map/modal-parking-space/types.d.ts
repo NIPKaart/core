@@ -18,8 +18,8 @@ export type LocationDetail = {
     last_confirmed_at?: string | null;
 };
 
-export type ParkingSpotModalProps = {
-    spotId: string | null;
+export type ParkingSpaceModalProps = {
+    spaceId: string | null;
     open: boolean;
     onClose: () => void;
     latitude: number | null;

@@ -10,18 +10,9 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { Eye, FileText, Info as InfoIcon, MapPin, MapPinCheckInside, Share2, X } from 'lucide-react';
 import * as React from 'react';
 import { ActionButtons, ConfirmTab, DescriptionTab, InfoTable, MainInfo } from './modal-parts';
-import { LocationDetail } from './types';
+import { LocationDetail, ParkingSpaceModalProps } from './types';
 
-type ParkingSpotModalProps = {
-    spotId: string | null;
-    open: boolean;
-    onClose: () => void;
-    latitude: number | null;
-    longitude: number | null;
-    confirmationStatusOptions: Record<string, string>;
-};
-
-export default function ParkingSpotModal({ spotId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpotModalProps) {
+export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpaceModalProps) {
     const { can, user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -33,10 +24,10 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
     const [tab, setTab] = React.useState('info');
 
     React.useEffect(() => {
-        if (open && spotId) {
+        if (open && spaceId) {
             setLoading(true);
             setError(null);
-            fetch(`/api/parking-spots/${spotId}`)
+            fetch(`/api/parking-spaces/${spaceId}`)
                 .then((res) => {
                     if (!res.ok) throw new Error('Not found');
                     return res.json();
@@ -48,7 +39,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
             setData(null);
             setError(null);
         }
-    }, [spotId, open]);
+    }, [spaceId, open]);
 
     React.useEffect(() => {
         if (open) {
@@ -56,7 +47,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
             setCopiedShare(false);
             setTab('info');
         }
-    }, [open, spotId]);
+    }, [open, spaceId]);
 
     function copyLocationId(e: React.MouseEvent) {
         e.stopPropagation();
@@ -131,18 +122,27 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                 <Separator />
                 <Tabs value={tab} onValueChange={setTab} className="mt-4 w-full">
                     <TabsList className="mb-2 flex w-full">
-                        <TabsTrigger value="info" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
+                        <TabsTrigger
+                            value="info"
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                        >
                             <InfoIcon className="h-4 w-4" />
                             Info
                         </TabsTrigger>
                         {isLoggedIn && (
-                            <TabsTrigger value="confirm" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
+                            <TabsTrigger
+                                value="confirm"
+                                className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                            >
                                 <MapPinCheckInside className="h-4 w-4" />
                                 Confirm
                             </TabsTrigger>
                         )}
                         {data?.description && (
-                            <TabsTrigger value="description" className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white">
+                            <TabsTrigger
+                                value="description"
+                                className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
+                            >
                                 <FileText className="h-4 w-4" />
                                 Description
                             </TabsTrigger>
@@ -165,7 +165,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                                 data={data}
                                 confirmationStatusOptions={confirmationStatusOptions}
                                 onConfirmed={() => {
-                                    fetch(`/api/parking-spots/${spotId}`)
+                                    fetch(`/api/parking-spaces/${spaceId}`)
                                         .then((res) => res.json())
                                         .then(setData);
                                 }}
@@ -191,7 +191,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                                 Parking location
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
-                                {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
+                                {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
@@ -214,8 +214,8 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                     <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
-                        {can('parking-spot.view') && data?.id && (
-                            <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener">
+                        {can('parking-space.view') && data?.id && (
+                            <a href={route('app.parking-spaces.show', { id: data.id })} target="_blank" rel="noopener">
                                 <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
                                     <Eye className="h-4 w-4" />
                                     Show
@@ -242,7 +242,7 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                             Parking location
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_spot" />}
+                            {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}
                             <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
                                 <Share2 className="h-5 w-5" />
                             </Button>
@@ -254,8 +254,8 @@ export default function ParkingSpotModal({ spotId, open, onClose, latitude, long
                     <div className="px-4 sm:px-6">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">
-                    {can('parking-spot.view') && data?.id && (
-                        <a href={route('app.parking-spots.show', { id: data.id })} target="_blank" rel="noopener" className="flex-1">
+                    {can('parking-space.view') && data?.id && (
+                        <a href={route('app.parking-spaces.show', { id: data.id })} target="_blank" rel="noopener" className="flex-1">
                             <Button variant="outline" className="flex w-full items-center gap-2" title="Go to admin page">
                                 <Eye className="h-4 w-4" />
                                 Show

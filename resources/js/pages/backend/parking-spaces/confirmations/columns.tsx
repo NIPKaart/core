@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { ParkingSpotConfirmation } from '@/types';
+import type { ParkingSpaceConfirmation } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Trash2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -16,8 +16,8 @@ const variantMap: Record<string, 'default' | 'secondary' | 'destructive'> = {
 export function getConfirmationColumns(
     statuses: Record<string, string>,
     can: (permission: string) => boolean,
-    openDialog: (type: 'delete', subject: ParkingSpotConfirmation) => void,
-): ColumnDef<ParkingSpotConfirmation>[] {
+    openDialog: (type: 'delete', subject: ParkingSpaceConfirmation) => void,
+): ColumnDef<ParkingSpaceConfirmation>[] {
     return [
         {
             id: 'select',
@@ -74,7 +74,7 @@ export function getConfirmationColumns(
             enableSorting: false,
             meta: { align: 'right' },
             cell: ({ row }) =>
-                can('parking-spot-confirmation.delete') && (
+                can('parking-space-confirmation.delete') && (
                     <Button variant="destructive" size="icon" className="cursor-pointer" onClick={() => openDialog('delete', row.original)}>
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete confirmation</span>

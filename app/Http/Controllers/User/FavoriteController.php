@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\FavoriteResource;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
-use App\Models\ParkingSpot;
+use App\Models\ParkingSpace;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -24,7 +24,7 @@ class FavoriteController extends Controller
                 'favoritable' => function ($morphTo) {
                     $morphTo
                         ->morphWith([
-                            ParkingSpot::class => ['country'],
+                            ParkingSpace::class => ['country'],
                             ParkingMunicipal::class => [],
                             ParkingOffstreet::class => [],
                         ]);
@@ -47,7 +47,7 @@ class FavoriteController extends Controller
             ->with([
                 'favoritable' => function ($morphTo) {
                     $morphTo->morphWith([
-                        ParkingSpot::class => ['country'],
+                        ParkingSpace::class => ['country'],
                         ParkingMunicipal::class => [],
                         ParkingOffstreet::class => [],
                     ]);
@@ -66,7 +66,7 @@ class FavoriteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type' => ['required', 'in:parking_spot,parking_municipal,parking_offstreet'],
+            'type' => ['required', 'in:parking_space,parking_municipal,parking_offstreet'],
             'id' => ['required', 'string'],
         ]);
 
@@ -86,7 +86,7 @@ class FavoriteController extends Controller
     public function destroy(Request $request)
     {
         $request->validate([
-            'type' => ['required', 'in:parking_spot,parking_municipal,parking_offstreet'],
+            'type' => ['required', 'in:parking_space,parking_municipal,parking_offstreet'],
             'id' => ['required', 'string'],
         ]);
 
@@ -106,7 +106,7 @@ class FavoriteController extends Controller
     private function findModel($type, $id)
     {
         return match ($type) {
-            'parking_spot' => ParkingSpot::findOrFail($id),
+            'parking_space' => ParkingSpace::findOrFail($id),
             'parking_municipal' => ParkingMunicipal::findOrFail($id),
             'parking_offstreet' => ParkingOffstreet::findOrFail($id),
             default => abort(404),

@@ -5,7 +5,7 @@ import ZoomControl from '@/components/map/zoom-control';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
-import { NominatimAddress, ParkingSpot } from '@/types';
+import { NominatimAddress, ParkingSpace } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
@@ -21,7 +21,7 @@ type PageProps = {
     selectOptions: {
         orientation: Record<string, string>;
     };
-    parkingSpots: ParkingSpot[];
+    parkingSpaces: ParkingSpace[];
 };
 
 function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
@@ -60,15 +60,15 @@ function useJustDragged(timeout = 250): [boolean, () => void] {
 
 /**
  * Clustered parking markers component.
- * Uses MarkerClusterGroup to cluster parking spots on the map.
+ * Uses MarkerClusterGroup to cluster parking spaces on the map.
  */
-const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ spots }: { spots: ParkingSpot[] }) {
+const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ spaces }: { spaces: ParkingSpace[] }) {
     const clusterMarkers = useMemo(
         () =>
-            spots.map((spot) => (
-                <Marker key={spot.id} position={[spot.latitude, spot.longitude]} icon={getParkingStatusIcon(spot.status)} interactive={false} />
+            spaces.map((space) => (
+                <Marker key={space.id} position={[space.latitude, space.longitude]} icon={getParkingStatusIcon(space.status)} interactive={false} />
             )),
-        [spots],
+        [spaces],
     );
     return (
         <MarkerClusterGroup
@@ -85,7 +85,7 @@ const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ sp
 
 export default function AddLocation() {
     const { props } = usePage<PageProps>();
-    const { selectOptions, parkingSpots } = props;
+    const { selectOptions, parkingSpaces } = props;
     const generalError = props.errors?.general;
 
     const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
@@ -166,9 +166,9 @@ export default function AddLocation() {
                             />
                         </BaseLayer>
 
-                        {/* Overlay for nearby parking spots */}
-                        <Overlay checked={true} name="Nearby Parking Spots">
-                            <ClusteredParkingMarkers spots={parkingSpots} />
+                        {/* Overlay for nearby parking spaces */}
+                        <Overlay checked={true} name="Nearby Parking Spaces">
+                            <ClusteredParkingMarkers spaces={parkingSpaces} />
                         </Overlay>
                     </LayersControl>
 

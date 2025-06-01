@@ -51,11 +51,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the parking spots for the user.
+     * Get the parking spaces for the user.
      */
-    public function parkingSpots(): HasMany
+    public function parkingSpaces(): HasMany
     {
-        return $this->hasMany(ParkingSpot::class);
+        return $this->hasMany(ParkingSpace::class);
     }
 
     /**
@@ -67,10 +67,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the parking spot confirmations for the user.
+     * Get the parking space confirmations for the user.
      */
     public function confirmations()
     {
-        return $this->hasMany(ParkingSpotConfirmation::class);
+        return $this->hasMany(ParkingSpaceConfirmation::class);
     }
 }

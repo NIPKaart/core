@@ -1,14 +1,14 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { ParkingSpotConfirmation } from '@/types';
+import { ParkingSpaceConfirmation } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 
 export type ConfirmationDialogType = 'delete' | 'bulkDelete';
-type DialogSubject = ParkingSpotConfirmation | { ids: string[] } | null;
+type DialogSubject = ParkingSpaceConfirmation | { ids: string[] } | null;
 
 type Options = {
-    parkingSpotId?: number;
+    parkingSpaceId?: number;
     onSuccess?: () => void;
     onError?: () => void;
 };
@@ -25,15 +25,15 @@ export function useConfirmationActionDialog(options: Options = {}) {
     const handlers: Record<ConfirmationDialogType, () => void> = {
         delete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            const parking_spot_id = options.parkingSpotId;
-            if (!parking_spot_id) {
-                toast.error('Missing parking spot id');
+            const parking_space_id = options.parkingSpaceId;
+            if (!parking_space_id) {
+                toast.error('Missing parking space id');
                 closeDialog();
                 return;
             }
             router.delete(
-                route('app.parking-spots.confirmations.destroy', {
-                    parking_spot: parking_spot_id,
+                route('app.parking-spaces.confirmations.destroy', {
+                    parking_space: parking_space_id,
                     confirmation: dialogSubject.id,
                 }),
                 {
@@ -53,15 +53,15 @@ export function useConfirmationActionDialog(options: Options = {}) {
         },
         bulkDelete: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
-            const parking_spot_id = options.parkingSpotId;
-            if (!parking_spot_id) {
-                toast.error('Missing parking spot id');
+            const parking_space_id = options.parkingSpaceId;
+            if (!parking_space_id) {
+                toast.error('Missing parking space id');
                 closeDialog();
                 return;
             }
             router.delete(
-                route('app.parking-spots.confirmations.bulk.destroy', {
-                    parking_spot: parking_spot_id,
+                route('app.parking-spaces.confirmations.bulk.destroy', {
+                    parking_space: parking_space_id,
                 }),
                 {
                     data: { ids: dialogSubject.ids },

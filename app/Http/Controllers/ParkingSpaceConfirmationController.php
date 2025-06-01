@@ -3,17 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ParkingConfirmationStatus;
-use App\Models\ParkingSpot;
-use App\Models\ParkingSpotConfirmation;
+use App\Models\ParkingSpace;
+use App\Models\ParkingSpaceConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
-class ParkingSpotConfirmationController extends Controller
+class ParkingSpaceConfirmationController extends Controller
 {
-    public function store(Request $request, ParkingSpot $parkingSpot)
+    public function store(Request $request, ParkingSpace $parkingSpace)
     {
         $request->validate([
             'status' => ['required', 'string', Rule::in(ParkingConfirmationStatus::all())],
@@ -22,18 +22,18 @@ class ParkingSpotConfirmationController extends Controller
 
         $user = Auth::user();
 
-        $alreadyConfirmed = $parkingSpot->confirmations()
+        $alreadyConfirmed = $parkingSpace->confirmations()
             ->where('user_id', $user->id)
             ->whereDate('confirmed_at', now()->toDateString())
             ->exists();
 
         if ($alreadyConfirmed) {
             return redirect()->back()->withErrors([
-                'general' => 'You already confirmed this spot today.',
+                'general' => 'You already confirmed this space today.',
             ])->withInput();
         }
 
-        $parkingSpot->confirmations()->create([
+        $parkingSpace->confirmations()->create([
             'user_id' => $user->id,
             'confirmed_at' => now(),
             'status' => $request->input('status'),
@@ -43,28 +43,28 @@ class ParkingSpotConfirmationController extends Controller
         return redirect()->back()->with('success', 'Confirmation recorded successfully.');
     }
 
-    public function index(Request $request, ParkingSpot $parkingSpot)
+    public function index(Request $request, ParkingSpace $parkingSpace)
     {
-        Gate::authorize('viewAny', ParkingSpotConfirmation::class);
+        Gate::authorize('viewAny', ParkingSpaceConfirmation::class);
 
-        $confirmations = ParkingSpotConfirmation::with('user')
-            ->where('parking_spot_id', $parkingSpot->id)
+        $confirmations = ParkingSpaceConfirmation::with('user')
+            ->where('parking_space_id', $parkingSpace->id)
             ->orderByDesc('created_at')
             ->paginate(20);
 
-        return Inertia::render('backend/parking-spots/confirmations/index', [
-            'parkingSpot' => $parkingSpot->only('id', 'country_id', 'municipality', 'city', 'street'),
+        return Inertia::render('backend/parking-spaces/confirmations/index', [
+            'parkingSpace' => $parkingSpace->only('id', 'country_id', 'municipality', 'city', 'street'),
             'confirmations' => $confirmations,
             'statuses' => ParkingConfirmationStatus::all(),
         ]);
     }
 
-    public function destroy(ParkingSpot $parking_spot, ParkingSpotConfirmation $confirmation)
+    public function destroy(ParkingSpace $parking_space, ParkingSpaceConfirmation $confirmation)
     {
         Gate::authorize('delete', $confirmation);
 
-        // Check if the confirmation belongs to the parking spot
-        if ($confirmation->parking_spot_id !== $parking_spot->id) {
+        // Check if the confirmation belongs to the parking space
+        if ($confirmation->parking_space_id !== $parking_space->id) {
             abort(404);
         }
 
@@ -75,14 +75,14 @@ class ParkingSpotConfirmationController extends Controller
 
     public function bulkDelete(Request $request)
     {
-        Gate::authorize('bulkDelete', ParkingSpotConfirmation::class);
+        Gate::authorize('bulkDelete', ParkingSpaceConfirmation::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_spot_confirmations,id'],
+            'ids.*' => ['string', 'exists:parking_space_confirmations,id'],
         ]);
 
-        ParkingSpotConfirmation::whereIn('id', $validated['ids'])->delete();
+        ParkingSpaceConfirmation::whereIn('id', $validated['ids'])->delete();
 
         return back();
     }
