@@ -7,14 +7,14 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
-use App\Models\ParkingSpot;
+use App\Models\ParkingSpace;
 use App\Models\Province;
 use App\Traits\ParsesNominatimAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
-class LocationController extends Controller
+class ParkingSpaceController extends Controller
 {
     use ParsesNominatimAddress;
 
@@ -23,11 +23,11 @@ class LocationController extends Controller
      */
     public function map()
     {
-        $parkingSpots = ParkingSpot::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
+        $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
             ->where('status', ParkingStatus::APPROVED)->get();
 
         return Inertia::render('frontend/map', [
-            'parkingSpots' => $parkingSpots,
+            'parkingSpaces' => $parkingSpaces,
             'selectOptions' => [
                 'confirmationStatus' => ParkingConfirmationStatus::options(),
             ],
@@ -39,20 +39,15 @@ class LocationController extends Controller
      */
     public function locationAdd()
     {
-        $parkingSpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')->get();
+        $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')->get();
 
         return Inertia::render('frontend/add-location', [
-            'parkingSpots' => $parkingSpots,
+            'parkingSpaces' => $parkingSpaces,
             'selectOptions' => [
                 'orientation' => ParkingOrientation::options(),
             ],
         ]);
     }
-
-    /**
-     * Retrieve the parking location information.
-     */
-    public function getLocationInfo() {}
 
     /**
      * Store the parking location information.
@@ -70,7 +65,7 @@ class LocationController extends Controller
                 'geocode' => $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
             ])->id;
 
-            $spot = new ParkingSpot([
+            $parkingSpace = new ParkingSpace([
                 'id' => uniqid(),
                 'user_id' => Auth::id(),
                 'ip_address' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $request->getClientIp(),
@@ -93,7 +88,7 @@ class LocationController extends Controller
                 'amenity' => $this->getAmenity($address),
             ]);
 
-            $spot->save();
+            $parkingSpace->save();
 
             return redirect()->route('map');
         } catch (\Throwable $e) {

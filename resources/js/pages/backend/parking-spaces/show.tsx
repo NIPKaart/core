@@ -4,73 +4,73 @@ import StreetViewCard from '@/components/map/card-location-streetview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { useSpotActionDialog } from '@/hooks/use-dialog-spot-action';
+import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem, ParkingSpot, ParkingSpotConfirmation } from '@/types';
+import { BreadcrumbItem, ParkingSpace, ParkingSpaceConfirmation } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, Server, Tag, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spots', href: route('app.parking-spots.index') },
-    { title: 'Show', href: route('app.parking-spots.show', { id: ':id' }) },
+    { title: 'Parking Spaces', href: route('app.parking-spaces.index') },
+    { title: 'Show', href: route('app.parking-spaces.show', { id: ':id' }) },
 ];
 
 type PageProps = {
-    parkingSpot: ParkingSpot;
+    parkingSpace: ParkingSpace;
     selectOptions: {
         parkingStatuses: { value: string; label: string; description: string }[];
         confirmationStatuses: { value: string; label: string; description: string }[];
     };
-    nearbySpots: ParkingSpot[];
-    recentConfirmations: ParkingSpotConfirmation[];
+    nearbySpaces: ParkingSpace[];
+    recentConfirmations: ParkingSpaceConfirmation[];
 };
 
-export default function Show({ parkingSpot, selectOptions, nearbySpots, recentConfirmations }: PageProps) {
+export default function Show({ parkingSpace, selectOptions, nearbySpaces, recentConfirmations }: PageProps) {
     const { can } = useAuthorization();
-    const { openDialog, dialogElement } = useSpotActionDialog();
+    const { openDialog, dialogElement } = useSpaceActionDialog();
 
-    const statusOpt = selectOptions.parkingStatuses.find((s) => s.value === parkingSpot.status)!;
+    const statusOpt = selectOptions.parkingStatuses.find((s) => s.value === parkingSpace.status)!;
     const variantMap: Record<string, BannerVariant> = {
         pending: 'primary',
         approved: 'success',
         rejected: 'error',
     };
-    const variant = variantMap[parkingSpot.status] ?? 'info';
+    const variant = variantMap[parkingSpace.status] ?? 'info';
 
     function copyToClipboard(val: string) {
         navigator.clipboard.writeText(val);
         toast.success('Copied to clipboard');
     }
 
-    const ipAddress = parkingSpot.ip_address ?? '';
+    const ipAddress = parkingSpace.ip_address ?? '';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Spot" />
+            <Head title="Parking Space" />
             {/* Header */}
             <div className="mb-4 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Parking spot ({parkingSpot.id})</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Parking space ({parkingSpace.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.parking-spots.index')}>
+                        <Link href={route('app.parking-spaces.index')}>
                             <ArrowLeft className="h-4 w-4" />
                             Back
                         </Link>
                     </Button>
 
-                    {can('parking-spot.update') && (
+                    {can('parking-space.update') && (
                         <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                            <Link href={route('app.parking-spots.edit', { id: parkingSpot.id })}>
+                            <Link href={route('app.parking-spaces.edit', { id: parkingSpace.id })}>
                                 <Edit className="h-4 w-4" />
                                 Edit
                             </Link>
                         </Button>
                     )}
 
-                    {can('parking-spot.delete') && (
-                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', parkingSpot)}>
+                    {can('parking-space.delete') && (
+                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', parkingSpace)}>
                             <Trash2 className="h-4 w-4" />
                             Move to Trash
                         </Button>
@@ -89,7 +89,7 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Details</h2>
-                        <p className="text-muted-foreground text-sm">All basic info about this parking spot.</p>
+                        <p className="text-muted-foreground text-sm">All basic info about this parking space.</p>
                     </div>
                     <div className="bg-background overflow-hidden rounded-xl border shadow-sm">
                         <dl>
@@ -99,45 +99,45 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                                     label: 'Country',
                                     value: (
                                         <>
-                                            {parkingSpot.country.name}
-                                            <span className="text-muted-foreground ml-2 font-normal">({parkingSpot.country.code})</span>
+                                            {parkingSpace.country.name}
+                                            <span className="text-muted-foreground ml-2 font-normal">({parkingSpace.country.code})</span>
                                         </>
                                     ),
                                 },
                                 {
                                     icon: <Landmark className="text-muted-foreground h-4 w-4" />,
                                     label: 'Province',
-                                    value: parkingSpot.province.name,
+                                    value: parkingSpace.province.name,
                                 },
                                 {
                                     icon: <MapPin className="text-muted-foreground h-4 w-4" />,
                                     label: 'Municipality',
-                                    value: parkingSpot.municipality,
+                                    value: parkingSpace.municipality,
                                 },
                                 {
                                     icon: <Home className="text-muted-foreground h-4 w-4" />,
                                     label: 'City',
-                                    value: parkingSpot.city,
+                                    value: parkingSpace.city,
                                 },
                                 {
                                     icon: <Tag className="text-muted-foreground h-4 w-4" />,
                                     label: 'Street',
-                                    value: parkingSpot.street,
+                                    value: parkingSpace.street,
                                 },
                                 {
                                     icon: <Hash className="text-muted-foreground h-4 w-4" />,
                                     label: 'Postcode',
-                                    value: parkingSpot.postcode,
+                                    value: parkingSpace.postcode,
                                 },
                                 {
                                     icon: <Compass className="text-muted-foreground h-4 w-4" />,
                                     label: 'Amenity',
-                                    value: parkingSpot.amenity,
+                                    value: parkingSpace.amenity,
                                 },
                                 {
                                     icon: <Compass className="text-muted-foreground h-4 w-4 rotate-90" />,
                                     label: 'Orientation',
-                                    value: parkingSpot.orientation,
+                                    value: parkingSpace.orientation,
                                 },
                                 {
                                     icon: <Server className="text-muted-foreground h-4 w-4" />,
@@ -231,7 +231,7 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                                         );
                                     })}
                                 </ul>
-                                {can('parking-spot-confirmation.view_any') && (
+                                {can('parking-space-confirmation.view_any') && (
                                     <div className="bg-muted/50 flex justify-end px-3 py-3">
                                         <Button
                                             asChild
@@ -239,7 +239,7 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                                             variant="outline"
                                             className="hover:bg-accent hover:text-accent-foreground transition-colors"
                                         >
-                                            <Link href={route('app.parking-spots.confirmations.index', { parking_spot: parkingSpot.id })}>
+                                            <Link href={route('app.parking-spaces.confirmations.index', { parking_space: parkingSpace.id })}>
                                                 Show all
                                             </Link>
                                         </Button>
@@ -256,18 +256,18 @@ export default function Show({ parkingSpot, selectOptions, nearbySpots, recentCo
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Location</h2>
-                        <p className="text-muted-foreground text-sm">Where the parking spot is located.</p>
+                        <p className="text-muted-foreground text-sm">Where the parking space is located.</p>
                     </div>
-                    <LocationMarkerCard latitude={parkingSpot.latitude} longitude={parkingSpot.longitude} nearbySpots={nearbySpots} />
+                    <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} nearbySpaces={nearbySpaces} />
                 </div>
 
                 {/* Card 4: Street View */}
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Street view</h2>
-                        <p className="text-muted-foreground text-sm">See the area around the parking spot.</p>
+                        <p className="text-muted-foreground text-sm">See the area around the parking space.</p>
                     </div>
-                    <StreetViewCard latitude={parkingSpot.latitude} longitude={parkingSpot.longitude} />
+                    <StreetViewCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
                 </div>
             </div>
             {dialogElement}

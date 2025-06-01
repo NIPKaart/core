@@ -33,11 +33,11 @@ export interface SharedData {
     sidebarOpen: boolean;
     counts: {
         users: number;
-        parkingSpots: {
+        parkingSpaces: {
             active: number;
             trashed: number;
         };
-        userParkingSpots: {
+        userParkingSpaces: {
             active: number;
         };
     };
@@ -123,7 +123,7 @@ export type ParkingRule = {
     };
 };
 
-export interface ParkingSpot {
+export interface ParkingSpace {
     id: string;
     user_id: number | null;
     user?: User;
@@ -181,7 +181,7 @@ export type NominatimAddress = {
     [key: string]: unknown;
 };
 
-export type FavoriteType = 'ParkingSpot' | 'ParkingMunicipal' | 'ParkingOffstreet';
+export type FavoriteType = 'ParkingSpace' | 'ParkingMunicipal' | 'ParkingOffstreet';
 
 export type Favorite = {
     id: string | null;
@@ -195,9 +195,9 @@ export type Favorite = {
     city?: string;
 };
 
-export type ParkingSpotConfirmation = {
+export type ParkingSpaceConfirmation = {
     id: number;
-    parking_spot_id: string;
+    parking_space_id: string;
     status: string;
     user: { id: number; name: string; email: string } | null;
     comment: string | null;

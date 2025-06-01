@@ -236,7 +236,7 @@ export function ConfirmTab({
     return (
         <div className="py-3">
             <ParkingConfirmForm
-                spotId={data.id}
+                spaceId={data.id}
                 onConfirmed={onConfirmed}
                 confirmationStatusOptions={confirmationStatusOptions}
                 confirmedToday={data.confirmed_today}

@@ -32,7 +32,7 @@ class ParkingMunicipal extends Model
     ];
 
     /**
-     * Get the country that owns the ParkingSpot
+     * Get the country that owns the ParkingSpace
      */
     public function country(): BelongsTo
     {
@@ -40,7 +40,7 @@ class ParkingMunicipal extends Model
     }
 
     /**
-     * Get the province that owns the ParkingSpot
+     * Get the province that owns the ParkingSpace
      */
     public function province(): BelongsTo
     {

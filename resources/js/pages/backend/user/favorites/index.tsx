@@ -12,7 +12,7 @@ type PageProps = {
 };
 
 const iconMap = {
-    ParkingSpot: MapPin,
+    ParkingSpace: MapPin,
     ParkingMunicipal: Landmark,
     ParkingOffstreet: Warehouse,
 };

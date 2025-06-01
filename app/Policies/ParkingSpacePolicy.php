@@ -2,25 +2,25 @@
 
 namespace App\Policies;
 
-use App\Models\ParkingSpot;
+use App\Models\ParkingSpace;
 use App\Models\User;
 
-class ParkingSpotPolicy
+class ParkingSpacePolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('parking-spot.view_any');
+        return $user->can('parking-space.view_any');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, ParkingSpot $parkingSpot): bool
+    public function view(User $user, ParkingSpace $parkingSpace): bool
     {
-        return $user->can('parking-spot.view');
+        return $user->can('parking-space.view');
     }
 
     /**
@@ -28,15 +28,15 @@ class ParkingSpotPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('parking-spot.create');
+        return $user->can('parking-space.create');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, ParkingSpot $parkingSpot): bool
+    public function update(User $user, ParkingSpace $parkingSpace): bool
     {
-        return $user->can('parking-spot.update');
+        return $user->can('parking-space.update');
     }
 
     /**
@@ -44,15 +44,15 @@ class ParkingSpotPolicy
      */
     public function bulkUpdate(User $user): bool
     {
-        return $user->can('parking-spot.update');
+        return $user->can('parking-space.update');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, ParkingSpot $parkingSpot): bool
+    public function delete(User $user, ParkingSpace $parkingSpace): bool
     {
-        return $user->can('parking-spot.delete');
+        return $user->can('parking-space.delete');
     }
 
     /**
@@ -60,7 +60,7 @@ class ParkingSpotPolicy
      */
     public function trash(User $user): bool
     {
-        return $user->can('parking-spot.restore');
+        return $user->can('parking-space.restore');
     }
 
     /**
@@ -68,7 +68,7 @@ class ParkingSpotPolicy
      */
     public function restore(User $user, string $class): bool
     {
-        return $user->can('parking-spot.restore');
+        return $user->can('parking-space.restore');
     }
 
     /**
@@ -76,7 +76,7 @@ class ParkingSpotPolicy
      */
     public function bulkRestore(User $user): bool
     {
-        return $user->can('parking-spot.restore');
+        return $user->can('parking-space.restore');
     }
 
     /**
@@ -84,7 +84,7 @@ class ParkingSpotPolicy
      */
     public function forceDelete(User $user, string $class): bool
     {
-        return $user->can('parking-spot.force-delete');
+        return $user->can('parking-space.force-delete');
     }
 
     /**
@@ -92,6 +92,6 @@ class ParkingSpotPolicy
      */
     public function bulkForceDelete(User $user): bool
     {
-        return $user->can('parking-spot.force-delete');
+        return $user->can('parking-space.force-delete');
     }
 }

@@ -9,4 +9,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::middleware(['throttle:30,1', 'web'])
-    ->get('parking-spots/{id}', [Api\LocationInfoController::class, 'getLocationInfo']);
+    ->get('parking-spaces/{id}', [Api\LocationInfoController::class, 'getLocationInfo']);

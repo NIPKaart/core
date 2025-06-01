@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Country, ParkingSpot, Province } from '@/types';
+import { Country, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { FileText, Layers, MapPin } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
@@ -40,18 +40,18 @@ type Props = {
     orientationOptions: Record<string, string>;
     onSubmit: () => void;
     submitting: boolean;
-    nearbySpots?: ParkingSpot[];
+    nearbySpaces?: ParkingSpace[];
 };
 
-export default function ParkingSpotForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting, nearbySpots }: Props) {
+export default function ParkingSpaceForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting, nearbySpaces }: Props) {
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-4">
                         <div className="mb-4 space-y-1">
-                            <h2 className="text-lg font-semibold">Parking Spot Details</h2>
-                            <p className="text-muted-foreground text-sm">Edit the details of the parking spot.</p>
+                            <h2 className="text-lg font-semibold">Parking Space Details</h2>
+                            <p className="text-muted-foreground text-sm">Edit the details of the parking space.</p>
                         </div>
                         <Tabs defaultValue="basic" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
@@ -236,7 +236,7 @@ export default function ParkingSpotForm({ form, countries, provinces, statusOpti
                         <div className="mb-4">
                             <div className="mb-4 space-y-1">
                                 <h2 className="text-lg font-semibold">Location</h2>
-                                <p className="text-muted-foreground text-sm">Drag the marker to fine-tune the exact spot on the map.</p>
+                                <p className="text-muted-foreground text-sm">Drag the marker to fine-tune the exact space on the map.</p>
                             </div>
                             <LocationMarkerCard
                                 latitude={form.watch('latitude')}
@@ -245,7 +245,7 @@ export default function ParkingSpotForm({ form, countries, provinces, statusOpti
                                     form.setValue('latitude', lat);
                                     form.setValue('longitude', lng);
                                 }}
-                                nearbySpots={nearbySpots}
+                                nearbySpaces={nearbySpaces}
                             />
                         </div>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

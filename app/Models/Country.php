@@ -27,11 +27,11 @@ class Country extends Model
     }
 
     /**
-     * Get parking spots in the country.
+     * Get parking spaces in the country.
      */
-    public function parkingSpots(): HasMany
+    public function parkingSpaces(): HasMany
     {
-        return $this->hasMany(ParkingSpot::class);
+        return $this->hasMany(ParkingSpace::class);
     }
 
     /**
@@ -43,9 +43,9 @@ class Country extends Model
     }
 
     /**
-     * Get parking spots provided by municipalities in the country.
+     * Get parking spaces provided by municipalities in the country.
      */
-    public function municipalParkingSpots(): HasMany
+    public function municipalParkingSpaces(): HasMany
     {
         return $this->hasMany(ParkingMunicipal::class);
     }

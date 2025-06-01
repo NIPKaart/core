@@ -9,18 +9,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { DialogType } from '@/hooks/use-dialog-spot-action';
-import type { ParkingSpot } from '@/types';
+import type { DialogType } from '@/hooks/use-dialog-space-action';
+import type { ParkingSpace } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreVertical } from 'lucide-react';
 
-export function getParkingSpotColumns(
+export function getParkingSpaceColumns(
     statuses: Record<ParkingStatus, string>,
     can: (permission: string) => boolean,
-    openDialog: (type: DialogType, spot: ParkingSpot) => void,
-): ColumnDef<ParkingSpot>[] {
+    openDialog: (type: DialogType, space: ParkingSpace) => void,
+): ColumnDef<ParkingSpace>[] {
     return [
         {
             id: 'select',
@@ -89,7 +89,7 @@ export function getParkingSpotColumns(
             enableSorting: false,
             meta: { align: 'right' },
             cell: ({ row }) => {
-                const spot = row.original;
+                const space = row.original;
 
                 return (
                     <div className="flex justify-end">
@@ -107,33 +107,33 @@ export function getParkingSpotColumns(
 
                             <DropdownMenuContent align="end" className="w-32">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                {can('parking-spot.view') && (
+                                {can('parking-space.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.parking-spots.show', { id: spot.id })}>Show</Link>
+                                        <Link href={route('app.parking-spaces.show', { id: space.id })}>Show</Link>
                                     </DropdownMenuItem>
                                 )}
-                                {can('parking-spot.update') && (
+                                {can('parking-space.update') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.parking-spots.edit', { id: spot.id })}>Edit</Link>
+                                        <Link href={route('app.parking-spaces.edit', { id: space.id })}>Edit</Link>
                                     </DropdownMenuItem>
                                 )}
-                                {can('parking-spot-confirmation.view_any') && (
+                                {can('parking-space-confirmation.view_any') && (
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.parking-spots.confirmations.index', { id: spot.id })}>Confirmations</Link>
+                                            <Link href={route('app.parking-spaces.confirmations.index', { id: space.id })}>Confirmations</Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}
 
-                                {can('parking-spot.delete') && (
+                                {can('parking-space.delete') && (
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             className="text-destructive cursor-pointer"
                                             onSelect={(e) => {
                                                 e.preventDefault();
-                                                openDialog('delete', spot);
+                                                openDialog('delete', space);
                                             }}
                                         >
                                             Move to Trash

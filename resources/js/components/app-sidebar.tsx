@@ -14,8 +14,8 @@ export function AppSidebar() {
 
     // Sidebar badge counts
     const userCount = props.counts.users;
-    const { active: activeParkingSpots, trashed: trashedParkingSpots } = props.counts.parkingSpots;
-    const { active: activeUserParkingSpots } = props.counts.userParkingSpots;
+    const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
+    const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
         title: 'Platform',
@@ -38,9 +38,9 @@ export function AppSidebar() {
         items: [
             {
                 title: 'My Locations',
-                href: route('user.parking-spots.index'),
+                href: route('user.parking-spaces.index'),
                 icon: icons.MapPin,
-                badge: activeUserParkingSpots ? activeUserParkingSpots : undefined,
+                badge: activeUserParkingSpaces ? activeUserParkingSpaces : undefined,
             },
             {
                 title: 'My Favorites',
@@ -53,17 +53,17 @@ export function AppSidebar() {
     const moderationNavGroup: NavGroup = {
         title: 'Moderation',
         items: [
-            can('parking-spot.view_any') && {
-                title: 'Parking Spots',
-                href: route('app.parking-spots.index'),
+            can('parking-space.view_any') && {
+                title: 'Parking Spaces',
+                href: route('app.parking-spaces.index'),
                 icon: icons.MapPin,
-                badge: activeParkingSpots,
+                badge: activeParkingSpaces,
             },
-            can('parking-spot.restore') && {
+            can('parking-space.restore') && {
                 title: 'Trash',
-                href: route('app.parking-spots.trash'),
+                href: route('app.parking-spaces.trash'),
                 icon: icons.Trash2,
-                badge: trashedParkingSpots ? trashedParkingSpots : undefined,
+                badge: trashedParkingSpaces ? trashedParkingSpaces : undefined,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',

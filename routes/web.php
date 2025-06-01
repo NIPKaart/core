@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ParkingSpaceController;
+use App\Http\Controllers\ParkingSpaceConfirmationController;
 use App\Http\Controllers\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,9 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // User routes
     Route::prefix('user')->as('user.')->group(function () {
         // Profile routes
-        Route::get('parking-spots', [User\MyParkingSpotController::class, 'index'])->name('parking-spots.index');
-        Route::get('parking-spots/{id}', [User\MyParkingSpotController::class, 'show'])->name('parking-spots.show');
-        Route::delete('parking-spots/{id}', [User\MyParkingSpotController::class, 'destroy'])->name('parking-spots.destroy');
+        Route::get('parking-spaces', [User\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
+        Route::get('parking-spaces/{id}', [User\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
+        Route::delete('parking-spaces/{id}', [User\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
 
         // Favorites routes
         Route::get('favorites', [User\FavoriteController::class, 'index'])->name('favorites.index');
@@ -37,26 +38,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // App routes
     Route::prefix('app')->as('app.')->group(function () {
-        // ParkingSpot routes
-        Route::prefix('parking-spots')->as('parking-spots.')->group(function () {
+        // ParkingSpace routes
+        Route::prefix('parking-spaces')->as('parking-spaces.')->group(function () {
             // Confirmations routes
-            Route::post('{parking_spot}/confirm', [ParkingSpotConfirmationController::class, 'store'])->name('confirm');
-            Route::get('{parking_spot}/confirmations', [ParkingSpotConfirmationController::class, 'index'])->name('confirmations.index');
-            Route::delete('{parking_spot}/confirmations/{confirmation}', [ParkingSpotConfirmationController::class, 'destroy'])->name('confirmations.destroy');
-            Route::delete('{parking_spot}/confirmations/bulk/delete', [ParkingSpotConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');
+            Route::post('{parking_space}/confirm', [ParkingSpaceConfirmationController::class, 'store'])->name('confirm');
+            Route::get('{parking_space}/confirmations', [ParkingSpaceConfirmationController::class, 'index'])->name('confirmations.index');
+            Route::delete('{parking_space}/confirmations/{confirmation}', [ParkingSpaceConfirmationController::class, 'destroy'])->name('confirmations.destroy');
+            Route::delete('{parking_space}/confirmations/bulk/delete', [ParkingSpaceConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');
 
             // Delete and restore routes
-            Route::get('trash', [Admin\ParkingSpotController::class, 'trash'])->name('trash');
+            Route::get('trash', [Admin\ParkingSpaceController::class, 'trash'])->name('trash');
 
             // Single actions
-            Route::patch('{parking_spot}/restore', [Admin\ParkingSpotController::class, 'restore'])->name('restore');
-            Route::delete('{parking_spot}/force-delete', [Admin\ParkingSpotController::class, 'forceDelete'])->name('force-destroy');
+            Route::patch('{parking_space}/restore', [Admin\ParkingSpaceController::class, 'restore'])->name('restore');
+            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-destroy');
 
             // Bulk actions
             Route::prefix('bulk')->as('bulk.')->group(function () {
-                Route::patch('update', [Admin\ParkingSpotController::class, 'bulkUpdate'])->name('update');
-                Route::patch('restore', [Admin\ParkingSpotController::class, 'bulkRestore'])->name('restore');
-                Route::delete('force-delete', [Admin\ParkingSpotController::class, 'bulkForceDelete'])->name('force-delete');
+                Route::patch('update', [Admin\ParkingSpaceController::class, 'bulkUpdate'])->name('update');
+                Route::patch('restore', [Admin\ParkingSpaceController::class, 'bulkRestore'])->name('restore');
+                Route::delete('force-delete', [Admin\ParkingSpaceController::class, 'bulkForceDelete'])->name('force-delete');
             });
         });
 
@@ -69,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', Admin\UserController::class);
         Route::resource('roles', Admin\RoleController::class);
         Route::resource('parking-rules', Admin\ParkingRuleController::class);
-        Route::resource('parking-spots', Admin\ParkingSpotController::class);
+        Route::resource('parking-spaces', Admin\ParkingSpaceController::class);
     });
 });
 

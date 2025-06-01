@@ -6,24 +6,24 @@ use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\App\UpdateParkingSpot;
+use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
-use App\Models\ParkingSpot;
+use App\Models\ParkingSpace;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
-class ParkingSpotController extends Controller
+class ParkingSpaceController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', ParkingSpot::class);
+        Gate::authorize('viewAny', ParkingSpace::class);
 
-        $query = ParkingSpot::query()
+        $query = ParkingSpace::query()
             ->with(['user', 'province', 'country']);
 
         if ($request->filled('status')) {
@@ -36,17 +36,17 @@ class ParkingSpotController extends Controller
             $query->whereIn('municipality', $municipalities);
         }
 
-        $spots = $query->latest()->paginate(25)->withQueryString();
+        $spaces = $query->latest()->paginate(25)->withQueryString();
 
-        return inertia('backend/parking-spots/index', [
-            'spots' => $spots,
+        return inertia('backend/parking-spaces/index', [
+            'spaces' => $spaces,
             'filters' => [
                 'status' => $request->input('status'),
                 'municipality' => $request->input('municipality'),
                 'deletion_requested' => $request->boolean('deletion_requested'),
             ],
             'statuses' => ParkingStatus::options(),
-            'municipalities' => ParkingSpot::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
+            'municipalities' => ParkingSpace::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
         ]);
     }
 
@@ -69,11 +69,11 @@ class ParkingSpotController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ParkingSpot $parkingSpot)
+    public function show(ParkingSpace $parkingSpace)
     {
-        Gate::authorize('view', $parkingSpot);
+        Gate::authorize('view', $parkingSpace);
 
-        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpace = ParkingSpace::with(['user', 'province', 'country'])->findOrFail($parkingSpace->id);
 
         $parkingStatuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -87,10 +87,10 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
-        // Get the 10 nearest parking spots
+        // Get the 10 nearest parking spaces
         $limit = 10;
-        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
-            ->where('id', '!=', $parkingSpot->id)
+        $nearbySpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->orderByRaw('
@@ -102,27 +102,27 @@ class ParkingSpotController extends Controller
                     sin(radians(latitude))
                 ))
             ', [
-                $parkingSpot->latitude,
-                $parkingSpot->longitude,
-                $parkingSpot->latitude,
+                $parkingSpace->latitude,
+                $parkingSpace->longitude,
+                $parkingSpace->latitude,
             ])
             ->limit($limit)
             ->get();
 
         // Fetch the 8 most recent confirmations
-        $recentConfirmations = $parkingSpot->confirmations()
+        $recentConfirmations = $parkingSpace->confirmations()
             ->with('user')
             ->latest('confirmed_at')
             ->take(8)
             ->get();
 
-        return inertia('backend/parking-spots/show', [
-            'parkingSpot' => $parkingSpot,
+        return inertia('backend/parking-spaces/show', [
+            'parkingSpace' => $parkingSpace,
             'selectOptions' => [
                 'parkingStatuses' => $parkingStatuses,
                 'confirmationStatuses' => $confirmationStatuses,
             ],
-            'nearbySpots' => $nearbySpots,
+            'nearbySpaces' => $nearbySpaces,
             'recentConfirmations' => $recentConfirmations,
         ]);
     }
@@ -130,14 +130,14 @@ class ParkingSpotController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ParkingSpot $parkingSpot)
+    public function edit(ParkingSpace $parkingSpace)
     {
-        Gate::authorize('update', $parkingSpot);
+        Gate::authorize('update', $parkingSpace);
 
-        $parkingSpot = ParkingSpot::with(['user', 'province', 'country'])->findOrFail($parkingSpot->id);
+        $parkingSpace = ParkingSpace::with(['user', 'province', 'country'])->findOrFail($parkingSpace->id);
 
-        $parkingSpot->parking_hours = $parkingSpot->parking_time ? floor($parkingSpot->parking_time / 60) : 0;
-        $parkingSpot->parking_minutes = $parkingSpot->parking_time ? $parkingSpot->parking_time % 60 : 0;
+        $parkingSpace->parking_hours = $parkingSpace->parking_time ? floor($parkingSpace->parking_time / 60) : 0;
+        $parkingSpace->parking_minutes = $parkingSpace->parking_time ? $parkingSpace->parking_time % 60 : 0;
 
         $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -145,10 +145,10 @@ class ParkingSpotController extends Controller
             'description' => $status->description(),
         ])->values();
 
-        // Get the 10 nearest parking spots
+        // Get the 10 nearest parking spaces
         $limit = 10;
-        $nearbySpots = ParkingSpot::select('id', 'latitude', 'longitude', 'status')
-            ->where('id', '!=', $parkingSpot->id)
+        $nearbySpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')
+            ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->orderByRaw('
@@ -160,9 +160,9 @@ class ParkingSpotController extends Controller
                     sin(radians(latitude))
                 ))
             ', [
-                $parkingSpot->latitude,
-                $parkingSpot->longitude,
-                $parkingSpot->latitude,
+                $parkingSpace->latitude,
+                $parkingSpace->longitude,
+                $parkingSpace->latitude,
             ])
             ->limit($limit)
             ->get();
@@ -170,24 +170,24 @@ class ParkingSpotController extends Controller
         $countries = Country::select('id', 'name')->get();
         $provinces = Province::select('id', 'name')->get();
 
-        return inertia('backend/parking-spots/edit', [
-            'parkingSpot' => $parkingSpot,
+        return inertia('backend/parking-spaces/edit', [
+            'parkingSpace' => $parkingSpace,
             'countries' => $countries,
             'provinces' => $provinces,
             'selectOptions' => [
                 'statuses' => $statuses,
                 'orientation' => ParkingOrientation::options(),
             ],
-            'nearbySpots' => $nearbySpots,
+            'nearbySpaces' => $nearbySpaces,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateParkingSpot $request, ParkingSpot $parkingSpot)
+    public function update(UpdateParkingSpace $request, ParkingSpace $parkingSpace)
     {
-        Gate::authorize('update', $parkingSpot);
+        Gate::authorize('update', $parkingSpace);
 
         $parkingTime = ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0);
 
@@ -198,23 +198,23 @@ class ParkingSpotController extends Controller
         ];
         unset($data['parking_hours'], $data['parking_minutes']);
 
-        $parkingSpot->update($data);
+        $parkingSpace->update($data);
 
         return redirect()
-            ->route('app.parking-spots.index')
-            ->with('success', 'Parking spot updated successfully.');
+            ->route('app.parking-spaces.index')
+            ->with('success', 'Parking space updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ParkingSpot $parkingSpot)
+    public function destroy(ParkingSpace $parkingSpace)
     {
-        Gate::authorize('delete', $parkingSpot);
-        $parkingSpot->delete();
+        Gate::authorize('delete', $parkingSpace);
+        $parkingSpace->delete();
 
-        return redirect()->route('app.parking-spots.index')
-            ->with('success', 'Parking spot moved to trash successfully.');
+        return redirect()->route('app.parking-spaces.index')
+            ->with('success', 'Parking space moved to trash successfully.');
     }
 
     /**
@@ -222,20 +222,20 @@ class ParkingSpotController extends Controller
      */
     public function bulkUpdate(Request $request)
     {
-        Gate::authorize('bulkUpdate', ParkingSpot::class);
+        Gate::authorize('bulkUpdate', ParkingSpace::class);
 
         $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['required', 'string', 'exists:parking_spots,id'],
+            'ids.*' => ['required', 'string', 'exists:parking_spaces,id'],
             'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
         ]);
 
-        ParkingSpot::whereIn('id', $request->input('ids'))
+        ParkingSpace::whereIn('id', $request->input('ids'))
             ->update(['status' => $request->input('status')]);
 
         return redirect()
             ->back()
-            ->with('success', 'Parking spots updated successfully.');
+            ->with('success', 'Parking spaces updated successfully.');
     }
 
     /**
@@ -243,16 +243,16 @@ class ParkingSpotController extends Controller
      */
     public function trash(Request $request)
     {
-        Gate::authorize('viewAny', ParkingSpot::class);
+        Gate::authorize('viewAny', ParkingSpace::class);
 
-        $spots = ParkingSpot::onlyTrashed()
+        $spaces = ParkingSpace::onlyTrashed()
             ->with(['user', 'province', 'country'])
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        return inertia('backend/parking-spots/trash', [
-            'spots' => $spots,
+        return inertia('backend/parking-spaces/trash', [
+            'spaces' => $spaces,
         ]);
     }
 
@@ -261,11 +261,11 @@ class ParkingSpotController extends Controller
      */
     public function restore(string $id)
     {
-        $spot = ParkingSpot::onlyTrashed()->findOrFail($id);
+        $space = ParkingSpace::onlyTrashed()->findOrFail($id);
 
-        Gate::authorize('restore', $spot);
+        Gate::authorize('restore', $space);
 
-        $spot->restore();
+        $space->restore();
 
         return back();
     }
@@ -275,11 +275,11 @@ class ParkingSpotController extends Controller
      */
     public function forceDelete(string $id)
     {
-        $spot = ParkingSpot::onlyTrashed()->findOrFail($id);
+        $space = ParkingSpace::onlyTrashed()->findOrFail($id);
 
-        Gate::authorize('forceDelete', $spot);
+        Gate::authorize('forceDelete', $space);
 
-        $spot->forceDelete();
+        $space->forceDelete();
 
         return back();
     }
@@ -289,14 +289,14 @@ class ParkingSpotController extends Controller
      */
     public function bulkRestore(Request $request)
     {
-        Gate::authorize('bulkRestore', ParkingSpot::class);
+        Gate::authorize('bulkRestore', ParkingSpace::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_spots,id'],
+            'ids.*' => ['string', 'exists:parking_spaces,id'],
         ]);
 
-        ParkingSpot::onlyTrashed()
+        ParkingSpace::onlyTrashed()
             ->whereIn('id', $validated['ids'])
             ->restore();
 
@@ -308,14 +308,14 @@ class ParkingSpotController extends Controller
      */
     public function bulkForceDelete(Request $request)
     {
-        Gate::authorize('bulkForceDelete', ParkingSpot::class);
+        Gate::authorize('bulkForceDelete', ParkingSpace::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_spots,id'],
+            'ids.*' => ['string', 'exists:parking_spaces,id'],
         ]);
 
-        ParkingSpot::onlyTrashed()
+        ParkingSpace::onlyTrashed()
             ->whereIn('id', $validated['ids'])
             ->forceDelete();
 

@@ -12,13 +12,13 @@ type FormValues = {
 };
 
 type Props = {
-    spotId: string;
+    spaceId: string;
     confirmationStatusOptions: Record<string, string>;
     confirmedToday: boolean;
     onConfirmed?: () => void;
 };
 
-export function ParkingConfirmForm({ spotId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
+export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
     const { errors } = usePage().props as unknown as { errors?: Record<string, string[]> };
     const [generalError, setGeneralError] = React.useState<string | null>(null);
 
@@ -26,11 +26,11 @@ export function ParkingConfirmForm({ spotId, confirmationStatusOptions, confirme
         defaultValues: { status: 'confirmed', comment: '' },
     });
 
-    // Clear errors and general error on open/spot change
+    // Clear errors and general error on open/space change
     React.useEffect(() => {
         setGeneralError(null);
         form.clearErrors();
-    }, [spotId, form]);
+    }, [spaceId, form]);
 
     // Set validation errors
     React.useEffect(() => {
@@ -47,7 +47,7 @@ export function ParkingConfirmForm({ spotId, confirmationStatusOptions, confirme
 
     const onSubmit = form.handleSubmit((data) => {
         setGeneralError(null);
-        router.post(route('app.parking-spots.confirm', spotId), data, {
+        router.post(route('app.parking-spaces.confirm', spaceId), data, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -67,9 +67,9 @@ export function ParkingConfirmForm({ spotId, confirmationStatusOptions, confirme
             <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-5">
                 <h2 className="mb-2 text-center text-lg font-semibold">Help keep the map up-to-date</h2>
                 <div className="mb-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-                    Confirm if the parking spot is still valid.
+                    Confirm if the parking space is still valid.
                     <br />
-                    <span className="text-sm text-zinc-400">(you can do this once per day, for each parking spot)</span>
+                    <span className="text-sm text-zinc-400">(you can do this once per day, for each parking space)</span>
                 </div>
                 {generalError && (
                     <div className="border-destructive/20 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/20 mb-2 rounded border px-3 py-2 text-center text-sm">
@@ -114,7 +114,7 @@ export function ParkingConfirmForm({ spotId, confirmationStatusOptions, confirme
                                         {...field}
                                         rows={2}
                                         className="resize-none text-xs"
-                                        placeholder="Add any details or comments about the parking spot..."
+                                        placeholder="Add any details or comments about the parking space..."
                                         maxLength={500}
                                         disabled={confirmedToday || form.formState.isSubmitting}
                                     />

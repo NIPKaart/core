@@ -57,7 +57,7 @@ export function getBlueMarkerIcon(): Icon {
 }
 
 /**
- * Icon for invalid parking spots.
+ * Icon for invalid parking spaces.
  */
 export function getInvalidParkingIcon(): Icon {
     return L.icon({
@@ -135,7 +135,7 @@ export function getGarageStatusIcon(status: 'green' | 'orange' | 'red' | 'grey')
 }
 
 /**
- * Get the icon for a parking spot based on its status.
+ * Get the icon for a parking space based on its status.
  */
 export function getParkingStatusIcon(status: 'approved' | 'pending' | 'rejected' | string): Icon {
     switch (status) {
