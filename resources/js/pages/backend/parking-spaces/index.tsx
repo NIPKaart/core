@@ -16,9 +16,9 @@ import { getParkingSpaceColumns } from './columns';
 
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
-    filters: { status: string | null; municipality: string | null; deletion_requested: boolean };
+    filters: { status: string | null; municipality_id: string | null; deletion_requested: boolean };
     statuses: Record<ParkingStatus, string>;
-    municipalities: string[];
+    municipalities: { id: string; name: string }[];
 };
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spaces', href: route('app.parking-spaces.index') }];
@@ -30,7 +30,7 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [selectedStatus, setSelectedStatus] = useState<ParkingStatus | ''>('');
     const [statusFilter, setStatusFilter] = useState<string[]>(filters.status ? filters.status.split(',') : []);
-    const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality ? filters.municipality.split(',') : []);
+    const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality_id ? filters.municipality_id.split(',') : []);
 
     useEffect(() => {
         setSelectedStatus('');
@@ -51,16 +51,16 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
         count: statusCounts[value] ?? 0,
     }));
 
-    const municipalityOptions = municipalities.map((name) => ({
-        value: name,
-        label: name,
-        count: spaces.data.filter((space) => space.municipality === name).length,
+    const municipalityOptions = municipalities.map((m) => ({
+        value: String(m.id),
+        label: m.name,
+        count: spaces.data.filter((space) => String(space.municipality.id) === String(m.id)).length,
     }));
 
     const updateFilters = (status: string[], municipality: string[]) => {
         router.get(
             route('app.parking-spaces.index'),
-            { status: status.join(','), municipality: municipality.join(',') },
+            { status: status.join(','), municipality_id: municipality.join(',') },
             { preserveScroll: true, preserveState: true },
         );
     };
@@ -105,7 +105,9 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="text-2xl font-bold">Parking Spaces</h1>
 
-                <p className="text-muted-foreground">All the listed parking spaces are added by the community and part of the own dataset of NIPKaart.</p>
+                <p className="text-muted-foreground">
+                    All the listed parking spaces are added by the community and part of the own dataset of NIPKaart.
+                </p>
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">

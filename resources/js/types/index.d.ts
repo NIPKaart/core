@@ -144,8 +144,9 @@ export interface ParkingSpace {
     country: Country;
     province_id: number;
     province: Province;
+    municipality_id: number;
+    municipality: Municipality;
 
-    municipality: string;
     city: string;
     suburb: string | null;
     neighbourhood: string | null;
