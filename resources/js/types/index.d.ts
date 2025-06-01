@@ -81,6 +81,15 @@ export interface Province {
     updated_at: string;
 }
 
+export interface Municipality {
+    id: number;
+    name: string;
+    country_id: number;
+    province_id: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface User {
     id: number;
     name: string;
@@ -135,8 +144,9 @@ export interface ParkingSpace {
     country: Country;
     province_id: number;
     province: Province;
+    municipality_id: number;
+    municipality: Municipality;
 
-    municipality: string;
     city: string;
     suburb: string | null;
     neighbourhood: string | null;

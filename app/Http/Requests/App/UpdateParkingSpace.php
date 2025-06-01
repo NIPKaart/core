@@ -28,8 +28,8 @@ class UpdateParkingSpace extends FormRequest
         return [
             'country_id' => ['required', 'exists:countries,id'],
             'province_id' => ['required', 'exists:provinces,id'],
+            'municipality_id' => ['required', 'exists:municipalities,id'],
 
-            'municipality' => ['required', 'string'],
             'city' => ['nullable', 'string'],
             'suburb' => ['nullable', 'string'],
             'neighbourhood' => ['nullable', 'string'],

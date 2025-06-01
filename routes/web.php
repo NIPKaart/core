@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\ParkingSpaceController;
 use App\Http\Controllers\ParkingSpaceConfirmationController;
+use App\Http\Controllers\ParkingSpaceController;
 use App\Http\Controllers\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -12,9 +12,9 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 // Map
-Route::get('map', [LocationController::class, 'map'])->name('map');
-Route::get('map/add', [LocationController::class, 'locationAdd'])->name('map.add');
-Route::post('map/add', [LocationController::class, 'store'])->name('map.store');
+Route::get('map', [ParkingSpaceController::class, 'map'])->name('map');
+Route::get('map/add', [ParkingSpaceController::class, 'locationAdd'])->name('map.add');
+Route::post('map/add', [ParkingSpaceController::class, 'store'])->name('map.store');
 
 // Backend
 Route::middleware(['auth', 'verified'])->group(function () {

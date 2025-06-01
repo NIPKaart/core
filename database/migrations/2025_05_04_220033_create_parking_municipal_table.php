@@ -14,12 +14,11 @@ return new class extends Migration
     {
         Schema::create('parking_municipal', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as string
-            $table->string('municipality');
-            $table->integer('number');
-
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
+            $table->foreignId('municipality')->constrained('municipalities');
 
+            $table->integer('number');
             $table->string('street')->nullable();
             $table->enum('orientation', ParkingOrientation::all())->nullable();
 

@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Country, ParkingSpace, Province } from '@/types';
+import { Country, Municipality, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { FileText, Layers, MapPin } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
@@ -15,7 +15,7 @@ import { UseFormReturn } from 'react-hook-form';
 export type FormValues = {
     country_id: number;
     province_id: number;
-    municipality: string;
+    municipality_id: number;
     city: string;
     suburb: string;
     neighbourhood: string;
@@ -36,6 +36,7 @@ type Props = {
     form: UseFormReturn<FormValues>;
     countries: Country[];
     provinces: Province[];
+    municipalities: Municipality[];
     statusOptions: ParkingStatusOption[];
     orientationOptions: Record<string, string>;
     onSubmit: () => void;
@@ -43,7 +44,17 @@ type Props = {
     nearbySpaces?: ParkingSpace[];
 };
 
-export default function ParkingSpaceForm({ form, countries, provinces, statusOptions, orientationOptions, onSubmit, submitting, nearbySpaces }: Props) {
+export default function ParkingSpaceForm({
+    form,
+    countries,
+    provinces,
+    municipalities,
+    statusOptions,
+    orientationOptions,
+    onSubmit,
+    submitting,
+    nearbySpaces,
+}: Props) {
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">
@@ -119,7 +130,28 @@ export default function ParkingSpaceForm({ form, countries, provinces, statusOpt
                                         )}
                                     />
 
-                                    {['municipality', 'city', 'suburb', 'neighbourhood', 'postcode', 'street', 'amenity'].map((name) => (
+                                    <FormField
+                                        name="municipality_id"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                            <FormItem className="w-full">
+                                                <FormLabel>Municipality</FormLabel>
+                                                <FormControl>
+                                                    <Combobox
+                                                        value={String(field.value)}
+                                                        onChange={(val) => field.onChange(Number(val))}
+                                                        options={municipalities.map((m) => ({
+                                                            label: m.name,
+                                                            value: String(m.id),
+                                                        }))}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {['city', 'suburb', 'neighbourhood', 'postcode', 'street', 'amenity'].map((name) => (
                                         <FormField
                                             key={name}
                                             name={name as keyof FormValues}

@@ -3,12 +3,12 @@ import { SearchableCombobox } from '@/components/forms/searchable-combobox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import type { Country } from '@/types';
+import type { Country, Municipality } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
 
 export type FormValues = {
     country_id: string;
-    municipality: string;
+    municipality_id: string;
     url: string;
     nationwide: boolean;
 };
@@ -16,7 +16,7 @@ export type FormValues = {
 type Props = {
     form: UseFormReturn<FormValues>;
     countries: Country[];
-    municipalities: string[];
+    municipalities: Municipality[];
     onSubmit: () => void;
 };
 
@@ -47,18 +47,17 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                     {/* Municipality */}
                     <FormField
                         control={form.control}
-                        name="municipality"
+                        name="municipality_id"
                         render={({ field }) => (
                             <SearchableCombobox
                                 label="Municipality"
                                 placeholder="Select a municipality"
-                                options={municipalities.map((m) => ({
-                                    label: m,
-                                    value: m,
-                                }))}
+                                options={municipalities.map((m) =>
+                                    typeof m === 'string' ? { label: m, value: m } : { label: m.name, value: String(m.id) },
+                                )}
                                 value={field.value}
                                 onChange={field.onChange}
-                                error={form.formState.errors.municipality?.message}
+                                error={form.formState.errors.municipality_id?.message}
                             />
                         )}
                     />

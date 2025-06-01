@@ -4,7 +4,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import ParkingRuleForm, { FormValues } from '@/pages/backend/form-parking-rules';
-import type { Country } from '@/types';
+import type { Country, Municipality } from '@/types';
 import { MapPin, Plus, X } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 
@@ -16,7 +16,7 @@ type Props = {
     onSubmit: () => void;
     submitting: boolean;
     countries: Country[];
-    municipalities: string[];
+    municipalities: Municipality[];
 };
 
 const descriptionText = 'This helps visitors understand the parking regulations in a municipality or for the whole country.';

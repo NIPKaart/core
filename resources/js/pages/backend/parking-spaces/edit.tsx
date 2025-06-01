@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpaceForm, { FormValues } from '@/pages/backend/form-parking-space';
-import type { BreadcrumbItem, Country, ParkingSpace, Province } from '@/types';
+import type { BreadcrumbItem, Country, Municipality, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
@@ -22,6 +22,7 @@ type PageProps = {
     parkingSpace: ParkingSpace;
     countries: Country[];
     provinces: Province[];
+    municipalities: Municipality[];
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
         orientation: Record<string, string>;
@@ -30,7 +31,7 @@ type PageProps = {
 };
 
 export default function Edit() {
-    const { parkingSpace, countries, provinces, selectOptions, nearbySpaces } = usePage<PageProps>().props;
+    const { parkingSpace, countries, provinces, municipalities, selectOptions, nearbySpaces } = usePage<PageProps>().props;
 
     const statusOptions: ParkingStatusOption[] = selectOptions.statuses.map((status) => ({
         ...status,
@@ -41,7 +42,7 @@ export default function Edit() {
         defaultValues: {
             country_id: parkingSpace.country.id,
             province_id: parkingSpace.province.id,
-            municipality: parkingSpace.municipality,
+            municipality_id: parkingSpace.municipality.id,
             city: parkingSpace.city,
             suburb: parkingSpace.suburb ?? '',
             neighbourhood: parkingSpace.neighbourhood ?? '',
@@ -135,6 +136,7 @@ export default function Edit() {
                         form={form}
                         countries={countries}
                         provinces={provinces}
+                        municipalities={municipalities}
                         statusOptions={statusOptions}
                         orientationOptions={selectOptions.orientation}
                         onSubmit={handleSubmit}

@@ -26,6 +26,7 @@ class ParkingOffstreet extends Model
     protected $fillable = [
         'country_id',
         'province_id',
+        'municipality_id',
     ];
 
     /**

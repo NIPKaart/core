@@ -105,7 +105,7 @@ export default function UserParkingShow({ space, selectOptions }: PageProps) {
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">Municipality</th>
-                                        <td className="px-4 py-2">{space.municipality}</td>
+                                        <td className="px-4 py-2">{space.municipality.name}</td>
                                     </tr>
                                     <tr className="border-t">
                                         <th className="px-4 py-2 font-medium">City</th>

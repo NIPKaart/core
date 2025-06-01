@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\App\StoreParkingRuleRequest;
 use App\Http\Requests\App\UpdateParkingRuleRequest;
 use App\Models\Country;
-use App\Models\ParkingMunicipal;
+use App\Models\Municipality;
 use App\Models\ParkingRule;
-use App\Models\ParkingSpace;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -22,22 +21,14 @@ class ParkingRuleController extends Controller
         Gate::authorize('viewAny', ParkingRule::class);
 
         $countries = Country::all();
-        $existingMunicipalities = ParkingRule::pluck('municipality')->toArray();
+        $existingMunicipalityIds = ParkingRule::pluck('municipality_id')->toArray();
 
-        $parkingSpaces = ParkingSpace::whereNotIn('municipality', $existingMunicipalities)
-            ->pluck('municipality');
-
-        $municipalSpaces = ParkingMunicipal::whereNotIn('municipality', $existingMunicipalities)
-            ->pluck('municipality');
-
-        $availableMunicipalities = $parkingSpaces
-            ->concat($municipalSpaces)
-            ->unique()
-            ->sort()
-            ->values();
+        $availableMunicipalities = Municipality::whereNotIn('id', $existingMunicipalityIds)
+            ->orderBy('name')
+            ->get(['id', 'name', 'country_id', 'province_id']);
 
         return Inertia::render('backend/parking-rules/index', [
-            'parkingRules' => ParkingRule::with('country')->paginate(20),
+            'parkingRules' => ParkingRule::with(['country', 'municipality'])->paginate(20),
             'countries' => $countries,
             'municipalities' => $availableMunicipalities,
         ]);

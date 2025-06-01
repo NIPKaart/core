@@ -41,7 +41,7 @@ class ParkingSpace extends Model
         'status',
         'country_id',
         'province_id',
-        'municipality',
+        'municipality_id',
         'city',
         'suburb',
         'neighbourhood',
@@ -92,6 +92,14 @@ class ParkingSpace extends Model
     public function confirmations(): HasMany
     {
         return $this->hasMany(ParkingSpaceConfirmation::class);
+    }
+
+    /**
+     * Get the municipality that owns the ParkingSpace
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 
     // /**

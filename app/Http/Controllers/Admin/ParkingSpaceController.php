@@ -8,6 +8,7 @@ use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
+use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\Province;
 use Illuminate\Http\Request;
@@ -24,16 +25,16 @@ class ParkingSpaceController extends Controller
         Gate::authorize('viewAny', ParkingSpace::class);
 
         $query = ParkingSpace::query()
-            ->with(['user', 'province', 'country']);
+            ->with(['user', 'province', 'country', 'municipality']);
 
         if ($request->filled('status')) {
             $statuses = explode(',', $request->input('status'));
             $query->whereIn('status', $statuses);
         }
 
-        if ($request->filled('municipality')) {
-            $municipalities = explode(',', $request->input('municipality'));
-            $query->whereIn('municipality', $municipalities);
+        if ($request->filled('municipality_id')) {
+            $municipalityIds = explode(',', $request->input('municipality_id'));
+            $query->whereIn('municipality_id', $municipalityIds);
         }
 
         $spaces = $query->latest()->paginate(25)->withQueryString();
@@ -42,11 +43,11 @@ class ParkingSpaceController extends Controller
             'spaces' => $spaces,
             'filters' => [
                 'status' => $request->input('status'),
-                'municipality' => $request->input('municipality'),
+                'municipality_id' => $request->input('municipality_id'),
                 'deletion_requested' => $request->boolean('deletion_requested'),
             ],
             'statuses' => ParkingStatus::options(),
-            'municipalities' => ParkingSpace::select('municipality')->distinct()->orderBy('municipality')->pluck('municipality')->filter()->values(),
+            'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
@@ -73,7 +74,7 @@ class ParkingSpaceController extends Controller
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'province', 'country'])->findOrFail($parkingSpace->id);
+        $parkingSpace = ParkingSpace::with(['user', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
 
         $parkingStatuses = collect(ParkingStatus::cases())->map(fn ($status) => [
             'value' => $status->value,
@@ -134,7 +135,7 @@ class ParkingSpaceController extends Controller
     {
         Gate::authorize('update', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'province', 'country'])->findOrFail($parkingSpace->id);
+        $parkingSpace = ParkingSpace::with(['user', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
 
         $parkingSpace->parking_hours = $parkingSpace->parking_time ? floor($parkingSpace->parking_time / 60) : 0;
         $parkingSpace->parking_minutes = $parkingSpace->parking_time ? $parkingSpace->parking_time % 60 : 0;
@@ -169,11 +170,13 @@ class ParkingSpaceController extends Controller
 
         $countries = Country::select('id', 'name')->get();
         $provinces = Province::select('id', 'name')->get();
+        $municipalities = Municipality::select('id', 'name')->get();
 
         return inertia('backend/parking-spaces/edit', [
             'parkingSpace' => $parkingSpace,
             'countries' => $countries,
             'provinces' => $provinces,
+            'municipalities' => $municipalities,
             'selectOptions' => [
                 'statuses' => $statuses,
                 'orientation' => ParkingOrientation::options(),
@@ -246,7 +249,7 @@ class ParkingSpaceController extends Controller
         Gate::authorize('viewAny', ParkingSpace::class);
 
         $spaces = ParkingSpace::onlyTrashed()
-            ->with(['user', 'province', 'country'])
+            ->with(['user', 'province', 'country', 'municipality'])
             ->latest()
             ->paginate(25)
             ->withQueryString();

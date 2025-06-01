@@ -112,7 +112,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                 {
                                     icon: <MapPin className="text-muted-foreground h-4 w-4" />,
                                     label: 'Municipality',
-                                    value: parkingSpace.municipality,
+                                    value: parkingSpace.municipality.name
                                 },
                                 {
                                     icon: <Home className="text-muted-foreground h-4 w-4" />,

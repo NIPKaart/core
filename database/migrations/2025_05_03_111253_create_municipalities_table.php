@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_rules', function (Blueprint $table) {
-            $table->bigIncrements('id');
+        Schema::create('municipalities', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
             $table->foreignId('country_id')->constrained('countries');
-            $table->foreignId('municipality_id')->nullable()->constrained('municipalities');
-            $table->string('url');
-            $table->boolean('nationwide')->default(false);
+            $table->foreignId('province_id')->constrained('provinces');
             $table->timestamps();
-
-            $table->unique(['country_id', 'municipality_id']);
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_rules');
+        Schema::dropIfExists('municipalities');
     }
 };

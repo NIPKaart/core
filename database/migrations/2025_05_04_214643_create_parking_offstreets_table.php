@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('parking_offstreets', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as primary key
             $table->string('name');
-            $table->string('municipality');
 
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
+            $table->foreignId('municipality_id')->constrained('municipalities');
 
             // Parking details
             $table->integer('free_space_short');

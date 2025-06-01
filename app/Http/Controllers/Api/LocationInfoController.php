@@ -11,7 +11,7 @@ class LocationInfoController extends Controller
 {
     public function getLocationInfo(string $id)
     {
-        $location = ParkingSpace::with(['country', 'province'])
+        $location = ParkingSpace::with(['country', 'province', 'municipality'])
             ->where('id', $id)
             ->where('status', ParkingStatus::APPROVED)
             ->firstOrFail();
@@ -49,7 +49,7 @@ class LocationInfoController extends Controller
         return response()->json([
             'id' => $location->id,
             'orientation' => $location->orientation,
-            'municipality' => $location->municipality,
+            'municipality' => $location->municipality->name ?? null,
             'province' => $location->province->name ?? null,
             'country' => $location->country->name ?? null,
             'street' => $location->street,

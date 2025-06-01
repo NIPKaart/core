@@ -24,9 +24,9 @@ return new class extends Migration
 
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
+            $table->foreignId('municipality_id')->constrained('municipalities');
 
             // Parking spaces details
-            $table->string('municipality');
             $table->string('city');
             $table->string('suburb')->nullable();
             $table->string('neighbourhood')->nullable();
