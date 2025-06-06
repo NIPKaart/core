@@ -61,6 +61,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
         });
 
+        // ParkingMunicipal routes
+        Route::prefix('parking-municipal')->as('parking-municipal.')->group(function () {
+            Route::get('municipalities', [Admin\ParkingMunicipalController::class, 'municipalities'])->name('municipalities');
+            Route::get('municipalities/{municipality}', [Admin\ParkingMunicipalController::class, 'index'])->name('municipalities.index');
+
+            // Toggle visibility
+            Route::post('toggle-visibility', [Admin\ParkingMunicipalController::class, 'toggleVisibility'])->name('toggle-visibility');
+
+            // Single actions
+            Route::patch('{parking_municipal}/restore', [Admin\ParkingMunicipalController::class, 'restore'])->name('restore');
+        });
+
         // Suspend user route
         Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])
             ->name('users.suspend')
@@ -71,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('roles', Admin\RoleController::class);
         Route::resource('parking-rules', Admin\ParkingRuleController::class);
         Route::resource('parking-spaces', Admin\ParkingSpaceController::class);
+        // Route::resource('parking-municipal', Admin\ParkingMunicipalController::class);
     });
 });
 

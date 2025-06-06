@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('id')->primary(); // External ID as string
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
-            $table->foreignId('municipality')->constrained('municipalities');
+            $table->foreignId('municipality_id')->constrained('municipalities');
 
             $table->integer('number');
             $table->string('street')->nullable();
@@ -25,8 +25,12 @@ return new class extends Migration
             // Parking details
             $table->decimal('longitude', 10, 7);
             $table->decimal('latitude', 10, 7);
-            $table->boolean('visibility');
+            $table->boolean('visibility')->default(true);
             $table->timestamps();
+
+            // Indexes
+            $table->index('municipality_id');
+            $table->index('visibility');
         });
     }
 

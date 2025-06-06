@@ -121,15 +121,13 @@ export interface Permission {
 export type ParkingRule = {
     id: number;
     country_id: number;
-    municipality: string;
+    municipality_id: number;
     url: string;
     nationwide: boolean;
     created_at: string;
-    country?: {
-        id: number;
-        name: string;
-        code: string;
-    };
+    // Relations
+    country?: Country;
+    municipality?: Municipality;
 };
 
 export interface ParkingSpace {
@@ -141,11 +139,11 @@ export interface ParkingSpace {
     ip_address: string | null;
 
     country_id: number;
-    country: Country;
+    country?: Country;
     province_id: number;
-    province: Province;
+    province?: Province;
     municipality_id: number;
-    municipality: Municipality;
+    municipality?: Municipality;
 
     city: string;
     suburb: string | null;
@@ -169,6 +167,24 @@ export interface ParkingSpace {
     updated_at: string;
     deleted_at: string | null;
 }
+
+export type ParkingMunicipal = {
+    id: string;
+    country_id: number;
+    country: Country;
+    province_id: number;
+    province: Province;
+    municipality_id: number;
+    municipality: Municipality;
+    street: string | null;
+    number: number;
+    orientation: string | null;
+    longitude: number;
+    latitude: number;
+    visibility: boolean;
+    created_at: string;
+    updated_at: string;
+};
 
 export type NominatimAddress = {
     country_code: string;

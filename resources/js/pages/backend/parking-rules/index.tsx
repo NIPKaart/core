@@ -5,7 +5,7 @@ import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem, Country, PaginatedResponse, ParkingRule } from '@/types';
+import type { BreadcrumbItem, Country, Municipality, PaginatedResponse, ParkingRule } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 type PageProps = {
     parkingRules: PaginatedResponse<ParkingRule>;
     countries: Country[];
-    municipalities: string[];
+    municipalities: Municipality[];
 };
 
 export default function Index({ parkingRules, countries, municipalities }: PageProps) {
@@ -35,7 +35,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     const formAdd = useForm<FormValues>({
         defaultValues: {
             country_id: '',
-            municipality: '',
+            municipality_id: '',
             url: '',
             nationwide: false,
         },
@@ -47,7 +47,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     const formEdit = useForm<FormValues>({
         defaultValues: {
             country_id: '',
-            municipality: '',
+            municipality_id: '',
             url: '',
             nationwide: false,
         },
@@ -57,7 +57,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
         setEditRule(rule);
         formEdit.reset({
             country_id: String(rule.country_id),
-            municipality: rule.municipality,
+            municipality_id: String(rule.municipality_id),
             url: rule.url,
             nationwide: rule.nationwide,
         });
@@ -133,7 +133,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Parking Rules" />
-            <div className="space-y-6 px-4 py-6 sm:px-6">
+            <div className="space-y-6 px-4 py-6 sm:px-6 overflow-x-auto">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Parking Rules</h1>
                     {can('parking-rule.create') && (
