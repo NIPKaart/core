@@ -89,58 +89,58 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Details</h2>
-                        <p className="text-muted-foreground text-sm">All basic info about this parking space.</p>
+                        <p className="text-sm text-muted-foreground">All basic info about this parking space.</p>
                     </div>
-                    <div className="bg-background overflow-hidden rounded-xl border shadow-sm">
+                    <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
                         <dl>
                             {[
                                 {
-                                    icon: <Globe className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Globe className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Country',
                                     value: (
                                         <>
-                                            {parkingSpace.country.name}
-                                            <span className="text-muted-foreground ml-2 font-normal">({parkingSpace.country.code})</span>
+                                            {parkingSpace.country?.name}
+                                            <span className="ml-2 font-normal text-muted-foreground">({parkingSpace.country?.code})</span>
                                         </>
                                     ),
                                 },
                                 {
-                                    icon: <Landmark className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Landmark className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Province',
-                                    value: parkingSpace.province.name,
+                                    value: parkingSpace.province?.name,
                                 },
                                 {
-                                    icon: <MapPin className="text-muted-foreground h-4 w-4" />,
+                                    icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Municipality',
-                                    value: parkingSpace.municipality.name
+                                    value: parkingSpace.municipality?.name,
                                 },
                                 {
-                                    icon: <Home className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Home className="h-4 w-4 text-muted-foreground" />,
                                     label: 'City',
                                     value: parkingSpace.city,
                                 },
                                 {
-                                    icon: <Tag className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Tag className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Street',
                                     value: parkingSpace.street,
                                 },
                                 {
-                                    icon: <Hash className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Hash className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Postcode',
                                     value: parkingSpace.postcode,
                                 },
                                 {
-                                    icon: <Compass className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Compass className="h-4 w-4 text-muted-foreground" />,
                                     label: 'Amenity',
                                     value: parkingSpace.amenity,
                                 },
                                 {
-                                    icon: <Compass className="text-muted-foreground h-4 w-4 rotate-90" />,
+                                    icon: <Compass className="h-4 w-4 rotate-90 text-muted-foreground" />,
                                     label: 'Orientation',
                                     value: parkingSpace.orientation,
                                 },
                                 {
-                                    icon: <Server className="text-muted-foreground h-4 w-4" />,
+                                    icon: <Server className="h-4 w-4 text-muted-foreground" />,
                                     label: 'IP Address',
                                     value: (
                                         <span className="flex items-center gap-1">
@@ -157,7 +157,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => copyToClipboard(ipAddress)}
-                                                className="text-muted-foreground hover:text-foreground h-7 w-7 cursor-pointer"
+                                                className="h-7 w-7 cursor-pointer text-muted-foreground hover:text-foreground"
                                                 tabIndex={0}
                                                 title="Copy IP"
                                             >
@@ -174,9 +174,9 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                     {/* Icon */}
                                     <div className="flex justify-center">{icon}</div>
                                     {/* Label */}
-                                    <dt className="text-muted-foreground text-left text-xs">{label}</dt>
+                                    <dt className="text-left text-xs text-muted-foreground">{label}</dt>
                                     {/* Value */}
-                                    <dd className="text-foreground text-sm font-medium break-words">
+                                    <dd className="text-sm font-medium break-words text-foreground">
                                         {value || <span className="text-muted-foreground">—</span>}
                                     </dd>
                                 </div>
@@ -189,9 +189,9 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Recent confirmations</h2>
-                        <p className="text-muted-foreground text-sm">Latest check-ins for this location.</p>
+                        <p className="text-sm text-muted-foreground">Latest check-ins for this location.</p>
                     </div>
-                    <div className="bg-background overflow-hidden rounded-lg border shadow-sm">
+                    <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
                         {recentConfirmations && recentConfirmations.length > 0 ? (
                             <>
                                 <ul>
@@ -206,7 +206,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                                     ? 'destructive'
                                                     : 'default';
                                         return (
-                                            <li key={confirmation.id} className={`px-3 py-2 ${i !== 0 ? 'border-muted border-t' : ''}`}>
+                                            <li key={confirmation.id} className={`px-3 py-2 ${i !== 0 ? 'border-t border-muted' : ''}`}>
                                                 <div className="flex items-start gap-2">
                                                     {/* Badge links */}
                                                     <Badge variant={badgeVariant} className="mt-0.5 shrink-0">
@@ -216,12 +216,12 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex min-w-0 items-center justify-between">
                                                             <span className="truncate font-medium">{confirmation.user?.name ?? 'Unknown'}</span>
-                                                            <span className="text-muted-foreground shrink-0 pl-2 text-xs">
+                                                            <span className="shrink-0 pl-2 text-xs text-muted-foreground">
                                                                 {formatDistanceToNow(new Date(confirmation.confirmed_at), { addSuffix: true })}
                                                             </span>
                                                         </div>
                                                         {confirmation.comment && (
-                                                            <span className="text-muted-foreground mt-0.5 block truncate text-xs italic">
+                                                            <span className="mt-0.5 block truncate text-xs text-muted-foreground italic">
                                                                 “{confirmation.comment}”
                                                             </span>
                                                         )}
@@ -232,12 +232,12 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                     })}
                                 </ul>
                                 {can('parking-space-confirmation.view_any') && (
-                                    <div className="bg-muted/50 flex justify-end px-3 py-3">
+                                    <div className="flex justify-end bg-muted/50 px-3 py-3">
                                         <Button
                                             asChild
                                             size="sm"
                                             variant="outline"
-                                            className="hover:bg-accent hover:text-accent-foreground transition-colors"
+                                            className="transition-colors hover:bg-accent hover:text-accent-foreground"
                                         >
                                             <Link href={route('app.parking-spaces.confirmations.index', { parking_space: parkingSpace.id })}>
                                                 Show all
@@ -247,7 +247,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                 )}
                             </>
                         ) : (
-                            <div className="text-muted-foreground px-3 py-5 text-sm">No confirmations yet.</div>
+                            <div className="px-3 py-5 text-sm text-muted-foreground">No confirmations yet.</div>
                         )}
                     </div>
                 </div>
@@ -256,7 +256,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Location</h2>
-                        <p className="text-muted-foreground text-sm">Where the parking space is located.</p>
+                        <p className="text-sm text-muted-foreground">Where the parking space is located.</p>
                     </div>
                     <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} nearbySpaces={nearbySpaces} />
                 </div>
@@ -265,7 +265,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 <div>
                     <div className="mb-4 space-y-1">
                         <h2 className="text-lg font-semibold">Street view</h2>
-                        <p className="text-muted-foreground text-sm">See the area around the parking space.</p>
+                        <p className="text-sm text-muted-foreground">See the area around the parking space.</p>
                     </div>
                     <StreetViewCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
                 </div>

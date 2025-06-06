@@ -126,11 +126,16 @@ export function getGarageGreyIcon(): Icon {
  */
 export function getGarageStatusIcon(status: 'green' | 'orange' | 'red' | 'grey'): Icon {
     switch (status) {
-        case 'green': return getGarageGreenIcon();
-        case 'orange': return getGarageOrangeIcon();
-        case 'red': return getGarageRedIcon();
-        case 'grey': return getGarageGreyIcon();
-        default: return getGarageGreyIcon();
+        case 'green':
+            return getGarageGreenIcon();
+        case 'orange':
+            return getGarageOrangeIcon();
+        case 'red':
+            return getGarageRedIcon();
+        case 'grey':
+            return getGarageGreyIcon();
+        default:
+            return getGarageGreyIcon();
     }
 }
 

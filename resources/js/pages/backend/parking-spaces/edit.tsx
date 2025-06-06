@@ -40,9 +40,9 @@ export default function Edit() {
 
     const form = useForm<FormValues, ParkingSpace>({
         defaultValues: {
-            country_id: parkingSpace.country.id,
-            province_id: parkingSpace.province.id,
-            municipality_id: parkingSpace.municipality.id,
+            country_id: parkingSpace.country?.id,
+            province_id: parkingSpace.province?.id,
+            municipality_id: parkingSpace.municipality?.id,
             city: parkingSpace.city,
             suburb: parkingSpace.suburb ?? '',
             neighbourhood: parkingSpace.neighbourhood ?? '',
@@ -109,23 +109,23 @@ export default function Edit() {
             </div>
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <div className="bg-muted/40 rounded-md border p-4 text-sm">
+                <div className="rounded-md border bg-muted/40 p-4 text-sm">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-muted-foreground flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
                             <UserIcon className="h-4 w-4" />
                             {parkingSpace.user ? (
                                 <span>
-                                    <span className="text-foreground font-medium">Submitted by:</span> {parkingSpace.user.name} (
+                                    <span className="font-medium text-foreground">Submitted by:</span> {parkingSpace.user.name} (
                                     {parkingSpace.user.email})
                                 </span>
                             ) : (
                                 <span className="text-muted-foreground italic">Submitted anonymously</span>
                             )}
                         </div>
-                        <div className="text-muted-foreground flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
                             <CalendarCheck className="h-4 w-4" />
                             <span>
-                                <span className="text-foreground font-medium">Created:</span> {new Date(parkingSpace.created_at).toLocaleString()}
+                                <span className="font-medium text-foreground">Created:</span> {new Date(parkingSpace.created_at).toLocaleString()}
                             </span>
                         </div>
                     </div>

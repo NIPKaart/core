@@ -37,7 +37,7 @@ export default function Trash({ spaces }: PageProps) {
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
                     aria-label="Select all"
-                    className="border-input bg-background data-[state=checked]:bg-primary cursor-pointer border"
+                    className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
             cell: ({ row }) => (
@@ -137,9 +137,9 @@ export default function Trash({ spaces }: PageProps) {
                 <h1 className="text-2xl font-bold">Trashed Parking Spaces</h1>
 
                 {selectedIds.length > 0 && (
-                    <div className="bg-muted/60 dark:border-muted/40 mb-4 flex flex-col rounded-md border p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-muted-foreground text-sm">
-                            <span className="text-foreground font-medium">{selectedIds.length}</span> selected
+                    <div className="mb-4 flex flex-col rounded-md border bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-muted/40">
+                        <div className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">{selectedIds.length}</span> selected
                         </div>
 
                         <div className="mt-2 flex flex-col gap-2 sm:mt-0 sm:flex-row sm:items-center sm:gap-3">

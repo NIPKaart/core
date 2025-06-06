@@ -2,8 +2,8 @@
 
 @plugin 'tailwindcss-animate';
 
-@import 'leaflet/dist/leaflet.css'; 
-@import 'react-leaflet-markercluster/styles'; 
+@import 'leaflet/dist/leaflet.css';
+@import 'react-leaflet-markercluster/styles';
 
 @source '../views'
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

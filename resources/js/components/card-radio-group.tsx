@@ -47,14 +47,14 @@ export function RadioCardGroup<TFieldValues extends FieldValues, TName extends P
                                         'rounded-md border p-4 shadow-sm transition-all',
                                         'hover:bg-muted',
                                         'peer-checked:border-primary peer-checked:bg-muted',
-                                        'peer-focus-visible:ring-ring peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2',
+                                        'peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2',
                                     )}
                                 >
                                     <div className="flex items-center gap-2 font-semibold">
-                                        {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
+                                        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
                                         {option.label}
                                     </div>
-                                    {option.description && <p className="text-muted-foreground mt-1 text-sm">{option.description}</p>}
+                                    {option.description && <p className="mt-1 text-sm text-muted-foreground">{option.description}</p>}
                                 </div>
                             </label>
                         );

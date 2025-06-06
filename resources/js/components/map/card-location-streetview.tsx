@@ -10,7 +10,7 @@ export default function StreetViewCard({ latitude, longitude }: StreetViewCardPr
     return (
         <iframe
             src={src}
-            className="h-80 w-full rounded-md border md:h-[500px]"
+            className="h-80 w-full rounded-xl border md:h-[500px]"
             loading="lazy"
             allow="accelerometer; encrypted-media; fullscreen; geolocation; gyroscope; picture-in-picture"
             title="Street View"

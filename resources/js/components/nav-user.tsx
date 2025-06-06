@@ -19,7 +19,7 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent group cursor-pointer"
+                            className="group cursor-pointer text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent"
                         >
                             <UserInfo user={auth.user} />
                             <EllipsisVertical className="ml-auto size-4" />

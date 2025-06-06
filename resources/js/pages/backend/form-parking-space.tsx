@@ -62,7 +62,7 @@ export default function ParkingSpaceForm({
                     <div className="space-y-4">
                         <div className="mb-4 space-y-1">
                             <h2 className="text-lg font-semibold">Parking Space Details</h2>
-                            <p className="text-muted-foreground text-sm">Edit the details of the parking space.</p>
+                            <p className="text-sm text-muted-foreground">Edit the details of the parking space.</p>
                         </div>
                         <Tabs defaultValue="basic" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
@@ -183,7 +183,7 @@ export default function ParkingSpaceForm({
 
                                     <div className="md:col-span-2">
                                         <FormLabel className="text-sm font-medium">Parking Time</FormLabel>
-                                        <p className="text-muted-foreground mb-2 text-sm">Maximum parking duration allowed at this location.</p>
+                                        <p className="mb-2 text-sm text-muted-foreground">Maximum parking duration allowed at this location.</p>
                                         <div className="flex flex-col gap-4 md:flex-row">
                                             <FormField
                                                 name="parking_hours"
@@ -268,7 +268,7 @@ export default function ParkingSpaceForm({
                         <div className="mb-4">
                             <div className="mb-4 space-y-1">
                                 <h2 className="text-lg font-semibold">Location</h2>
-                                <p className="text-muted-foreground text-sm">Drag the marker to fine-tune the exact space on the map.</p>
+                                <p className="text-sm text-muted-foreground">Drag the marker to fine-tune the exact space on the map.</p>
                             </div>
                             <LocationMarkerCard
                                 latitude={form.watch('latitude')}

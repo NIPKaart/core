@@ -53,12 +53,12 @@ export default function Index({ confirmations, parkingSpace, statuses }: PagePro
 
                 {/* Bulk delete toolbar */}
                 {can('parking-space-confirmation.delete') && selectedIds.length > 0 && (
-                    <div className="bg-muted/70 dark:border-muted/50 mb-4 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-muted-foreground text-sm">
-                            <span className="text-foreground font-medium">{selectedIds.length}</span> selected
+                    <div className="mb-4 flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
+                        <div className="text-sm text-muted-foreground">
+                            <span className="font-medium text-foreground">{selectedIds.length}</span> selected
                             <button
                                 onClick={() => setRowSelection({})}
-                                className="hover:text-foreground ml-4 cursor-pointer text-xs underline underline-offset-2 transition"
+                                className="ml-4 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground"
                             >
                                 Clear
                             </button>

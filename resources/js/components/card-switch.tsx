@@ -25,7 +25,7 @@ export function SwitchCard<TFieldValues extends FieldValues>({ name, control, la
                 >
                     <div className="space-y-0.5">
                         <FormLabel>{label}</FormLabel>
-                        {description && <p className="text-muted-foreground text-sm">{description}</p>}
+                        {description && <p className="text-sm text-muted-foreground">{description}</p>}
                     </div>
                     <FormControl>
                         <Switch checked={field.value} onCheckedChange={field.onChange} disabled={disabled} className="cursor-pointer" />

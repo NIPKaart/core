@@ -29,7 +29,7 @@ export function getParkingSpaceColumns(
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
                     aria-label="Select all"
-                    className="border-input bg-background data-[state=checked]:bg-primary cursor-pointer border"
+                    className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
             cell: ({ row }) => (
@@ -51,7 +51,7 @@ export function getParkingSpaceColumns(
         {
             accessorKey: 'province.name',
             header: 'Province',
-            cell: ({ row }) => row.original.province.name,
+            cell: ({ row }) => row.original.province?.name ?? '—',
         },
         {
             accessorKey: 'municipality',
@@ -99,7 +99,7 @@ export function getParkingSpaceColumns(
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-muted-foreground data-[state=open]:bg-muted flex size-8 cursor-pointer"
+                                    className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
                                     <span className="sr-only">Open menu</span>
@@ -131,7 +131,7 @@ export function getParkingSpaceColumns(
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                            className="text-destructive cursor-pointer"
+                                            className="cursor-pointer text-destructive"
                                             onSelect={(e) => {
                                                 e.preventDefault();
                                                 openDialog('delete', space);

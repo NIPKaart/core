@@ -94,7 +94,7 @@ export default function Navbar() {
                                                             <Link
                                                                 href={child.href}
                                                                 className={cn(
-                                                                    'hover:bg-accent focus:bg-accent block rounded-md px-3 py-2 transition-colors',
+                                                                    'block rounded-md px-3 py-2 transition-colors hover:bg-accent focus:bg-accent',
                                                                     route().current(child.href)
                                                                         ? 'text-orange-600 dark:text-orange-400'
                                                                         : 'text-gray-900 dark:text-neutral-100',

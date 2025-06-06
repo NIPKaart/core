@@ -28,11 +28,11 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={onClose}>
-                <DialogContent showClose={false} className="bg-background max-w-xl overflow-visible px-0 pt-0 pb-0 sm:rounded-xl">
+                <DialogContent showClose={false} className="max-w-xl overflow-visible bg-background px-0 pt-0 pb-0 sm:rounded-xl">
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2 px-6 pt-6 pb-4">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-                                <MapPin className="text-primary h-6 w-6" />
+                                <MapPin className="h-6 w-6 text-primary" />
                                 {isEdit ? 'Edit Parking Rule' : 'Add Parking Rule'}
                             </DialogTitle>
                             <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
@@ -40,7 +40,7 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                             </Button>
                         </div>
                         <DialogDescription asChild>
-                            <div className="text-muted-foreground -mt-2 mb-1 px-6 text-sm">{descriptionText}</div>
+                            <div className="-mt-2 mb-1 px-6 text-sm text-muted-foreground">{descriptionText}</div>
                         </DialogDescription>
                     </DialogHeader>
                     <Separator />
@@ -70,16 +70,16 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
     // Mobile Drawer
     return (
         <Drawer open={open} onOpenChange={onClose}>
-            <DrawerContent className="bg-background mx-auto max-w-xl px-0 pt-0 pb-0 sm:rounded-t-2xl">
+            <DrawerContent className="mx-auto max-w-xl bg-background px-0 pt-0 pb-0 sm:rounded-t-2xl">
                 <DrawerHeader className="px-4 pt-4 pb-2">
                     <div className="flex w-full items-center gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
-                            <MapPin className="text-primary h-6 w-6" />
+                            <MapPin className="h-6 w-6 text-primary" />
                             {isEdit ? 'Edit Parking Rule' : 'Add Parking Rule'}
                         </DrawerTitle>
                     </div>
                     <DrawerDescription asChild>
-                        <div className="text-muted-foreground mt-1 text-sm">{descriptionText}</div>
+                        <div className="mt-1 text-sm text-muted-foreground">{descriptionText}</div>
                     </DrawerDescription>
                 </DrawerHeader>
                 <Separator />

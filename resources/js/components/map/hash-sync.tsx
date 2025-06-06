@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useMap } from "react-leaflet";
+import { useEffect } from 'react';
+import { useMap } from 'react-leaflet';
 
 function parseHash(): { zoom: number; lat: number; lng: number } | null {
     if (!window.location.hash) return null;
@@ -22,11 +22,7 @@ export function HashSync() {
             // Prevent the card from immediately triggering itself again if it is already correct
             const current = map.getCenter();
             const currentZoom = map.getZoom();
-            if (
-                Math.abs(current.lat - pos.lat) > 1e-5 ||
-                Math.abs(current.lng - pos.lng) > 1e-5 ||
-                currentZoom !== pos.zoom
-            ) {
+            if (Math.abs(current.lat - pos.lat) > 1e-5 || Math.abs(current.lng - pos.lng) > 1e-5 || currentZoom !== pos.zoom) {
                 map.setView([pos.lat, pos.lng], pos.zoom, { animate: false });
             }
         }
@@ -39,9 +35,9 @@ export function HashSync() {
             const zoom = map.getZoom();
             window.location.hash = `#${zoom}/${center.lat.toFixed(5)}/${center.lng.toFixed(5)}`;
         };
-        map.on("moveend", onMove);
+        map.on('moveend', onMove);
         return () => {
-            map.off("moveend", onMove);
+            map.off('moveend', onMove);
         };
     }, [map]);
 
@@ -51,17 +47,13 @@ export function HashSync() {
             const pos = parseHash();
             if (pos) {
                 const center = map.getCenter();
-                if (
-                    Math.abs(center.lat - pos.lat) > 1e-5 ||
-                    Math.abs(center.lng - pos.lng) > 1e-5 ||
-                    map.getZoom() !== pos.zoom
-                ) {
+                if (Math.abs(center.lat - pos.lat) > 1e-5 || Math.abs(center.lng - pos.lng) > 1e-5 || map.getZoom() !== pos.zoom) {
                     map.setView([pos.lat, pos.lng], pos.zoom, { animate: false });
                 }
             }
         };
-        window.addEventListener("hashchange", onHashChange);
-        return () => window.removeEventListener("hashchange", onHashChange);
+        window.addEventListener('hashchange', onHashChange);
+        return () => window.removeEventListener('hashchange', onHashChange);
     }, [map]);
 
     return null;

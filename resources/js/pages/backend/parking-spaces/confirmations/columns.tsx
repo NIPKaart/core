@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ParkingSpaceConfirmation } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Trash2 } from 'lucide-react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS } from 'date-fns/locale';
+import { Trash2 } from 'lucide-react';
 
 const variantMap: Record<string, 'default' | 'secondary' | 'destructive'> = {
     confirmed: 'secondary',
@@ -26,7 +26,7 @@ export function getConfirmationColumns(
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
                     aria-label="Select all"
-                    className="border-input bg-background data-[state=checked]:bg-primary cursor-pointer border"
+                    className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
             cell: ({ row }) => (
