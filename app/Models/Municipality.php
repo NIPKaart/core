@@ -22,7 +22,7 @@ class Municipality extends Model
         return $this->hasMany(ParkingSpace::class);
     }
 
-    public function municipalSpaces(): HasMany
+    public function parkingMunicipal(): HasMany
     {
         return $this->hasMany(ParkingMunicipal::class);
     }

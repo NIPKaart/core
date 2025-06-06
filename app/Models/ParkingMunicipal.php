@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ParkingOrientation;
 use App\Traits\Favoritable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,19 @@ class ParkingMunicipal extends Model
 
     public $incrementing = false;
 
+    protected $fillable = [
+        'id',
+        'country_id',
+        'province_id',
+        'municipality_id',
+        'number',
+        'street',
+        'orientation',
+        'longitude',
+        'latitude',
+        'visibility',
+    ];
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -29,6 +43,7 @@ class ParkingMunicipal extends Model
         'orientation' => ParkingOrientation::class,
         'updated_at' => 'datetime',
         'created_at' => 'datetime',
+        'visibility' => 'boolean',
     ];
 
     /**

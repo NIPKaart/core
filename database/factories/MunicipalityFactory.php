@@ -18,19 +18,10 @@ class MunicipalityFactory extends Factory
      */
     public function definition(): array
     {
-        // Pick a random country, or create one
-        $country = Country::query()->inRandomOrder()->first() ?? Country::factory()->create();
-
-        // Pick a random province for the country, or create one
-        $province = Province::where('country_id', $country->id)
-            ->inRandomOrder()
-            ->first()
-            ?? Province::factory()->create(['country_id' => $country->id]);
-
         return [
             'name' => $this->faker->city,
-            'country_id' => $country->id,
-            'province_id' => $province->id,
+            'country_id' => null,
+            'province_id' => null,
         ];
     }
 }
