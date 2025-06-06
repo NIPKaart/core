@@ -7,6 +7,7 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Traits\FindsOrCreatesMunicipality;
 use App\Traits\FindsOrCreatesProvince;
@@ -28,9 +29,12 @@ class ParkingSpaceController extends Controller
     {
         $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
             ->where('status', ParkingStatus::APPROVED)->get();
+        $municipalSpaces = ParkingMunicipal::select('id', 'latitude', 'longitude', 'orientation')
+            ->where('visible', true)->get();
 
         return Inertia::render('frontend/map', [
             'parkingSpaces' => $parkingSpaces,
+            'municipalSpaces' => $municipalSpaces,
             'selectOptions' => [
                 'confirmationStatus' => ParkingConfirmationStatus::options(),
             ],
