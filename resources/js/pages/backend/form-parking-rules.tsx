@@ -85,7 +85,7 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                 <Separator />
 
                 <div className="space-y-6">
-                    <h2 className="text-foreground/80 mb-2 text-base font-semibold tracking-tight">Scope</h2>
+                    <h2 className="mb-2 text-base font-semibold tracking-tight text-foreground/80">Scope</h2>
                     <FormField
                         control={form.control}
                         name="nationwide"
