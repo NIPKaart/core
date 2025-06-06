@@ -30,7 +30,7 @@ class ParkingSpaceController extends Controller
         $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'created_at', 'orientation')
             ->where('status', ParkingStatus::APPROVED)->get();
         $municipalSpaces = ParkingMunicipal::select('id', 'latitude', 'longitude', 'orientation')
-            ->where('visible', true)->get();
+            ->where('visibility', true)->get();
 
         return Inertia::render('frontend/map', [
             'parkingSpaces' => $parkingSpaces,
