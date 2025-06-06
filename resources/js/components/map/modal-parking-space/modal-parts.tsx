@@ -1,11 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
+import { formatDistanceToNow } from 'date-fns';
 import { AlarmClock, Compass, Copy, Eye, FileText, Hash, Landmark, MapPin, Navigation, Tag, Users } from 'lucide-react';
 import * as React from 'react';
 import { LocationDetail } from './types';
 import { formatParkingTime, getOrientationIllustration } from './utils';
-import { formatDistanceToNow } from 'date-fns';
 
 export function ConfirmedBadge({ count, className = '' }: { count: number; className?: string }) {
     if (!count || count <= 0) return null;
@@ -99,7 +99,7 @@ export function InfoTable({
 }) {
     const rows = [
         {
-            icon: <Tag className="text-muted-foreground h-4 w-4" />,
+            icon: <Tag className="h-4 w-4 text-muted-foreground" />,
             label: 'Street',
             value: data.street || '-',
         },
@@ -126,17 +126,17 @@ export function InfoTable({
                 ),
         },
         {
-            icon: <Compass className="text-muted-foreground h-4 w-4" />,
+            icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: 'Orientation',
             value: data.orientation || '-',
         },
         {
-            icon: <MapPin className="text-muted-foreground h-4 w-4" />,
+            icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
             label: 'Municipality',
             value: data.municipality || '-',
         },
         {
-            icon: <Landmark className="text-muted-foreground h-4 w-4" />,
+            icon: <Landmark className="h-4 w-4 text-muted-foreground" />,
             label: 'Municipal regulations',
             value: data.rule_url ? (
                 <a href={data.rule_url} target="_blank" rel="noopener" className="text-orange-600 underline">
@@ -152,7 +152,7 @@ export function InfoTable({
             value: data.last_confirmed_at ? (
                 <>
                     <span>{formatDistanceToNow(new Date(data.last_confirmed_at), { addSuffix: true })}</span>
-                    <span className="text-muted-foreground ml-2 text-xs">({new Date(data.last_confirmed_at).toLocaleDateString()})</span>
+                    <span className="ml-2 text-xs text-muted-foreground">({new Date(data.last_confirmed_at).toLocaleDateString()})</span>
                 </>
             ) : (
                 <span className="text-zinc-400 italic">Never</span>
@@ -161,12 +161,12 @@ export function InfoTable({
         ...(isLoggedIn
             ? [
                   {
-                      icon: <Compass className="text-muted-foreground h-4 w-4" />,
+                      icon: <Compass className="h-4 w-4 text-muted-foreground" />,
                       label: 'Area',
                       value: data.amenity || '-',
                   },
                   {
-                      icon: <Hash className="text-muted-foreground h-4 w-4" />,
+                      icon: <Hash className="h-4 w-4 text-muted-foreground" />,
                       label: 'Location ID',
                       value: (
                           <span className="flex items-center gap-1">
@@ -178,7 +178,7 @@ export function InfoTable({
                                               type="button"
                                               tabIndex={0}
                                               aria-label="Copy location ID"
-                                              className="hover:bg-muted/40 text-muted-foreground hover:text-foreground ml-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors"
+                                              className="ml-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                               onClick={copyLocationId}
                                           >
                                               <Copy className="h-4 w-4" />
@@ -193,7 +193,7 @@ export function InfoTable({
                       ),
                   },
                   {
-                      icon: <FileText className="text-muted-foreground h-4 w-4" />,
+                      icon: <FileText className="h-4 w-4 text-muted-foreground" />,
                       label: 'Added on',
                       value: new Date(data.created_at).toLocaleDateString(),
                   },
@@ -212,9 +212,9 @@ export function InfoTable({
                         {/* Icon */}
                         <div className="flex justify-center">{row.icon}</div>
                         {/* Label */}
-                        <dt className="text-muted-foreground text-left text-xs">{row.label}</dt>
+                        <dt className="text-left text-xs text-muted-foreground">{row.label}</dt>
                         {/* Value */}
-                        <dd className="text-foreground text-sm font-medium break-words">
+                        <dd className="text-sm font-medium break-words text-foreground">
                             {row.value || <span className="text-muted-foreground">—</span>}
                         </dd>
                     </div>

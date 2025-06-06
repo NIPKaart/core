@@ -72,7 +72,7 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                     <span className="text-sm text-zinc-400">(you can do this once per day, for each parking space)</span>
                 </div>
                 {generalError && (
-                    <div className="border-destructive/20 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/20 mb-2 rounded border px-3 py-2 text-center text-sm">
+                    <div className="mb-2 rounded border border-destructive/20 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/20">
                         {generalError}
                     </div>
                 )}
@@ -107,7 +107,7 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>
-                                    Comment <span className="text-muted-foreground text-xs">(optional)</span>
+                                    Comment <span className="text-xs text-muted-foreground">(optional)</span>
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea

@@ -54,7 +54,7 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
     const municipalityOptions = municipalities.map((m) => ({
         value: String(m.id),
         label: m.name,
-        count: spaces.data.filter((space) => String(space.municipality.id) === String(m.id)).length,
+        count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
     }));
 
     const updateFilters = (status: string[], municipality: string[]) => {
@@ -110,15 +110,15 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
                 </p>
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
-                    <div className="bg-muted/70 dark:border-muted/50 flex flex-col gap-3 rounded-md border p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="text-muted-foreground text-sm">
-                                <span className="text-foreground font-medium">{Object.keys(rowSelection).length}</span> selected
+                            <div className="text-sm text-muted-foreground">
+                                <span className="font-medium text-foreground">{Object.keys(rowSelection).length}</span> selected
                             </div>
 
                             <button
                                 onClick={() => setRowSelection({})}
-                                className="hover:text-foreground absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition sm:static sm:ml-3 sm:text-sm sm:no-underline"
+                                className="absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
                                 Clear
                             </button>

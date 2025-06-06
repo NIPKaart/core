@@ -65,6 +65,11 @@ export function AppSidebar() {
                 icon: icons.Trash2,
                 badge: trashedParkingSpaces ? trashedParkingSpaces : undefined,
             },
+            can('parking-municipal.view_any') && {
+                title: 'Municipalities',
+                href: route('app.parking-municipal.municipalities'),
+                icon: icons.Building,
+            },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',
                 href: route('app.parking-rules.index'),

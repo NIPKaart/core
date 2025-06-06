@@ -211,7 +211,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         </div>
                         {/* <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription> */}
                     </DialogHeader>
-                    <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription>
+                    <DialogDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-space.view') && data?.id && (
@@ -250,7 +250,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                     </div>
                 </DrawerHeader>
                 <div className="overflow-y-auto">
-                    <DrawerDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DrawerDescription>
+                    <DrawerDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DrawerDescription>
                     <div className="px-4 sm:px-6">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">

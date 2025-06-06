@@ -42,7 +42,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     const EmptyState = (
         <div className="mt-8 mb-10 flex flex-col items-center justify-center gap-3 text-center">
             <Heart className="h-10 w-10 text-red-500" fill="#ef4444" />
-            <div className="text-muted-foreground font-semibold">No favorites yet</div>
+            <div className="font-semibold text-muted-foreground">No favorites yet</div>
             <div className="text-sm text-zinc-500">Browse the map and click the heart icon to favorite locations.</div>
         </div>
     );
@@ -54,7 +54,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                 return (
                     <div
                         key={`${fav.type}-${fav.id}`}
-                        className="bg-card flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 shadow-sm transition hover:bg-orange-50 dark:hover:bg-orange-900"
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition hover:bg-orange-50 dark:hover:bg-orange-900"
                         onClick={() => handleFavoriteClick(fav)}
                         tabIndex={0}
                         role="button"
@@ -67,7 +67,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                             <div className="truncate font-medium">
                                 {fav.title}
                                 {(fav.city || fav.municipality) && (
-                                    <span className="text-muted-foreground font-normal"> — {fav.city || fav.municipality}</span>
+                                    <span className="font-normal text-muted-foreground"> — {fav.city || fav.municipality}</span>
                                 )}
                             </div>
                             <div className="text-xs text-zinc-500 capitalize">{fav.type.toLowerCase()}</div>
@@ -95,7 +95,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
-                        <DialogDescription className="text-muted-foreground mt-1 mb-0 text-center text-sm">
+                        <DialogDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">
                             Quickly access all your favorite locations here.
                         </DialogDescription>
                     </DialogHeader>
@@ -119,7 +119,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                         <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
                         <DrawerTitle className="text-lg font-semibold">Your Favorites</DrawerTitle>
                     </div>
-                    <DrawerDescription className="text-muted-foreground mt-1 mb-0 text-center text-sm">
+                    <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">
                         Quickly access all your favorite locations here.
                     </DrawerDescription>
                 </DrawerHeader>

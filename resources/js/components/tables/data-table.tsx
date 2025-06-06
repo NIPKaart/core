@@ -71,7 +71,7 @@ export function DataTable<TData, TValue>({
 
             <div className="overflow-x-auto rounded-md border">
                 <Table>
-                    <TableHeader className="bg-muted sticky top-0 z-10">
+                    <TableHeader className="sticky top-0 z-10 bg-muted">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
@@ -115,8 +115,8 @@ function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TVa
     return (
         <div
             onClick={isSortable ? () => header.column.toggleSorting(isSorted === 'asc') : undefined}
-            className={`text-muted-foreground flex items-center gap-1 text-sm font-medium ${
-                isSortable ? 'hover:text-foreground cursor-pointer' : ''
+            className={`flex items-center gap-1 text-sm font-medium text-muted-foreground ${
+                isSortable ? 'cursor-pointer hover:text-foreground' : ''
             } ${alignment}`}
         >
             {flexRender(header.column.columnDef.header, header.getContext())}

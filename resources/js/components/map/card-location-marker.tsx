@@ -35,7 +35,7 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
                 zoom={19}
                 scrollWheelZoom
                 zoomControl={false}
-                className="h-80 w-full rounded-md border md:h-[500px]"
+                className="h-80 w-full rounded-xl border md:h-[500px]"
             >
                 <LayersControl position="topright">
                     <BaseLayer checked name="Google Hybrid">

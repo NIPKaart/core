@@ -23,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Model::automaticallyEagerLoadRelationships();
+
         Model::shouldBeStrict(! $this->app->isProduction());
         DB::prohibitDestructiveCommands($this->app->isProduction());
 

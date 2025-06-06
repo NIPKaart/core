@@ -70,14 +70,14 @@ export function DataTableFacetFilter({ title, selected, options, onChange, onCle
                                     <CommandItem key={option.value} onSelect={() => toggle(option.value)} className="cursor-pointer">
                                         <div
                                             className={cn(
-                                                'border-primary mr-2 flex h-4 w-4 items-center justify-center rounded-sm border',
+                                                'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
                                                 isSelected ? 'bg-primary text-primary-foreground' : 'opacity-50 [&_svg]:invisible',
                                             )}
                                         >
                                             <CheckIcon className="h-4 w-4" />
                                         </div>
                                         <span>{option.label}</span>
-                                        <span className="text-muted-foreground ml-auto">{option.count}</span>
+                                        <span className="ml-auto text-muted-foreground">{option.count}</span>
                                     </CommandItem>
                                 );
                             })}

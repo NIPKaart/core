@@ -48,9 +48,9 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
                 {filteredSpaces.length === 0 ? (
                     <div className="mt-16 flex flex-col items-center justify-center gap-4 text-center">
                         <div className="flex flex-col items-center gap-2">
-                            <MapPin className="text-primary mb-2 h-10 w-10" />
-                            <span className="text-muted-foreground text-lg font-semibold">You haven&apos;t added any parking spaces yet.</span>
-                            <span className="text-muted-foreground text-sm">Start contributing and help others by adding your first location!</span>
+                            <MapPin className="mb-2 h-10 w-10 text-primary" />
+                            <span className="text-lg font-semibold text-muted-foreground">You haven&apos;t added any parking spaces yet.</span>
+                            <span className="text-sm text-muted-foreground">Start contributing and help others by adding your first location!</span>
                         </div>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
                             <Link href={route('map.add')}>
@@ -64,16 +64,16 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
                         {filteredSpaces.map((space) => (
                             <Card
                                 key={space.id}
-                                className="border-border/70 bg-card rounded-2xl border shadow-sm transition-all duration-150 hover:shadow-md"
+                                className="rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-150 hover:shadow-md"
                             >
                                 <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                                    <div className="bg-primary/10 flex items-center justify-center rounded-xl p-3">
-                                        <MapPin className="text-primary h-6 w-6" />
+                                    <div className="flex items-center justify-center rounded-xl bg-primary/10 p-3">
+                                        <MapPin className="h-6 w-6 text-primary" />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <CardTitle className="truncate text-base leading-tight font-semibold lg:text-lg">
                                             {space.street}
-                                            {space.city ? <span className="text-muted-foreground font-normal"> — {space.city}</span> : null}
+                                            {space.city ? <span className="font-normal text-muted-foreground"> — {space.city}</span> : null}
                                         </CardTitle>
                                         <CardDescription className="mt-0.5 text-sm">
                                             Postcode: <span className="font-medium">{space.postcode ?? '-'}</span>

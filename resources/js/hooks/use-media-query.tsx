@@ -4,7 +4,7 @@ const MOBILE_BREAKPOINT = 768;
 
 /**
  * useMediaQuery
- * 
+ *
  * React hook to check if a given media query matches.
  * - By default, returns true if the viewport is smaller than MOBILE_BREAKPOINT (768px).
  * - If you pass a number, it will be treated as a max-width in px (exclusive).
@@ -23,9 +23,7 @@ export function useMediaQuery(query?: string | number): boolean {
     }
 
     // Set initial state (only on client side)
-    const [matches, setMatches] = useState(() =>
-        typeof window !== 'undefined' ? window.matchMedia(mediaQuery).matches : false
-    );
+    const [matches, setMatches] = useState(() => (typeof window !== 'undefined' ? window.matchMedia(mediaQuery).matches : false));
 
     useEffect(() => {
         if (typeof window === 'undefined') return;

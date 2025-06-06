@@ -99,7 +99,7 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                         href={`https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-muted-foreground text-sm underline"
+                        className="text-sm text-muted-foreground underline"
                     >
                         Look up the location in Google Streetview
                     </a>
@@ -135,7 +135,7 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                             )}
                         />
                     </div>
-                    <p className="text-muted-foreground text-sm">Keep it empty if there is no time limit indicated on a sub-board.</p>
+                    <p className="text-sm text-muted-foreground">Keep it empty if there is no time limit indicated on a sub-board.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -150,7 +150,7 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                                 </FormControl>
                                 <div className="space-y-1 leading-none">
                                     <FormLabel className="font-normal">Window times</FormLabel>
-                                    <p className="text-muted-foreground text-sm">
+                                    <p className="text-sm text-muted-foreground">
                                         For example: Mon–Sun | 09:00–17:00. Please specify this in the comments.
                                     </p>
                                 </div>

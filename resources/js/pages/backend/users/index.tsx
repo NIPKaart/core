@@ -9,7 +9,14 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
@@ -127,7 +134,7 @@ export default function Index({ users }: PageProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-muted-foreground data-[state=open]:bg-muted flex size-8 cursor-pointer"
+                                    className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
                                     <span className="sr-only">Open menu</span>
@@ -168,7 +175,7 @@ export default function Index({ users }: PageProps) {
                                             e.preventDefault();
                                             openDialog(user, 'delete');
                                         }}
-                                        className="text-destructive cursor-pointer"
+                                        className="cursor-pointer text-destructive"
                                     >
                                         Delete
                                     </DropdownMenuItem>

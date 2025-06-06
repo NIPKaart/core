@@ -83,7 +83,7 @@ export default function Index({ roles }: PageProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-muted-foreground data-[state=open]:bg-muted flex size-8 cursor-pointer"
+                                    className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
                                     <span className="sr-only">Open menu</span>
@@ -112,7 +112,7 @@ export default function Index({ roles }: PageProps) {
                                                 e.preventDefault();
                                                 openDialog(role, 'delete');
                                             }}
-                                            className="text-destructive cursor-pointer"
+                                            className="cursor-pointer text-destructive"
                                         >
                                             Delete
                                         </DropdownMenuItem>
