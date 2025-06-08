@@ -60,7 +60,7 @@ class ParkingMunicipalController extends Controller
             $orientations = explode(',', $request->input('orientation'));
             if (in_array('unknown', $orientations)) {
                 $query->where(function ($q) use ($orientations) {
-                    $q->whereIn('orientation', array_filter($orientations, fn($o) => $o !== 'unknown'));
+                    $q->whereIn('orientation', array_filter($orientations, fn ($o) => $o !== 'unknown'));
                     $q->orWhereNull('orientation');
                 });
             } else {
