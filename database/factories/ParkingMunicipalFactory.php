@@ -3,9 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\ParkingOrientation;
-use App\Models\Country;
-use App\Models\Municipality;
-use App\Models\Province;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
