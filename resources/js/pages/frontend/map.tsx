@@ -87,7 +87,7 @@ export default function Map() {
         () =>
             mapMarkers.map((marker) => (
                 <Marker
-                    key={marker.type + '-' + marker.id}
+                    key={`${marker.type}:${marker.id}`}
                     position={[marker.latitude, marker.longitude]}
                     icon={getInvalidParkingIcon()}
                     eventHandlers={{
