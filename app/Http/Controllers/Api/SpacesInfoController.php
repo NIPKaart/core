@@ -68,10 +68,11 @@ class SpacesInfoController extends Controller
         ]);
     }
 
-    public function ParkingMunicipalInfo(string $id) {
+    public function ParkingMunicipalInfo(string $id)
+    {
         $location = ParkingMunicipal::with(['country', 'province', 'municipality'])
             ->where('id', $id)
-            ->where('visible', true)
+            ->where('visibility', true)
             ->firstOrFail();
 
         $rule = ParkingRule::where('municipality', $location->municipality)->first();
