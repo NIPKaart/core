@@ -54,7 +54,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
             onClick={toggleFavorite}
             aria-label={isFavorited ? 'Remove favorite' : 'Add favorite'}
             disabled={loading}
-            className={`cursor-pointer transition ${isFavorited ? 'text-red-500' : 'text-zinc-400 hover:text-red-500'} `}
+            className={`cursor-pointer transition ${isFavorited ? 'text-red-500' : 'text-black hover:text-red-500'} `}
         >
             <Heart
                 className="h-5 w-5"

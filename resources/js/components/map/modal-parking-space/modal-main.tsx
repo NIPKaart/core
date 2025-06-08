@@ -7,16 +7,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { Eye, FileText, Info as InfoIcon, MapPin, MapPinCheckInside, Share2, X } from 'lucide-react';
+import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, MapPinned, Share2, X } from 'lucide-react';
 import * as React from 'react';
-import { ActionButtons, ConfirmTab, DescriptionTab, InfoTable, MainInfo } from './modal-parts';
-import { LocationDetail, ParkingSpaceModalProps } from './types';
+import { getCommunityInfoRows } from '../modal-shared/info-table';
+import { ActionButtons, InfoTable, MainInfo } from '../modal-shared/modal-parts';
+import type { ParkingSpaceDetail } from '../modal-shared/types';
+import { ConfirmTab, DescriptionTab } from './modal-parts';
+
+export type ParkingSpaceModalProps = {
+    spaceId: string | null;
+    open: boolean;
+    onClose: () => void;
+    latitude: number | null;
+    longitude: number | null;
+    confirmationStatusOptions: Record<string, string>;
+};
 
 export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpaceModalProps) {
     const { can, user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [data, setData] = React.useState<LocationDetail | null>(null);
+    const [data, setData] = React.useState<ParkingSpaceDetail | null>(null);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [copiedLocationId, setCopiedLocationId] = React.useState(false);
@@ -75,7 +86,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
     function LoadingSkeleton() {
         return (
             <div className="flex flex-col items-center justify-center gap-4 py-10">
-                <div className="mb-2 h-6 w-6 animate-spin text-orange-400">{/* Loader */}</div>
+                <div className="mb-2 h-6 w-6 animate-spin text-orange-400" />
                 <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
                 <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
                 <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
@@ -102,22 +113,14 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         if (!isLoggedIn && !data?.description)
             return (
                 <>
-                    {data && <MainInfo data={data} />}
+                    {data && <MainInfo data={data} type="community" />}
                     <ActionButtons latitude={latitude} longitude={longitude} />
-                    {data && (
-                        <InfoTable
-                            data={data}
-                            isLoggedIn={isLoggedIn}
-                            copiedLocationId={copiedLocationId}
-                            setCopiedLocationId={setCopiedLocationId}
-                            copyLocationId={copyLocationId}
-                        />
-                    )}
+                    {data && <InfoTable rows={getCommunityInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />}
                 </>
             );
         return (
             <>
-                {data && <MainInfo data={data} />}
+                {data && <MainInfo data={data} type="community" />}
                 <ActionButtons latitude={latitude} longitude={longitude} />
                 <Separator />
                 <Tabs value={tab} onValueChange={setTab} className="mt-4 w-full">
@@ -149,15 +152,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         )}
                     </TabsList>
                     <TabsContent value="info">
-                        {data && (
-                            <InfoTable
-                                data={data}
-                                isLoggedIn={isLoggedIn}
-                                copiedLocationId={copiedLocationId}
-                                setCopiedLocationId={setCopiedLocationId}
-                                copyLocationId={copyLocationId}
-                            />
-                        )}
+                        {data && <InfoTable rows={getCommunityInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />}
                     </TabsContent>
                     <TabsContent value="confirm">
                         {isLoggedIn && data && (
@@ -178,7 +173,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         );
     }
 
-    const descriptionText = 'Here you will find all the details of this parking location.';
+    const descriptionText = 'This space is part of our community parking initiative. You can confirm use or view more details.';
 
     if (isDesktop) {
         return (
@@ -187,8 +182,8 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-                                <MapPin className="h-6 w-6 text-orange-400" />
-                                Parking location
+                                <MapPinned className="h-6 w-6 text-orange-400" />
+                                Community Parking Space
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}
@@ -209,7 +204,6 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                                 </Button>
                             </div>
                         </div>
-                        {/* <DialogDescription className="text-muted-foreground mb-0 text-center text-sm">{descriptionText}</DialogDescription> */}
                     </DialogHeader>
                     <DialogDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
@@ -231,15 +225,15 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         );
     }
 
-    // Mobile Drawer variant
+    // Mobile - Drawer variant
     return (
         <Drawer open={open} onOpenChange={onClose}>
             <DrawerContent className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
-                            <MapPin className="h-6 w-6 text-orange-400" />
-                            Parking location
+                            <MapPinned className="h-6 w-6 text-orange-400" />
+                            Community Parking Space
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}

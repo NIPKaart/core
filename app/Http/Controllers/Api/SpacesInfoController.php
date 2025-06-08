@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingRule;
 use App\Models\ParkingSpace;
 
-class LocationInfoController extends Controller
+class SpacesInfoController extends Controller
 {
-    public function getLocationInfo(string $id)
+    public function ParkingSpaceInfo(string $id)
     {
         $location = ParkingSpace::with(['country', 'province', 'municipality'])
             ->where('id', $id)
@@ -48,10 +49,10 @@ class LocationInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
-            'orientation' => $location->orientation,
             'municipality' => $location->municipality->name ?? null,
             'province' => $location->province->name ?? null,
             'country' => $location->country->name ?? null,
+            'orientation' => $location->orientation,
             'street' => $location->street,
             'amenity' => $location->amenity,
             'description' => $location->description,
@@ -64,6 +65,39 @@ class LocationInfoController extends Controller
                 'confirmed' => $confirmedCount,
             ],
             'last_confirmed_at' => $lastConfirmed,
+        ]);
+    }
+
+    public function ParkingMunicipalInfo(string $id)
+    {
+        $location = ParkingMunicipal::with(['country', 'province', 'municipality'])
+            ->where('id', $id)
+            ->where('visibility', true)
+            ->firstOrFail();
+
+        $rule = ParkingRule::where('municipality', $location->municipality)->first();
+        // Fallback to nationwide rule if no municipal rule is found
+        if (empty($rule)) {
+            $rule = ParkingRule::where([
+                ['country_id', $location->country_id],
+                ['nationwide', 1],
+            ])->first();
+        }
+
+        // Check if the user has favorited this location
+        $user = auth()->user();
+        $isFavorited = $user ? $location->favoritedByUsers()->where('user_id', $user->id)->exists() : false;
+
+        return response()->json([
+            'id' => $location->id,
+            'municipality' => $location->municipality->name ?? null,
+            'province' => $location->province->name ?? null,
+            'country' => $location->country->name ?? null,
+            'orientation' => $location->orientation ?? null,
+            'street' => $location->street ?? null,
+            'rule_url' => $rule ? $rule->url : null,
+            'updated_at' => $location->updated_at,
+            'is_favorited' => $isFavorited,
         ]);
     }
 }

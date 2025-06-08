@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
+use App\Models\ParkingSpace;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,21 +17,24 @@ class FavoriteResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $type = class_basename($this->favoritable_type);
-        $f = $this->favoritable;
-
-        $result = [
-            'id' => $f?->id,
-            'type' => $type,
-            'title' => $f?->street ?? $f?->name ?? '[deleted]',
-            'municipality' => $f?->municipality ?? null,
-            'city' => $f?->city ?? null,
-            'country' => $f?->country?->name ?? null,
-            'address' => $f?->address ?? null,
-            'latitude' => $f?->latitude ?? null,
-            'longitude' => $f?->longitude ?? null,
+        $favoritable = $this->favoritable;
+        $typeMap = [
+            ParkingSpace::class => 'Community',
+            ParkingMunicipal::class => 'Municipal',
+            ParkingOffstreet::class => 'Offstreet',
         ];
 
-        return $result;
+        return [
+            'id' => $favoritable->id,
+            'type' => $typeMap[get_class($favoritable)] ?? 'Unknown',
+            'title' => $favoritable->title ?? $favoritable->street ?? '',
+            'latitude' => $favoritable->latitude,
+            'longitude' => $favoritable->longitude,
+            'municipality' => is_object($favoritable->municipality)
+                ? ['id' => $favoritable->municipality->id, 'name' => $favoritable->municipality->name]
+                : null,
+            'city' => $favoritable->city ?? null,
+            'country' => $favoritable->country->name ?? null,
+        ];
     }
 }
