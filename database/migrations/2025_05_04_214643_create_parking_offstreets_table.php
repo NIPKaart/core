@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_offstreets', function (Blueprint $table) {
+        Schema::create('parking_offstreet_spaces', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as primary key
             $table->string('name');
 
@@ -47,6 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_offstreets');
+        Schema::dropIfExists('parking_offstreet_spaces');
     }
 };

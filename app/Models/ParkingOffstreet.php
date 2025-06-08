@@ -12,7 +12,7 @@ class ParkingOffstreet extends Model
     /** @use HasFactory<\Database\Factories\ParkingOffstreetFactory> */
     use Favoritable, HasFactory;
 
-    protected $table = 'parking_offstreets';
+    protected $table = 'parking_offstreet_spaces';
 
     protected $primaryKey = 'id';
 

@@ -13,7 +13,7 @@ class ParkingMunicipal extends Model
     /** @use HasFactory<\Database\Factories\ParkingMunicipalFactory> */
     use Favoritable, HasFactory;
 
-    protected $table = 'parking_municipal';
+    protected $table = 'parking_municipal_spaces';
 
     protected $primaryKey = 'id';
 
