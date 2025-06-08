@@ -207,7 +207,7 @@ export type NominatimAddress = {
     [key: string]: unknown;
 };
 
-export type FavoriteType = 'ParkingSpace' | 'ParkingMunicipal' | 'ParkingOffstreet';
+export type FavoriteType = 'Community' | 'Municipal' | 'Offstreet';
 
 export type Favorite = {
     id: string | null;
@@ -215,7 +215,7 @@ export type Favorite = {
     title: string;
     latitude: number;
     longitude: number;
-    municipality?: string;
+    municipality?: Municipality;
     country?: string;
     address?: string;
     city?: string;

@@ -13,9 +13,9 @@ type FavoritesDialogProps = {
 };
 
 const iconMap = {
-    ParkingSpace: MapPin,
-    ParkingMunicipal: Landmark,
-    ParkingOffstreet: Warehouse,
+    Community: MapPin,
+    Municipal: Landmark,
+    Offstreet: Warehouse,
 };
 
 export default function FavoritesDialog({ open, onClose, onGotoLocation }: FavoritesDialogProps) {
@@ -48,7 +48,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     );
 
     const List = (
-        <div className="mt-4 grid max-h-[60vh] grid-cols-1 gap-5 overflow-y-auto">
+        <div className="mt-2 grid max-h-[60vh] grid-cols-1 gap-4 overflow-y-auto">
             {favorites.map((fav) => {
                 const Icon = iconMap[fav.type] || MapPin;
                 return (
@@ -66,8 +66,11 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                         <div className="min-w-0 flex-1">
                             <div className="truncate font-medium">
                                 {fav.title}
-                                {(fav.city || fav.municipality) && (
-                                    <span className="font-normal text-muted-foreground"> — {fav.city || fav.municipality}</span>
+                                {(fav.city || fav.municipality?.name) && (
+                                    <span className="font-normal text-muted-foreground">
+                                        {' — '}
+                                        {fav.city || fav.municipality?.name}
+                                    </span>
                                 )}
                             </div>
                             <div className="text-xs text-zinc-500 capitalize">{fav.type.toLowerCase()}</div>
