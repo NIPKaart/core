@@ -2,8 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Country;
-use App\Models\Province;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,40 +9,33 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ParkingOffstreetFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'id' => fake()->unique()->bothify('##??##'),
-            'name' => fake()->company,
-            'country_id' => function (): mixed {
-                return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
-            },
-            'province_id' => function (): mixed {
-                $countryId = Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
+            'id' => 'OFST_' . $this->faker->unique()->bothify('##??##'),
 
-                return Province::where('country_id', $countryId)
-                    ->inRandomOrder()
-                    ->value('id')
-                    ?? Province::factory()->create(['country_id' => $countryId])->id;
-            },
-            'municipality' => fake()->city,
-            'state' => fake()->optional()->state,
-            'free_space_short' => fake()->numberBetween(0, 100),
-            'free_space_long' => fake()->optional()->numberBetween(0, 50),
-            'short_capacity' => fake()->numberBetween(100, 200),
-            'long_capacity' => fake()->optional()->numberBetween(50, 150),
-            'availability_pct' => fake()->optional()->randomFloat(2, 0, 1),
-            'parking_type' => fake()->randomElement(['garage', 'parkandride']),
-            'prices' => json_encode(['short' => fake()->randomFloat(2, 0, 10)]),
-            'url' => fake()->optional()->url,
-            'longitude' => fake()->longitude,
-            'latitude' => fake()->latitude,
-            'visibility' => fake()->boolean,
+            'name' => $this->faker->company,
+            'country_id' => null,
+            'province_id' => null,
+            'municipality_id' => null,
+
+            // Parking details
+            'free_space_short' => $this->faker->numberBetween(0, 200),
+            'free_space_long' => $this->faker->optional()->numberBetween(0, 100),
+            'short_capacity' => $this->faker->numberBetween(80, 300),
+            'long_capacity' => $this->faker->optional()->numberBetween(20, 120),
+            'availability_pct' => $this->faker->optional()->randomFloat(2, 0, 1),
+            'parking_type' => $this->faker->randomElement(['garage', 'parkandride']),
+            'prices' => [
+                'short' => $this->faker->randomFloat(2, 0, 10),
+                'long' => $this->faker->optional()->randomFloat(2, 0, 20),
+            ],
+            'url' => $this->faker->optional()->url,
+            'visibility' => $this->faker->boolean(80),
+
+            // Parking location
+            'longitude' => $this->faker->longitude,
+            'latitude' => $this->faker->latitude,
         ];
     }
 }

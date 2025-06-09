@@ -18,16 +18,20 @@ class ParkingMunicipalFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => $this->faker->unique()->bothify('##??##'),
+            'id' => 'MUNI_' . $this->faker->unique()->bothify('##??##'),
             'country_id' => null,
             'province_id' => null,
             'municipality_id' => null,
+
+            // Parking details
             'street' => $this->faker->streetName,
             'orientation' => $this->faker->randomElement(ParkingOrientation::all()),
             'number' => $this->faker->numberBetween(1, 10),
+            'visibility' => $this->faker->boolean(80),
+
+            // Parking location
             'longitude' => $this->faker->longitude,
             'latitude' => $this->faker->latitude,
-            'visibility' => $this->faker->boolean,
         ];
     }
 }

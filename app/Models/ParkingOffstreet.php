@@ -36,6 +36,7 @@ class ParkingOffstreet extends Model
      */
     protected $casts = [
         'id' => 'string',
+        'prices' => 'array',
         'updated_at' => 'datetime',
     ];
 
@@ -53,5 +54,13 @@ class ParkingOffstreet extends Model
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
+    }
+
+    /**
+     * Get the municipality that owns the parking offstreet.
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
     }
 }
