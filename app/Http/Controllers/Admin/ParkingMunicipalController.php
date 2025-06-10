@@ -77,7 +77,9 @@ class ParkingMunicipalController extends Controller
                 'visibility' => $request->input('visibility'),
                 'orientation' => $request->input('orientation'),
             ],
-            'orientations' => ParkingOrientation::options(),
+            'options' => [
+                'orientations' => ParkingOrientation::options(),
+            ]
         ]);
     }
 
