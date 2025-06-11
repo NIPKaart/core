@@ -61,6 +61,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
         });
 
+        // ParkingOffstreet routes
+        Route::prefix('parking-offstreet')->as('parking-offstreet.')->group(function () {
+            Route::get('index', [Admin\ParkingOffstreetController::class, 'index'])->name('index');
+            Route::post('toggle-visibility', [Admin\ParkingOffstreetController::class, 'toggleVisibility'])->name('toggle-visibility');
+
+            Route::prefix('bulk')->as('bulk.')->group(function () {
+                Route::patch('toggle-visibility', [Admin\ParkingOffstreetController::class, 'bulkSetVisibility'])->name('toggle-visibility');
+            });
+        });
+
         // ParkingMunicipal routes
         Route::prefix('parking-municipal')->as('parking-municipal.')->group(function () {
             Route::get('municipalities', [Admin\ParkingMunicipalController::class, 'municipalities'])->name('municipalities');
@@ -83,7 +93,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('roles', Admin\RoleController::class);
         Route::resource('parking-rules', Admin\ParkingRuleController::class);
         Route::resource('parking-spaces', Admin\ParkingSpaceController::class);
-        // Route::resource('parking-municipal', Admin\ParkingMunicipalController::class);
     });
 });
 
