@@ -11,8 +11,52 @@ type MainInfoProps = {
         country?: string | null;
         confirmations_count?: { confirmed: number };
     };
-    type: 'community' | 'municipal';
+    type: 'community' | 'municipal' | 'offstreet';
 };
+
+// Copies the location ID to clipboard and sets a copied state for a short duration
+export function copyLocationId(data: { id?: string } | null, setCopied: (v: boolean) => void, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (data?.id) {
+        navigator.clipboard.writeText(data.id);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1400);
+    }
+}
+
+// Generates a shareable URL based on latitude, longitude, and zoom level
+export function getShareUrl(lat: number, lng: number, zoom = 18) {
+    if (lat != null && lng != null) {
+        return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
+    }
+    return window.location.href;
+}
+
+// Copies the shareable URL to clipboard and sets a copied state for a short duration
+export function copyUrl(data: { id?: string }, latitude: number, longitude: number, setCopied: (v: boolean) => void) {
+    if (!data) return;
+    const shareUrl = getShareUrl(latitude, longitude, 18);
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+}
+
+// LoadingSkeleton component displays a loading animation with a customizable color
+export function LoadingSkeleton({ color = 'text-orange-400' }: { color?: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center gap-4 py-10">
+            <div className={`mb-2 h-6 w-6 animate-spin ${color}`} />
+            <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
+        </div>
+    );
+}
+
+// ErrorBlock component displays an error message when location details cannot be loaded
+export function ErrorBlock({ message = 'Could not load location details.' }) {
+    return <div className="flex flex-col items-center justify-center gap-4 py-10 text-red-600">{message}</div>;
+}
 
 export function MainInfo({ data, type }: MainInfoProps) {
     return (

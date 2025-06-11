@@ -9,8 +9,8 @@ import { formatParkingTime } from './utils';
 export function getCommunityInfoRows(
     data: ParkingSpaceDetail,
     isLoggedIn: boolean,
-    copiedLocationId: boolean,
-    setCopiedLocationId: (v: boolean) => void,
+    copiedSpaceId: boolean,
+    setCopiedSpaceId: (v: boolean) => void,
     copyLocationId: (e: React.MouseEvent) => void,
 ): InfoTableRow[] {
     return [
@@ -88,7 +88,7 @@ export function getCommunityInfoRows(
                           <span className="flex items-center gap-1">
                               <span className="select-all">{data.id}</span>
                               <TooltipProvider>
-                                  <Tooltip open={copiedLocationId} onOpenChange={() => setCopiedLocationId(false)} delayDuration={0}>
+                                  <Tooltip open={copiedSpaceId} onOpenChange={() => setCopiedSpaceId(false)} delayDuration={0}>
                                       <TooltipTrigger asChild>
                                           <button
                                               type="button"
@@ -122,8 +122,8 @@ export function getCommunityInfoRows(
 export function getMunicipalInfoRows(
     data: MunicipalParkingDetail,
     isLoggedIn: boolean,
-    copiedLocationId: boolean,
-    setCopiedLocationId: (v: boolean) => void,
+    copiedSpaceId: boolean,
+    setCopiedSpaceId: (v: boolean) => void,
     copyLocationId: (e: React.MouseEvent) => void,
 ): InfoTableRow[] {
     return [
@@ -167,7 +167,7 @@ export function getMunicipalInfoRows(
                           <span className="flex items-center gap-1">
                               <span className="select-all">{data.id}</span>
                               <TooltipProvider>
-                                  <Tooltip open={copiedLocationId} onOpenChange={() => setCopiedLocationId(false)} delayDuration={0}>
+                                  <Tooltip open={copiedSpaceId} onOpenChange={() => setCopiedSpaceId(false)} delayDuration={0}>
                                       <TooltipTrigger asChild>
                                           <button
                                               type="button"

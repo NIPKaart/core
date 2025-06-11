@@ -9,17 +9,18 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, MapPinned, Share2, X } from 'lucide-react';
 import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { getCommunityInfoRows } from '../modal-shared/info-table';
-import { ActionButtons, InfoTable, MainInfo } from '../modal-shared/modal-parts';
+import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
 import type { ParkingSpaceDetail } from '../modal-shared/types';
 import { ConfirmTab, DescriptionTab } from './modal-parts';
 
 export type ParkingSpaceModalProps = {
-    spaceId: string | null;
+    spaceId: string;
     open: boolean;
     onClose: () => void;
-    latitude: number | null;
-    longitude: number | null;
+    latitude: number;
+    longitude: number;
     confirmationStatusOptions: Record<string, string>;
 };
 
@@ -27,14 +28,14 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
     const { can, user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [data, setData] = React.useState<ParkingSpaceDetail | null>(null);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [copiedLocationId, setCopiedLocationId] = React.useState(false);
-    const [copiedShare, setCopiedShare] = React.useState(false);
+    const [data, setData] = useState<ParkingSpaceDetail | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [copiedSpaceId, setCopiedSpaceId] = useState(false);
+    const [copiedShare, setCopiedShare] = useState(false);
     const [tab, setTab] = React.useState('info');
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (open && spaceId) {
             setLoading(true);
             setError(null);
@@ -52,62 +53,13 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         }
     }, [spaceId, open]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (open) {
-            setCopiedLocationId(false);
+            setCopiedSpaceId(false);
             setCopiedShare(false);
             setTab('info');
         }
     }, [open, spaceId]);
-
-    function copyLocationId(e: React.MouseEvent) {
-        e.stopPropagation();
-        if (data?.id) {
-            navigator.clipboard.writeText(data.id);
-            setCopiedLocationId(true);
-            setTimeout(() => setCopiedLocationId(false), 1400);
-        }
-    }
-
-    function getShareUrl(lat: number | null, lng: number | null, zoom = 18) {
-        if (lat !== null && lng !== null) {
-            return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
-        }
-        return window.location.href;
-    }
-
-    function copyUrl() {
-        const shareUrl = getShareUrl(latitude, longitude, 18);
-        navigator.clipboard.writeText(shareUrl);
-        setCopiedShare(true);
-        setTimeout(() => setCopiedShare(false), 1400);
-    }
-
-    function LoadingSkeleton() {
-        return (
-            <div className="flex flex-col items-center justify-center gap-4 py-10">
-                <div className="mb-2 h-6 w-6 animate-spin text-orange-400" />
-                <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
-            </div>
-        );
-    }
-
-    function ErrorBlock() {
-        return (
-            <div className="flex flex-col items-center justify-center gap-4 py-10 text-red-600">
-                Could not load location details.
-                <br />
-                <button
-                    className="rounded bg-zinc-100 px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-zinc-200 dark:bg-zinc-900"
-                    onClick={() => window.location.reload()}
-                >
-                    Try again
-                </button>
-            </div>
-        );
-    }
 
     function TabBlock() {
         if (!isLoggedIn && !data?.description)
@@ -115,7 +67,13 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                 <>
                     {data && <MainInfo data={data} type="community" />}
                     <ActionButtons latitude={latitude} longitude={longitude} />
-                    {data && <InfoTable rows={getCommunityInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />}
+                    {data && (
+                        <InfoTable
+                            rows={getCommunityInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
+                                copyLocationId(data, setCopiedSpaceId, e),
+                            )}
+                        />
+                    )}
                 </>
             );
         return (
@@ -152,7 +110,13 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         )}
                     </TabsList>
                     <TabsContent value="info">
-                        {data && <InfoTable rows={getCommunityInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />}
+                        {data && (
+                            <InfoTable
+                                rows={getCommunityInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
+                                    copyLocationId(data, setCopiedSpaceId, e),
+                                )}
+                            />
+                        )}
                     </TabsContent>
                     <TabsContent value="confirm">
                         {isLoggedIn && data && (
@@ -190,7 +154,13 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
-                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
+                                            <Button
+                                                className="cursor-pointer"
+                                                size="icon"
+                                                variant="ghost"
+                                                aria-label="Share"
+                                                onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}
+                                            >
                                                 <Share2 className="h-5 w-5" />
                                             </Button>
                                         </TooltipTrigger>
@@ -237,7 +207,12 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}
-                            <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Share"
+                                onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}
+                            >
                                 <Share2 className="h-5 w-5" />
                             </Button>
                         </div>

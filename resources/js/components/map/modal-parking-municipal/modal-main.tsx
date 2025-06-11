@@ -8,28 +8,29 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { Landmark, Share2, X } from 'lucide-react';
 import * as React from 'react';
 import { getMunicipalInfoRows } from '../modal-shared/info-table';
-import { ActionButtons, InfoTable, MainInfo } from '../modal-shared/modal-parts';
+import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
 import type { MunicipalParkingDetail } from '../modal-shared/types';
+import { useEffect, useState } from 'react';
 
 export type ParkingMunicipalModalProps = {
-    spaceId: string | null;
+    spaceId: string;
     open: boolean;
     onClose: () => void;
-    latitude: number | null;
-    longitude: number | null;
+    latitude: number;
+    longitude: number;
 };
 
 export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude, longitude }: ParkingMunicipalModalProps) {
     const { user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [data, setData] = React.useState<MunicipalParkingDetail | null>(null);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [copiedLocationId, setCopiedLocationId] = React.useState(false);
-    const [copiedShare, setCopiedShare] = React.useState(false);
+    const [data, setData] = useState<MunicipalParkingDetail | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [copiedSpaceId, setCopiedSpaceId] = useState(false);
+    const [copiedShare, setCopiedShare] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (open && spaceId) {
             setLoading(true);
             setError(null);
@@ -47,53 +48,16 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
         }
     }, [spaceId, open]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (open) {
-            setCopiedLocationId(false);
+            setCopiedSpaceId(false);
             setCopiedShare(false);
         }
     }, [open, spaceId]);
 
-    function copyLocationId(e: React.MouseEvent) {
-        e.stopPropagation();
-        if (data?.id) {
-            navigator.clipboard.writeText(data.id);
-            setCopiedLocationId(true);
-            setTimeout(() => setCopiedLocationId(false), 1400);
-        }
-    }
-
-    function getShareUrl(lat: number | null, lng: number | null, zoom = 18) {
-        if (lat !== null && lng !== null) {
-            return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
-        }
-        return window.location.href;
-    }
-
-    function copyUrl() {
-        const shareUrl = getShareUrl(latitude, longitude, 18);
-        navigator.clipboard.writeText(shareUrl);
-        setCopiedShare(true);
-        setTimeout(() => setCopiedShare(false), 1400);
-    }
-
-    function LoadingSkeleton() {
-        return (
-            <div className="flex flex-col items-center justify-center gap-4 py-10">
-                <div className="mb-2 h-6 w-6 animate-spin text-orange-400" />
-                <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
-            </div>
-        );
-    }
-
-    function ErrorBlock() {
-        return <div className="flex flex-col items-center justify-center gap-4 py-10 text-red-600">Could not load location details.</div>;
-    }
-
     const descriptionText = 'This is an official parking space provided by the municipality. Details are based on open data.';
 
+    // Desktop - Dialog variant
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={onClose}>
@@ -109,7 +73,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
-                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
+                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}>
                                                 <Share2 className="h-5 w-5" />
                                             </Button>
                                         </TooltipTrigger>
@@ -135,7 +99,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 {data && <MainInfo data={data} type="municipal" />}
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />
+                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e))} />
                                 )}
                             </>
                         )}
@@ -162,7 +126,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}
-                            <Button size="icon" variant="ghost" aria-label="Share" onClick={copyUrl}>
+                            <Button size="icon" variant="ghost" aria-label="Share" onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}>
                                 <Share2 className="h-5 w-5" />
                             </Button>
                         </div>
@@ -180,7 +144,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 {data && <MainInfo data={data} type="municipal" />}
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedLocationId, setCopiedLocationId, copyLocationId)} />
+                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e))} />
                                 )}
                             </>
                         )}
