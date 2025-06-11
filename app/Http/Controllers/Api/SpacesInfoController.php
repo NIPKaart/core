@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
 use App\Models\ParkingRule;
 use App\Models\ParkingSpace;
 
@@ -103,7 +104,7 @@ class SpacesInfoController extends Controller
 
     public function ParkingOffstreetInfo(string $id)
     {
-        $location = ParkingMunicipal::with(['country', 'province', 'municipality'])
+        $location = ParkingOffstreet::with(['country', 'province', 'municipality'])
             ->where('id', $id)
             ->where('visibility', true)
             ->firstOrFail();
