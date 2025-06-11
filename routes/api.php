@@ -12,4 +12,5 @@ Route::get('/user', function (Request $request) {
 Route::middleware(['throttle:30,1', 'web'])->group(function () {
     Route::get('parking-spaces/{id}', [Api\SpacesInfoController::class, 'ParkingSpaceInfo']);
     Route::get('parking-municipal/{id}', [Api\SpacesInfoController::class, 'ParkingMunicipalInfo']);
+    Route::get('parking-offstreet/{id}', [Api\SpacesInfoController::class, 'ParkingOffstreetInfo']);
 });

@@ -49,9 +49,9 @@ class SpacesInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
-            'municipality' => $location->municipality->name ?? null,
-            'province' => $location->province->name ?? null,
             'country' => $location->country->name ?? null,
+            'province' => $location->province->name ?? null,
+            'municipality' => $location->municipality->name ?? null,
             'orientation' => $location->orientation,
             'street' => $location->street,
             'amenity' => $location->amenity,
@@ -90,12 +90,41 @@ class SpacesInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
-            'municipality' => $location->municipality->name ?? null,
-            'province' => $location->province->name ?? null,
             'country' => $location->country->name ?? null,
+            'province' => $location->province->name ?? null,
+            'municipality' => $location->municipality->name ?? null,
             'orientation' => $location->orientation ?? null,
             'street' => $location->street ?? null,
             'rule_url' => $rule ? $rule->url : null,
+            'updated_at' => $location->updated_at,
+            'is_favorited' => $isFavorited,
+        ]);
+    }
+
+    public function ParkingOffstreetInfo(string $id)
+    {
+        $location = ParkingMunicipal::with(['country', 'province', 'municipality'])
+            ->where('id', $id)
+            ->where('visibility', true)
+            ->firstOrFail();
+
+        // Check if the user has favorited this location
+        $user = auth()->user();
+        $isFavorited = $user ? $location->favoritedByUsers()->where('user_id', $user->id)->exists() : false;
+
+        return response()->json([
+            'id' => $location->id,
+            'name' => $location->name,
+            'country' => $location->country->name ?? null,
+            'province' => $location->province->name ?? null,
+            'municipality' => $location->municipality->name ?? null,
+            'free_space_short' => $location->free_space_short,
+            'free_space_long' => $location->free_space_long ?? null,
+            'short_capacity' => $location->short_capacity,
+            'long_capacity' => $location->long_capacity ?? null,
+            'url' => $location->url ?? null,
+            'prices' => $location->prices ?? null,
+            'api_state' => $location->api_state ?? null,
             'updated_at' => $location->updated_at,
             'is_favorited' => $isFavorited,
         ]);
