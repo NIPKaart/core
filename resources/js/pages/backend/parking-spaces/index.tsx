@@ -18,7 +18,7 @@ type Option = { id: number; name: string };
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
     filters: { status: string | null; municipality_id: string | null; deletion_requested: boolean };
-    options: { statuses: Record<ParkingStatus, string>; municipalities: Option[]; };
+    options: { statuses: Record<ParkingStatus, string>; municipalities: Option[] };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spaces', href: route('app.parking-spaces.index') }];
@@ -51,18 +51,20 @@ export default function Index({ spaces, filters, options }: PageProps) {
         count: statusCounts[value] ?? 0,
     }));
 
-    const municipalityOptions = options.municipalities.map((m) => ({
-        value: String(m.id),
-        label: m.name,
-        count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
-    }));
+    const municipalityOptions = options.municipalities
+        .map((m) => ({
+            value: String(m.id),
+            label: m.name,
+            count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
+        }))
+        .filter((o) => o.count > 0);
 
     const updateFilters = (status: string[], municipality: string[]) => {
-        router.get(
-            route('app.parking-spaces.index'),
-            { status: status.join(','), municipality_id: municipality.join(',') },
-            { preserveScroll: true, preserveState: true },
-        );
+        const query: Record<string, string | null> = {};
+        if (status.length > 0) query.status = status.join(',');
+        if (municipality.length > 0) query.municipality_id = municipality.join(',');
+
+        router.get(route('app.parking-spaces.index'), query, { preserveScroll: true, preserveState: true });
     };
 
     // Get the columns for the data table
@@ -84,6 +86,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedStatus('');
+                    toast.success('Parking spaces updated successfully.');
                 },
                 onError: (errors) => {
                     if (errors.ids) {

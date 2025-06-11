@@ -56,11 +56,14 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     const columns = getParkingMunicipalColumns(can, options.orientations);
 
     const updateFilters = (visibility: string[], orientation: string[]) => {
-        router.get(
-            route('app.parking-municipal.municipalities.index', { municipality: municipality.id }),
-            { visibility: visibility.join(','), orientation: orientation.join(',') },
-            { preserveScroll: true, preserveState: true },
-        );
+        const query: Record<string, string | null> = {};
+        if (visibility.length > 0) query.visibility = visibility.join(',');
+        if (orientation.length > 0) query.orientation = orientation.join(',');
+
+        router.get(route('app.parking-municipal.municipalities.index', { municipality: municipality.id }), query, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     const breadcrumbs: BreadcrumbItem[] = [
