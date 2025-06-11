@@ -70,6 +70,20 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
             enableSorting: true,
         },
         {
+            id: 'api_state',
+            header: 'API',
+            cell: ({ row }) => {
+                const state = row.original.api_state
+                if (state === 'ok') {
+                    return <Badge variant="default">OK</Badge>;
+                }
+                if (state === 'error') {
+                    return <Badge variant="destructive">Error</Badge>;
+                }
+                return <span className="text-muted-foreground">—</span>;
+            },
+        },
+        {
             id: 'parking_status',
             header: 'Status',
             cell: ({ row }) => {

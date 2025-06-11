@@ -195,7 +195,7 @@ export type ParkingOffstreet = {
     long_capacity: number | null;
     parking_type: 'garage' | 'parkandride';
     prices: json | null;
-    state: string | null;
+    api_state: string | null;
     visibility: boolean;
 
     country_id: number;
