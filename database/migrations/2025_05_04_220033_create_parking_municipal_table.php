@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_municipal', function (Blueprint $table) {
+        Schema::create('parking_municipal_spaces', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as string
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
@@ -39,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_municipal');
+        Schema::dropIfExists('parking_municipal_spaces');
     }
 };

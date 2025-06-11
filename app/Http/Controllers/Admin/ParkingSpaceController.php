@@ -27,6 +27,7 @@ class ParkingSpaceController extends Controller
         $query = ParkingSpace::query()
             ->with(['user', 'province', 'country', 'municipality']);
 
+        // Filters
         if ($request->filled('status')) {
             $statuses = explode(',', $request->input('status'));
             $query->whereIn('status', $statuses);
@@ -46,8 +47,10 @@ class ParkingSpaceController extends Controller
                 'municipality_id' => $request->input('municipality_id'),
                 'deletion_requested' => $request->boolean('deletion_requested'),
             ],
-            'statuses' => ParkingStatus::options(),
-            'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
+            'options' => [
+                'statuses' => ParkingStatus::options(),
+                'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
+            ]
         ]);
     }
 
@@ -236,9 +239,7 @@ class ParkingSpaceController extends Controller
         ParkingSpace::whereIn('id', $request->input('ids'))
             ->update(['status' => $request->input('status')]);
 
-        return redirect()
-            ->back()
-            ->with('success', 'Parking spaces updated successfully.');
+        return back();
     }
 
     /**

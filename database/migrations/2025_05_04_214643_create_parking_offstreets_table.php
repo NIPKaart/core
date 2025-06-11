@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApiState;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parking_offstreets', function (Blueprint $table) {
+        Schema::create('parking_offstreet_spaces', function (Blueprint $table) {
             $table->string('id')->primary(); // External ID as primary key
             $table->string('name');
 
@@ -24,7 +25,6 @@ return new class extends Migration
             $table->integer('free_space_long')->nullable();
             $table->integer('short_capacity');
             $table->integer('long_capacity')->nullable();
-            $table->double('availability_pct')->nullable();
             $table->enum('parking_type', ['garage', 'parkandride']);
             $table->json('prices')->nullable();
             $table->string('url')->nullable();
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->decimal('latitude', 10, 7);
 
-            $table->string('state')->nullable();
+            $table->enum('api_state', ApiState::all())->nullable();
             $table->boolean('visibility');
             $table->timestamps();
 
@@ -47,6 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parking_offstreets');
+        Schema::dropIfExists('parking_offstreet_spaces');
     }
 };

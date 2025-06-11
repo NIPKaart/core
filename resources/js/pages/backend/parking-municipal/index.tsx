@@ -15,11 +15,11 @@ import { getParkingMunicipalColumns } from './columns';
 type PageProps = {
     municipality: Municipality;
     spaces: PaginatedResponse<ParkingMunicipal>;
-    filters: { orientation: string | null; search: string | null; visibility: string | null };
-    orientations: Record<ParkingOrientation, string>;
+    filters: { orientation: string | null; visibility: string | null };
+    options: { orientations: Record<ParkingOrientation, string> };
 };
 
-export default function Index({ municipality, spaces, filters, orientations }: PageProps) {
+export default function Index({ municipality, spaces, filters, options }: PageProps) {
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -45,7 +45,7 @@ export default function Index({ municipality, spaces, filters, orientations }: P
     ];
 
     const orientationOptions = [
-        ...Object.entries(orientations).map(([value, label]) => ({
+        ...Object.entries(options.orientations).map(([value, label]) => ({
             value,
             label,
             count: orientationCounts[value] ?? 0,
@@ -53,14 +53,17 @@ export default function Index({ municipality, spaces, filters, orientations }: P
         { value: 'unknown', label: 'No orientation', count: orientationCounts['unknown'] ?? 0 },
     ];
 
-    const columns = getParkingMunicipalColumns(can, orientations);
+    const columns = getParkingMunicipalColumns(can, options.orientations);
 
     const updateFilters = (visibility: string[], orientation: string[]) => {
-        router.get(
-            route('app.parking-municipal.municipalities.index', { municipality: municipality.id }),
-            { visibility: visibility.join(','), orientation: orientation.join(',') },
-            { preserveScroll: true, preserveState: true },
-        );
+        const query: Record<string, string | null> = {};
+        if (visibility.length > 0) query.visibility = visibility.join(',');
+        if (orientation.length > 0) query.orientation = orientation.join(',');
+
+        router.get(route('app.parking-municipal.municipalities.index', { municipality: municipality.id }), query, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     const breadcrumbs: BreadcrumbItem[] = [

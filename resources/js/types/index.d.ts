@@ -152,8 +152,8 @@ export interface ParkingSpace {
     street: string;
     amenity: string | null;
 
-    longitude: number;
-    latitude: number;
+    longitude: float;
+    latitude: float;
 
     parking_time: number | null;
     parking_hours?: number;
@@ -179,12 +179,38 @@ export type ParkingMunicipal = {
     street: string | null;
     number: number;
     orientation: string | null;
-    longitude: number;
-    latitude: number;
+    longitude: float;
+    latitude: float;
     visibility: boolean;
     created_at: string;
     updated_at: string;
 };
+
+export type ParkingOffstreet = {
+    id: string;
+    name: string;
+    free_space_short: number;
+    free_space_long: number | null;
+    short_capacity: number;
+    long_capacity: number | null;
+    parking_type: 'garage' | 'parkandride';
+    prices: json | null;
+    api_state: string | null;
+    visibility: boolean;
+
+    country_id: number;
+    country?: Country;
+    province_id: number;
+    province?: Province;
+    municipality_id: number;
+    municipality?: Municipality;
+
+    longitude: float;
+    latitude: float;
+
+    created_at: string;
+    updated_at: string;
+}
 
 export type NominatimAddress = {
     country_code: string;
@@ -213,8 +239,8 @@ export type Favorite = {
     id: string | null;
     type: FavoriteType;
     title: string;
-    latitude: number;
-    longitude: number;
+    latitude: float;
+    longitude: float;
     municipality?: Municipality;
     country?: string;
     address?: string;

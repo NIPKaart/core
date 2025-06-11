@@ -54,7 +54,7 @@ export function getParkingSpaceColumns(
             cell: ({ row }) => row.original.province?.name ?? '—',
         },
         {
-            accessorKey: 'municipality',
+            accessorKey: 'municipality.name',
             header: 'Municipality',
             cell: ({ row }) => row.original.municipality?.name ?? '—',
         },

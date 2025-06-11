@@ -34,7 +34,7 @@ export function AppSidebar() {
     };
 
     const parkingNavGroup: NavGroup = {
-        title: 'Parking',
+        title: 'My Parking',
         items: [
             {
                 title: 'My Locations',
@@ -69,6 +69,11 @@ export function AppSidebar() {
                 title: 'Municipalities',
                 href: route('app.parking-municipal.municipalities'),
                 icon: icons.Building,
+            },
+            can('parking-offstreet.view_any') && {
+                title: 'Off-Street Parking',
+                href: route('app.parking-offstreet.index'),
+                icon: icons.SquareParking,
             },
             can('parking-rule.view_any') && {
                 title: 'Parking Rules',

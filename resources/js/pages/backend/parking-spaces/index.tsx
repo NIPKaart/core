@@ -14,16 +14,16 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getParkingSpaceColumns } from './columns';
 
+type Option = { id: number; name: string };
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
     filters: { status: string | null; municipality_id: string | null; deletion_requested: boolean };
-    statuses: Record<ParkingStatus, string>;
-    municipalities: { id: string; name: string }[];
+    options: { statuses: Record<ParkingStatus, string>; municipalities: Option[] };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spaces', href: route('app.parking-spaces.index') }];
 
-export default function Index({ spaces, filters, statuses, municipalities }: PageProps) {
+export default function Index({ spaces, filters, options }: PageProps) {
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
@@ -45,28 +45,30 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
         {} as Record<string, number>,
     );
 
-    const statusOptions = Object.entries(statuses).map(([value, label]) => ({
+    const statusOptions = Object.entries(options.statuses).map(([value, label]) => ({
         value,
         label,
         count: statusCounts[value] ?? 0,
     }));
 
-    const municipalityOptions = municipalities.map((m) => ({
-        value: String(m.id),
-        label: m.name,
-        count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
-    }));
+    const municipalityOptions = options.municipalities
+        .map((m) => ({
+            value: String(m.id),
+            label: m.name,
+            count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
+        }))
+        .filter((o) => o.count > 0);
 
     const updateFilters = (status: string[], municipality: string[]) => {
-        router.get(
-            route('app.parking-spaces.index'),
-            { status: status.join(','), municipality_id: municipality.join(',') },
-            { preserveScroll: true, preserveState: true },
-        );
+        const query: Record<string, string | null> = {};
+        if (status.length > 0) query.status = status.join(',');
+        if (municipality.length > 0) query.municipality_id = municipality.join(',');
+
+        router.get(route('app.parking-spaces.index'), query, { preserveScroll: true, preserveState: true });
     };
 
     // Get the columns for the data table
-    const columns = getParkingSpaceColumns(statuses, can, openDialog);
+    const columns = getParkingSpaceColumns(options.statuses, can, openDialog);
 
     // Bulk update location status
     const handleBulkUpdate = () => {
@@ -84,6 +86,7 @@ export default function Index({ spaces, filters, statuses, municipalities }: Pag
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedStatus('');
+                    toast.success('Parking spaces updated successfully.');
                 },
                 onError: (errors) => {
                     if (errors.ids) {
