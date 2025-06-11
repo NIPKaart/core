@@ -239,9 +239,7 @@ class ParkingSpaceController extends Controller
         ParkingSpace::whereIn('id', $request->input('ids'))
             ->update(['status' => $request->input('status')]);
 
-        return redirect()
-            ->back()
-            ->with('success', 'Parking spaces updated successfully.');
+        return back();
     }
 
     /**

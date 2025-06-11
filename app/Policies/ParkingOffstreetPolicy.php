@@ -41,6 +41,14 @@ class ParkingOffstreetPolicy
     }
 
     /**
+     * Determine whether the user can bulk update models.
+     */
+    public function bulkUpdate(User $user): bool
+    {
+        return $user->hasPermissionTo('parking-offstreet.update');
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, ParkingOffstreet $parkingOffstreet): bool
