@@ -80,7 +80,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                 {(fav.city || fav.municipality) && (
                                                     <span className="font-normal text-muted-foreground">
                                                         {' — '}
-                                                        {fav.municipality?.name || fav.city}
+                                                        {fav.city || fav.municipality?.name}
                                                     </span>
                                                 )}
                                             </CardTitle>
