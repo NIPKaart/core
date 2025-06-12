@@ -116,6 +116,7 @@ class SpacesInfoController extends Controller
         return response()->json([
             'id' => $location->id,
             'name' => $location->name,
+            'type' => $location->parking_type,
             'country' => $location->country->name ?? null,
             'province' => $location->province->name ?? null,
             'municipality' => $location->municipality->name ?? null,
