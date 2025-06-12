@@ -29,3 +29,21 @@ export type MunicipalParkingDetail = {
     updated_at: datetime;
     is_favorited?: boolean;
 };
+
+export type OffstreetParkingDetail = {
+    id: string;
+    name: string;
+    type: 'garage' | 'parkandride';
+    country: string | null;
+    province: string | null;
+    municipality: string | null;
+    free_space_short: number;
+    free_space_long: number | null;
+    short_capacity: number;
+    long_capacity: number | null;
+    url: string | null;
+    prices: json | null;
+    api_state: string | null;
+    updated_at: datetime;
+    is_favorited?: boolean;
+}

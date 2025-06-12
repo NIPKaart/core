@@ -69,7 +69,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                                 {(fav.city || fav.municipality?.name) && (
                                     <span className="font-normal text-muted-foreground">
                                         {' — '}
-                                        {fav.city || fav.municipality?.name}
+                                        {fav.municipality?.name || fav.city}
                                     </span>
                                 )}
                             </div>

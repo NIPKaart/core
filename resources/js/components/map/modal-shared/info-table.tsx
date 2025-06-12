@@ -1,8 +1,8 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
-import { AlarmClock, Compass, Copy, FileText, Hash, Landmark, MapPin, Tag, Users } from 'lucide-react';
+import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
 import type { InfoTableRow } from './modal-parts';
-import type { MunicipalParkingDetail, ParkingSpaceDetail } from './types';
+import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
 import { formatParkingTime } from './utils';
 
 // Community spot info rows
@@ -157,6 +157,143 @@ export function getMunicipalInfoRows(
             icon: <FileText className="h-4 w-4 text-muted-foreground" />,
             label: 'Last updated',
             value: new Date(data.updated_at).toLocaleDateString(),
+        },
+        ...(isLoggedIn
+            ? [
+                  {
+                      icon: <Hash className="h-4 w-4 text-muted-foreground" />,
+                      label: 'Location ID',
+                      value: (
+                          <span className="flex items-center gap-1">
+                              <span className="select-all">{data.id}</span>
+                              <TooltipProvider>
+                                  <Tooltip open={copiedSpaceId} onOpenChange={() => setCopiedSpaceId(false)} delayDuration={0}>
+                                      <TooltipTrigger asChild>
+                                          <button
+                                              type="button"
+                                              tabIndex={0}
+                                              aria-label="Copy location ID"
+                                              className="ml-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                              onClick={copyLocationId}
+                                          >
+                                              <Copy className="h-4 w-4" />
+                                          </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" align="center">
+                                          Copied!
+                                      </TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                          </span>
+                      ),
+                  },
+              ]
+            : []),
+    ];
+}
+
+// Offstreet parking info rows
+export function getOffstreetInfoRows(
+    data: OffstreetParkingDetail,
+    isLoggedIn: boolean,
+    copiedSpaceId: boolean,
+    setCopiedSpaceId: (v: boolean) => void,
+    copyLocationId: (e: React.MouseEvent) => void,
+): InfoTableRow[] {
+    return [
+        {
+            icon: <ParkingSquare className="h-4 w-4 text-primary" />,
+            label: 'Type',
+            value:
+                data.type === 'parkandride' ? (
+                    <span className="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        P+R
+                    </span>
+                ) : (
+                    <span className="inline-block rounded bg-zinc-200 px-2 py-0.5 text-xs text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
+                        Garage
+                    </span>
+                ),
+        },
+        ...(typeof data.api_state === 'string'
+            ? [
+                  {
+                      icon: <FileText className="h-4 w-4 text-muted-foreground" />,
+                      label: 'API status',
+                      value: (
+                          <span
+                              className={
+                                  'inline-block rounded px-2 py-0.5 text-xs font-semibold ' +
+                                  (data.api_state === 'ok'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200')
+                              }
+                          >
+                              {data.api_state === 'ok' ? 'Live' : data.api_state}
+                          </span>
+                      ),
+                  },
+              ]
+            : []),
+        {
+            icon: <Globe2 className="h-4 w-4 text-muted-foreground" />,
+            label: 'Country',
+            value: data.country || '-',
+        },
+        {
+            icon: <Compass className="h-4 w-4 text-muted-foreground" />,
+            label: 'Province',
+            value: data.province || '-',
+        },
+        {
+            icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
+            label: 'Municipality',
+            value: data.municipality || '-',
+        },
+        {
+            icon: <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />,
+            label: 'Short-term parking',
+            value: (
+                <span>
+                    <strong>{data.free_space_short}</strong> / {data.short_capacity}
+                </span>
+            ),
+        },
+        ...(data.long_capacity
+            ? [
+                  {
+                      icon: <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />,
+                      label: 'Long-term parking',
+                      value: (
+                          <span>
+                              <strong>{data.free_space_long ?? '-'}</strong> / {data.long_capacity}
+                          </span>
+                      ),
+                  },
+              ]
+            : []),
+        {
+            icon: <Link className="h-4 w-4 text-muted-foreground" />,
+            label: 'More information',
+            value: data.url ? (
+                <a href={data.url} target="_blank" rel="noopener noreferrer" className="text-orange-600 underline">
+                    Website
+                </a>
+            ) : (
+                <span className="text-zinc-400 italic">No link</span>
+            ),
+        },
+        {
+            icon: <FileText className="h-4 w-4 text-muted-foreground" />,
+            label: 'Latest update',
+            value: new Date(data.updated_at).toLocaleString(undefined, {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            }),
         },
         ...(isLoggedIn
             ? [

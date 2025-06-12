@@ -2,7 +2,7 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import { ParkingMunicipal, ParkingSpace } from '@/types';
+import { ParkingMunicipal, ParkingOffstreet, ParkingSpace } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
@@ -10,8 +10,9 @@ import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
+import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/modal-main';
 import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
-import { getInvalidParkingIcon } from '@/lib/icon-factory';
+import { getGarageOccupancyStatus, getGarageStatusIcon, getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
 
 const { BaseLayer } = LayersControl;
@@ -22,9 +23,10 @@ type PageProps = {
     };
     parkingSpaces: ParkingSpace[];
     municipalSpaces: ParkingMunicipal[];
+    offstreetSpaces: ParkingOffstreet[];
 };
 
-type MarkerType = 'community' | 'municipal';
+type MarkerType = 'community' | 'municipal' | 'offstreet';
 
 type MapMarker = {
     id: string;
@@ -55,7 +57,7 @@ export default function Map() {
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { parkingSpaces, municipalSpaces, selectOptions } = usePage<PageProps>().props;
+    const { parkingSpaces, municipalSpaces, offstreetSpaces, selectOptions } = usePage<PageProps>().props;
 
     const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
@@ -63,7 +65,8 @@ export default function Map() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<MarkerType>('community');
 
-    const mapMarkers: MapMarker[] = useMemo(
+    // Create markers list for parking spaces
+    const parkingMarkersList: MapMarker[] = useMemo(
         () => [
             ...parkingSpaces.map((space) => ({
                 id: space.id,
@@ -83,9 +86,10 @@ export default function Map() {
         [parkingSpaces, municipalSpaces],
     );
 
-    const markers = useMemo(
+    // Create markers for parking spaces
+    const parkingMarkers = useMemo(
         () =>
-            mapMarkers.map((marker) => (
+            parkingMarkersList.map((marker) => (
                 <Marker
                     key={`${marker.type}:${marker.id}`}
                     position={[marker.latitude, marker.longitude]}
@@ -101,7 +105,29 @@ export default function Map() {
                     }}
                 />
             )),
-        [mapMarkers],
+        [parkingMarkersList],
+    );
+
+    // Create markers for offstreet parking spaces
+    const offstreetMarkers = useMemo(
+        () =>
+            offstreetSpaces.map((marker) => (
+                <Marker
+                    key={`offstreet:${marker.id}`}
+                    position={[marker.latitude, marker.longitude]}
+                    icon={getGarageStatusIcon(getGarageOccupancyStatus(marker))}
+                    eventHandlers={{
+                        click: () => {
+                            setSelectedSpaceId(marker.id);
+                            setSelectedLat(marker.latitude);
+                            setSelectedLng(marker.longitude);
+                            setSelectedType('offstreet');
+                            setModalOpen(true);
+                        },
+                    }}
+                />
+            )),
+        [offstreetSpaces],
     );
 
     return (
@@ -134,12 +160,22 @@ export default function Map() {
                         </LayersControl>
 
                         <MarkerClusterGroup
+                            key={'parking'}
                             spiderfyOnMaxZoom={false}
                             disableClusteringAtZoom={16}
                             maxClusterRadius={80}
                             removeOutsideVisibleBound={true}
                         >
-                            {markers}
+                            {parkingMarkers}
+                        </MarkerClusterGroup>
+                        <MarkerClusterGroup
+                            key={'offstreet'}
+                            spiderfyOnMaxZoom={false}
+                            disableClusteringAtZoom={16}
+                            maxClusterRadius={80}
+                            removeOutsideVisibleBound={true}
+                        >
+                            {offstreetMarkers}
                         </MarkerClusterGroup>
 
                         <LegendControl />
@@ -148,7 +184,7 @@ export default function Map() {
                     </MapContainer>
                 </div>
 
-                {selectedType === 'community' ? (
+                {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                     <ParkingSpaceModal
                         spaceId={selectedSpaceId}
                         open={modalOpen}
@@ -157,8 +193,20 @@ export default function Map() {
                         longitude={selectedLng}
                         confirmationStatusOptions={selectOptions.confirmationStatus}
                     />
-                ) : (
+                )}
+
+                {selectedType === 'municipal' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                     <ParkingMunicipalModal
+                        spaceId={selectedSpaceId}
+                        open={modalOpen}
+                        onClose={() => setModalOpen(false)}
+                        latitude={selectedLat}
+                        longitude={selectedLng}
+                    />
+                )}
+
+                {selectedType === 'offstreet' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
+                    <ParkingOffstreetModal
                         spaceId={selectedSpaceId}
                         open={modalOpen}
                         onClose={() => setModalOpen(false)}
