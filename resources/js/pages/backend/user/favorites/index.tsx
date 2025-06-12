@@ -12,9 +12,9 @@ type PageProps = {
 };
 
 const iconMap = {
-    ParkingSpace: MapPin,
-    ParkingMunicipal: Landmark,
-    ParkingOffstreet: Warehouse,
+    Community: MapPin,
+    Municipal: Landmark,
+    Offstreet: Warehouse,
 };
 
 const breadcrumbs = [{ title: 'My Favorites', href: route('user.favorites.index') }];
@@ -28,7 +28,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
         return favorites.filter(
             (fav) =>
                 fav.title?.toLowerCase().includes(s) ||
-                (fav.municipality && fav.municipality.toLowerCase().includes(s)) ||
+                (fav.municipality && fav.municipality.name.toLowerCase().includes(s)) ||
                 (fav.city && fav.city.toLowerCase().includes(s)),
         );
     }, [favorites, search]);
@@ -80,7 +80,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                 {(fav.city || fav.municipality) && (
                                                     <span className="font-normal text-muted-foreground">
                                                         {' — '}
-                                                        {fav.city || fav.municipality}
+                                                        {fav.municipality?.name || fav.city}
                                                     </span>
                                                 )}
                                             </CardTitle>

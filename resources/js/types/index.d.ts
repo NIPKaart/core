@@ -210,7 +210,7 @@ export type ParkingOffstreet = {
 
     created_at: string;
     updated_at: string;
-}
+};
 
 export type NominatimAddress = {
     country_code: string;

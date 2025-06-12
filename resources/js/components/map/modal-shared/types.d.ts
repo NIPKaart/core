@@ -46,4 +46,4 @@ export type OffstreetParkingDetail = {
     api_state: string | null;
     updated_at: datetime;
     is_favorited?: boolean;
-}
+};

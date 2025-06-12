@@ -6,11 +6,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Landmark, Share2, X } from 'lucide-react';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { getMunicipalInfoRows } from '../modal-shared/info-table';
 import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
 import type { MunicipalParkingDetail } from '../modal-shared/types';
-import { useEffect, useState } from 'react';
 
 export type ParkingMunicipalModalProps = {
     spaceId: string;
@@ -73,7 +72,13 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
-                                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Share" onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}>
+                                            <Button
+                                                className="cursor-pointer"
+                                                size="icon"
+                                                variant="ghost"
+                                                aria-label="Share"
+                                                onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}
+                                            >
                                                 <Share2 className="h-5 w-5" />
                                             </Button>
                                         </TooltipTrigger>
@@ -99,7 +104,11 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 {data && <MainInfo data={data} type="municipal" />}
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e))} />
+                                    <InfoTable
+                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
+                                            copyLocationId(data, setCopiedSpaceId, e),
+                                        )}
+                                    />
                                 )}
                             </>
                         )}
@@ -126,7 +135,12 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}
-                            <Button size="icon" variant="ghost" aria-label="Share" onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Share"
+                                onClick={() => data && copyUrl(data, latitude, longitude, setCopiedShare)}
+                            >
                                 <Share2 className="h-5 w-5" />
                             </Button>
                         </div>
@@ -144,7 +158,11 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 {data && <MainInfo data={data} type="municipal" />}
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e))} />
+                                    <InfoTable
+                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
+                                            copyLocationId(data, setCopiedSpaceId, e),
+                                        )}
+                                    />
                                 )}
                             </>
                         )}
