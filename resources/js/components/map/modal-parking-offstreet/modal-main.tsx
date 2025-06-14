@@ -5,13 +5,13 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { Landmark, Share2, X } from 'lucide-react';
+import { Navigation, ParkingSquare, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getMunicipalInfoRows } from '../modal-shared/info-table';
-import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
-import type { MunicipalParkingDetail } from '../modal-shared/types';
+import { copyUrl, ErrorBlock, LoadingSkeleton } from '../modal-shared/modal-parts';
+import { OffstreetParkingDetail } from '../modal-shared/types';
+import { OffstreetModalContent } from './modal-parts';
 
-export type ParkingMunicipalModalProps = {
+export type ParkingOffstreetModalProps = {
     spaceId: string;
     open: boolean;
     onClose: () => void;
@@ -19,11 +19,11 @@ export type ParkingMunicipalModalProps = {
     longitude: number;
 };
 
-export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude, longitude }: ParkingMunicipalModalProps) {
+export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude, longitude }: ParkingOffstreetModalProps) {
     const { user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [data, setData] = useState<MunicipalParkingDetail | null>(null);
+    const [data, setData] = useState<OffstreetParkingDetail | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [copiedSpaceId, setCopiedSpaceId] = useState(false);
@@ -33,7 +33,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
         if (open && spaceId) {
             setLoading(true);
             setError(null);
-            fetch(`/api/parking-municipal/${spaceId}`)
+            fetch(`/api/parking-offstreet/${spaceId}`)
                 .then((res) => {
                     if (!res.ok) throw new Error('Not found');
                     return res.json();
@@ -54,7 +54,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
         }
     }, [open, spaceId]);
 
-    const descriptionText = 'This is an official parking space provided by the municipality. Details are based on open data.';
+    const descriptionText = 'This is an off-street parking location. You can find more details about the parking space below.';
 
     // Desktop - Dialog variant
     if (isDesktop) {
@@ -64,11 +64,11 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-                                <Landmark className="h-6 w-6 text-orange-400" />
-                                Municipal Parking Space
+                                <ParkingSquare className="h-6 w-6 text-orange-400" />
+                                {data?.name}
                             </DialogTitle>
-                            <div className="flex items-center gap-1 sm:gap-2">
-                                {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}
+                            <div className="flex items-center gap-2">
+                                {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_offstreet" />}
                                 <TooltipProvider>
                                     <Tooltip open={copiedShare} onOpenChange={() => setCopiedShare(false)} delayDuration={0}>
                                         <TooltipTrigger asChild>
@@ -101,19 +101,35 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                             <ErrorBlock />
                         ) : (
                             <>
-                                {data && <MainInfo data={data} type="municipal" />}
-                                <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable
-                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                            copyLocationId(data, setCopiedSpaceId, e),
-                                        )}
+                                    <OffstreetModalContent
+                                        data={data}
+                                        latitude={latitude}
+                                        longitude={longitude}
+                                        isLoggedIn={isLoggedIn}
+                                        copiedSpaceId={copiedSpaceId}
+                                        setCopiedSpaceId={setCopiedSpaceId}
                                     />
                                 )}
                             </>
                         )}
                     </div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
+                        <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`}
+                            target="_blank"
+                            rel="noopener"
+                            tabIndex={0}
+                            aria-disabled={false}
+                        >
+                            <Button
+                                className="flex cursor-pointer items-center gap-2 bg-orange-500 text-white hover:bg-orange-600"
+                                title="Go to Google Maps"
+                            >
+                                <Navigation className="mr-1 h-4 w-4" />
+                                Navigate
+                            </Button>
+                        </a>
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
                             Close
                         </Button>
@@ -130,11 +146,11 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
-                            <Landmark className="h-6 w-6 text-orange-400" />
-                            Municipal Parking Space
+                            <ParkingSquare className="h-6 w-6 text-orange-400" />
+                            {data?.name}
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}
+                            {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_offstreet" />}
                             <Button
                                 size="icon"
                                 variant="ghost"
@@ -155,13 +171,14 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                             <ErrorBlock />
                         ) : (
                             <>
-                                {data && <MainInfo data={data} type="municipal" />}
-                                <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
-                                    <InfoTable
-                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                            copyLocationId(data, setCopiedSpaceId, e),
-                                        )}
+                                    <OffstreetModalContent
+                                        data={data}
+                                        latitude={latitude}
+                                        longitude={longitude}
+                                        isLoggedIn={isLoggedIn}
+                                        copiedSpaceId={copiedSpaceId}
+                                        setCopiedSpaceId={setCopiedSpaceId}
                                     />
                                 )}
                             </>
@@ -169,6 +186,22 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                     </div>
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">
+                    <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`}
+                        target="_blank"
+                        rel="noopener"
+                        tabIndex={0}
+                        aria-disabled={false}
+                        className="flex-1"
+                    >
+                        <Button
+                            className="flex w-full cursor-pointer items-center gap-2 bg-orange-500 text-white hover:bg-orange-600"
+                            title="Go to Google Maps"
+                        >
+                            <Navigation className="mr-1 h-4 w-4" />
+                            Navigate
+                        </Button>
+                    </a>
                     <DrawerClose asChild>
                         <Button variant="secondary" className="flex-1">
                             Close

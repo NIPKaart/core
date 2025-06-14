@@ -27,7 +27,7 @@ class FavoriteResource extends JsonResource
         return [
             'id' => $favoritable->id,
             'type' => $typeMap[get_class($favoritable)] ?? 'Unknown',
-            'title' => $favoritable->title ?? $favoritable->street ?? '',
+            'title' => $favoritable->title ?? $favoritable->street ?? $favoritable->name ?? '',
             'latitude' => $favoritable->latitude,
             'longitude' => $favoritable->longitude,
             'municipality' => is_object($favoritable->municipality)

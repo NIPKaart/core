@@ -1,3 +1,4 @@
+import OutdatedMunicipalitiesBanner from '@/components/alerts/outdated-municipalities';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
@@ -117,6 +118,8 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 <h1 className="text-2xl font-bold">Offstreet Parking</h1>
 
                 <p className="text-muted-foreground">Manage offstreet parking spaces. You can filter by country, province, and municipality.</p>
+
+                <OutdatedMunicipalitiesBanner spaces={spaces.data} minDaysOutdated={2} />
 
                 {can('parking-offstreet.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">

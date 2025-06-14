@@ -7,7 +7,6 @@ import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { toast } from 'sonner';
 
-
 function ParkingProgressBar({ value, label }: { value: number; label: string }) {
     let color = 'bg-green-500';
     if (value <= 5) {
@@ -73,7 +72,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
             id: 'api_state',
             header: 'API',
             cell: ({ row }) => {
-                const state = row.original.api_state
+                const state = row.original.api_state;
                 if (state === 'ok') {
                     return <Badge variant="default">OK</Badge>;
                 }

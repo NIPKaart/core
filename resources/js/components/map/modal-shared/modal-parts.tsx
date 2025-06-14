@@ -11,8 +11,52 @@ type MainInfoProps = {
         country?: string | null;
         confirmations_count?: { confirmed: number };
     };
-    type: 'community' | 'municipal';
+    type: 'community' | 'municipal' | 'offstreet';
 };
+
+// Copies the location ID to clipboard and sets a copied state for a short duration
+export function copyLocationId(data: { id?: string } | null, setCopied: (v: boolean) => void, e: React.MouseEvent) {
+    e.stopPropagation();
+    if (data?.id) {
+        navigator.clipboard.writeText(data.id);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1400);
+    }
+}
+
+// Generates a shareable URL based on latitude, longitude, and zoom level
+export function getShareUrl(lat: number, lng: number, zoom = 18) {
+    if (lat != null && lng != null) {
+        return `${window.location.origin}${window.location.pathname}#${zoom}/${lat.toFixed(5)}/${lng.toFixed(5)}`;
+    }
+    return window.location.href;
+}
+
+// Copies the shareable URL to clipboard and sets a copied state for a short duration
+export function copyUrl(data: { id?: string }, latitude: number, longitude: number, setCopied: (v: boolean) => void) {
+    if (!data) return;
+    const shareUrl = getShareUrl(latitude, longitude, 18);
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+}
+
+// LoadingSkeleton component displays a loading animation with a customizable color
+export function LoadingSkeleton({ color = 'text-orange-400' }: { color?: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center gap-4 py-10">
+            <div className={`mb-2 h-6 w-6 animate-spin ${color}`} />
+            <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+            <div className="h-20 w-full max-w-xs animate-pulse rounded bg-zinc-100 dark:bg-zinc-900" />
+        </div>
+    );
+}
+
+// ErrorBlock component displays an error message when location details cannot be loaded
+export function ErrorBlock({ message = 'Could not load location details.' }) {
+    return <div className="flex flex-col items-center justify-center gap-4 py-10 text-red-600">{message}</div>;
+}
 
 export function MainInfo({ data, type }: MainInfoProps) {
     return (
@@ -61,32 +105,51 @@ export function ConfirmedBadge({ count, className = '' }: { count: number; class
     );
 }
 
-export function ActionButtons({ latitude, longitude }: { latitude: number | null; longitude: number | null }) {
-    const hasCoords = latitude !== null && longitude !== null;
-    function getGoogleMapsUrl(lat: number | null, lng: number | null) {
-        if (lat !== null && lng !== null) {
-            return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-        }
-        return 'https://maps.google.com/';
+type ActionButtonsProps = {
+    latitude: number;
+    longitude: number;
+    showNavigate?: boolean;
+    showStreetview?: boolean;
+};
+
+export function ActionButtons({ latitude, longitude, showNavigate = true, showStreetview = true }: ActionButtonsProps) {
+    const hasCoords = typeof latitude === 'number' && typeof longitude === 'number';
+    function getGoogleMapsUrl(lat: number, lng: number) {
+        return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
-    function getStreetViewUrl(lat: number | null, lng: number | null) {
-        if (lat !== null && lng !== null) {
-            return `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
-        }
-        return 'https://maps.google.com/';
+
+    function getStreetViewUrl(lat: number, lng: number) {
+        return `https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`;
     }
+
     return (
         <div className="my-3 flex flex-row justify-center gap-2">
-            <a href={getGoogleMapsUrl(latitude, longitude)} target="_blank" rel="noopener" tabIndex={hasCoords ? 0 : -1} aria-disabled={!hasCoords}>
-                <Button size="sm" className="cursor-pointer rounded-md bg-orange-500 text-white hover:bg-orange-600" disabled={!hasCoords}>
-                    <Navigation className="mr-1 h-4 w-4" /> Navigate
-                </Button>
-            </a>
-            <a href={getStreetViewUrl(latitude, longitude)} target="_blank" rel="noopener" tabIndex={hasCoords ? 0 : -1} aria-disabled={!hasCoords}>
-                <Button variant="outline" size="sm" className="cursor-pointer rounded-md" disabled={!hasCoords}>
-                    <Eye className="mr-1 h-4 w-4" /> Streetview
-                </Button>
-            </a>
+            {showNavigate && (
+                <a
+                    href={getGoogleMapsUrl(latitude, longitude)}
+                    target="_blank"
+                    rel="noopener"
+                    tabIndex={hasCoords ? 0 : -1}
+                    aria-disabled={!hasCoords}
+                >
+                    <Button size="sm" className="cursor-pointer rounded-md bg-orange-500 text-white hover:bg-orange-600" disabled={!hasCoords}>
+                        <Navigation className="mr-1 h-4 w-4" /> Navigate
+                    </Button>
+                </a>
+            )}
+            {showStreetview && (
+                <a
+                    href={getStreetViewUrl(latitude, longitude)}
+                    target="_blank"
+                    rel="noopener"
+                    tabIndex={hasCoords ? 0 : -1}
+                    aria-disabled={!hasCoords}
+                >
+                    <Button variant="outline" size="sm" className="cursor-pointer rounded-md" disabled={!hasCoords}>
+                        <Eye className="mr-1 h-4 w-4" /> Streetview
+                    </Button>
+                </a>
+            )}
         </div>
     );
 }
