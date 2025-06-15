@@ -1,25 +1,16 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreVertical, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
+import { getUserColumns } from './columns';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -79,114 +70,7 @@ export default function Index({ users }: PageProps) {
         );
     };
 
-    const columns: ColumnDef<UserWithRoles>[] = [
-        {
-            accessorKey: 'name',
-            header: 'Name',
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'email',
-            header: 'Email',
-            enableSorting: false,
-        },
-        {
-            accessorKey: 'roles',
-            header: 'Roles',
-            enableSorting: false,
-            cell: ({ row }) => (
-                <div className="flex flex-wrap gap-1">
-                    {row.original.roles.map((role) => (
-                        <Badge key={role.id} variant="outline" className="capitalize">
-                            {role.name}
-                        </Badge>
-                    ))}
-                </div>
-            ),
-        },
-        {
-            id: 'status',
-            header: 'Status',
-            accessorFn: (row) => (row.suspended_at ? 'Suspended' : 'Active'),
-            enableSorting: true,
-            cell: ({ row }) =>
-                row.original.suspended_at ? <Badge variant="destructive">Suspended</Badge> : <Badge variant="secondary">Active</Badge>,
-        },
-        {
-            accessorKey: 'created_at',
-            header: 'Created at',
-            enableSorting: true,
-            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
-        },
-        {
-            id: 'actions',
-            enableSorting: false,
-            meta: { align: 'right' },
-            cell: ({ row }) => {
-                const user = row.original;
-                const isSelf = user.id === auth.user?.id;
-                const isSuspended = !!user.suspended_at;
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
-                                >
-                                    <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                {/* {can('user.view') && (
-                                    <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.users.show', { id: user.id })}>View</Link>
-                                    </DropdownMenuItem>
-                                )} */}
-                                {can('user.update') && (
-                                    <>
-                                        <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.users.edit', { id: user.id })}>Edit</Link>
-                                        </DropdownMenuItem>
-                                        {!isSelf && (
-                                            <>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem
-                                                    onSelect={(e) => {
-                                                        e.preventDefault();
-                                                        openDialog(user, 'suspend');
-                                                    }}
-                                                    className="cursor-pointer"
-                                                >
-                                                    {isSuspended ? 'Unsuspend' : 'Suspend'}
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                    </>
-                                )}
-                                {can('user.delete') && !isSelf && (
-                                    <DropdownMenuItem
-                                        onSelect={(e) => {
-                                            e.preventDefault();
-                                            openDialog(user, 'delete');
-                                        }}
-                                        className="cursor-pointer text-destructive"
-                                    >
-                                        Delete
-                                    </DropdownMenuItem>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ];
+    const columns = getUserColumns(can, auth.user, openDialog);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

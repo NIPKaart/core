@@ -21,6 +21,8 @@ export function getConfirmationColumns(
     return [
         {
             id: 'select',
+            enableSorting: false,
+            enableHiding: false,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
@@ -37,13 +39,12 @@ export function getConfirmationColumns(
                     className="cursor-pointer"
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
             accessorKey: 'status',
             header: 'Status',
             enableSorting: true,
+            enableHiding: false,
             cell: ({ row }) => (
                 <Badge variant={variantMap[row.original.status] ?? 'default'}>{statuses[row.original.status] ?? row.original.status}</Badge>
             ),
@@ -52,6 +53,7 @@ export function getConfirmationColumns(
             accessorKey: 'user.name',
             header: 'User',
             enableSorting: true,
+            enableHiding: false,
             cell: ({ row }) => row.original.user?.name ?? <span className="text-muted-foreground italic">Unknown</span>,
         },
         {
@@ -72,6 +74,7 @@ export function getConfirmationColumns(
         {
             id: 'actions',
             enableSorting: false,
+            enableHiding: false,
             meta: { align: 'right' },
             cell: ({ row }) =>
                 can('parking-space-confirmation.delete') && (

@@ -27,12 +27,14 @@ export function getParkingRuleColumns(
             header: 'ID',
             meta: { align: 'center' },
             enableSorting: true,
+            enableHiding: false,
         },
         {
             accessorKey: 'country',
             header: 'Country',
             meta: { align: 'left' },
             enableSorting: false,
+            enableHiding: false,
             cell: ({ row }) => {
                 const country = row.original.country as Country | undefined;
                 return country ? `${country.name} (${country.code})` : '—';
@@ -85,6 +87,8 @@ export function getParkingRuleColumns(
         {
             id: 'actions',
             meta: { align: 'right' },
+            enableSorting: false,
+            enableHiding: false,
             cell: ({ row }) => {
                 const parkingRule = row.original;
                 return (

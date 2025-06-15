@@ -24,6 +24,8 @@ export function getParkingSpaceColumns(
     return [
         {
             id: 'select',
+            enableSorting: false,
+            enableHiding: false,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
@@ -40,12 +42,11 @@ export function getParkingSpaceColumns(
                     className="cursor-pointer"
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
             accessorKey: 'user.name',
             header: 'Submitted By',
+            enableHiding: false,
             cell: ({ row }) => row.original.user?.name ?? '—',
         },
         {
@@ -70,6 +71,7 @@ export function getParkingSpaceColumns(
         {
             accessorKey: 'status',
             header: 'Status',
+            enableHiding: false,
             cell: ({ row }) => {
                 const status = row.original.status as ParkingStatus;
                 const variantMap: Record<ParkingStatus, 'default' | 'secondary' | 'destructive'> = {
@@ -88,6 +90,7 @@ export function getParkingSpaceColumns(
         {
             id: 'actions',
             enableSorting: false,
+            enableHiding: false,
             meta: { align: 'right' },
             cell: ({ row }) => {
                 const space = row.original;
