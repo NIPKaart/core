@@ -32,6 +32,8 @@ export default function Trash({ spaces }: PageProps) {
     const columns: ColumnDef<ParkingSpace>[] = [
         {
             id: 'select',
+            enableSorting: false,
+            enableHiding: false,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
@@ -48,8 +50,6 @@ export default function Trash({ spaces }: PageProps) {
                     className="cursor-pointer"
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
             accessorKey: 'user.name',
@@ -106,6 +106,7 @@ export default function Trash({ spaces }: PageProps) {
         {
             id: 'actions',
             enableSorting: false,
+            enableHiding: false,
             cell: ({ row }) => {
                 const space = row.original;
 

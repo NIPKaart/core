@@ -14,6 +14,8 @@ export function getParkingMunicipalColumns(
     return [
         {
             id: 'select',
+            enableSorting: false,
+            enableHiding: false,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
@@ -30,12 +32,12 @@ export function getParkingMunicipalColumns(
                     className="cursor-pointer"
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
             accessorKey: 'id',
             header: 'ID',
+            enableSorting: true,
+            enableHiding: false,
             cell: ({ row }) => row.original.id,
         },
         {
@@ -51,6 +53,7 @@ export function getParkingMunicipalColumns(
         {
             accessorKey: 'street',
             header: 'Street',
+            enableHiding: false,
         },
         {
             accessorKey: 'number',
@@ -67,6 +70,7 @@ export function getParkingMunicipalColumns(
         {
             accessorKey: 'visibility',
             header: 'Visible',
+            enableHiding: false,
             cell: ({ row }) => {
                 const space = row.original;
                 return can('parking-municipal.update') ? (

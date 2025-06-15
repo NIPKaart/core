@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
+import { ColumnsSelector } from './columns-selector';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -38,6 +39,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
     const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
+    const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
     const table = useReactTable({
         data,
@@ -46,10 +48,12 @@ export function DataTable<TData, TValue>({
             sorting,
             globalFilter,
             rowSelection: rowSelection ?? {},
+            columnVisibility,
         },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         onRowSelectionChange,
+        onColumnVisibilityChange: setColumnVisibility,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -67,6 +71,7 @@ export function DataTable<TData, TValue>({
                     className="w-full sm:max-w-sm"
                 />
                 {filters && <div className="w-full sm:w-auto">{filters}</div>}
+                <ColumnsSelector table={table} />
             </div>
 
             <div className="overflow-x-auto rounded-md border">

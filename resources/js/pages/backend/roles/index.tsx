@@ -2,22 +2,14 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreVertical, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { getRoleColumns } from './columns';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -52,79 +44,7 @@ export default function Index({ roles }: PageProps) {
         });
     };
 
-    const columns: ColumnDef<Role>[] = [
-        {
-            accessorKey: 'name',
-            header: 'Name',
-            enableSorting: true,
-        },
-        {
-            accessorKey: 'guard_name',
-            header: 'Guard',
-            enableSorting: false,
-        },
-        {
-            accessorKey: 'created_at',
-            header: 'Created at',
-            enableSorting: true,
-            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
-        },
-        {
-            id: 'actions',
-            enableSorting: false,
-            meta: { align: 'right' },
-            cell: ({ row }) => {
-                const role = row.original;
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
-                                >
-                                    <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                {/* {can('role.view') && (
-                                    <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.roles.show', { id: role.id })}>View</Link>
-                                    </DropdownMenuItem>
-                                )} */}
-                                {can('role.update') && (
-                                    <>
-                                        <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.roles.edit', { id: role.id })}>Edit</Link>
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
-                                {can('role.delete') && (
-                                    <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onSelect={(e) => {
-                                                e.preventDefault();
-                                                openDialog(role, 'delete');
-                                            }}
-                                            className="cursor-pointer text-destructive"
-                                        >
-                                            Delete
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ];
+    const columns = getRoleColumns(can, openDialog);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

@@ -35,6 +35,8 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
     return [
         {
             id: 'select',
+            enableSorting: false,
+            enableHiding: false,
             header: ({ table }) => (
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
@@ -51,12 +53,12 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                     className="cursor-pointer"
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
             accessorKey: 'name',
             header: 'Name',
+            enableSorting: true,
+            enableHiding: false,
             cell: ({ row }) => (
                 <div>
                     <span className="font-semibold">{row.original.name}</span>
@@ -66,7 +68,6 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                     </div>
                 </div>
             ),
-            enableSorting: true,
         },
         {
             id: 'api_state',
@@ -85,6 +86,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         {
             id: 'parking_status',
             header: 'Status',
+            enableHiding: false,
             cell: ({ row }) => {
                 const { free_space_short, short_capacity } = row.original;
                 if (!short_capacity) return <span className="text-muted-foreground">—</span>;
@@ -156,6 +158,8 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         {
             accessorKey: 'visibility',
             header: 'Visible',
+            enableSorting: false,
+            enableHiding: false,
             cell: ({ row }) => {
                 const space = row.original;
                 return can('parking-municipal.update') ? (
@@ -197,7 +201,6 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                     <span>{space.visibility ? 'Yes' : 'No'}</span>
                 );
             },
-            enableSorting: false,
         },
     ];
 }
