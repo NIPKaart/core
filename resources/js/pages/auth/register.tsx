@@ -8,20 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { useTranslation } from 'react-i18next';
 
 type RegisterForm = {
     name: string;
     email: string;
     password: string;
     password_confirmation: string;
+    locale: string;
 };
 
 export default function Register() {
+    const { i18n } = useTranslation();
+
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        locale: i18n.language,
     });
 
     const submit: FormEventHandler = (e) => {
