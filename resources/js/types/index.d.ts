@@ -95,6 +95,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    locale: string;
     avatar?: string;
     email_verified_at: string | null;
     suspended_at: string | null;
