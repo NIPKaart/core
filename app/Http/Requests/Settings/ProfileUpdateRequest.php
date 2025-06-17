@@ -30,7 +30,7 @@ class ProfileUpdateRequest extends FormRequest
             'locale' => [
                 'required',
                 'string',
-                'in:en,nl'
+                'in:en,nl',
             ],
         ];
     }
