@@ -1,4 +1,5 @@
 import { Icon } from '@/components/icon';
+import LanguageSwitcher from '@/components/language-switcher';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
@@ -130,6 +131,7 @@ export default function Navbar() {
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
                             {auth.user && <FavoritesNavButton />}
+                            <LanguageSwitcher />
                             <ThemeToggle />
                         </div>
                         {auth.user ? (
@@ -224,6 +226,7 @@ export default function Navbar() {
                             <div className="flex items-center gap-2">
                                 {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
                                 <ThemeToggle />
+                                <LanguageSwitcher />
                             </div>
                         </div>
                     </div>

@@ -27,6 +27,7 @@ export interface NavItem {
 
 export interface SharedData {
     name: string;
+    locale: string;
     quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };
@@ -94,6 +95,7 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    locale: string;
     avatar?: string;
     email_verified_at: string | null;
     suspended_at: string | null;

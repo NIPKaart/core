@@ -24,6 +24,7 @@ class UserTableSeeder extends Seeder
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => bcrypt('password'),
+                'locale' => 'en',
             ]);
 
             $user->assignRole($data['role']->value);

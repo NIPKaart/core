@@ -6,6 +6,7 @@ use App\Models\ParkingSpace;
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -44,6 +45,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'locale' => App::getLocale(),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'flash' => [
                 'success' => session('success'),
