@@ -1,0 +1,19 @@
+{
+    "platform": "Platform",
+    "dashboard": "Dashboard",
+    "map": "Map",
+    "personal": "Personal",
+    "my_locations": "My Locations",
+    "my_favorites": "My Favorites",
+    "moderation": "Moderation",
+    "community_spaces": "Community Spaces",
+    "offstreet": "Off-Street Parking",
+    "municipalities": "Municipalities",
+    "rules": "Parking Rules",
+    "trash": "Trash",
+    "management": "Management",
+    "users": "Users",
+    "roles": "Roles",
+    "logs": "Logs",
+    "back_to_frontend": "Back to Frontend"
+}
