@@ -1,0 +1,20 @@
+{
+    "common": {
+        "actions": "Actions",
+        "cancel": "Cancel",
+        "close": "Close",
+        "delete": "Delete",
+        "edit": "Edit",
+        "no": "No",
+        "openMenu": "Open menu",
+        "save": "Save",
+        "yes": "Yes"
+    },
+    "search": {
+        "placeholder": "Search..."
+    },
+    "table": {
+        "columns": "Columns",
+        "show_hide_columns": "Show/hide columns"
+    }
+}

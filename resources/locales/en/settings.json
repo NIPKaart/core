@@ -1,0 +1,13 @@
+{
+    "profile": {
+        "title": "Profile settings",
+        "description": "Update your name and email address",
+        "name": "Name",
+        "email": "Email address",
+        "language": "Language",
+        "verify_message": "Your email address is unverified.",
+        "resend_verification": "Click here to resend the verification email.",
+        "verification_sent": "A new verification link has been sent to your email address.",
+        "saved": "Saved"
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "profile": {
+        "title": "Profielinstellingen",
+        "description": "Werk je naam en e-mailadres bij",
+        "name": "Naam",
+        "email": "E-mailadres",
+        "language": "Taal",
+        "verify_message": "Je e-mailadres is niet geverifieerd.",
+        "resend_verification": "Klik hier om de verificatiemail opnieuw te verzenden.",
+        "verification_sent": "Er is een nieuwe verificatielink naar je e-mailadres gestuurd.",
+        "save": "Opslaan",
+        "saved": "Opgeslagen"
+    }
+}
