@@ -30,4 +30,12 @@ class ParkingRule extends Model
     {
         return $this->belongsTo(Country::class);
     }
+
+    /**
+     * Get the municipality that owns the parking rule.
+     */
+    public function municipality(): BelongsTo
+    {
+        return $this->belongsTo(Municipality::class);
+    }
 }

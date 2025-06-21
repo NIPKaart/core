@@ -4,22 +4,16 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Country, Municipality, PaginatedResponse, ParkingRule } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormValues } from '../form-parking-rules';
 import { getParkingRuleColumns } from './columns';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Parking Rules',
-        href: route('app.parking-rules.index'),
-    },
-];
 
 type PageProps = {
     parkingRules: PaginatedResponse<ParkingRule>;
@@ -28,7 +22,15 @@ type PageProps = {
 };
 
 export default function Index({ parkingRules, countries, municipalities }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('parking-rules');
     const { can } = useAuthorization();
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: t('breadcrumbs.index'),
+            href: route('app.parking-rules.index'),
+        },
+    ];
 
     // ADD Dialog/Drawer
     const [openAdd, setOpenAdd] = useState(false);
@@ -88,7 +90,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
             onSuccess: () => {
                 setOpenAdd(false);
                 formAdd.reset();
-                toast.success('Parking Rule added successfully!');
+                toast.success(t('toasts.created'));
             },
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
@@ -108,7 +110,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
             onSuccess: () => {
                 setOpenEdit(false);
                 setEditRule(null);
-                toast.success('Parking Rule updated successfully!');
+                toast.success(t('toasts.updated'));
             },
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
@@ -123,23 +125,37 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
 
     const deleteParkingRule = (id: number) => {
         router.delete(route('app.parking-rules.destroy', { id }), {
-            onSuccess: () => toast.success('Parking Rule deleted successfully'),
-            onError: () => toast.error('Failed to delete parking rule'),
+            onSuccess: () => toast.success(t('toasts.deleted')),
+            onError: () => toast.error(t('toasts.error')),
         });
     };
 
-    const columns = getParkingRuleColumns(can, openEditDialog, openDeleteDialog);
+    const columns = getParkingRuleColumns(can, openEditDialog, openDeleteDialog, { t, tGlobal });
+
+    // Memoize the municipalities to include the one being edited if applicable
+    const editMunicipalities = useMemo(() => {
+        if (!editRule) return municipalities;
+
+        const currentId = String(editRule.municipality_id);
+        const alreadyIncluded = municipalities.some((m) => String(m.id) === currentId);
+
+        if (!alreadyIncluded && editRule.municipality) {
+            return [...municipalities, editRule.municipality];
+        }
+
+        return municipalities;
+    }, [municipalities, editRule]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Rules" />
-            <div className="space-y-6 px-4 py-6 sm:px-6 overflow-x-auto">
+            <Head title={t('head.title')} />
+            <div className="space-y-6 overflow-x-auto px-4 py-6 sm:px-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Parking Rules</h1>
+                    <h1 className="text-2xl font-bold">{t('head.title')}</h1>
                     {can('parking-rule.create') && (
                         <Button className="cursor-pointer" variant="outline" onClick={() => setOpenAdd(true)}>
                             <Plus className="mr-1 h-4 w-4" />
-                            Parking Rule
+                            {t('buttons.add')}
                         </Button>
                     )}
                 </div>
@@ -166,7 +182,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                 onClose={handleEditClose}
                 form={formEdit}
                 countries={countries}
-                municipalities={municipalities}
+                municipalities={editMunicipalities}
                 isEdit
                 onSubmit={handleEditSubmit}
                 submitting={formEdit.formState.isSubmitting}
@@ -175,9 +191,14 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
             {/* DELETE Dialog */}
             {dialogParkingRule && dialogType === 'delete' && (
                 <ConfirmDialog
-                    title="Delete parking rule?"
-                    description={`Are you sure you want to delete the rule for: ${dialogParkingRule.country?.name} (${dialogParkingRule.country?.code}), ${dialogParkingRule.municipality}?`}
-                    confirmText="Delete"
+                    title={t('parkingRules.index.delete_title')}
+                    description={t('parkingRules.index.delete_description', {
+                        country: dialogParkingRule.country?.name,
+                        code: dialogParkingRule.country?.code,
+                        municipality: dialogParkingRule.municipality?.name,
+                    })}
+                    confirmText={tGlobal('common.delete')}
+                    cancelText={tGlobal('common.cancel')}
                     variant="destructive"
                     onConfirm={() => {
                         deleteParkingRule(dialogParkingRule.id);
