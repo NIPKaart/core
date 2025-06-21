@@ -3,6 +3,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Table } from '@tanstack/react-table';
 import { SlidersHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer';
 
 interface ColumnsSelectorProps<TData> {
@@ -11,8 +12,8 @@ interface ColumnsSelectorProps<TData> {
 }
 
 export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: ColumnsSelectorProps<TData>) {
+    const { t } = useTranslation('global');
     const isMobile = useMediaQuery(mobileBreakpoint);
-
     const columns = table.getAllLeafColumns().filter((col) => col.getCanHide());
 
     if (!columns.length) return null;
@@ -24,12 +25,12 @@ export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: Column
                 <DrawerTrigger asChild>
                     <Button variant="outline" className="w-full">
                         <SlidersHorizontal className="h-4 w-4" />
-                        Columns
+                        {t('table.columns')}
                     </Button>
                 </DrawerTrigger>
                 <DrawerContent className="mx-auto max-w-md rounded-t-xl">
                     <DrawerHeader>
-                        <DrawerTitle>Show/hide columns</DrawerTitle>
+                        <DrawerTitle>{t('table.show_hide_columns')}</DrawerTitle>
                     </DrawerHeader>
                     <div className="flex flex-col gap-3 p-4 pb-0">
                         {columns.map((column) => (
@@ -54,7 +55,7 @@ export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: Column
                     <DrawerFooter className="mt-4 flex items-center border-t">
                         <DrawerClose asChild>
                             <Button variant="outline" className="w-full">
-                                Close
+                                {t('common.close')}
                             </Button>
                         </DrawerClose>
                     </DrawerFooter>
@@ -69,7 +70,7 @@ export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: Column
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto cursor-pointer">
                     <SlidersHorizontal className="h-4 w-4" />
-                    Columns
+                    {t('table.columns')}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

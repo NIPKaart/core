@@ -16,6 +16,7 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
 import { ColumnsSelector } from './columns-selector';
+import { useTranslation } from 'react-i18next';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -37,6 +38,7 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange,
     initialState,
 }: DataTableProps<TData, TValue>) {
+    const { t } = useTranslation('global');
     const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
     const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
     const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
@@ -65,7 +67,7 @@ export function DataTable<TData, TValue>({
         <div className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Input
-                    placeholder="Search..."
+                    placeholder={t('search.placeholder')}
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
                     className="w-full sm:max-w-sm"
