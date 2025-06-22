@@ -1,5 +1,18 @@
 {
+    "sidebar": {
+        "profile": "Profiel",
+        "password": "Wachtwoord",
+        "appearance": "Uiterlijk"
+    },
+    "meta": {
+        "title": "Instellingen",
+        "description": "Beheer je profiel- en accountinstellingen."
+    },
     "profile": {
+        "meta": {
+            "breadcrumb": "Profielinstellingen",
+            "title": "Profielinstellingen"
+        },
         "title": "Profielinstellingen",
         "description": "Werk je naam en e-mailadres bij",
         "name": "Naam",
@@ -8,8 +21,6 @@
         "verify_message": "Je e-mailadres is niet geverifieerd.",
         "resend_verification": "Klik hier om de verificatiemail opnieuw te verzenden.",
         "verification_sent": "Er is een nieuwe verificatielink naar je e-mailadres gestuurd.",
-        "save": "Opslaan",
-        "saved": "Opgeslagen",
         "delete": {
             "title": "Account verwijderen",
             "description": "Verwijder je account en al je gegevens.",
@@ -26,5 +37,28 @@
                 "submit": "Verwijder account"
             }
         }
+    },
+    "password": {
+        "meta": {
+            "breadcrumb": "Wachtwoordinstellingen",
+            "title": "Wachtwoordinstellingen"
+        },
+        "title": "Wachtwoord bijwerken",
+        "description": "Zorg ervoor dat je account een lang, willekeurig wachtwoord gebruikt om veilig te blijven.",
+        "current": "Huidig wachtwoord",
+        "new": "Nieuw wachtwoord",
+        "confirm": "Bevestig wachtwoord",
+        "submit": "Sla wachtwoord op"
+    },
+    "appearance": {
+        "meta": {
+            "breadcrumb": "Uiterlijk instellingen",
+            "title": "Uiterlijk instellingen"
+        },
+        "title": "Uiterlijk instellingen",
+        "description": "Werk de uiterlijk instellingen van je account bij",
+        "light": "Licht",
+        "dark": "Donker",
+        "system": "Systeem"
     }
 }

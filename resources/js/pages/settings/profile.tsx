@@ -145,7 +145,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-neutral-600">{tSettings('profile.saved')}</p>
+                                <p className="text-sm text-neutral-600">{t('common.saved')}</p>
                             </Transition>
                         </div>
                     </form>
