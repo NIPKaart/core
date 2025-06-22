@@ -48,8 +48,7 @@
     },
     "confirm": {
         "delete_title": "Parkeerregel verwijderen?",
-        "delete_description": "Weet je zeker dat je de regel wilt verwijderen voor {{country}} ({{code}}), {{municipality}}?",
-        "delete_confirm": "Verwijderen"
+        "delete_description": "Weet je zeker dat je de regel wilt verwijderen voor {{country}} ({{code}}), {{municipality}}?"
     },
     "toast": {
         "created": "Parkeerregel succesvol toegevoegd",

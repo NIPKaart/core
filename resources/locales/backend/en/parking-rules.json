@@ -48,8 +48,7 @@
     },
     "confirm": {
         "delete_title": "Delete parking rule?",
-        "delete_description": "Are you sure you want to delete the rule for {{country}} ({{code}}), {{municipality}}?",
-        "delete_confirm": "Delete"
+        "delete_description": "Are you sure you want to delete the rule for {{country}} ({{code}}), {{municipality}}?"
     },
     "toast": {
         "created": "Parking rule created successfully",

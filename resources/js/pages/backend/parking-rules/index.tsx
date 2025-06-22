@@ -191,8 +191,8 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
             {/* DELETE Dialog */}
             {dialogParkingRule && dialogType === 'delete' && (
                 <ConfirmDialog
-                    title={t('parkingRules.index.delete_title')}
-                    description={t('parkingRules.index.delete_description', {
+                    title={t('confirm.delete_title')}
+                    description={t('confirm.delete_description', {
                         country: dialogParkingRule.country?.name,
                         code: dialogParkingRule.country?.code,
                         municipality: dialogParkingRule.municipality?.name,

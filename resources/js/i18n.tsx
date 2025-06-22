@@ -37,7 +37,7 @@ i18n.use(LanguageDetector)
     .init({
         fallbackLng: 'en',
         supportedLngs: ['en', 'nl'],
-        defaultNS: 'translation',
+        defaultNS: 'global',
         ns: [...namespaces],
         interpolation: {
             escapeValue: false,
