@@ -13,15 +13,16 @@ type ResourceMap = {
 };
 
 // Load all JSON files under locales/{lang}/{namespace}.json
-const modules = import.meta.glob('../locales/*/*.json', {
-    eager: true,
-}) as Record<string, { default: TranslationJson }>;
+const modules = {
+    ...import.meta.glob('../locales/frontend/*/*.json', { eager: true }),
+    ...import.meta.glob('../locales/backend/*/*.json', { eager: true }),
+} as Record<string, { default: TranslationJson }>;
 
 const resources: ResourceMap = {};
 const namespaces: Set<string> = new Set();
 
 for (const path in modules) {
-    const match = path.match(/..\/locales\/([a-z]{2})\/([a-zA-Z0-9_-]+)\.json$/);
+    const match = path.match(/..\/locales\/(?:frontend|backend)\/([a-z]{2})\/([a-zA-Z0-9_-]+)\.json$/);
     if (!match) continue;
 
     const [, lang, namespace] = match;
