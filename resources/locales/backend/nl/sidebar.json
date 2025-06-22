@@ -15,5 +15,7 @@
     "users": "Gebruikers",
     "roles": "Rollen",
     "logs": "Logboeken",
-    "back_to_frontend": "Terug naar website"
+    "back_to_frontend": "Terug naar website",
+    "settings": "Instellingen",
+    "logout": "Uitloggen"
 }

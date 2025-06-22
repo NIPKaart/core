@@ -15,13 +15,6 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { useTranslation } from 'react-i18next';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Profile settings',
-        href: '/settings/profile',
-    },
-];
-
 type ProfileForm = {
     name: string;
     email: string;
@@ -32,6 +25,13 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     const { auth } = usePage<SharedData>().props;
     const { t } = useTranslation('global');
     const { t: tSettings } = useTranslation('settings');
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: tSettings('profile.title'),
+            href: route('profile.edit'),
+        },
+    ];
 
     const languageLabels: Record<string, string> = {
         en: 'English',

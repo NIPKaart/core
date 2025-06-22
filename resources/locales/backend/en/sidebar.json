@@ -15,5 +15,7 @@
     "users": "Users",
     "roles": "Roles",
     "logs": "Logs",
-    "back_to_frontend": "Back to Frontend"
+    "back_to_frontend": "Back to Frontend",
+    "settings": "Settings",
+    "logout": "Log out"
 }

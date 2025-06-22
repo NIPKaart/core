@@ -4,12 +4,14 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface UserMenuContentProps {
     user: User;
 }
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
+    const { t } = useTranslation('sidebar');
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {
@@ -29,7 +31,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 <DropdownMenuItem asChild>
                     <Link className="block w-full cursor-pointer" href={route('profile.edit')} as="button" prefetch onClick={handleLogout}>
                         <Settings className="mr-2" />
-                        Settings
+                        {t('settings')}
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -37,7 +39,7 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             <DropdownMenuItem asChild>
                 <Link className="block w-full cursor-pointer" method="post" href={route('logout')} as="button" onClick={cleanup}>
                     <LogOut className="mr-2" />
-                    Log out
+                    {t('logout')}
                 </Link>
             </DropdownMenuItem>
         </>
