@@ -7,7 +7,7 @@
         "index": "Parkeerregels"
     },
     "buttons": {
-        "add": "Voeg parkeerregel toe"
+        "add": "Parkeerregel"
     },
     "modal": {
         "title_add": "Toevoegen parkeerregel",

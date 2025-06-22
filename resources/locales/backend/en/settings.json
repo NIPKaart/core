@@ -1,5 +1,18 @@
 {
+    "sidebar": {
+        "profile": "Profile",
+        "password": "Password",
+        "appearance": "Appearance"
+    },
+    "meta": {
+        "title": "Settings",
+        "description": "Manage your profile and account settings."
+    },
     "profile": {
+        "meta": {
+            "breadcrumb": "Profile settings",
+            "title": "Profile settings"
+        },
         "title": "Profile settings",
         "description": "Update your name and email address",
         "name": "Name",
@@ -8,7 +21,6 @@
         "verify_message": "Your email address is unverified.",
         "resend_verification": "Click here to resend the verification email.",
         "verification_sent": "A new verification link has been sent to your email address.",
-        "saved": "Saved",
         "delete": {
             "title": "Delete account",
             "description": "Delete your account and all of its resources.",
@@ -25,5 +37,28 @@
                 "submit": "Delete account"
             }
         }
+    },
+    "password": {
+        "meta": {
+            "breadcrumb": "Password settings",
+            "title": "Password settings"
+        },
+        "title": "Update password",
+        "description": "Ensure your account is using a long, random password to stay secure.",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Confirm password",
+        "submit": "Save password"
+    },
+    "appearance": {
+        "meta": {
+            "breadcrumb": "Appearance settings",
+            "title": "Appearance settings"
+        },
+        "title": "Appearance settings",
+        "description": "Update your account's appearance settings",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
     }
 }
