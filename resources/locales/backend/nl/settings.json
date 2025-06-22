@@ -1,0 +1,30 @@
+{
+    "profile": {
+        "title": "Profielinstellingen",
+        "description": "Werk je naam en e-mailadres bij",
+        "name": "Naam",
+        "email": "E-mailadres",
+        "language": "Taal",
+        "verify_message": "Je e-mailadres is niet geverifieerd.",
+        "resend_verification": "Klik hier om de verificatiemail opnieuw te verzenden.",
+        "verification_sent": "Er is een nieuwe verificatielink naar je e-mailadres gestuurd.",
+        "save": "Opslaan",
+        "saved": "Opgeslagen",
+        "delete": {
+            "title": "Account verwijderen",
+            "description": "Verwijder je account en al je gegevens.",
+            "warning": {
+                "title": "Waarschuwing",
+                "description": "Ga voorzichtig te werk, dit kan niet ongedaan worden gemaakt."
+            },
+            "button": "Verwijder account",
+            "dialog": {
+                "title": "Weet je zeker dat je je account wilt verwijderen?",
+                "description": "Zodra je account is verwijderd, worden alle bijbehorende gegevens permanent verwijderd. Voer je wachtwoord in om te bevestigen dat je je account definitief wilt verwijderen.",
+                "password_label": "Wachtwoord",
+                "password_placeholder": "Wachtwoord",
+                "submit": "Verwijder account"
+            }
+        }
+    }
+}

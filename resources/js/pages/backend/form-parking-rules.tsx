@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import type { Country, Municipality } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
     country_id: string;
@@ -21,6 +22,8 @@ type Props = {
 };
 
 export default function ParkingRuleForm({ form, countries, municipalities, onSubmit }: Props) {
+    const { t } = useTranslation('parking-rules');
+
     return (
         <Form {...form}>
             <form id="parking-rule-form" onSubmit={onSubmit} className="flex flex-col gap-0 space-y-6" autoComplete="on">
@@ -31,8 +34,8 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                         name="country_id"
                         render={({ field }) => (
                             <SearchableCombobox
-                                label="Country"
-                                placeholder="Select a country"
+                                label={t('form.country.label')}
+                                placeholder={t('form.country.placeholder')}
                                 options={countries.map((c) => ({
                                     label: `${c.name} (${c.code})`,
                                     value: String(c.id),
@@ -50,8 +53,8 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                         name="municipality_id"
                         render={({ field }) => (
                             <SearchableCombobox
-                                label="Municipality"
-                                placeholder="Select a municipality"
+                                label={t('form.municipality.label')}
+                                placeholder={t('form.municipality.placeholder')}
                                 options={municipalities.map((m) =>
                                     typeof m === 'string' ? { label: m, value: m } : { label: m.name, value: String(m.id) },
                                 )}
@@ -71,11 +74,11 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                         name="url"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Official Rule URL</FormLabel>
+                                <FormLabel>{t('form.url.label')}</FormLabel>
                                 <FormControl>
                                     <Input placeholder="https://example.com" {...field} />
                                 </FormControl>
-                                <FormDescription>Direct link to the official parking rule source or document.</FormDescription>
+                                <FormDescription>{t('form.url.description')}</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -85,7 +88,7 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                 <Separator />
 
                 <div className="space-y-6">
-                    <h2 className="mb-2 text-base font-semibold tracking-tight text-foreground/80">Scope</h2>
+                    <h2 className="mb-2 text-base font-semibold tracking-tight text-foreground/80">{t('form.scope.title')}</h2>
                     <FormField
                         control={form.control}
                         name="nationwide"
@@ -94,8 +97,8 @@ export default function ParkingRuleForm({ form, countries, municipalities, onSub
                                 <SwitchCard
                                     name="nationwide"
                                     control={form.control}
-                                    label="Nationwide"
-                                    description="Check if this rule applies to the entire country."
+                                    label={t('form.scope.label')}
+                                    description={t('form.scope.description')}
                                 />
                                 <FormMessage />
                             </FormItem>

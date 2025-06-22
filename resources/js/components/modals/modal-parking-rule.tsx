@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import ParkingRuleForm, { FormValues } from '@/pages/backend/form-parking-rules';
 import type { Country, Municipality } from '@/types';
 import { MapPin, Plus, X } from 'lucide-react';
@@ -19,10 +20,14 @@ type Props = {
     municipalities: Municipality[];
 };
 
-const descriptionText = 'This helps visitors understand the parking regulations in a municipality or for the whole country.';
-
 export default function ParkingRuleModal({ open, onClose, form, isEdit = false, onSubmit, submitting, countries, municipalities }: Props) {
     const isDesktop = useMediaQuery('(min-width: 768px)');
+    const { t, tGlobal } = useResourceTranslation('parking-rules');
+
+    const descriptionText = t('modal.description');
+    const titleText = isEdit ? t('modal.title_edit') : t('modal.title_add');
+    const submitText = isEdit ? t('modal.submit_update') : t('modal.submit_add');
+    const closeText = tGlobal('common.close');
 
     // Desktop Dialog
     if (isDesktop) {
@@ -33,7 +38,7 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                         <div className="flex w-full items-center justify-between gap-2 px-6 pt-6 pb-4">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                                 <MapPin className="h-6 w-6 text-primary" />
-                                {isEdit ? 'Edit Parking Rule' : 'Add Parking Rule'}
+                                {titleText}
                             </DialogTitle>
                             <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
                                 <X className="h-5 w-5" />
@@ -49,15 +54,15 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                     </div>
                     <DialogFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                         <Button type="button" variant="outline" className="w-full cursor-pointer sm:w-auto" onClick={onClose} disabled={submitting}>
-                            Close
+                            {closeText}
                         </Button>
                         <Button type="submit" form="parking-rule-form" disabled={submitting} className="w-full cursor-pointer sm:w-auto">
                             {isEdit ? (
-                                'Update Parking Rule'
+                                submitText
                             ) : (
                                 <>
                                     <Plus className="mr-1 h-4 w-4" />
-                                    Add Parking Rule
+                                    {submitText}
                                 </>
                             )}
                         </Button>
@@ -75,7 +80,7 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                     <div className="flex w-full items-center gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
                             <MapPin className="h-6 w-6 text-primary" />
-                            {isEdit ? 'Edit Parking Rule' : 'Add Parking Rule'}
+                            {titleText}
                         </DrawerTitle>
                     </div>
                     <DrawerDescription asChild>
@@ -89,16 +94,16 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                 <DrawerFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                     <DrawerClose asChild>
                         <Button variant="outline" className="w-full sm:w-auto">
-                            Close
+                            {closeText}
                         </Button>
                     </DrawerClose>
                     <Button type="submit" form="parking-rule-form" disabled={submitting} className="w-full sm:w-auto">
                         {isEdit ? (
-                            'Update Parking Rule'
+                            submitText
                         ) : (
                             <>
                                 <Plus className="mr-1 h-4 w-4" />
-                                Add
+                                {submitText}
                             </>
                         )}
                     </Button>

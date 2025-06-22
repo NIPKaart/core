@@ -1,0 +1,20 @@
+{
+    "common": {
+        "actions": "Acties",
+        "cancel": "Annuleren",
+        "close": "Sluiten",
+        "delete": "Verwijderen",
+        "edit": "Bewerken",
+        "no": "Nee",
+        "openMenu": "Menu openen",
+        "save": "Opslaan",
+        "yes": "Ja"
+    },
+    "search": {
+        "placeholder": "Zoeken..."
+    },
+    "table": {
+        "columns": "Kolommen",
+        "show_hide_columns": "Toon/verberg kolommen"
+    }
+}

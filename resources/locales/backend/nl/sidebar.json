@@ -1,0 +1,21 @@
+{
+    "platform": "Platform",
+    "dashboard": "Dashboard",
+    "map": "Kaart",
+    "personal": "Persoonlijk",
+    "my_locations": "Mijn Locaties",
+    "my_favorites": "Mijn Favorieten",
+    "moderation": "Moderatie",
+    "community_spaces": "Community-locaties",
+    "offstreet": "Off-street Parkeren",
+    "municipalities": "Gemeenten",
+    "rules": "Parkeerregels",
+    "trash": "Prullenbak",
+    "management": "Beheer",
+    "users": "Gebruikers",
+    "roles": "Rollen",
+    "logs": "Logboeken",
+    "back_to_frontend": "Terug naar website",
+    "settings": "Instellingen",
+    "logout": "Uitloggen"
+}

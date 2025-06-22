@@ -23,7 +23,7 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
-    const { t } = useTranslation();
+    const { t } = useTranslation('auth');
     const { data, setData, post, processing, errors, reset } = useForm<Required<LoginForm>>({
         email: '',
         password: '',
@@ -38,13 +38,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title={t('auth.login.title')} description={t('auth.login.description')}>
-            <Head title={t('auth.login.title')} />
+        <AuthLayout title={t('login.title')} description={t('login.description')}>
+            <Head title={t('login.title')} />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="email">{t('auth.login.email')}</Label>
+                        <Label htmlFor="email">{t('login.email')}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -61,10 +61,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                     <div className="grid gap-2">
                         <div className="flex items-center">
-                            <Label htmlFor="password">{t('auth.login.password')}</Label>
+                            <Label htmlFor="password">{t('login.password')}</Label>
                             {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    {t('auth.login.forgot')}
+                                    {t('login.forgot')}
                                 </TextLink>
                             )}
                         </div>
@@ -89,19 +89,19 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             onClick={() => setData('remember', !data.remember)}
                             tabIndex={3}
                         />
-                        <Label htmlFor="remember">{t('auth.login.remember')}</Label>
+                        <Label htmlFor="remember">{t('login.remember')}</Label>
                     </div>
 
                     <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        {t('auth.login.submit')}
+                        {t('login.submit')}
                     </Button>
                 </div>
 
                 <div className="text-center text-sm text-muted-foreground">
-                    {t('auth.login.no_account')}{' '}
+                    {t('login.no_account')}{' '}
                     <TextLink href={route('register')} tabIndex={5}>
-                        {t('auth.login.signup')}
+                        {t('login.signup')}
                     </TextLink>
                 </div>
             </form>

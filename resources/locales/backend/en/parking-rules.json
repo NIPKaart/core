@@ -1,0 +1,59 @@
+{
+    "head": {
+        "title": "Parking Rules",
+        "description": "Manage parking rules for municipalities or nationwide regulations."
+    },
+    "breadcrumbs": {
+        "index": "Parking Rules"
+    },
+    "buttons": {
+        "add": "Add Parking Rule"
+    },
+    "modal": {
+        "title_add": "Add Parking Rule",
+        "title_edit": "Edit Parking Rule",
+        "description": "This helps visitors understand the parking regulations in a municipality or for the whole country.",
+        "submit_add": "Add",
+        "submit_update": "Update"
+    },
+    "table": {
+        "country": "Country",
+        "municipality": "Municipality",
+        "nationwide": "Nationwide",
+        "url": "URL",
+        "created_at": "Created at",
+        "actions": "Actions"
+    },
+    "form": {
+        "country": {
+            "label": "Country",
+            "placeholder": "Select a country"
+        },
+        "municipality": {
+            "label": "Municipality",
+            "placeholder": "Select a municipality"
+        },
+        "url": {
+            "label": "Official Rule URL",
+            "description": "Direct link to the official parking rule source or document."
+        },
+        "scope": {
+            "title": "Scope",
+            "label": "Nationwide",
+            "description": "Check if this rule applies to the entire country."
+        },
+        "save": "Save",
+        "create": "Create Rule",
+        "update": "Update Rule"
+    },
+    "confirm": {
+        "delete_title": "Delete parking rule?",
+        "delete_description": "Are you sure you want to delete the rule for {{country}} ({{code}}), {{municipality}}?"
+    },
+    "toast": {
+        "created": "Parking rule created successfully",
+        "updated": "Parking rule updated successfully",
+        "deleted": "Parking rule deleted",
+        "error": "Something went wrong while saving the parking rule."
+    }
+}

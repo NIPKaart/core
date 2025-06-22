@@ -1,0 +1,59 @@
+{
+    "head": {
+        "title": "Parkeerregels",
+        "description": "Beheer parkeerregels voor gemeenten of landelijke regelgeving."
+    },
+    "breadcrumbs": {
+        "index": "Parkeerregels"
+    },
+    "buttons": {
+        "add": "Voeg parkeerregel toe"
+    },
+    "modal": {
+        "title_add": "Toevoegen parkeerregel",
+        "title_edit": "Bewerk parkeerregel",
+        "description": "Dit helpt bezoekers om de parkeervoorschriften per gemeente of landelijk te begrijpen.",
+        "submit_add": "Toevoegen",
+        "submit_update": "Bijwerken"
+    },
+    "table": {
+        "country": "Land",
+        "municipality": "Gemeente",
+        "nationwide": "Landelijk",
+        "url": "URL",
+        "created_at": "Aangemaakt op",
+        "actions": "Acties"
+    },
+    "form": {
+        "country": {
+            "label": "Land",
+            "placeholder": "Selecteer een land"
+        },
+        "municipality": {
+            "label": "Gemeente",
+            "placeholder": "Selecteer een gemeente"
+        },
+        "url": {
+            "label": "Officiële regel-URL",
+            "description": "Directe link naar de officiële bron of het document met de parkeerregel."
+        },
+        "scope": {
+            "title": "Reikwijdte",
+            "label": "Landelijk",
+            "description": "Vink aan als deze regel geldt voor het hele land."
+        },
+        "save": "Opslaan",
+        "create": "Maak regel aan",
+        "update": "Werk regel bij"
+    },
+    "confirm": {
+        "delete_title": "Parkeerregel verwijderen?",
+        "delete_description": "Weet je zeker dat je de regel wilt verwijderen voor {{country}} ({{code}}), {{municipality}}?"
+    },
+    "toast": {
+        "created": "Parkeerregel succesvol toegevoegd",
+        "updated": "Parkeerregel succesvol bijgewerkt",
+        "deleted": "Parkeerregel verwijderd",
+        "error": "Er is iets misgegaan bij het opslaan van de parkeerregel."
+    }
+}

@@ -5,12 +5,14 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { NavGroup, SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { icons } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
     const { props } = usePage<SharedData>();
+    const { t } = useTranslation('sidebar');
 
     // Sidebar badge counts
     const userCount = props.counts.users;
@@ -18,15 +20,15 @@ export function AppSidebar() {
     const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
-        title: 'Platform',
+        title: t('platform'),
         items: [
             {
-                title: 'Dashboard',
+                title: t('dashboard'),
                 href: route('dashboard'),
                 icon: icons.LayoutGrid,
             },
             {
-                title: 'Map',
+                title: t('map'),
                 href: route('map'),
                 icon: icons.Map,
             },
@@ -34,16 +36,16 @@ export function AppSidebar() {
     };
 
     const parkingNavGroup: NavGroup = {
-        title: 'My Parking',
+        title: t('personal'),
         items: [
             {
-                title: 'My Locations',
+                title: t('my_locations'),
                 href: route('user.parking-spaces.index'),
                 icon: icons.MapPin,
-                badge: activeUserParkingSpaces ? activeUserParkingSpaces : undefined,
+                badge: activeUserParkingSpaces || undefined,
             },
             {
-                title: 'My Favorites',
+                title: t('my_favorites'),
                 href: route('user.favorites.index'),
                 icon: icons.Heart,
             },
@@ -51,49 +53,49 @@ export function AppSidebar() {
     };
 
     const moderationNavGroup: NavGroup = {
-        title: 'Moderation',
+        title: t('moderation'),
         items: [
             can('parking-space.view_any') && {
-                title: 'Parking Spaces',
+                title: t('community_spaces'),
                 href: route('app.parking-spaces.index'),
                 icon: icons.MapPin,
                 badge: activeParkingSpaces,
             },
-            can('parking-space.restore') && {
-                title: 'Trash',
-                href: route('app.parking-spaces.trash'),
-                icon: icons.Trash2,
-                badge: trashedParkingSpaces ? trashedParkingSpaces : undefined,
-            },
-            can('parking-municipal.view_any') && {
-                title: 'Municipalities',
-                href: route('app.parking-municipal.municipalities'),
-                icon: icons.Building,
-            },
             can('parking-offstreet.view_any') && {
-                title: 'Off-Street Parking',
+                title: t('offstreet'),
                 href: route('app.parking-offstreet.index'),
                 icon: icons.SquareParking,
             },
+            can('parking-municipal.view_any') && {
+                title: t('municipalities'),
+                href: route('app.parking-municipal.municipalities'),
+                icon: icons.Building,
+            },
             can('parking-rule.view_any') && {
-                title: 'Parking Rules',
+                title: t('rules'),
                 href: route('app.parking-rules.index'),
                 icon: icons.Gavel,
+            },
+            can('parking-space.restore') && {
+                title: t('trash'),
+                href: route('app.parking-spaces.trash'),
+                icon: icons.Trash2,
+                badge: trashedParkingSpaces || undefined,
             },
         ].filter(Boolean) as NavItem[],
     };
 
     const managementNavGroup: NavGroup = {
-        title: 'Management',
+        title: t('management'),
         items: [
             can('user.view_any') && {
-                title: 'Users',
+                title: t('users'),
                 href: route('app.users.index'),
                 icon: icons.Users,
                 badge: userCount,
             },
             can('role.view_any') && {
-                title: 'Roles',
+                title: t('roles'),
                 href: route('app.roles.index'),
                 icon: icons.Shield,
             },
@@ -108,13 +110,13 @@ export function AppSidebar() {
         //     icon: Folder,
         // },
         hasRole('admin') && {
-            title: 'Logs',
+            title: t('logs'),
             href: route('log-viewer.index'),
             target: '_blank',
             icon: icons.Logs,
         },
         {
-            title: 'Back to Frontend',
+            title: t('back_to_frontend'),
             href: route('home'),
             icon: icons.ArrowLeft,
         },

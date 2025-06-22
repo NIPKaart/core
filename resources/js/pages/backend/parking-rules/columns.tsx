@@ -11,15 +11,22 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Country, ParkingRule } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
 import { MoreVertical } from 'lucide-react';
 
 type OpenEditDialogFn = (rule: ParkingRule) => void;
 type OpenDeleteDialogFn = (rule: ParkingRule) => void;
 
+type Translations = {
+    t: TFunction;
+    tGlobal: TFunction;
+};
+
 export function getParkingRuleColumns(
     can: (permission: string) => boolean,
     openEditDialog: OpenEditDialogFn,
     openDeleteDialog: OpenDeleteDialogFn,
+    { t, tGlobal }: Translations,
 ): ColumnDef<ParkingRule>[] {
     return [
         {
@@ -31,7 +38,7 @@ export function getParkingRuleColumns(
         },
         {
             accessorKey: 'country',
-            header: 'Country',
+            header: t('table.country'),
             meta: { align: 'left' },
             enableSorting: false,
             enableHiding: false,
@@ -42,20 +49,26 @@ export function getParkingRuleColumns(
         },
         {
             accessorKey: 'municipality',
-            header: 'Municipality',
+            header: t('table.municipality'),
             meta: { align: 'left' },
             enableSorting: true,
+            cell: ({ row }) => row.original.municipality?.name ?? '—',
         },
         {
             accessorKey: 'nationwide',
-            header: 'Nationwide',
+            header: t('table.nationwide'),
             meta: { align: 'left' },
             enableSorting: true,
-            cell: ({ row }) => (row.original.nationwide ? <Badge variant="default">Yes</Badge> : <Badge variant="outline">No</Badge>),
+            cell: ({ row }) =>
+                row.original.nationwide ? (
+                    <Badge variant="default">{tGlobal('common.yes')}</Badge>
+                ) : (
+                    <Badge variant="outline">{tGlobal('common.no')}</Badge>
+                ),
         },
         {
             accessorKey: 'url',
-            header: 'URL',
+            header: t('table.url'),
             meta: { align: 'left' },
             enableSorting: false,
             cell: ({ row }) => {
@@ -79,7 +92,7 @@ export function getParkingRuleColumns(
         },
         {
             accessorKey: 'created_at',
-            header: 'Created at',
+            header: t('table.created_at'),
             meta: { align: 'left' },
             enableSorting: true,
             cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
@@ -101,12 +114,12 @@ export function getParkingRuleColumns(
                                     className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
+                                    <span className="sr-only">{tGlobal('common.openMenu')}</span>
                                 </Button>
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{tGlobal('common.actions')}</DropdownMenuLabel>
                                 {can('parking-rule.update') && (
                                     <>
                                         <DropdownMenuItem
@@ -116,7 +129,7 @@ export function getParkingRuleColumns(
                                             }}
                                             className="cursor-pointer"
                                         >
-                                            Edit
+                                            {tGlobal('common.edit')}
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                     </>
@@ -129,7 +142,7 @@ export function getParkingRuleColumns(
                                         }}
                                         className="cursor-pointer text-destructive"
                                     >
-                                        Delete
+                                        {tGlobal('common.delete')}
                                     </DropdownMenuItem>
                                 )}
                             </DropdownMenuContent>

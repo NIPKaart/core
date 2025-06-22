@@ -19,7 +19,7 @@ type RegisterForm = {
 };
 
 export default function Register() {
-    const { t, i18n } = useTranslation();
+    const { t, i18n } = useTranslation('auth');
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -37,12 +37,12 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title={t('auth.register.title')} description={t('auth.register.description')}>
-            <Head title={t('auth.register.title')} />
+        <AuthLayout title={t('register.title')} description={t('register.description')}>
+            <Head title={t('register.title')} />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">{t('auth.register.name')}</Label>
+                        <Label htmlFor="name">{t('register.name')}</Label>
                         <Input
                             id="name"
                             type="text"
@@ -53,13 +53,13 @@ export default function Register() {
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             disabled={processing}
-                            placeholder={t('auth.register.name')}
+                            placeholder={t('register.name')}
                         />
                         <InputError message={errors.name} className="mt-2" />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="email">{t('auth.register.email')}</Label>
+                        <Label htmlFor="email">{t('register.email')}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -75,7 +75,7 @@ export default function Register() {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="password">{t('auth.register.password')}</Label>
+                        <Label htmlFor="password">{t('register.password')}</Label>
                         <Input
                             id="password"
                             type="password"
@@ -91,7 +91,7 @@ export default function Register() {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">{t('auth.register.confirm_password')}</Label>
+                        <Label htmlFor="password_confirmation">{t('register.confirm_password')}</Label>
                         <Input
                             id="password_confirmation"
                             type="password"
@@ -108,14 +108,14 @@ export default function Register() {
 
                     <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        {t('auth.register.submit')}
+                        {t('register.submit')}
                     </Button>
                 </div>
 
                 <div className="text-center text-sm text-muted-foreground">
-                    {t('auth.register.already_have')}{' '}
+                    {t('register.already_have')}{' '}
                     <TextLink href={route('login')} tabIndex={6}>
-                        {t('auth.register.login')}
+                        {t('register.login')}
                     </TextLink>
                 </div>
             </form>

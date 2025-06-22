@@ -1,0 +1,29 @@
+{
+    "profile": {
+        "title": "Profile settings",
+        "description": "Update your name and email address",
+        "name": "Name",
+        "email": "Email address",
+        "language": "Language",
+        "verify_message": "Your email address is unverified.",
+        "resend_verification": "Click here to resend the verification email.",
+        "verification_sent": "A new verification link has been sent to your email address.",
+        "saved": "Saved",
+        "delete": {
+            "title": "Delete account",
+            "description": "Delete your account and all of its resources.",
+            "warning": {
+                "title": "Warning",
+                "description": "Please proceed with caution, this cannot be undone."
+            },
+            "button": "Delete account",
+            "dialog": {
+                "title": "Are you sure you want to delete your account?",
+                "description": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+                "password_label": "Password",
+                "password_placeholder": "Password",
+                "submit": "Delete account"
+            }
+        }
+    }
+}
