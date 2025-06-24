@@ -1,0 +1,19 @@
+{
+    "home": "Home",
+    "map": {
+        "title": "Kaart",
+        "view": {
+            "title": "Alle locaties bekijken",
+            "description": "Bekijk de kaart met alle locaties."
+        },
+        "add": {
+            "title": "Nieuwe locatie toevoegen",
+            "description": "Nieuwe locatie? Voeg deze toe aan de kaart."
+        }
+    },
+    "garages": "Garages",
+    "about": "Over ons",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "login": "Inloggen"
+}
