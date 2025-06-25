@@ -8,37 +8,39 @@ import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FavoritesNavButton } from './favorties-nav-item';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
-const navigation = [
-    { name: 'Home', href: route('home'), routeName: 'home' },
-    {
-        name: 'Map',
-        routeName: 'map',
-        children: [
-            {
-                name: 'View all locations',
-                href: route('map'),
-                description: 'Look at the map with all the locations.',
-            },
-            {
-                name: 'Add new location',
-                href: route('map.add'),
-                description: 'New location? Add it to the map.',
-            },
-        ],
-    },
-    { name: 'Garages', href: '#', routeName: 'garages' },
-    { name: 'About', href: '#', routeName: 'about' },
-    { name: 'Contact', href: route('contact'), routeName: 'contact' },
-];
-
 export default function Navbar() {
+    const { t } = useTranslation('navbar');
     const page = usePage<SharedData>();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { auth } = page.props;
+
+    const navigation = [
+        { name: t('home'), href: route('home'), routeName: 'home' },
+        {
+            name: t('map.title'),
+            routeName: 'map',
+            children: [
+                {
+                    name: t('map.view.title'),
+                    href: route('map'),
+                    description: t('map.view.description'),
+                },
+                {
+                    name: t('map.add.title'),
+                    href: route('map.add'),
+                    description: t('map.add.description'),
+                },
+            ],
+        },
+        { name: t('garages'), href: '#', routeName: 'garages' },
+        { name: t('about'), href: '#', routeName: 'about' },
+        { name: t('contact'), href: route('contact'), routeName: 'contact' },
+    ];
 
     useEffect(() => {
         document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
@@ -89,7 +91,7 @@ export default function Navbar() {
                                                 {item.name}
                                             </NavigationMenuTrigger>
                                             <NavigationMenuContent>
-                                                <ul className="min-w-[250px] p-2">
+                                                <ul className="min-w-[280px] p-2">
                                                     {item.children.map((child) => (
                                                         <li key={child.name}>
                                                             <Link
@@ -139,11 +141,11 @@ export default function Navbar() {
                                 href={route('dashboard')}
                                 className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
                             >
-                                Dashboard
+                                {t('dashboard')}
                             </Link>
                         ) : (
                             <Link href={route('login')} className="text-sm font-semibold text-gray-900 dark:text-white">
-                                Log in →
+                                {t('login')} →
                             </Link>
                         )}
                     </div>
@@ -212,7 +214,7 @@ export default function Navbar() {
                                     onClick={() => setMobileMenuOpen(false)}
                                     className="font-semibold text-gray-900 hover:underline dark:text-white"
                                 >
-                                    Dashboard
+                                    {t('dashboard')}
                                 </Link>
                             ) : (
                                 <Link
@@ -220,7 +222,7 @@ export default function Navbar() {
                                     onClick={() => setMobileMenuOpen(false)}
                                     className="font-semibold text-gray-900 dark:text-white"
                                 >
-                                    Log in →
+                                    {t('login')} →
                                 </Link>
                             )}
                             <div className="flex items-center gap-2">

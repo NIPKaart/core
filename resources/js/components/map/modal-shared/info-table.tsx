@@ -1,5 +1,6 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
+import { TFunction } from 'i18next';
 import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
 import type { InfoTableRow } from './modal-parts';
 import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
@@ -12,16 +13,17 @@ export function getCommunityInfoRows(
     copiedSpaceId: boolean,
     setCopiedSpaceId: (v: boolean) => void,
     copyLocationId: (e: React.MouseEvent) => void,
+    t: TFunction,
 ): InfoTableRow[] {
     return [
         {
             icon: <Tag className="h-4 w-4 text-muted-foreground" />,
-            label: 'Street',
+            label: t('common.table.street'),
             value: data.street || '-',
         },
         {
             icon: <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />,
-            label: 'Max. parking time',
+            label: t('community.table.max_time'),
             value:
                 typeof data.parking_time === 'number' && data.parking_time > 0 ? (
                     <TooltipProvider>
@@ -33,30 +35,30 @@ export function getCommunityInfoRows(
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="top" align="center">
-                                Don’t forget your parking disc!
+                                {t('community.table.parking_disc')}
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 ) : (
-                    <span className="text-zinc-400 italic">Unlimited</span>
+                    <span className="text-zinc-400 italic">{t('community.table.unlimited')}</span>
                 ),
         },
         {
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
-            label: 'Orientation',
+            label: t('common.table.orientation'),
             value: data.orientation || '-',
         },
         {
             icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
-            label: 'Municipality',
+            label: t('common.table.municipality'),
             value: data.municipality || '-',
         },
         {
             icon: <Landmark className="h-4 w-4 text-muted-foreground" />,
-            label: 'Municipal regulations',
+            label: t('common.table.regulations'),
             value: data.rule_url ? (
                 <a href={data.rule_url} target="_blank" rel="noopener" className="text-orange-600 underline">
-                    Website
+                    {t('common.table.website')}
                 </a>
             ) : (
                 <span className="text-zinc-400 italic">No information</span>
@@ -64,26 +66,26 @@ export function getCommunityInfoRows(
         },
         {
             icon: <Users className="h-4 w-4 text-green-600 dark:text-green-300" />,
-            label: 'Last confirmed',
+            label: t('community.table.last_confirmed'),
             value: data.last_confirmed_at ? (
                 <>
                     <span>{formatDistanceToNow(new Date(data.last_confirmed_at), { addSuffix: true })}</span>
                     <span className="ml-2 text-xs text-muted-foreground">({new Date(data.last_confirmed_at).toLocaleDateString()})</span>
                 </>
             ) : (
-                <span className="text-zinc-400 italic">Never</span>
+                <span className="text-zinc-400 italic">{t('community.table.never')}</span>
             ),
         },
         ...(isLoggedIn
             ? [
                   {
                       icon: <Compass className="h-4 w-4 text-muted-foreground" />,
-                      label: 'Area',
+                      label: t('community.table.area'),
                       value: data.amenity || '-',
                   },
                   {
                       icon: <Hash className="h-4 w-4 text-muted-foreground" />,
-                      label: 'Location ID',
+                      label: t('common.table.location_id'),
                       value: (
                           <span className="flex items-center gap-1">
                               <span className="select-all">{data.id}</span>
@@ -101,7 +103,7 @@ export function getCommunityInfoRows(
                                           </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" align="center">
-                                          Copied!
+                                          {t('common.table.copied')}
                                       </TooltipContent>
                                   </Tooltip>
                               </TooltipProvider>
@@ -125,44 +127,45 @@ export function getMunicipalInfoRows(
     copiedSpaceId: boolean,
     setCopiedSpaceId: (v: boolean) => void,
     copyLocationId: (e: React.MouseEvent) => void,
+    t: TFunction,
 ): InfoTableRow[] {
     return [
         {
             icon: <Tag className="h-4 w-4 text-muted-foreground" />,
-            label: 'Street',
+            label: t('common.table.street'),
             value: data.street || '-',
         },
         {
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
-            label: 'Orientation',
+            label: t('common.table.orientation'),
             value: data.orientation || '-',
         },
         {
             icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
-            label: 'Municipality',
+            label: t('common.table.municipality'),
             value: data.municipality || '-',
         },
         {
             icon: <Landmark className="h-4 w-4 text-muted-foreground" />,
-            label: 'Municipal regulations',
+            label: t('common.table.regulations'),
             value: data.rule_url ? (
                 <a href={data.rule_url} target="_blank" rel="noopener" className="text-orange-600 underline">
-                    Website
+                    {t('common.table.website')}
                 </a>
             ) : (
-                <span className="text-zinc-400 italic">No information</span>
+                <span className="text-zinc-400 italic">{t('common.table.no_information')}</span>
             ),
         },
         {
             icon: <FileText className="h-4 w-4 text-muted-foreground" />,
-            label: 'Last updated',
+            label: t('municipal.table.updated_at'),
             value: new Date(data.updated_at).toLocaleDateString(),
         },
         ...(isLoggedIn
             ? [
                   {
                       icon: <Hash className="h-4 w-4 text-muted-foreground" />,
-                      label: 'Location ID',
+                      label: t('common.table.location_id'),
                       value: (
                           <span className="flex items-center gap-1">
                               <span className="select-all">{data.id}</span>
@@ -180,7 +183,7 @@ export function getMunicipalInfoRows(
                                           </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" align="center">
-                                          Copied!
+                                          {t('common.table.copied')}
                                       </TooltipContent>
                                   </Tooltip>
                               </TooltipProvider>
@@ -199,19 +202,20 @@ export function getOffstreetInfoRows(
     copiedSpaceId: boolean,
     setCopiedSpaceId: (v: boolean) => void,
     copyLocationId: (e: React.MouseEvent) => void,
+    t: TFunction,
 ): InfoTableRow[] {
     return [
         {
             icon: <ParkingSquare className="h-4 w-4 text-primary" />,
-            label: 'Type',
+            label: t('offstreet.table.type'),
             value:
                 data.type === 'parkandride' ? (
                     <span className="inline-block rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                        P+R
+                        {t('offstreet.table.parkandride')}
                     </span>
                 ) : (
                     <span className="inline-block rounded bg-zinc-200 px-2 py-0.5 text-xs text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-                        Garage
+                        {t('offstreet.table.garage')}
                     </span>
                 ),
         },
@@ -219,7 +223,7 @@ export function getOffstreetInfoRows(
             ? [
                   {
                       icon: <FileText className="h-4 w-4 text-muted-foreground" />,
-                      label: 'API status',
+                      label: t('offstreet.table.api_status'),
                       value: (
                           <span
                               className={
@@ -237,22 +241,22 @@ export function getOffstreetInfoRows(
             : []),
         {
             icon: <Globe2 className="h-4 w-4 text-muted-foreground" />,
-            label: 'Country',
+            label: t('common.table.country'),
             value: data.country || '-',
         },
         {
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
-            label: 'Province',
+            label: t('common.table.province'),
             value: data.province || '-',
         },
         {
             icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
-            label: 'Municipality',
+            label: t('common.table.municipality'),
             value: data.municipality || '-',
         },
         {
             icon: <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />,
-            label: 'Short-term parking',
+            label: t('offstreet.table.short_term'),
             value: (
                 <span>
                     <strong>{data.free_space_short}</strong> / {data.short_capacity}
@@ -263,7 +267,7 @@ export function getOffstreetInfoRows(
             ? [
                   {
                       icon: <AlarmClock className="h-4 w-4 text-orange-400 dark:text-orange-300" />,
-                      label: 'Long-term parking',
+                      label: t('offstreet.table.long_term'),
                       value: (
                           <span>
                               <strong>{data.free_space_long ?? '-'}</strong> / {data.long_capacity}
@@ -274,32 +278,32 @@ export function getOffstreetInfoRows(
             : []),
         {
             icon: <Link className="h-4 w-4 text-muted-foreground" />,
-            label: 'More information',
+            label: t('offstreet.table.more_info'),
             value: data.url ? (
                 <a href={data.url} target="_blank" rel="noopener noreferrer" className="text-orange-600 underline">
-                    Website
+                    {t('common.table.website')}
                 </a>
             ) : (
-                <span className="text-zinc-400 italic">No link</span>
+                <span className="text-zinc-400 italic">{t('offstreet.table.no_link')}</span>
             ),
         },
         {
             icon: <FileText className="h-4 w-4 text-muted-foreground" />,
-            label: 'Latest update',
+            label: t('offstreet.table.latest_update'),
             value: new Date(data.updated_at).toLocaleString(undefined, {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit',
+                hourCycle: 'h23',
             }),
         },
         ...(isLoggedIn
             ? [
                   {
                       icon: <Hash className="h-4 w-4 text-muted-foreground" />,
-                      label: 'Location ID',
+                      label: t('common.table.location_id'),
                       value: (
                           <span className="flex items-center gap-1">
                               <span className="select-all">{data.id}</span>
@@ -317,7 +321,7 @@ export function getOffstreetInfoRows(
                                           </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" align="center">
-                                          Copied!
+                                          {t('common.table.copied')}
                                       </TooltipContent>
                                   </Tooltip>
                               </TooltipProvider>

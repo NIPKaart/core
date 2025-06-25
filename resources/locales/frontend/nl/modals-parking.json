@@ -1,0 +1,71 @@
+{
+    "community": {
+        "modal": {
+            "title": "Community parkeerplaats",
+            "description": "Deze parkeerplaats maakt deel uit van ons community parkeerinitiatief. U kunt het gebruik bevestigen of meer details bekijken."
+        },
+        "tabs": {
+            "info": "Info",
+            "confirm": "Bevestigen",
+            "description": "Beschrijving"
+        },
+        "table": {
+            "max_time": "Max. parkeertijd",
+            "parking_disc": "Vergeet uw parkeerschijf niet!",
+            "unlimited": "Onbeperkt",
+            "last_confirmed": "Laatst bevestigd",
+            "never": "Nooit",
+            "area": "Gebied",
+            "added_on": "Toegevoegd op"
+        }
+    },
+    "municipal": {
+        "modal": {
+            "title": "Gemeentelijke parkeerplaats",
+            "description": "Dit is een officiële parkeerplaats die wordt aangeboden door de gemeente. De details zijn gebaseerd op open data."
+        },
+        "table": {
+            "updated_at": "Laatst bijgewerkt"
+        }
+    },
+    "offstreet": {
+        "modal": {
+            "description": "Dit is een parkeerlocatie buiten de straat. U kunt meer details over de parkeerplaats hieronder vinden."
+        },
+        "available": "{{free}} vrij / {{total}} totaal",
+        "occupied": "{{percent}}% bezet",
+        "percentage_note": "Percentage van beschikbare parkeerplaatsen",
+        "warning": "Let op: parkeren in een parkeergarage kan extra kosten met zich meebrengen.",
+        "delay_warning": "De gegevens zijn vertraagd; controleer altijd de borden ter plaatse.",
+        "table": {
+            "type": "Type",
+            "garage": "Garage",
+            "parkandride": "P+R",
+            "api_status": "API-status",
+            "live": "Live",
+            "short_term": "Kort parkeren",
+            "long_term": "Lang parkeren",
+            "more_info": "Meer informatie",
+            "no_link": "Geen link",
+            "latest_update": "Laatste update"
+        }
+    },
+    "common": {
+        "table": {
+            "street": "Straat",
+            "orientation": "Oriëntatie",
+            "country": "Land",
+            "province": "Provincie",
+            "municipality": "Gemeente",
+            "regulations": "Gemeentelijke regels",
+            "website": "Website",
+            "no_information": "Geen informatie",
+            "location_id": "Locatie-ID",
+            "copied": "Gekopieerd!"
+        },
+        "buttons": {
+            "navigate": "Navigeren",
+            "streetview": "Streetview"
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "common": {
+        "confirm": "Bevestigen",
+        "cancel": "Annuleren",
+        "loading": "Laden...",
+        "save": "Opslaan",
+        "log_out": "Uitloggen",
+        "close": "Sluiten"
+    }
+}

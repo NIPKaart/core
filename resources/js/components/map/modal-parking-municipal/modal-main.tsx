@@ -7,6 +7,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Landmark, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getMunicipalInfoRows } from '../modal-shared/info-table';
 import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
 import type { MunicipalParkingDetail } from '../modal-shared/types';
@@ -20,6 +21,10 @@ export type ParkingMunicipalModalProps = {
 };
 
 export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude, longitude }: ParkingMunicipalModalProps) {
+    const { t } = useTranslation('modals-parking');
+    const { t: tGlobal } = useTranslation('global');
+
+    // Authorization and media query hooks
     const { user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -54,7 +59,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
         }
     }, [open, spaceId]);
 
-    const descriptionText = 'This is an official parking space provided by the municipality. Details are based on open data.';
+    const descriptionText = t('municipal.modal.description');
 
     // Desktop - Dialog variant
     if (isDesktop) {
@@ -65,7 +70,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                                 <Landmark className="h-6 w-6 text-orange-400" />
-                                Municipal Parking Space
+                                {t('municipal.modal.title')}
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}
@@ -105,8 +110,13 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
                                     <InfoTable
-                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                            copyLocationId(data, setCopiedSpaceId, e),
+                                        rows={getMunicipalInfoRows(
+                                            data,
+                                            isLoggedIn,
+                                            copiedSpaceId,
+                                            setCopiedSpaceId,
+                                            (e) => copyLocationId(data, setCopiedSpaceId, e),
+                                            t,
                                         )}
                                     />
                                 )}
@@ -115,7 +125,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                     </div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -147,8 +157,8 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                     </div>
                 </DrawerHeader>
                 <div className="overflow-y-auto">
-                    <DrawerDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DrawerDescription>
                     <div className="px-4 sm:px-6">
+                        <DrawerDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DrawerDescription>
                         {loading ? (
                             <LoadingSkeleton />
                         ) : error ? (
@@ -159,8 +169,13 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                                 <ActionButtons latitude={latitude} longitude={longitude} />
                                 {data && (
                                     <InfoTable
-                                        rows={getMunicipalInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                            copyLocationId(data, setCopiedSpaceId, e),
+                                        rows={getMunicipalInfoRows(
+                                            data,
+                                            isLoggedIn,
+                                            copiedSpaceId,
+                                            setCopiedSpaceId,
+                                            (e) => copyLocationId(data, setCopiedSpaceId, e),
+                                            t,
                                         )}
                                     />
                                 )}
@@ -171,7 +186,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                 <DrawerFooter className="flex flex-row gap-2">
                     <DrawerClose asChild>
                         <Button variant="secondary" className="flex-1">
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DrawerClose>
                 </DrawerFooter>

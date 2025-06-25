@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Eye, MapPin, Navigation, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getOrientationIllustration } from './utils';
 
 type MainInfoProps = {
@@ -113,6 +114,8 @@ type ActionButtonsProps = {
 };
 
 export function ActionButtons({ latitude, longitude, showNavigate = true, showStreetview = true }: ActionButtonsProps) {
+    const { t } = useTranslation('modals-parking');
+
     const hasCoords = typeof latitude === 'number' && typeof longitude === 'number';
     function getGoogleMapsUrl(lat: number, lng: number) {
         return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -133,7 +136,7 @@ export function ActionButtons({ latitude, longitude, showNavigate = true, showSt
                     aria-disabled={!hasCoords}
                 >
                     <Button size="sm" className="cursor-pointer rounded-md bg-orange-500 text-white hover:bg-orange-600" disabled={!hasCoords}>
-                        <Navigation className="mr-1 h-4 w-4" /> Navigate
+                        <Navigation className="mr-1 h-4 w-4" /> {t('common.buttons.navigate')}
                     </Button>
                 </a>
             )}
@@ -146,7 +149,7 @@ export function ActionButtons({ latitude, longitude, showNavigate = true, showSt
                     aria-disabled={!hasCoords}
                 >
                     <Button variant="outline" size="sm" className="cursor-pointer rounded-md" disabled={!hasCoords}>
-                        <Eye className="mr-1 h-4 w-4" /> Streetview
+                        <Eye className="mr-1 h-4 w-4" /> {t('common.buttons.streetview')}
                     </Button>
                 </a>
             )}

@@ -7,6 +7,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Navigation, ParkingSquare, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { copyUrl, ErrorBlock, LoadingSkeleton } from '../modal-shared/modal-parts';
 import { OffstreetParkingDetail } from '../modal-shared/types';
 import { OffstreetModalContent } from './modal-parts';
@@ -20,6 +21,10 @@ export type ParkingOffstreetModalProps = {
 };
 
 export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude, longitude }: ParkingOffstreetModalProps) {
+    const { t } = useTranslation('modals-parking');
+    const { t: tGlobal } = useTranslation('global');
+
+    // Authorization and media query hooks
     const { user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -54,7 +59,7 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
         }
     }, [open, spaceId]);
 
-    const descriptionText = 'This is an off-street parking location. You can find more details about the parking space below.';
+    const descriptionText = t('offstreet.modal.description');
 
     // Desktop - Dialog variant
     if (isDesktop) {
@@ -83,7 +88,7 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent side="top" align="center">
-                                            Copied!
+                                            {t('common.table.copied')}
                                         </TooltipContent>
                                     </Tooltip>
                                 </TooltipProvider>
@@ -127,11 +132,11 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
                                 title="Go to Google Maps"
                             >
                                 <Navigation className="mr-1 h-4 w-4" />
-                                Navigate
+                                {t('common.buttons.navigate')}
                             </Button>
                         </a>
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -199,12 +204,12 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
                             title="Go to Google Maps"
                         >
                             <Navigation className="mr-1 h-4 w-4" />
-                            Navigate
+                            {t('common.buttons.navigate')}
                         </Button>
                     </a>
                     <DrawerClose asChild>
                         <Button variant="secondary" className="flex-1">
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DrawerClose>
                 </DrawerFooter>

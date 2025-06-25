@@ -10,6 +10,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, MapPinned, Share2, X } from 'lucide-react';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getCommunityInfoRows } from '../modal-shared/info-table';
 import { ActionButtons, copyLocationId, copyUrl, ErrorBlock, InfoTable, LoadingSkeleton, MainInfo } from '../modal-shared/modal-parts';
 import type { ParkingSpaceDetail } from '../modal-shared/types';
@@ -25,6 +26,10 @@ export type ParkingSpaceModalProps = {
 };
 
 export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpaceModalProps) {
+    const { t } = useTranslation('modals-parking');
+    const { t: tGlobal } = useTranslation('global');
+
+    // Authorization and media query hooks
     const { can, user } = useAuthorization();
     const isLoggedIn = !!user;
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -69,8 +74,13 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                     <ActionButtons latitude={latitude} longitude={longitude} />
                     {data && (
                         <InfoTable
-                            rows={getCommunityInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                copyLocationId(data, setCopiedSpaceId, e),
+                            rows={getCommunityInfoRows(
+                                data,
+                                isLoggedIn,
+                                copiedSpaceId,
+                                setCopiedSpaceId,
+                                (e) => copyLocationId(data, setCopiedSpaceId, e),
+                                t,
                             )}
                         />
                     )}
@@ -88,7 +98,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                             className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                         >
                             <InfoIcon className="h-4 w-4" />
-                            Info
+                            {t('community.tabs.info')}
                         </TabsTrigger>
                         {isLoggedIn && (
                             <TabsTrigger
@@ -96,7 +106,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                                 className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                             >
                                 <MapPinCheckInside className="h-4 w-4" />
-                                Confirm
+                                {t('community.tabs.confirm')}
                             </TabsTrigger>
                         )}
                         {data?.description && (
@@ -105,15 +115,20 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                                 className="flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                             >
                                 <FileText className="h-4 w-4" />
-                                Description
+                                {t('community.tabs.description')}
                             </TabsTrigger>
                         )}
                     </TabsList>
                     <TabsContent value="info">
                         {data && (
                             <InfoTable
-                                rows={getCommunityInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) =>
-                                    copyLocationId(data, setCopiedSpaceId, e),
+                                rows={getCommunityInfoRows(
+                                    data,
+                                    isLoggedIn,
+                                    copiedSpaceId,
+                                    setCopiedSpaceId,
+                                    (e) => copyLocationId(data, setCopiedSpaceId, e),
+                                    t,
                                 )}
                             />
                         )}
@@ -137,7 +152,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         );
     }
 
-    const descriptionText = 'This space is part of our community parking initiative. You can confirm use or view more details.';
+    const descriptionText = t('community.modal.description');
 
     if (isDesktop) {
         return (
@@ -187,7 +202,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                             </a>
                         )}
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -233,7 +248,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                     )}
                     <DrawerClose asChild>
                         <Button variant="secondary" className="flex-1">
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DrawerClose>
                 </DrawerFooter>
