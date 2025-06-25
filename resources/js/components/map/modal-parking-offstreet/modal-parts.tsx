@@ -1,4 +1,5 @@
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from 'react-i18next';
 import { getOffstreetInfoRows } from '../modal-shared/info-table';
 import { copyLocationId, InfoTable } from '../modal-shared/modal-parts';
 import { OffstreetParkingDetail } from '../modal-shared/types';
@@ -13,6 +14,8 @@ type OffstreetModalContentProps = {
 };
 
 export function OffstreetModalContent({ data, isLoggedIn, copiedSpaceId, setCopiedSpaceId }: OffstreetModalContentProps) {
+    const { t } = useTranslation('modals-parking');
+
     // Calculate occupancy and color
     const occupancy = data && data.short_capacity > 0 && data.free_space_short != null ? 1 - data.free_space_short / data.short_capacity : null;
 
@@ -31,9 +34,16 @@ export function OffstreetModalContent({ data, isLoggedIn, copiedSpaceId, setCopi
                     <div className="mx-auto my-4 flex w-full max-w-xs flex-col items-center">
                         <div className="mb-2 flex w-full justify-between text-xs">
                             <span>
-                                {data.free_space_short} free / {data.short_capacity} total
+                                {t('offstreet.available', {
+                                    free: data.free_space_short,
+                                    total: data.short_capacity,
+                                })}
                             </span>
-                            <span>{Math.round(occupancy * 100)}% occupied</span>
+                            <span>
+                                {t('offstreet.occupied', {
+                                    percent: Math.round(occupancy * 100),
+                                })}
+                            </span>
                         </div>
                         <Progress
                             value={occupancy * 100}
@@ -47,20 +57,18 @@ export function OffstreetModalContent({ data, isLoggedIn, copiedSpaceId, setCopi
                                         : '[&>div]:bg-zinc-400'
                             } `}
                         />
-                        <p className="mt-2 text-center text-xs text-muted-foreground">Percentage of available parking spaces</p>
+                        <p className="mt-2 text-center text-xs text-muted-foreground">{t('offstreet.percentage_note')}</p>
                     </div>
-                    <p className="mt-4 mb-4 text-center text-sm font-normal text-muted-foreground">
-                        Please note that parking in a parking garage may involve additional costs, and the availability can change rapidly.
-                    </p>
+                    <p className="mt-4 mb-4 text-center text-sm font-normal text-muted-foreground">{t('offstreet.warning')}</p>
                 </>
             )}
 
             <InfoTable
-                rows={getOffstreetInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e))}
+                rows={getOffstreetInfoRows(data, isLoggedIn, copiedSpaceId, setCopiedSpaceId, (e) => copyLocationId(data, setCopiedSpaceId, e), t)}
             />
 
             <div className="mt-4">
-                <p className="text-center text-xs text-muted-foreground">Data may be delayed; always check signage on location.</p>
+                <p className="text-center text-xs text-muted-foreground">{t('offstreet.delay_warning')}</p>
             </div>
         </>
     );

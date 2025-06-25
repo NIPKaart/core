@@ -1,0 +1,71 @@
+{
+    "community": {
+        "modal": {
+            "title": "Community Parking Space",
+            "description": "This space is part of our community parking initiative. You can confirm use or view more details."
+        },
+        "tabs": {
+            "info": "Info",
+            "confirm": "Confirm",
+            "description": "Description"
+        },
+        "table": {
+            "max_time": "Max. parking time",
+            "parking_disc": "Don't forget your parking disc!",
+            "unlimited": "Unlimited",
+            "last_confirmed": "Last confirmed",
+            "never": "Never",
+            "area": "Area",
+            "added_on": "Added on"
+        }
+    },
+    "municipal": {
+        "modal": {
+            "title": "Municipal Parking Space",
+            "description": "This is an official parking space provided by the municipality. Details are based on open data."
+        },
+        "table": {
+            "updated_at": "Last updated"
+        }
+    },
+    "offstreet": {
+        "modal": {
+            "description": "This is an off-street parking location. You can find more details about the parking space below."
+        },
+        "available": "{{free}} free / {{total}} total",
+        "occupied": "{{percent}}% occupied",
+        "percentage_note": "Percentage of available parking spaces",
+        "warning": "Please note that parking in a parking garage may involve additional costs.",
+        "delay_warning": "Data may be delayed; always check signage on location.",
+        "table": {
+            "type": "Type",
+            "garage": "Garage",
+            "parkandride": "P+R",
+            "api_status": "API status",
+            "live": "Live",
+            "short_term": "Short-term parking",
+            "long_term": "Long-term parking",
+            "more_info": "More information",
+            "no_link": "No link",
+            "latest_update": "Latest update"
+        }
+    },
+    "common": {
+        "table": {
+            "street": "Street",
+            "orientation": "Orientation",
+            "country": "Country",
+            "province": "Province",
+            "municipality": "Municipality",
+            "regulations": "Municipal regulations",
+            "website": "Website",
+            "no_information": "No information",
+            "location_id": "Location ID",
+            "copied": "Copied!"
+        },
+        "buttons": {
+            "navigate": "Navigate",
+            "streetview": "Streetview"
+        }
+    }
+}

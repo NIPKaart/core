@@ -1,0 +1,10 @@
+{
+    "common": {
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "save": "Save",
+        "log_out": "Log out",
+        "close": "Close"
+    }
+}
