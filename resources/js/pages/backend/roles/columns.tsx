@@ -7,28 +7,30 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { Role } from '@/types';
+import type { Role, Translations } from '@/types';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreVertical } from 'lucide-react';
 
-export function getRoleColumns(can: (permission: string) => boolean, openDialog: (role: Role, type: 'delete') => void): ColumnDef<Role>[] {
+type OpenDialogFn = (role: Role, type: 'delete') => void;
+
+export function getRoleColumns(can: (permission: string) => boolean, openDialog: OpenDialogFn, { t, tGlobal }: Translations): ColumnDef<Role>[] {
     return [
         {
             accessorKey: 'name',
-            header: 'Name',
+            header: t('table.name'),
             enableSorting: true,
             enableHiding: false,
         },
         {
             accessorKey: 'guard_name',
-            header: 'Guard',
+            header: t('table.guard'),
             enableSorting: false,
             enableHiding: true,
         },
         {
             accessorKey: 'created_at',
-            header: 'Created at',
+            header: t('table.created_at'),
             enableSorting: true,
             enableHiding: true,
             cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
@@ -50,11 +52,11 @@ export function getRoleColumns(can: (permission: string) => boolean, openDialog:
                                     className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
+                                    <span className="sr-only">{tGlobal('common.openMenu')}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{tGlobal('common.actions')}</DropdownMenuLabel>
                                 {/* {can('role.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
                                         <Link href={route('app.roles.show', { id: role.id })}>View</Link>
@@ -63,7 +65,7 @@ export function getRoleColumns(can: (permission: string) => boolean, openDialog:
                                 {can('role.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.roles.edit', { id: role.id })}>Edit</Link>
+                                            <Link href={route('app.roles.edit', { id: role.id })}>{tGlobal('common.edit')}</Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}
@@ -77,7 +79,7 @@ export function getRoleColumns(can: (permission: string) => boolean, openDialog:
                                             }}
                                             className="cursor-pointer text-destructive"
                                         >
-                                            Delete
+                                            {tGlobal('common.delete')}
                                         </DropdownMenuItem>
                                     </>
                                 )}

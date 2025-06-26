@@ -1,0 +1,27 @@
+{
+    "head": {
+        "title": "Roles",
+        "description": "Manage user roles and their permissions."
+    },
+    "breadcrumbs": {
+        "index": "Roles"
+    },
+    "buttons": {
+        "add": "Role"
+    },
+    "table": {
+        "name": "Name",
+        "guard": "Guard",
+        "created_at": "Created at",
+        "actions": "Actions"
+    },
+    "confirm": {
+        "delete_title": "Delete role?",
+        "delete_description": "Are you sure you want to delete the role \"{{name}}\"?",
+        "delete_confirm": "Delete"
+    },
+    "toast": {
+        "deleted": "Role deleted successfully",
+        "error": "Failed to delete role"
+    }
+}

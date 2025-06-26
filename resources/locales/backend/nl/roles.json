@@ -1,0 +1,27 @@
+{
+    "head": {
+        "title": "Rollen",
+        "description": "Beheer gebruikersrollen en bijbehorende rechten."
+    },
+    "breadcrumbs": {
+        "index": "Rollen"
+    },
+    "buttons": {
+        "add": "Rol"
+    },
+    "table": {
+        "name": "Naam",
+        "guard": "Beveiliging",
+        "created_at": "Aangemaakt op",
+        "actions": "Acties"
+    },
+    "confirm": {
+        "delete_title": "Rol verwijderen?",
+        "delete_description": "Weet je zeker dat je de rol \"{{name}}\" wilt verwijderen?",
+        "delete_confirm": "Verwijderen"
+    },
+    "toast": {
+        "deleted": "Rol succesvol verwijderd",
+        "error": "Verwijderen van rol mislukt"
+    }
+}
