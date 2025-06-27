@@ -1,0 +1,51 @@
+{
+    "head": {
+        "index": "Users",
+        "description": "Manage users, suspend or delete them, and assign roles.",
+        "edit": "Edit {{name}}",
+        "create": "New User"
+    },
+    "breadcrumbs": {
+        "index": "Users"
+    },
+    "buttons": {
+        "add": "User"
+    },
+    "table": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Status",
+        "created_at": "Created at",
+        "active": "Active",
+        "suspended": "Suspended",
+        "actions": {
+            "suspend": "Suspend",
+            "unsuspend": "Unsuspend"
+        }
+    },
+    "confirm": {
+        "delete": {
+            "title": "Delete user?",
+            "description": "Are you sure you want to delete: {{name}}? This action cannot be undone.",
+            "confirm": "Delete"
+        },
+        "suspend": {
+            "title": "Suspend user",
+            "description": "Are you sure you want to suspend: {{name}}?",
+            "confirm": "Suspend"
+        },
+        "unsuspend": {
+            "title": "Unsuspend user",
+            "description": "Are you sure you want to unsuspend: {{name}}?",
+            "confirm": "Unsuspend"
+        }
+    },
+    "toast": {
+        "deleted": "User deleted successfully",
+        "delete_failed": "Failed to delete user",
+        "suspended": "User is suspended",
+        "unsuspended": "User is unsuspended",
+        "suspend_failed": "Failed to update suspension status"
+    }
+}

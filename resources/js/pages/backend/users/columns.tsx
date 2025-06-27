@@ -8,7 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { User } from '@/types';
+import type { Translations, User } from '@/types';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreVertical } from 'lucide-react';
@@ -16,28 +16,30 @@ import { MoreVertical } from 'lucide-react';
 type UserWithRoles = User & {
     roles: { id: number; name: string }[];
 };
+type OpenDialogFn = (user: UserWithRoles, type: 'delete' | 'suspend') => void;
 
 export function getUserColumns(
     can: (permission: string) => boolean,
     authUser: { id: number } | undefined,
-    openDialog: (user: UserWithRoles, type: 'delete' | 'suspend') => void,
+    openDialog: OpenDialogFn,
+    { t, tGlobal }: Translations,
 ): ColumnDef<UserWithRoles>[] {
     return [
         {
             accessorKey: 'name',
-            header: 'Name',
+            header: t('table.name'),
             enableSorting: true,
             enableHiding: false,
         },
         {
             accessorKey: 'email',
-            header: 'Email',
+            header: t('table.email'),
             enableSorting: false,
             enableHiding: true,
         },
         {
             accessorKey: 'roles',
-            header: 'Roles',
+            header: t('table.roles'),
             enableSorting: false,
             enableHiding: true,
             cell: ({ row }) => (
@@ -52,16 +54,20 @@ export function getUserColumns(
         },
         {
             id: 'status',
-            header: 'Status',
+            header: t('table.status'),
             accessorFn: (row) => (row.suspended_at ? 'Suspended' : 'Active'),
             enableSorting: true,
             enableHiding: false,
             cell: ({ row }) =>
-                row.original.suspended_at ? <Badge variant="destructive">Suspended</Badge> : <Badge variant="secondary">Active</Badge>,
+                row.original.suspended_at ? (
+                    <Badge variant="destructive">{t('table.suspended')}</Badge>
+                ) : (
+                    <Badge variant="secondary">{t('table.active')}</Badge>
+                ),
         },
         {
             accessorKey: 'created_at',
-            header: 'Created at',
+            header: t('table.created_at'),
             enableSorting: true,
             enableHiding: true,
             cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
@@ -86,12 +92,12 @@ export function getUserColumns(
                                     className="flex size-8 cursor-pointer text-muted-foreground data-[state=open]:bg-muted"
                                 >
                                     <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Open menu</span>
+                                    <span className="sr-only">{tGlobal('common.openMenu')}</span>
                                 </Button>
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{tGlobal('common.actions')}</DropdownMenuLabel>
                                 {/* {can('user.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
                                         <Link href={route('app.users.show', { id: user.id })}>View</Link>
@@ -100,7 +106,7 @@ export function getUserColumns(
                                 {can('user.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.users.edit', { id: user.id })}>Edit</Link>
+                                            <Link href={route('app.users.edit', { id: user.id })}>{tGlobal('common.edit')}</Link>
                                         </DropdownMenuItem>
                                         {!isSelf && (
                                             <>
@@ -112,7 +118,7 @@ export function getUserColumns(
                                                     }}
                                                     className="cursor-pointer"
                                                 >
-                                                    {isSuspended ? 'Unsuspend' : 'Suspend'}
+                                                    {isSuspended ? t('table.actions.unsuspend') : t('table.actions.suspend')}
                                                 </DropdownMenuItem>
                                             </>
                                         )}
@@ -126,7 +132,7 @@ export function getUserColumns(
                                         }}
                                         className="cursor-pointer text-destructive"
                                     >
-                                        Delete
+                                        {tGlobal('common.delete')}
                                     </DropdownMenuItem>
                                 )}
                             </DropdownMenuContent>

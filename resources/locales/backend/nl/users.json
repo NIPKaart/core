@@ -1,0 +1,51 @@
+{
+    "head": {
+        "index": "Gebruikers",
+        "description": "Beheer gebruikers, schors of verwijder ze en wijs rollen toe.",
+        "edit": "Bewerk {{name}}",
+        "create": "Nieuwe gebruiker"
+    },
+    "breadcrumbs": {
+        "index": "Gebruikers"
+    },
+    "buttons": {
+        "add": "Gebruiker"
+    },
+    "table": {
+        "name": "Naam",
+        "email": "E-mail",
+        "roles": "Rollen",
+        "status": "Status",
+        "created_at": "Aangemaakt op",
+        "active": "Actief",
+        "suspended": "Gesuspend",
+        "actions": {
+            "suspend": "Schorsen",
+            "unsuspend": "Herstellen"
+        }
+    },
+    "confirm": {
+        "delete": {
+            "title": "Gebruiker verwijderen?",
+            "description": "Weet je zeker dat je {{name}} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+            "confirm": "Verwijderen"
+        },
+        "suspend": {
+            "title": "Gebruiker schorsen",
+            "description": "Weet je zeker dat je {{name}} wilt schorsen?",
+            "confirm": "Schorsen"
+        },
+        "unsuspend": {
+            "title": "Gebruiker herstellen",
+            "description": "Weet je zeker dat je {{name}} wilt herstellen?",
+            "confirm": "Herstellen"
+        }
+    },
+    "toast": {
+        "deleted": "Gebruiker succesvol verwijderd",
+        "delete_failed": "Verwijderen van gebruiker mislukt",
+        "suspended": "Gebruiker is geschorst",
+        "unsuspended": "Gebruiker is hersteld",
+        "suspend_failed": "Bijwerken schorsingsstatus mislukt"
+    }
+}
