@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import RoleForm, { FormValues } from '@/pages/backend/form-role';
 import { BreadcrumbItem, Permission, Role } from '@/types';
@@ -13,13 +14,15 @@ type PageProps = {
 };
 
 export default function Edit({ role, rolePermissions, allPermissions }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('roles');
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Roles',
+            title: t('breadcrumbs.index'),
             href: route('app.roles.index'),
         },
         {
-            title: `Edit role (${role.name})`,
+            title: t('breadcrumbs.edit', { name: role.name }),
             href: route('app.roles.edit', { role: role.id }),
         },
     ];
@@ -47,14 +50,14 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${role.name}`} />
+            <Head title={t('head.edit', { name: role.name })} />
             <div className="mb-6 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Edit {role.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('head.edit', { name: role.name })}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.roles.index')}>
                         <ArrowLeft className="h-4 w-4" />
-                        Back
+                        {tGlobal('common.back')}
                     </Link>
                 </Button>
             </div>

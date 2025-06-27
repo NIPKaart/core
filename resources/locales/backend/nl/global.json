@@ -9,7 +9,8 @@
         "openMenu": "Menu openen",
         "save": "Opslaan",
         "saved": "Opgeslagen",
-        "yes": "Ja"
+        "yes": "Ja",
+        "back": "Terug"
     },
     "search": {
         "placeholder": "Zoeken..."

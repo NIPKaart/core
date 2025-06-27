@@ -1,0 +1,45 @@
+{
+    "head": {
+        "title": "Roles",
+        "description": "Manage user roles and their permissions.",
+        "edit": "Edit {{name}}",
+        "create": "Create Role"
+    },
+    "breadcrumbs": {
+        "index": "Roles",
+        "edit": "Edit role ({{name}})",
+        "create": "Create role"
+    },
+    "buttons": {
+        "add": "Role"
+    },
+    "table": {
+        "name": "Name",
+        "guard": "Guard",
+        "created_at": "Created at"
+    },
+    "form": {
+        "name": {
+            "label": "Name",
+            "placeholder": "admin, moderator..."
+        },
+        "permissions": {
+            "label": "Permissions",
+            "group_label": "{{resource}} permissions"
+        },
+        "submit": {
+            "create": "Save Role",
+            "update": "Update Role"
+        }
+    },
+    "confirm": {
+        "delete_title": "Delete role?",
+        "delete_description": "Are you sure you want to delete the role \"{{name}}\"?",
+        "delete_confirm": "Delete"
+    },
+    "toast": {
+        "updated": "Role updated successfully",
+        "deleted": "Role deleted successfully",
+        "error": "Something went wrong while updating the role."
+    }
+}

@@ -10,6 +10,11 @@ export interface BreadcrumbItem {
     href: string;
 }
 
+type Translations = {
+    t: TFunction;
+    tGlobal: TFunction;
+};
+
 export interface NavGroup {
     title?: string;
     items: NavItem[];
