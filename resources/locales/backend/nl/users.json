@@ -3,10 +3,12 @@
         "index": "Gebruikers",
         "description": "Beheer gebruikers, schors of verwijder ze en wijs rollen toe.",
         "edit": "Bewerk {{name}}",
-        "create": "Nieuwe gebruiker"
+        "create": "Gebruiker aanmaken"
     },
     "breadcrumbs": {
-        "index": "Gebruikers"
+        "index": "Gebruikers",
+        "edit": "Bewerk gebruiker ({{name}})",
+        "create": "Gebruiker aanmaken"
     },
     "buttons": {
         "add": "Gebruiker"
@@ -22,6 +24,21 @@
         "actions": {
             "suspend": "Schorsen",
             "unsuspend": "Herstellen"
+        }
+    },
+    "form": {
+        "account_info": "Accountinformatie",
+        "name": "Naam",
+        "email": "E-mail",
+        "password": "Wachtwoord",
+        "password_optional": "Wijzig wachtwoord (optioneel)",
+        "confirm_password": "Bevestig wachtwoord",
+        "role": "Rol",
+        "assign_role": "Wijs rol toe",
+        "select_role": "Selecteer een rol",
+        "actions": {
+            "create": "Nieuwe gebruiker aanmaken",
+            "update": "Gebruiker bijwerken"
         }
     },
     "confirm": {

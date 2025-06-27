@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Role } from '@/types';
 import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
     name: string;
@@ -22,12 +23,14 @@ type UserFormProps = {
 };
 
 export default function UserForm({ form, roles, isEdit = false, onSubmit, submitting }: UserFormProps) {
+    const { t } = useTranslation('users');
+
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="space-y-10">
                 {/* === Account Info === */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-tight">Account Info</h2>
+                    <h2 className="text-xl font-semibold tracking-tight">{t('form.account_info')}</h2>
 
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         {/* Name */}
@@ -36,7 +39,7 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Name</FormLabel>
+                                    <FormLabel>{t('form.name')}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="John Doe" {...field} />
                                     </FormControl>
@@ -51,7 +54,7 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel>{t('form.email')}</FormLabel>
                                     <FormControl>
                                         <Input type="email" placeholder="john@example.com" {...field} />
                                     </FormControl>
@@ -64,14 +67,14 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
 
                 {/* === Password Fields === */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-tight">{isEdit ? 'Change Password (optional)' : 'Password'}</h2>
+                    <h2 className="text-xl font-semibold tracking-tight">{isEdit ? t('form.password_optional') : t('form.password')}</h2>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <FormField
                             control={form.control}
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Password</FormLabel>
+                                    <FormLabel>{t('form.password')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                                     </FormControl>
@@ -84,7 +87,7 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
                             name="password_confirmation"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Confirm Password</FormLabel>
+                                    <FormLabel>{t('form.confirm_password')}</FormLabel>
                                     <FormControl>
                                         <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
                                     </FormControl>
@@ -97,17 +100,17 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
 
                 {/* === Role Selection === */}
                 <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-tight">Role</h2>
+                    <h2 className="text-xl font-semibold tracking-tight">{t('form.role')}</h2>
                     <FormField
                         control={form.control}
                         name="role"
                         render={({ field }) => (
                             <FormItem className="sm:w-[300px]">
-                                <FormLabel>Assign Role</FormLabel>
+                                <FormLabel>{t('form.assign_role')}</FormLabel>
                                 <Select value={field.value} onValueChange={field.onChange}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select a role" />
+                                            <SelectValue placeholder={t('form.select_role')} />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -127,7 +130,7 @@ export default function UserForm({ form, roles, isEdit = false, onSubmit, submit
                 {/* === Submit Button === */}
                 <div className="pt-4">
                     <Button className="cursor-pointer" type="submit" disabled={submitting}>
-                        {isEdit ? 'Update User' : 'Create User'}
+                        {isEdit ? t('form.actions.update') : t('form.actions.create')}
                     </Button>
                 </div>
             </form>

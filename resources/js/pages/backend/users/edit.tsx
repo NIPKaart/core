@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import UserForm, { FormValues } from '@/pages/backend/form-user';
 import { BreadcrumbItem, Role, User } from '@/types';
@@ -13,13 +14,14 @@ type PageProps = {
 };
 
 export default function Edit({ user, userRole, roles }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('users');
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Users',
+            title: t('breadcrumbs.index'),
             href: route('app.users.index'),
         },
         {
-            title: `Edit user (${user.name})`,
+            title: t('breadcrumbs.edit', { name: user.name }),
             href: route('app.users.edit', { user: user.id }),
         },
     ];
@@ -48,15 +50,15 @@ export default function Edit({ user, userRole, roles }: PageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${user.name}`} />
+            <Head title={t('head.edit', { name: user.name })} />
 
             <div className="mb-6 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Edit {user.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('head.edit', { name: user.name })}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
                     <Link href={route('app.users.index')}>
                         <ArrowLeft className="h-4 w-4" />
-                        Back
+                        {tGlobal('common.back')}
                     </Link>
                 </Button>
             </div>

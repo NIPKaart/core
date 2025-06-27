@@ -3,10 +3,12 @@
         "index": "Users",
         "description": "Manage users, suspend or delete them, and assign roles.",
         "edit": "Edit {{name}}",
-        "create": "New User"
+        "create": "Create User"
     },
     "breadcrumbs": {
-        "index": "Users"
+        "index": "Users",
+        "edit": "Edit user ({{name}})",
+        "create": "Create user"
     },
     "buttons": {
         "add": "User"
@@ -22,6 +24,21 @@
         "actions": {
             "suspend": "Suspend",
             "unsuspend": "Unsuspend"
+        }
+    },
+    "form": {
+        "account_info": "Account Info",
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "password_optional": "Change Password (optional)",
+        "confirm_password": "Confirm Password",
+        "role": "Role",
+        "assign_role": "Assign Role",
+        "select_role": "Select a role",
+        "actions": {
+            "create": "Create User",
+            "update": "Update User"
         }
     },
     "confirm": {
