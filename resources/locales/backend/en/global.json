@@ -9,7 +9,8 @@
         "openMenu": "Open menu",
         "save": "Save",
         "saved": "Saved",
-        "yes": "Yes"
+        "yes": "Yes",
+        "back": "Back"
     },
     "search": {
         "placeholder": "Search..."

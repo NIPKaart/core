@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Permission, Role } from '@/types';
 
 import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
     name: string;
@@ -21,6 +22,8 @@ type RoleFormProps = {
 };
 
 export default function RoleForm({ form, role, allPermissions, onSubmit, submitting }: RoleFormProps) {
+    const { t } = useTranslation('roles');
+
     const groupedPermissions = allPermissions.reduce<Record<string, Permission[]>>((acc, perm) => {
         const [resource] = perm.name.includes('.') ? perm.name.split('.') : perm.name.split('_');
         if (!acc[resource]) acc[resource] = [];
@@ -32,7 +35,7 @@ export default function RoleForm({ form, role, allPermissions, onSubmit, submitt
         <Form {...form}>
             <form onSubmit={onSubmit} className="space-y-10">
                 <div className="space-y-2">
-                    <h2 className="text-xl font-semibold">Name</h2>
+                    <h2 className="text-xl font-semibold">{t('form.name.label')}</h2>
                     <FormField
                         control={form.control}
                         name="name"
@@ -40,7 +43,7 @@ export default function RoleForm({ form, role, allPermissions, onSubmit, submitt
                             <FormItem className="w-full sm:w-[400px]">
                                 {/* <FormLabel>Name</FormLabel> */}
                                 <FormControl>
-                                    <Input placeholder="admin, moderator..." {...field} />
+                                    <Input placeholder={t('form.name.placeholder')} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -49,7 +52,7 @@ export default function RoleForm({ form, role, allPermissions, onSubmit, submitt
                 </div>
 
                 <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Permissions</h2>
+                    <h2 className="text-xl font-semibold">{t('form.permissions.label')}</h2>
                     <FormField
                         control={form.control}
                         name="permissions"
@@ -97,7 +100,7 @@ export default function RoleForm({ form, role, allPermissions, onSubmit, submitt
 
                 <div className="pt-4">
                     <Button className="cursor-pointer" type="submit" disabled={submitting}>
-                        {role ? 'Update Role' : 'Save Role'}
+                        {role ? t('form.submit.update') : t('form.submit.create')}
                     </Button>
                 </div>
             </form>

@@ -1,10 +1,14 @@
 {
     "head": {
         "title": "Rollen",
-        "description": "Beheer gebruikersrollen en bijbehorende rechten."
+        "description": "Beheer gebruikersrollen en bijbehorende rechten.",
+        "edit": "Bewerk {{name}}",
+        "create": "Rol aanmaken"
     },
     "breadcrumbs": {
-        "index": "Rollen"
+        "index": "Rollen",
+        "edit":  "Bewerk rol ({{name}})",
+        "create": "Rol aanmaken"
     },
     "buttons": {
         "add": "Rol"
@@ -12,8 +16,21 @@
     "table": {
         "name": "Naam",
         "guard": "Beveiliging",
-        "created_at": "Aangemaakt op",
-        "actions": "Acties"
+        "created_at": "Aangemaakt op"
+    },
+    "form": {
+        "name": {
+            "label": "Naam",
+            "placeholder": "admin, moderator..."
+        },
+        "permissions": {
+            "label": "Rechten",
+            "group_label": "{{resource}} rechten"
+        },
+        "submit": {
+            "create": "Rol opslaan",
+            "update": "Rol bijwerken"
+        }
     },
     "confirm": {
         "delete_title": "Rol verwijderen?",
@@ -21,7 +38,8 @@
         "delete_confirm": "Verwijderen"
     },
     "toast": {
+        "updated": "Rol succesvol bijgewerkt",
         "deleted": "Rol succesvol verwijderd",
-        "error": "Verwijderen van rol mislukt"
+        "error": "Er is iets misgegaan bij het bijwerken van de rol."
     }
 }
