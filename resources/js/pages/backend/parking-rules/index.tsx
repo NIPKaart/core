@@ -154,7 +154,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                     <h1 className="text-2xl font-bold">{t('head.title')}</h1>
                     {can('parking-rule.create') && (
                         <Button className="cursor-pointer" variant="outline" onClick={() => setOpenAdd(true)}>
-                            <Plus className="mr-1 h-4 w-4" />
+                            <Plus className="h-4 w-4" />
                             {t('buttons.add')}
                         </Button>
                     )}
