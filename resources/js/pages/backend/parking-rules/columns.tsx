@@ -9,18 +9,12 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Country, ParkingRule } from '@/types';
+import type { Country, ParkingRule, Translations } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
 import { MoreVertical } from 'lucide-react';
 
 type OpenEditDialogFn = (rule: ParkingRule) => void;
 type OpenDeleteDialogFn = (rule: ParkingRule) => void;
-
-type Translations = {
-    t: TFunction;
-    tGlobal: TFunction;
-};
 
 export function getParkingRuleColumns(
     can: (permission: string) => boolean,

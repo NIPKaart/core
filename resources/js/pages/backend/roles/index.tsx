@@ -64,6 +64,7 @@ export default function Index({ roles }: PageProps) {
                             </Button>
                         )}
                     </div>
+                    <p className="text-muted-foreground">{t('head.description')}</p>
 
                     <DataTable columns={columns} data={roles.data} />
                     <DataTablePagination pagination={roles} />

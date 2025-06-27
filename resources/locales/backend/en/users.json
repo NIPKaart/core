@@ -1,0 +1,68 @@
+{
+    "head": {
+        "index": "Users",
+        "description": "Manage users, suspend or delete them, and assign roles.",
+        "edit": "Edit {{name}}",
+        "create": "Create User"
+    },
+    "breadcrumbs": {
+        "index": "Users",
+        "edit": "Edit user ({{name}})",
+        "create": "Create user"
+    },
+    "buttons": {
+        "add": "User"
+    },
+    "table": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Status",
+        "created_at": "Created at",
+        "active": "Active",
+        "suspended": "Suspended",
+        "actions": {
+            "suspend": "Suspend",
+            "unsuspend": "Unsuspend"
+        }
+    },
+    "form": {
+        "account_info": "Account Info",
+        "name": "Name",
+        "email": "Email",
+        "password": "Password",
+        "password_optional": "Change Password (optional)",
+        "confirm_password": "Confirm Password",
+        "role": "Role",
+        "assign_role": "Assign Role",
+        "select_role": "Select a role",
+        "actions": {
+            "create": "Create User",
+            "update": "Update User"
+        }
+    },
+    "confirm": {
+        "delete": {
+            "title": "Delete user?",
+            "description": "Are you sure you want to delete: {{name}}? This action cannot be undone.",
+            "confirm": "Delete"
+        },
+        "suspend": {
+            "title": "Suspend user",
+            "description": "Are you sure you want to suspend: {{name}}?",
+            "confirm": "Suspend"
+        },
+        "unsuspend": {
+            "title": "Unsuspend user",
+            "description": "Are you sure you want to unsuspend: {{name}}?",
+            "confirm": "Unsuspend"
+        }
+    },
+    "toast": {
+        "deleted": "User deleted successfully",
+        "delete_failed": "Failed to delete user",
+        "suspended": "User is suspended",
+        "unsuspended": "User is unsuspended",
+        "suspend_failed": "Failed to update suspension status"
+    }
+}
