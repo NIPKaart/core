@@ -8,24 +8,54 @@
         },
         "heading": "Mijn favoriete locaties",
         "subheading": "Alle favoriete parkeerlocaties en garages in één overzicht.",
-        "search": {
-            "placeholder": "Zoek favorieten op naam, stad of gemeente..."
+        "types": {
+            "community": "Gemeenschap",
+            "municipal": "Gemeentelijk",
+            "offstreet": "Off-street"
         },
         "empty": {
             "title": "Je hebt nog geen favorieten toegevoegd.",
             "subtitle": "Blader door de kaart en klik op het hartpictogram om locaties te favoriseren."
         },
+        "search": {
+            "placeholder": "Zoek favorieten op naam, stad of gemeente..."
+        }
+    },
+    "parking_spaces": {
+        "head": {
+            "title": "Mijn parkeerlocaties"
+        },
+        "breadcrumbs": {
+            "index": "Mijn parkeerlocaties"
+        },
+        "heading": "Mijn parkeerlocaties",
+        "subheading": "Hier kun je je parkeerplaatsen beheren en hun details bekijken. Je kunt ook een van je parkeerplaatsen verwijderen indien nodig.",
+        "empty": {
+            "title": "Je hebt nog geen parkeerplaatsen toegevoegd.",
+            "subtitle": "Begin met bijdragen en help anderen door je eerste locatie toe te voegen!"
+        },
+        "search": {
+            "placeholder": "Zoeken op straat, stad, postcode..."
+        }
+    },
+    "common": {
         "actions": {
             "go_to_map": "Ga naar de kaart",
+            "add": "Toevoegen",
+            "add_first_parking_space": "Voeg je eerste parkeerplaats toe",
+            "details": "Details",
             "view_on_map": "Op de kaart"
         },
-        "fields": {
-            "country": "Land"
+        "status": {
+            "pending": "In behandeling",
+            "approved": "Goedgekeurd",
+            "rejected": "Afgewezen",
+            "active": "Actief",
+            "suspended": "Gestaakt"
         },
-        "types": {
-            "community": "Gemeenschap",
-            "municipal": "Gemeentelijk",
-            "offstreet": "Off-street"
+        "fields": {
+            "country": "Land",
+            "postcode": "Postcode"
         }
     }
 }

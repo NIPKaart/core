@@ -6,14 +6,14 @@ import { BreadcrumbItem, ParkingSpace } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { AlertCircle, CheckCircle, MapPin, Plus, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type PageProps = {
     parkingSpaces: ParkingSpace[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'My parking locations', href: route('profile.parking-spaces.index') }];
-
 export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
+    const { t } = useTranslation('profile');
     const [search, setSearch] = useState('');
 
     const filteredSpaces = useMemo(() => {
@@ -27,35 +27,36 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
         );
     }, [parkingSpaces, search]);
 
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('parking_spaces.breadcrumbs.index'), href: route('profile.parking-spaces.index') }];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="My parking locations" />
+            <Head title={t('parking_spaces.head.title')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="mb-2 text-2xl font-bold">My parking locations</h1>
-                <p className="text-muted-foreground">
-                    Here you can manage your parking spaces and view their details. You can also remove any of your parking spaces if needed.
-                </p>
+                <h1 className="mb-2 text-2xl font-bold">{t('parking_spaces.heading')}</h1>
+                <p className="text-muted-foreground">{t('parking_spaces.subheading')}</p>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                         className="w-full sm:max-w-sm"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Live search by street, city, postcode..."
+                        placeholder={t('parking_spaces.search.placeholder')}
                         autoFocus
                     />
                 </div>
 
+                {/* If there are no parking spaces added yet */}
                 {filteredSpaces.length === 0 ? (
                     <div className="mt-16 flex flex-col items-center justify-center gap-4 text-center">
                         <div className="flex flex-col items-center gap-2">
                             <MapPin className="mb-2 h-10 w-10 text-primary" />
-                            <span className="text-lg font-semibold text-muted-foreground">You haven&apos;t added any parking spaces yet.</span>
-                            <span className="text-sm text-muted-foreground">Start contributing and help others by adding your first location!</span>
+                            <span className="text-lg font-semibold text-muted-foreground">{t('parking_spaces.empty.title')}</span>
+                            <span className="text-sm text-muted-foreground">{t('parking_spaces.empty.subtitle')}</span>
                         </div>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
                             <Link href={route('map.add')}>
                                 <Plus className="h-5 w-5" />
-                                Add your first parking space
+                                {t('common.actions.add_first_parking_space')}
                             </Link>
                         </Button>
                     </div>
@@ -76,7 +77,7 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
                                             {space.city ? <span className="font-normal text-muted-foreground"> — {space.city}</span> : null}
                                         </CardTitle>
                                         <CardDescription className="mt-0.5 text-sm">
-                                            Postcode: <span className="font-medium">{space.postcode ?? '-'}</span>
+                                            {t('common.fields.postcode')}: <span className="font-medium">{space.postcode ?? '-'}</span>
                                         </CardDescription>
                                     </div>
                                 </CardHeader>
@@ -84,17 +85,17 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
                                     <StatusBadge status={space.status} />
                                     <div className="flex gap-1">
                                         <Button asChild size="sm" variant="outline" className="me-1">
-                                            <Link href={route('profile.parking-spaces.show', { id: space.id })}>Details</Link>
+                                            <Link href={route('profile.parking-spaces.show', { id: space.id })}>{t('common.actions.details')}</Link>
                                         </Button>
                                         {space.status === 'approved' && (
-                                            <Button asChild size="sm" variant="default" title="View on map">
+                                            <Button asChild size="sm" variant="default" title={t('common.actions.view_on_map')}>
                                                 <a
                                                     href={`/map#19/${space.latitude.toFixed(5)}/${space.longitude.toFixed(5)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
                                                     <MapPin className="h-4 w-4" />
-                                                    On map
+                                                    {t('common.actions.view_on_map')}
                                                 </a>
                                             </Button>
                                         )}
@@ -110,30 +111,30 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+    const { t } = useTranslation('profile');
+
     let color = 'bg-gray-100 text-gray-700 border border-gray-200';
     let icon = null;
-    let label = status.charAt(0).toUpperCase() + status.slice(1);
 
-    if (status === 'pending') {
-        color = 'bg-yellow-100 text-yellow-700 border border-yellow-200';
-        icon = <AlertCircle className="mr-1 h-4 w-4" />;
-        label = 'Pending';
-    }
-    if (status === 'approved') {
-        color = 'bg-green-100 text-green-700 border border-green-200';
-        icon = <CheckCircle className="mr-1 h-4 w-4" />;
-        label = 'Approved';
-    }
-    if (status === 'rejected') {
-        color = 'bg-red-100 text-red-700 border border-red-200';
-        icon = <XCircle className="mr-1 h-4 w-4" />;
-        label = 'Rejected';
+    switch (status) {
+        case 'pending':
+            color = 'bg-yellow-100 text-yellow-700 border border-yellow-200';
+            icon = <AlertCircle className="mr-1 h-4 w-4" />;
+            break;
+        case 'approved':
+            color = 'bg-green-100 text-green-700 border border-green-200';
+            icon = <CheckCircle className="mr-1 h-4 w-4" />;
+            break;
+        case 'rejected':
+            color = 'bg-red-100 text-red-700 border border-red-200';
+            icon = <XCircle className="mr-1 h-4 w-4" />;
+            break;
     }
 
     return (
         <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-medium ${color}`}>
             {icon}
-            {label}
+            {t(`common.status.${status}`)}
         </span>
     );
 }

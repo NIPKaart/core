@@ -91,12 +91,12 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                     </CardHeader>
                                     <CardFooter className="mt-2 flex items-center justify-between border-t pt-4">
                                         <div className="flex flex-col text-xs text-zinc-500">
-                                            {fav.country && <span>{t('favorites.fields.country')}: {fav.country}</span>}
+                                            {fav.country && <span>{t('common.fields.country')}: {fav.country}</span>}
                                         </div>
                                         <Button asChild size="sm" variant="outline" className="ml-auto" title="View on map">
                                             <a href={`/map#18/${fav.latitude}/${fav.longitude}`} rel="noopener noreferrer">
                                                 <MapPin className="mr-1 h-4 w-4" />
-                                                {t('favorites.actions.view_on_map')}
+                                                {t('common.actions.view_on_map')}
                                             </a>
                                         </Button>
                                     </CardFooter>
