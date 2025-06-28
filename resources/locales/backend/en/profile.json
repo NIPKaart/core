@@ -1,7 +1,7 @@
 {
     "favorites": {
-        "head": {
-            "title": "My Favorites"
+        "title": {
+            "index": "My Favorites"
         },
         "breadcrumbs": {
             "index": "My Favorites"
@@ -22,20 +22,53 @@
         }
     },
     "parking_spaces": {
-        "head": {
-            "title": "My parking locations"
+        "title": {
+            "index": "My parking locations",
+            "show": "Parking Space Details"
         },
         "breadcrumbs": {
-            "index": "My parking locations"
+            "index": "My parking locations",
+            "show": "Show"
         },
-        "heading": "My parking locations",
+        "heading": {
+            "index": "My parking locations",
+            "show": "Parking Space ({{id}})"
+        },
         "subheading": "Here you can manage your parking spaces and view their details. You can also remove any of your parking spaces if needed.",
+        "table": {
+            "title": "Details",
+            "subtitle": "Information about the parking space.",
+            "added_at": "Added At",
+            "country": "Country",
+            "province": "Province",
+            "municipality": "Municipality",
+            "city": "City",
+            "street": "Street",
+            "postcode": "Postcode",
+            "amenity": "Amenity",
+            "orientation": "Orientation"
+        },
+        "location": {
+            "title": "Location",
+            "subtitle": "Where the parking space is located."
+        },
+        "actions": {
+            "delete": {
+                "title": "Delete parking space?",
+                "description": "Are you sure you want to delete the parking space at {{street}}, {{city}} ({{country}} - {{code}})? This action cannot be undone.",
+                "confirm": "Delete Parking Space"
+            }
+        },
+        "toast": {
+            "success": "Parking space updated successfully",
+            "error": "Failed to update parking space"
+        },
         "empty": {
             "title": "You haven't added any parking spaces yet.",
             "subtitle": "Start contributing and help others by adding your first location!"
         },
         "search": {
-            "placeholder": "Search by street, city, postcode..."
+            "placeholder": "Search parking spaces by street, city, or postcode..."
         }
     },
     "common": {
@@ -45,13 +78,6 @@
             "add_first_parking_space": "Add your first parking space",
             "details": "Details",
             "view_on_map": "On the map"
-        },
-        "status": {
-            "pending": "Pending",
-            "approved": "Approved",
-            "rejected": "Rejected",
-            "active": "Active",
-            "suspended": "Suspended"
         },
         "fields": {
             "country": "Country",

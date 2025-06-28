@@ -1,7 +1,7 @@
 {
     "favorites": {
-        "head": {
-            "title": "Mijn Favorieten"
+        "title": {
+            "index": "Mijn Favorieten"
         },
         "breadcrumbs": {
             "index": "Mijn Favorieten"
@@ -22,14 +22,47 @@
         }
     },
     "parking_spaces": {
-        "head": {
-            "title": "Mijn parkeerlocaties"
+        "title": {
+            "index": "Mijn parkeerlocaties",
+            "show": "Details van parkeerplaats"
         },
         "breadcrumbs": {
-            "index": "Mijn parkeerlocaties"
+            "index": "Mijn parkeerlocaties",
+            "show": "Bekijken"
         },
-        "heading": "Mijn parkeerlocaties",
+        "heading": {
+            "index": "Mijn parkeerlocaties",
+            "show": "Parkeerplaats ({{id}})"
+        },
         "subheading": "Hier kun je je parkeerplaatsen beheren en hun details bekijken. Je kunt ook een van je parkeerplaatsen verwijderen indien nodig.",
+        "table": {
+            "title": "Details",
+            "subtitle": "Informatie over de parkeerplaats.",
+            "added_at": "Toegevoegd op",
+            "country": "Land",
+            "province": "Provincie",
+            "municipality": "Gemeente",
+            "city": "Stad",
+            "street": "Straat",
+            "postcode": "Postcode",
+            "amenity": "Voorziening",
+            "orientation": "Oriëntatie"
+        },
+        "location": {
+            "title": "Locatie",
+            "subtitle": "Waar de parkeerplaats zich bevindt."
+        },
+        "actions": {
+            "delete": {
+                "title": "Parkeerplaats verwijderen?",
+                "description": "Weet je zeker dat je de parkeerplaats op {{street}}, {{city}} ({{country}} - {{code}}) wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+                "confirm": "Verwijder Parkeerplaats"
+            }
+        },
+        "toast": {
+            "success": "Parkeerplaats succesvol bijgewerkt",
+            "error": "Bijwerken van parkeerplaats mislukt"
+        },
         "empty": {
             "title": "Je hebt nog geen parkeerplaatsen toegevoegd.",
             "subtitle": "Begin met bijdragen en help anderen door je eerste locatie toe te voegen!"
@@ -45,13 +78,6 @@
             "add_first_parking_space": "Voeg je eerste parkeerplaats toe",
             "details": "Details",
             "view_on_map": "Op de kaart"
-        },
-        "status": {
-            "pending": "In behandeling",
-            "approved": "Goedgekeurd",
-            "rejected": "Afgewezen",
-            "active": "Actief",
-            "suspended": "Gestaakt"
         },
         "fields": {
             "country": "Land",
