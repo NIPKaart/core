@@ -10,20 +10,12 @@ enum ParkingOrientation: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::PARALLEL => 'Parallel',
-            self::PERPENDICULAR => 'Perpendicular',
-            self::ANGLE => 'Angle',
-        };
+        return __("parking_orientation.{$this->value}.label");
     }
 
     public function description(): string
     {
-        return match ($this) {
-            self::PARALLEL => 'Parked parallel to the curb.',
-            self::PERPENDICULAR => 'Parked perpendicular to the curb.',
-            self::ANGLE => 'Parked at an angle to the curb.',
-        };
+        return __("parking_orientation.{$this->value}.description");
     }
 
     public static function all(): array

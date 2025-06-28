@@ -10,20 +10,12 @@ enum ParkingStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::PENDING => 'Pending',
-            self::APPROVED => 'Approved',
-            self::REJECTED => 'Rejected',
-        };
+        return __("parking_status.{$this->value}.label");
     }
 
     public function description(): string
     {
-        return match ($this) {
-            self::PENDING => 'Location is pending review.',
-            self::APPROVED => 'Location is approved and visible on the map.',
-            self::REJECTED => 'Location is rejected and will be removed.',
-        };
+        return __("parking_status.{$this->value}.description");
     }
 
     public static function all(): array
