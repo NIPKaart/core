@@ -162,7 +162,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                                 <MapPinned className="h-6 w-6 text-orange-400" />
-                                Community Parking Space
+                                {t('community.modal.title')}
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}

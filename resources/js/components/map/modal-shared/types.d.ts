@@ -1,6 +1,6 @@
 export type ParkingSpaceDetail = {
     id: string;
-    orientation: string | null;
+    orientation: EnumOption | null;
     country: string | null;
     province: string | null;
     municipality: string | null;
@@ -20,7 +20,7 @@ export type ParkingSpaceDetail = {
 
 export type MunicipalParkingDetail = {
     id: string;
-    orientation: string | null;
+    orientation: EnumOption | null;
     country: string | null;
     province: string | null;
     municipality: string | null;
@@ -46,4 +46,10 @@ export type OffstreetParkingDetail = {
     api_state: string | null;
     updated_at: datetime;
     is_favorited?: boolean;
+};
+
+export type EnumOption = {
+    value: string;
+    label: string;
+    description: string;
 };
