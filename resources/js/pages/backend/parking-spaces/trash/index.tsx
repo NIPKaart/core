@@ -7,7 +7,6 @@ import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { Head } from '@inertiajs/react';
-import { RowSelectionState } from '@tanstack/react-table';
 import { useState } from 'react';
 import { getParkingTrashColumns } from './columns';
 
@@ -19,10 +18,10 @@ export default function Index({ spaces }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('parking-trash');
     const { can } = useAuthorization();
 
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+    const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
-    const selectedIds = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
+    const selectedIds = spaces.data.filter((space) => rowSelection[space.id]).map((space) => space.id);
     const columns = getParkingTrashColumns(can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
