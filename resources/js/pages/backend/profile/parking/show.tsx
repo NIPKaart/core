@@ -23,8 +23,8 @@ function formatDate(dateString: string) {
 
 export default function UserParkingShow({ space, selectOptions }: PageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'My parking locations', href: route('user.parking-spaces.index') },
-        { title: 'Show', href: route('user.parking-spaces.show', { id: space.id }) },
+        { title: 'My parking locations', href: route('profile.parking-spaces.index') },
+        { title: 'Show', href: route('profile.parking-spaces.show', { id: space.id }) },
     ];
 
     const [dialogState, setDialogState] = useState<{ space: ParkingSpace | null; type: 'delete' | null }>({
@@ -41,7 +41,7 @@ export default function UserParkingShow({ space, selectOptions }: PageProps) {
     };
 
     const deleteParkingSpace = (id: string) => {
-        router.delete(route('user.parking-spaces.destroy', { id }), {
+        router.delete(route('profile.parking-spaces.destroy', { id }), {
             onSuccess: () => toast.success('Parking space deleted permanently'),
             onError: () => toast.error('Failed to delete parking space'),
         });
@@ -117,7 +117,7 @@ export default function UserParkingShow({ space, selectOptions }: PageProps) {
                 <h1 className="text-2xl font-bold tracking-tight">Parking space ({space.id})</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('user.parking-spaces.index')}>
+                        <Link href={route('profile.parking-spaces.index')}>
                             <ArrowLeft className="h-4 w-4" />
                             Back
                         </Link>

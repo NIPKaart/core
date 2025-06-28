@@ -17,7 +17,7 @@ const iconMap = {
     Offstreet: Warehouse,
 };
 
-const breadcrumbs = [{ title: 'My Favorites', href: route('user.favorites.index') }];
+const breadcrumbs = [{ title: 'My Favorites', href: route('profile.favorites.index') }];
 
 export default function FavoritesPage({ favorites = [] }: PageProps) {
     const [search, setSearch] = useState('');

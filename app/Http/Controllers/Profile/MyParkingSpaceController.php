@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Profile;
 
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
@@ -21,7 +21,7 @@ class MyParkingSpaceController extends Controller
             ->latest()
             ->get();
 
-        return Inertia::render('backend/user/parking/index', [
+        return Inertia::render('backend/profile/parking/index', [
             'parkingSpaces' => $parkingSpaces,
         ]);
     }
@@ -43,7 +43,7 @@ class MyParkingSpaceController extends Controller
             'description' => $status->description(),
         ])->values();
 
-        return Inertia::render('backend/user/parking/show', [
+        return Inertia::render('backend/profile/parking/show', [
             'space' => $space,
             'selectOptions' => [
                 'statuses' => $statuses,
@@ -62,6 +62,6 @@ class MyParkingSpaceController extends Controller
         }
         $space->delete();
 
-        return redirect()->route('user.parking-spaces.index');
+        return redirect()->route('profile.parking-spaces.index');
     }
 }

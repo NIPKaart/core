@@ -49,7 +49,7 @@ class ParkingOffstreetController extends Controller
                 'countries' => Country::select('id', 'name')->orderBy('name')->get(),
                 'provinces' => Province::select('id', 'name')->orderBy('name')->get(),
                 'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
-            ]
+            ],
         ]);
     }
 

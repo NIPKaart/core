@@ -79,7 +79,7 @@ class ParkingMunicipalController extends Controller
             ],
             'options' => [
                 'orientations' => ParkingOrientation::options(),
-            ]
+            ],
         ]);
     }
 

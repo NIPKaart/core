@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\ParkingSpaceConfirmationController;
 use App\Http\Controllers\ParkingSpaceController;
-use App\Http\Controllers\User;
+use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,18 +22,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
-    // User routes
-    Route::prefix('user')->as('user.')->group(function () {
+    // Profile routes
+    Route::prefix('profile')->as('profile.')->group(function () {
         // Profile routes
-        Route::get('parking-spaces', [User\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
-        Route::get('parking-spaces/{id}', [User\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
-        Route::delete('parking-spaces/{id}', [User\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
+        Route::get('parking-spaces', [profile\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
+        Route::get('parking-spaces/{id}', [profile\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
+        Route::delete('parking-spaces/{id}', [profile\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
 
         // Favorites routes
-        Route::get('favorites', [User\FavoriteController::class, 'index'])->name('favorites.index');
-        Route::get('favorites/list', [User\FavoriteController::class, 'list'])->name('favorites.list');
-        Route::post('favorites', [User\FavoriteController::class, 'store'])->name('favorites.store');
-        Route::delete('favorites', [User\FavoriteController::class, 'destroy'])->name('favorites.destroy');
+        Route::get('favorites', [profile\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::get('favorites/list', [profile\FavoriteController::class, 'list'])->name('favorites.list');
+        Route::post('favorites', [profile\FavoriteController::class, 'store'])->name('favorites.store');
+        Route::delete('favorites', [profile\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
     // App routes

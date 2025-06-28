@@ -21,7 +21,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
         if (!user || loading) return;
         setLoading(true);
         if (isFavorited) {
-            router.delete(route('user.favorites.destroy'), {
+            router.delete(route('profile.favorites.destroy'), {
                 data: { type, id },
                 preserveScroll: true,
                 preserveState: true,
@@ -31,7 +31,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
             });
         } else {
             router.post(
-                route('user.favorites.store'),
+                route('profile.favorites.store'),
                 { type, id },
                 {
                     preserveScroll: true,

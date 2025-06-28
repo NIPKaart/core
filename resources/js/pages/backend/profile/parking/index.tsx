@@ -11,7 +11,7 @@ type PageProps = {
     parkingSpaces: ParkingSpace[];
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'My parking locations', href: route('user.parking-spaces.index') }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'My parking locations', href: route('profile.parking-spaces.index') }];
 
 export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
     const [search, setSearch] = useState('');
@@ -84,7 +84,7 @@ export default function UserParkingSpacesPage({ parkingSpaces }: PageProps) {
                                     <StatusBadge status={space.status} />
                                     <div className="flex gap-1">
                                         <Button asChild size="sm" variant="outline" className="me-1">
-                                            <Link href={route('user.parking-spaces.show', { id: space.id })}>Details</Link>
+                                            <Link href={route('profile.parking-spaces.show', { id: space.id })}>Details</Link>
                                         </Button>
                                         {space.status === 'approved' && (
                                             <Button asChild size="sm" variant="default" title="View on map">
