@@ -190,7 +190,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                             </div>
                         </div>
                     </DialogHeader>
-                    <DialogDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DialogDescription>
+                    <DialogDescription className="mb-0 text-center">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-space.view') && data?.id && (

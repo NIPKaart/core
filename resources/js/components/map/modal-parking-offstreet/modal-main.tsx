@@ -98,7 +98,7 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
                             </div>
                         </div>
                     </DialogHeader>
-                    <DialogDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DialogDescription>
+                    <DialogDescription className="mb-0 text-center">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">
                         {loading ? (
                             <LoadingSkeleton />
