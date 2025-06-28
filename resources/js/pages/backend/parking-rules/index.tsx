@@ -159,6 +159,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                         </Button>
                     )}
                 </div>
+                <p className="text-muted-foreground">{t('head.description')}</p>
 
                 <DataTable columns={columns} data={parkingRules.data} />
                 <DataTablePagination pagination={parkingRules} />

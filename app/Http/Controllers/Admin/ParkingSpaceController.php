@@ -50,7 +50,7 @@ class ParkingSpaceController extends Controller
             'options' => [
                 'statuses' => ParkingStatus::options(),
                 'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
-            ]
+            ],
         ]);
     }
 
@@ -255,7 +255,7 @@ class ParkingSpaceController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        return inertia('backend/parking-spaces/trash', [
+        return inertia('backend/parking-spaces/trash/index', [
             'spaces' => $spaces,
         ]);
     }

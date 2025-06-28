@@ -1,6 +1,7 @@
 {
     "common": {
         "actions": "Actions",
+        "back": "Back",
         "cancel": "Cancel",
         "close": "Close",
         "delete": "Delete",
@@ -9,8 +10,9 @@
         "openMenu": "Open menu",
         "save": "Save",
         "saved": "Saved",
-        "yes": "Yes",
-        "back": "Back"
+        "selectAll": "Select all",
+        "selectRow": "Select row",
+        "yes": "Yes"
     },
     "search": {
         "placeholder": "Search..."

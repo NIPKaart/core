@@ -2,6 +2,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ParkingSpace } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 export type DialogType = 'delete' | 'restore' | 'forceDelete' | 'bulkRestore' | 'bulkForceDelete';
@@ -13,6 +14,7 @@ type Options = {
 };
 
 export function useSpaceActionDialog(options: Options = {}) {
+    const { t } = useTranslation('parking-trash');
     const [dialogType, setDialogType] = useState<DialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 
@@ -27,12 +29,12 @@ export function useSpaceActionDialog(options: Options = {}) {
             router.delete(route('app.parking-spaces.destroy', { parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Parking space moved to trash');
+                    toast.success(t('toast.delete.success'));
                     closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
-                    toast.error('Failed to move parking space to trash');
+                    toast.error(t('toast.delete.error'));
                     closeDialog();
                     options.onError?.();
                 },
@@ -46,12 +48,12 @@ export function useSpaceActionDialog(options: Options = {}) {
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Parking space restored');
+                        toast.success(t('toast.restore.success'));
                         closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
-                        toast.error('Failed to restore parking space');
+                        toast.error(t('toast.restore.error'));
                         closeDialog();
                         options.onError?.();
                     },
@@ -63,12 +65,12 @@ export function useSpaceActionDialog(options: Options = {}) {
             router.delete(route('app.parking-spaces.forceDelete', { parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Parking space permanently deleted');
+                    toast.success(t('toast.forceDelete.success'));
                     closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
-                    toast.error('Failed to permanently delete parking space');
+                    toast.error(t('toast.forceDelete.error'));
                     closeDialog();
                     options.onError?.();
                 },
@@ -82,12 +84,12 @@ export function useSpaceActionDialog(options: Options = {}) {
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Restored selected spaces.');
+                        toast.success(t('toast.bulkRestore.success', { count: dialogSubject.ids.length }));
                         closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
-                        toast.error('Restore failed.');
+                        toast.error(t('toast.bulkRestore.error'));
                         closeDialog();
                         options.onError?.();
                     },
@@ -100,12 +102,12 @@ export function useSpaceActionDialog(options: Options = {}) {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Deleted selected spaces.');
+                    toast.success(t('toast.bulkForceDelete.success', { count: dialogSubject.ids.length }));
                     closeDialog();
                     options.onSuccess?.();
                 },
                 onError: () => {
-                    toast.error('Delete failed.');
+                    toast.error(t('toast.bulkForceDelete.error'));
                     closeDialog();
                     options.onError?.();
                 },
@@ -123,37 +125,33 @@ export function useSpaceActionDialog(options: Options = {}) {
         }
     > = {
         delete: {
-            title: 'Move to Trash?',
-            description: (s) => (s && 'id' in s ? `Are you sure you want to move the parking space at "${s.street}, ${s.city}" to the trash?` : ''),
-            confirmText: 'Move to Trash',
+            title: t('confirm.delete.title'),
+            description: (s) => (s && 'id' in s ? t('confirm.delete.description', { street: s.street, city: s.city }) : ''),
+            confirmText: t('confirm.delete.confirm'),
             variant: 'destructive',
         },
         restore: {
-            title: 'Restore Location?',
-            description: (s) => (s && 'id' in s ? `Are you sure you want to restore the parking space at "${s.street}, ${s.city}"?` : ''),
-            confirmText: 'Restore',
+            title: t('confirm.restore.title'),
+            description: (s) => (s && 'id' in s ? t('confirm.restore.description', { street: s.street, city: s.city }) : ''),
+            confirmText: t('confirm.restore.confirm'),
             variant: 'default',
         },
         forceDelete: {
-            title: 'Permanently Delete?',
-            description: (s) =>
-                s && 'id' in s
-                    ? `Are you sure you want to permanently delete the parking space at "${s.street}, ${s.city}"? This action cannot be undone.`
-                    : '',
-            confirmText: 'Delete Forever',
+            title: t('confirm.forceDelete.title'),
+            description: (s) => (s && 'id' in s ? t('confirm.forceDelete.description', { street: s.street, city: s.city }) : ''),
+            confirmText: t('confirm.forceDelete.confirm'),
             variant: 'destructive',
         },
         bulkRestore: {
-            title: 'Restore Selected Locations?',
-            description: (s) => (s && 'ids' in s ? `Are you sure you want to restore ${s.ids.length} parking spaces?` : ''),
-            confirmText: 'Restore',
+            title: t('confirm.bulkRestore.title'),
+            description: (s) => (s && 'ids' in s ? t('confirm.bulkRestore.description', { count: s.ids.length }) : ''),
+            confirmText: t('confirm.bulkRestore.confirm'),
             variant: 'default',
         },
         bulkForceDelete: {
-            title: 'Permanently Delete Selected?',
-            description: (s) =>
-                s && 'ids' in s ? `Are you sure you want to permanently delete ${s.ids.length} parking spaces? This cannot be undone.` : '',
-            confirmText: 'Delete Forever',
+            title: t('confirm.bulkForceDelete.title'),
+            description: (s) => (s && 'ids' in s ? t('confirm.bulkForceDelete.description', { count: s.ids.length }) : ''),
+            confirmText: t('confirm.bulkForceDelete.confirm'),
             variant: 'destructive',
         },
     };

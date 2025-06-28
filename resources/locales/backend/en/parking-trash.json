@@ -1,0 +1,80 @@
+{
+    "head": {
+        "title": "Trashed Parking Spaces",
+        "description": "Manage trashed parking spaces, restore or permanently delete them."
+    },
+    "breadcrumbs": {
+        "index": "Parking Spaces (Community)",
+        "trash": "Trash"
+    },
+    "selected": "selected",
+    "table": {
+        "submittedBy": "Submitted By",
+        "municipality": "Municipality",
+        "city": "City",
+        "street": "Street",
+        "status": "Status",
+        "submittedAt": "Submitted At",
+        "deletedAt": "Deleted At",
+        "actions": {
+            "restoreSelected": "Restore selected",
+            "deleteSelected": "Delete selected",
+            "restore": "Restore",
+            "forceDelete": "Delete permanently"
+        }
+    },
+    "confirm": {
+        "delete": {
+            "title": "Move to Trash?",
+            "description": "Are you sure you want to move the parking space at \"{{street}}, {{city}}\" to the trash?",
+            "confirm": "Move to trash"
+        },
+        "restore": {
+            "title": "Restore Location?",
+            "description": "Are you sure you want to restore the parking space at \"{{street}}, {{city}}\"?",
+            "confirm": "Restore"
+        },
+        "forceDelete": {
+            "title": "Permanently Delete?",
+            "description": "Are you sure you want to permanently delete the parking space at \"{{street}}, {{city}}\"? This action cannot be undone.",
+            "confirm": "Delete forever"
+        },
+        "bulkRestore": {
+            "title": "Restore Selected Locations?",
+            "description": "Are you sure you want to restore {{count}} parking spaces?",
+            "confirm": "Restore"
+        },
+        "bulkForceDelete": {
+            "title": "Permanently Delete Selected?",
+            "description": "Are you sure you want to permanently delete {{count}} parking spaces? This cannot be undone.",
+            "confirm": "Delete forever"
+        }
+    },
+    "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+    },
+    "toast": {
+        "delete": {
+            "success": "Parking space moved to trash",
+            "error": "Failed to move parking space to trash"
+        },
+        "restore": {
+            "success": "Parking space restored",
+            "error": "Failed to restore parking space"
+        },
+        "forceDelete": {
+            "success": "Parking space permanently deleted",
+            "error": "Failed to permanently delete parking space"
+        },
+        "bulkRestore": {
+            "success": "Restored {{count}} selected spaces.",
+            "error": "Restore failed."
+        },
+        "bulkForceDelete": {
+            "success": "Deleted {{count}} selected spaces.",
+            "error": "Delete failed."
+        }
+    }
+}
