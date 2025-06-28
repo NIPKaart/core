@@ -23,9 +23,58 @@
             "forceDelete": "Permanent verwijderen"
         }
     },
+    "confirm": {
+        "delete": {
+            "title": "Verplaatsen naar prullenbak?",
+            "description": "Weet je zeker dat je de parkeerplaats op \"{{street}}, {{city}}\" naar de prullenbak wilt verplaatsen?",
+            "confirm": "Verplaatsen naar prullenbak"
+        },
+        "restore": {
+            "title": "Locatie herstellen?",
+            "description": "Weet je zeker dat je de parkeerplaats op \"{{street}}, {{city}}\" wilt herstellen?",
+            "confirm": "Herstellen"
+        },
+        "forceDelete": {
+            "title": "Permanent verwijderen?",
+            "description": "Weet je zeker dat je de parkeerplaats op \"{{street}}, {{city}}\" permanent wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+            "confirm": "Permanent verwijderen"
+        },
+        "bulkRestore": {
+            "title": "Geselecteerde locaties herstellen?",
+            "description": "Weet je zeker dat je {{count}} parkeerplaatsen wilt herstellen?",
+            "confirm": "Herstellen"
+        },
+        "bulkForceDelete": {
+            "title": "Geselecteerde permanent verwijderen?",
+            "description": "Weet je zeker dat je {{count}} parkeerplaatsen permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+            "confirm": "Permanent verwijderen"
+        }
+    },
     "status": {
         "pending": "In afwachting",
         "approved": "Goedgekeurd",
         "rejected": "Afgewezen"
+    },
+    "toast": {
+        "delete": {
+            "success": "Parkeerplaats verplaatst naar prullenbak",
+            "error": "Verplaatsen naar prullenbak mislukt"
+        },
+        "restore": {
+            "success": "Parkeerplaats hersteld",
+            "error": "Herstellen mislukt"
+        },
+        "forceDelete": {
+            "success": "Parkeerplaats permanent verwijderd",
+            "error": "Permanent verwijderen mislukt"
+        },
+        "bulkRestore": {
+            "success": "{{count}} parkeerplaatsen hersteld",
+            "error": "Herstellen van geselecteerde parkeerplaatsen mislukt"
+        },
+        "bulkForceDelete": {
+            "success": "{{count}} parkeerplaatsen permanent verwijderd",
+            "error": "Permanent verwijderen van geselecteerde parkeerplaatsen mislukt"
+        }
     }
 }
