@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FavoriteResource;
@@ -32,7 +32,7 @@ class FavoriteController extends Controller
             ])
             ->get();
 
-        return Inertia::render('backend/user/favorites/index', [
+        return Inertia::render('backend/profile/favorites/index', [
             'favorites' => FavoriteResource::collection($favorites)->toArray($request),
         ]);
     }

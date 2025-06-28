@@ -40,13 +40,13 @@ export function AppSidebar() {
         items: [
             {
                 title: t('my_locations'),
-                href: route('user.parking-spaces.index'),
+                href: route('profile.parking-spaces.index'),
                 icon: icons.MapPin,
                 badge: activeUserParkingSpaces || undefined,
             },
             {
                 title: t('my_favorites'),
-                href: route('user.favorites.index'),
+                href: route('profile.favorites.index'),
                 icon: icons.Heart,
             },
         ].filter(Boolean) as NavItem[],

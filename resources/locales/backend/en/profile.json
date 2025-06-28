@@ -1,0 +1,87 @@
+{
+    "favorites": {
+        "title": {
+            "index": "My Favorites"
+        },
+        "breadcrumbs": {
+            "index": "My Favorites"
+        },
+        "heading": "My favorite locations",
+        "subheading": "All your favorite parking locations and garages at a glance.",
+        "types": {
+            "community": "Community",
+            "municipal": "Municipal",
+            "offstreet": "Off-street"
+        },
+        "empty": {
+            "title": "You haven't added any favorites yet.",
+            "subtitle": "Browse the map and click the heart icon to favorite locations."
+        },
+        "search": {
+            "placeholder": "Search favorites by name, city, or municipality..."
+        }
+    },
+    "parking_spaces": {
+        "title": {
+            "index": "My parking locations",
+            "show": "Parking Space Details"
+        },
+        "breadcrumbs": {
+            "index": "My parking locations",
+            "show": "Show"
+        },
+        "heading": {
+            "index": "My parking locations",
+            "show": "Parking Space ({{id}})"
+        },
+        "subheading": "Here you can manage your added parking spaces and view their details. You can also delete a parking space if needed.",
+        "table": {
+            "title": "Details",
+            "subtitle": "Information about the parking space.",
+            "added_at": "Added At",
+            "country": "Country",
+            "province": "Province",
+            "municipality": "Municipality",
+            "city": "City",
+            "street": "Street",
+            "postcode": "Postcode",
+            "amenity": "Amenity",
+            "orientation": "Orientation"
+        },
+        "location": {
+            "title": "Location",
+            "subtitle": "Where the parking space is located."
+        },
+        "actions": {
+            "delete": {
+                "title": "Delete parking space?",
+                "description": "Are you sure you want to delete the parking space at {{street}}, {{city}} ({{country}} - {{code}})? This action cannot be undone.",
+                "confirm": "Delete Parking Space"
+            }
+        },
+        "toast": {
+            "success": "Parking space updated successfully",
+            "error": "Failed to update parking space"
+        },
+        "empty": {
+            "title": "You haven't added any parking spaces yet.",
+            "subtitle": "Start contributing and help others by adding your first location!"
+        },
+        "search": {
+            "placeholder": "Search parking spaces by street, city, or postcode..."
+        }
+    },
+    "common": {
+        "actions": {
+            "go_to_map": "Go to map",
+            "add": "Add",
+            "add_first_parking_space": "Add your first parking space",
+            "details": "Details",
+            "view_on_map": "On the map"
+        },
+        "fields": {
+            "country": "Country",
+            "postcode": "Postcode"
+        }
+    }
+}

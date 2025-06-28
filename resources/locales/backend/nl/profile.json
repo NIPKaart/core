@@ -1,0 +1,87 @@
+{
+    "favorites": {
+        "title": {
+            "index": "Mijn Favorieten"
+        },
+        "breadcrumbs": {
+            "index": "Mijn Favorieten"
+        },
+        "heading": "Mijn favoriete locaties",
+        "subheading": "Al je favoriete parkeerlocaties en garages in één oogopslag.",
+        "types": {
+            "community": "Gemeenschap",
+            "municipal": "Gemeentelijk",
+            "offstreet": "Off-street"
+        },
+        "empty": {
+            "title": "Je hebt nog geen favorieten toegevoegd.",
+            "subtitle": "Blader door de kaart en klik op het hartpictogram om locaties te favoriseren."
+        },
+        "search": {
+            "placeholder": "Zoek favorieten op naam, stad of gemeente..."
+        }
+    },
+    "parking_spaces": {
+        "title": {
+            "index": "Mijn parkeerlocaties",
+            "show": "Details van parkeerplaats"
+        },
+        "breadcrumbs": {
+            "index": "Mijn parkeerlocaties",
+            "show": "Bekijken"
+        },
+        "heading": {
+            "index": "Mijn parkeerlocaties",
+            "show": "Parkeerplaats ({{id}})"
+        },
+        "subheading": "Hier kun je je eigen toegevoegde parkeerplaatsen beheren en hun details bekijken. Je kunt ook een parkeerplaats verwijderen indien nodig.",
+        "table": {
+            "title": "Details",
+            "subtitle": "Informatie over de parkeerplaats.",
+            "added_at": "Toegevoegd op",
+            "country": "Land",
+            "province": "Provincie",
+            "municipality": "Gemeente",
+            "city": "Stad",
+            "street": "Straat",
+            "postcode": "Postcode",
+            "amenity": "Voorziening",
+            "orientation": "Oriëntatie"
+        },
+        "location": {
+            "title": "Locatie",
+            "subtitle": "Waar de parkeerplaats zich bevindt."
+        },
+        "actions": {
+            "delete": {
+                "title": "Parkeerplaats verwijderen?",
+                "description": "Weet je zeker dat je de parkeerplaats op {{street}}, {{city}} ({{country}} - {{code}}) wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+                "confirm": "Verwijder Parkeerplaats"
+            }
+        },
+        "toast": {
+            "success": "Parkeerplaats succesvol bijgewerkt",
+            "error": "Bijwerken van parkeerplaats mislukt"
+        },
+        "empty": {
+            "title": "Je hebt nog geen parkeerplaatsen toegevoegd.",
+            "subtitle": "Begin met bijdragen en help anderen door je eerste locatie toe te voegen!"
+        },
+        "search": {
+            "placeholder": "Zoeken op straat, stad, postcode..."
+        }
+    },
+    "common": {
+        "actions": {
+            "go_to_map": "Ga naar de kaart",
+            "add": "Toevoegen",
+            "add_first_parking_space": "Voeg je eerste parkeerplaats toe",
+            "details": "Details",
+            "view_on_map": "Op de kaart"
+        },
+        "fields": {
+            "country": "Land",
+            "postcode": "Postcode"
+        }
+    }
+}

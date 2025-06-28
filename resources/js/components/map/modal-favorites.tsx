@@ -26,7 +26,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     useEffect(() => {
         if (!open) return;
         setLoading(true);
-        fetch(route('user.favorites.list'))
+        fetch(route('profile.favorites.list'))
             .then((res) => res.json())
             .then((data) => setFavorites(data.favorites ?? []))
             .catch(() => setFavorites([]))
