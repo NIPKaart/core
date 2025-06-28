@@ -7,7 +7,7 @@
             "index": "Mijn Favorieten"
         },
         "heading": "Mijn favoriete locaties",
-        "subheading": "Alle favoriete parkeerlocaties en garages in één overzicht.",
+        "subheading": "Al je favoriete parkeerlocaties en garages in één oogopslag.",
         "types": {
             "community": "Gemeenschap",
             "municipal": "Gemeentelijk",
@@ -34,7 +34,7 @@
             "index": "Mijn parkeerlocaties",
             "show": "Parkeerplaats ({{id}})"
         },
-        "subheading": "Hier kun je je parkeerplaatsen beheren en hun details bekijken. Je kunt ook een van je parkeerplaatsen verwijderen indien nodig.",
+        "subheading": "Hier kun je je eigen toegevoegde parkeerplaatsen beheren en hun details bekijken. Je kunt ook een parkeerplaats verwijderen indien nodig.",
         "table": {
             "title": "Details",
             "subtitle": "Informatie over de parkeerplaats.",

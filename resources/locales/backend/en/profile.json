@@ -34,7 +34,7 @@
             "index": "My parking locations",
             "show": "Parking Space ({{id}})"
         },
-        "subheading": "Here you can manage your parking spaces and view their details. You can also remove any of your parking spaces if needed.",
+        "subheading": "Here you can manage your added parking spaces and view their details. You can also delete a parking space if needed.",
         "table": {
             "title": "Details",
             "subtitle": "Information about the parking space.",
