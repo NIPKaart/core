@@ -1,6 +1,8 @@
-export function getOrientationIllustration(orientation?: string | null) {
+import { EnumOption } from "./types";
+
+export function getOrientationIllustration(orientation: EnumOption | null) {
     if (!orientation) return '/assets/images/car-illu.svg';
-    const key = orientation.toLowerCase();
+    const key = orientation.value;
     if (key === 'perpendicular') return '/assets/images/orientation/perpendicular.png';
     if (key === 'parallel') return '/assets/images/orientation/parallel.png';
     if (key === 'angle') return '/assets/images/orientation/angle.png';

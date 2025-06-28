@@ -162,7 +162,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
                                 <MapPinned className="h-6 w-6 text-orange-400" />
-                                Community Parking Space
+                                {t('community.modal.title')}
                             </DialogTitle>
                             <div className="flex items-center gap-1 sm:gap-2">
                                 {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_space" />}
@@ -190,7 +190,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                             </div>
                         </div>
                     </DialogHeader>
-                    <DialogDescription className="mb-0 text-center text-sm text-muted-foreground">{descriptionText}</DialogDescription>
+                    <DialogDescription className="mb-0 text-center">{descriptionText}</DialogDescription>
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-space.view') && data?.id && (

@@ -98,10 +98,8 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
-                        <DialogDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">
-                            Quickly access all your favorite locations here.
-                        </DialogDescription>
                     </DialogHeader>
+                    <DialogDescription className="mt-1 mb-0 text-center">Quickly access all your favorite locations here.</DialogDescription>
                     <div className="mt-2">{content}</div>
                     <DialogFooter>
                         <Button className="w-full cursor-pointer" variant="secondary" onClick={onClose}>

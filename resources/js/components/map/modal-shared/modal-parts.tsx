@@ -1,11 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Eye, MapPin, Navigation, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { EnumOption } from './types';
 import { getOrientationIllustration } from './utils';
 
 type MainInfoProps = {
     data: {
-        orientation?: string | null;
+        orientation?: EnumOption | null;
         street?: string | null;
         municipality?: string | null;
         province?: string | null;
@@ -63,7 +64,7 @@ export function MainInfo({ data, type }: MainInfoProps) {
     return (
         <div className="mx-auto my-2 flex w-full max-w-lg flex-col items-center gap-2">
             <img
-                src={getOrientationIllustration(data.orientation)}
+                src={getOrientationIllustration(data.orientation ?? null)}
                 alt="Orientation"
                 className="max-h-28 w-auto object-contain"
                 style={{ aspectRatio: '3/1', maxWidth: 300 }}

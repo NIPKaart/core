@@ -46,7 +46,18 @@ export function getCommunityInfoRows(
         {
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: t('common.table.orientation'),
-            value: data.orientation || '-',
+            value: data.orientation ? (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span>{data.orientation.label}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{data.orientation.description}</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            ) : (
+                '-'
+            ),
         },
         {
             icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
@@ -61,7 +72,7 @@ export function getCommunityInfoRows(
                     {t('common.table.website')}
                 </a>
             ) : (
-                <span className="text-zinc-400 italic">No information</span>
+                <span className="text-zinc-400 italic">{t('common.table.no_information')}</span>
             ),
         },
         {
@@ -112,7 +123,7 @@ export function getCommunityInfoRows(
                   },
                   {
                       icon: <FileText className="h-4 w-4 text-muted-foreground" />,
-                      label: 'Added on',
+                      label: t('community.table.added_on'),
                       value: new Date(data.created_at).toLocaleDateString(),
                   },
               ]
@@ -138,7 +149,18 @@ export function getMunicipalInfoRows(
         {
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: t('common.table.orientation'),
-            value: data.orientation || '-',
+            value: data.orientation ? (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span>{data.orientation.label}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{data.orientation.description}</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            ) : (
+                '-'
+            ),
         },
         {
             icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
