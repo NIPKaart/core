@@ -79,18 +79,6 @@ class ParkingSpaceController extends Controller
 
         $parkingSpace = ParkingSpace::with(['user', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
 
-        $parkingStatuses = collect(ParkingStatus::cases())->map(fn ($status) => [
-            'value' => $status->value,
-            'label' => $status->label(),
-            'description' => $status->description(),
-        ])->values();
-
-        $confirmationStatuses = collect(ParkingConfirmationStatus::cases())->map(fn ($status) => [
-            'value' => $status->value,
-            'label' => $status->label(),
-            'description' => $status->description(),
-        ])->values();
-
         // Get the 10 nearest parking spaces
         $limit = 10;
         $nearbySpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')
@@ -123,8 +111,8 @@ class ParkingSpaceController extends Controller
         return inertia('backend/parking-spaces/show', [
             'parkingSpace' => $parkingSpace,
             'selectOptions' => [
-                'parkingStatuses' => $parkingStatuses,
-                'confirmationStatuses' => $confirmationStatuses,
+                'parkingStatuses' => ParkingStatus::mapped(),
+                'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
             'nearbySpaces' => $nearbySpaces,
             'recentConfirmations' => $recentConfirmations,
@@ -142,12 +130,6 @@ class ParkingSpaceController extends Controller
 
         $parkingSpace->parking_hours = $parkingSpace->parking_time ? floor($parkingSpace->parking_time / 60) : 0;
         $parkingSpace->parking_minutes = $parkingSpace->parking_time ? $parkingSpace->parking_time % 60 : 0;
-
-        $statuses = collect(ParkingStatus::cases())->map(fn ($status) => [
-            'value' => $status->value,
-            'label' => $status->label(),
-            'description' => $status->description(),
-        ])->values();
 
         // Get the 10 nearest parking spaces
         $limit = 10;
@@ -181,7 +163,7 @@ class ParkingSpaceController extends Controller
             'provinces' => $provinces,
             'municipalities' => $municipalities,
             'selectOptions' => [
-                'statuses' => $statuses,
+                'statuses' => ParkingStatus::mapped(),
                 'orientation' => ParkingOrientation::options(),
             ],
             'nearbySpaces' => $nearbySpaces,

@@ -37,4 +37,13 @@ enum ParkingConfirmationStatus: string
             ->mapWithKeys(fn ($confirmationStatus) => [$confirmationStatus->value => $confirmationStatus->label()])
             ->toArray();
     }
+
+    public static function mapped(): array
+    {
+        return collect(self::cases())->map(fn ($case) => [
+            'value' => $case->value,
+            'label' => $case->label(),
+            'description' => $case->description(),
+        ])->values()->toArray();
+    }
 }
