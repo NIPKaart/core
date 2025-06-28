@@ -1,0 +1,31 @@
+{
+    "favorites": {
+        "head": {
+            "title": "Mijn Favorieten"
+        },
+        "breadcrumbs": {
+            "index": "Mijn Favorieten"
+        },
+        "heading": "Mijn favoriete locaties",
+        "subheading": "Alle favoriete parkeerlocaties en garages in één overzicht.",
+        "search": {
+            "placeholder": "Zoek favorieten op naam, stad of gemeente..."
+        },
+        "empty": {
+            "title": "Je hebt nog geen favorieten toegevoegd.",
+            "subtitle": "Blader door de kaart en klik op het hartpictogram om locaties te favoriseren."
+        },
+        "actions": {
+            "go_to_map": "Ga naar de kaart",
+            "view_on_map": "Op de kaart"
+        },
+        "fields": {
+            "country": "Land"
+        },
+        "types": {
+            "community": "Gemeenschap",
+            "municipal": "Gemeentelijk",
+            "offstreet": "Off-street"
+        }
+    }
+}

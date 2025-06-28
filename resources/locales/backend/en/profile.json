@@ -1,0 +1,31 @@
+{
+    "favorites": {
+        "head": {
+            "title": "My Favorites"
+        },
+        "breadcrumbs": {
+            "index": "My Favorites"
+        },
+        "heading": "My favorite locations",
+        "subheading": "All your favorite parking locations and garages at a glance.",
+        "search": {
+            "placeholder": "Search favorites by name, city, or municipality..."
+        },
+        "empty": {
+            "title": "You haven't added any favorites yet.",
+            "subtitle": "Browse the map and click the heart icon to favorite locations."
+        },
+        "actions": {
+            "go_to_map": "Go to map",
+            "view_on_map": "On the map"
+        },
+        "fields": {
+            "country": "Country"
+        },
+        "types": {
+            "community": "Community",
+            "municipal": "Municipal",
+            "offstreet": "Off-street"
+        }
+    }
+}
