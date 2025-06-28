@@ -1,0 +1,31 @@
+{
+    "head": {
+        "title": "Verwijderde parkeerplaatsen",
+        "description": "Beheer verwijderde parkeerplaatsen, herstel of verwijder ze permanent."
+    },
+    "breadcrumbs": {
+        "index": "Parkeerplaatsen (Gemeenschap)",
+        "trash": "Prullenbak"
+    },
+    "selected": "geselecteerd",
+    "table": {
+        "submittedBy": "Ingediend door",
+        "municipality": "Gemeente",
+        "city": "Stad",
+        "street": "Straat",
+        "status": "Status",
+        "submittedAt": "Ingediend op",
+        "deletedAt": "Verwijderd op",
+        "actions": {
+            "restoreSelected": "Geselecteerde herstellen",
+            "deleteSelected": "Geselecteerde verwijderen",
+            "restore": "Herstellen",
+            "forceDelete": "Permanent verwijderen"
+        }
+    },
+    "status": {
+        "pending": "In afwachting",
+        "approved": "Goedgekeurd",
+        "rejected": "Afgewezen"
+    }
+}

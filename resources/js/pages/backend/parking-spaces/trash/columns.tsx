@@ -21,7 +21,7 @@ export function getParkingTrashColumns(
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                    aria-label="Select all"
+                    aria-label={tGlobal('common.selectAll')}
                     className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
@@ -29,36 +29,37 @@ export function getParkingTrashColumns(
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                    aria-label="Select row"
+                    aria-label={tGlobal('common.selectRow')}
                     className="cursor-pointer"
                 />
             ),
         },
         {
             accessorKey: 'user.name',
-            header: 'Submitted By',
+            header: t('table.submittedBy'),
             enableSorting: true,
             cell: ({ row }) => row.original.user?.name ?? '—',
         },
         {
             accessorKey: 'municipality',
-            header: 'Municipality',
+            header: t('table.municipality'),
             enableSorting: true,
+            cell: ({ row }) => row.original.municipality?.name ?? '—',
         },
         {
             accessorKey: 'city',
-            header: 'City',
+            header: t('table.city'),
             enableSorting: true,
         },
         {
             accessorKey: 'street',
-            header: 'Street',
+            header: t('table.street'),
             enableSorting: true,
             cell: ({ row }) => `${row.original.street}, ${row.original.postcode}`,
         },
         {
             accessorKey: 'status',
-            header: 'Status',
+            header: t('table.status'),
             enableSorting: true,
             cell: ({ row }) => {
                 const status = row.original.status;
@@ -68,22 +69,31 @@ export function getParkingTrashColumns(
                     rejected: 'destructive',
                 } as const;
 
-                return <Badge variant={variantMap[status as keyof typeof variantMap] ?? 'default'}>{status}</Badge>;
+                return <Badge variant={variantMap[status as keyof typeof variantMap] ?? 'default'}>{t(`status.${status}`)}</Badge>;
             },
         },
         {
             accessorKey: 'created_at',
-            header: 'Submitted At',
+            header: t('table.submittedAt'),
             enableSorting: true,
-            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
+            cell: ({ row }) =>
+                new Date(row.original.created_at).toLocaleString(undefined, {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                }),
         },
         {
             accessorKey: 'deleted_at',
-            header: 'Deleted At',
+            header: t('table.deletedAt'),
             enableSorting: true,
             cell: ({ row }) => {
                 const deletedAt = row.original.deleted_at;
-                return deletedAt ? new Date(deletedAt).toLocaleDateString() : '—';
+                return deletedAt
+                    ? new Date(deletedAt).toLocaleString(undefined, {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                      })
+                    : '—';
             },
         },
         {
@@ -98,14 +108,14 @@ export function getParkingTrashColumns(
                         {can('parking-space.restore') && (
                             <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', space)}>
                                 <RotateCcw className="h-4 w-4" />
-                                <span className="sr-only">Restore</span>
+                                <span className="sr-only">{t('table.actions.restore')}</span>
                             </Button>
                         )}
 
                         {can('parking-space.force-delete') && (
                             <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', space)}>
                                 <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete permanently</span>
+                                <span className="sr-only">{t('table.actions.forceDelete')}</span>
                             </Button>
                         )}
                     </div>

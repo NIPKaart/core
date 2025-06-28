@@ -1,0 +1,31 @@
+{
+    "head": {
+        "title": "Trashed Parking Spaces",
+        "description": "Manage trashed parking spaces, restore or permanently delete them."
+    },
+    "breadcrumbs": {
+        "index": "Parking Spaces (Community)",
+        "trash": "Trash"
+    },
+    "selected": "selected",
+    "table": {
+        "submittedBy": "Submitted By",
+        "municipality": "Municipality",
+        "city": "City",
+        "street": "Street",
+        "status": "Status",
+        "submittedAt": "Submitted At",
+        "deletedAt": "Deleted At",
+        "actions": {
+            "restoreSelected": "Restore selected",
+            "deleteSelected": "Delete selected",
+            "restore": "Restore",
+            "forceDelete": "Delete permanently"
+        }
+    },
+    "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+    }
+}

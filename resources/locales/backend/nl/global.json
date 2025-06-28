@@ -1,6 +1,7 @@
 {
     "common": {
         "actions": "Acties",
+        "back": "Terug",
         "cancel": "Annuleren",
         "close": "Sluiten",
         "delete": "Verwijderen",
@@ -9,8 +10,9 @@
         "openMenu": "Menu openen",
         "save": "Opslaan",
         "saved": "Opgeslagen",
-        "yes": "Ja",
-        "back": "Terug"
+        "selectAll": "Alles selecteren",
+        "selectRow": "Rij selecteren",
+        "yes": "Ja"
     },
     "search": {
         "placeholder": "Zoeken..."
