@@ -37,7 +37,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={t('favorites.head.title')} />
+            <Head title={t('favorites.title.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <h1 className="mb-2 text-2xl font-bold">{t('favorites.heading')}</h1>
                 <p className="text-muted-foreground">{t('favorites.subheading')}</p>
