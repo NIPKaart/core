@@ -17,6 +17,57 @@
             "never": "Never",
             "area": "Area",
             "added_on": "Added on"
+        },
+        "add": {
+            "form": {
+                "title": "Add a location",
+                "orientation": {
+                    "label": "Orientation",
+                    "placeholder": "--- Select orientation ---"
+                },
+                "parking_time": {
+                    "title": "Parking time",
+                    "hours": "Hours",
+                    "minutes": "Minutes",
+                    "help": "Leave empty if no time limit is indicated on the sign."
+                },
+                "window_times": {
+                    "label": "Window times",
+                    "help": "For example: Mon–Sun | 09:00–17:00. Please specify this in the comments."
+                },
+                "message": {
+                    "label": "Message",
+                    "placeholder": "For example, location description, details, etc."
+                },
+                "actions": {
+                    "cancel": "Cancel",
+                    "submit": "Send"
+                },
+                "success": {
+                    "title": "Thank you!",
+                    "message": "Your location has been successfully submitted for review."
+                }
+            }
+        },
+        "confirm": {
+            "form": {
+                "title": "Help keep the map up-to-date",
+                "description": "Confirm if the parking space is still present.",
+                "description_note": "(you can do this once per day, for each parking space)",
+                "field": {
+                    "status": "Status",
+                    "comment": {
+                        "label": "Comment",
+                        "optional": "(optional)",
+                        "placeholder": "Add any details or comments about the parking space..."
+                    }
+                }
+            },
+            "buttons": {
+                "confirm": "Confirm",
+                "confirming": "Confirming...",
+                "alreadyConfirmed": "Already confirmed today"
+            }
         }
     },
     "municipal": {

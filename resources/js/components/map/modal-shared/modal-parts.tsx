@@ -115,7 +115,7 @@ type ActionButtonsProps = {
 };
 
 export function ActionButtons({ latitude, longitude, showNavigate = true, showStreetview = true }: ActionButtonsProps) {
-    const { t } = useTranslation('modals-parking');
+    const { t } = useTranslation('map-parking');
 
     const hasCoords = typeof latitude === 'number' && typeof longitude === 'number';
     function getGoogleMapsUrl(lat: number, lng: number) {

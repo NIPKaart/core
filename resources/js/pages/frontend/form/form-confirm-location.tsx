@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { router, usePage } from '@inertiajs/react';
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 type FormValues = {
     status: string;
@@ -19,6 +20,8 @@ type Props = {
 };
 
 export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
+    const { t } = useTranslation('map-parking');
+
     const { errors } = usePage().props as unknown as { errors?: Record<string, string[]> };
     const [generalError, setGeneralError] = React.useState<string | null>(null);
 
@@ -65,11 +68,11 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-5">
-                <h2 className="mb-2 text-center text-lg font-semibold">Help keep the map up-to-date</h2>
+                <h2 className="mb-2 text-center text-lg font-semibold">{t('community.confirm.form.title')}</h2>
                 <div className="mb-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-                    Confirm if the parking space is still valid.
+                    {t('community.confirm.form.description')}
                     <br />
-                    <span className="text-sm text-zinc-400">(you can do this once per day, for each parking space)</span>
+                    <span className="text-sm text-zinc-400">{t('community.confirm.form.description_note')}</span>
                 </div>
                 {generalError && (
                     <div className="mb-2 rounded border border-destructive/20 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/20">
@@ -82,7 +85,7 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                         name="status"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Status</FormLabel>
+                                <FormLabel>{t('community.confirm.form.field.status')}</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value} disabled={confirmedToday || form.formState.isSubmitting}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -107,14 +110,15 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>
-                                    Comment <span className="text-xs text-muted-foreground">(optional)</span>
+                                    {t('community.confirm.form.field.comment.label')}
+                                    <span className="text-xs text-muted-foreground">{t('community.confirm.form.field.comment.optional')}</span>
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea
                                         {...field}
                                         rows={2}
                                         className="resize-none text-xs"
-                                        placeholder="Add any details or comments about the parking space..."
+                                        placeholder={t('community.confirm.form.field.comment.placeholder')}
                                         maxLength={500}
                                         disabled={confirmedToday || form.formState.isSubmitting}
                                     />
@@ -125,7 +129,11 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                     />
                 </div>
                 <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={confirmedToday || form.formState.isSubmitting}>
-                    {confirmedToday ? 'Already confirmed today' : form.formState.isSubmitting ? 'Confirming...' : 'Confirm'}
+                    {confirmedToday
+                        ? t('community.confirm.buttons.alreadyConfirmed')
+                        : form.formState.isSubmitting
+                          ? t('community.confirm.buttons.confirming')
+                          : t('community.confirm.buttons.confirm')}
                 </Button>
             </form>
         </Form>

@@ -10,25 +10,26 @@ enum ParkingConfirmationStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::CONFIRMED => 'Confirm availability',
-            self::MOVED => 'Location moved',
-            self::UNAVAILABLE => 'Unavailable',
-        };
+        return __("parking_confirmation.{$this->value}.label");
     }
 
     public function description(): string
     {
-        return match ($this) {
-            self::CONFIRMED => 'The parking space is confirmed to be available.',
-            self::MOVED => 'The parking space has been moved to a different location.',
-            self::UNAVAILABLE => 'The parking space is currently unavailable.',
-        };
+        return __("parking_confirmation.{$this->value}.description");
     }
 
     public static function all(): array
     {
         return array_column(self::cases(), 'value');
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'value' => $this->value,
+            'label' => $this->label(),
+            'description' => $this->description(),
+        ];
     }
 
     public static function options(): array

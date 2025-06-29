@@ -17,6 +17,26 @@
             "never": "Nooit",
             "area": "Gebied",
             "added_on": "Toegevoegd op"
+        },
+        "confirm": {
+            "form": {
+                "title": "Help mee de kaart up-to-date te houden",
+                "description": "Bevestig of deze parkeerplek nog steeds aanwezig is.",
+                "description_note": "(dit kan één keer per dag per plek)",
+                "field": {
+                    "status": "Status",
+                    "comment": {
+                        "label": "Opmerking",
+                        "optional": "(optioneel)",
+                        "placeholder": "Voeg details of opmerkingen over de parkeerplaats toe..."
+                    }
+                }
+            },
+            "buttons": {
+                "confirm": "Bevestigen",
+                "confirming": "Bevestigen...",
+                "alreadyConfirmed": "Vandaag al bevestigd"
+            }
         }
     },
     "municipal": {
