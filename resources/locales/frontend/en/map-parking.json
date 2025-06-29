@@ -18,6 +18,37 @@
             "area": "Area",
             "added_on": "Added on"
         },
+        "add": {
+            "form": {
+                "title": "Add a location",
+                "orientation": {
+                    "label": "Orientation",
+                    "placeholder": "--- Select orientation ---"
+                },
+                "parking_time": {
+                    "title": "Parking time",
+                    "hours": "Hours",
+                    "minutes": "Minutes",
+                    "help": "Leave empty if no time limit is indicated on the sign."
+                },
+                "window_times": {
+                    "label": "Window times",
+                    "help": "For example: Mon–Sun | 09:00–17:00. Please specify this in the comments."
+                },
+                "message": {
+                    "label": "Message",
+                    "placeholder": "For example, location description, details, etc."
+                },
+                "actions": {
+                    "cancel": "Cancel",
+                    "submit": "Send"
+                },
+                "success": {
+                    "title": "Thank you!",
+                    "message": "Your location has been successfully submitted for review."
+                }
+            }
+        },
         "confirm": {
             "form": {
                 "title": "Help keep the map up-to-date",
