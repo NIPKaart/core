@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
-    const { t } = useTranslation('modals-parking');
+    const { t } = useTranslation('map-parking');
 
     const { errors } = usePage().props as unknown as { errors?: Record<string, string[]> };
     const [generalError, setGeneralError] = React.useState<string | null>(null);
