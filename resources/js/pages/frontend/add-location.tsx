@@ -6,14 +6,16 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
 import { NominatimAddress, ParkingSpace } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import { AlertCircle } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { AddLocationForm } from './form/form-create-location';
+import Swal from 'sweetalert2';
+import { AddLocationForm, FormValues } from './form/form-create-location';
 
 const { BaseLayer, Overlay } = LayersControl;
 
@@ -141,6 +143,48 @@ export default function AddLocation() {
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
+    const form = useForm<FormValues>({
+        defaultValues: {
+            parking_hours: '',
+            parking_minutes: '',
+            orientation: '',
+            window_times: false,
+            message: '',
+        },
+    });
+
+    const handleSubmit = form.handleSubmit((data) => {
+        const [lat, lng] = markerPosition as [number, number];
+        router.post(
+            route('map.store'),
+            {
+                ...data,
+                latitude: lat,
+                longitude: lng,
+                nominatim: JSON.stringify(nominatimData),
+            },
+            {
+                onSuccess: () => {
+                    Swal.fire({
+                        title: 'Thank you!',
+                        text: 'Your location has been successfully submitted for review.',
+                        icon: 'success',
+                        confirmButtonText: 'Oké',
+                        confirmButtonColor: '#f97316',
+                    }).then(() => {
+                        setModalOpen(false);
+                        form.reset();
+                    });
+                },
+                onError: (errors) => {
+                    Object.entries(errors).forEach(([key, message]) => {
+                        form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
+                    });
+                },
+            },
+        );
+    });
+
     return (
         <>
             <Head title="Add Location" />
@@ -219,11 +263,13 @@ export default function AddLocation() {
                         )}
 
                         <AddLocationForm
+                            form={form}
+                            orientationOptions={selectOptions.orientation}
+                            onSubmit={handleSubmit}
+                            onClose={() => setModalOpen(false)}
+                            disabled={!nominatimData}
                             lat={markerPosition[0]}
                             lng={markerPosition[1]}
-                            nominatim={nominatimData}
-                            onClose={() => setModalOpen(false)}
-                            orientationOptions={selectOptions.orientation}
                         />
                     </DialogContent>
                 </Dialog>

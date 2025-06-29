@@ -4,12 +4,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { NominatimAddress } from '@/types';
-import { router } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
-import Swal from 'sweetalert2';
+import { UseFormReturn } from 'react-hook-form';
 
-type FormValues = {
+export type FormValues = {
     parking_hours: string;
     parking_minutes: string;
     orientation: string;
@@ -18,54 +15,16 @@ type FormValues = {
 };
 
 type Props = {
+    form: UseFormReturn<FormValues>;
+    orientationOptions: Record<string, string>;
+    onSubmit: () => void;
+    onClose: () => void;
     lat: number;
     lng: number;
-    nominatim: NominatimAddress | null;
-    onClose: () => void;
-    orientationOptions: Record<string, string>;
+    disabled?: boolean;
 };
 
-export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptions }: Props) {
-    const form = useForm<FormValues>({
-        defaultValues: {
-            parking_hours: '',
-            parking_minutes: '',
-            orientation: '',
-            window_times: false,
-            message: '',
-        },
-    });
-
-    const onSubmit = form.handleSubmit((data) => {
-        router.post(
-            route('map.store'),
-            {
-                ...data,
-                latitude: lat,
-                longitude: lng,
-                nominatim: JSON.stringify(nominatim),
-            },
-            {
-                onSuccess: () => {
-                    Swal.fire({
-                        title: 'Thank you!',
-                        text: 'Your location has been successfully submitted for review.',
-                        icon: 'success',
-                        confirmButtonText: 'Oké',
-                        confirmButtonColor: '#f97316',
-                    }).then(() => {
-                        onClose();
-                    });
-                },
-                onError: (errors) => {
-                    Object.entries(errors).forEach(([key, message]) => {
-                        form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
-                    });
-                },
-            },
-        );
-    });
-
+export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, lat, lng, disabled }: Props) {
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="space-y-8">
@@ -180,7 +139,7 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                     <Button className="cursor-pointer" variant="ghost" type="button" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button className="cursor-pointer" type="submit" disabled={!nominatim}>
+                    <Button className="cursor-pointer" type="submit" disabled={disabled}>
                         Send
                     </Button>
                 </div>
