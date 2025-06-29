@@ -17,6 +17,26 @@
             "never": "Never",
             "area": "Area",
             "added_on": "Added on"
+        },
+        "confirm": {
+            "form": {
+                "title": "Help keep the map up-to-date",
+                "description": "Confirm if the parking space is still present.",
+                "description_note": "(you can do this once per day, for each parking space)",
+                "field": {
+                    "status": "Status",
+                    "comment": {
+                        "label": "Comment",
+                        "optional": "(optional)",
+                        "placeholder": "Add any details or comments about the parking space..."
+                    }
+                }
+            },
+            "buttons": {
+                "confirm": "Confirm",
+                "confirming": "Confirming...",
+                "alreadyConfirmed": "Already confirmed today"
+            }
         }
     },
     "municipal": {
