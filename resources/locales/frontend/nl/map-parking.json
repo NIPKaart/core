@@ -35,7 +35,7 @@
             "buttons": {
                 "confirm": "Bevestigen",
                 "confirming": "Bevestigen...",
-                "already_confirmed": "Vandaag al bevestigd"
+                "alreadyConfirmed": "Vandaag al bevestigd"
             }
         }
     },
