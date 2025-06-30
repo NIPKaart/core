@@ -15,10 +15,10 @@ import { getConfirmationColumns } from './columns';
 type PageProps = {
     confirmations: PaginatedResponse<ParkingSpaceConfirmation>;
     parkingSpace: { id: number; street: string; city: string; municipality: string };
-    statuses: Record<string, string>;
+    options: { confirmationStatuses: Record<string, string> };
 };
 
-export default function Index({ confirmations, parkingSpace, statuses }: PageProps) {
+export default function Index({ confirmations, parkingSpace, options }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/confirmations');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useConfirmationActionDialog({ parkingSpaceId: parkingSpace.id });
@@ -27,7 +27,7 @@ export default function Index({ confirmations, parkingSpace, statuses }: PagePro
     const selectedIds = confirmations.data.filter((_, index) => rowSelection[index]).map((confirmation) => String(confirmation.id));
 
     // Get the columns for the data table
-    const columns = getConfirmationColumns(statuses, can, openDialog, { t, tGlobal });
+    const columns = getConfirmationColumns(options.confirmationStatuses, can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('breadcrumbs.spaces'), href: route('app.parking-spaces.index') },

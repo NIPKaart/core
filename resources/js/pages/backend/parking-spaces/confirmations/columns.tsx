@@ -47,9 +47,10 @@ export function getConfirmationColumns(
             header: t('table.status'),
             enableSorting: true,
             enableHiding: false,
-            cell: ({ row }) => (
-                <Badge variant={variantMap[row.original.status] ?? 'default'}>{statuses[row.original.status] ?? row.original.status}</Badge>
-            ),
+            cell: ({ row }) => {
+                const status = row.original.status;
+                return <Badge variant={variantMap[status] || 'default'}>{statuses[status]}</Badge>;
+            },
         },
         {
             accessorKey: 'user.name',

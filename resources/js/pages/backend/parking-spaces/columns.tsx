@@ -16,6 +16,11 @@ import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreVertical } from 'lucide-react';
 
+const variantMap: Record<ParkingStatus, 'default' | 'secondary' | 'destructive'> = {
+    pending: 'default',
+    approved: 'secondary',
+    rejected: 'destructive',
+};
 type OpenDialogFn = (type: DialogType, space: ParkingSpace) => void;
 
 export function getParkingSpaceColumns(
@@ -77,11 +82,6 @@ export function getParkingSpaceColumns(
             enableHiding: false,
             cell: ({ row }) => {
                 const status = row.original.status as ParkingStatus;
-                const variantMap: Record<ParkingStatus, 'default' | 'secondary' | 'destructive'> = {
-                    pending: 'default',
-                    approved: 'secondary',
-                    rejected: 'destructive',
-                };
                 return <Badge variant={variantMap[status] ?? 'default'}>{statuses[status]}</Badge>;
             },
         },
@@ -128,7 +128,9 @@ export function getParkingSpaceColumns(
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.parking-spaces.confirmations.index', { id: space.id })}>{t('table.actions.confirmations')}</Link>
+                                            <Link href={route('app.parking-spaces.confirmations.index', { id: space.id })}>
+                                                {t('table.actions.confirmations')}
+                                            </Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}

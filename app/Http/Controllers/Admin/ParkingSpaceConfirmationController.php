@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Enums\ParkingConfirmationStatus;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -55,7 +56,9 @@ class ParkingSpaceConfirmationController extends Controller
         return Inertia::render('backend/parking-spaces/confirmations/index', [
             'parkingSpace' => $parkingSpace->only('id', 'country_id', 'municipality', 'city', 'street'),
             'confirmations' => $confirmations,
-            'statuses' => ParkingConfirmationStatus::all(),
+            'options' => [
+                'confirmationStatuses' => ParkingConfirmationStatus::options()
+            ]
         ]);
     }
 
