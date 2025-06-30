@@ -2,20 +2,18 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AddParkingModal from '@/components/modals/modal-add-parking';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
 import { NominatimAddress, ParkingSpace } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
-import { AlertCircle } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import Swal from 'sweetalert2';
-import { AddLocationForm, FormValues } from './form/form-create-location';
+import { FormValues } from '../form/form-create-location';
 
 const { BaseLayer, Overlay } = LayersControl;
 
@@ -29,6 +27,8 @@ type PageProps = {
 function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
     useMapEvents({
         click(e) {
+            const target = e.originalEvent.target as HTMLElement;
+            if (target.closest('.leaflet-control')) return;
             onMapClick(e);
         },
     });
@@ -237,42 +237,18 @@ export default function AddLocation() {
             </div>
 
             {modalOpen && markerPosition && Array.isArray(markerPosition) && (
-                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                    <DialogContent className="max-h-[95dvh] overflow-y-auto sm:max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle>Add new location</DialogTitle>
-                            <DialogDescription>Fill in the form below to add a new location.</DialogDescription>
-                        </DialogHeader>
-
-                        {!addressValid && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Address lookup failed</AlertTitle>
-                                <AlertDescription>
-                                    We could not determine the address for this location. Try moving the pin slightly.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-
-                        {generalError && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Submission failed</AlertTitle>
-                                <AlertDescription>{generalError}</AlertDescription>
-                            </Alert>
-                        )}
-
-                        <AddLocationForm
-                            form={form}
-                            orientationOptions={selectOptions.orientation}
-                            onSubmit={handleSubmit}
-                            onClose={() => setModalOpen(false)}
-                            disabled={!nominatimData}
-                            lat={markerPosition[0]}
-                            lng={markerPosition[1]}
-                        />
-                    </DialogContent>
-                </Dialog>
+                <AddParkingModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    form={form}
+                    onSubmit={handleSubmit}
+                    submitting={form.formState.isSubmitting}
+                    orientationOptions={selectOptions.orientation}
+                    lat={(markerPosition as [number, number])[0]}
+                    lng={(markerPosition as [number, number])[1]}
+                    addressValid={addressValid}
+                    generalError={generalError}
+                />
             )}
         </>
     );

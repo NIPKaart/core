@@ -1,9 +1,9 @@
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { SwitchCard } from '@/components/card-switch';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useRef } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 
 export type FormValues = {
@@ -18,18 +18,22 @@ type Props = {
     form: UseFormReturn<FormValues>;
     orientationOptions: Record<string, string>;
     onSubmit: () => void;
-    onClose: () => void;
     lat: number;
     lng: number;
-    disabled?: boolean;
 };
 
-export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, lat, lng, disabled }: Props) {
+export function AddLocationForm({ form, orientationOptions, onSubmit, lat, lng }: Props) {
+    const formRef = useRef<HTMLFormElement | null>(null);
+
     return (
         <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-8">
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Type of parking space</h2>
+            <form onSubmit={onSubmit} ref={formRef} className="mx-auto max-w-xl space-y-6">
+                {/* Orientation */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">Type of parking space</h2>
+                        <p className="text-sm text-muted-foreground">What kind of orientation does the parking spot have?</p>
+                    </div>
                     <FormField
                         control={form.control}
                         name="orientation"
@@ -39,7 +43,7 @@ export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, l
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="--- Select orientation ---" />
+                                            <SelectValue placeholder="Select orientation" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -60,13 +64,17 @@ export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, l
                         rel="noopener noreferrer"
                         className="text-sm text-muted-foreground underline"
                     >
-                        Look up the location in Google Streetview
+                        Look up the location in Google Street View
                     </a>
-                </div>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Parking time</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                {/* Parking time */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">Parking time</h2>
+                        <p className="text-sm text-muted-foreground">If there is a time restriction, enter it here. Otherwise leave it blank.</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                             control={form.control}
                             name="parking_hours"
@@ -74,7 +82,7 @@ export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, l
                                 <FormItem>
                                     <FormLabel>Hours</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="E.g. 2" {...field} />
+                                        <Input type="number" min={0} placeholder="E.g. 2" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -87,62 +95,43 @@ export function AddLocationForm({ form, orientationOptions, onSubmit, onClose, l
                                 <FormItem>
                                     <FormLabel>Minutes</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="E.g. 30" {...field} />
+                                        <Input type="number" min={0} placeholder="E.g. 30" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-                    <p className="text-sm text-muted-foreground">Keep it empty if there is no time limit indicated on a sub-board.</p>
-                </div>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Optional information</h2>
-                    <FormField
-                        control={form.control}
-                        name="window_times"
-                        render={({ field }) => (
-                            <FormItem className="flex items-start space-x-2">
-                                <FormControl>
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel className="font-normal">Window times</FormLabel>
-                                    <p className="text-sm text-muted-foreground">
-                                        For example: Mon–Sun | 09:00–17:00. Please specify this in the comments.
-                                    </p>
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                {/* Optional info */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">Additional info</h2>
+                        <p className="text-sm text-muted-foreground">Help others understand the context better.</p>
+                    </div>
+                    <SwitchCard name="window_times" control={form.control} label="Window times" description="For example: Mon–Sun | 09:00–17:00" />
+                    <p className="text-sm text-muted-foreground">Please describe the specific times in the message field.</p>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Message</h2>
+                {/* Message */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">Message</h2>
+                    </div>
                     <FormField
                         control={form.control}
                         name="message"
                         render={({ field }) => (
                             <FormItem>
                                 <FormControl>
-                                    <Textarea rows={3} placeholder="For example, location description, details, etc." {...field} />
+                                    <Textarea rows={3} placeholder="For example, more context or details about the location..." {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <Button className="cursor-pointer" variant="ghost" type="button" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button className="cursor-pointer" type="submit" disabled={disabled}>
-                        Send
-                    </Button>
-                </div>
+                </section>
             </form>
         </Form>
     );
