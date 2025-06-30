@@ -1,0 +1,10 @@
+{
+    "title": "Jouw favorieten",
+    "description": "Opgeslagen locaties die je als favoriet hebt gemarkeerd. Klik op een locatie om deze op de kaart te bekijken.",
+    "empty": {
+        "title": "Nog geen favorieten",
+        "description": "Blader door de kaart en klik op het hartpictogram om locaties als favoriet te markeren."
+    },
+    "loading": "Laden...",
+    "goToLocation": "Ga naar {{title}} op de kaart"
+}
