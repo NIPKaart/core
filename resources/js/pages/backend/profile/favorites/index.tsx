@@ -59,7 +59,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
                             <Link href={route('map')}>
                                 <MapPin className="h-5 w-5" />
-                                {t('favorites.actions.go_to_map')}
+                                {t('common.actions.go_to_map')}
                             </Link>
                         </Button>
                     </div>
