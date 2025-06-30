@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { ParkingStatus } from '@/types/enum';
@@ -21,9 +22,8 @@ type PageProps = {
     options: { statuses: Record<ParkingStatus, string>; municipalities: Option[] };
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parking Spaces', href: route('app.parking-spaces.index') }];
-
 export default function Index({ spaces, filters, options }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('backend/parking-spaces');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
@@ -68,7 +68,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
     };
 
     // Get the columns for the data table
-    const columns = getParkingSpaceColumns(options.statuses, can, openDialog);
+    const columns = getParkingSpaceColumns(options.statuses, can, openDialog, { t, tGlobal });
 
     // Bulk update location status
     const handleBulkUpdate = () => {
@@ -86,51 +86,50 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedStatus('');
-                    toast.success('Parking spaces updated successfully.');
+                    toast.success(t('toast.success'));
                 },
                 onError: (errors) => {
                     if (errors.ids) {
-                        toast.error('Invalid selection. Some items may no longer exist.');
+                        toast.error(t('toast.errors.ids'));
                     } else if (errors.status) {
-                        toast.error('Please select a valid status.');
+                        toast.error(t('toast.errors.status'));
                     } else {
-                        toast.error('Something went wrong. Please try again.');
+                        toast.error(t('toast.errors.default'));
                     }
                 },
             },
         );
     };
 
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') }];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Spaces" />
+            <Head title={t('head.title')} />
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">Parking Spaces</h1>
-
-                <p className="text-muted-foreground">
-                    All the listed parking spaces are added by the community and part of the own dataset of NIPKaart.
-                </p>
+                <h1 className="text-2xl font-bold">{t('head.title')}</h1>
+                <p className="text-muted-foreground">{t('head.description')}</p>
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">{Object.keys(rowSelection).length}</span> selected
+                                <span className="font-medium text-foreground">{Object.keys(rowSelection).length}</span> {t('selected')}
                             </div>
 
                             <button
                                 onClick={() => setRowSelection({})}
                                 className="absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
-                                Clear
+                                {t('bulk.clear')}
                             </button>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                             <Select value={selectedStatus} onValueChange={(value: ParkingStatus) => setSelectedStatus(value)}>
                                 <SelectTrigger className="w-full sm:w-[200px]">
-                                    <SelectValue placeholder="Select status" />
+                                    <SelectValue placeholder={t('bulk.placeholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {statusOptions.map(({ value, label }) => (
@@ -142,7 +141,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                             </Select>
 
                             <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full cursor-pointer sm:w-auto">
-                                Update status
+                                {t('bulk.update')}
                             </Button>
                         </div>
                     </div>
@@ -156,7 +155,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                     filters={
                         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
                             <DataTableFacetFilter
-                                title="Status"
+                                title={t('filters.status')}
                                 selected={statusFilter}
                                 options={statusOptions}
                                 onChange={(next) => {
@@ -169,7 +168,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 }}
                             />
                             <DataTableFacetFilter
-                                title="Municipality"
+                                title={t('filters.municipality')}
                                 selected={municipalityFilter}
                                 options={municipalityOptions}
                                 onChange={(next) => {

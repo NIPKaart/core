@@ -21,8 +21,7 @@
         "municipality": "Municipality",
         "nationwide": "Nationwide",
         "url": "URL",
-        "created_at": "Created at",
-        "actions": "Actions"
+        "created_at": "Created at"
     },
     "form": {
         "country": {
