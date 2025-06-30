@@ -1,0 +1,40 @@
+{
+    "head": {
+        "title": "Parking Spaces (Community)",
+        "description": "All the listed parking spaces are added by the community and part of the own dataset of NIPKaart."
+    },
+    "breadcrumbs": {
+        "index": "Parking Spaces"
+    },
+    "selected": "selected",
+    "table": {
+        "submittedBy": "Submitted By",
+        "province": "Province",
+        "municipality": "Municipality",
+        "city": "City",
+        "street": "Street",
+        "status": "Status",
+        "submittedAt": "Submitted At",
+        "actions": {
+            "confirmations": "Confirmations",
+            "trash": "Trash"
+        }
+    },
+    "filters": {
+        "status": "Status",
+        "municipality": "Municipality"
+    },
+    "bulk": {
+        "clear": "Clear",
+        "placeholder": "Select status",
+        "update": "Update status"
+    },
+    "toast": {
+        "success": "Parking spaces updated successfully.",
+        "error": {
+            "ids": "Invalid selection. Some items may no longer exist.",
+            "status": "Please select a valid status.",
+            "default": "Something went wrong. Please try again."
+        }
+    }
+}

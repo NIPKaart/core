@@ -1,0 +1,42 @@
+{
+    "head": {
+        "title": "Parkeerplekken (Community)",
+        "description": "Alle vermelde parkeerplekken zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
+    },
+    "breadcrumbs": {
+        "index": "Parkeerplekken"
+    },
+    "selected": "geselecteerd",
+    "table": {
+        "submittedBy": "Ingediend door",
+        "province": "Provincie",
+        "municipality": "Gemeente",
+        "city": "Stad",
+        "street": "Straat",
+        "status": "Status",
+        "submittedAt": "Ingediend op",
+        "actions": {
+            "show": "Bekijken",
+            "edit": "Bewerken",
+            "confirmations": "Bevestigingen",
+            "trash": "Prullenbak"
+        }
+    },
+    "filters": {
+        "status": "Status",
+        "municipality": "Gemeente"
+    },
+    "bulk": {
+        "clear": "Wissen",
+        "placeholder": "Selecteer status",
+        "update": "Status bijwerken"
+    },
+    "toast": {
+        "success": "Parkeerplekken succesvol bijgewerkt.",
+        "error": {
+            "ids": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer.",
+            "status": "Selecteer een geldige status.",
+            "default": "Er is iets misgegaan. Probeer het opnieuw."
+        }
+    }
+}

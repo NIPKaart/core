@@ -2,11 +2,11 @@
 
 return [
     'confirmed' => [
-        'label' => 'Beschikbaarheid bevestigen',
+        'label' => 'Bevestigd beschikbaarheid',
         'description' => 'De parkeerplaats is bevestigd als beschikbaar.',
     ],
     'moved' => [
-        'label' => 'Locatie verplaatst',
+        'label' => 'Locatie is verplaatst',
         'description' => 'De parkeerplaats is verplaatst naar een andere locatie.',
     ],
     'unavailable' => [

@@ -21,8 +21,7 @@
         "municipality": "Gemeente",
         "nationwide": "Landelijk",
         "url": "URL",
-        "created_at": "Aangemaakt op",
-        "actions": "Acties"
+        "created_at": "Aangemaakt op"
     },
     "form": {
         "country": {

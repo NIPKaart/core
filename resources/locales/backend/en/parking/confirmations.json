@@ -1,0 +1,50 @@
+{
+    "head": {
+        "title": "Confirmations for parking space #{{id}}",
+        "description": "View and manage confirmations submitted for this parking space."
+    },
+    "breadcrumbs": {
+        "spaces": "Parking Spaces",
+        "show": "Show",
+        "confirmations": "Confirmations"
+    },
+    "selected": "selected",
+    "unknown": "Unknown",
+    "back": "Back to parking space",
+    "table": {
+        "status": "Status",
+        "user": "User",
+        "confirmedAt": "Confirmed at",
+        "comment": "Comment",
+        "actions": {
+            "delete": "Delete confirmation",
+            "deleteSelected": "Delete selected"
+        }
+    },
+    "bulk": {
+        "clear": "Clear"
+    },
+    "delete": {
+        "title": "Delete Confirmation?",
+        "description": "Are you sure you want to delete this confirmation by \"{{user}}\" on {{date}}? This cannot be undone.",
+        "confirm": "Delete"
+    },
+    "bulkDelete": {
+        "title": "Delete Selected Confirmations?",
+        "description": "Are you sure you want to delete {{count}} confirmations? This cannot be undone.",
+        "confirm": "Delete"
+    },
+    "toast": {
+        "delete": {
+            "success": "Confirmation deleted successfully",
+            "error": "Failed to delete confirmation"
+        },
+        "bulkDelete": {
+            "success": "Deleted selected confirmations successfully",
+            "error": "Failed to delete selected confirmations"
+        }
+    },
+    "errors": {
+        "missingId": "Missing parking space id"
+    }
+}

@@ -2,6 +2,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ParkingSpaceConfirmation } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 export type ConfirmationDialogType = 'delete' | 'bulkDelete';
@@ -14,6 +15,8 @@ type Options = {
 };
 
 export function useConfirmationActionDialog(options: Options = {}) {
+    const { t } = useTranslation('backend/parking/confirmations');
+    const { t: tGlobal } = useTranslation('backend/global');
     const [dialogType, setDialogType] = useState<ConfirmationDialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 
@@ -27,7 +30,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
             if (!dialogSubject || !('id' in dialogSubject)) return;
             const parking_space_id = options.parkingSpaceId;
             if (!parking_space_id) {
-                toast.error('Missing parking space id');
+                toast.error(t('errors.missingId'));
                 closeDialog();
                 return;
             }
@@ -39,12 +42,12 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Confirmation deleted successfully');
+                        toast.success(t('toast.delete.success'));
                         closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
-                        toast.error('Failed to delete confirmation');
+                        toast.error(t('toast.delete.error'));
                         closeDialog();
                         options.onError?.();
                     },
@@ -55,7 +58,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             const parking_space_id = options.parkingSpaceId;
             if (!parking_space_id) {
-                toast.error('Missing parking space id');
+                toast.error(t('errors.missingId'));
                 closeDialog();
                 return;
             }
@@ -67,12 +70,12 @@ export function useConfirmationActionDialog(options: Options = {}) {
                     data: { ids: dialogSubject.ids },
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Deleted selected confirmations successfully');
+                        toast.success(t('toast.bulkDelete.success'));
                         closeDialog();
                         options.onSuccess?.();
                     },
                     onError: () => {
-                        toast.error('Failed to delete selected confirmations');
+                        toast.error(t('toast.bulkDelete.error'));
                         closeDialog();
                         options.onError?.();
                     },
@@ -91,18 +94,21 @@ export function useConfirmationActionDialog(options: Options = {}) {
         }
     > = {
         delete: {
-            title: 'Delete Confirmation?',
+            title: t('delete.title'),
             description: (s) =>
                 s && 'id' in s
-                    ? `Are you sure you want to delete this confirmation by "${s.user?.name ?? 'Unknown'}" on ${new Date(s.confirmed_at).toLocaleDateString()}? This cannot be undone.`
+                    ? t('delete.description', {
+                          user: s.user?.name ?? t('unknown', { defaultValue: 'Unknown' }),
+                          date: new Date(s.confirmed_at).toLocaleDateString(),
+                      })
                     : '',
-            confirmText: 'Delete',
+            confirmText: t('delete.confirm'),
             variant: 'destructive',
         },
         bulkDelete: {
-            title: 'Delete Selected Confirmations?',
-            description: (s) => (s && 'ids' in s ? `Are you sure you want to delete ${s.ids.length} confirmations? This cannot be undone.` : ''),
-            confirmText: 'Delete',
+            title: t('bulkDelete.title'),
+            description: (s) => (s && 'ids' in s ? t('bulkDelete.description', { count: s.ids.length }) : ''),
+            confirmText: t('bulkDelete.confirm'),
             variant: 'destructive',
         },
     };
@@ -118,6 +124,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 title={dialogPropsMap[dialogType].title}
                 description={dialogPropsMap[dialogType].description(dialogSubject)}
                 confirmText={dialogPropsMap[dialogType].confirmText}
+                cancelText={tGlobal('common.cancel')}
                 variant={dialogPropsMap[dialogType].variant}
                 onConfirm={handlers[dialogType]}
                 onClose={closeDialog}

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\ParkingSpaceConfirmationController;
 use App\Http\Controllers\ParkingSpaceController;
 use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
@@ -41,10 +40,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ParkingSpace routes
         Route::prefix('parking-spaces')->as('parking-spaces.')->group(function () {
             // Confirmations routes
-            Route::post('{parking_space}/confirm', [ParkingSpaceConfirmationController::class, 'store'])->name('confirm');
-            Route::get('{parking_space}/confirmations', [ParkingSpaceConfirmationController::class, 'index'])->name('confirmations.index');
-            Route::delete('{parking_space}/confirmations/{confirmation}', [ParkingSpaceConfirmationController::class, 'destroy'])->name('confirmations.destroy');
-            Route::delete('{parking_space}/confirmations/bulk/delete', [ParkingSpaceConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');
+            Route::post('{parking_space}/confirm', [Admin\ParkingSpaceConfirmationController::class, 'store'])->name('confirm');
+            Route::get('{parking_space}/confirmations', [Admin\ParkingSpaceConfirmationController::class, 'index'])->name('confirmations.index');
+            Route::delete('{parking_space}/confirmations/{confirmation}', [Admin\ParkingSpaceConfirmationController::class, 'destroy'])->name('confirmations.destroy');
+            Route::delete('{parking_space}/confirmations/bulk/delete', [Admin\ParkingSpaceConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');
 
             // Delete and restore routes
             Route::get('trash', [Admin\ParkingSpaceController::class, 'trash'])->name('trash');
