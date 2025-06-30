@@ -23,7 +23,7 @@ type PageProps = {
 };
 
 export default function Index({ spaces, filters, options }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('backend/parking-spaces');
+    const { t, tGlobal } = useResourceTranslation('backend/parking/main');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
