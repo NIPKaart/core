@@ -1,0 +1,10 @@
+{
+    "title": "Your Favorites",
+    "description": "Saved locations you've marked as favorites. Click one to view it on the map.",
+    "empty": {
+        "title": "No favorites yet",
+        "description": "Browse the map and click the heart icon to favorite locations."
+    },
+    "loading": "Loading...",
+    "goToLocation": "Go to {{title}} on map"
+}

@@ -1,4 +1,4 @@
-import FavoritesDialog from '@/components/map/modal-favorites';
+import FavoritesDialog from '@/components/modals/modal-favorites';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';

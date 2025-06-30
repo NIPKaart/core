@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Favorite } from '@/types';
 import { Heart, Landmark, MapPin, Warehouse, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type FavoritesDialogProps = {
     open: boolean;
@@ -19,6 +21,8 @@ const iconMap = {
 };
 
 export default function FavoritesDialog({ open, onClose, onGotoLocation }: FavoritesDialogProps) {
+    const { t } = useTranslation('frontend/map/favorites');
+    const { t: tGlobal } = useTranslation('frontend/global');
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [favorites, setFavorites] = useState<Favorite[]>([]);
     const [loading, setLoading] = useState(false);
@@ -40,10 +44,10 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     };
 
     const EmptyState = (
-        <div className="mt-8 mb-10 flex flex-col items-center justify-center gap-3 text-center">
+        <div className="mt-8 mb-10 flex flex-col items-center justify-center gap-3 px-8 text-center">
             <Heart className="h-10 w-10 text-red-500" fill="#ef4444" />
-            <div className="font-semibold text-muted-foreground">No favorites yet</div>
-            <div className="text-sm text-zinc-500">Browse the map and click the heart icon to favorite locations.</div>
+            <div className="font-semibold text-muted-foreground">{t('empty.title')}</div>
+            <div className="text-sm text-zinc-500">{t('empty.description')}</div>
         </div>
     );
 
@@ -81,7 +85,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
         </div>
     );
 
-    const content = loading ? <div className="py-10 text-center">Loading...</div> : favorites.length === 0 ? EmptyState : List;
+    const content = loading ? <div className="py-10 text-center">{t('loading')}</div> : favorites.length === 0 ? EmptyState : List;
 
     // ---- Desktop Dialog ----
     if (isDesktop) {
@@ -92,18 +96,19 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                         <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                                 <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
-                                <DialogTitle className="text-lg font-semibold">Your Favorites</DialogTitle>
+                                <DialogTitle className="text-lg font-semibold">{t('title')}</DialogTitle>
                             </div>
                             <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
                     </DialogHeader>
-                    <DialogDescription className="mt-1 mb-0 text-center">Quickly access all your favorite locations here.</DialogDescription>
+                    <DialogDescription className="mt-1 mb-0 text-center">{t('description')}</DialogDescription>
+                    <Separator />
                     <div className="mt-2">{content}</div>
                     <DialogFooter>
                         <Button className="w-full cursor-pointer" variant="secondary" onClick={onClose}>
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -118,17 +123,16 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                 <DrawerHeader>
                     <div className="flex items-center gap-2">
                         <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
-                        <DrawerTitle className="text-lg font-semibold">Your Favorites</DrawerTitle>
+                        <DrawerTitle className="text-lg font-semibold">{t('title')}</DrawerTitle>
                     </div>
-                    <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">
-                        Quickly access all your favorite locations here.
-                    </DrawerDescription>
+                    <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">{t('description')}</DrawerDescription>
                 </DrawerHeader>
+                <Separator />
                 <div className="mt-2 px-2">{content}</div>
                 <DrawerFooter>
                     <DrawerClose asChild>
                         <Button className="w-full" variant="secondary">
-                            Close
+                            {tGlobal('common.close')}
                         </Button>
                     </DrawerClose>
                 </DrawerFooter>
