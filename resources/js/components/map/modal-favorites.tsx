@@ -86,7 +86,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     // ---- Desktop Dialog ----
     if (isDesktop) {
         return (
-            <Dialog open={open} onOpenChange={onClose}>
+            <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
                 <DialogContent showClose={false} className="max-w-lg bg-white sm:rounded-xl dark:bg-zinc-950">
                     <DialogHeader>
                         <div className="flex items-center justify-between gap-2">
@@ -113,7 +113,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
 
     // ---- Mobile Drawer ----
     return (
-        <Drawer open={open} onOpenChange={onClose}>
+        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
             <DrawerContent className="mx-auto max-w-lg bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex items-center gap-2">

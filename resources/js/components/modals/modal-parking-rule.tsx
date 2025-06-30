@@ -32,7 +32,7 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
     // Desktop Dialog
     if (isDesktop) {
         return (
-            <Dialog open={open} onOpenChange={onClose}>
+            <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
                 <DialogContent showClose={false} className="max-w-xl overflow-visible bg-background px-0 pt-0 pb-0 sm:rounded-xl">
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2 px-6 pt-6 pb-4">
@@ -74,7 +74,7 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
 
     // Mobile Drawer
     return (
-        <Drawer open={open} onOpenChange={onClose}>
+        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
             <DrawerContent className="mx-auto max-w-xl bg-background px-0 pt-0 pb-0 sm:rounded-t-2xl">
                 <DrawerHeader className="px-4 pt-4 pb-2">
                     <div className="flex w-full items-center gap-2">
