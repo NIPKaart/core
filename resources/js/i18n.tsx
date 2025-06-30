@@ -13,7 +13,12 @@ const resources: ResourceMap = {};
 const namespaces: Set<string> = new Set();
 
 for (const path in modules) {
-    const match = path.match(/..\/locales\/([a-zA-Z0-9_-]+)\/([a-z]{2})(?:\/(.+))?\/([a-zA-Z0-9_-]+)\.json$/);
+    // Match paths in the format: ../locales/{domain}/{lang}/{optional_folder}/{namespace}.json
+    // - {domain}: Alphanumeric, underscores, or hyphens (e.g., "global", "app")
+    // - {lang}: Two-letter language code (e.g., "en", "nl")
+    // - {optional_folder}: Optional subfolder for grouping namespaces (e.g., "common")
+    // - {namespace}: Alphanumeric, underscores, or hyphens (e.g., "messages", "errors")
+    const match = path.match(/^\.{2}\/locales\/([a-zA-Z0-9_-]+)\/([a-z]{2})(?:\/([a-zA-Z0-9_-]+))?\/([a-zA-Z0-9_-]+)\.json$/);
     if (!match) continue;
 
     const [, domain, lang, folder, filename] = match;
