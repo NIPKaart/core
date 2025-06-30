@@ -1,0 +1,67 @@
+{
+    "head": {
+        "title": "Add Location"
+    },
+    "modal": {
+        "title": "Add new location",
+        "description": "Fill in the details below to add a new parking location.",
+        "buttons": {
+            "submit": "Send location"
+        },
+        "alerts": {
+            "addressFailed": {
+                "title": "Address lookup failed",
+                "description": "We could not determine the address for this location. Try moving the pin slightly."
+            },
+            "submitFailed": {
+                "title": "Submission failed"
+            }
+        },
+        "form": {
+            "orientation": {
+                "title": "Type of parking space",
+                "description": "What kind of orientation does the parking spot have?",
+                "label": "Orientation *",
+                "placeholder": "Select orientation",
+                "streetviewLink": "Look up the location in Google Street View"
+            },
+            "parking_time": {
+                "title": "Parking time",
+                "description": "If there is a time restriction, enter it here. Otherwise leave it blank.",
+                "fields": {
+                    "hours": {
+                        "label": "Hours",
+                        "placeholder": "E.g. 2"
+                    },
+                    "minutes": {
+                        "label": "Minutes",
+                        "placeholder": "E.g. 30"
+                    }
+                }
+            },
+            "window_times": {
+                "title": "Additional info",
+                "description": "Help others understand the context better.",
+                "note": "Please describe the specific times in the message field.",
+                "switch": {
+                    "label": "Window times",
+                    "description": "For example: Mon–Sun | 09:00–17:00"
+                }
+            },
+            "message": {
+                "title": "Message",
+                "placeholder": "For example, more context or details about the location..."
+            }
+        },
+        "success": {
+            "title": "Thank you!",
+            "text": "Your location has been successfully submitted for review.",
+            "confirm": "Okay"
+        }
+    },
+    "layers": {
+        "mapbox": "Mapbox Streets",
+        "google": "Google Hybrid",
+        "parkingOverlay": "Nearby Parking Spaces"
+    }
+}

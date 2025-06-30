@@ -10,6 +10,7 @@ import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import Swal from 'sweetalert2';
@@ -89,6 +90,7 @@ export default function AddLocation() {
     const { props } = usePage<PageProps>();
     const { selectOptions, parkingSpaces } = props;
     const generalError = props.errors?.general;
+    const { t } = useTranslation('map-add-parking');
 
     const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
@@ -166,10 +168,10 @@ export default function AddLocation() {
             {
                 onSuccess: () => {
                     Swal.fire({
-                        title: 'Thank you!',
-                        text: 'Your location has been successfully submitted for review.',
+                        title: t('modal.success.title'),
+                        text: t('modal.success.text'),
                         icon: 'success',
-                        confirmButtonText: 'Oké',
+                        confirmButtonText: t('modal.success.confirm'),
                         confirmButtonColor: '#f97316',
                     }).then(() => {
                         setModalOpen(false);
@@ -187,12 +189,12 @@ export default function AddLocation() {
 
     return (
         <>
-            <Head title="Add Location" />
+            <Head title={t('head.title')} />
             <div className="flex h-[100dvh] flex-col">
                 <Navbar />
                 <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <LayersControl position="topright">
-                        <BaseLayer name="Mapbox Streets">
+                        <BaseLayer name={t('layers.mapbox')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
                                 url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
@@ -201,7 +203,7 @@ export default function AddLocation() {
                             />
                         </BaseLayer>
 
-                        <BaseLayer checked name="Google Hybrid">
+                        <BaseLayer checked name={t('layers.google')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
                                 url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
@@ -211,7 +213,7 @@ export default function AddLocation() {
                         </BaseLayer>
 
                         {/* Overlay for nearby parking spaces */}
-                        <Overlay checked={true} name="Nearby Parking Spaces">
+                        <Overlay checked={true} name={t('layers.parkingOverlay')}>
                             <ClusteredParkingMarkers spaces={parkingSpaces} />
                         </Overlay>
                     </LayersControl>
