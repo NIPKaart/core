@@ -3,6 +3,7 @@ import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useConfirmationActionDialog } from '@/hooks/use-dialog-confirmation-action';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, ParkingSpaceConfirmation } from '@/types';
 import { Head, Link } from '@inertiajs/react';
@@ -18,6 +19,7 @@ type PageProps = {
 };
 
 export default function Index({ confirmations, parkingSpace, statuses }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('backend/parking/confirmations');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useConfirmationActionDialog({ parkingSpaceId: parkingSpace.id });
 
@@ -25,12 +27,12 @@ export default function Index({ confirmations, parkingSpace, statuses }: PagePro
     const selectedIds = confirmations.data.filter((_, index) => rowSelection[index]).map((confirmation) => String(confirmation.id));
 
     // Get the columns for the data table
-    const columns = getConfirmationColumns(statuses, can, openDialog);
+    const columns = getConfirmationColumns(statuses, can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Parking Spaces', href: route('app.parking-spaces.index') },
-        { title: 'Show', href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
-        { title: 'Confirmations', href: '' },
+        { title: t('breadcrumbs.spaces'), href: route('app.parking-spaces.index') },
+        { title: t('breadcrumbs.show'), href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
+        { title: t('breadcrumbs.confirmations'), href: '' },
     ];
 
     useEffect(() => {
@@ -39,28 +41,29 @@ export default function Index({ confirmations, parkingSpace, statuses }: PagePro
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Parking Space Confirmations" />
+            <Head title={t('head.title', { id: parkingSpace.id })} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight">Confirmations for {parkingSpace.id}</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('head.title', { id: parkingSpace.id })}</h1>
                     <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link href={route('app.parking-spaces.show', { id: parkingSpace.id })}>
                             <ArrowLeft className="h-4 w-4" />
-                            Back to parking space
+                            {t('back')}
                         </Link>
                     </Button>
                 </div>
+                <p className="text-muted-foreground">{t('head.description')}</p>
 
                 {/* Bulk delete toolbar */}
                 {can('parking-space-confirmation.delete') && selectedIds.length > 0 && (
                     <div className="mb-4 flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
                         <div className="text-sm text-muted-foreground">
-                            <span className="font-medium text-foreground">{selectedIds.length}</span> selected
+                            <span className="font-medium text-foreground">{selectedIds.length}</span> {t('selected')}
                             <button
                                 onClick={() => setRowSelection({})}
                                 className="ml-4 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground"
                             >
-                                Clear
+                                {t('bulk.clear')}
                             </button>
                         </div>
                         <Button
@@ -68,7 +71,7 @@ export default function Index({ confirmations, parkingSpace, statuses }: PagePro
                             onClick={() => openDialog('bulkDelete', { ids: selectedIds })}
                             className="w-full cursor-pointer sm:w-auto"
                         >
-                            Delete selected
+                            {t('table.actions.deleteSelected')}
                         </Button>
                     </div>
                 )}

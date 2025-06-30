@@ -111,7 +111,7 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                             <FormItem>
                                 <FormLabel>
                                     {t('community.confirm.form.field.comment.label')}
-                                    <span className="text-xs text-muted-foreground">{t('community.confirm.form.field.comment.optional')}</span>
+                                    <span className="ml-1 text-xs text-muted-foreground">{t('community.confirm.form.field.comment.optional')}</span>
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea

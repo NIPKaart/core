@@ -1,0 +1,50 @@
+{
+    "head": {
+        "title": "Bevestigingen voor parkeerplek #{{id}}",
+        "description": "Bekijk en beheer alle bevestigingen die zijn ingediend voor deze parkeerplek."
+    },
+    "breadcrumbs": {
+        "spaces": "Parkeerplekken",
+        "show": "Bekijken",
+        "confirmations": "Bevestigingen"
+    },
+    "selected": "geselecteerd",
+    "unknown": "Onbekend",
+    "back": "Terug naar parkeerplek",
+    "table": {
+        "status": "Status",
+        "user": "Gebruiker",
+        "confirmedAt": "Bevestigd op",
+        "comment": "Opmerking",
+        "actions": {
+            "delete": "Bevestiging verwijderen",
+            "deleteSelected": "Verwijder selectie"
+        }
+    },
+    "bulk": {
+        "clear": "Leegmaken"
+    },
+    "delete": {
+        "title": "Bevestiging verwijderen?",
+        "description": "Weet je zeker dat je deze bevestiging van \"{{user}}\" op {{date}} wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Verwijderen"
+    },
+    "bulkDelete": {
+        "title": "Geselecteerde bevestigingen verwijderen?",
+        "description": "Weet je zeker dat je {{count}} bevestigingen wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "confirm": "Verwijderen"
+    },
+    "toast": {
+        "delete": {
+            "success": "Bevestiging succesvol verwijderd",
+            "error": "Verwijderen van bevestiging mislukt"
+        },
+        "bulkDelete": {
+            "success": "Geselecteerde bevestigingen succesvol verwijderd",
+            "error": "Verwijderen van geselecteerde bevestigingen mislukt"
+        }
+    },
+    "errors": {
+        "missingId": "Parkeerplek ID ontbreekt"
+    }
+}

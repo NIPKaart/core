@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { ParkingSpaceConfirmation } from '@/types';
+import type { ParkingSpaceConfirmation, Translations } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -12,11 +12,13 @@ const variantMap: Record<string, 'default' | 'secondary' | 'destructive'> = {
     moved: 'default',
     unavailable: 'destructive',
 };
+type OpenDialogFn = (type: 'delete', subject: ParkingSpaceConfirmation) => void;
 
 export function getConfirmationColumns(
     statuses: Record<string, string>,
     can: (permission: string) => boolean,
-    openDialog: (type: 'delete', subject: ParkingSpaceConfirmation) => void,
+    openDialog: OpenDialogFn,
+    { t }: Translations,
 ): ColumnDef<ParkingSpaceConfirmation>[] {
     return [
         {
@@ -42,7 +44,7 @@ export function getConfirmationColumns(
         },
         {
             accessorKey: 'status',
-            header: 'Status',
+            header: t('table.status'),
             enableSorting: true,
             enableHiding: false,
             cell: ({ row }) => (
@@ -51,14 +53,14 @@ export function getConfirmationColumns(
         },
         {
             accessorKey: 'user.name',
-            header: 'User',
+            header: t('table.user'),
             enableSorting: true,
             enableHiding: false,
             cell: ({ row }) => row.original.user?.name ?? <span className="text-muted-foreground italic">Unknown</span>,
         },
         {
             accessorKey: 'confirmed_at',
-            header: 'Confirmed at',
+            header: t('table.confirmedAt'),
             enableSorting: true,
             cell: ({ row }) => {
                 const date = row.original.confirmed_at;
@@ -67,7 +69,7 @@ export function getConfirmationColumns(
         },
         {
             accessorKey: 'comment',
-            header: 'Comment',
+            header: t('table.comment'),
             enableSorting: false,
             cell: ({ row }) => row.original.comment ?? <span className="text-muted-foreground italic">—</span>,
         },
@@ -80,7 +82,7 @@ export function getConfirmationColumns(
                 can('parking-space-confirmation.delete') && (
                     <Button variant="destructive" size="icon" className="cursor-pointer" onClick={() => openDialog('delete', row.original)}>
                         <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete confirmation</span>
+                        <span className="sr-only">{t('table.actions.delete')}</span>
                     </Button>
                 ),
         },
