@@ -22,7 +22,7 @@ type RoleFormProps = {
 };
 
 export default function RoleForm({ form, role, allPermissions, onSubmit, submitting }: RoleFormProps) {
-    const { t } = useTranslation('roles');
+    const { t } = useTranslation('backend/roles');
 
     const groupedPermissions = allPermissions.reduce<Record<string, Permission[]>>((acc, perm) => {
         const [resource] = perm.name.includes('.') ? perm.name.split('.') : perm.name.split('_');

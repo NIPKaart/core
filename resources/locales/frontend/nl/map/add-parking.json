@@ -58,10 +58,5 @@
             "text": "Je locatie is succesvol ingediend voor beoordeling.",
             "confirm": "Oké"
         }
-    },
-    "layers": {
-        "mapbox": "Mapbox Straten",
-        "google": "Google Hybride",
-        "parkingOverlay": "Dichtbijzijnde Parkeerplaatsen"
     }
 }

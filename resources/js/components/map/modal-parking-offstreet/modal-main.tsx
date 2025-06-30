@@ -21,8 +21,8 @@ export type ParkingOffstreetModalProps = {
 };
 
 export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude, longitude }: ParkingOffstreetModalProps) {
-    const { t } = useTranslation('map-parking');
-    const { t: tGlobal } = useTranslation('global');
+    const { t } = useTranslation('frontend/map/modals');
+    const { t: tGlobal } = useTranslation('frontend/global');
 
     // Authorization and media query hooks
     const { user } = useAuthorization();

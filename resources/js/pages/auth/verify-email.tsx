@@ -9,7 +9,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import { useTranslation } from 'react-i18next';
 
 export default function VerifyEmail({ status }: { status?: string }) {
-    const { t } = useTranslation('auth');
+    const { t } = useTranslation('backend/auth');
     const { post, processing } = useForm({});
 
     const submit: FormEventHandler = (e) => {

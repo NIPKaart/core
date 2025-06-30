@@ -23,8 +23,8 @@ type ProfileForm = {
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
-    const { t } = useTranslation('global');
-    const { t: tSettings } = useTranslation('settings');
+    const { t } = useTranslation('backend/global');
+    const { t: tSettings } = useTranslation('backend/settings');
 
     const breadcrumbs: BreadcrumbItem[] = [
         {

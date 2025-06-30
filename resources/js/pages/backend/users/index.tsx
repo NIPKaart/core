@@ -22,7 +22,7 @@ type PageProps = {
 };
 
 export default function Index({ users }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('users');
+    const { t, tGlobal } = useResourceTranslation('backend/users');
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const { can } = useAuthorization();

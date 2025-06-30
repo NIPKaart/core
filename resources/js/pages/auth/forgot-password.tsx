@@ -12,7 +12,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import { useTranslation } from 'react-i18next';
 
 export default function ForgotPassword({ status }: { status?: string }) {
-    const { t } = useTranslation('auth');
+    const { t } = useTranslation('backend/auth');
 
     const { data, setData, post, processing, errors } = useForm<Required<{ email: string }>>({
         email: '',

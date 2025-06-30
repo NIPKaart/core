@@ -6,5 +6,10 @@
         "save": "Save",
         "log_out": "Log out",
         "close": "Close"
+    },
+    "layers": {
+        "mapbox": "Mapbox Streets",
+        "google": "Google Hybrid",
+        "parkingOverlay": "Nearby Parking Spaces"
     }
 }

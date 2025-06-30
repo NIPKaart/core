@@ -12,7 +12,7 @@ type PageProps = {
 };
 
 export default function Create({ allPermissions }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('roles');
+    const { t, tGlobal } = useResourceTranslation('backend/roles');
 
     const breadcrumbs: BreadcrumbItem[] = [
         {

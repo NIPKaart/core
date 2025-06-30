@@ -21,8 +21,8 @@ export type ParkingMunicipalModalProps = {
 };
 
 export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude, longitude }: ParkingMunicipalModalProps) {
-    const { t } = useTranslation('map-parking');
-    const { t: tGlobal } = useTranslation('global');
+    const { t } = useTranslation('frontend/map/modals');
+    const { t: tGlobal } = useTranslation('frontend/global');
 
     // Authorization and media query hooks
     const { user } = useAuthorization();
@@ -141,7 +141,7 @@ export default function ParkingMunicipalModal({ spaceId, open, onClose, latitude
                     <div className="flex w-full items-center justify-between gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
                             <Landmark className="h-6 w-6 text-orange-400" />
-                            Municipal Parking Space
+                            {t('municipal.modal.title')}
                         </DrawerTitle>
                         <div className="flex items-center gap-1 sm:gap-2">
                             {isLoggedIn && data?.id && <FavoriteButton initial={!!data.is_favorited} id={data.id} type="parking_municipal" />}

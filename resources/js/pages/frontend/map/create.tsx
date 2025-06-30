@@ -91,7 +91,8 @@ export default function AddLocation() {
     const { props } = usePage<PageProps>();
     const { selectOptions, parkingSpaces } = props;
     const generalError = props.errors?.general;
-    const { t } = useTranslation('map-add-parking');
+    const { t } = useTranslation('frontend/map/add-parking');
+    const { t: tGlobal } = useTranslation('frontend/global');
 
     const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
@@ -195,7 +196,7 @@ export default function AddLocation() {
                 <Navbar />
                 <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <LayersControl position="topright">
-                        <BaseLayer name={t('layers.mapbox')}>
+                        <BaseLayer name={tGlobal('layers.mapbox')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
                                 url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
@@ -204,7 +205,7 @@ export default function AddLocation() {
                             />
                         </BaseLayer>
 
-                        <BaseLayer checked name={t('layers.google')}>
+                        <BaseLayer checked name={tGlobal('layers.google')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
                                 url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
@@ -214,7 +215,7 @@ export default function AddLocation() {
                         </BaseLayer>
 
                         {/* Overlay for nearby parking spaces */}
-                        <Overlay checked={true} name={t('layers.parkingOverlay')}>
+                        <Overlay checked={true} name={tGlobal('layers.parkingOverlay')}>
                             <ClusteredParkingMarkers spaces={parkingSpaces} />
                         </Overlay>
                     </LayersControl>

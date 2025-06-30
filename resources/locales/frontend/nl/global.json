@@ -6,5 +6,10 @@
         "save": "Opslaan",
         "log_out": "Uitloggen",
         "close": "Sluiten"
+    },
+    "layers": {
+        "mapbox": "Mapbox Straten",
+        "google": "Google Hybride",
+        "parkingOverlay": "Dichtbijzijnde Parkeerplaatsen"
     }
 }

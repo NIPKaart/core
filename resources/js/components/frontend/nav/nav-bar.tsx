@@ -14,7 +14,7 @@ import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
 export default function Navbar() {
-    const { t } = useTranslation('navbar');
+    const { t } = useTranslation('frontend/navbar');
     const page = usePage<SharedData>();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { auth } = page.props;

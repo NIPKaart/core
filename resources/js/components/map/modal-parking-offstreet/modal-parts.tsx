@@ -14,7 +14,7 @@ type OffstreetModalContentProps = {
 };
 
 export function OffstreetModalContent({ data, isLoggedIn, copiedSpaceId, setCopiedSpaceId }: OffstreetModalContentProps) {
-    const { t } = useTranslation('map-parking');
+    const { t } = useTranslation('frontend/map/modals');
 
     // Calculate occupancy and color
     const occupancy = data && data.short_capacity > 0 && data.free_space_short != null ? 1 - data.free_space_short / data.short_capacity : null;

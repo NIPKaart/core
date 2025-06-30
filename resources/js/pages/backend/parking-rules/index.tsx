@@ -22,7 +22,7 @@ type PageProps = {
 };
 
 export default function Index({ parkingRules, countries, municipalities }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('parking-rules');
+    const { t, tGlobal } = useResourceTranslation('backend/parking-rules');
     const { can } = useAuthorization();
 
     const breadcrumbs: BreadcrumbItem[] = [

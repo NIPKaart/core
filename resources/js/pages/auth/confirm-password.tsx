@@ -11,7 +11,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import { useTranslation } from 'react-i18next';
 
 export default function ConfirmPassword() {
-    const { t } = useTranslation('auth');
+    const { t } = useTranslation('backend/auth');
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<{ password: string }>>({
         password: '',

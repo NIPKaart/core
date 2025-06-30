@@ -4,10 +4,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import { AddLocationForm, FormValues } from '@/pages/frontend/form/form-create-location';
 import { AlertCircle, MapPinned, Send, X } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
     open: boolean;
@@ -34,7 +34,8 @@ export default function AddParkingModal({
     addressValid,
     generalError,
 }: Props) {
-    const { t, tGlobal } = useResourceTranslation('map-add-parking');
+    const { t } = useTranslation('frontend/map/add-parking');
+    const { t: tGlobal } = useTranslation('frontend/global');
     const isDesktop = useMediaQuery('(min-width: 768px)');
 
     const title = t('modal.title');

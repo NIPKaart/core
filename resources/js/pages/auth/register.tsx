@@ -19,7 +19,7 @@ type RegisterForm = {
 };
 
 export default function Register() {
-    const { t, i18n } = useTranslation('auth');
+    const { t, i18n } = useTranslation('backend/auth');
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',

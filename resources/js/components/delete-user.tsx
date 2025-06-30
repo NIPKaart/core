@@ -12,8 +12,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { useTranslation } from 'react-i18next';
 
 export default function DeleteUser() {
-    const { t } = useTranslation('global');
-    const { t: tSettings } = useTranslation('settings');
+    const { t } = useTranslation('backend/global');
+    const { t: tSettings } = useTranslation('backend/settings');
     const passwordInput = useRef<HTMLInputElement>(null);
     const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm<Required<{ password: string }>>({ password: '' });
 

@@ -58,10 +58,5 @@
             "text": "Your location has been successfully submitted for review.",
             "confirm": "Okay"
         }
-    },
-    "layers": {
-        "mapbox": "Mapbox Streets",
-        "google": "Google Hybrid",
-        "parkingOverlay": "Nearby Parking Spaces"
     }
 }
