@@ -29,7 +29,7 @@ export function AddLocationForm({ form, orientationOptions, onSubmit, lat, lng }
 
     return (
         <Form {...form}>
-            <form onSubmit={onSubmit} ref={formRef} className="mx-auto max-w-xl space-y-6">
+            <form id="location-form" onSubmit={onSubmit} ref={formRef} className="mx-auto max-w-xl space-y-6">
                 {/* Orientation */}
                 <section className="space-y-4">
                     <div>

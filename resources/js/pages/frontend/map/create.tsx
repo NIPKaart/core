@@ -28,7 +28,8 @@ type PageProps = {
 function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
     useMapEvents({
         click(e) {
-            const target = e.originalEvent.target as HTMLElement;
+            const target = e.originalEvent.target;
+            if (!(target instanceof HTMLElement)) return;
             if (target.closest('.leaflet-control')) return;
             onMapClick(e);
         },
