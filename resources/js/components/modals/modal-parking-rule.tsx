@@ -22,7 +22,7 @@ type Props = {
 
 export default function ParkingRuleModal({ open, onClose, form, isEdit = false, onSubmit, submitting, countries, municipalities }: Props) {
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const { t, tGlobal } = useResourceTranslation('parking-rules');
+    const { t, tGlobal } = useResourceTranslation('backend/parking-rules');
 
     const descriptionText = t('modal.description');
     const titleText = isEdit ? t('modal.title_edit') : t('modal.title_add');

@@ -24,7 +24,7 @@ type Props = {
 };
 
 export function AddLocationForm({ form, orientationOptions, onSubmit, lat, lng }: Props) {
-    const { t } = useTranslation('map-add-parking');
+    const { t } = useTranslation('frontend/map/add-parking');
     const formRef = useRef<HTMLFormElement | null>(null);
 
     return (

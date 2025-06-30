@@ -5,7 +5,7 @@ import { HTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function AppearanceToggleTab({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
-    const { t } = useTranslation('settings');
+    const { t } = useTranslation('backend/settings');
     const { appearance, updateAppearance } = useAppearance();
 
     const tabs: { value: Appearance; icon: LucideIcon }[] = [

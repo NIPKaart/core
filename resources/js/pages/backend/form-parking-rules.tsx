@@ -22,7 +22,7 @@ type Props = {
 };
 
 export default function ParkingRuleForm({ form, countries, municipalities, onSubmit }: Props) {
-    const { t } = useTranslation('parking-rules');
+    const { t } = useTranslation('backend/parking-rules');
 
     return (
         <Form {...form}>

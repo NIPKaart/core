@@ -14,7 +14,7 @@ type Options = {
 };
 
 export function useSpaceActionDialog(options: Options = {}) {
-    const { t } = useTranslation('parking-trash');
+    const { t } = useTranslation('backend/parking-trash');
     const [dialogType, setDialogType] = useState<DialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 

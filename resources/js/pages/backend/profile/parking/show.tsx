@@ -24,7 +24,7 @@ function formatDate(dateString: string) {
 }
 
 export default function UserParkingShow({ parkingSpace, selectOptions }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('profile');
+    const { t, tGlobal } = useResourceTranslation('backend/profile');
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('parking_spaces.breadcrumbs.index'), href: route('profile.parking-spaces.index') },

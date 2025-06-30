@@ -14,7 +14,7 @@ type PageProps = {
 };
 
 export default function Edit({ user, userRole, roles }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('users');
+    const { t, tGlobal } = useResourceTranslation('backend/users');
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('breadcrumbs.index'),

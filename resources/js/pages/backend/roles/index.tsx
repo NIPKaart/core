@@ -17,7 +17,7 @@ type PageProps = {
 };
 
 export default function Index({ roles }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('roles');
+    const { t, tGlobal } = useResourceTranslation('backend/roles');
     const { can } = useAuthorization();
 
     const breadcrumbs: BreadcrumbItem[] = [

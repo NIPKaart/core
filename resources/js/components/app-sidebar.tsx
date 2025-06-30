@@ -12,7 +12,7 @@ import { NavSection } from './nav/nav-section';
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
     const { props } = usePage<SharedData>();
-    const { t } = useTranslation('sidebar');
+    const { t } = useTranslation('backend/sidebar');
 
     // Sidebar badge counts
     const userCount = props.counts.users;

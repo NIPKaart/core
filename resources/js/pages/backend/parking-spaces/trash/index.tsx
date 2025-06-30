@@ -15,7 +15,7 @@ type PageProps = {
 };
 
 export default function Index({ spaces }: PageProps) {
-    const { t, tGlobal } = useResourceTranslation('parking-trash');
+    const { t, tGlobal } = useResourceTranslation('backend/parking-trash');
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});

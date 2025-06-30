@@ -8,7 +8,7 @@ import { type PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
-    const { t } = useTranslation('settings');
+    const { t } = useTranslation('backend/settings');
     // When server-side rendering, we only render the layout on the client...
     if (typeof window === 'undefined') {
         return null;

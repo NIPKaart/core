@@ -23,7 +23,7 @@ type UserFormProps = {
 };
 
 export default function UserForm({ form, roles, isEdit = false, onSubmit, submitting }: UserFormProps) {
-    const { t } = useTranslation('users');
+    const { t } = useTranslation('backend/users');
 
     return (
         <Form {...form}>

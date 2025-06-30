@@ -16,7 +16,7 @@ type PageProps = {
 };
 
 export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: PageProps) {
-    const { t } = useTranslation('profile');
+    const { t } = useTranslation('backend/profile');
 
     const [search, setSearch] = useState('');
 

@@ -11,7 +11,7 @@ interface UserMenuContentProps {
 }
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
-    const { t } = useTranslation('sidebar');
+    const { t } = useTranslation('backend/sidebar');
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {

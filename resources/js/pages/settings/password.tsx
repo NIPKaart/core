@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useTranslation } from 'react-i18next';
 
 export default function Password() {
-    const { t } = useTranslation('settings');
+    const { t } = useTranslation('backend/settings');
     const { t: tGlobal } = useTranslation();
     const passwordInput = useRef<HTMLInputElement>(null);
     const currentPasswordInput = useRef<HTMLInputElement>(null);

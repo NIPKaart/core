@@ -9,7 +9,7 @@ import SettingsLayout from '@/layouts/settings/layout';
 import { useTranslation } from 'react-i18next';
 
 export default function Appearance() {
-    const { t } = useTranslation('settings');
+    const { t } = useTranslation('backend/settings');
 
     const breadcrumbs: BreadcrumbItem[] = [
         {

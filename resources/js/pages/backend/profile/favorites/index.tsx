@@ -19,7 +19,7 @@ const iconMap = {
 };
 
 export default function FavoritesPage({ favorites = [] }: PageProps) {
-    const { t } = useTranslation('profile');
+    const { t } = useTranslation('backend/profile');
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
