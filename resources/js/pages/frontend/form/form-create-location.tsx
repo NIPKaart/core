@@ -1,15 +1,13 @@
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { SwitchCard } from '@/components/card-switch';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { NominatimAddress } from '@/types';
-import { router } from '@inertiajs/react';
-import { useForm } from 'react-hook-form';
-import Swal from 'sweetalert2';
+import { useRef } from 'react';
+import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
-type FormValues = {
+export type FormValues = {
     parking_hours: string;
     parking_minutes: string;
     orientation: string;
@@ -18,69 +16,36 @@ type FormValues = {
 };
 
 type Props = {
+    form: UseFormReturn<FormValues>;
+    orientationOptions: Record<string, string>;
+    onSubmit: () => void;
     lat: number;
     lng: number;
-    nominatim: NominatimAddress | null;
-    onClose: () => void;
-    orientationOptions: Record<string, string>;
 };
 
-export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptions }: Props) {
-    const form = useForm<FormValues>({
-        defaultValues: {
-            parking_hours: '',
-            parking_minutes: '',
-            orientation: '',
-            window_times: false,
-            message: '',
-        },
-    });
-
-    const onSubmit = form.handleSubmit((data) => {
-        router.post(
-            route('map.store'),
-            {
-                ...data,
-                latitude: lat,
-                longitude: lng,
-                nominatim: JSON.stringify(nominatim),
-            },
-            {
-                onSuccess: () => {
-                    Swal.fire({
-                        title: 'Thank you!',
-                        text: 'Your location has been successfully submitted for review.',
-                        icon: 'success',
-                        confirmButtonText: 'Oké',
-                        confirmButtonColor: '#f97316',
-                    }).then(() => {
-                        onClose();
-                    });
-                },
-                onError: (errors) => {
-                    Object.entries(errors).forEach(([key, message]) => {
-                        form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
-                    });
-                },
-            },
-        );
-    });
+export function AddLocationForm({ form, orientationOptions, onSubmit, lat, lng }: Props) {
+    const { t } = useTranslation('map-add-parking');
+    const formRef = useRef<HTMLFormElement | null>(null);
 
     return (
         <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-8">
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Type of parking space</h2>
+            <form id="location-form" onSubmit={onSubmit} ref={formRef} className="mx-auto max-w-xl space-y-6">
+                {/* Orientation */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">{t('modal.form.orientation.title')}</h2>
+                        <p className="text-sm text-muted-foreground">{t('modal.form.orientation.description')}</p>
+                    </div>
                     <FormField
                         control={form.control}
                         name="orientation"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Orientation *</FormLabel>
+                                <FormLabel>{t('modal.form.orientation.label')}</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="--- Select orientation ---" />
+                                            <SelectValue placeholder={t('modal.form.orientation.placeholder')} />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -101,21 +66,25 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                         rel="noopener noreferrer"
                         className="text-sm text-muted-foreground underline"
                     >
-                        Look up the location in Google Streetview
+                        {t('modal.form.orientation.streetviewLink')}
                     </a>
-                </div>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Parking time</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                {/* Parking time */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">{t('modal.form.parking_time.title')}</h2>
+                        <p className="text-sm text-muted-foreground">{t('modal.form.parking_time.description')}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                             control={form.control}
                             name="parking_hours"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Hours</FormLabel>
+                                    <FormLabel>{t('modal.form.parking_time.fields.hours.label')}</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="E.g. 2" {...field} />
+                                        <Input type="number" min={0} placeholder={t('modal.form.parking_time.fields.hours.placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -126,64 +95,55 @@ export function AddLocationForm({ lat, lng, nominatim, onClose, orientationOptio
                             name="parking_minutes"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Minutes</FormLabel>
+                                    <FormLabel>{t('modal.form.parking_time.fields.minutes.label')}</FormLabel>
                                     <FormControl>
-                                        <Input type="number" placeholder="E.g. 30" {...field} />
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder={t('modal.form.parking_time.fields.minutes.placeholder')}
+                                            {...field}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </div>
-                    <p className="text-sm text-muted-foreground">Keep it empty if there is no time limit indicated on a sub-board.</p>
-                </div>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Optional information</h2>
-                    <FormField
-                        control={form.control}
+                {/* Optional info */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">{t('modal.form.window_times.title')}</h2>
+                        <p className="text-sm text-muted-foreground">{t('modal.form.window_times.description')}</p>
+                    </div>
+                    <SwitchCard
                         name="window_times"
-                        render={({ field }) => (
-                            <FormItem className="flex items-start space-x-2">
-                                <FormControl>
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                                </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel className="font-normal">Window times</FormLabel>
-                                    <p className="text-sm text-muted-foreground">
-                                        For example: Mon–Sun | 09:00–17:00. Please specify this in the comments.
-                                    </p>
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
+                        control={form.control}
+                        label={t('modal.form.window_times.switch.label')}
+                        description={t('modal.form.window_times.switch.description')}
                     />
-                </div>
+                    <p className="text-sm text-muted-foreground">{t('modal.form.window_times.note')}</p>
+                </section>
 
-                <div className="space-y-2">
-                    <h2 className="text-lg font-semibold">Message</h2>
+                {/* Message */}
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-lg font-semibold">{t('modal.form.message.title')}</h2>
+                    </div>
                     <FormField
                         control={form.control}
                         name="message"
                         render={({ field }) => (
                             <FormItem>
                                 <FormControl>
-                                    <Textarea rows={3} placeholder="For example, location description, details, etc." {...field} />
+                                    <Textarea rows={3} placeholder={t('modal.form.message.placeholder')} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                    <Button className="cursor-pointer" variant="ghost" type="button" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button className="cursor-pointer" type="submit" disabled={!nominatim}>
-                        Send
-                    </Button>
-                </div>
+                </section>
             </form>
         </Form>
     );

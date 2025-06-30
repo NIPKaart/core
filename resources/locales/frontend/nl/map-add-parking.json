@@ -1,0 +1,67 @@
+{
+    "head": {
+        "title": "Voeg Locatie Toe"
+    },
+    "modal": {
+        "title": "Nieuwe locatie toevoegen",
+        "description": "Vul de onderstaande details in om een nieuwe locatie toe te voegen.",
+        "buttons": {
+            "submit": "Locatie verzenden"
+        },
+        "alerts": {
+            "addressFailed": {
+                "title": "Adresopzoeking mislukt",
+                "description": "We konden het adres voor deze locatie niet bepalen. Probeer de pin iets te verplaatsen."
+            },
+            "submitFailed": {
+                "title": "Verzending mislukt"
+            }
+        },
+        "form": {
+            "orientation": {
+                "title": "Type parkeerplaats",
+                "description": "Wat voor soort oriëntatie heeft de parkeerplaats?",
+                "label": "Oriëntatie *",
+                "placeholder": "Selecteer oriëntatie",
+                "streetviewLink": "Bekijk de locatie in Google Street View"
+            },
+            "parking_time": {
+                "title": "Parkeertijd",
+                "description": "Als er een tijdsbeperking is, voer deze hier in. Laat anders het veld leeg.",
+                "fields": {
+                    "hours": {
+                        "label": "Uren",
+                        "placeholder": "Bijv. 2"
+                    },
+                    "minutes": {
+                        "label": "Minuten",
+                        "placeholder": "Bijv. 30"
+                    }
+                }
+            },
+            "window_times": {
+                "title": "Extra informatie",
+                "description": "Help anderen de context beter te begrijpen.",
+                "note": "Beschrijf de specifieke tijden in het berichtveld.",
+                "switch": {
+                    "label": "Venstertijden",
+                    "description": "Bijvoorbeeld: Ma–Zo | 09:00–17:00"
+                }
+            },
+            "message": {
+                "title": "Bericht",
+                "placeholder": "Bijvoorbeeld, meer context of details over de locatie..."
+            }
+        },
+        "success": {
+            "title": "Bedankt!",
+            "text": "Je locatie is succesvol ingediend voor beoordeling.",
+            "confirm": "Oké"
+        }
+    },
+    "layers": {
+        "mapbox": "Mapbox Straten",
+        "google": "Google Hybride",
+        "parkingOverlay": "Dichtbijzijnde Parkeerplaatsen"
+    }
+}

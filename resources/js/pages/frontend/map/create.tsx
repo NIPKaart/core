@@ -2,18 +2,19 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import AddParkingModal from '@/components/modals/modal-add-parking';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
 import { NominatimAddress, ParkingSpace } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
-import { AlertCircle } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import { AddLocationForm } from './form/form-create-location';
+import Swal from 'sweetalert2';
+import { FormValues } from '../form/form-create-location';
 
 const { BaseLayer, Overlay } = LayersControl;
 
@@ -27,6 +28,9 @@ type PageProps = {
 function ClickHandler({ onMapClick }: { onMapClick: (e: LeafletMouseEvent) => void }) {
     useMapEvents({
         click(e) {
+            const target = e.originalEvent.target;
+            if (!(target instanceof HTMLElement)) return;
+            if (target.closest('.leaflet-control')) return;
             onMapClick(e);
         },
     });
@@ -87,6 +91,7 @@ export default function AddLocation() {
     const { props } = usePage<PageProps>();
     const { selectOptions, parkingSpaces } = props;
     const generalError = props.errors?.general;
+    const { t } = useTranslation('map-add-parking');
 
     const [nominatimData, setNominatimData] = useState<NominatimAddress | null>(null);
     const [markerPosition, setMarkerPosition] = useState<LatLngExpression | null>(null);
@@ -141,14 +146,56 @@ export default function AddLocation() {
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
+    const form = useForm<FormValues>({
+        defaultValues: {
+            parking_hours: '',
+            parking_minutes: '',
+            orientation: '',
+            window_times: false,
+            message: '',
+        },
+    });
+
+    const handleSubmit = form.handleSubmit((data) => {
+        const [lat, lng] = markerPosition as [number, number];
+        router.post(
+            route('map.store'),
+            {
+                ...data,
+                latitude: lat,
+                longitude: lng,
+                nominatim: JSON.stringify(nominatimData),
+            },
+            {
+                onSuccess: () => {
+                    Swal.fire({
+                        title: t('modal.success.title'),
+                        text: t('modal.success.text'),
+                        icon: 'success',
+                        confirmButtonText: t('modal.success.confirm'),
+                        confirmButtonColor: '#f97316',
+                    }).then(() => {
+                        setModalOpen(false);
+                        form.reset();
+                    });
+                },
+                onError: (errors) => {
+                    Object.entries(errors).forEach(([key, message]) => {
+                        form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
+                    });
+                },
+            },
+        );
+    });
+
     return (
         <>
-            <Head title="Add Location" />
+            <Head title={t('head.title')} />
             <div className="flex h-[100dvh] flex-col">
                 <Navbar />
                 <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <LayersControl position="topright">
-                        <BaseLayer name="Mapbox Streets">
+                        <BaseLayer name={t('layers.mapbox')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
                                 url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
@@ -157,7 +204,7 @@ export default function AddLocation() {
                             />
                         </BaseLayer>
 
-                        <BaseLayer checked name="Google Hybrid">
+                        <BaseLayer checked name={t('layers.google')}>
                             <TileLayer
                                 attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
                                 url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
@@ -167,7 +214,7 @@ export default function AddLocation() {
                         </BaseLayer>
 
                         {/* Overlay for nearby parking spaces */}
-                        <Overlay checked={true} name="Nearby Parking Spaces">
+                        <Overlay checked={true} name={t('layers.parkingOverlay')}>
                             <ClusteredParkingMarkers spaces={parkingSpaces} />
                         </Overlay>
                     </LayersControl>
@@ -193,40 +240,18 @@ export default function AddLocation() {
             </div>
 
             {modalOpen && markerPosition && Array.isArray(markerPosition) && (
-                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                    <DialogContent className="max-h-[95dvh] overflow-y-auto sm:max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle>Add new location</DialogTitle>
-                            <DialogDescription>Fill in the form below to add a new location.</DialogDescription>
-                        </DialogHeader>
-
-                        {!addressValid && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Address lookup failed</AlertTitle>
-                                <AlertDescription>
-                                    We could not determine the address for this location. Try moving the pin slightly.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-
-                        {generalError && (
-                            <Alert variant="destructive" className="mb-4">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Submission failed</AlertTitle>
-                                <AlertDescription>{generalError}</AlertDescription>
-                            </Alert>
-                        )}
-
-                        <AddLocationForm
-                            lat={markerPosition[0]}
-                            lng={markerPosition[1]}
-                            nominatim={nominatimData}
-                            onClose={() => setModalOpen(false)}
-                            orientationOptions={selectOptions.orientation}
-                        />
-                    </DialogContent>
-                </Dialog>
+                <AddParkingModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    form={form}
+                    onSubmit={handleSubmit}
+                    submitting={form.formState.isSubmitting}
+                    orientationOptions={selectOptions.orientation}
+                    lat={(markerPosition as [number, number])[0]}
+                    lng={(markerPosition as [number, number])[1]}
+                    addressValid={addressValid}
+                    generalError={generalError}
+                />
             )}
         </>
     );

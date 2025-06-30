@@ -156,7 +156,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
 
     if (isDesktop) {
         return (
-            <Dialog open={open} onOpenChange={onClose}>
+            <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
                 <DialogContent showClose={false} className="max-w-xl bg-white sm:rounded-xl dark:bg-zinc-950">
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
@@ -212,7 +212,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
 
     // Mobile - Drawer variant
     return (
-        <Drawer open={open} onOpenChange={onClose}>
+        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
             <DrawerContent className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">

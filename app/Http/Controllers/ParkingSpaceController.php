@@ -35,7 +35,7 @@ class ParkingSpaceController extends Controller
         $offstreetSpaces = ParkingOffstreet::select('id', 'latitude', 'longitude', 'free_space_short', 'short_capacity', 'api_state')
             ->where('visibility', true)->get();
 
-        return Inertia::render('frontend/map', [
+        return Inertia::render('frontend/map/index', [
             'parkingSpaces' => $parkingSpaces,
             'municipalSpaces' => $municipalSpaces,
             'offstreetSpaces' => $offstreetSpaces,
@@ -52,7 +52,7 @@ class ParkingSpaceController extends Controller
     {
         $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')->get();
 
-        return Inertia::render('frontend/add-location', [
+        return Inertia::render('frontend/map/create', [
             'parkingSpaces' => $parkingSpaces,
             'selectOptions' => [
                 'orientation' => ParkingOrientation::options(),
