@@ -2,11 +2,12 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ParkingOffstreet } from '@/types';
+import { ParkingOffstreet, Translations } from '@/types';
 import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { toast } from 'sonner';
 
+// Custom progress bar component for parking spaces
 function ParkingProgressBar({ value, label }: { value: number; label: string }) {
     let color = 'bg-green-500';
     if (value <= 5) {
@@ -31,7 +32,8 @@ function ParkingProgressBar({ value, label }: { value: number; label: string }) 
     );
 }
 
-export function getParkingOffstreetColumns(can: (permission: string) => boolean): ColumnDef<ParkingOffstreet>[] {
+// Function to get the columns for the parking offstreet data table
+export function getParkingOffstreetColumns(can: (permission: string) => boolean, { t, tGlobal }: Translations): ColumnDef<ParkingOffstreet>[] {
     return [
         {
             id: 'select',
@@ -56,7 +58,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         },
         {
             accessorKey: 'name',
-            header: 'Name',
+            header: t('table.name'),
             enableSorting: true,
             enableHiding: false,
             cell: ({ row }) => (
@@ -71,21 +73,21 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         },
         {
             id: 'api_state',
-            header: 'API',
+            header: t('table.api'),
             cell: ({ row }) => {
                 const state = row.original.api_state;
                 if (state === 'ok') {
-                    return <Badge variant="default">OK</Badge>;
+                    return <Badge variant="default">{t('badges.ok')}</Badge>;
                 }
                 if (state === 'error') {
-                    return <Badge variant="destructive">Error</Badge>;
+                    return <Badge variant="destructive">{t('badges.error')}</Badge>;
                 }
                 return <span className="text-muted-foreground">—</span>;
             },
         },
         {
             id: 'parking_status',
-            header: 'Status',
+            header: t('table.status'),
             enableHiding: false,
             cell: ({ row }) => {
                 const { free_space_short, short_capacity } = row.original;
@@ -93,34 +95,37 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                 const pct = Math.round(((free_space_short ?? 0) / short_capacity) * 100);
 
                 if (pct <= 5) {
-                    return <Badge variant="destructive">Full!</Badge>;
+                    return <Badge variant="destructive">{t('badges.full')}</Badge>;
                 }
                 if (pct <= 20) {
                     return (
                         <Badge variant="default" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                            Almost full
+                            {t('badges.almost_full')}
                         </Badge>
                     );
                 }
                 return (
                     <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        Plenty of space
+                        {t('badges.plenty')}
                     </Badge>
                 );
             },
         },
         {
             id: 'short_parking',
-            header: 'Short Parking',
+            header: t('table.short_parking'),
             cell: ({ row }) => {
                 const { free_space_short, short_capacity } = row.original;
                 const pct = short_capacity ? Math.round(((free_space_short ?? 0) / short_capacity) * 100) : 0;
-                const label = `${pct}% available (short)`;
+                const label = t('table.short_parking_available', {
+                    pct,
+                });
+
                 return (
                     <div className="flex min-w-[120px] flex-col gap-1">
                         <div className="flex justify-between text-xs">
                             <span>
-                                <strong>{free_space_short}</strong> / {short_capacity}
+                                <strong>{free_space_short}</strong> {t('table.of')} {short_capacity}
                             </span>
                             <span className="text-muted-foreground">{pct}%</span>
                         </div>
@@ -131,17 +136,20 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         },
         {
             id: 'long_parking',
-            header: 'Long Parking',
+            header: t('table.long_parking'),
             cell: ({ row }) => {
                 const { free_space_long, long_capacity } = row.original;
                 if (!long_capacity) return <span className="text-muted-foreground">—</span>;
                 const pct = long_capacity ? Math.round(((free_space_long ?? 0) / long_capacity) * 100) : 0;
-                const label = `${pct}% available (long)`;
+                const label = t('table.long_parking_available', {
+                    pct,
+                });
+
                 return (
                     <div className="flex min-w-[120px] flex-col gap-1">
                         <div className="flex justify-between text-xs">
                             <span>
-                                <strong>{free_space_long}</strong> / {long_capacity}
+                                <strong>{free_space_long}</strong> {t('table.of')} {long_capacity}
                             </span>
                             <span className="text-muted-foreground">{pct}%</span>
                         </div>
@@ -152,12 +160,12 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
         },
         {
             accessorKey: 'updated_at',
-            header: 'Last Updated',
+            header: t('table.last_updated'),
             cell: ({ row }) => new Date(row.original.updated_at).toLocaleDateString(),
         },
         {
             accessorKey: 'visibility',
-            header: 'Visible',
+            header: t('table.visible'),
             enableSorting: false,
             enableHiding: false,
             cell: ({ row }) => {
@@ -180,9 +188,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                                     onSuccess: () => {
                                         toast.success(
                                             <>
-                                                <span>
-                                                    Visibility <b>{checked ? 'enabled' : 'disabled'}</b>
-                                                </span>
+                                                <span>{checked ? t('toast.enabled') : t('toast.disabled')}</span>
                                                 <span className="mt-1 block text-xs text-muted-foreground">
                                                     {space.name} &middot; <b>ID:</b> {space.id}
                                                 </span>
@@ -190,15 +196,15 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean)
                                         );
                                     },
                                     onError: () => {
-                                        toast.error('Failed to update visibility.');
+                                        toast.error(t('toast.error'));
                                     },
                                 },
                             );
                         }}
-                        aria-label="Toggle visibility"
+                        aria-label={t('accessibility.toggle_visibility', { id: space.id })}
                     />
                 ) : (
-                    <span>{space.visibility ? 'Yes' : 'No'}</span>
+                    <span>{space.visibility ? tGlobal('common.yes') : tGlobal('common.no')}</span>
                 );
             },
         },

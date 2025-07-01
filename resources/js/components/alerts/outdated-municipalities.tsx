@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ParkingOffstreet } from '@/types';
 import { AlertTriangle } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 
 type Props = {
     spaces: ParkingOffstreet[];
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export default function OutdatedMunicipalitiesBanner({ spaces, minDaysOutdated = 2 }: Props) {
+    const { t } = useTranslation('backend/parking-offstreet');
     const now = new Date();
 
     const outdatedMunicipalities = (() => {
@@ -36,24 +38,22 @@ export default function OutdatedMunicipalitiesBanner({ spaces, minDaysOutdated =
             <Alert className="w-full border-2 border-orange-300/60 bg-orange-50 px-3 py-3 sm:py-4 dark:bg-orange-950/80">
                 <AlertTitle className="flex items-center gap-2 text-base font-semibold text-orange-800 dark:text-orange-100">
                     <AlertTriangle className="h-5 w-5 min-w-5 text-orange-500" aria-label="Warning" />
-                    Data not up-to-date
+                    {t('banner.outdated.title')}
                 </AlertTitle>
                 <AlertDescription className="mt-2 w-full text-sm text-zinc-800 dark:text-orange-50">
                     <div className="mb-2">
-                        {outdatedMunicipalities.length === 1 ? (
-                            <>
-                                1 municipality hasn't been updated in over <b>{minDaysOutdated}</b> day{minDaysOutdated > 1 && 's'}:
-                            </>
-                        ) : (
-                            <>
-                                {outdatedMunicipalities.length} municipalities haven't been updated in over <b>{minDaysOutdated}</b> day
-                                {minDaysOutdated > 1 && 's'}:
-                            </>
-                        )}
+                        <Trans
+                            i18nKey={
+                                outdatedMunicipalities.length === 1 ? 'banner.outdated.description_single' : 'banner.outdated.description_multiple'
+                            }
+                            ns="backend/parking-offstreet"
+                            values={{ count: outdatedMunicipalities.length, days: minDaysOutdated }}
+                            components={{ b: <b /> }}
+                        />
                     </div>
                     <div
                         className="mb-2 flex max-h-24 flex-wrap gap-2 overflow-x-auto overflow-y-auto sm:max-h-32"
-                        aria-label="List of outdated municipalities"
+                        aria-label={t('banner.outdated.aria_label')}
                     >
                         {outdatedMunicipalities.map(({ name, updatedAt }) => (
                             <span
