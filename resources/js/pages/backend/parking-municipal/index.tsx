@@ -3,6 +3,7 @@ import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, Municipality, PaginatedResponse, ParkingMunicipal } from '@/types';
 import { ParkingOrientation } from '@/types/enum';
@@ -20,6 +21,7 @@ type PageProps = {
 };
 
 export default function Index({ municipality, spaces, filters, options }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('backend/parking-municipal');
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -40,8 +42,8 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     );
 
     const visibilityOptions = [
-        { value: 'true', label: 'Visible', count: spaces.data.filter((s) => s.visibility).length },
-        { value: 'false', label: 'Hidden', count: spaces.data.filter((s) => !s.visibility).length },
+        { value: 'true', label: t('filters.options.true'), count: spaces.data.filter((s) => s.visibility).length },
+        { value: 'false', label: t('filters.options.false'), count: spaces.data.filter((s) => !s.visibility).length },
     ];
 
     const orientationOptions = [
@@ -50,10 +52,10 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
             label,
             count: orientationCounts[value] ?? 0,
         })),
-        { value: 'unknown', label: 'No orientation', count: orientationCounts['unknown'] ?? 0 },
+        { value: 'unknown', label: t('filters.options.unknown'), count: orientationCounts['unknown'] ?? 0 },
     ];
 
-    const columns = getParkingMunicipalColumns(can, options.orientations);
+    const columns = getParkingMunicipalColumns(can, options.orientations, { t, tGlobal });
 
     const updateFilters = (visibility: string[], orientation: string[]) => {
         const query: Record<string, string | null> = {};
@@ -67,27 +69,27 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     };
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Municipalities', href: route('app.parking-municipal.municipalities') },
+        { title: t('breadcrumbs.index'), href: route('app.parking-municipal.municipalities') },
         { title: municipality.name, href: route('app.parking-municipal.municipalities.index', { municipality: municipality.id }) },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Parking Spaces in ${municipality.name}`} />
+            <Head title={t('head.detail', { municipality: municipality.name })} />
 
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{municipality.name} – Parking Locations</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('detail.title', { municipality: municipality.name })}</h1>
                     <p className="mt-2 text-muted-foreground">
-                        Overview of all municipal parking spaces in <b>{municipality.name}</b>.
+                        {t('detail.description')} {municipality.name}.
                     </p>
                 </div>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end">
                     <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link href={route('app.parking-municipal.municipalities')}>
                             <ArrowLeft className="h-4 w-4" />
-                            Back
+                            {tGlobal('common.back')}
                         </Link>
                     </Button>
                 </div>
@@ -103,7 +105,7 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
                     filters={
                         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
                             <DataTableFacetFilter
-                                title="Visibility"
+                                title={t('filters.visibility')}
                                 selected={visibilityFilter}
                                 options={visibilityOptions}
                                 onChange={(next) => {
@@ -116,7 +118,7 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
                                 }}
                             />
                             <DataTableFacetFilter
-                                title="Orientation"
+                                title={t('filters.orientation')}
                                 selected={orientationFilter}
                                 options={orientationOptions}
                                 onChange={(next) => {
