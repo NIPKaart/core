@@ -28,14 +28,14 @@ export function formatParkingTime(t: TFunction, minutes?: number | null): string
     return t('community.table.unlimited');
 }
 
-export function HelpPopover({ content, label }: { content: React.ReactNode; label?: string }) {
+export function HelpPopover({ content, label }: { content: React.ReactNode; label: string }) {
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <button
                     type="button"
                     className="cursor-help rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-                    aria-label={label ?? 'More info'}
+                    aria-label={label}
                 >
                     <HelpCircle className="h-4 w-4" />
                 </button>
