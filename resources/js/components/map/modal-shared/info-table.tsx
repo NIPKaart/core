@@ -1,11 +1,10 @@
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
 import { TFunction } from 'i18next';
-import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, HelpCircle, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
+import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
 import type { InfoTableRow } from './modal-parts';
 import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
-import { formatParkingTime } from './utils';
+import { formatParkingTime, HelpPopover } from './utils';
 
 // Community spot info rows
 export function getCommunityInfoRows(
@@ -27,19 +26,13 @@ export function getCommunityInfoRows(
             label: t('community.table.max_time'),
             value:
                 typeof data.parking_time === 'number' && data.parking_time > 0 ? (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span className="inline-flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-800 shadow-sm transition-colors dark:border-orange-900 dark:bg-orange-950/70 dark:text-orange-100">
-                                    <AlarmClock className="h-4 w-4" />
-                                    {formatParkingTime(data.parking_time)}
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" align="center">
-                                {t('community.table.parking_disc')}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <div className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-orange-800 shadow-sm transition-colors dark:border-orange-900 dark:bg-orange-950/70 dark:text-orange-100">
+                            <AlarmClock className="h-4 w-4" />
+                            {formatParkingTime(t, data.parking_time)}
+                        </span>
+                        <HelpPopover content={t('community.table.parking_disc')} label={t('common.popovers.parking_disc')} />
+                    </div>
                 ) : (
                     <span className="text-zinc-400 italic">{t('community.table.unlimited')}</span>
                 ),
@@ -50,20 +43,7 @@ export function getCommunityInfoRows(
             value: data.orientation ? (
                 <div className="inline-flex items-center gap-1">
                     <span>{data.orientation.label}</span>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button
-                                type="button"
-                                className="cursor-help rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-                                aria-label={t('show.cards.details.fields.orientation_info')}
-                            >
-                                <HelpCircle className="h-4 w-4" />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent side="top" align="start" className="max-w-xs text-sm text-muted-foreground">
-                            {data.orientation.description}
-                        </PopoverContent>
-                    </Popover>
+                    <HelpPopover content={data.orientation.description} label={t('show.cards.details.fields.orientation_info')} />
                 </div>
             ) : (
                 <span className="text-muted-foreground">—</span>
@@ -162,20 +142,7 @@ export function getMunicipalInfoRows(
             value: data.orientation ? (
                 <div className="inline-flex items-center gap-1">
                     <span>{data.orientation.label}</span>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button
-                                type="button"
-                                className="cursor-help rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
-                                aria-label={t('show.cards.details.fields.orientation_info')}
-                            >
-                                <HelpCircle className="h-4 w-4" />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent side="top" align="start" className="max-w-xs text-sm text-muted-foreground">
-                            {data.orientation.description}
-                        </PopoverContent>
-                    </Popover>
+                    <HelpPopover content={data.orientation.description} label={t('show.cards.details.fields.orientation_info')} />
                 </div>
             ) : (
                 <span className="text-muted-foreground">—</span>
