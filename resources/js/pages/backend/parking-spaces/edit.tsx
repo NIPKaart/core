@@ -127,7 +127,7 @@ export default function Edit() {
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <CalendarCheck className="h-4 w-4" />
                             <span>
-                                <span className="font-medium text-foreground">{t('edit.created')}</span>
+                                <span className="font-medium text-foreground">{t('edit.created')}</span>{' '}
                                 {new Date(parkingSpace.created_at).toLocaleString()}
                             </span>
                         </div>
