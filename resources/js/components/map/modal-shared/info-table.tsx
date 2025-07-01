@@ -1,7 +1,8 @@
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDistanceToNow } from 'date-fns';
 import { TFunction } from 'i18next';
-import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
+import { AlarmClock, Compass, Copy, FileText, Globe2, Hash, HelpCircle, Landmark, Link, MapPin, ParkingSquare, Tag, Users } from 'lucide-react';
 import type { InfoTableRow } from './modal-parts';
 import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
 import { formatParkingTime } from './utils';
@@ -47,16 +48,25 @@ export function getCommunityInfoRows(
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: t('common.table.orientation'),
             value: data.orientation ? (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <span>{data.orientation.label}</span>
-                        </TooltipTrigger>
-                        <TooltipContent>{data.orientation.description}</TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <div className="inline-flex items-center gap-1">
+                    <span>{data.orientation.label}</span>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button
+                                type="button"
+                                className="cursor-help rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                aria-label={t('show.cards.details.fields.orientation_info')}
+                            >
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="start" className="max-w-xs text-sm text-muted-foreground">
+                            {data.orientation.description}
+                        </PopoverContent>
+                    </Popover>
+                </div>
             ) : (
-                '-'
+                <span className="text-muted-foreground">—</span>
             ),
         },
         {
@@ -150,16 +160,25 @@ export function getMunicipalInfoRows(
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: t('common.table.orientation'),
             value: data.orientation ? (
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <span>{data.orientation.label}</span>
-                        </TooltipTrigger>
-                        <TooltipContent>{data.orientation.description}</TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                <div className="inline-flex items-center gap-1">
+                    <span>{data.orientation.label}</span>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button
+                                type="button"
+                                className="cursor-help rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                aria-label={t('show.cards.details.fields.orientation_info')}
+                            >
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="start" className="max-w-xs text-sm text-muted-foreground">
+                            {data.orientation.description}
+                        </PopoverContent>
+                    </Popover>
+                </div>
             ) : (
-                '-'
+                <span className="text-muted-foreground">—</span>
             ),
         },
         {
