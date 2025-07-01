@@ -91,7 +91,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
             route('app.parking-offstreet.bulk.toggle-visibility'),
             {
                 ids,
-                visibility: selectedVisibility === 'visible',
+                visibility: selectedVisibility === 'true' ? true : false,
             },
             {
                 preserveState: true,
