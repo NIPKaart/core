@@ -1,10 +1,14 @@
 {
     "head": {
         "title": "Parkeerplekken (Community)",
+        "edit": "Bewerken ({{id}})",
+        "show": "Parkeerplek ({{id}})",
         "description": "Alle vermelde parkeerplekken zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
     },
     "breadcrumbs": {
-        "index": "Parkeerplekken"
+        "index": "Parkeerplekken",
+        "edit": "Bewerken ({{id}})",
+        "show": "Bekijken ({{id}})"
     },
     "selected": "geselecteerd",
     "table": {
@@ -37,6 +41,90 @@
             "ids": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer.",
             "status": "Selecteer een geldige status.",
             "default": "Er is iets misgegaan. Probeer het opnieuw."
+        }
+    },
+    "show": {
+        "trash": "Prullenbak",
+        "cards": {
+            "details": {
+                "title": "Details",
+                "description": "Alle basisinformatie over deze parkeerplek.",
+                "fields": {
+                    "country": "Land",
+                    "province": "Provincie",
+                    "municipality": "Gemeente",
+                    "city": "Stad",
+                    "street": "Straat",
+                    "postcode": "Postcode",
+                    "amenity": "Voorziening",
+                    "orientation": "Oriëntatie",
+                    "ip_address": "IP-adres",
+                    "copy_ip": "Kopieer IP"
+                }
+            },
+            "confirmations": {
+                "title": "Recente bevestigingen",
+                "description": "Laatste check-ins voor deze locatie.",
+                "empty": "Nog geen bevestigingen",
+                "show_all": "Toon alles",
+                "unknown_user": "Onbekende gebruiker"
+            },
+            "location": {
+                "title": "Locatie",
+                "description": "Waar de parkeerplek zich bevindt."
+            },
+            "street_view": {
+                "title": "Street View",
+                "description": "Bekijk de omgeving van de parkeerplek."
+            }
+        },
+        "toast": {
+            "copied": "Gekopieerd naar klembord"
+        }
+    },
+    "edit": {
+        "viewStreet": "Street View",
+        "submitted": "Ingediend door:",
+        "anonymous": "Anoniem ingediend",
+        "created": "Aangemaakt op:",
+        "form": {
+            "title": "Parkeerplek details",
+            "description": "Bewerk de details van de parkeerplek.",
+            "tabs": {
+                "basic": "Basis",
+                "extra": "Extra",
+                "status": "Status"
+            },
+            "labels": {
+                "country": "Land",
+                "province": "Provincie",
+                "municipality": "Gemeente",
+                "city": "Stad",
+                "suburb": "Wijk",
+                "neighbourhood": "Buurt",
+                "postcode": "Postcode",
+                "street": "Straat",
+                "amenity": "Voorziening",
+                "orientation": "Oriëntatie *",
+                "description": "Beschrijving",
+                "windowTimes": "Tijdvensters",
+                "parkingTime": "Parkeertijd",
+                "hours": "Uren",
+                "minutes": "Minuten"
+            },
+            "hints": {
+                "windowTimes": "Zijn er beperkte tijden op deze locatie?",
+                "parkingTime": "Maximale toegestane parkeertijd op deze locatie."
+            },
+            "location": {
+                "title": "Locatie",
+                "description": "Versleep de marker om de exacte plek aan te passen op de kaart.",
+                "latitude": "Breedtegraad",
+                "longitude": "Lengtegraad"
+            },
+            "actions": {
+                "save": "Wijzigingen opslaan"
+            }
         }
     }
 }

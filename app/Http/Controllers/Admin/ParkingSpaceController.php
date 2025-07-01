@@ -111,6 +111,7 @@ class ParkingSpaceController extends Controller
         return inertia('backend/parking-spaces/show', [
             'parkingSpace' => $parkingSpace,
             'selectOptions' => [
+                'orientation' => ParkingOrientation::mapped(),
                 'parkingStatuses' => ParkingStatus::mapped(),
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
