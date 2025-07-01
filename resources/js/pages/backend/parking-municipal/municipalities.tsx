@@ -81,9 +81,11 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
                                             {t('card.visible', { count: municipality.visible_spaces })}
                                         </Badge>
 
-                                        <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
-                                            {t('card.hidden', { count: municipality.hidden_spaces })}
-                                        </Badge>
+                                        {municipality.hidden_spaces > 0 && (
+                                            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
+                                                {t('card.hidden', { count: municipality.hidden_spaces })}
+                                            </Badge>
+                                        )}
 
                                         {municipality.last_updated && (
                                             <Badge variant="secondary" className="text-muted-foreground">

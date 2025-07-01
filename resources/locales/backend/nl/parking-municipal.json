@@ -1,0 +1,54 @@
+{
+    "head": {
+        "index": "Gemeenten",
+        "detail": "Parkeerplaatsen in {{municipality}}"
+    },
+    "breadcrumbs": {
+        "index": "Gemeenten"
+    },
+    "description": "Hier vind je alle gemeenten die geregistreerde parkeerplaatsen hebben. Gebruik de zoekbalk om snel een specifieke gemeente te vinden.",
+    "search": {
+        "placeholder": "Zoek gemeente..."
+    },
+    "empty": {
+        "title": "Geen gemeenten gevonden",
+        "description": "Probeer een andere zoekopdracht of kijk later terug voor meer ondersteunde gemeenten."
+    },
+    "card": {
+        "total": "{{count}} totaal",
+        "visible": "{{count}} zichtbaar",
+        "hidden": "{{count}} verborgen",
+        "updated_value": "Bijgewerkt {{date, datetime}}"
+    },
+    "detail": {
+        "title": "{{municipality}} – Parkeerlocaties",
+        "description": "Overzicht van alle gemeentelijke parkeerplaatsen in"
+    },
+    "filters": {
+        "visibility": "Zichtbaarheid",
+        "orientation": "Oriëntatie",
+        "options": {
+            "true": "Zichtbaar",
+            "false": "Verborgen",
+            "unknown": "Geen oriëntatie"
+        }
+    },
+    "table": {
+        "id": "ID",
+        "province": "Provincie",
+        "street": "Straat",
+        "count": "Aantal",
+        "orientation": "Oriëntatie",
+        "visible": "Zichtbaar",
+        "updated": "Bijgewerkt"
+    },
+    "toast": {
+        "enabled": "Zichtbaarheid ingeschakeld",
+        "disabled": "Zichtbaarheid uitgeschakeld",
+        "error": "Fout bij het bijwerken van zichtbaarheid.",
+        "unknown_street": "Onbekende straat"
+    },
+    "accessibility": {
+        "toggle_visibility": "Zichtbaarheid wisselen voor parkeerplaats met ID {{id}}"
+    }
+}

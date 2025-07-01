@@ -1,0 +1,54 @@
+{
+    "head": {
+        "index": "Municipalities",
+        "detail": "Parking Spaces in {{municipality}}"
+    },
+    "breadcrumbs": {
+        "index": "Municipalities"
+    },
+    "description": "Here you can find all municipalities that have registered parking spaces. Use the search bar to quickly find a specific municipality.",
+    "search": {
+        "placeholder": "Search municipality..."
+    },
+    "empty": {
+        "title": "No municipalities found",
+        "description": "Try a different search or check back later for more supported municipalities."
+    },
+    "card": {
+        "total": "{{count}} total",
+        "visible": "{{count}} visible",
+        "hidden": "{{count}} hidden",
+        "updated_value": "Updated {{date, datetime}}"
+    },
+    "detail": {
+        "title": "{{municipality}} – Parking Locations",
+        "description": "Overview of all municipal parking spaces in"
+    },
+    "filters": {
+        "visibility": "Visibility",
+        "orientation": "Orientation",
+        "options": {
+            "true": "Visible",
+            "false": "Hidden",
+            "unknown": "No orientation"
+        }
+    },
+    "table": {
+        "id": "ID",
+        "province": "Province",
+        "street": "Street",
+        "count": "Number",
+        "orientation": "Orientation",
+        "visible": "Visible",
+        "updated": "Updated"
+    },
+    "toast": {
+        "enabled": "Visibility enabled",
+        "disabled": "Visibility disabled",
+        "error": "Failed to update visibility.",
+        "unknown_street": "Unknown street"
+    },
+    "accessibility": {
+        "toggle_visibility": "Toggle visibility for parking space with ID {{id}}"
+    }
+}
