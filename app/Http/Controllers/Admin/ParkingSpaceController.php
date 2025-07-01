@@ -190,7 +190,8 @@ class ParkingSpaceController extends Controller
         $parkingSpace->update($data);
 
         return redirect()
-            ->route('app.parking-spaces.index');
+            ->route('app.parking-spaces.index')
+            ->with('success', __('parking_spaces.flash.updated'));
     }
 
     /**

@@ -10,12 +10,12 @@ enum ParkingStatus: string
 
     public function label(): string
     {
-        return __("parking_status.{$this->value}.label");
+        return __("enums/parking_status.{$this->value}.label");
     }
 
     public function description(): string
     {
-        return __("parking_status.{$this->value}.description");
+        return __("enums/parking_status.{$this->value}.description");
     }
 
     public function toArray(): array

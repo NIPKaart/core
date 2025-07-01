@@ -16,7 +16,13 @@
             "last_confirmed": "Last confirmed",
             "never": "Never",
             "area": "Area",
-            "added_on": "Added on"
+            "added_on": "Added on",
+            "time_format": {
+                "hours": "{{count}} hour",
+                "hours_plural": "{{count}} hours",
+                "minutes": "{{count}} minute",
+                "minutes_plural": "{{count}} minutes"
+            }
         },
         "confirm": {
             "form": {
