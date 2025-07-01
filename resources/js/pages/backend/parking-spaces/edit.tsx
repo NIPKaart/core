@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpaceForm, { FormValues } from '@/pages/backend/form-parking-space';
 import type { BreadcrumbItem, Country, Municipality, ParkingSpace, Province } from '@/types';
@@ -6,11 +7,7 @@ import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Parking Spaces', href: route('app.parking-spaces.index') },
-    { title: 'Edit Parking Space', href: route('app.parking-spaces.edit', { id: ':id' }) },
-];
+import { toast } from 'sonner';
 
 const iconMap = {
     pending: TimerIcon,
@@ -31,6 +28,7 @@ type PageProps = {
 };
 
 export default function Edit() {
+    const { t, tGlobal } = useResourceTranslation('backend/parking/main');
     const { parkingSpace, countries, provinces, municipalities, selectOptions, nearbySpaces } = usePage<PageProps>().props;
 
     const statusOptions: ParkingStatusOption[] = selectOptions.statuses.map((status) => ({
@@ -68,6 +66,10 @@ export default function Edit() {
 
         router.put(route('app.parking-spaces.update', { id: parkingSpace.id }), payload, {
             preserveScroll: true,
+            onSuccess: () => {
+                form.reset(data);
+                toast.success(t('toast.success'));
+            },
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
                     form.setError(field as keyof FormValues, {
@@ -79,18 +81,23 @@ export default function Edit() {
         });
     });
 
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
+        { title: t('breadcrumbs.edit', { id: parkingSpace.id }), href: route('app.parking-spaces.edit', { id: parkingSpace.id }) },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Edit ${parkingSpace.id}`} />
+            <Head title={t('head.edit', { id: parkingSpace.id })} />
 
             <div className="flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">Edit {parkingSpace.id}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('head.edit', { id: parkingSpace.id })}</h1>
 
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
                         <Link href={route('app.parking-spaces.index')}>
                             <ArrowLeft className="h-4 w-4" />
-                            Back
+                            {tGlobal('common.back')}
                         </Link>
                     </Button>
 
@@ -102,7 +109,7 @@ export default function Edit() {
                             className="inline-flex items-center justify-center gap-2"
                         >
                             <MapPinned className="h-4 w-4" />
-                            Street View
+                            {t('edit.viewStreet')}
                         </a>
                     </Button>
                 </div>
@@ -115,17 +122,17 @@ export default function Edit() {
                             <UserIcon className="h-4 w-4" />
                             {parkingSpace.user ? (
                                 <span>
-                                    <span className="font-medium text-foreground">Submitted by:</span> {parkingSpace.user.name} (
+                                    <span className="font-medium text-foreground">{t('edit.submitted')}</span> {parkingSpace.user.name} (
                                     {parkingSpace.user.email})
                                 </span>
                             ) : (
-                                <span className="text-muted-foreground italic">Submitted anonymously</span>
+                                <span className="text-muted-foreground italic">{t('edit.anonymous')}</span>
                             )}
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <CalendarCheck className="h-4 w-4" />
                             <span>
-                                <span className="font-medium text-foreground">Created:</span> {new Date(parkingSpace.created_at).toLocaleString()}
+                                <span className="font-medium text-foreground">{t('edit.created')}</span> {new Date(parkingSpace.created_at).toLocaleString()}
                             </span>
                         </div>
                     </div>

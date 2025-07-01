@@ -11,6 +11,7 @@ import { Country, Municipality, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { FileText, Layers, MapPin } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
     country_id: number;
@@ -55,14 +56,15 @@ export default function ParkingSpaceForm({
     submitting,
     nearbySpaces,
 }: Props) {
+    const { t } = useTranslation('backend/parking/main');
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-4">
                         <div className="mb-4 space-y-1">
-                            <h2 className="text-lg font-semibold">Parking Space Details</h2>
-                            <p className="text-sm text-muted-foreground">Edit the details of the parking space.</p>
+                            <h2 className="text-lg font-semibold">{t('edit.form.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('edit.form.description')}</p>
                         </div>
                         <Tabs defaultValue="basic" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
@@ -70,19 +72,19 @@ export default function ParkingSpaceForm({
                                     value="basic"
                                     className="cursor-pointer data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                                 >
-                                    <MapPin className="mr-2 h-4 w-4" /> Basic
+                                    <MapPin className="mr-2 h-4 w-4" /> {t('edit.form.tabs.basic')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="extra"
                                     className="cursor-pointer data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                                 >
-                                    <Layers className="mr-2 h-4 w-4" /> Extra
+                                    <Layers className="mr-2 h-4 w-4" /> {t('edit.form.tabs.extra')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="status"
                                     className="cursor-pointer data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white"
                                 >
-                                    <FileText className="mr-2 h-4 w-4" /> Status
+                                    <FileText className="mr-2 h-4 w-4" /> {t('edit.form.tabs.status')}
                                 </TabsTrigger>
                             </TabsList>
 
@@ -93,7 +95,7 @@ export default function ParkingSpaceForm({
                                         control={form.control}
                                         render={({ field }) => (
                                             <FormItem className="w-full">
-                                                <FormLabel>Country</FormLabel>
+                                                <FormLabel>{t('edit.form.labels.country')}</FormLabel>
                                                 <FormControl>
                                                     <Combobox
                                                         value={String(field.value)}
@@ -114,7 +116,7 @@ export default function ParkingSpaceForm({
                                         control={form.control}
                                         render={({ field }) => (
                                             <FormItem className="w-full">
-                                                <FormLabel>Province</FormLabel>
+                                                <FormLabel>{t('edit.form.labels.province')}</FormLabel>
                                                 <FormControl>
                                                     <Combobox
                                                         value={String(field.value)}
@@ -135,7 +137,7 @@ export default function ParkingSpaceForm({
                                         control={form.control}
                                         render={({ field }) => (
                                             <FormItem className="w-full">
-                                                <FormLabel>Municipality</FormLabel>
+                                                <FormLabel>{t('edit.form.labels.municipality')}</FormLabel>
                                                 <FormControl>
                                                     <Combobox
                                                         value={String(field.value)}
@@ -158,7 +160,7 @@ export default function ParkingSpaceForm({
                                             control={form.control}
                                             render={({ field }) => (
                                                 <FormItem className="w-full">
-                                                    <FormLabel>{name}</FormLabel>
+                                                    <FormLabel>{t(`edit.form.labels.${name}`)}</FormLabel>
                                                     <FormControl>
                                                         <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value} />
                                                     </FormControl>
@@ -176,21 +178,22 @@ export default function ParkingSpaceForm({
                                         <SwitchCard
                                             name="window_times"
                                             control={form.control}
-                                            label="Window Times"
-                                            description="Are there restricted hours at this location?"
+                                            label={t('edit.form.labels.windowTimes')}
+                                            description={t('edit.form.hints.windowTimes')}
                                         />
+                                        <p className="my-2 text-sm text-muted-foreground">{t('edit.form.hints.windowTimesDescription')}</p>
                                     </div>
 
                                     <div className="md:col-span-2">
-                                        <FormLabel className="text-sm font-medium">Parking Time</FormLabel>
-                                        <p className="mb-2 text-sm text-muted-foreground">Maximum parking duration allowed at this location.</p>
+                                        <FormLabel className="text-sm font-medium">{t('edit.form.labels.parkingTime')}</FormLabel>
+                                        <p className="mb-2 text-sm text-muted-foreground">{t('edit.form.hints.parkingTime')}</p>
                                         <div className="flex flex-col gap-4 md:flex-row">
                                             <FormField
                                                 name="parking_hours"
                                                 control={form.control}
                                                 render={({ field }) => (
                                                     <FormItem className="w-full">
-                                                        <FormLabel>Hours</FormLabel>
+                                                        <FormLabel>{t('edit.form.labels.hours')}</FormLabel>
                                                         <FormControl>
                                                             <Input type="number" min={0} {...field} />
                                                         </FormControl>
@@ -203,7 +206,7 @@ export default function ParkingSpaceForm({
                                                 control={form.control}
                                                 render={({ field }) => (
                                                     <FormItem className="w-full">
-                                                        <FormLabel>Minutes</FormLabel>
+                                                        <FormLabel>{t('edit.form.labels.minutes')}</FormLabel>
                                                         <FormControl>
                                                             <Input type="number" min={0} max={59} {...field} />
                                                         </FormControl>
@@ -213,13 +216,12 @@ export default function ParkingSpaceForm({
                                             />
                                         </div>
                                     </div>
-
                                     <FormField
                                         control={form.control}
                                         name="orientation"
                                         render={({ field }) => (
                                             <FormItem className="w-full">
-                                                <FormLabel>Orientation *</FormLabel>
+                                                <FormLabel>{t('edit.form.labels.orientation')}</FormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
@@ -238,13 +240,12 @@ export default function ParkingSpaceForm({
                                             </FormItem>
                                         )}
                                     />
-
                                     <FormField
                                         name="description"
                                         control={form.control}
                                         render={({ field }) => (
                                             <FormItem className="md:col-span-2">
-                                                <FormLabel>Description</FormLabel>
+                                                <FormLabel>{t('edit.form.labels.description')}</FormLabel>
                                                 <FormControl>
                                                     <textarea
                                                         className="min-h-[100px] w-full resize-y rounded-md border px-3 py-2 text-sm"
@@ -267,8 +268,8 @@ export default function ParkingSpaceForm({
                     <div className="space-y-4">
                         <div className="mb-4">
                             <div className="mb-4 space-y-1">
-                                <h2 className="text-lg font-semibold">Location</h2>
-                                <p className="text-sm text-muted-foreground">Drag the marker to fine-tune the exact space on the map.</p>
+                                <h2 className="text-lg font-semibold">{t('edit.form.location.title')}</h2>
+                                <p className="text-sm text-muted-foreground">{t('edit.form.location.description')}</p>
                             </div>
                             <LocationMarkerCard
                                 latitude={form.watch('latitude')}
@@ -286,7 +287,7 @@ export default function ParkingSpaceForm({
                                 control={form.control}
                                 render={({ field }) => (
                                     <FormItem className="w-full">
-                                        <FormLabel>Latitude</FormLabel>
+                                        <FormLabel>{t('edit.form.location.latitude')}</FormLabel>
                                         <FormControl>
                                             <Input disabled {...field} />
                                         </FormControl>
@@ -299,7 +300,7 @@ export default function ParkingSpaceForm({
                                 control={form.control}
                                 render={({ field }) => (
                                     <FormItem className="w-full">
-                                        <FormLabel>Longitude</FormLabel>
+                                        <FormLabel>{t('edit.form.location.longitude')}</FormLabel>
                                         <FormControl>
                                             <Input disabled {...field} />
                                         </FormControl>
@@ -312,7 +313,7 @@ export default function ParkingSpaceForm({
                 </div>
                 <div className="md:col-span-2">
                     <Button type="submit" disabled={submitting} className="w-full cursor-pointer md:w-auto">
-                        Save Changes
+                        {t('edit.form.actions.save')}
                     </Button>
                 </div>
             </form>

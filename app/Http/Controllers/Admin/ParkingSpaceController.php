@@ -111,6 +111,7 @@ class ParkingSpaceController extends Controller
         return inertia('backend/parking-spaces/show', [
             'parkingSpace' => $parkingSpace,
             'selectOptions' => [
+                'orientation' => ParkingOrientation::mapped(),
                 'parkingStatuses' => ParkingStatus::mapped(),
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
@@ -189,8 +190,7 @@ class ParkingSpaceController extends Controller
         $parkingSpace->update($data);
 
         return redirect()
-            ->route('app.parking-spaces.index')
-            ->with('success', 'Parking space updated successfully.');
+            ->route('app.parking-spaces.index');
     }
 
     /**
@@ -201,8 +201,7 @@ class ParkingSpaceController extends Controller
         Gate::authorize('delete', $parkingSpace);
         $parkingSpace->delete();
 
-        return redirect()->route('app.parking-spaces.index')
-            ->with('success', 'Parking space moved to trash successfully.');
+        return redirect()->route('app.parking-spaces.index');
     }
 
     /**

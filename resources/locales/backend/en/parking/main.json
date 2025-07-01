@@ -1,10 +1,14 @@
 {
     "head": {
         "title": "Parking Spaces (Community)",
-        "description": "All the listed parking spaces are added by the community and part of the own dataset of NIPKaart."
+        "edit": "Edit ({{id}})",
+        "show": "Parking Space ({{id}})",
+        "description": "All listed parking spaces are contributed by the community and are part of NIPKaart’s own dataset."
     },
     "breadcrumbs": {
-        "index": "Parking Spaces"
+        "index": "Parking Spaces",
+        "edit": "Edit ({{id}})",
+        "show": "Show ({{id}})"
     },
     "selected": "selected",
     "table": {
@@ -35,6 +39,91 @@
             "ids": "Invalid selection. Some items may no longer exist.",
             "status": "Please select a valid status.",
             "default": "Something went wrong. Please try again."
+        }
+    },
+    "show": {
+        "trash": "Trash",
+        "cards": {
+            "details": {
+                "title": "Details",
+                "description": "All basic info about this parking space.",
+                "fields": {
+                    "country": "Country",
+                    "province": "Province",
+                    "municipality": "Municipality",
+                    "city": "City",
+                    "street": "Street",
+                    "postcode": "Postcode",
+                    "amenity": "Amenity",
+                    "orientation": "Orientation",
+                    "ip_address": "IP Address",
+                    "copy_ip": "Copy IP"
+                }
+            },
+            "confirmations": {
+                "title": "Recent confirmations",
+                "description": "Latest check-ins for this location.",
+                "empty": "No confirmations yet",
+                "show_all": "Show all",
+                "unknown_user": "Unknown User"
+            },
+            "location": {
+                "title": "Location",
+                "description": "Where the parking space is located."
+            },
+            "street_view": {
+                "title": "Street view",
+                "description": "See the area around the parking space."
+            }
+        },
+        "toast": {
+            "copied": "Copied to clipboard"
+        }
+    },
+    "edit": {
+        "viewStreet": "Street View",
+        "submitted": "Submitted by:",
+        "anonymous": "Submitted anonymously",
+        "created": "Created:",
+        "form": {
+            "title": "Parking Space Details",
+            "description": "Edit the details of the parking space.",
+            "tabs": {
+                "basic": "Basic",
+                "extra": "Extra",
+                "status": "Status"
+            },
+            "labels": {
+                "country": "Country",
+                "province": "Province",
+                "municipality": "Municipality",
+                "city": "City",
+                "suburb": "Suburb",
+                "neighbourhood": "Neighbourhood",
+                "postcode": "Postcode",
+                "street": "Street",
+                "amenity": "Amenity",
+                "orientation": "Orientation",
+                "description": "Description",
+                "windowTimes": "Window Times",
+                "parkingTime": "Parking Time",
+                "hours": "Hours",
+                "minutes": "Minutes"
+            },
+            "hints": {
+                "windowTimes": "Are there restricted hours at this location?",
+                "parkingTime": "Maximum parking duration allowed at this location.",
+                "windowTimesDescription": "Describe the time window in the description below. For example, 'Available from 8 AM to 6 PM.'"
+            },
+            "location": {
+                "title": "Location",
+                "description": "Drag the marker to fine-tune the exact space on the map.",
+                "latitude": "Latitude",
+                "longitude": "Longitude"
+            },
+            "actions": {
+                "save": "Save Changes"
+            }
         }
     }
 }
