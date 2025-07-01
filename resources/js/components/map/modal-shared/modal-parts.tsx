@@ -166,11 +166,26 @@ export function InfoTable({ rows }: { rows: InfoTableRow[] }) {
                 {rows.map((row, i) => (
                     <div
                         key={i}
-                        className={`grid grid-cols-[2rem_8rem_1fr] items-center gap-2 px-4 py-3 ${i % 2 === 0 ? 'bg-white dark:bg-zinc-950' : 'bg-zinc-50 dark:bg-zinc-900'} ${i === 0 ? 'rounded-t-xl' : ''} ${i === rows.length - 1 ? 'rounded-b-xl' : ''}`}
+                        className={`flex items-center gap-3 px-4 py-3 sm:grid sm:grid-cols-[2rem_8rem_1fr] sm:items-center sm:gap-2 ${
+                            i % 2 === 0 ? 'bg-white dark:bg-zinc-950' : 'bg-zinc-50 dark:bg-zinc-900'
+                        } ${i === 0 ? 'rounded-t-xl' : ''} ${i === rows.length - 1 ? 'rounded-b-xl' : ''}`}
                     >
-                        <div className="flex justify-center">{row.icon}</div>
-                        <dt className="text-left text-xs text-muted-foreground">{row.label}</dt>
-                        <dd className="text-sm font-medium break-words text-foreground">
+                        {/* Icon */}
+                        <div className="flex shrink-0 items-center justify-center text-muted-foreground sm:justify-self-center">{row.icon}</div>
+
+                        {/* Mobile: flex-col layout */}
+                        <div className="flex flex-1 flex-col sm:hidden">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs text-muted-foreground">{row.label}</span>
+                                <span className="text-right text-sm font-medium text-foreground">
+                                    {row.value || <span className="text-muted-foreground">—</span>}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Desktop */}
+                        <dt className="hidden text-xs text-muted-foreground sm:block">{row.label}</dt>
+                        <dd className="hidden text-sm font-medium break-words text-foreground sm:block">
                             {row.value || <span className="text-muted-foreground">—</span>}
                         </dd>
                     </div>
