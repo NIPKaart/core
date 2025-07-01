@@ -7,7 +7,6 @@ import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 const iconMap = {
     pending: TimerIcon,
@@ -66,10 +65,6 @@ export default function Edit() {
 
         router.put(route('app.parking-spaces.update', { id: parkingSpace.id }), payload, {
             preserveScroll: true,
-            onSuccess: () => {
-                form.reset(data);
-                toast.success(t('toast.success'));
-            },
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
                     form.setError(field as keyof FormValues, {
@@ -132,7 +127,8 @@ export default function Edit() {
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <CalendarCheck className="h-4 w-4" />
                             <span>
-                                <span className="font-medium text-foreground">{t('edit.created')}</span> {new Date(parkingSpace.created_at).toLocaleString()}
+                                <span className="font-medium text-foreground">{t('edit.created')}</span>{' '}
+                                {new Date(parkingSpace.created_at).toLocaleString()}
                             </span>
                         </div>
                     </div>

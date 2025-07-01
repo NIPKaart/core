@@ -16,7 +16,13 @@
             "last_confirmed": "Laatst bevestigd",
             "never": "Nooit",
             "area": "Gebied",
-            "added_on": "Toegevoegd op"
+            "added_on": "Toegevoegd op",
+            "time_format": {
+                "hours": "{{count}} uur",
+                "hours_plural": "{{count}} uur",
+                "minutes": "{{count}} minuut",
+                "minutes_plural": "{{count}} minuten"
+            }
         },
         "confirm": {
             "form": {
