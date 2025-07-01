@@ -34,10 +34,8 @@
         "plenty": "Plenty of space"
     },
     "bulk": {
-        "clear": "Clear",
         "selected": "{{count}} selected",
         "select_visibility": "Select visibility",
-        "update": "Update visibility",
         "success": "Visibility updated successfully.",
         "error": {
             "generic": "Failed to update visibility",

@@ -34,10 +34,8 @@
         "plenty": "Ruimte genoeg"
     },
     "bulk": {
-        "clear": "Wissen",
         "selected": "{{count}} geselecteerd",
         "select_visibility": "Selecteer zichtbaarheid",
-        "update": "Zichtbaarheid bijwerken",
         "success": "Zichtbaarheid succesvol bijgewerkt.",
         "error": {
             "generic": "Zichtbaarheid bijwerken mislukt",

@@ -132,22 +132,22 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 onClick={() => setRowSelection({})}
                                 className="absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
-                                {t('bulk.clear')}
+                                {tGlobal('common.clear')}
                             </button>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                             <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
-                                <SelectTrigger className="w-full sm:w-[160px]">
+                                <SelectTrigger className="w-full sm:w-[200px]">
                                     <SelectValue placeholder={t('bulk.select_visibility')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="visible">{t('filters.visible')}</SelectItem>
-                                    <SelectItem value="hidden">{t('filters.hidden')}</SelectItem>
+                                    <SelectItem value="true">{t('filters.visible')}</SelectItem>
+                                    <SelectItem value="false">{t('filters.hidden')}</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Button onClick={handleBulkVisibility} disabled={!selectedVisibility} className="w-full cursor-pointer sm:w-auto">
-                                {t('bulk.update')}
+                                {tGlobal('common.update')}
                             </Button>
                         </div>
                     </div>
