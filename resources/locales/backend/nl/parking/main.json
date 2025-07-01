@@ -114,7 +114,8 @@
             },
             "hints": {
                 "windowTimes": "Zijn er beperkte tijden op deze locatie?",
-                "parkingTime": "Maximale toegestane parkeertijd op deze locatie."
+                "parkingTime": "Maximale toegestane parkeertijd op deze locatie.",
+                "windowTimesDescription": "Beschrijf het tijdvenster in het beschrijving hieronder. Bijvoorbeeld: 'Beschikbaar van 8:00 tot 18:00.'"
             },
             "location": {
                 "title": "Locatie",

@@ -112,7 +112,8 @@
             },
             "hints": {
                 "windowTimes": "Are there restricted hours at this location?",
-                "parkingTime": "Maximum parking duration allowed at this location."
+                "parkingTime": "Maximum parking duration allowed at this location.",
+                "windowTimesDescription": "Describe the time window in the description below. For example, 'Available from 8 AM to 6 PM.'"
             },
             "location": {
                 "title": "Location",
