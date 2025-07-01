@@ -1,0 +1,63 @@
+{
+    "head": {
+        "index": "Offstreet Parking"
+    },
+    "breadcrumbs": {
+        "index": "Offstreet Parking"
+    },
+    "description": "Managing all off-street parking spaces, such as parking lots (P+R) and garages.",
+    "filters": {
+        "country": "Country",
+        "province": "Province",
+        "municipality": "Municipality",
+        "visibility": "Visibility",
+        "visible": "Visible",
+        "hidden": "Hidden"
+    },
+    "table": {
+        "name": "Name",
+        "api": "API",
+        "status": "Status",
+        "short_parking": "Short-term parking",
+        "long_parking": "Long-term Parking",
+        "last_updated": "Last Updated",
+        "visible": "Visible",
+        "short_parking_available": "{{pct}}% available (short)",
+        "long_parking_available": "{{pct}}% available (long)",
+        "of": "of"
+    },
+    "badges": {
+        "ok": "OK",
+        "error": "Error",
+        "full": "Full!",
+        "almost_full": "Almost full",
+        "plenty": "Plenty of space"
+    },
+    "bulk": {
+        "clear": "Clear",
+        "selected": "{{count}} selected",
+        "select_visibility": "Select visibility",
+        "update": "Update visibility",
+        "success": "Visibility updated successfully.",
+        "error": {
+            "generic": "Failed to update visibility",
+            "invalid": "Invalid selection. Some items may no longer exist."
+        }
+    },
+    "toast": {
+        "enabled": "Visibility enabled",
+        "disabled": "Visibility disabled",
+        "error": "Failed to update visibility."
+    },
+    "accessibility": {
+        "toggle_visibility": "Toggle visibility for parking space with ID {{id}}"
+    },
+    "banner": {
+        "outdated": {
+            "title": "Data not up-to-date",
+            "description_single": "1 municipality hasn't been updated in over <b>{{days}}</b> day.",
+            "description_multiple": "{{count}} municipalities haven't been updated in over <b>{{days}}</b> days.",
+            "aria_label": "List of outdated municipalities"
+        }
+    }
+}

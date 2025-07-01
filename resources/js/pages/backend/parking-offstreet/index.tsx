@@ -5,6 +5,7 @@ import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filte
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, PaginatedResponse, ParkingOffstreet } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -20,9 +21,8 @@ type PageProps = {
     options: { countries: Option[]; provinces: Option[]; municipalities: Option[] };
 };
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Offstreet Parking', href: route('app.parking-offstreet.index') }];
-
 export default function Index({ spaces, filters, options }: PageProps) {
+    const { t, tGlobal } = useResourceTranslation('backend/parking-offstreet');
     const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -63,8 +63,8 @@ export default function Index({ spaces, filters, options }: PageProps) {
         .filter((o) => o.count > 0);
 
     const visibilityOptions = [
-        { value: 'true', label: 'Visible', count: spaces.data.filter((s) => s.visibility).length },
-        { value: 'false', label: 'Hidden', count: spaces.data.filter((s) => !s.visibility).length },
+        { value: 'true', label: t('filters.visible'), count: spaces.data.filter((s) => s.visibility).length },
+        { value: 'false', label: t('filters.hidden'), count: spaces.data.filter((s) => !s.visibility).length },
     ];
 
     const updateFilters = (country: string[], province: string[], municipality: string[], visibility: string[]) => {
@@ -81,7 +81,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
     };
 
     // Get the columns for the data table
-    const columns = getParkingOffstreetColumns(can);
+    const columns = getParkingOffstreetColumns(can, { t, tGlobal });
 
     const handleBulkVisibility = () => {
         const ids: string[] = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
@@ -98,26 +98,27 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedVisibility('');
-                    toast.success('Visibility updated successfully.');
+                    toast.success(t('bulk.success'));
                 },
                 onError: (errors) => {
                     if (errors.ids) {
-                        toast.error(`Invalid selection. Some items may no longer exist.`);
+                        toast.error(t('bulk.error.invalid'));
                     } else {
-                        toast.error('Failed to update visibility');
+                        toast.error(t('bulk.error.generic'));
                     }
                 },
             },
         );
     };
 
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('app.parking-offstreet.index') }];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Offstreet Parking" />
+            <Head title={t('head.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">Offstreet Parking</h1>
-
-                <p className="text-muted-foreground">Manage offstreet parking spaces. You can filter by country, province, and municipality.</p>
+                <h1 className="text-2xl font-bold">{t('head.index')}</h1>
+                <p className="text-muted-foreground">{t('description')}</p>
 
                 <OutdatedMunicipalitiesBanner spaces={spaces.data} minDaysOutdated={2} />
 
@@ -125,28 +126,28 @@ export default function Index({ spaces, filters, options }: PageProps) {
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
                         <div className="relative flex w-full flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                             <div className="text-sm text-muted-foreground">
-                                <span className="font-medium text-foreground">{Object.keys(rowSelection).length}</span> selected
+                                <span className="font-medium text-foreground">{t('bulk.selected', { count: Object.keys(rowSelection).length })}</span>
                             </div>
                             <button
                                 onClick={() => setRowSelection({})}
                                 className="absolute top-0 right-0 cursor-pointer text-xs underline underline-offset-2 transition hover:text-foreground sm:static sm:ml-3 sm:text-sm sm:no-underline"
                             >
-                                Clear
+                                {t('bulk.clear')}
                             </button>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                             <Select value={selectedVisibility} onValueChange={setSelectedVisibility}>
                                 <SelectTrigger className="w-full sm:w-[160px]">
-                                    <SelectValue placeholder="Select visibility" />
+                                    <SelectValue placeholder={t('bulk.select_visibility')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="visible">Visible</SelectItem>
-                                    <SelectItem value="hidden">Hidden</SelectItem>
+                                    <SelectItem value="visible">{t('filters.visible')}</SelectItem>
+                                    <SelectItem value="hidden">{t('filters.hidden')}</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Button onClick={handleBulkVisibility} disabled={!selectedVisibility} className="w-full cursor-pointer sm:w-auto">
-                                Update visibility
+                                {t('bulk.update')}
                             </Button>
                         </div>
                     </div>
@@ -160,7 +161,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                     filters={
                         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
                             <DataTableFacetFilter
-                                title="Country"
+                                title={t('filters.country')}
                                 selected={countryFilter}
                                 options={countryOptions}
                                 onChange={(selected) => {
@@ -173,7 +174,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 }}
                             />
                             <DataTableFacetFilter
-                                title="Province"
+                                title={t('filters.province')}
                                 selected={provinceFilter}
                                 options={provinceOptions}
                                 onChange={(selected) => {
@@ -186,7 +187,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 }}
                             />
                             <DataTableFacetFilter
-                                title="Municipality"
+                                title={t('filters.municipality')}
                                 selected={municipalityFilter}
                                 options={municipalityOptions}
                                 onChange={(selected) => {
@@ -199,7 +200,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 }}
                             />
                             <DataTableFacetFilter
-                                title="Visibility"
+                                title={t('filters.visibility')}
                                 selected={visibilityFilter}
                                 options={visibilityOptions}
                                 onChange={(selected) => {

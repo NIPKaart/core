@@ -1,0 +1,63 @@
+{
+    "head": {
+        "index": "Off-street Parkeren"
+    },
+    "breadcrumbs": {
+        "index": "Off-street Parkeren"
+    },
+    "description": "Het beheren van alle off-street parkeerplaatsen, zoals parkeerterreinen (P+R) en garages.",
+    "filters": {
+        "country": "Land",
+        "province": "Provincie",
+        "municipality": "Gemeente",
+        "visibility": "Zichtbaarheid",
+        "visible": "Zichtbaar",
+        "hidden": "Verborgen"
+    },
+    "table": {
+        "name": "Naam",
+        "api": "API",
+        "status": "Status",
+        "short_parking": "Kort parkeren",
+        "long_parking": "Lang parkeren",
+        "last_updated": "Laatst bijgewerkt",
+        "visible": "Zichtbaar",
+        "short_parking_available": "{{pct}}% beschikbaar (kort)",
+        "long_parking_available": "{{pct}}% beschikbaar (lang)",
+        "of": "van"
+    },
+    "badges": {
+        "ok": "OK",
+        "error": "Fout",
+        "full": "Vol!",
+        "almost_full": "Bijna vol",
+        "plenty": "Ruimte genoeg"
+    },
+    "bulk": {
+        "clear": "Wissen",
+        "selected": "{{count}} geselecteerd",
+        "select_visibility": "Selecteer zichtbaarheid",
+        "update": "Zichtbaarheid bijwerken",
+        "success": "Zichtbaarheid succesvol bijgewerkt.",
+        "error": {
+            "generic": "Zichtbaarheid bijwerken mislukt",
+            "invalid": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer."
+        }
+    },
+    "toast": {
+        "enabled": "Zichtbaarheid ingeschakeld",
+        "disabled": "Zichtbaarheid uitgeschakeld",
+        "error": "Zichtbaarheid bijwerken mislukt."
+    },
+    "accessibility": {
+        "toggle_visibility": "Zichtbaarheid wisselen voor parkeerplaats met ID {{id}}"
+    },
+    "banner": {
+        "outdated": {
+            "title": "Data niet up-to-date",
+            "description_single": "1 gemeente is al meer dan <b>{{days}}</b> dag niet bijgewerkt.",
+            "description_multiple": "{{count}} gemeenten zijn al meer dan <b>{{days}}</b> dagen niet bijgewerkt.",
+            "aria_label": "Lijst van verouderde gemeenten"
+        }
+    }
+}
