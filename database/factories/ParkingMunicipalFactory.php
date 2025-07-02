@@ -18,7 +18,7 @@ class ParkingMunicipalFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => 'MUNI_' . $this->faker->unique()->bothify('##??##'),
+            'id' => 'MUNI_'.$this->faker->unique()->bothify('##??##'),
             'country_id' => null,
             'province_id' => null,
             'municipality_id' => null,
