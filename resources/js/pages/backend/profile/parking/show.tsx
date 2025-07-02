@@ -1,4 +1,4 @@
-import Banner, { BannerVariant } from '@/components/banner';
+import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
         { title: t('parking_spaces.breadcrumbs.show'), href: route('profile.parking-spaces.show', { id: parkingSpace.id }) },
     ];
 
+    const statusOpt = selectOptions.statuses.find((s) => s.value === parkingSpace.status)!;
     const [dialogState, setDialogState] = useState<{ parkingSpace: ParkingSpace | null; type: 'delete' | null }>({
         parkingSpace: null,
         type: null,
@@ -50,14 +51,6 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
             onError: () => toast.error(t('parking_spaces.toast.error')),
         });
     };
-
-    const statusOpt = selectOptions.statuses.find((s) => s.value === parkingSpace.status)!;
-    const variantMap: Record<string, BannerVariant> = {
-        pending: 'primary',
-        approved: 'success',
-        rejected: 'error',
-    };
-    const variant = variantMap[parkingSpace.status] ?? 'info';
 
     const details = [
         {
@@ -144,7 +137,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
 
             {/* Banner Notification */}
             <div className="px-4 sm:px-6">
-                <Banner variant={variant} title={statusOpt.label} description={statusOpt.description} />
+                <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
             </div>
 
             {/* Main grid */}

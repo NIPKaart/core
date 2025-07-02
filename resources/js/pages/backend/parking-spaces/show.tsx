@@ -1,4 +1,4 @@
-import Banner, { BannerVariant } from '@/components/banner';
+import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import StreetViewCard from '@/components/map/card-location-streetview';
 import { Badge } from '@/components/ui/badge';
@@ -32,12 +32,6 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
     const statusOpt = selectOptions.parkingStatuses.find((s) => s.value === parkingSpace.status)!;
-    const variantMap: Record<string, BannerVariant> = {
-        pending: 'primary',
-        approved: 'success',
-        rejected: 'error',
-    };
-    const variant = variantMap[parkingSpace.status] ?? 'info';
 
     function copyToClipboard(val: string) {
         navigator.clipboard.writeText(val);
@@ -168,7 +162,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
 
             {/* Banner Notification */}
             <div className="px-4 sm:px-6">
-                <Banner variant={variant} title={statusOpt.label} description={statusOpt.description} />
+                <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
             </div>
 
             {/* 2×2 grid met auto-rows-min */}
