@@ -19,7 +19,7 @@ class ParkingOffstreetFactory extends Factory
         $free_space_long = is_null($long_capacity) ? null : fake()->numberBetween(0, $long_capacity);
 
         return [
-            'id' => 'OFST_' . fake()->unique()->bothify('##??##'),
+            'id' => 'OFST_'.fake()->unique()->bothify('##??##'),
 
             'name' => fake()->company,
             'country_id' => null,
