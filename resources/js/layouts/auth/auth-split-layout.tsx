@@ -18,7 +18,7 @@ export default function AuthSplitLayout({ children, title, description }: PropsW
                 <div className="absolute inset-0 bg-[url('/assets/images/backgrounds/disabled_parking_2x.webp')] bg-cover bg-center" />
                 <div className="absolute inset-0 bg-black/60" />
                 <Link href={route('home')} className="relative z-20 flex items-center text-lg font-medium">
-                    <AppLogo size="lg" />
+                    <AppLogo size="lg" forceDark />
                 </Link>
                 {quote && (
                     <div className="relative z-20 mt-auto">
