@@ -1,10 +1,10 @@
 import { ImgHTMLAttributes } from 'react';
 
-interface AppLogoProps extends ImgHTMLAttributes<HTMLImageElement> {
+type ThemeVariant = { forceDark: true; forceLight?: never } | { forceLight: true; forceDark?: never } | { forceDark?: false; forceLight?: false };
+
+type AppLogoProps = ImgHTMLAttributes<HTMLImageElement> & {
     size?: 'sm' | 'md' | 'lg';
-    forceDark?: boolean;
-    forceLight?: boolean;
-}
+} & ThemeVariant;
 
 export default function AppLogo({ size = 'md', className = '', forceDark, forceLight, ...props }: AppLogoProps) {
     const heightClass = {
