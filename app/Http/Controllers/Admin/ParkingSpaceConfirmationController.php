@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ParkingConfirmationStatus;
+use App\Http\Controllers\Controller;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -57,8 +57,8 @@ class ParkingSpaceConfirmationController extends Controller
             'parkingSpace' => $parkingSpace->only('id', 'country_id', 'municipality', 'city', 'street'),
             'confirmations' => $confirmations,
             'options' => [
-                'confirmationStatuses' => ParkingConfirmationStatus::options()
-            ]
+                'confirmationStatuses' => ParkingConfirmationStatus::options(),
+            ],
         ]);
     }
 
