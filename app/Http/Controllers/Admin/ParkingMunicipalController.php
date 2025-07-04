@@ -25,20 +25,20 @@ class ParkingMunicipalController extends Controller
             'parkingMunicipal as hidden_spaces' => fn ($q) => $q->where('visibility', false),
             'parkingMunicipal as total_spaces',
         ])
-        ->with(['parkingMunicipal' => fn ($q) => $q->latest('updated_at')])
-        ->whereHas('parkingMunicipal')
-        ->orderBy('name')
-        ->get()
-        ->map(function ($municipality) {
-            return [
-                'id' => $municipality->id,
-                'name' => $municipality->name,
-                'visible_spaces' => $municipality->visible_spaces,
-                'hidden_spaces' => $municipality->hidden_spaces,
-                'total_spaces' => $municipality->total_spaces,
-                'last_updated' => optional($municipality->parkingMunicipal->first())->updated_at,
-            ];
-        });
+            ->with(['parkingMunicipal' => fn ($q) => $q->latest('updated_at')])
+            ->whereHas('parkingMunicipal')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($municipality) {
+                return [
+                    'id' => $municipality->id,
+                    'name' => $municipality->name,
+                    'visible_spaces' => $municipality->visible_spaces,
+                    'hidden_spaces' => $municipality->hidden_spaces,
+                    'total_spaces' => $municipality->total_spaces,
+                    'last_updated' => optional($municipality->parkingMunicipal->first())->updated_at,
+                ];
+            });
 
         return Inertia::render('backend/parking-municipal/municipalities', [
             'municipalities' => $municipalities,
