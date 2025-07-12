@@ -59,7 +59,7 @@
         "globals": "^16.0.0",
         "i18next": "^25.2.1",
         "i18next-browser-languagedetector": "^8.2.0",
-        "laravel-vite-plugin": "^1.0",
+        "laravel-vite-plugin": "^2.0.0",
         "leaflet": "^1.9.4",
         "leaflet.locatecontrol": "^0.84.2",
         "lucide-react": "^0.525.0",
