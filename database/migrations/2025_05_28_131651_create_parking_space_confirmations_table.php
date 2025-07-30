@@ -14,14 +14,14 @@ return new class extends Migration
     {
         Schema::create('parking_space_confirmations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parking_space_id')->constrained()->onDelete('cascade');
+            $table->uuid('parking_space_id')->constrained('parking_spaces')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('confirmed_at');
             $table->enum('status', ParkingConfirmationStatus::all())->default(ParkingConfirmationStatus::CONFIRMED->value);
             $table->text('comment')->nullable();
             $table->timestamps();
 
-            $table->index(['parking_space_id', 'user_id', 'confirmed_at']);
+            $table->index(['parking_space_id', 'user_id', 'confirmed_at'], 'ps_conf_space_user_time_idx');
         });
     }
 

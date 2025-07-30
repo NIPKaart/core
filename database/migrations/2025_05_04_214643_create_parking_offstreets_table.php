@@ -38,7 +38,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Indexes
-            $table->index('municipality');
+            $table->index('municipality_id');
         });
     }
 
