@@ -1,0 +1,22 @@
+name: redis-insight
+repository: stasadev/ddev-redis-insight
+version: v1.0.0
+dependencies:
+    - redis
+install_date: "2025-07-30T15:00:26+02:00"
+project_files:
+    - docker-compose.redis-insight.yaml
+    - docker-compose.redis-insight_norouter.yaml
+    - commands/host/redis-insight
+global_files: []
+removal_actions:
+    - |
+      #ddev-description:Remove docker-compose.redis-insight_password.yaml file
+      file=docker-compose.redis-insight_password.yaml
+      if [ -f "${file}" ]; then
+        if grep -q '#ddev-generated' "${file}"; then
+          rm -f "${file}"
+        else
+          echo "Unwilling to remove '$DDEV_APPROOT/.ddev/${file}' because it does not have #ddev-generated in it; you can manually delete it if it is safe to delete."
+        fi
+      fi
