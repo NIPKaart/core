@@ -8,8 +8,12 @@ use Inertia\Inertia;
 
 // Frontend
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('frontend/home');
 })->name('home');
+Route::get('contact', function () {
+    return Inertia::render('frontend/contact');
+})->name('contact');
+
 // Map
 Route::get('map', [ParkingSpaceController::class, 'map'])->name('map');
 Route::get('map/add', [ParkingSpaceController::class, 'locationAdd'])->name('map.add');
