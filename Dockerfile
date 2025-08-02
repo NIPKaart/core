@@ -47,7 +47,6 @@ RUN chmod -R 775 storage bootstrap/cache
 
 # Optional: set Laravel config cache during build (can also be done at runtime)
 RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
+ && php artisan route:cache
 
 EXPOSE 80
