@@ -1,12 +1,11 @@
-# ===================================
-# Backend stage (Composer + Laravel)
-# ===================================
+# ============================
+# Backend stage (Composer)
+# ============================
 FROM composer:2.8.10 AS backend
 
 WORKDIR /app
 
-# Copy composer files and install deps
-COPY composer.json composer.lock /app/
+COPY composer.json composer.lock ./
 RUN composer install \
     --ignore-platform-reqs \
     --no-ansi \
@@ -15,50 +14,40 @@ RUN composer install \
     --no-interaction \
     --no-scripts
 
-# Copy rest of Laravel source
-COPY . /app/
+COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative
 
-# ===================================
+# ============================
 # Frontend stage (Vite build)
-# ===================================
+# ============================
 FROM node:22 AS frontend
 
 WORKDIR /app
 
-# Install deps
-COPY package.json package-lock.json vite.config.* tsconfig.json /app/
+COPY package.json package-lock.json vite.config.* tsconfig.json ./
 RUN npm install
 
-# Copy frontend source and build
-COPY resources /app/resources
-COPY public /app/public
+COPY resources ./resources
+COPY public ./public
 RUN npm run build
 
-# ===================================
-# Final image
-# ===================================
-FROM php:8.3.23-fpm-bullseye
+# ============================
+# Final stage: FrankenPHP
+# ============================
+FROM dunglas/frankenphp:1.9.0
 
-WORKDIR /var/www
+WORKDIR /app
 
-# Install system packages and PHP extensions
-RUN apt-get update && apt-get install -y \
-    git unzip curl zip libpng-dev libonig-dev libxml2-dev \
-    libzip-dev libicu-dev libjpeg62-turbo-dev libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip mbstring intl gd \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Copy Laravel + Vite build
+COPY --from=backend /app /app
+COPY --from=frontend /app/public/build /app/public/build
 
-# Copy Laravel app and frontend build
-COPY --from=backend /app /var/www
-COPY --from=frontend /app/public/build /var/www/public/build
+# Laravel storage permissions
+RUN chmod -R 775 storage bootstrap/cache
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www \
- && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Optional: set Laravel config cache during build (can also be done at runtime)
+RUN php artisan config:cache \
+ && php artisan route:cache \
+ && php artisan view:cache
 
-# Expose PHP-FPM port
-EXPOSE 9000
-
-CMD ["php-fpm"]
+EXPOSE 80
