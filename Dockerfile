@@ -8,9 +8,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl bcmath sockets intl
 
 # Swoole is installed from GitHub
-RUN curl -L -o swoole.tar.gz https://github.com/swoole/swoole-src/archive/refs/tags/v5.1.0.tar.gz \
+RUN curl -L -o swoole.tar.gz https://github.com/swoole/swoole-src/archive/refs/tags/v6.0.2.tar.gz \
     && tar -xf swoole.tar.gz \
-    && cd swoole-src-5.1.0 \
+    && cd swoole-src-6.0.2 \
     && phpize \
     && ./configure \
     && make -j$(nproc) \
