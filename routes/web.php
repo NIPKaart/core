@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Frontend\ContactController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ParkingSpaceController;
 use App\Http\Controllers\Profile;
@@ -9,9 +10,7 @@ use Inertia\Inertia;
 
 // Frontend
 Route::get('/', [HomeController::class, 'home'])->name('home');
-Route::get('contact', function () {
-    return Inertia::render('frontend/contact');
-})->name('contact');
+Route::get('contact', [ContactController::class, 'contact'])->name('contact');
 
 // Map
 Route::get('map', [ParkingSpaceController::class, 'map'])->name('map');
