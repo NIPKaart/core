@@ -24,9 +24,31 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$this->user->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $this->route('user')->id],
             'password' => ['nullable', 'confirmed', 'min:8'],
             'role' => ['required', 'exists:roles,name'],
         ];
+    }
+
+    /**
+     * Custom validation after the default rules.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $editedUser = $this->route('user');
+            $currentUser = $this->user();
+
+            if (
+                $currentUser->id === $editedUser->id &&
+                $this->has('role') &&
+                $this->input('role') !== $editedUser->getRoleNames()->first()
+            ) {
+                $validator->errors()->add(
+                    'role',
+                    __('users.validation.self_role_change')
+                );
+            }
+        });
     }
 }
