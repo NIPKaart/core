@@ -1,15 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ParkingSpaceController;
 use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Frontend
-Route::get('/', function () {
-    return Inertia::render('frontend/home');
-})->name('home');
+Route::get('/', [HomeController::class, 'home'])->name('home');
 Route::get('contact', function () {
     return Inertia::render('frontend/contact');
 })->name('contact');
