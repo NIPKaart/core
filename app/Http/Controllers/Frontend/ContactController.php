@@ -10,7 +10,7 @@ class ContactController extends Controller
     /**
      * Frontend - Render the contact page.
      */
-    public function contact()
+    public function index()
     {
         return Inertia::render('frontend/contact');
     }

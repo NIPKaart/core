@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
-class HomeController extends Controller
+class AboutController extends Controller
 {
     /**
-     * Frontend - Render the home page.
+     * Frontend - Render the about page.
      */
     public function index()
     {
-        return Inertia::render('frontend/home');
+        return Inertia::render('frontend/about');
     }
 }
