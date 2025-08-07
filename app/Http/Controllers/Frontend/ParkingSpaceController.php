@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Frontend;
 
 use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
@@ -13,6 +13,7 @@ use App\Models\ParkingSpace;
 use App\Traits\FindsOrCreatesMunicipality;
 use App\Traits\FindsOrCreatesProvince;
 use App\Traits\ParsesNominatimAddress;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -24,7 +25,7 @@ class ParkingSpaceController extends Controller
     use ParsesNominatimAddress;
 
     /**
-     * Frontend - map page.
+     * Frontend - Render the map page with parking spaces.
      */
     public function map()
     {

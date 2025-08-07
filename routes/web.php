@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\ParkingSpaceController;
+use App\Http\Controllers\Frontend\ParkingSpaceController;
 use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
