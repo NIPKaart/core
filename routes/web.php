@@ -1,25 +1,27 @@
 <?php
 
 use App\Http\Controllers\Admin;
-use App\Http\Controllers\ParkingSpaceController;
+use App\Http\Controllers\Frontend\AboutController;
+use App\Http\Controllers\Frontend\ContactController;
+use App\Http\Controllers\Frontend\GarageController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\ParkingSpaceController;
 use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Frontend
-Route::get('/', function () {
-    return Inertia::render('frontend/home');
-})->name('home');
-Route::get('contact', function () {
-    return Inertia::render('frontend/contact');
-})->name('contact');
-
+// Frontend routes
+Route::get('/', [HomeController::class, 'index'])->name('home');
 // Map
 Route::get('map', [ParkingSpaceController::class, 'map'])->name('map');
 Route::get('map/add', [ParkingSpaceController::class, 'locationAdd'])->name('map.add');
 Route::post('map/add', [ParkingSpaceController::class, 'store'])->name('map.store');
+// Other frontend routes
+Route::get('garages', [GarageController::class, 'index'])->name('garages');
+Route::get('about', [AboutController::class, 'index'])->name('about');
+Route::get('contact', [ContactController::class, 'index'])->name('contact');
 
-// Backend
+// Backend routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

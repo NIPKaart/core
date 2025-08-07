@@ -37,8 +37,8 @@ export default function Navbar() {
                 },
             ],
         },
-        { name: t('garages'), href: '#', routeName: 'garages' },
-        { name: t('about'), href: '#', routeName: 'about' },
+        { name: t('garages'), href: route('garages'), routeName: 'garages' },
+        { name: t('about'), href: route('about'), routeName: 'about' },
         { name: t('contact'), href: route('contact'), routeName: 'contact' },
     ];
 
