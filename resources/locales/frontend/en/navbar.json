@@ -15,5 +15,6 @@
     "about": "About",
     "contact": "Contact",
     "dashboard": "Dashboard",
-    "login": "Log in"
+    "login": "Log in",
+    "logout": "Log out"
 }

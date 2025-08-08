@@ -50,6 +50,12 @@ export function UserNavMenu() {
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                         <UserInfo user={auth.user} showEmail={true} />
                     </div>
+                    <div className="px-1 py-1.5">
+                        <div className="flex items-center gap-2">
+                            <ThemeToggle />
+                            <LanguageSwitcher />
+                        </div>
+                    </div>
                 </DropdownMenuLabel>
 
                 <DropdownMenuSeparator />
@@ -62,13 +68,6 @@ export function UserNavMenu() {
                         </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                <div className="space-y-2 px-2 py-1.5">
-                    <ThemeToggle />
-                    <LanguageSwitcher />
-                </div>
 
                 <DropdownMenuSeparator />
 
