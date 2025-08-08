@@ -32,6 +32,11 @@ export function AppSidebar() {
                 href: route('map'),
                 icon: icons.Map,
             },
+            {
+                title: t('garages'),
+                href: route('garages'),
+                icon: icons.SquareParking
+            }
         ].filter(Boolean) as NavItem[],
     };
 
