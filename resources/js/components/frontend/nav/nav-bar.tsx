@@ -9,7 +9,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FavoritesNavButton } from './favorties-nav-item';
+import { FavoritesNavButton } from './favorites';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
