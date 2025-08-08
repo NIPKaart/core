@@ -6,14 +6,14 @@ import { cn } from '@/lib/utils';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FavoritesNavButton } from './badge/favorites';
-import { NavItem } from './nav-item';
-import { ThemeToggle } from './theme-toggle';
 import { NotificationsNavButton } from './badge/notifications';
 import { UserNavMenu } from './badge/user';
+import { NavItem } from './nav-item';
+import { ThemeToggle } from './theme-toggle';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
@@ -205,29 +205,59 @@ export default function Navbar() {
                             )}
                         </Accordion>
 
-                        <div className="mt-4 flex items-center justify-between border-t border-gray-200 px-4 pt-4 dark:border-gray-700">
+                        <div className="mt-4 flex flex-col gap-4 border-t border-gray-200 px-4 pt-4 dark:border-gray-700">
                             {auth.user ? (
-                                <Link
-                                    href={route('dashboard')}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="font-semibold text-gray-900 hover:underline dark:text-white"
-                                >
-                                    {t('dashboard')}
-                                </Link>
+                                <>
+                                    <div className="flex items-center justify-between">
+                                        <Link
+                                            href={route('dashboard')}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex items-center gap-2 text-base font-medium text-gray-800 hover:underline dark:text-white"
+                                        >
+                                            <LayoutDashboard className="h-5 w-5" />
+                                            {t('dashboard')}
+                                        </Link>
+
+                                        <Link
+                                            href={route('logout')}
+                                            method="post"
+                                            as="button"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex items-center gap-2 text-base font-medium text-gray-800 hover:underline dark:text-white"
+                                        >
+                                            <LogOut className="h-5 w-5" />
+                                            {t('logout')}
+                                        </Link>
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-4 px-4">
+                                        <div className="flex justify-center">
+                                            {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
+                                        </div>
+                                        <div className="flex justify-center">{auth.user && <NotificationsNavButton hasUnread />}</div>
+                                        <div className="flex justify-center">
+                                            <LanguageSwitcher />
+                                        </div>
+                                        <div className="flex justify-center">
+                                            <ThemeToggle />
+                                        </div>
+                                    </div>
+                                </>
                             ) : (
-                                <Link
-                                    href={route('login')}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="font-semibold text-gray-900 dark:text-white"
-                                >
-                                    {t('login')} →
-                                </Link>
+                                <div className="flex items-center justify-between">
+                                    <Link
+                                        href={route('login')}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="font-semibold text-gray-900 dark:text-white"
+                                    >
+                                        {t('login')} →
+                                    </Link>
+                                    <div className="flex items-center gap-2">
+                                        <LanguageSwitcher />
+                                        <ThemeToggle />
+                                    </div>
+                                </div>
                             )}
-                            <div className="flex items-center gap-2">
-                                {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
-                                <ThemeToggle />
-                                <LanguageSwitcher />
-                            </div>
                         </div>
                     </div>
                 </Transition>
