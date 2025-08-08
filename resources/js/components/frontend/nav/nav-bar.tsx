@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { FavoritesNavButton } from './favorites';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
+import { NotificationsNavButton } from './notifications';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
@@ -133,8 +134,9 @@ export default function Navbar() {
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
                             {auth.user && <FavoritesNavButton />}
-                            <LanguageSwitcher />
-                            <ThemeToggle />
+                            {auth.user && <NotificationsNavButton hasUnread={true} />}
+                            {!auth.user && <LanguageSwitcher />}
+                            {!auth.user && <ThemeToggle />}
                         </div>
                         {auth.user ? (
                             <Link
