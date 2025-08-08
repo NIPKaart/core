@@ -15,5 +15,6 @@
     "about": "Over ons",
     "contact": "Contact",
     "dashboard": "Dashboard",
-    "login": "Inloggen"
+    "login": "Inloggen",
+    "logout": "Uitloggen"
 }
