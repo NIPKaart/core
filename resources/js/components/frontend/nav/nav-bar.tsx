@@ -13,6 +13,7 @@ import { FavoritesNavButton } from './badge/favorites';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 import { NotificationsNavButton } from './badge/notifications';
+import { UserNavMenu } from './badge/user';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
@@ -139,12 +140,7 @@ export default function Navbar() {
                             {!auth.user && <ThemeToggle />}
                         </div>
                         {auth.user ? (
-                            <Link
-                                href={route('dashboard')}
-                                className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                            >
-                                {t('dashboard')}
-                            </Link>
+                            <UserNavMenu />
                         ) : (
                             <Link href={route('login')} className="text-sm font-semibold text-gray-900 dark:text-white">
                                 {t('login')} →
