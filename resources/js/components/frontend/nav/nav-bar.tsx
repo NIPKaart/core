@@ -9,10 +9,10 @@ import { Link, usePage } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FavoritesNavButton } from './favorites';
+import { FavoritesNavButton } from './badge/favorites';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
-import { NotificationsNavButton } from './notifications';
+import { NotificationsNavButton } from './badge/notifications';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
