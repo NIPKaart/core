@@ -1,5 +1,6 @@
 import { Icon } from '@/components/icon';
 import LanguageSwitcher from '@/components/language-switcher';
+import { NotificationsNavButton } from '@/components/nav/notifications';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
@@ -10,7 +11,6 @@ import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FavoritesNavButton } from './badge/favorites';
-import { NotificationsNavButton } from './badge/notifications';
 import { UserNavMenu } from './badge/user';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
