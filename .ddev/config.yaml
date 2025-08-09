@@ -18,6 +18,10 @@ web_extra_exposed_ports:
     container_port: 5173
     http_port: 5172
     https_port: 5173
+  - name: reverb
+    container_port: 8080
+    http_port: 8080
+    https_port: 8443
 
 # Key features of DDEV's config.yaml:
 
