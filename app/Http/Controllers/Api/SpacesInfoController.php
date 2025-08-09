@@ -18,7 +18,7 @@ class SpacesInfoController extends Controller
             ->where('status', ParkingStatus::APPROVED)
             ->firstOrFail();
 
-        $rule = ParkingRule::where('municipality', $location->municipality)->first();
+        $rule = ParkingRule::where('municipality_id', $location->municipality_id)->first();
         // Fallback to nationwide rule if no municipal rule is found
         if (empty($rule)) {
             $rule = ParkingRule::where([
@@ -76,7 +76,7 @@ class SpacesInfoController extends Controller
             ->where('visibility', true)
             ->firstOrFail();
 
-        $rule = ParkingRule::where('municipality', $location->municipality)->first();
+        $rule = ParkingRule::where('municipality_id', $location->municipality_id)->first();
         // Fallback to nationwide rule if no municipal rule is found
         if (empty($rule)) {
             $rule = ParkingRule::where([
