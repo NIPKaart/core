@@ -1,6 +1,5 @@
 import { Icon } from '@/components/icon';
 import LanguageSwitcher from '@/components/language-switcher';
-import { NotificationsNavButton } from '@/components/nav/notifications';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
@@ -14,6 +13,7 @@ import { FavoritesNavButton } from './badge/favorites';
 import { UserNavMenu } from './badge/user';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
+import NotificationsBell from '@/components/nav/notifications-bell';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
@@ -135,7 +135,7 @@ export default function Navbar() {
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
                             {auth.user && <FavoritesNavButton />}
-                            {auth.user && <NotificationsNavButton hasUnread={true} />}
+                            {auth.user && <NotificationsBell />}
                             {!auth.user && <LanguageSwitcher />}
                             {!auth.user && <ThemeToggle />}
                         </div>
@@ -234,7 +234,7 @@ export default function Navbar() {
                                         <div className="flex justify-center">
                                             {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
                                         </div>
-                                        <div className="flex justify-center">{auth.user && <NotificationsNavButton hasUnread />}</div>
+                                        <div className="flex justify-center">{auth.user && <NotificationsBell />}</div>
                                         <div className="flex justify-center">
                                             <LanguageSwitcher />
                                         </div>
