@@ -7,7 +7,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { Bell, BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
-import { Fragment, useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type NotificationItem = {
     id: string;
@@ -91,12 +91,9 @@ function Row({ n, onMarkRead }: RowProps) {
     const Wrapper: any = url ? Link : 'div';
     const wrapperProps = url ? { href: url } : {};
 
-    const handleClick = useCallback(
-        (e: React.MouseEvent) => {
-            if (unread && n.id && url) onMarkRead(n.id);
-        },
-        [n.id, unread, url, onMarkRead],
-    );
+    const handleClick = useCallback(() => {
+        if (unread && n.id && url) onMarkRead(n.id);
+    }, [n.id, unread, url, onMarkRead]);
 
     return (
         <Wrapper
@@ -199,38 +196,50 @@ export default function NotificationsBell() {
     const firstOpenRef = useRef(false);
     const isDesktop = useMediaQuery('(min-width: 640px)');
 
+    const [localRecent, setLocalRecent] = useState<NotificationItem[] | null>(null);
+    useEffect(() => {
+        setLocalRecent(recent);
+    }, [recent]);
+
     const ensureLoaded = () => {
-        if (!firstOpenRef.current && isLoggedIn && recent.length === 0) {
+        if (!firstOpenRef.current && isLoggedIn && (localRecent ?? recent).length === 0) {
             firstOpenRef.current = true;
             setLoading(true);
             router.reload({ only: ['notifications'], onFinish: () => setLoading(false) });
         }
     };
 
-    const items = useMemo(() => recent.slice(0, 12), [recent]);
+    const itemsSource = localRecent ?? recent;
+    const items = useMemo(() => itemsSource.filter((n) => !n.read_at).slice(0, 12), [itemsSource]);
     const groups = useMemo(() => groupByDay(items), [items]);
     const hasItems = items.length > 0;
 
     const markAll = () => {
-        router.post(
-            route('notify.read_all'),
-            {},
-            {
-                onSuccess: () => router.reload({ only: ['notifications'] }),
-                preserveScroll: true,
+        setLocalRecent((prev) => (prev ?? recent).map((n) => ({ ...n, read_at: new Date().toISOString() })));
+
+        router.visit(route('notify.readAll'), {
+            method: 'get',
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => router.reload({ only: ['notifications'] }),
+            onError: () => {
+                setLocalRecent(recent);
             },
-        );
+        });
     };
 
     const markOne = (id: string) => {
-        router.post(
-            route('notify.read_one', id),
-            {},
-            {
-                onSuccess: () => router.reload({ only: ['notifications'] }),
-                preserveScroll: true,
+        setLocalRecent((prev) => (prev ?? recent).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
+
+        router.visit(route('notify.read', id), {
+            method: 'get',
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => router.reload({ only: ['notifications'] }),
+            onError: () => {
+                setLocalRecent((prev) => (prev ?? recent).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
             },
-        );
+        });
     };
 
     const EmptyState = (

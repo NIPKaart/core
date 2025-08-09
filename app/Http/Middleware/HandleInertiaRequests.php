@@ -66,7 +66,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'notifications' => fn () => auth()->check() ? [
                 'unread' => auth()->user()->unreadNotifications()->count(),
-                'recent' => auth()->user()->notifications()
+                'recent' => auth()->user()->unreadNotifications()
                     ->latest()
                     ->limit(8)
                     ->get()
