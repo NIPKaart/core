@@ -2,31 +2,31 @@ import { echo } from '@/echo';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
-export function useNotifications(onNew?: (payload: any) => void) {
-    const { props } = usePage();
-    const user = (props as any).auth?.user;
+type PageProps = {
+    notifications?: { unread: number; recent: unknown[] };
+    auth?: { user?: { id: number } | null };
+};
+
+export function useNotifications(onNew?: (payload: unknown) => void) {
+    const { props } = usePage<PageProps>();
+    const userId = props.auth?.user?.id;
 
     useEffect(() => {
-        if (!user?.id) return;
+        if (!userId) return;
 
-        const channelName = `App.Models.User.${user.id}`;
-        const fullName = `private-${channelName}`;
+        const channelName = `App.Models.User.${userId}`;
+        const channel = echo.private(channelName);
 
-        const handler = (notification: any) => {
+        const handler = (notification: unknown) => {
             onNew?.(notification);
-            router.reload({ only: ['auth'] });
+            router.reload({ only: ['notifications'] });
         };
 
-        const channel = echo.private(channelName);
         channel.notification(handler);
 
         return () => {
-            try {
-                channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
-                echo.leave(fullName);
-            } catch {
-                /* no-op */
-            }
+            channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
+            echo.leave(`private-${channelName}`);
         };
-    }, [user?.id, onNew]);
+    }, [userId, onNew]);
 }
