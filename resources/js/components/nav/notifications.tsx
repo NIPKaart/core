@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAuthorization } from '@/hooks/use-authorization';
+import { useNotifications } from '@/hooks/use-notifications';
+import { usePage } from '@inertiajs/react';
 import { Bell } from 'lucide-react';
+import { useState } from 'react';
 
 type Props = {
     hasUnread: boolean;
@@ -9,15 +11,16 @@ type Props = {
 };
 
 export function NotificationsNavButton({ hasUnread }: Props) {
-    const { user } = useAuthorization();
-    // const [open, setOpen] = useState(false);
+    const { props } = usePage();
+    const baseUnread = (props as any).auth?.unread_notifications ?? 0;
+    const [bump, setBump] = useState(false);
 
-    if (!user) return null;
+    useNotifications(() => {
+        setBump(true);
+        setTimeout(() => setBump(false), 800);
+    });
 
-    // function handleClose() {
-    //     setOpen(false);
-    //     closeMobileMenu?.();
-    // }
+    const unread = (props as any).auth?.unread_notifications ?? 0;
 
     return (
         <>
@@ -32,7 +35,7 @@ export function NotificationsNavButton({ hasUnread }: Props) {
                             // onClick={() => setOpen(true)}
                         >
                             <Bell className="h-5 w-5" />
-                            {hasUnread && <span className="absolute top-[6px] right-[6px] h-2 w-2 rounded-full bg-red-500" />}
+                            {unread > 0 && <span className="absolute top-[6px] right-[6px] h-2 w-2 rounded-full bg-red-500" aria-hidden />}
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" align="center">

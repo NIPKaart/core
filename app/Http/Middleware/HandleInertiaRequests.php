@@ -63,6 +63,9 @@ class HandleInertiaRequests extends Middleware
                         ->mapWithKeys(fn ($perm) => [$perm => true])
                         ->all()
                     : [],
+                'unread_notifications' => fn () => $request->user()
+                    ? $request->user()->unreadNotifications()->count()
+                    : 0,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
