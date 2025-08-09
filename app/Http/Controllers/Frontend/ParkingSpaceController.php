@@ -5,17 +5,20 @@ namespace App\Http\Controllers\Frontend;
 use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\Country;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
+use App\Models\User;
+use App\Notifications\NewCommunitySpotSubmitted;
 use App\Traits\FindsOrCreatesMunicipality;
 use App\Traits\FindsOrCreatesProvince;
 use App\Traits\ParsesNominatimAddress;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class ParkingSpaceController extends Controller
@@ -106,6 +109,16 @@ class ParkingSpaceController extends Controller
             ]);
 
             $parkingSpace->save();
+
+            $admins = User::role(['admin', 'moderator'])->get();
+            Notification::send(
+                $admins,
+                new NewCommunitySpotSubmitted(
+                    $parkingSpace->id,
+                    $parkingSpace->street ?: "Spot #{$parkingSpace->id}",
+                    submittedByUserId: Auth::id()
+                )
+            );
 
             return redirect()->route('map');
         } catch (\Throwable $e) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Frontend\ContactController;
 use App\Http\Controllers\Frontend\GarageController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ParkingSpaceController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Profile;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // Notification routes
+    Route::prefix('notifications')->as('notify.')
+        ->controller(NotificationController::class)
+        ->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('{id}/read', 'read')->name('read');
+            Route::get('read/all', 'readAll')->name('readAll');
+            Route::delete('{id}/remove', 'remove')->name('remove');
+            Route::get('remove/all', 'removeAll')->name('removeAll');
+        });
 
     // Profile routes
     Route::prefix('profile')->as('profile.')->group(function () {
