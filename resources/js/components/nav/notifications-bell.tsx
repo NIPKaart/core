@@ -306,7 +306,7 @@ export default function NotificationsBell() {
                 <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="z-50 w-[min(92vw,32rem)] rounded-2xl border bg-background p-0 shadow-sm sm:w-[32rem]"
+                    className="z-50 w-[min(92vw,28rem)] rounded-2xl border bg-background p-0 shadow-sm sm:w-[28rem]"
                 >
                     <div className="flex items-center justify-between px-4 py-3">
                         <DropdownMenuLabel className="p-0 text-base font-semibold">Notifications</DropdownMenuLabel>
