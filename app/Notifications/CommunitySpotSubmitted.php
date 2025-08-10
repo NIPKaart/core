@@ -37,7 +37,6 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'title' => __('notifications.types.community_spot_submitted'),
             'type' => 'community_spot_submitted',
             'spot_id' => $this->spotId,
             'spot_label' => $this->spotLabel,
@@ -52,7 +51,6 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'title' => __('notifications.types.community_spot_submitted'),
             'id' => (string) \Str::uuid(),
             'type' => 'community_spot_submitted',
             'spot_id' => $this->spotId,

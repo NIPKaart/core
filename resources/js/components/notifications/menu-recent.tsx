@@ -4,14 +4,21 @@ import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { Fragment, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type NotificationItem = {
     id: string;
-    type?: string;
-    title: string;
-    data?: Record<string, unknown>;
-    read_at?: string | null;
-    created_at?: string;
+    type: string;
+    data: {
+        type: string;
+        title_key: string;
+        spot_id: string;
+        spot_label: string;
+        submitted_by?: number;
+        url?: string;
+    }
+    read_at: string | null;
+    created_at: string;
 };
 
 type NotificationsMenuProps = {
@@ -67,8 +74,8 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
     const spotLabel = getStr(n.data?.['spot_label']);
     const unread = !n.read_at;
     const Icon = TYPE_ICON[n.type ?? 'default'] ?? TYPE_ICON.default;
+    const { t } = useTranslation('global/notification');
 
-    // Gescheiden handlers (geen union → geen TS-mismatch)
     const handleLinkClick = (e: React.MouseEvent<Element>) => {
         if (unread) onMarkOne(n.id);
     };
@@ -97,7 +104,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
 
                 <div className="min-w-0">
                     <div className="flex items-start gap-2 pr-8">
-                        <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{n.title}</span>
+                        <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{t(`types.${n.data.type}`)}</span>
                     </div>
                     {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
 

@@ -70,23 +70,18 @@ class HandleInertiaRequests extends Middleware
                     ->latest()
                     ->limit(8)
                     ->get()
-                    ->map(function ($n) {
-                        $data = (array) $n->data;
-
-                        return [
-                            'id' => (string) $n->id,
-                            'type' => $n->type,
-                            'title' => $data['title'] ?? __('notifications.types.default'),
-                            'data' => $data,
-                            'read_at' => optional($n->read_at)?->toIso8601String(),
-                            'created_at' => optional($n->created_at)?->toIso8601String(),
-                        ];
-                    }),
+                    ->map(fn ($n) => [
+                        'id' => (string) $n->id,
+                        'type' => $n->type,
+                        'data' => (array) $n->data,
+                        'read_at' => optional($n->read_at)?->toIso8601String(),
+                        'created_at' => optional($n->created_at)?->toIso8601String(),
+                    ]),
             ] : ['unread' => 0, 'recent' => []],
             'ziggy' => fn (): array => [
-                            ...(new Ziggy)->toArray(),
-                            'location' => $request->url(),
-                        ],
+                ...(new Ziggy)->toArray(),
+                'location' => $request->url(),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'counts' => function () {
                 return [

@@ -1,0 +1,7 @@
+{
+    "types": {
+        "community_spot_submitted": "Nieuwe community-plek toegevoegd",
+        "community_spot_status_changed": "Status van je plek is gewijzigd",
+        "default": "Melding"
+    }
+}
