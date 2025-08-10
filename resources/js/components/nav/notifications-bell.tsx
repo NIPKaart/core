@@ -88,28 +88,33 @@ function Row({ n, onMarkRead }: RowProps) {
     const unread = !n.read_at;
     const Icon = TYPE_ICON[n.type ?? 'default'] ?? TYPE_ICON.default;
 
-    const Wrapper: any = url ? Link : 'div';
-    const wrapperProps = url ? { href: url } : {};
+    const handleLinkClick = useCallback(
+        (e: React.MouseEvent<Element>) => {
+            if (unread && n.id && url) onMarkRead(n.id);
+        },
+        [unread, n.id, url, onMarkRead],
+    );
 
-    const handleClick = useCallback(() => {
-        if (unread && n.id && url) onMarkRead(n.id);
-    }, [n.id, unread, url, onMarkRead]);
+    const handleDivClick = useCallback<React.MouseEventHandler<HTMLDivElement>>(
+        (e) => {
+            if (unread && n.id) onMarkRead(n.id);
+        },
+        [unread, n.id, onMarkRead],
+    );
 
-    return (
-        <Wrapper
-            {...(wrapperProps as any)}
-            onClick={handleClick}
-            className={cn(
-                'group relative block rounded-xl border p-3 transition',
-                'bg-card hover:border-accent/50 hover:bg-accent/40',
-                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
-            )}
-        >
+    const commonClassName = cn(
+        'group relative block rounded-xl border p-3 transition',
+        'bg-card hover:border-accent/50 hover:bg-accent/40',
+        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
+    );
+
+    const inner = (
+        <>
             {/* Unread dot */}
             <span aria-hidden className={cn('absolute top-2 left-2 h-2 w-2 rounded-full', unread ? 'bg-primary' : 'bg-transparent')} />
 
             <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3">
-                {/* Leading icon */}
+                {/* Icon */}
                 <div
                     className={cn(
                         'mt-0.5 flex h-8 w-8 items-center justify-center rounded-md',
@@ -126,7 +131,7 @@ function Row({ n, onMarkRead }: RowProps) {
                     </div>
                     {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
 
-                    {/* Quick actions strip */}
+                    {/* Quick actions */}
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
                         {unread && (
                             <button
@@ -148,9 +153,7 @@ function Row({ n, onMarkRead }: RowProps) {
                             <Link
                                 href={url}
                                 className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                }}
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 Open
                                 <ChevronRight className="h-3.5 w-3.5" />
@@ -181,15 +184,27 @@ function Row({ n, onMarkRead }: RowProps) {
                     )}
                 </div>
             </div>
-        </Wrapper>
+        </>
+    );
+
+    return url ? (
+        <Link href={url} onClick={handleLinkClick} className={commonClassName}>
+            {inner}
+        </Link>
+    ) : (
+        <div onClick={handleDivClick} className={commonClassName}>
+            {inner}
+        </div>
     );
 }
 
 export default function NotificationsBell() {
     const { props } = usePage<PageProps>();
-    const unread = props.notifications?.unread ?? 0;
-    const recent = props.notifications?.recent ?? [];
     const isLoggedIn = !!props.auth?.user?.id;
+
+    const notifications = props.notifications;
+    const recentFromProps = useMemo(() => notifications?.recent ?? [], [notifications]);
+    const unread = notifications?.unread ?? 0;
 
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
@@ -198,24 +213,25 @@ export default function NotificationsBell() {
 
     const [localRecent, setLocalRecent] = useState<NotificationItem[] | null>(null);
     useEffect(() => {
-        setLocalRecent(recent);
-    }, [recent]);
+        setLocalRecent(recentFromProps);
+    }, [recentFromProps]);
 
     const ensureLoaded = () => {
-        if (!firstOpenRef.current && isLoggedIn && (localRecent ?? recent).length === 0) {
+        const source = localRecent ?? recentFromProps;
+        if (!firstOpenRef.current && isLoggedIn && source.length === 0) {
             firstOpenRef.current = true;
             setLoading(true);
             router.reload({ only: ['notifications'], onFinish: () => setLoading(false) });
         }
     };
 
-    const itemsSource = localRecent ?? recent;
+    const itemsSource = localRecent ?? recentFromProps;
     const items = useMemo(() => itemsSource.filter((n) => !n.read_at).slice(0, 12), [itemsSource]);
     const groups = useMemo(() => groupByDay(items), [items]);
     const hasItems = items.length > 0;
 
     const markAll = () => {
-        setLocalRecent((prev) => (prev ?? recent).map((n) => ({ ...n, read_at: new Date().toISOString() })));
+        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => ({ ...n, read_at: new Date().toISOString() })));
 
         router.visit(route('notify.readAll'), {
             method: 'get',
@@ -223,13 +239,13 @@ export default function NotificationsBell() {
             preserveState: true,
             onSuccess: () => router.reload({ only: ['notifications'] }),
             onError: () => {
-                setLocalRecent(recent);
+                setLocalRecent(recentFromProps);
             },
         });
     };
 
     const markOne = (id: string) => {
-        setLocalRecent((prev) => (prev ?? recent).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
+        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
         router.visit(route('notify.read', id), {
             method: 'get',
@@ -237,7 +253,7 @@ export default function NotificationsBell() {
             preserveState: true,
             onSuccess: () => router.reload({ only: ['notifications'] }),
             onError: () => {
-                setLocalRecent((prev) => (prev ?? recent).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+                setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
             },
         });
     };
@@ -310,7 +326,7 @@ export default function NotificationsBell() {
                 >
                     <div className="flex items-center justify-between px-4 py-3">
                         <DropdownMenuLabel className="p-0 text-base font-semibold">Notifications</DropdownMenuLabel>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={markAll} disabled={unread === 0}>
+                        <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs" onClick={markAll} disabled={unread === 0}>
                             <Check className="mr-1 h-3.5 w-3.5" />
                             Mark all
                         </Button>
