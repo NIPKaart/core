@@ -29,6 +29,7 @@ class NotificationController extends Controller
     public function readAll(Request $request)
     {
         $request->user()->unreadNotifications->markAsRead();
+
         return back()->with('success', __('Marked all as read'));
     }
 
@@ -38,18 +39,21 @@ class NotificationController extends Controller
         if (is_null($n->read_at)) {
             $n->markAsRead();
         }
+
         return back()->with('success', __('Marked as read'));
     }
 
     public function remove(Request $request, string $id)
     {
         $request->user()->notifications()->where('id', $id)->delete();
+
         return back()->with('success', __('Deleted'));
     }
 
     public function removeAll(Request $request)
     {
         $request->user()->notifications()->delete();
+
         return back()->with('success', __('Deleted all notifications'));
     }
 }

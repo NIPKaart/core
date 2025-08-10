@@ -2,7 +2,7 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { router } from '@inertiajs/react';
-import NotificationsBell from './nav/notifications-bell';
+import BellBadge from './notifications/badge-bell';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
@@ -13,7 +13,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             </div>
 
             <div className="ml-auto flex items-center gap-2">
-                <NotificationsBell />
+                <BellBadge />
             </div>
         </header>
     );
