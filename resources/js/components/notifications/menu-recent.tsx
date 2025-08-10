@@ -76,10 +76,10 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
     const Icon = TYPE_ICON[n.type ?? 'default'] ?? TYPE_ICON.default;
     const { t } = useTranslation('global/notification');
 
-    const handleLinkClick = (e: React.MouseEvent<Element>) => {
+    const handleLinkClick: React.MouseEventHandler<Element> = () => {
         if (unread) onMarkOne(n.id);
     };
-    const handleDivClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const handleDivClick: React.MouseEventHandler<HTMLDivElement> = () => {
         if (unread) onMarkOne(n.id);
     };
 
