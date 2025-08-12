@@ -28,6 +28,9 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        if ((int) $notifiable->getKey() === (int) $this->submittedByUserId) {
+            return [];
+        }
         return ['database', 'broadcast'];
     }
 
