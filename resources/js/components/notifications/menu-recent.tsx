@@ -1,9 +1,8 @@
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
-import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { isToday, isYesterday } from 'date-fns';
 import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
-import { Fragment, useMemo } from 'react';
+import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type NotificationItem = {
@@ -16,7 +15,8 @@ export type NotificationItem = {
         spot_label: string;
         submitted_by?: number;
         url?: string;
-    }
+        title_params?: Record<string, unknown>;
+    };
     read_at: string | null;
     created_at: string;
 };
@@ -36,19 +36,55 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     default: BellRing,
 };
 
-function relDayLabel(date: Date) {
-    if (isToday(date)) return 'Today';
-    if (isYesterday(date)) return 'Yesterday';
-    return format(date, 'EEEE, MMM d', { locale: enUS });
+function useI18nDates(ns = 'global/notification') {
+    const { t, i18n } = useTranslation(ns);
+
+    const dateFmt = useMemo(
+        () =>
+            new Intl.DateTimeFormat(i18n.language, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            }),
+        [i18n.language],
+    );
+
+    const relDayLabel = useCallback(
+        (d: Date) => {
+            if (isToday(d)) return t('relative.today');
+            if (isYesterday(d)) return t('relative.yesterday');
+            return dateFmt.format(d);
+        },
+        [dateFmt, t],
+    );
+
+    const rtf = useMemo(() => new Intl.RelativeTimeFormat(i18n.language, { numeric: 'auto' }), [i18n.language]);
+
+    const timeAgo = useCallback(
+        (iso: string) => {
+            const now = Date.now();
+            const then = new Date(iso).getTime();
+
+            let diff = Math.round((then - now) / 1000);
+            const abs = Math.abs(diff);
+            if (abs >= 86400) return rtf.format(Math.trunc(diff / 86400), 'day');
+            if (abs >= 3600) return rtf.format(Math.trunc(diff / 3600), 'hour');
+            if (abs >= 60) return rtf.format(Math.trunc(diff / 60), 'minute');
+            return rtf.format(diff, 'second');
+        },
+        [rtf],
+    );
+
+    return { t, relDayLabel, timeAgo };
 }
 
-function groupByDay(items: NotificationItem[]) {
+function groupByDay(items: NotificationItem[], labeler: (d: Date) => string) {
     const groups: Record<string, NotificationItem[]> = {};
     for (const n of items) {
         const d = n.created_at ? new Date(n.created_at) : new Date();
-        const key = relDayLabel(d);
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(n);
+        const key = labeler(d);
+        (groups[key] ??= []).push(n);
     }
     return groups;
 }
@@ -70,11 +106,12 @@ function SkeletonRow() {
 }
 
 function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) => void }) {
+    const { t, timeAgo } = useI18nDates('global/notification');
     const url = getStr(n.data?.['url']);
     const spotLabel = getStr(n.data?.['spot_label']);
     const unread = !n.read_at;
     const Icon = TYPE_ICON[n.type ?? 'default'] ?? TYPE_ICON.default;
-    const { t } = useTranslation('global/notification');
+    const title = t(`types.${n.data.type}`, { defaultValue: t('types.default') });
 
     const handleLinkClick: React.MouseEventHandler<Element> = () => {
         if (unread) onMarkOne(n.id);
@@ -104,7 +141,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
 
                 <div className="min-w-0">
                     <div className="flex items-start gap-2 pr-8">
-                        <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{t(`types.${n.data.type}`)}</span>
+                        <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{title}</span>
                     </div>
                     {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
 
@@ -121,7 +158,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             >
                                 <span className="inline-flex items-center gap-1">
                                     <Check className="h-3.5 w-3.5" />
-                                    Mark as read
+                                    {t('actions.markRead')}
                                 </span>
                             </button>
                         )}
@@ -131,7 +168,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                                 className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                Open
+                                {t('actions.open')}
                                 <ChevronRight className="h-3.5 w-3.5" />
                             </Link>
                         )}
@@ -140,15 +177,20 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
 
                 <div className="mt-0.5 flex items-center">
                     {n.created_at && (
-                        <time className="text-[11px] text-muted-foreground" dateTime={n.created_at} title={new Date(n.created_at).toLocaleString()}>
-                            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        <time
+                            className="text-[11px] text-muted-foreground"
+                            dateTime={n.created_at}
+                            title={new Date(n.created_at).toLocaleString()}
+                            aria-label={timeAgo(n.created_at)}
+                        >
+                            {timeAgo(n.created_at)}
                         </time>
                     )}
                     {unread && (
                         <button
                             type="button"
                             className="ml-1 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
-                            aria-label="Mark as read"
+                            aria-label={t('actions.markRead')}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -175,15 +217,16 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
 }
 
 export function NotificationsMenu({ items, loading = false, onMarkOne }: NotificationsMenuProps) {
-    const groups = useMemo(() => groupByDay(items), [items]);
+    const { t, relDayLabel } = useI18nDates('global/notification');
+    const groups = useMemo(() => groupByDay(items, (d) => relDayLabel(d)), [items, relDayLabel]);
 
     const EmptyState = (
         <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-sm text-muted-foreground">
             <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-card">
                 <Inbox className="h-5 w-5" />
             </div>
-            <div className="text-base font-medium text-foreground">No notifications yet</div>
-            <div className="max-w-xs text-xs">When there’s activity on your spots, you’ll see it here.</div>
+            <div className="text-base font-medium text-foreground">{t('empty.title')}</div>
+            <div className="max-w-xs text-xs">{t('empty.subtitle')}</div>
         </div>
     );
 

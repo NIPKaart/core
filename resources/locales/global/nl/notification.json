@@ -3,5 +3,23 @@
         "community_spot_submitted": "Nieuwe community-plek toegevoegd",
         "community_spot_status_changed": "Status van je plek is gewijzigd",
         "default": "Melding"
+    },
+    "actions": {
+        "markRead": "Markeren als gelezen",
+        "open": "Openen",
+        "viewAll": "Alles bekijken",
+        "markAll": "Alles markeren"
+    },
+    "empty": {
+        "title": "Nog geen meldingen",
+        "subtitle": "Zodra er activiteit is rondom je plekken, zie je dat hier."
+    },
+    "relative": {
+        "today": "Vandaag",
+        "yesterday": "Gisteren"
+    },
+    "header": {
+        "title": "Meldingen",
+        "subtitle": "Recente activiteit"
     }
 }
