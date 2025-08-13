@@ -1,0 +1,25 @@
+{
+    "types": {
+        "community_spot_submitted": "New community spot submitted",
+        "community_spot_status_changed": "Your spot status changed",
+        "default": "Notification"
+    },
+    "actions": {
+        "markRead": "Markeren als gelezen",
+        "open": "Openen",
+        "viewAll": "Alles bekijken",
+        "markAll": "Alles markeren"
+    },
+    "empty": {
+        "title": "Nog geen meldingen",
+        "subtitle": "Zodra er activiteit is rondom je plekken, zie je dat hier."
+    },
+    "relative": {
+        "today": "Vandaag",
+        "yesterday": "Gisteren"
+    },
+    "header": {
+        "title": "Meldingen",
+        "subtitle": "Recente activiteit"
+    }
+}
