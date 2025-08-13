@@ -45,7 +45,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
 
     const EmptyState = (
         <div className="mt-8 mb-10 flex flex-col items-center justify-center gap-3 px-8 text-center">
-            <HeartCrack className="h-10 w-10 text-red-500" fill="#ef4444" />
+            <HeartCrack className="h-10 w-10 text-red-500" />
             <div className="font-semibold text-muted-foreground">{t('empty.title')}</div>
             <div className="text-sm text-zinc-500">{t('empty.description')}</div>
         </div>
