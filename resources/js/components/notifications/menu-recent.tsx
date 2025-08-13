@@ -144,7 +144,6 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                         <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{title}</span>
                     </div>
 
-                    {/* ▼ Relative time onder de titel in drawer/mobiel */}
                     {n.created_at && (
                         <div className="mt-0.5 text-[11px] text-muted-foreground sm:hidden">
                             <time dateTime={n.created_at} title={new Date(n.created_at).toLocaleString()} aria-label={timeAgo(n.created_at)}>
