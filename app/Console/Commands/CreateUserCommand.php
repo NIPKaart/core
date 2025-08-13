@@ -48,6 +48,7 @@ class CreateUserCommand extends Command
         // Validate user account existence
         if (User::where('email', $email)->exists()) {
             $this->error("A user with email {$email} already exists.");
+
             return Command::FAILURE;
         }
 
@@ -56,6 +57,7 @@ class CreateUserCommand extends Command
             $role = Role::findByName($roleName);
         } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
             $this->error("The role '{$roleName}' does not exist.");
+
             return Command::FAILURE;
         }
 
@@ -68,9 +70,10 @@ class CreateUserCommand extends Command
 
         $this->info("User {$name} <{$email}> created and assigned role '{$roleName}'.");
         $this->newLine();
-        $this->info("✅ Login credentials:");
+        $this->info('✅ Login credentials:');
         $this->line("Email: {$email}");
         $this->line("Password: {$password}");
+
         return Command::SUCCESS;
     }
 }
