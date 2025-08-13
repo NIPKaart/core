@@ -141,11 +141,12 @@ export default function BellBadge() {
             {/* Drawer for mobile view */}
             <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
                 <DrawerContent className="p-0">
-                    <DrawerHeader className="flex items-center text-center justify-between border-b px-4 py-3">
-                        <div>
-                            <DrawerTitle className="text-base font-semibold">{t('header.title')}</DrawerTitle>
-                            <DrawerDescription>{t('header.subtitle')}</DrawerDescription>
+                    <DrawerHeader className="flex items-center justify-between border-b px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2 text-center">
+                            <Bell className="h-6 w-6" />
+                            <DrawerTitle className="text-lg font-semibold">{t('header.title')}</DrawerTitle>
                         </div>
+                        <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">{t('header.subtitle')}</DrawerDescription>
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={markAll} disabled={unreadCount === 0}>
                             <Check className="mr-1 h-3.5 w-3.5" />
                             {t('actions.markAll')}

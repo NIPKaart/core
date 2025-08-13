@@ -8,11 +8,11 @@
         "markRead": "Markeren als gelezen",
         "open": "Openen",
         "viewAll": "Alles bekijken",
-        "markAll": "Alles markeren"
+        "markAll": "Alles markeren als gelezen"
     },
     "empty": {
         "title": "Nog geen meldingen",
-        "subtitle": "Zodra er activiteit is rondom je plekken, zie je dat hier."
+        "subtitle": "Alle meldingen verschijnen hier wanneer er iets te melden is."
     },
     "relative": {
         "today": "Vandaag",
@@ -20,6 +20,6 @@
     },
     "header": {
         "title": "Meldingen",
-        "subtitle": "Recente activiteit"
+        "subtitle": "Jouw recente meldingen of activiteiten"
     }
 }
