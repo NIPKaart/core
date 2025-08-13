@@ -5,21 +5,21 @@
         "default": "Notification"
     },
     "actions": {
-        "markRead": "Markeren als gelezen",
-        "open": "Openen",
-        "viewAll": "Alles bekijken",
-        "markAll": "Alles markeren"
+        "markRead": "Mark as read",
+        "open": "Open",
+        "viewAll": "View all",
+        "markAll": "Mark all as read"
     },
     "empty": {
-        "title": "Nog geen meldingen",
-        "subtitle": "Zodra er activiteit is rondom je plekken, zie je dat hier."
+        "title": "No notifications yet",
+        "subtitle": "All notifications will appear here when there is something to tell."
     },
     "relative": {
-        "today": "Vandaag",
-        "yesterday": "Gisteren"
+        "today": "Today",
+        "yesterday": "Yesterday"
     },
     "header": {
-        "title": "Meldingen",
-        "subtitle": "Recente activiteit"
+        "title": "Notifications",
+        "subtitle": "Your recent notifications or activity"
     }
 }

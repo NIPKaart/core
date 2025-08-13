@@ -118,10 +118,10 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
 
     // ---- Mobile Drawer ----
     return (
-        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
+        <Drawer open={open} onOpenChange={(value) => !value && onClose()}>
             <DrawerContent className="mx-auto max-w-lg bg-white dark:bg-zinc-950">
                 <DrawerHeader>
-                    <div className="flex items-center gap-2">
+                    <div className="flex justify-center text-center items-center gap-2">
                         <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
                         <DrawerTitle className="text-lg font-semibold">{t('title')}</DrawerTitle>
                     </div>

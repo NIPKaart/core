@@ -64,11 +64,24 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Mobile menu button */}
-                    <div className="relative z-50 flex lg:hidden">
+                    {/* Mobile actions (favorites, notifications, hamburger) */}
+                    <div className="relative z-50 flex items-center gap-2 lg:hidden">
+                        {auth.user && (
+                            <div className="flex items-center gap-1 me-1">
+                                <div className="relative flex min-w-8 justify-center">
+                                    <FavoritesNavButton />
+                                </div>
+                                <div className="relative flex min-w-8 justify-center">
+                                    <BellBadge />
+                                </div>
+                            </div>
+                        )}
+
                         <button
                             onClick={() => setMobileMenuOpen((prev) => !prev)}
                             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
+                            aria-expanded={mobileMenuOpen}
+                            aria-controls="mobile-nav"
                         >
                             <span className="sr-only">Toggle menu</span>
                             <Icon iconNode={mobileMenuOpen ? X : Menu} className="size-6 transition-transform duration-200" />
@@ -205,6 +218,7 @@ export default function Navbar() {
                             )}
                         </Accordion>
 
+                        {/* Compact utilities under the menu */}
                         <div className="mt-4 flex flex-col gap-4 border-t border-gray-200 px-4 pt-4 dark:border-gray-700">
                             {auth.user ? (
                                 <>
@@ -230,17 +244,9 @@ export default function Navbar() {
                                         </Link>
                                     </div>
 
-                                    <div className="mt-4 grid grid-cols-4 px-4">
-                                        <div className="flex justify-center">
-                                            {auth.user && <FavoritesNavButton closeMobileMenu={() => setMobileMenuOpen(false)} />}
-                                        </div>
-                                        <div className="flex justify-center">{auth.user && <BellBadge />}</div>
-                                        <div className="flex justify-center">
-                                            <LanguageSwitcher />
-                                        </div>
-                                        <div className="flex justify-center">
-                                            <ThemeToggle />
-                                        </div>
+                                    <div className="mt-4 flex justify-center gap-4">
+                                        <LanguageSwitcher />
+                                        <ThemeToggle />
                                     </div>
                                 </>
                             ) : (
