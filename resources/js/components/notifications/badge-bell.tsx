@@ -6,7 +6,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NotificationItem, NotificationsMenu } from './menu-recent';
+import { NotificationItem, NotificationsMenu } from './list-notifications';
 
 type PageProps = {
     auth?: { user?: { id: number } | null };

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { Favorite } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Heart, Landmark, MapPin, Warehouse } from 'lucide-react';
+import { HeartCrack, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -53,7 +53,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
 
                 {filtered.length === 0 ? (
                     <div className="mt-16 flex flex-col items-center justify-center gap-4 text-center">
-                        <Heart className="mb-2 h-10 w-10 text-red-500" fill="#ef4444" />
+                        <HeartCrack className="mb-2 h-10 w-10 text-red-500" />
                         <span className="text-lg font-semibold text-muted-foreground">{t('favorites.empty.title')}</span>
                         <span className="text-sm text-muted-foreground">{t('favorites.empty.subtitle')}</span>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
@@ -86,12 +86,18 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                     </span>
                                                 )}
                                             </CardTitle>
-                                            <CardDescription className="mt-0.5 text-xs capitalize">{t(`favorites.types.${fav.type.toLowerCase()}`)}</CardDescription>
+                                            <CardDescription className="mt-0.5 text-xs capitalize">
+                                                {t(`favorites.types.${fav.type.toLowerCase()}`)}
+                                            </CardDescription>
                                         </div>
                                     </CardHeader>
                                     <CardFooter className="mt-2 flex items-center justify-between border-t pt-4">
                                         <div className="flex flex-col text-xs text-zinc-500">
-                                            {fav.country && <span>{t('common.fields.country')}: {fav.country}</span>}
+                                            {fav.country && (
+                                                <span>
+                                                    {t('common.fields.country')}: {fav.country}
+                                                </span>
+                                            )}
                                         </div>
                                         <Button asChild size="sm" variant="outline" className="ml-auto" title="View on map">
                                             <a href={`/map#18/${fav.latitude}/${fav.longitude}`} rel="noopener noreferrer">
