@@ -138,9 +138,10 @@ export default function BellBadge() {
                 )}
             </Button>
 
+            {/* Drawer for mobile view */}
             <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
                 <DrawerContent className="p-0">
-                    <DrawerHeader className="flex items-center justify-between border-b px-4 py-3">
+                    <DrawerHeader className="flex items-center text-center justify-between border-b px-4 py-3">
                         <div>
                             <DrawerTitle className="text-base font-semibold">{t('header.title')}</DrawerTitle>
                             <DrawerDescription>{t('header.subtitle')}</DrawerDescription>

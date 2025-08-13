@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
 import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
@@ -143,6 +143,16 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                     <div className="flex items-start gap-2 pr-8">
                         <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{title}</span>
                     </div>
+
+                    {/* ▼ Relative time onder de titel in drawer/mobiel */}
+                    {n.created_at && (
+                        <div className="mt-0.5 text-[11px] text-muted-foreground sm:hidden">
+                            <time dateTime={n.created_at} title={new Date(n.created_at).toLocaleString()} aria-label={timeAgo(n.created_at)}>
+                                {timeAgo(n.created_at)}
+                            </time>
+                        </div>
+                    )}
+
                     {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
@@ -163,14 +173,18 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             </button>
                         )}
                         {url && (
-                            <Link
-                                href={url}
+                            <button
+                                type="button"
                                 className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    router.visit(url);
+                                }}
                             >
                                 {t('actions.open')}
                                 <ChevronRight className="h-3.5 w-3.5" />
-                            </Link>
+                            </button>
                         )}
                     </div>
                 </div>
@@ -178,7 +192,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                 <div className="mt-0.5 flex items-center">
                     {n.created_at && (
                         <time
-                            className="text-[11px] text-muted-foreground"
+                            className="hidden text-[11px] text-muted-foreground sm:inline"
                             dateTime={n.created_at}
                             title={new Date(n.created_at).toLocaleString()}
                             aria-label={timeAgo(n.created_at)}
