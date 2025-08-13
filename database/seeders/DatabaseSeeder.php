@@ -15,10 +15,10 @@ class DatabaseSeeder extends Seeder
             PermissionsTableSeeder::class,
             CountrySeeder::class,
             ProvinceSeeder::class,
-            # UserTableSeeder::class,
+            // UserTableSeeder::class,
 
-            # MunicipalityWithParkingSeeder::class,
-            # MunicipalityWithOffstreetSeeder::class,
+            // MunicipalityWithParkingSeeder::class,
+            // MunicipalityWithOffstreetSeeder::class,
         ]);
     }
 }

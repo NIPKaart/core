@@ -28,14 +28,16 @@ class ClearLogsCommand extends Command
     {
         $logPath = storage_path('logs/laravel.log');
 
-        if (!File::exists($logPath)) {
+        if (! File::exists($logPath)) {
             $this->info('Log file does not exist.');
+
             return Command::SUCCESS;
         }
 
         File::put($logPath, '');
 
         $this->info('Log file cleared successfully.');
+
         return Command::SUCCESS;
     }
 }
