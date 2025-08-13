@@ -4,7 +4,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Favorite } from '@/types';
-import { Heart, Landmark, MapPin, Warehouse, X } from 'lucide-react';
+import { Heart, HeartCrack, Landmark, MapPin, Warehouse, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -45,7 +45,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
 
     const EmptyState = (
         <div className="mt-8 mb-10 flex flex-col items-center justify-center gap-3 px-8 text-center">
-            <Heart className="h-10 w-10 text-red-500" fill="#ef4444" />
+            <HeartCrack className="h-10 w-10 text-red-500" fill="#ef4444" />
             <div className="font-semibold text-muted-foreground">{t('empty.title')}</div>
             <div className="text-sm text-zinc-500">{t('empty.description')}</div>
         </div>
@@ -121,7 +121,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
         <Drawer open={open} onOpenChange={(value) => !value && onClose()}>
             <DrawerContent className="mx-auto max-w-lg bg-white dark:bg-zinc-950">
                 <DrawerHeader>
-                    <div className="flex justify-center text-center items-center gap-2">
+                    <div className="flex items-center justify-center gap-2 text-center">
                         <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
                         <DrawerTitle className="text-lg font-semibold">{t('title')}</DrawerTitle>
                     </div>
