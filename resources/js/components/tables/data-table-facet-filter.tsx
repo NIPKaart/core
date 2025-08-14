@@ -58,7 +58,7 @@ export function DataTableFacetFilter({ title, selected, options, onChange, onCle
                     )}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0" align="start">
+            <PopoverContent className="w-full p-0" align="start">
                 <Command>
                     <CommandInput placeholder={`Filter ${title.toLowerCase()}...`} />
                     <CommandList>
