@@ -3,7 +3,6 @@ import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem, NotificationItem, PaginatedResponse } from '@/types';
@@ -21,7 +20,6 @@ type PageProps = {
 
 export default function NotificationsIndex({ notificationList, filters, options }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/notifications');
-    const { can } = useAuthorization();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [selectedAction, setSelectedAction] = useState<string | ''>('');
@@ -59,7 +57,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
         router.get(route('notifications.index'), query, { preserveScroll: true, preserveState: true });
     };
 
-    const columns = useMemo(() => getNotificationColumns(can, { t, tGlobal }), [can, t, tGlobal]);
+    const columns = getNotificationColumns({ t, tGlobal });
 
     const handleBulkAction = () => {
         const ids: string[] = notificationList.data.filter((_, index) => rowSelection[index]).map((n) => n.id);

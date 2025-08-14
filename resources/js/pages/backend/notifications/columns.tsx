@@ -19,23 +19,15 @@ const readVariantMap: Record<'read' | 'unread', 'secondary' | 'default'> = {
     unread: 'default',
 };
 
-function resolveTitle(n: NotificationItem, t: Translations['t']): string {
-    const type = n.type || 'system_announcement';
-    const params =
-        ((n.data as any)?.params as Record<string, unknown>) ??
-        ({
-            spot_label: (n.data as any)?.spot_label ?? (n.data as any)?.spot_name ?? (n.data as any)?.label ?? undefined,
-        } as Record<string, unknown>);
+const dtf = new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+});
 
-    const key = `titles.${type}`;
-    const translated = t(key, params);
-    if (!translated || translated === key) {
-        return t('table.untitled');
-    }
-    return translated;
-}
-
-export function getNotificationColumns(can: (permission: string) => boolean, { t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {
+export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {
     return [
         {
             id: 'select',
@@ -64,18 +56,22 @@ export function getNotificationColumns(can: (permission: string) => boolean, { t
             enableHiding: false,
             cell: ({ row }) => {
                 const n = row.original;
-                const title = resolveTitle(n, t);
-                const url = (n.data as any)?.url;
 
-                if (typeof url === 'string' && url.length > 0) {
-                    return (
-                        <Link href={url} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
-                            {title}
-                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                        </Link>
-                    );
-                }
-                return title;
+                const raw = (n as { data?: unknown }).data;
+                const data = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : undefined;
+                const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
+
+                const key = n.type ? `titles.${n.type}` : '';
+                const title = (n as { title?: string }).title?.trim() || (key ? t(key) : '') || t('table.untitled');
+
+                return url ? (
+                    <Link href={url} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
+                        {title}
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Link>
+                ) : (
+                    title
+                );
             },
         },
         {
@@ -83,7 +79,7 @@ export function getNotificationColumns(can: (permission: string) => boolean, { t
             header: t('table.type'),
             cell: ({ row }) => {
                 const type = row.original.type ?? '—';
-                const label = t(`types.${type}`, type);
+                const label = t(`types.${type}`) || type;
                 return <Badge variant="outline">{label}</Badge>;
             },
         },
@@ -99,18 +95,9 @@ export function getNotificationColumns(can: (permission: string) => boolean, { t
             accessorKey: 'created_at',
             header: t('table.createdAt'),
             cell: ({ row }) => {
-                const date = new Date(row.original.created_at);
-                return (
-                    <span className="text-muted-foreground">
-                        {date.toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                        })}
-                    </span>
-                );
+                const s = row.original.created_at;
+                const d = s ? new Date(s) : null;
+                return <span className="text-muted-foreground">{d ? dtf.format(d) : '—'}</span>;
             },
         },
         {
@@ -121,6 +108,10 @@ export function getNotificationColumns(can: (permission: string) => boolean, { t
             cell: ({ row }) => {
                 const n = row.original;
                 const isUnread = !n.read_at;
+
+                const raw = (n as { data?: unknown }).data;
+                const data = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : undefined;
+                const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
 
                 return (
                     <div className="flex justify-end">
@@ -139,9 +130,9 @@ export function getNotificationColumns(can: (permission: string) => boolean, { t
                             <DropdownMenuContent align="end" className="w-full">
                                 <DropdownMenuLabel>{tGlobal('common.actions')}</DropdownMenuLabel>
 
-                                {(n.data as any)?.url && typeof (n.data as any).url === 'string' && (
+                                {url && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={(n.data as any).url}>{t('table.actions.open')}</Link>
+                                        <Link href={url}>{t('table.actions.open')}</Link>
                                     </DropdownMenuItem>
                                 )}
 
