@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -18,7 +19,7 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function __construct(
         public string $spotId,
         public string $spotLabel,
-        public int $submittedByUserId
+        public ?int $submittedByUserId = null
     ) {}
 
     /**
@@ -28,9 +29,13 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        if ((int) $notifiable->getKey() === (int) $this->submittedByUserId) {
+        if (
+            $this->submittedByUserId !== null &&
+            (int) $notifiable->getKey() === (int) $this->submittedByUserId
+        ) {
             return [];
         }
+
         return ['database', 'broadcast'];
     }
 
@@ -40,11 +45,15 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'type' => 'community_spot_submitted',
-            'spot_id' => $this->spotId,
-            'spot_label' => $this->spotLabel,
-            'submitted_by' => $this->submittedByUserId,
-            'url' => route('app.parking-spaces.show', $this->spotId),
+            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'params' => [
+                'spot_label' => $this->spotLabel,
+            ],
+            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'meta' => [
+                'spot_id' => $this->spotId,
+                'submitted_by' => $this->submittedByUserId,
+            ],
         ]);
     }
 
@@ -55,11 +64,15 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     {
         return new BroadcastMessage([
             'id' => (string) \Str::uuid(),
-            'type' => 'community_spot_submitted',
-            'spot_id' => $this->spotId,
-            'spot_label' => $this->spotLabel,
-            'submitted_by' => $this->submittedByUserId,
-            'url' => route('app.parking-spaces.show', $this->spotId),
+            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'params' => [
+                'spot_label' => $this->spotLabel,
+            ],
+            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'meta' => [
+                'spot_id' => $this->spotId,
+                'submitted_by' => $this->submittedByUserId,
+            ],
         ]);
     }
 }
