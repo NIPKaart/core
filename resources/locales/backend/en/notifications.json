@@ -1,0 +1,55 @@
+{
+    "head": {
+        "title": "Notifications",
+        "description": "If you have any notifications, they will be listed here. You can manage your notifications and their settings."
+    },
+    "breadcrumbs": {
+        "index": "Notifications"
+    },
+    "filters": {
+        "read_status": "Read status",
+        "type": "Type",
+        "read": "Read",
+        "unread": "Unread"
+    },
+    "bulk": {
+        "clear": "Clear selection",
+        "placeholder": "Select action",
+        "apply": "Apply",
+        "mark_read": "Mark as read",
+        "mark_unread": "Mark as unread",
+        "delete": "Delete"
+    },
+    "toast": {
+        "error": "Something went wrong."
+    },
+    "table": {
+        "title": "Title",
+        "type": "Type",
+        "read": "Status",
+        "createdAt": "Received at",
+        "untitled": "Untitled",
+        "actions": {
+            "open": "Open",
+            "markRead": "Mark as read"
+        }
+    },
+    "badges": {
+        "read": "Read",
+        "unread": "Unread"
+    },
+    "types": {
+        "community_spot_submitted": "Community spot",
+        "spot_approved": "Spot approved",
+        "spot_rejected": "Spot rejected",
+        "spot_deleted": "Spot deleted",
+        "system_announcement": "System announcement"
+    },
+    "titles": {
+        "community_spot_submitted": "New community spot: {{spot_label}}",
+        "spot_approved": "Spot approved: {{spot_label}}",
+        "spot_rejected": "Spot rejected: {{spot_label}}",
+        "spot_deleted": "Spot deleted: {{spot_label}}",
+        "system_announcement": "System announcement"
+    }
+}

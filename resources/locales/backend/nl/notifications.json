@@ -1,0 +1,55 @@
+{
+    "head": {
+        "index": "Meldingen",
+        "description": "Als je meldingen hebt, worden deze hier weergegeven. Je kunt je meldingen en hun instellingen beheren."
+    },
+    "breadcrumbs": {
+        "index": "Meldingen"
+    },
+    "filters": {
+        "read_status": "Leesstatus",
+        "type": "Type",
+        "read": "Gelezen",
+        "unread": "Ongelezen"
+    },
+    "bulk": {
+        "clear": "Selectie wissen",
+        "placeholder": "Selecteer actie",
+        "apply": "Toepassen",
+        "mark_read": "Markeren als gelezen",
+        "mark_unread": "Markeren als ongelezen",
+        "delete": "Verwijderen"
+    },
+    "toast": {
+        "error": "Er is iets misgegaan."
+    },
+    "table": {
+        "title": "Titel",
+        "type": "Type",
+        "read": "Status",
+        "createdAt": "Ontvangen op",
+        "untitled": "Zonder titel",
+        "actions": {
+            "open": "Openen",
+            "markRead": "Markeren als gelezen"
+        }
+    },
+    "badges": {
+        "read": "Gelezen",
+        "unread": "Ongelezen"
+    },
+    "types": {
+        "community_spot_submitted": "Community locatie",
+        "spot_approved": "Locatie goedgekeurd",
+        "spot_rejected": "Locatie afgewezen",
+        "spot_deleted": "Locatie verwijderd",
+        "system_announcement": "Systeem aankondiging"
+    },
+    "titles": {
+        "community_spot_submitted": "Nieuwe community locatie: {{spot_label}}",
+        "spot_approved": "Locatie goedgekeurd: {{spot_label}}",
+        "spot_rejected": "Locatie afgewezen: {{spot_label}}",
+        "spot_deleted": "Locatie verwijderd: {{spot_label}}",
+        "system_announcement": "Systeem aankondiging"
+    }
+}
