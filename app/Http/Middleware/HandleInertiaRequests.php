@@ -64,20 +64,23 @@ class HandleInertiaRequests extends Middleware
                         ->all()
                     : [],
             ],
-            'notifications' => fn () => auth()->check() ? [
-                'unread' => auth()->user()->unreadNotifications()->count(),
-                'recent' => auth()->user()->unreadNotifications()
-                    ->latest()
-                    ->limit(5)
-                    ->get()
-                    ->map(fn ($n) => [
-                        'id' => (string) $n->id,
-                        'type' => $n->type,
-                        'data' => (array) $n->data,
-                        'read_at' => optional($n->read_at)?->toIso8601String(),
-                        'created_at' => optional($n->created_at)?->toIso8601String(),
-                    ]),
-            ] : ['unread' => 0, 'recent' => []],
+            'notifications' => fn () => auth()->check()
+                ? [
+                    'unread' => auth()->user()->unreadNotifications()->count(),
+                    'recent' => auth()->user()->notifications()
+                        ->latest()
+                        ->limit(5)
+                        ->get()
+                        ->map(fn ($n) => [
+                            'id' => (string) $n->id,
+                            'type' => data_get($n->data, 'type'),
+                            'data' => (array) $n->data,
+                            'read_at' => optional($n->read_at)?->toIso8601String(),
+                            'created_at' => optional($n->created_at)?->toIso8601String(),
+                        ])
+                        ->toArray(),
+                ]
+                : ['unread' => 0, 'recent' => []],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

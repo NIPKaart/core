@@ -264,3 +264,17 @@ export type ParkingSpaceConfirmation = {
     created_at: string;
     updated_at: string;
 };
+
+export type NotificationItem = {
+    id: string;
+    type: string;
+    data: {
+        type: string;
+        spot_id?: string;
+        spot_label?: string;
+        submitted_by?: number;
+        url?: string;
+    };
+    read_at: string | null;
+    created_at: string;
+};

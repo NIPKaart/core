@@ -1,25 +1,10 @@
 import { cn } from '@/lib/utils';
+import { NotificationItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
 import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-export type NotificationItem = {
-    id: string;
-    type: string;
-    data: {
-        type: string;
-        title_key: string;
-        spot_id: string;
-        spot_label: string;
-        submitted_by?: number;
-        url?: string;
-        title_params?: Record<string, unknown>;
-    };
-    read_at: string | null;
-    created_at: string;
-};
 
 type NotificationsMenuProps = {
     items: NotificationItem[];

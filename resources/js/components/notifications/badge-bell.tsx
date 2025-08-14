@@ -2,11 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import type { NotificationItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NotificationItem, NotificationsMenu } from './list-notifications';
+import { NotificationsMenu } from './list-notifications';
 
 type PageProps = {
     auth?: { user?: { id: number } | null };
@@ -18,15 +19,15 @@ export default function BellBadge() {
 
     const { props } = usePage<PageProps>();
     const isLoggedIn = !!props.auth?.user?.id;
-
-    const notifications = props.notifications;
-    const recentFromProps = useMemo<NotificationItem[]>(() => notifications?.recent ?? [], [notifications]);
+    const unread = props.notifications?.unread ?? 0;
+    const recentFromProps = useMemo<NotificationItem[]>(() => props.notifications?.recent ?? [], [props.notifications]);
 
     const [loading, setLoading] = useState(false);
     const [openDrawer, setOpenDrawer] = useState(false);
     const firstOpenRef = useRef(false);
     const isDesktop = useMediaQuery('(min-width: 640px)');
 
+    // Local copy so we can optimistically mark items read
     const [localRecent, setLocalRecent] = useState<NotificationItem[] | null>(null);
     useEffect(() => {
         setLocalRecent(recentFromProps);
@@ -43,12 +44,11 @@ export default function BellBadge() {
 
     const itemsSource = localRecent ?? recentFromProps;
     const quickItems = useMemo(() => itemsSource.filter((n) => !n.read_at).slice(0, 12), [itemsSource]);
-    const unreadCount = useMemo(() => itemsSource.filter((n) => !n.read_at).length, [itemsSource]);
 
     const markAll = () => {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => ({ ...n, read_at: new Date().toISOString() })));
 
-        router.visit(route('notify.readAll'), {
+        router.visit(route('notifications.readAll'), {
             method: 'get',
             preserveScroll: true,
             preserveState: true,
@@ -62,7 +62,7 @@ export default function BellBadge() {
     const markOne = (id: string) => {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
-        router.visit(route('notify.read', id), {
+        router.visit(route('notifications.read', id), {
             method: 'get',
             preserveScroll: true,
             preserveState: true,
@@ -83,9 +83,9 @@ export default function BellBadge() {
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label={t('header.title')} className="relative cursor-pointer rounded-full">
                         <Bell className="h-5 w-5" />
-                        {unreadCount > 0 && (
+                        {unread > 0 && (
                             <span className="absolute top-[3px] right-[3px] min-w-[16px] rounded-full border border-background bg-primary px-1 text-center text-[9px] leading-[14px] font-semibold text-primary-foreground">
-                                {unreadCount > 99 ? '99+' : unreadCount}
+                                {unread > 99 ? '99+' : unread}
                             </span>
                         )}
                     </Button>
@@ -98,7 +98,7 @@ export default function BellBadge() {
                 >
                     <div className="flex items-center justify-between px-4 py-3">
                         <DropdownMenuLabel className="p-0 text-base font-semibold">{t('header.title')}</DropdownMenuLabel>
-                        <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs" onClick={markAll} disabled={unreadCount === 0}>
+                        <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs" onClick={markAll} disabled={unread === 0}>
                             <Check className="mr-1 h-3.5 w-3.5" />
                             {t('actions.markAll')}
                         </Button>
@@ -107,7 +107,7 @@ export default function BellBadge() {
                     <NotificationsMenu items={quickItems} loading={loading} onMarkOne={markOne} />
                     <DropdownMenuSeparator />
                     <div className="px-4 py-3">
-                        <Link href={route('notify.index')} className="block">
+                        <Link href={route('notifications.index')} className="block">
                             <Button variant="secondary" className="w-full cursor-pointer">
                                 {t('actions.viewAll')}
                             </Button>
@@ -118,6 +118,7 @@ export default function BellBadge() {
         );
     }
 
+    // Mobile drawer
     return (
         <>
             <Button
@@ -131,14 +132,13 @@ export default function BellBadge() {
                 }}
             >
                 <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
+                {unread > 0 && (
                     <span className="absolute top-[3px] right-[3px] min-w-[16px] rounded-full border border-background bg-primary px-1 text-center text-[9px] leading-[14px] font-semibold text-primary-foreground">
-                        {unreadCount > 99 ? '99+' : unreadCount}
+                        {unread > 99 ? '99+' : unread}
                     </span>
                 )}
             </Button>
 
-            {/* Drawer for mobile view */}
             <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
                 <DrawerContent className="p-0">
                     <DrawerHeader className="flex items-center justify-between border-b px-4 py-3 text-center">
@@ -147,7 +147,7 @@ export default function BellBadge() {
                             <DrawerTitle className="text-lg font-semibold">{t('header.title')}</DrawerTitle>
                         </div>
                         <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">{t('header.subtitle')}</DrawerDescription>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={markAll} disabled={unreadCount === 0}>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={markAll} disabled={unread === 0}>
                             <Check className="mr-1 h-3.5 w-3.5" />
                             {t('actions.markAll')}
                         </Button>
@@ -156,7 +156,7 @@ export default function BellBadge() {
                     <NotificationsMenu items={quickItems} loading={loading} onMarkOne={markOne} />
 
                     <DrawerFooter className="border-t px-4 py-3">
-                        <Link href={route('notify.index')} className="block w-full">
+                        <Link href={route('notifications.index')} className="block w-full">
                             <Button variant="secondary" className="w-full">
                                 {t('actions.viewAll')}
                             </Button>
