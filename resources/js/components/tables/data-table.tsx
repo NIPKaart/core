@@ -15,8 +15,8 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
-import { ColumnsSelector } from './columns-selector';
 import { useTranslation } from 'react-i18next';
+import { ColumnsSelector } from './columns-selector';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];

@@ -19,11 +19,11 @@ export default function Password() {
     const currentPasswordInput = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: t('password.meta.breadcrumb'),
-        href: '/settings/password',
-    },
-];
+        {
+            title: t('password.meta.breadcrumb'),
+            href: '/settings/password',
+        },
+    ];
 
     const { data, setData, errors, put, reset, processing, recentlySuccessful } = useForm({
         current_password: '',

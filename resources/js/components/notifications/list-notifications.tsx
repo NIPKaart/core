@@ -51,7 +51,7 @@ function useI18nDates(ns = 'global/notification') {
             const now = Date.now();
             const then = new Date(iso).getTime();
 
-            let diff = Math.round((then - now) / 1000);
+            const diff = Math.round((then - now) / 1000);
             const abs = Math.abs(diff);
             if (abs >= 86400) return rtf.format(Math.trunc(diff / 86400), 'day');
             if (abs >= 3600) return rtf.format(Math.trunc(diff / 3600), 'hour');
