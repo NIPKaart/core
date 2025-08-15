@@ -67,7 +67,7 @@ export default function Navbar() {
                     {/* Mobile actions (favorites, notifications, hamburger) */}
                     <div className="relative z-50 flex items-center gap-2 lg:hidden">
                         {auth.user && (
-                            <div className="flex items-center gap-1 me-1">
+                            <div className="me-1 flex items-center gap-1">
                                 <div className="relative flex min-w-8 justify-center">
                                     <FavoritesNavButton />
                                 </div>

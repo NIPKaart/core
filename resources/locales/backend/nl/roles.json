@@ -7,7 +7,7 @@
     },
     "breadcrumbs": {
         "index": "Rollen",
-        "edit":  "Bewerk rol ({{name}})",
+        "edit": "Bewerk rol ({{name}})",
         "create": "Rol aanmaken"
     },
     "buttons": {

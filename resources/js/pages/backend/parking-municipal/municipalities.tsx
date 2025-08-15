@@ -44,7 +44,13 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
                 </div>
 
                 <div className="relative w-full sm:max-w-sm">
-                    <Input className="w-full pl-9" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('search.placeholder')} aria-label={t('search.placeholder')} />
+                    <Input
+                        className="w-full pl-9"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder={t('search.placeholder')}
+                        aria-label={t('search.placeholder')}
+                    />
                     <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
                 </div>
 
