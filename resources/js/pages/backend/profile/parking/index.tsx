@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,8 +38,8 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('parking_spaces.title.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="mb-2 text-2xl font-bold">{t('parking_spaces.heading.index')}</h1>
-                <p className="text-muted-foreground">{t('parking_spaces.subheading')}</p>
+                <Heading title={t('parking_spaces.heading.index')} description={t('parking_spaces.subheading')} />
+
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                         className="w-full sm:max-w-sm"
