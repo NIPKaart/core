@@ -85,7 +85,6 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 );
             },
         },
-
         {
             accessorKey: 'type',
             header: t('table.type'),
