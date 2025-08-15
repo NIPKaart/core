@@ -6,9 +6,7 @@
         "description": "All listed parking spaces are contributed by the community and are part of NIPKaart’s own dataset."
     },
     "breadcrumbs": {
-        "index": "Parking Spaces",
-        "edit": "Edit ({{id}})",
-        "show": "Show ({{id}})"
+        "index": "Parking Spaces"
     },
     "selected": "selected",
     "table": {

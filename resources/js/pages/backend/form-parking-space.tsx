@@ -1,5 +1,6 @@
 import { RadioCardGroup } from '@/components/card-radio-group';
 import { SwitchCard } from '@/components/card-switch';
+import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
@@ -63,8 +64,7 @@ export default function ParkingSpaceForm({
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-4">
                         <div className="mb-4 space-y-1">
-                            <h2 className="text-lg font-semibold">{t('edit.form.title')}</h2>
-                            <p className="text-sm text-muted-foreground">{t('edit.form.description')}</p>
+                            <HeadingSmall title={t('edit.form.title')} description={t('edit.form.description')} />
                         </div>
                         <Tabs defaultValue="basic" className="w-full">
                             <TabsList className="grid w-full grid-cols-3">
@@ -268,8 +268,7 @@ export default function ParkingSpaceForm({
                     <div className="space-y-4">
                         <div className="mb-4">
                             <div className="mb-4 space-y-1">
-                                <h2 className="text-lg font-semibold">{t('edit.form.location.title')}</h2>
-                                <p className="text-sm text-muted-foreground">{t('edit.form.location.description')}</p>
+                                <HeadingSmall title={t('edit.form.location.title')} description={t('edit.form.location.description')} />
                             </div>
                             <LocationMarkerCard
                                 latitude={form.watch('latitude')}

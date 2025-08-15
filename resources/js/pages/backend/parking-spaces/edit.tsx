@@ -78,37 +78,46 @@ export default function Edit() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
-        { title: t('breadcrumbs.edit', { id: parkingSpace.id }), href: route('app.parking-spaces.edit', { id: parkingSpace.id }) },
+        { title: parkingSpace.id, href: route('app.parking-spaces.edit', { id: parkingSpace.id }) },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.edit', { id: parkingSpace.id })} />
+            {/* Header */}
+            <header className="px-4 pt-6 sm:px-6">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-0 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div className="min-w-0">
+                        <h1 className="truncate text-xl leading-none font-semibold tracking-tight sm:text-2xl">
+                            {t('head.edit', { id: parkingSpace.id })}
+                        </h1>
+                    </div>
 
-            <div className="flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">{t('head.edit', { id: parkingSpace.id })}</h1>
+                    <div className="flex flex-wrap gap-2 sm:auto-cols-max sm:flex-nowrap sm:justify-end">
+                        <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
+                            <Link href={route('app.parking-spaces.index')}>
+                                <ArrowLeft className="h-4 w-4" />
+                                {tGlobal('common.back')}
+                            </Link>
+                        </Button>
 
-                <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
-                    <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.parking-spaces.index')}>
-                            <ArrowLeft className="h-4 w-4" />
-                            {tGlobal('common.back')}
-                        </Link>
-                    </Button>
-
-                    <Button asChild className="w-1/2 bg-sky-600 text-white hover:bg-sky-700 sm:w-auto dark:bg-sky-500 dark:hover:bg-sky-400">
-                        <a
-                            href={`https://www.google.com/maps?q=&layer=c&cbll=${parkingSpace.latitude},${parkingSpace.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2"
+                        <Button
+                            asChild
+                            className="h-10 flex-1 bg-sky-600 text-white hover:bg-sky-700 sm:h-9 sm:flex-none sm:px-3 dark:bg-sky-500 dark:hover:bg-sky-400"
                         >
-                            <MapPinned className="h-4 w-4" />
-                            {t('edit.viewStreet')}
-                        </a>
-                    </Button>
+                            <a
+                                href={`https://www.google.com/maps?q=&layer=c&cbll=${parkingSpace.latitude},${parkingSpace.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2"
+                            >
+                                <MapPinned className="h-4 w-4" />
+                                {t('edit.viewStreet')}
+                            </a>
+                        </Button>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <div className="rounded-md border bg-muted/40 p-4 text-sm">

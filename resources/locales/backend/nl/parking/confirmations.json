@@ -1,6 +1,6 @@
 {
     "head": {
-        "title": "Bevestigingen voor parkeerplek #{{id}}",
+        "title": "Bevestigingen - #{{id}}",
         "description": "Bekijk en beheer alle bevestigingen die zijn ingediend voor deze parkeerplek."
     },
     "breadcrumbs": {

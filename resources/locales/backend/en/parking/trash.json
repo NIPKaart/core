@@ -1,10 +1,10 @@
 {
     "head": {
         "title": "Trashed Parking Spaces",
-        "description": "Manage trashed parking spaces, restore or permanently delete them."
+        "description": "These are (community) parking spaces that have been deleted and placed in the trash. You can manage, restore, or permanently delete them here."
     },
     "breadcrumbs": {
-        "index": "Parking Spaces (Community)",
+        "index": "Parking Spaces",
         "trash": "Trash"
     },
     "selected": "selected",
