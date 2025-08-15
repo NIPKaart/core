@@ -80,7 +80,7 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{t('detail.title', { municipality: municipality.name })}</h1>
+                    <h1 className="text-xl font-bold tracking-tight">{t('detail.title', { municipality: municipality.name })}</h1>
                     <p className="mt-2 text-muted-foreground">
                         {t('detail.description')} {municipality.name}.
                     </p>

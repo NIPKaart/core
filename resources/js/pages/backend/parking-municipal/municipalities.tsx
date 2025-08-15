@@ -3,6 +3,7 @@ import { Building2, MapPin, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
@@ -39,8 +40,7 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
             <Head title={t('head.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold tracking-tight">{t('head.index')}</h1>
-                    <p className="text-muted-foreground">{t('description')}</p>
+                    <Heading title={t('head.index')} description={t('description')} />
                 </div>
 
                 <div className="relative w-full sm:max-w-sm">

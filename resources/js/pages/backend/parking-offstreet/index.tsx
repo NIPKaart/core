@@ -1,4 +1,5 @@
 import OutdatedMunicipalitiesBanner from '@/components/alerts/outdated-municipalities';
+import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
@@ -117,8 +118,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">{t('head.index')}</h1>
-                <p className="text-muted-foreground">{t('description')}</p>
+                <Heading title={t('head.index')} description={t('description')} />
 
                 <OutdatedMunicipalitiesBanner spaces={spaces.data} minDaysOutdated={2} />
 
