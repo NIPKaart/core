@@ -1,6 +1,6 @@
 {
     "head": {
-        "title": "Confirmations for parking space #{{id}}",
+        "title": "Confirmations - #{{id}}",
         "description": "View and manage confirmations submitted for this parking space."
     },
     "breadcrumbs": {

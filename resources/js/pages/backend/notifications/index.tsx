@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
@@ -87,8 +88,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
             <Head title={t('head.title')} />
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">{t('head.title')}</h1>
-                <p className="text-muted-foreground">{t('head.description')}</p>
+                <Heading title={t('head.title')} description={t('head.description')} />
 
                 {Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">

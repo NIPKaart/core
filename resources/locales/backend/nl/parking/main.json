@@ -6,9 +6,7 @@
         "description": "Alle vermelde parkeerplekken zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
     },
     "breadcrumbs": {
-        "index": "Parkeerplekken",
-        "edit": "Bewerken ({{id}})",
-        "show": "Bekijken ({{id}})"
+        "index": "Parkeerplekken"
     },
     "selected": "geselecteerd",
     "table": {

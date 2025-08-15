@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
@@ -33,9 +34,7 @@ export default function Index({ spaces }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">{t('head.title')}</h1>
-
-                <p className="text-muted-foreground">{t('head.description')}</p>
+                <Heading title={t('head.title')} description={t('head.description')} />
 
                 {selectedIds.length > 0 && (
                     <div className="mb-4 flex flex-col rounded-md border bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-muted/40">

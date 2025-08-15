@@ -14,6 +14,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getParkingSpaceColumns } from './columns';
+import Heading from '@/components/heading';
 
 type Option = { id: number; name: string };
 type PageProps = {
@@ -108,8 +109,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
             <Head title={t('head.title')} />
 
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <h1 className="text-2xl font-bold">{t('head.title')}</h1>
-                <p className="text-muted-foreground">{t('head.description')}</p>
+                <Heading title={t('head.title')} description={t('head.description')} />
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">

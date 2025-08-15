@@ -1,10 +1,10 @@
 {
     "head": {
         "title": "Verwijderde parkeerplaatsen",
-        "description": "Beheer verwijderde parkeerplaatsen, herstel of verwijder ze permanent."
+        "description": "Dit zijn (community) parkeerplaatsen die zijn verwijderd en in de prullenbak zijn geplaatst. Je kunt ze hier beheren, herstellen of permanent verwijderen."
     },
     "breadcrumbs": {
-        "index": "Parkeerplaatsen (Gemeenschap)",
+        "index": "Parkeerplaatsen",
         "trash": "Prullenbak"
     },
     "selected": "geselecteerd",

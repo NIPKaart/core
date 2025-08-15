@@ -43,15 +43,22 @@ export default function Index({ confirmations, parkingSpace, options }: PageProp
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title', { id: parkingSpace.id })} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h1 className="text-2xl font-bold tracking-tight">{t('head.title', { id: parkingSpace.id })}</h1>
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                        <Link href={route('app.parking-spaces.show', { id: parkingSpace.id })}>
-                            <ArrowLeft className="h-4 w-4" />
-                            {t('back')}
-                        </Link>
-                    </Button>
+                {/* Header */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div className="min-w-0">
+                        <h1 className="truncate text-2xl font-bold tracking-tight">{t('head.title', { id: parkingSpace.id })}</h1>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
+                        <Button asChild variant="outline" className="h-10 min-w-[140px] flex-1 sm:h-9 sm:flex-none sm:px-3">
+                            <Link href={route('app.parking-spaces.show', { id: parkingSpace.id })}>
+                                <ArrowLeft className="h-4 w-4" />
+                                {t('back')}
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
+
                 <p className="text-muted-foreground">{t('head.description')}</p>
 
                 {/* Bulk delete toolbar */}

@@ -1,4 +1,5 @@
 import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
+import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import StreetViewCard from '@/components/map/card-location-streetview';
 import { Badge } from '@/components/ui/badge';
@@ -125,53 +126,62 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
-        { title: t('breadcrumbs.show', { id: parkingSpace.id }), href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
+        { title: parkingSpace.id, href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.show', { id: parkingSpace.id })} />
             {/* Header */}
-            <div className="mb-4 flex flex-col gap-4 px-4 pt-6 sm:flex-row sm:items-start sm:justify-between sm:px-6">
-                <h1 className="text-2xl font-bold tracking-tight">{t('head.show', { id: parkingSpace.id })}</h1>
-                <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
-                    <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('app.parking-spaces.index')}>
-                            <ArrowLeft className="h-4 w-4" />
-                            {tGlobal('common.back')}
-                        </Link>
-                    </Button>
+            <header className="px-4 pt-6 sm:px-6">
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div className="min-w-0">
+                        <h1 className="truncate text-xl leading-none font-semibold tracking-tight sm:text-2xl">
+                            {t('head.show', { id: parkingSpace.id })}
+                        </h1>
+                    </div>
 
-                    {can('parking-space.update') && (
-                        <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                            <Link href={route('app.parking-spaces.edit', { id: parkingSpace.id })}>
-                                <Edit className="h-4 w-4" />
-                                {tGlobal('common.edit')}
+                    <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
+                        <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
+                            <Link href={route('app.parking-spaces.index')}>
+                                <ArrowLeft className="h-4 w-4" />
+                                {tGlobal('common.back')}
                             </Link>
                         </Button>
-                    )}
 
-                    {can('parking-space.delete') && (
-                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog('delete', parkingSpace)}>
-                            <Trash2 className="h-4 w-4" />
-                            {t('show.trash')}
-                        </Button>
-                    )}
+                        {can('parking-space.update') && (
+                            <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
+                                <Link href={route('app.parking-spaces.edit', { id: parkingSpace.id })}>
+                                    <Edit className="h-4 w-4" />
+                                    {tGlobal('common.edit')}
+                                </Link>
+                            </Button>
+                        )}
+
+                        {can('parking-space.delete') && (
+                            <Button
+                                variant="destructive"
+                                className="h-10 flex-1 cursor-pointer sm:h-9 sm:flex-none sm:px-3"
+                                onClick={() => openDialog('delete', parkingSpace)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                {t('show.trash')}
+                            </Button>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </header>
 
             {/* Banner Notification */}
             <div className="px-4 sm:px-6">
                 <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
             </div>
 
-            {/* 2×2 grid met auto-rows-min */}
             <div className="grid auto-rows-min grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-2">
                 {/* Card 1: Details */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('show.cards.details.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('show.cards.details.description')}</p>
+                        <HeadingSmall title={t('show.cards.details.title')} description={t('show.cards.details.description')} />
                     </div>
                     <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
                         <dl>
@@ -208,8 +218,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 {/* Card 2: Recent confirmations */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('show.cards.confirmations.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('show.cards.confirmations.description')}</p>
+                        <HeadingSmall title={t('show.cards.confirmations.title')} description={t('show.cards.confirmations.description')} />
                     </div>
                     <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
                         {recentConfirmations && recentConfirmations.length > 0 ? (
@@ -277,8 +286,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 {/* Card 3: Map */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('show.cards.location.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('show.cards.location.description')}</p>
+                        <HeadingSmall title={t('show.cards.location.title')} description={t('show.cards.location.description')} />
                     </div>
                     <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} nearbySpaces={nearbySpaces} />
                 </div>
@@ -286,8 +294,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 {/* Card 4: Street View */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('show.cards.street_view.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('show.cards.street_view.description')}</p>
+                        <HeadingSmall title={t('show.cards.street_view.title')} description={t('show.cards.street_view.description')} />
                     </div>
                     <StreetViewCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
                 </div>

@@ -1,5 +1,6 @@
 import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
@@ -145,8 +146,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
                 {/* Details Card */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('parking_spaces.table.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('parking_spaces.table.subtitle')}</p>
+                        <HeadingSmall title={t('parking_spaces.table.title')} description={t('parking_spaces.table.subtitle')} />
                     </div>
                     <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
                         <dl>
@@ -169,8 +169,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
                 {/* Location Card */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <h2 className="text-lg font-semibold">{t('parking_spaces.location.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('parking_spaces.location.subtitle')}</p>
+                        <HeadingSmall title={t('parking_spaces.location.title')} description={t('parking_spaces.location.subtitle')} />
                     </div>
                     <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
                 </div>
