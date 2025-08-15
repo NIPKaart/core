@@ -27,6 +27,20 @@ const dtf = new Intl.DateTimeFormat(undefined, {
     minute: '2-digit',
 });
 
+/**
+ * Resolves the title for a notification item.
+ * It first checks if there is an explicit title in the data,
+ * then looks for a translation key, and finally falls back to a default value.
+ */
+const resolveNotificationTitle = (n: NotificationItem, t: Translations['t']) => {
+    const data = (n.data ?? {}) as Record<string, unknown>;
+    const explicit = typeof data.title === 'string' ? data.title.trim() : '';
+    const key = typeof data.title_key === 'string' ? (data.title_key as string) : n.type;
+    const translated = key ? t(`titles.${key}`, { ...data, defaultValue: '' }) : '';
+
+    return explicit || translated || t('table.untitled');
+};
+
 export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {
     return [
         {
@@ -56,13 +70,10 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
             enableHiding: false,
             cell: ({ row }) => {
                 const n = row.original;
+                const data = (n.data ?? {}) as Record<string, unknown>;
+                const url = typeof data.url === 'string' ? (data.url as string) : undefined;
 
-                const raw = (n as { data?: unknown }).data;
-                const data = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : undefined;
-                const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
-
-                const key = n.type ? `titles.${n.type}` : '';
-                const title = (n as { title?: string }).title?.trim() || (key ? t(key) : '') || t('table.untitled');
+                const title = resolveNotificationTitle(n, t);
 
                 return url ? (
                     <Link href={url} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
@@ -74,12 +85,13 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 );
             },
         },
+
         {
             accessorKey: 'type',
             header: t('table.type'),
             cell: ({ row }) => {
                 const type = row.original.type ?? '—';
-                const label = t(`types.${type}`) || type;
+                const label = t(`types.${type}`, { defaultValue: type });
                 return <Badge variant="outline">{label}</Badge>;
             },
         },
@@ -141,7 +153,14 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                                         className="cursor-pointer"
                                         onSelect={(e) => {
                                             e.preventDefault();
-                                            router.get(route('notifications.read', { id: n.id }), {}, { preserveState: true });
+                                            router.get(
+                                                route('notifications.read', { id: n.id }),
+                                                {},
+                                                {
+                                                    preserveState: true,
+                                                    onSuccess: () => router.reload({ only: ['notifications'] }),
+                                                },
+                                            );
                                         }}
                                     >
                                         {t('table.actions.markRead')}
