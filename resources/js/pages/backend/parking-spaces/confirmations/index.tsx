@@ -52,7 +52,7 @@ export default function Index({ confirmations, parkingSpace, options }: PageProp
                     <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
                         <Button asChild variant="outline" className="h-10 min-w-[140px] flex-1 sm:h-9 sm:flex-none sm:px-3">
                             <Link href={route('app.parking-spaces.show', { id: parkingSpace.id })}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <ArrowLeft className="h-4 w-4" />
                                 {t('back')}
                             </Link>
                         </Button>
