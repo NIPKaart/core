@@ -16,6 +16,7 @@
         "title": "Profile settings",
         "description": "Update your name and email address",
         "name": "Name",
+        "name_placeholder": "Full name",
         "email": "Email address",
         "language": "Language",
         "verify_message": "Your email address is unverified.",

@@ -16,6 +16,7 @@
         "title": "Profielinstellingen",
         "description": "Werk je naam en e-mailadres bij",
         "name": "Naam",
+        "name_placeholder": "Volledige naam",
         "email": "E-mailadres",
         "language": "Taal",
         "verify_message": "Je e-mailadres is niet geverifieerd.",

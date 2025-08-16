@@ -1,5 +1,4 @@
-import { useForm } from '@inertiajs/react';
-import { FormEventHandler, useRef } from 'react';
+import { useRef } from 'react';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -9,29 +8,13 @@ import { Label } from '@/components/ui/label';
 import HeadingSmall from '@/components/heading-small';
 
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 
 export default function DeleteUser() {
     const { t } = useTranslation('backend/global');
     const { t: tSettings } = useTranslation('backend/settings');
     const passwordInput = useRef<HTMLInputElement>(null);
-    const { data, setData, delete: destroy, processing, reset, errors, clearErrors } = useForm<Required<{ password: string }>>({ password: '' });
-
-    const deleteUser: FormEventHandler = (e) => {
-        e.preventDefault();
-
-        destroy(route('profile.destroy'), {
-            preserveScroll: true,
-            onSuccess: () => closeModal(),
-            onError: () => passwordInput.current?.focus(),
-            onFinish: () => reset(),
-        });
-    };
-
-    const closeModal = () => {
-        clearErrors();
-        reset();
-    };
 
     return (
         <div className="space-y-6">
@@ -49,38 +32,50 @@ export default function DeleteUser() {
                     <DialogContent>
                         <DialogTitle>{tSettings('profile.delete.dialog.title')}</DialogTitle>
                         <DialogDescription>{tSettings('profile.delete.dialog.description')}</DialogDescription>
-                        <form className="space-y-6" onSubmit={deleteUser}>
-                            <div className="grid gap-2">
-                                <Label htmlFor="password" className="sr-only">
-                                    {tSettings('profile.delete.dialog.password_label')}
-                                </Label>
 
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    name="password"
-                                    ref={passwordInput}
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    placeholder={tSettings('profile.delete.dialog.password_placeholder')}
-                                    autoComplete="current-password"
-                                />
+                        <Form
+                            method="delete"
+                            action={route('profile.destroy')}
+                            options={{
+                                preserveScroll: true,
+                            }}
+                            onError={() => passwordInput.current?.focus()}
+                            resetOnSuccess
+                            className="space-y-6"
+                        >
+                            {({ resetAndClearErrors, processing, errors }) => (
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="password" className="sr-only">
+                                            {tSettings('profile.delete.dialog.password_label')}
+                                        </Label>
 
-                                <InputError message={errors.password} />
-                            </div>
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            name="password"
+                                            ref={passwordInput}
+                                            placeholder={tSettings('profile.delete.dialog.password_placeholder')}
+                                            autoComplete="current-password"
+                                        />
 
-                            <DialogFooter className="gap-2">
-                                <DialogClose asChild>
-                                    <Button variant="secondary" onClick={closeModal}>
-                                        {t('common.cancel')}
-                                    </Button>
-                                </DialogClose>
+                                        <InputError message={errors.password} />
+                                    </div>
 
-                                <Button variant="destructive" disabled={processing} asChild>
-                                    <button type="submit">{tSettings('profile.delete.dialog.submit')}</button>
-                                </Button>
-                            </DialogFooter>
-                        </form>
+                                    <DialogFooter className="gap-2">
+                                        <DialogClose asChild>
+                                            <Button variant="secondary" onClick={() => resetAndClearErrors()}>
+                                                {t('common.cancel')}
+                                            </Button>
+                                        </DialogClose>
+
+                                        <Button variant="destructive" disabled={processing} asChild>
+                                            <button type="submit">{tSettings('profile.delete.dialog.submit')}</button>
+                                        </Button>
+                                    </DialogFooter>
+                                </>
+                            )}
+                        </Form>
                     </DialogContent>
                 </Dialog>
             </div>

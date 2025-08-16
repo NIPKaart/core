@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
@@ -14,7 +15,6 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getParkingSpaceColumns } from './columns';
-import Heading from '@/components/heading';
 
 type Option = { id: number; name: string };
 type PageProps = {
