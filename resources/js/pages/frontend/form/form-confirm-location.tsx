@@ -1,16 +1,10 @@
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { router, usePage } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import React from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-
-type FormValues = {
-    status: string;
-    comment: string;
-};
 
 type Props = {
     spaceId: string;
@@ -22,76 +16,52 @@ type Props = {
 export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
     const { t } = useTranslation('frontend/map/modals');
 
-    const { errors } = usePage().props as unknown as { errors?: Record<string, string[]> };
-    const [generalError, setGeneralError] = React.useState<string | null>(null);
+    const [status, setStatus] = React.useState<string>('confirmed');
+    const [comment, setComment] = React.useState<string>('');
 
-    const form = useForm<FormValues>({
-        defaultValues: { status: 'confirmed', comment: '' },
-    });
-
-    // Clear errors and general error on open/space change
     React.useEffect(() => {
-        setGeneralError(null);
-        form.clearErrors();
-    }, [spaceId, form]);
-
-    // Set validation errors
-    React.useEffect(() => {
-        if (errors) {
-            Object.entries(errors).forEach(([key, value]) => {
-                if (key === 'status' || key === 'comment') {
-                    form.setError(key as keyof FormValues, { type: 'server', message: Array.isArray(value) ? value[0] : value });
-                } else {
-                    setGeneralError(Array.isArray(value) ? value[0] : value);
-                }
-            });
-        }
-    }, [errors, form]);
-
-    const onSubmit = form.handleSubmit((data) => {
-        setGeneralError(null);
-        router.post(route('app.parking-spaces.confirm', spaceId), data, {
-            preserveScroll: true,
-            onSuccess: () => {
-                form.reset();
-                setGeneralError(null);
-                onConfirmed?.();
-            },
-            onError: (errors) => {
-                Object.entries(errors).forEach(([key, message]) => {
-                    form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
-                });
-            },
-        });
-    });
+        setStatus('confirmed');
+        setComment('');
+    }, [spaceId]);
 
     return (
-        <Form {...form}>
-            <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-5">
-                <h2 className="mb-2 text-center text-lg font-semibold">{t('community.confirm.form.title')}</h2>
-                <div className="mb-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-                    {t('community.confirm.form.description')}
-                    <br />
-                    <span className="text-sm text-zinc-400">{t('community.confirm.form.description_note')}</span>
-                </div>
-                {generalError && (
-                    <div className="mb-2 rounded border border-destructive/20 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/20">
-                        {generalError}
-                    </div>
-                )}
-                <div className="space-y-3">
-                    <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('community.confirm.form.field.status')}</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={confirmedToday || form.formState.isSubmitting}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                    </FormControl>
+        <Form
+            method="post"
+            action={route('app.parking-spaces.confirm', spaceId)}
+            options={{ preserveScroll: true }}
+            onSuccess={() => {
+                setStatus('confirmed');
+                setComment('');
+                onConfirmed?.();
+            }}
+            className="mx-auto max-w-md space-y-5"
+        >
+            {({ errors, processing }) => {
+                const otherErrors = Object.entries(errors ?? {}).filter(([key]) => key !== 'status' && key !== 'comment');
+                const generalError = otherErrors.length ? String(otherErrors[0][1] ?? '') : null;
+
+                return (
+                    <>
+                        <h2 className="mb-2 text-center text-lg font-semibold">{t('community.confirm.form.title')}</h2>
+                        <div className="mb-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
+                            {t('community.confirm.form.description')}
+                            <br />
+                            <span className="text-sm text-zinc-400">{t('community.confirm.form.description_note')}</span>
+                        </div>
+
+                        {generalError && (
+                            <div className="mb-2 rounded border border-destructive/20 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/20">
+                                {generalError}
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">{t('community.confirm.form.field.status')}</label>
+                                <Select value={status} onValueChange={setStatus} disabled={confirmedToday || processing}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(confirmationStatusOptions).map(([value, label]) => (
                                             <SelectItem key={value} value={value}>
@@ -100,42 +70,39 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="comment"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>
-                                    {t('community.confirm.form.field.comment.label')}
+                                <input type="hidden" name="status" value={status} />
+                                <InputError message={errors.status} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    {t('community.confirm.form.field.comment.label')}{' '}
                                     <span className="ml-1 text-xs text-muted-foreground">{t('community.confirm.form.field.comment.optional')}</span>
-                                </FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        {...field}
-                                        rows={2}
-                                        className="resize-none text-xs"
-                                        placeholder={t('community.confirm.form.field.comment.placeholder')}
-                                        maxLength={500}
-                                        disabled={confirmedToday || form.formState.isSubmitting}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-                <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={confirmedToday || form.formState.isSubmitting}>
-                    {confirmedToday
-                        ? t('community.confirm.buttons.alreadyConfirmed')
-                        : form.formState.isSubmitting
-                          ? t('community.confirm.buttons.confirming')
-                          : t('community.confirm.buttons.confirm')}
-                </Button>
-            </form>
+                                </label>
+                                <Textarea
+                                    name="comment"
+                                    rows={2}
+                                    className="resize-none text-xs"
+                                    placeholder={t('community.confirm.form.field.comment.placeholder')}
+                                    maxLength={500}
+                                    disabled={confirmedToday || processing}
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                />
+                                <InputError message={errors.comment} />
+                            </div>
+                        </div>
+
+                        <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={confirmedToday || processing}>
+                            {confirmedToday
+                                ? t('community.confirm.buttons.alreadyConfirmed')
+                                : processing
+                                  ? t('community.confirm.buttons.confirming')
+                                  : t('community.confirm.buttons.confirm')}
+                        </Button>
+                    </>
+                );
+            }}
         </Form>
     );
 }
