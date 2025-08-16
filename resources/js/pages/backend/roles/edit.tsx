@@ -1,11 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
-import RoleForm, { FormValues } from '@/pages/backend/form-role';
+import RoleForm from '@/pages/backend/form-role';
 import { BreadcrumbItem, Permission, Role } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 
 type PageProps = {
     role: Role;
@@ -27,27 +26,6 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
         },
     ];
 
-    const form = useForm<FormValues>({
-        defaultValues: {
-            name: role.name,
-            permissions: rolePermissions,
-        },
-    });
-
-    const handleSubmit = form.handleSubmit((data) => {
-        router.put(route('app.roles.update', { role: role.id }), data, {
-            preserveScroll: true,
-            onError: (errors) => {
-                Object.entries(errors).forEach(([field, message]) => {
-                    form.setError(field as keyof FormValues, {
-                        type: 'server',
-                        message: message as string,
-                    });
-                });
-            },
-        });
-    });
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.edit', { name: role.name })} />
@@ -63,7 +41,13 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
             </div>
 
             <div className="px-4 py-6 sm:px-6">
-                <RoleForm form={form} role={role} allPermissions={allPermissions} onSubmit={handleSubmit} submitting={form.formState.isSubmitting} />
+                <RoleForm
+                    role={role}
+                    allPermissions={allPermissions}
+                    action={route('app.roles.update', { role: role.id })}
+                    method="put"
+                    initial={{ name: role.name, permissions: rolePermissions }}
+                />
             </div>
         </AppLayout>
     );
