@@ -1,6 +1,7 @@
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Role } from '@/types';
 import { Form } from '@inertiajs/react';
@@ -36,14 +37,15 @@ export default function UserForm({ roles, action, method = 'post', initial, isEd
                         <h2 className="text-xl font-semibold tracking-tight">{t('form.account_info')}</h2>
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="text-sm font-medium">{t('form.name')}</label>
-                                <Input name="name" placeholder="John Doe" defaultValue={initial?.name ?? ''} disabled={processing} />
+                                <Label htmlFor="name">{t('form.name')}</Label>
+                                <Input id="name" name="name" placeholder="John Doe" defaultValue={initial?.name ?? ''} disabled={processing} />
                                 <InputError className="mt-2" message={errors.name} />
                             </div>
 
                             <div>
-                                <label className="text-sm font-medium">{t('form.email')}</label>
+                                <Label htmlFor="email">{t('form.email')}</Label>
                                 <Input
+                                    id="email"
                                     name="email"
                                     type="email"
                                     placeholder="john@example.com"
@@ -59,13 +61,21 @@ export default function UserForm({ roles, action, method = 'post', initial, isEd
                         <h2 className="text-xl font-semibold tracking-tight">{isEdit ? t('form.password_optional') : t('form.password')}</h2>
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
-                                <label className="text-sm font-medium">{t('form.password')}</label>
-                                <Input name="password" type="password" placeholder="••••••••" autoComplete="new-password" disabled={processing} />
+                                <Label htmlFor="password">{t('form.password')}</Label>
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    autoComplete="new-password"
+                                    disabled={processing}
+                                />
                                 <InputError className="mt-2" message={errors.password} />
                             </div>
                             <div>
-                                <label className="text-sm font-medium">{t('form.confirm_password')}</label>
+                                <Label htmlFor="password_confirmation">{t('form.confirm_password')}</Label>
                                 <Input
+                                    id="password_confirmation"
                                     name="password_confirmation"
                                     type="password"
                                     placeholder="••••••••"
@@ -80,9 +90,9 @@ export default function UserForm({ roles, action, method = 'post', initial, isEd
                     <div className="space-y-4">
                         <h2 className="text-xl font-semibold tracking-tight">{t('form.role')}</h2>
                         <div className="sm:w-[300px]">
-                            <label className="text-sm font-medium">{t('form.assign_role')}</label>
+                            <Label id="role-label">{t('form.assign_role')}</Label>
                             <Select value={roleValue} onValueChange={setRoleValue} disabled={processing}>
-                                <SelectTrigger>
+                                <SelectTrigger aria-labelledby="role-label">
                                     <SelectValue placeholder={t('form.select_role')} />
                                 </SelectTrigger>
                                 <SelectContent>

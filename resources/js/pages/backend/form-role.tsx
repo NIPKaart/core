@@ -3,6 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Permission, Role } from '@/types';
 import { Form } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -51,7 +52,15 @@ export default function RoleForm({ role, allPermissions, action, method = 'post'
                     <div className="space-y-2">
                         <h2 className="text-xl font-semibold">{t('form.name.label')}</h2>
                         <div className="w-full sm:w-[400px]">
-                            <Input name="name" placeholder={t('form.name.placeholder')} value={name} onChange={(e) => setName(e.target.value)} />
+                            <Label htmlFor="name">{t('form.name.label')}</Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                placeholder={t('form.name.placeholder')}
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                disabled={processing}
+                            />
                             <InputError className="mt-2" message={errors.name} />
                         </div>
                     </div>
@@ -63,24 +72,26 @@ export default function RoleForm({ role, allPermissions, action, method = 'post'
                             <Accordion type="multiple" className="w-full divide-y rounded-md border">
                                 {Object.entries(groupedPermissions).map(([resource, perms]) => (
                                     <AccordionItem key={resource} value={resource}>
-                                        <AccordionTrigger className="px-4 py-2 text-sm font-medium capitalize">
+                                        <AccordionTrigger className="cursor-pointer px-4 py-2 text-sm font-medium capitalize">
                                             {resource.replace(/[_-]/g, ' ')}
                                         </AccordionTrigger>
                                         <AccordionContent>
                                             <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
                                                 {perms.map((perm) => {
                                                     const isChecked = selected.includes(perm.id);
+                                                    const inputId = `perm-${perm.id}`;
                                                     return (
-                                                        <label key={perm.id} className="flex cursor-pointer items-center space-x-2">
+                                                        <div key={perm.id} className="flex items-center space-x-2">
                                                             <Checkbox
+                                                                id={inputId}
                                                                 checked={isChecked}
                                                                 onCheckedChange={(c) => togglePermission(perm.id, c)}
                                                                 disabled={processing}
                                                             />
-                                                            <span className="text-sm font-normal capitalize">
+                                                            <Label htmlFor={inputId} className="cursor-pointer text-sm font-normal capitalize">
                                                                 {perm.name.split('.').pop()?.replace(/[_-]/g, ' ') ?? perm.name}
-                                                            </span>
-                                                        </label>
+                                                            </Label>
+                                                        </div>
                                                     );
                                                 })}
                                             </div>
