@@ -98,7 +98,7 @@ export default function AddParkingModal({
                         </DialogDescription>
                     </DialogHeader>
                     <Separator />
-                    <div className="max-h[60vh] overflow-y-auto px-4 py-6 sm:px-6">{formContent}</div>
+                    <div className="max-h-[60vh] overflow-y-auto px-4 py-6 sm:px-6">{formContent}</div>
                     <DialogFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                         <Button type="button" variant="outline" className="w-full cursor-pointer sm:w-auto" onClick={onClose} disabled={submitting}>
                             {tGlobal('common.close')}
