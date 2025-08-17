@@ -5,16 +5,14 @@ import ZoomControl from '@/components/map/zoom-control';
 import AddParkingModal from '@/components/modals/modal-add-parking';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
 import { NominatimAddress, ParkingSpace } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
 import L from 'leaflet';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 import Swal from 'sweetalert2';
-import { FormValues } from '../form/form-create-location';
 
 const { BaseLayer, Overlay } = LayersControl;
 
@@ -51,7 +49,6 @@ function useJustDragged(timeout = 250): [boolean, () => void] {
         timer.current = setTimeout(() => setJustDragged(false), timeout);
     }, [timeout]);
 
-    // Clean up timer on unmount
     useEffect(
         () => () => {
             if (timer.current) clearTimeout(timer.current);
@@ -75,13 +72,7 @@ const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ sp
         [spaces],
     );
     return (
-        <MarkerClusterGroup
-            spiderfyOnMaxZoom={false}
-            disableClusteringAtZoom={16}
-            maxClusterRadius={100}
-            removeOutsideVisibleBounds={true}
-            chunkedLoading
-        >
+        <MarkerClusterGroup spiderfyOnMaxZoom={false} disableClusteringAtZoom={16} maxClusterRadius={100} removeOutsideVisibleBounds chunkedLoading>
             {clusterMarkers}
         </MarkerClusterGroup>
     );
@@ -90,7 +81,7 @@ const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ sp
 export default function AddLocation() {
     const { props } = usePage<PageProps>();
     const { selectOptions, parkingSpaces } = props;
-    const generalError = props.errors?.general;
+    const generalError = (props).errors?.general as string | undefined;
     const { t } = useTranslation('frontend/map/add-parking');
     const { t: tGlobal } = useTranslation('frontend/global');
 
@@ -124,13 +115,11 @@ export default function AddLocation() {
         const [lat, lng] = markerPosition;
 
         fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-            headers: {
-                'User-Agent': 'NIPKaart (https://nipkaart.nl)',
-            },
+            headers: { 'User-Agent': 'NIPKaart (https://nipkaart.nl)' },
         })
             .then((res) => res.json())
             .then((data) => {
-                // console.log(data.address);
+                // console.log('Nominatim data:', data.address);
                 if (data?.address && data.address.country_code) {
                     setNominatimData(data.address as NominatimAddress);
                     setAddressValid(true);
@@ -147,47 +136,24 @@ export default function AddLocation() {
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-    const form = useForm<FormValues>({
-        defaultValues: {
-            parking_hours: '',
-            parking_minutes: '',
-            orientation: '',
-            window_times: false,
-            message: '',
-        },
-    });
+    const successHandler = () => {
+        Swal.fire({
+            title: t('modal.success.title'),
+            text: t('modal.success.text'),
+            icon: 'success',
+            confirmButtonText: t('modal.success.confirm'),
+            confirmButtonColor: '#f97316',
+        }).then(() => {
+            setModalOpen(false);
+        });
+    };
 
-    const handleSubmit = form.handleSubmit((data) => {
-        const [lat, lng] = markerPosition as [number, number];
-        router.post(
-            route('map.store'),
-            {
-                ...data,
-                latitude: lat,
-                longitude: lng,
-                nominatim: JSON.stringify(nominatimData),
-            },
-            {
-                onSuccess: () => {
-                    Swal.fire({
-                        title: t('modal.success.title'),
-                        text: t('modal.success.text'),
-                        icon: 'success',
-                        confirmButtonText: t('modal.success.confirm'),
-                        confirmButtonColor: '#f97316',
-                    }).then(() => {
-                        setModalOpen(false);
-                        form.reset();
-                    });
-                },
-                onError: (errors) => {
-                    Object.entries(errors).forEach(([key, message]) => {
-                        form.setError(key as keyof FormValues, { type: 'server', message: String(message) });
-                    });
-                },
-            },
-        );
-    });
+    const [lat, lng] = (markerPosition as [number, number]) ?? [];
+
+    const actionWithQuery =
+        markerPosition && Array.isArray(markerPosition)
+            ? `${route('map.store')}?latitude=${lat}&longitude=${lng}&nominatim=${encodeURIComponent(JSON.stringify(nominatimData ?? {}))}`
+            : route('map.store');
 
     return (
         <>
@@ -215,7 +181,7 @@ export default function AddLocation() {
                         </BaseLayer>
 
                         {/* Overlay for nearby parking spaces */}
-                        <Overlay checked={true} name={tGlobal('layers.parkingOverlay')}>
+                        <Overlay checked name={tGlobal('layers.parkingOverlay')}>
                             <ClusteredParkingMarkers spaces={parkingSpaces} />
                         </Overlay>
                     </LayersControl>
@@ -227,10 +193,7 @@ export default function AddLocation() {
                             position={markerPosition}
                             icon={getOrangeMarkerIcon()}
                             draggable
-                            eventHandlers={{
-                                dragend: handleDragEnd,
-                                click: handleMarkerClick,
-                            }}
+                            eventHandlers={{ dragend: handleDragEnd, click: handleMarkerClick }}
                         />
                     )}
 
@@ -244,14 +207,14 @@ export default function AddLocation() {
                 <AddParkingModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    form={form}
-                    onSubmit={handleSubmit}
-                    submitting={form.formState.isSubmitting}
+                    action={actionWithQuery}
+                    method="post"
                     orientationOptions={selectOptions.orientation}
-                    lat={(markerPosition as [number, number])[0]}
-                    lng={(markerPosition as [number, number])[1]}
+                    lat={lat}
+                    lng={lng}
                     addressValid={addressValid}
                     generalError={generalError}
+                    onSuccess={successHandler}
                 />
             )}
         </>

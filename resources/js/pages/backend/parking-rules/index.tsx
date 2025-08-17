@@ -10,7 +10,6 @@ import type { BreadcrumbItem, Country, Municipality, PaginatedResponse, ParkingR
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { FormValues } from '../form-parking-rules';
 import { getParkingRuleColumns } from './columns';
@@ -34,46 +33,23 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
 
     // ADD Dialog/Drawer
     const [openAdd, setOpenAdd] = useState(false);
-    const formAdd = useForm<FormValues>({
-        defaultValues: {
-            country_id: '',
-            municipality_id: '',
-            url: '',
-            nationwide: false,
-        },
-    });
 
     // EDIT Dialog/Drawer
     const [openEdit, setOpenEdit] = useState(false);
     const [editRule, setEditRule] = useState<ParkingRule | null>(null);
-    const formEdit = useForm<FormValues>({
-        defaultValues: {
-            country_id: '',
-            municipality_id: '',
-            url: '',
-            nationwide: false,
-        },
-    });
 
     function openEditDialog(rule: ParkingRule) {
         setEditRule(rule);
-        formEdit.reset({
-            country_id: String(rule.country_id),
-            municipality_id: String(rule.municipality_id),
-            url: rule.url,
-            nationwide: rule.nationwide,
-        });
         setOpenEdit(true);
     }
 
     function handleAddClose() {
-        formAdd.reset();
         setOpenAdd(false);
     }
 
     function handleEditClose() {
-        formEdit.reset();
         setOpenEdit(false);
+        setEditRule(null);
     }
 
     // DELETE Dialog
@@ -84,49 +60,11 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
         setDialogType('delete');
     };
 
-    const handleAddSubmit = formAdd.handleSubmit((data) => {
-        router.post(route('app.parking-rules.store'), data, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setOpenAdd(false);
-                formAdd.reset();
-                toast.success(t('toasts.created'));
-            },
-            onError: (errors) => {
-                Object.entries(errors).forEach(([field, message]) => {
-                    formAdd.setError(field as keyof FormValues, {
-                        type: 'server',
-                        message: message as string,
-                    });
-                });
-            },
-        });
-    });
-
-    const handleEditSubmit = formEdit.handleSubmit((data) => {
-        if (!editRule) return;
-        router.put(route('app.parking-rules.update', { id: editRule.id }), data, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setOpenEdit(false);
-                setEditRule(null);
-                toast.success(t('toasts.updated'));
-            },
-            onError: (errors) => {
-                Object.entries(errors).forEach(([field, message]) => {
-                    formEdit.setError(field as keyof FormValues, {
-                        type: 'server',
-                        message: message as string,
-                    });
-                });
-            },
-        });
-    });
-
     const deleteParkingRule = (id: number) => {
         router.delete(route('app.parking-rules.destroy', { id }), {
             onSuccess: () => toast.success(t('toasts.deleted')),
             onError: () => toast.error(t('toasts.error')),
+            preserveScroll: true,
         });
     };
 
@@ -135,16 +73,31 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     // Memoize the municipalities to include the one being edited if applicable
     const editMunicipalities = useMemo(() => {
         if (!editRule) return municipalities;
-
         const currentId = String(editRule.municipality_id);
         const alreadyIncluded = municipalities.some((m) => String(m.id) === currentId);
-
         if (!alreadyIncluded && editRule.municipality) {
             return [...municipalities, editRule.municipality];
         }
-
         return municipalities;
     }, [municipalities, editRule]);
+
+    // Initial values for the add and edit forms
+    const initialAdd: Partial<FormValues> = {
+        country_id: '',
+        municipality_id: '',
+        url: '',
+        nationwide: false,
+    };
+
+    // If editing, set initial values based on the rule being edited
+    const initialEdit: Partial<FormValues> | undefined = editRule
+        ? {
+              country_id: String(editRule.country_id ?? ''),
+              municipality_id: String(editRule.municipality_id ?? ''),
+              url: editRule.url ?? '',
+              nationwide: Boolean(editRule.nationwide),
+          }
+        : undefined;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -169,24 +122,33 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
             <ParkingRuleModal
                 open={openAdd}
                 onClose={handleAddClose}
-                form={formAdd}
+                isEdit={false}
                 countries={countries}
                 municipalities={municipalities}
-                isEdit={false}
-                onSubmit={handleAddSubmit}
-                submitting={formAdd.formState.isSubmitting}
+                action={route('app.parking-rules.store')}
+                method="post"
+                initial={initialAdd}
+                onSuccess={() => {
+                    setOpenAdd(false);
+                    toast.success(t('toasts.created'));
+                }}
             />
 
             {/* EDIT Dialog/Drawer */}
             <ParkingRuleModal
                 open={openEdit}
                 onClose={handleEditClose}
-                form={formEdit}
+                isEdit
                 countries={countries}
                 municipalities={editMunicipalities}
-                isEdit
-                onSubmit={handleEditSubmit}
-                submitting={formEdit.formState.isSubmitting}
+                action={editRule ? route('app.parking-rules.update', { id: editRule.id }) : '#'}
+                method="put"
+                initial={initialEdit}
+                onSuccess={() => {
+                    setOpenEdit(false);
+                    setEditRule(null);
+                    toast.success(t('toasts.updated'));
+                }}
             />
 
             {/* DELETE Dialog */}

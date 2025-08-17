@@ -1,10 +1,12 @@
-import { SwitchCard } from '@/components/card-switch';
 import { SearchableCombobox } from '@/components/forms/searchable-combobox';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import type { Country, Municipality } from '@/types';
-import { UseFormReturn } from 'react-hook-form';
+import { Form } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
@@ -15,97 +17,109 @@ export type FormValues = {
 };
 
 type Props = {
-    form: UseFormReturn<FormValues>;
+    action: string;
+    method?: 'post' | 'patch' | 'put';
     countries: Country[];
     municipalities: Municipality[];
-    onSubmit: () => void;
+    initial?: Partial<FormValues>;
+    onSuccess?: Parameters<typeof Form>[0]['onSuccess'];
 };
 
-export default function ParkingRuleForm({ form, countries, municipalities, onSubmit }: Props) {
+export default function ParkingRuleForm({ action, method = 'post', countries, municipalities, initial, onSuccess }: Props) {
     const { t } = useTranslation('backend/parking-rules');
 
+    const [countryId, setCountryId] = useState<string>(initial?.country_id ?? '');
+    const [municipalityId, setMunicipalityId] = useState<string>(initial?.municipality_id ?? '');
+    const [nationwide, setNationwide] = useState<boolean>(Boolean(initial?.nationwide));
+
+    useEffect(() => {
+        if (nationwide) setMunicipalityId('');
+    }, [nationwide]);
+
+    const countryOptions = useMemo(
+        () =>
+            countries.map((c) => ({
+                label: `${c.name} (${c.code})`,
+                value: String(c.id),
+            })),
+        [countries],
+    );
+
+    const municipalityOptions = useMemo(
+        () => municipalities.map((m) => (typeof m === 'string' ? { label: m, value: m } : { label: m.name, value: String(m.id) })),
+        [municipalities],
+    );
+
     return (
-        <Form {...form}>
-            <form id="parking-rule-form" onSubmit={onSubmit} className="flex flex-col gap-0 space-y-6" autoComplete="on">
-                <div className="space-y-6">
-                    {/* Country */}
-                    <FormField
-                        control={form.control}
-                        name="country_id"
-                        render={({ field }) => (
+        <Form
+            id="parking-rule-form"
+            method={method}
+            action={action}
+            options={{ preserveScroll: true }}
+            onSuccess={onSuccess}
+            className="flex flex-col gap-0 space-y-6"
+            autoComplete="on"
+        >
+            {({ errors }) => (
+                <>
+                    <div className="space-y-6">
+                        <div className="grid gap-2">
                             <SearchableCombobox
                                 label={t('form.country.label')}
                                 placeholder={t('form.country.placeholder')}
-                                options={countries.map((c) => ({
-                                    label: `${c.name} (${c.code})`,
-                                    value: String(c.id),
-                                }))}
-                                value={field.value}
-                                onChange={field.onChange}
-                                error={form.formState.errors.country_id?.message}
+                                options={countryOptions}
+                                value={countryId}
+                                onChange={setCountryId}
+                                error={errors.country_id}
                             />
-                        )}
-                    />
+                            <input type="hidden" name="country_id" value={countryId} />
+                        </div>
 
-                    {/* Municipality */}
-                    <FormField
-                        control={form.control}
-                        name="municipality_id"
-                        render={({ field }) => (
+                        <div className="grid gap-2">
                             <SearchableCombobox
                                 label={t('form.municipality.label')}
                                 placeholder={t('form.municipality.placeholder')}
-                                options={municipalities.map((m) =>
-                                    typeof m === 'string' ? { label: m, value: m } : { label: m.name, value: String(m.id) },
-                                )}
-                                value={field.value}
-                                onChange={field.onChange}
-                                error={form.formState.errors.municipality_id?.message}
+                                options={municipalityOptions}
+                                value={municipalityId}
+                                onChange={setMunicipalityId}
+                                error={errors.municipality_id}
+                                disabled={nationwide}
                             />
-                        )}
-                    />
-                </div>
+                            <input type="hidden" name="municipality_id" value={municipalityId} />
+                        </div>
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="space-y-6">
-                    <FormField
-                        control={form.control}
-                        name="url"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('form.url.label')}</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://example.com" {...field} />
-                                </FormControl>
-                                <FormDescription>{t('form.url.description')}</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                    <div className="space-y-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="url">{t('form.url.label')}</Label>
+                            <Input id="url" name="url" placeholder="https://example.com" defaultValue={initial?.url ?? ''} autoComplete="url" />
+                            <p className="text-sm text-muted-foreground">{t('form.url.description')}</p>
+                            <InputError className="mt-2" message={errors.url} />
+                        </div>
+                    </div>
 
-                <Separator />
+                    <Separator />
 
-                <div className="space-y-6">
-                    <h2 className="mb-2 text-base font-semibold tracking-tight text-foreground/80">{t('form.scope.title')}</h2>
-                    <FormField
-                        control={form.control}
-                        name="nationwide"
-                        render={() => (
-                            <FormItem>
-                                <SwitchCard
-                                    name="nationwide"
-                                    control={form.control}
-                                    label={t('form.scope.label')}
-                                    description={t('form.scope.description')}
-                                />
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            </form>
+                    <div className="space-y-4">
+                        <h2 className="text-base font-semibold tracking-tight text-foreground/80">{t('form.scope.title')}</h2>
+
+                        <div className="rounded-lg border p-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="font-medium">{t('form.scope.label')}</div>
+                                    <p className="text-sm text-muted-foreground">{t('form.scope.description')}</p>
+                                </div>
+                                <Switch checked={nationwide} onCheckedChange={setNationwide} aria-label={t('form.scope.label')} />
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="nationwide" value={nationwide ? '1' : '0'} />
+                        <InputError message={errors.nationwide} />
+                    </div>
+                </>
+            )}
         </Form>
     );
 }

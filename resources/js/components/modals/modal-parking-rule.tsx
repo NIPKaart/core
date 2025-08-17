@@ -7,20 +7,32 @@ import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import ParkingRuleForm, { FormValues } from '@/pages/backend/form-parking-rules';
 import type { Country, Municipality } from '@/types';
 import { MapPin, Plus, X } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    form: UseFormReturn<FormValues>;
     isEdit?: boolean;
-    onSubmit: () => void;
-    submitting: boolean;
+    submitting?: boolean;
     countries: Country[];
     municipalities: Municipality[];
+    action: string;
+    method?: 'post' | 'patch' | 'put';
+    initial?: Partial<FormValues>;
+    onSuccess?: () => void;
 };
 
-export default function ParkingRuleModal({ open, onClose, form, isEdit = false, onSubmit, submitting, countries, municipalities }: Props) {
+export default function ParkingRuleModal({
+    open,
+    onClose,
+    isEdit = false,
+    submitting = false,
+    countries,
+    municipalities,
+    action,
+    method = 'post',
+    initial,
+    onSuccess,
+}: Props) {
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const { t, tGlobal } = useResourceTranslation('backend/parking-rules');
 
@@ -29,7 +41,6 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
     const submitText = isEdit ? t('modal.submit_update') : t('modal.submit_add');
     const closeText = tGlobal('common.close');
 
-    // Desktop Dialog
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
@@ -50,7 +61,14 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                     </DialogHeader>
                     <Separator />
                     <div className="max-h-[60vh] overflow-y-auto px-4 py-6 sm:px-6">
-                        <ParkingRuleForm form={form} countries={countries} municipalities={municipalities} onSubmit={onSubmit} />
+                        <ParkingRuleForm
+                            action={action}
+                            method={method}
+                            countries={countries}
+                            municipalities={municipalities}
+                            initial={initial}
+                            onSuccess={onSuccess}
+                        />
                     </div>
                     <DialogFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                         <Button type="button" variant="outline" className="w-full cursor-pointer sm:w-auto" onClick={onClose} disabled={submitting}>
@@ -72,7 +90,6 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
         );
     }
 
-    // Mobile Drawer
     return (
         <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
             <DrawerContent className="mx-auto max-w-xl bg-background px-0 pt-0 pb-0 sm:rounded-t-2xl">
@@ -89,7 +106,14 @@ export default function ParkingRuleModal({ open, onClose, form, isEdit = false, 
                 </DrawerHeader>
                 <Separator />
                 <div className="max-h-[60vh] overflow-y-auto px-4 py-6 sm:px-6">
-                    <ParkingRuleForm form={form} countries={countries} municipalities={municipalities} onSubmit={onSubmit} />
+                    <ParkingRuleForm
+                        action={action}
+                        method={method}
+                        countries={countries}
+                        municipalities={municipalities}
+                        initial={initial}
+                        onSuccess={onSuccess}
+                    />
                 </div>
                 <DrawerFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                     <DrawerClose asChild>

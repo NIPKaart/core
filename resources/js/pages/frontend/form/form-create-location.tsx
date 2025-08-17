@@ -1,10 +1,10 @@
-import { SwitchCard } from '@/components/card-switch';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import InputError from '@/components/input-error';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useRef } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { Form } from '@inertiajs/react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type FormValues = {
@@ -16,135 +16,143 @@ export type FormValues = {
 };
 
 type Props = {
-    form: UseFormReturn<FormValues>;
+    action: string;
+    method?: 'post' | 'put' | 'patch';
     orientationOptions: Record<string, string>;
-    onSubmit: () => void;
+    initial?: Partial<FormValues>;
     lat: number;
     lng: number;
+    onSuccess?: () => void;
 };
 
-export function AddLocationForm({ form, orientationOptions, onSubmit, lat, lng }: Props) {
+export function AddLocationForm({ action, method = 'post', orientationOptions, initial, lat, lng, onSuccess }: Props) {
     const { t } = useTranslation('frontend/map/add-parking');
-    const formRef = useRef<HTMLFormElement | null>(null);
+
+    const [orientation, setOrientation] = useState<string>(initial?.orientation ?? '');
+    const [windowTimes, setWindowTimes] = useState<boolean>(Boolean(initial?.window_times));
 
     return (
-        <Form {...form}>
-            <form id="location-form" onSubmit={onSubmit} ref={formRef} className="mx-auto max-w-xl space-y-6">
-                {/* Orientation */}
-                <section className="space-y-4">
-                    <div>
-                        <h2 className="text-lg font-semibold">{t('modal.form.orientation.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('modal.form.orientation.description')}</p>
-                    </div>
-                    <FormField
-                        control={form.control}
-                        name="orientation"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>{t('modal.form.orientation.label')}</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={t('modal.form.orientation.placeholder')} />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {Object.entries(orientationOptions).map(([value, label]) => (
-                                            <SelectItem key={value} value={value}>
-                                                {label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <a
-                        href={`https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground underline"
-                    >
-                        {t('modal.form.orientation.streetviewLink')}
-                    </a>
-                </section>
+        <Form
+            id="location-form"
+            method={method}
+            action={action}
+            options={{ preserveScroll: true }}
+            onSuccess={onSuccess}
+            className="mx-auto max-w-xl space-y-6"
+        >
+            {({ errors, processing }) => (
+                <>
+                    {/* Orientation */}
+                    <section className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">{t('modal.form.orientation.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('modal.form.orientation.description')}</p>
+                        </div>
 
-                {/* Parking time */}
-                <section className="space-y-4">
-                    <div>
-                        <h2 className="text-lg font-semibold">{t('modal.form.parking_time.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('modal.form.parking_time.description')}</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="parking_hours"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('modal.form.parking_time.fields.hours.label')}</FormLabel>
-                                    <FormControl>
-                                        <Input type="number" min={0} placeholder={t('modal.form.parking_time.fields.hours.placeholder')} {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="parking_minutes"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{t('modal.form.parking_time.fields.minutes.label')}</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            placeholder={t('modal.form.parking_time.fields.minutes.placeholder')}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </section>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">{t('modal.form.orientation.label')}</label>
+                            <Select value={orientation} onValueChange={setOrientation} disabled={processing}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('modal.form.orientation.placeholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(orientationOptions).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>
+                                            {label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <input type="hidden" name="orientation" value={orientation} />
+                            <InputError message={errors.orientation} />
+                        </div>
 
-                {/* Optional info */}
-                <section className="space-y-4">
-                    <div>
-                        <h2 className="text-lg font-semibold">{t('modal.form.window_times.title')}</h2>
-                        <p className="text-sm text-muted-foreground">{t('modal.form.window_times.description')}</p>
-                    </div>
-                    <SwitchCard
-                        name="window_times"
-                        control={form.control}
-                        label={t('modal.form.window_times.switch.label')}
-                        description={t('modal.form.window_times.switch.description')}
-                    />
-                    <p className="text-sm text-muted-foreground">{t('modal.form.window_times.note')}</p>
-                </section>
+                        <a
+                            href={`https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-muted-foreground underline"
+                        >
+                            {t('modal.form.orientation.streetviewLink')}
+                        </a>
+                    </section>
 
-                {/* Message */}
-                <section className="space-y-4">
-                    <div>
-                        <h2 className="text-lg font-semibold">{t('modal.form.message.title')}</h2>
-                    </div>
-                    <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormControl>
-                                    <Textarea rows={3} placeholder={t('modal.form.message.placeholder')} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </section>
-            </form>
+                    {/* Parking time */}
+                    <section className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">{t('modal.form.parking_time.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('modal.form.parking_time.description')}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="text-sm font-medium">{t('modal.form.parking_time.fields.hours.label')}</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    name="parking_hours"
+                                    placeholder={t('modal.form.parking_time.fields.hours.placeholder')}
+                                    defaultValue={initial?.parking_hours ?? ''}
+                                    disabled={processing}
+                                />
+                                <InputError className="mt-2" message={errors.parking_hours} />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium">{t('modal.form.parking_time.fields.minutes.label')}</label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    name="parking_minutes"
+                                    placeholder={t('modal.form.parking_time.fields.minutes.placeholder')}
+                                    defaultValue={initial?.parking_minutes ?? ''}
+                                    disabled={processing}
+                                />
+                                <InputError className="mt-2" message={errors.parking_minutes} />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Optional info */}
+                    <section className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">{t('modal.form.window_times.title')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('modal.form.window_times.description')}</p>
+                        </div>
+
+                        <div className="rounded-lg border p-4">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-1">
+                                    <div className="font-medium">{t('modal.form.window_times.switch.label')}</div>
+                                    <p className="text-sm text-muted-foreground">{t('modal.form.window_times.switch.description')}</p>
+                                </div>
+                                <Switch checked={windowTimes} onCheckedChange={setWindowTimes} disabled={processing} />
+                            </div>
+                            <input type="hidden" name="window_times" value={windowTimes ? '1' : '0'} />
+                            <InputError className="mt-2" message={errors.window_times} />
+                        </div>
+
+                        <p className="text-sm text-muted-foreground">{t('modal.form.window_times.note')}</p>
+                    </section>
+
+                    {/* Message */}
+                    <section className="space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold">{t('modal.form.message.title')}</h2>
+                        </div>
+                        <div>
+                            <Textarea
+                                rows={3}
+                                name="message"
+                                placeholder={t('modal.form.message.placeholder')}
+                                defaultValue={initial?.message ?? ''}
+                                disabled={processing}
+                            />
+                            <InputError className="mt-2" message={errors.message} />
+                        </div>
+                    </section>
+                </>
+            )}
         </Form>
     );
 }

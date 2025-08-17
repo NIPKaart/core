@@ -49,7 +49,7 @@
         "delete_title": "Delete parking rule?",
         "delete_description": "Are you sure you want to delete the rule for {{country}} ({{code}}), {{municipality}}?"
     },
-    "toast": {
+    "toasts": {
         "created": "Parking rule created successfully",
         "updated": "Parking rule updated successfully",
         "deleted": "Parking rule deleted",
