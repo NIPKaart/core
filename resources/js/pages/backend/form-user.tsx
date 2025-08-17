@@ -22,7 +22,7 @@ type UserFormProps = {
     method?: 'post' | 'put' | 'patch';
     initial?: Partial<FormValues>;
     isEdit?: boolean;
-    onSuccess?: (args: any) => void;
+    onSuccess?: () => void;
 };
 
 export default function UserForm({ roles, action, method = 'post', initial, isEdit = false, onSuccess }: UserFormProps) {

@@ -22,7 +22,7 @@ type Props = {
     initial?: Partial<FormValues>;
     lat: number;
     lng: number;
-    onSuccess?: (args: any) => void;
+    onSuccess?: () => void;
 };
 
 export function AddLocationForm({ action, method = 'post', orientationOptions, initial, lat, lng, onSuccess }: Props) {

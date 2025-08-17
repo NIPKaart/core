@@ -81,7 +81,7 @@ const ClusteredParkingMarkers = React.memo(function ClusteredParkingMarkers({ sp
 export default function AddLocation() {
     const { props } = usePage<PageProps>();
     const { selectOptions, parkingSpaces } = props;
-    const generalError = (props as any).errors?.general as string | undefined;
+    const generalError = (props).errors?.general as string | undefined;
     const { t } = useTranslation('frontend/map/add-parking');
     const { t: tGlobal } = useTranslation('frontend/global');
 

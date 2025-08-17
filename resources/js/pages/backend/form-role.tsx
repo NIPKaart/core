@@ -20,7 +20,7 @@ type RoleFormProps = {
     action: string;
     method?: 'post' | 'put' | 'patch';
     initial?: Partial<FormValues>;
-    onSuccess?: (args: any) => void;
+    onSuccess?: () => void;
 };
 
 export default function RoleForm({ role, allPermissions, action, method = 'post', initial, onSuccess }: RoleFormProps) {

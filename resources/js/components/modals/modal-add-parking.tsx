@@ -19,7 +19,7 @@ type Props = {
     addressValid: boolean;
     generalError?: string;
     initial?: Partial<FormValues>;
-    onSuccess?: (args: any) => void;
+    onSuccess?: () => void;
     submitting?: boolean;
 };
 

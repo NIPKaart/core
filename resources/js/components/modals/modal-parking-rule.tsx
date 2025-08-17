@@ -18,7 +18,7 @@ type Props = {
     action: string;
     method?: 'post' | 'patch' | 'put';
     initial?: Partial<FormValues>;
-    onSuccess?: (args: any) => void;
+    onSuccess?: () => void;
 };
 
 export default function ParkingRuleModal({
