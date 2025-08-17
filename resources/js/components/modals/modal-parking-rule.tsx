@@ -91,7 +91,7 @@ export default function ParkingRuleModal({
     }
 
     return (
-        <Drawer open={open} onOpenChange={(value) => !value && onClose()}>
+        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
             <DrawerContent className="mx-auto max-w-xl bg-background px-0 pt-0 pb-0 sm:rounded-t-2xl">
                 <DrawerHeader className="px-4 pt-4 pb-2">
                     <div className="flex w-full items-center gap-2">

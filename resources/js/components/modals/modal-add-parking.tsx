@@ -6,33 +6,36 @@ import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { AddLocationForm, FormValues } from '@/pages/frontend/form/form-create-location';
 import { AlertCircle, MapPinned, Send, X } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    form: UseFormReturn<FormValues>;
-    onSubmit: () => void;
-    submitting?: boolean;
+    action: string;
+    method?: 'post' | 'put' | 'patch';
     orientationOptions: Record<string, string>;
     lat: number;
     lng: number;
     addressValid: boolean;
     generalError?: string;
+    initial?: Partial<FormValues>;
+    onSuccess?: (args: any) => void;
+    submitting?: boolean;
 };
 
 export default function AddParkingModal({
     open,
     onClose,
-    form,
-    onSubmit,
-    submitting = false,
+    action,
+    method = 'post',
     orientationOptions,
     lat,
     lng,
     addressValid,
     generalError,
+    initial,
+    onSuccess,
+    submitting = false,
 }: Props) {
     const { t } = useTranslation('frontend/map/add-parking');
     const { t: tGlobal } = useTranslation('frontend/global');
@@ -63,7 +66,15 @@ export default function AddParkingModal({
     const formContent = (
         <>
             {alerts}
-            <AddLocationForm form={form} orientationOptions={orientationOptions} onSubmit={onSubmit} lat={lat} lng={lng} />
+            <AddLocationForm
+                action={action}
+                method={method}
+                orientationOptions={orientationOptions}
+                initial={initial}
+                lat={lat}
+                lng={lng}
+                onSuccess={onSuccess}
+            />
         </>
     );
 
@@ -87,7 +98,7 @@ export default function AddParkingModal({
                         </DialogDescription>
                     </DialogHeader>
                     <Separator />
-                    <div className="max-h-[60vh] overflow-y-auto px-4 py-6 sm:px-6">{formContent}</div>
+                    <div className="max-h[60vh] overflow-y-auto px-4 py-6 sm:px-6">{formContent}</div>
                     <DialogFooter className="flex flex-row gap-2 border-t px-4 py-4 sm:px-6">
                         <Button type="button" variant="outline" className="w-full cursor-pointer sm:w-auto" onClick={onClose} disabled={submitting}>
                             {tGlobal('common.close')}
