@@ -39,16 +39,16 @@
         "unread": "Unread"
     },
     "types": {
-        "community.spot_submitted": "Community spot",
-        "community.spot_status_changed": "Status changed",
-        "community.spot_deleted": "Community spot deleted",
+        "community.space_submitted": "Community spot",
+        "community.space_status_changed": "Status changed",
+        "community.space_deleted": "Community spot deleted",
         "system.announcement": "System",
         "default": "Notification"
     },
     "titles": {
-        "community.spot_submitted": "New community spot: {{spot_label}}",
-        "community.spot_status_changed": "Status changed for community spot: {{spot_label}}",
-        "community.spot_deleted": "Community spot deleted: {{spot_label}}",
+        "community.space_submitted": "New community spot: {{spot_label}}",
+        "community.space_status_changed": "Status changed for community spot: {{spot_label}}",
+        "community.space_deleted": "Community spot deleted: {{spot_label}}",
         "system.announcement": "System announcement",
         "default": "Notification"
     }

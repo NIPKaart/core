@@ -39,16 +39,16 @@
         "unread": "Ongelezen"
     },
     "types": {
-        "community.spot_submitted": "Community locatie",
-        "community.spot_status_changed": "Status gewijzigd",
-        "community.spot_deleted": "Community locatie verwijderd",
+        "community.space_submitted": "Community locatie",
+        "community.space_status_changed": "Status gewijzigd",
+        "community.space_deleted": "Community locatie verwijderd",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding"
     },
     "titles": {
-        "community.spot_submitted": "Nieuwe community locatie: {{spot_label}}",
-        "community.spot_status_changed": "Status gewijzigd voor community locatie: {{spot_label}}",
-        "community.spot_deleted": "Community locatie verwijderd: {{spot_label}}",
+        "community.space_submitted": "Nieuwe community locatie: {{spot_label}}",
+        "community.space_status_changed": "Status gewijzigd voor community locatie: {{spot_label}}",
+        "community.space_deleted": "Community locatie verwijderd: {{spot_label}}",
         "system_announcement": "Systeem aankondiging",
         "default": "Melding"
     }

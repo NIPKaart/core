@@ -44,10 +44,10 @@ const resolveNotificationTitle = (n: NotificationItem, t: Translations['t']) => 
 
     const translated = key ? t(`titles.${key}`, { ...params, defaultValue: '' }) : '';
 
-    const fallbackSpot =
+    const fallbackSpace =
         (typeof params.spot_label === 'string' ? params.spot_label : '') || (typeof data.spot_label === 'string' ? data.spot_label : '');
 
-    return explicit || translated || fallbackSpot || t('table.untitled');
+    return explicit || translated || fallbackSpace || t('table.untitled');
 };
 
 export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {

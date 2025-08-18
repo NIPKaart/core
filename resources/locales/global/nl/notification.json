@@ -1,8 +1,8 @@
 {
     "types": {
-        "community.spot_submitted": "Nieuwe community-plek toegevoegd",
-        "community.spot_status_changed": "Status van community-plek gewijzigd",
-        "community.spot_deleted": "Community-plek verwijderd",
+        "community.space_submitted": "Nieuwe community-plek toegevoegd",
+        "community.space_status_changed": "Status van community-plek gewijzigd",
+        "community.space_deleted": "Community-plek verwijderd",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding"
     },

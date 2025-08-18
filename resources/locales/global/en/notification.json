@@ -1,8 +1,8 @@
 {
     "types": {
-        "community.spot_submitted": "New community spot submitted",
-        "community.spot_status_changed": "Community spot status changed",
-        "community.spot_deleted": "Community spot deleted",
+        "community.space_submitted": "New community spot submitted",
+        "community.space_status_changed": "Community spot status changed",
+        "community.space_deleted": "Community spot deleted",
         "system.announcement": "System announcement",
         "default": "Notification"
     },

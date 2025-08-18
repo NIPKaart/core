@@ -15,8 +15,8 @@ type NotificationsMenuProps = {
 const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
 
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-    'community.spot_submitted': MapPin,
-    'community.spot_status_changed': Landmark,
+    'community.space_submitted': MapPin,
+    'community.space_status_changed': Landmark,
     default: BellRing,
 };
 

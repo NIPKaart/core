@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
 
-class CommunitySpotSubmitted extends Notification implements ShouldQueue
+class CommunitySpaceSubmitted extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -45,7 +45,7 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'type' => NotificationType::CommunitySpaceSubmitted->value,
             'params' => [
                 'spot_label' => $this->spotLabel,
             ],
@@ -64,7 +64,7 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     {
         return new BroadcastMessage([
             'id' => (string) \Str::uuid(),
-            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'type' => NotificationType::CommunitySpaceSubmitted->value,
             'params' => [
                 'spot_label' => $this->spotLabel,
             ],

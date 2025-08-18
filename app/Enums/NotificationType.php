@@ -4,9 +4,9 @@ namespace App\Enums;
 
 enum NotificationType: string
 {
-    case CommunitySpotSubmitted = 'community.spot_submitted';
-    case CommunitySpotStatusChanged = 'community.spot_status_changed';
-    case CommunitySpotDeleted = 'community.spot_deleted';
+    case CommunitySpaceSubmitted = 'community.space_submitted';
+    case CommunitySpaceStatusChanged = 'community.space_status_changed';
+    case CommunitySpaceDeleted = 'community.space_deleted';
     case SystemAnnouncement = 'system.announcement';
 
     public function label(): string
