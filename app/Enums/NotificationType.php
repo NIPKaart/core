@@ -4,11 +4,10 @@ namespace App\Enums;
 
 enum NotificationType: string
 {
-    case CommunitySpotSubmitted = 'community_spot_submitted';
-    case SpotApproved = 'spot_approved';
-    case SpotRejected = 'spot_rejected';
-    case SpotDeleted = 'spot_deleted';
-    case SystemAnnouncement = 'system_announcement';
+    case CommunitySpotSubmitted = 'community.spot_submitted';
+    case CommunitySpotStatusChanged = 'community.spot_status_changed';
+    case CommunitySpotDeleted = 'community.spot_deleted';
+    case SystemAnnouncement = 'system.announcement';
 
     public function label(): string
     {
@@ -17,7 +16,7 @@ enum NotificationType: string
 
     public function titleKey(): string
     {
-        return "backend/notifications.titles.{$this->value}";
+        return __("backend/notifications.titles.{$this->value}");
     }
 
     public function toArray(): array

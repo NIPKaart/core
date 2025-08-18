@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { NotificationItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
-import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin, Warehouse } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,9 +15,8 @@ type NotificationsMenuProps = {
 const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
 
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-    community_spot_submitted: MapPin,
-    community_spot_status_changed: Landmark,
-    offstreet_status_update: Warehouse,
+    'community.spot_submitted': MapPin,
+    'community.spot_status_changed': Landmark,
     default: BellRing,
 };
 
@@ -92,11 +91,15 @@ function SkeletonRow() {
 
 function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) => void }) {
     const { t, timeAgo } = useI18nDates('global/notification');
-    const url = getStr(n.data?.['url']);
-    const spotLabel = getStr(n.data?.['spot_label']);
+    const url = getStr(n.data?.url);
+    const spotLabel = getStr(n.data?.params?.spot_label);
+
     const unread = !n.read_at;
-    const Icon = TYPE_ICON[n.type ?? 'default'] ?? TYPE_ICON.default;
-    const title = t(`types.${n.data.type}`, { defaultValue: t('types.default') });
+
+    const rawType = n.type ?? n.data?.type ?? 'default';
+    const Icon = TYPE_ICON[rawType] ?? TYPE_ICON.default;
+
+    const title = t(`types.${rawType}`, { defaultValue: t('types.default') });
 
     const handleLinkClick: React.MouseEventHandler<Element> = () => {
         if (unread) onMarkOne(n.id);
@@ -136,7 +139,6 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             </time>
                         </div>
                     )}
-
                     {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">

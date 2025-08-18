@@ -39,17 +39,17 @@
         "unread": "Ongelezen"
     },
     "types": {
-        "community_spot_submitted": "Community locatie",
-        "spot_approved": "Locatie goedgekeurd",
-        "spot_rejected": "Locatie afgewezen",
-        "spot_deleted": "Locatie verwijderd",
-        "system_announcement": "Systeem aankondiging"
+        "community.spot_submitted": "Community locatie",
+        "community.spot_status_changed": "Status gewijzigd",
+        "community.spot_deleted": "Community locatie verwijderd",
+        "system.announcement": "Systeem aankondiging",
+        "default": "Melding"
     },
     "titles": {
-        "community_spot_submitted": "Nieuwe community locatie: {{spot_label}}",
-        "spot_approved": "Locatie goedgekeurd: {{spot_label}}",
-        "spot_rejected": "Locatie afgewezen: {{spot_label}}",
-        "spot_deleted": "Locatie verwijderd: {{spot_label}}",
-        "system_announcement": "Systeem aankondiging"
+        "community.spot_submitted": "Nieuwe community locatie: {{spot_label}}",
+        "community.spot_status_changed": "Status gewijzigd voor community locatie: {{spot_label}}",
+        "community.spot_deleted": "Community locatie verwijderd: {{spot_label}}",
+        "system_announcement": "Systeem aankondiging",
+        "default": "Melding"
     }
 }

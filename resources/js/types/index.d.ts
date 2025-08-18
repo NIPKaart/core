@@ -270,10 +270,14 @@ export type NotificationItem = {
     type: string;
     data: {
         type: string;
-        spot_id?: string;
-        spot_label?: string;
-        submitted_by?: number;
+        params: {
+            spot_label?: string;
+        };
         url?: string;
+        meta: {
+            spot_id?: string;
+            submitted_by?: number;
+        };
     };
     read_at: string | null;
     created_at: string;

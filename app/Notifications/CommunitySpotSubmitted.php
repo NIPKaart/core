@@ -49,7 +49,7 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
             'params' => [
                 'spot_label' => $this->spotLabel,
             ],
-            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'url' => route('app.parking-spaces.show', (string) $this->spotId),
             'meta' => [
                 'spot_id' => $this->spotId,
                 'submitted_by' => $this->submittedByUserId,
@@ -68,7 +68,7 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
             'params' => [
                 'spot_label' => $this->spotLabel,
             ],
-            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'url' => route('app.parking-spaces.show', (string) $this->spotId),
             'meta' => [
                 'spot_id' => $this->spotId,
                 'submitted_by' => $this->submittedByUserId,
