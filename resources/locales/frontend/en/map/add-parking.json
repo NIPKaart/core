@@ -20,7 +20,7 @@
         "form": {
             "orientation": {
                 "title": "Type of parking space",
-                "description": "What kind of orientation does the parking spot have?",
+                "description": "What kind of orientation does the parking space have?",
                 "label": "Orientation *",
                 "placeholder": "Select orientation",
                 "streetviewLink": "Look up the location in Google Street View"

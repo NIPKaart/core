@@ -12,7 +12,7 @@ use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
 use App\Models\User;
-use App\Notifications\CommunitySpaceSubmitted;
+use App\Notifications\CommunitySpace;
 use App\Traits\FindsOrCreatesMunicipality;
 use App\Traits\FindsOrCreatesProvince;
 use App\Traits\ParsesNominatimAddress;
@@ -113,7 +113,7 @@ class ParkingSpaceController extends Controller
             $admins = User::role(['admin', 'moderator'])->get();
             Notification::send(
                 $admins,
-                new CommunitySpaceSubmitted(
+                new CommunitySpace\Submitted(
                     $parkingSpace->id,
                     $parkingSpace->street ?: "Space #{$parkingSpace->id}",
                     submittedByUserId: Auth::id()

@@ -271,11 +271,11 @@ export type NotificationItem = {
     data: {
         type: string;
         params: {
-            spot_label?: string;
+            space_label?: string;
         };
         url?: string;
         meta: {
-            spot_id?: string;
+            space_id?: string;
             submitted_by?: number;
         };
     };

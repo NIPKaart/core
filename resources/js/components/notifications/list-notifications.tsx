@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { NotificationItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
-import { BellRing, Check, ChevronRight, Inbox, Landmark, MapPin } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Inbox, MapPin, Pencil } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,7 +16,7 @@ const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
 
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     'community.space_submitted': MapPin,
-    'community.space_status_changed': Landmark,
+    'community.space_status_changed': Pencil,
     default: BellRing,
 };
 
@@ -92,7 +92,7 @@ function SkeletonRow() {
 function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) => void }) {
     const { t, timeAgo } = useI18nDates('global/notification');
     const url = getStr(n.data?.url);
-    const spotLabel = getStr(n.data?.params?.spot_label);
+    const spaceLabel = getStr(n.data?.params?.space_label);
 
     const unread = !n.read_at;
 
@@ -139,7 +139,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             </time>
                         </div>
                     )}
-                    {spotLabel && <div className="truncate text-xs text-muted-foreground">{spotLabel}</div>}
+                    {spaceLabel && <div className="truncate text-xs text-muted-foreground">{spaceLabel}</div>}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
                         {unread && (
