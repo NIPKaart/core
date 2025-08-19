@@ -16,7 +16,7 @@ enum NotificationType: string
 
     public function titleKey(): string
     {
-        return __("backend/notifications.titles.{$this->value}");
+        return "backend/notifications.titles.{$this->value}";
     }
 
     public function toArray(): array

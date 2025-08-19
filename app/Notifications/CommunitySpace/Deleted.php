@@ -17,7 +17,7 @@ class Deleted extends Notification implements ShouldQueue
      * Create a new notification instance.
      */
     public function __construct(
-        public int $spaceId,
+        public string $spaceId,
         public string $spaceLabel,
         public ?int $actedByUserId = null
     ) {}
