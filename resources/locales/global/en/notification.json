@@ -1,7 +1,9 @@
 {
     "types": {
-        "community_spot_submitted": "New community spot submitted",
-        "community_spot_status_changed": "Your spot status changed",
+        "community.space_submitted": "New parking space submitted",
+        "community.space_status_changed": "Parking space status changed",
+        "community.space_deleted": "Parking space deleted",
+        "system.announcement": "System announcement",
         "default": "Notification"
     },
     "actions": {

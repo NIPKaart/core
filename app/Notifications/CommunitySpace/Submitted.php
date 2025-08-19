@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\CommunitySpace;
 
 use App\Enums\NotificationType;
 use Illuminate\Bus\Queueable;
@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
 
-class CommunitySpotSubmitted extends Notification implements ShouldQueue
+class Submitted extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -17,8 +17,8 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
      * Create a new notification instance.
      */
     public function __construct(
-        public string $spotId,
-        public string $spotLabel,
+        public string $spaceId,
+        public string $spaceLabel,
         public ?int $submittedByUserId = null
     ) {}
 
@@ -45,13 +45,13 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'type' => NotificationType::CommunitySpaceSubmitted->value,
             'params' => [
-                'spot_label' => $this->spotLabel,
+                'space_label' => $this->spaceLabel,
             ],
-            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'url' => route('app.parking-spaces.show', (string) $this->spaceId),
             'meta' => [
-                'spot_id' => $this->spotId,
+                'space_id' => $this->spaceId,
                 'submitted_by' => $this->submittedByUserId,
             ],
         ]);
@@ -64,13 +64,13 @@ class CommunitySpotSubmitted extends Notification implements ShouldQueue
     {
         return new BroadcastMessage([
             'id' => (string) \Str::uuid(),
-            'type' => NotificationType::CommunitySpotSubmitted->value,
+            'type' => NotificationType::CommunitySpaceSubmitted->value,
             'params' => [
-                'spot_label' => $this->spotLabel,
+                'space_label' => $this->spaceLabel,
             ],
-            'url' => route('app.parking-spaces.show', ['id' => $this->spotId]),
+            'url' => route('app.parking-spaces.show', (string) $this->spaceId),
             'meta' => [
-                'spot_id' => $this->spotId,
+                'space_id' => $this->spaceId,
                 'submitted_by' => $this->submittedByUserId,
             ],
         ]);

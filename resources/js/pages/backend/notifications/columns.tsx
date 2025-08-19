@@ -34,11 +34,20 @@ const dtf = new Intl.DateTimeFormat(undefined, {
  */
 const resolveNotificationTitle = (n: NotificationItem, t: Translations['t']) => {
     const data = (n.data ?? {}) as Record<string, unknown>;
+    const params = (typeof data.params === 'object' && data.params !== null ? data.params : {}) as Record<string, unknown>;
     const explicit = typeof data.title === 'string' ? data.title.trim() : '';
-    const key = typeof data.title_key === 'string' ? (data.title_key as string) : n.type;
-    const translated = key ? t(`titles.${key}`, { ...data, defaultValue: '' }) : '';
 
-    return explicit || translated || t('table.untitled');
+    const key =
+        (typeof data.title_key === 'string' ? (data.title_key as string) : '') ||
+        (typeof n.type === 'string' ? n.type : '') ||
+        (typeof data.type === 'string' ? (data.type as string) : '');
+
+    const translated = key ? t(`titles.${key}`, { ...params, defaultValue: '' }) : '';
+
+    const fallbackSpace =
+        (typeof params.space_label === 'string' ? params.space_label : '') || (typeof data.space_label === 'string' ? data.space_label : '');
+
+    return explicit || translated || fallbackSpace || t('table.untitled');
 };
 
 export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {

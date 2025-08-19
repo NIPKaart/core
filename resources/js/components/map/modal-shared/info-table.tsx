@@ -6,7 +6,7 @@ import type { InfoTableRow } from './modal-parts';
 import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
 import { formatParkingTime, HelpPopover } from './utils';
 
-// Community spot info rows
+// Community space info rows
 export function getCommunityInfoRows(
     data: ParkingSpaceDetail,
     isLoggedIn: boolean,
@@ -121,7 +121,7 @@ export function getCommunityInfoRows(
     ];
 }
 
-// Municipal spot info rows
+// Municipal space info rows
 export function getMunicipalInfoRows(
     data: MunicipalParkingDetail,
     isLoggedIn: boolean,

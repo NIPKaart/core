@@ -1,7 +1,9 @@
 {
     "types": {
-        "community_spot_submitted": "Nieuwe community-plek toegevoegd",
-        "community_spot_status_changed": "Status van je plek is gewijzigd",
+        "community.space_submitted": "Nieuwe parkeerplek toegevoegd",
+        "community.space_status_changed": "Status van parkeerplek gewijzigd",
+        "community.space_deleted": "Parkeerplek verwijderd",
+        "system.announcement": "Systeem aankondiging",
         "default": "Melding"
     },
     "actions": {
