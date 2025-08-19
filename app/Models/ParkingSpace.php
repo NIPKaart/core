@@ -58,6 +58,8 @@ class ParkingSpace extends Model
     protected $casts = [
         'status' => ParkingStatus::class,
         'orientation' => ParkingOrientation::class,
+        'latitude' => 'float',
+        'longitude' => 'float',
         'updated_at' => 'datetime',
         'created_at' => 'datetime',
     ];
