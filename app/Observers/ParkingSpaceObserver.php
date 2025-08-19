@@ -60,7 +60,7 @@ class ParkingSpaceObserver
             ? $parkingSpace->label()
             : ($parkingSpace->street ?: "Space #{$parkingSpace->id}");
 
-        if ($parkingSpace->user()->withTrashed()->exists()) {
+        if ($parkingSpace->user) {
             Notification::send(
                 $parkingSpace->user,
                 new CommunitySpace\Deleted(
