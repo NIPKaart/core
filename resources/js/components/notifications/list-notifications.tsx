@@ -1,15 +1,17 @@
 import { cn } from '@/lib/utils';
 import { NotificationItem } from '@/types';
+import { getNotificationLabel } from '@/utils/notifications';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
 import { BellRing, Check, ChevronRight, Inbox, MapPin, Pencil } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-type NotificationsMenuProps = {
+type NotificationsListProps = {
     items: NotificationItem[];
     loading?: boolean;
     onMarkOne: (id: string) => void;
+    onOpen?: (id: string, url: string) => void;
 };
 
 const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
@@ -67,8 +69,7 @@ function groupByDay(items: NotificationItem[], labeler: (d: Date) => string) {
     const groups: Record<string, NotificationItem[]> = {};
     for (const n of items) {
         const d = n.created_at ? new Date(n.created_at) : new Date();
-        const key = labeler(d);
-        (groups[key] ??= []).push(n);
+        (groups[labeler(d)] ??= []).push(n);
     }
     return groups;
 }
@@ -89,23 +90,42 @@ function SkeletonRow() {
     );
 }
 
-function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) => void }) {
-    const { t, timeAgo } = useI18nDates('global/notification');
-    const url = getStr(n.data?.url);
+function NotificationRow({
+    n,
+    onMarkOne,
+    onOpen,
+}: {
+    n: NotificationItem;
+    onMarkOne: (id: string) => void;
+    onOpen?: (id: string, url: string) => void;
+}) {
+    const { t: tGlobal, timeAgo } = useI18nDates('global/notification');
+
+    const raw = (n.data ?? {}) as Record<string, unknown>;
+    const url = getStr(raw.url);
     const spaceLabel = getStr(n.data?.params?.space_label);
 
     const unread = !n.read_at;
 
-    const rawType = n.type ?? n.data?.type ?? 'default';
+    const rawType = (typeof n.type === 'string' && n.type) || (typeof raw.type === 'string' && (raw.type as string)) || 'default';
+
     const Icon = TYPE_ICON[rawType] ?? TYPE_ICON.default;
 
-    const title = t(`types.${rawType}`, { defaultValue: t('types.default') });
+    const title = getNotificationLabel(tGlobal, rawType);
 
-    const handleLinkClick: React.MouseEventHandler<Element> = () => {
-        if (unread) onMarkOne(n.id);
-    };
     const handleDivClick: React.MouseEventHandler<HTMLDivElement> = () => {
         if (unread) onMarkOne(n.id);
+    };
+
+    const handleOpen = (e: React.MouseEvent, targetUrl: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onOpen) {
+            onOpen(n.id, targetUrl);
+        } else {
+            if (unread) onMarkOne(n.id);
+            router.visit(targetUrl);
+        }
     };
 
     const commonClassName = cn(
@@ -139,6 +159,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             </time>
                         </div>
                     )}
+
                     {spaceLabel && <div className="truncate text-xs text-muted-foreground">{spaceLabel}</div>}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
@@ -154,21 +175,17 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                             >
                                 <span className="inline-flex items-center gap-1">
                                     <Check className="h-3.5 w-3.5" />
-                                    {t('actions.markRead')}
+                                    {tGlobal('actions.markRead')}
                                 </span>
                             </button>
                         )}
                         {url && (
                             <button
                                 type="button"
-                                className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    router.visit(url);
-                                }}
+                                className="inline-flex cursor-pointer items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
+                                onClick={(e) => handleOpen(e, url)}
                             >
-                                {t('actions.open')}
+                                {tGlobal('actions.open')}
                                 <ChevronRight className="h-3.5 w-3.5" />
                             </button>
                         )}
@@ -190,7 +207,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
                         <button
                             type="button"
                             className="ml-1 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
-                            aria-label={t('actions.markRead')}
+                            aria-label={tGlobal('actions.markRead')}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -206,7 +223,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
     );
 
     return url ? (
-        <Link href={url} onClick={handleLinkClick} className={commonClassName}>
+        <Link href={url} onClick={(e) => handleOpen(e, url)} className={commonClassName}>
             {inner}
         </Link>
     ) : (
@@ -216,7 +233,7 @@ function Row({ n, onMarkOne }: { n: NotificationItem; onMarkOne: (id: string) =>
     );
 }
 
-export function NotificationsMenu({ items, loading = false, onMarkOne }: NotificationsMenuProps) {
+export function NotificationsList({ items, loading = false, onMarkOne, onOpen }: NotificationsListProps) {
     const { t, relDayLabel } = useI18nDates('global/notification');
     const groups = useMemo(() => groupByDay(items, (d) => relDayLabel(d)), [items, relDayLabel]);
 
@@ -245,7 +262,7 @@ export function NotificationsMenu({ items, loading = false, onMarkOne }: Notific
     }
 
     return (
-        <div className="max-h-[70vh] overflow-auto">
+        <div className="max-h=[70vh] overflow-auto">
             <div className="space-y-4 p-3">
                 {Object.entries(groups).map(([label, arr]) => (
                     <Fragment key={label}>
@@ -253,7 +270,7 @@ export function NotificationsMenu({ items, loading = false, onMarkOne }: Notific
                         <ul className="space-y-2">
                             {arr.map((n) => (
                                 <li key={n.id}>
-                                    <Row n={n} onMarkOne={onMarkOne} />
+                                    <NotificationRow n={n} onMarkOne={onMarkOne} onOpen={onOpen} />
                                 </li>
                             ))}
                         </ul>

@@ -7,7 +7,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NotificationsMenu } from './list-notifications';
+import { NotificationsList } from './list-notifications';
 
 type PageProps = {
     auth?: { user?: { id: number } | null };
@@ -48,29 +48,57 @@ export default function BellBadge() {
     const markAll = () => {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => ({ ...n, read_at: new Date().toISOString() })));
 
-        router.visit(route('notifications.readAll'), {
-            method: 'get',
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => router.reload({ only: ['notifications'] }),
-            onError: () => {
-                setLocalRecent(recentFromProps);
+        router.get(
+            route('notifications.readAll'),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => router.reload({ only: ['notifications'] }),
+                onError: () => {
+                    setLocalRecent(recentFromProps);
+                },
             },
-        });
+        );
     };
 
     const markOne = (id: string) => {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
-        router.visit(route('notifications.read', id), {
-            method: 'get',
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => router.reload({ only: ['notifications'] }),
-            onError: () => {
-                setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+        router.get(
+            route('notifications.read', { id }),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => router.reload({ only: ['notifications'] }),
+                onError: () => {
+                    setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+                },
             },
-        });
+        );
+    };
+
+    // 👉 nieuw: eerst markeren, dan daadwerkelijk naar de URL
+    const markAndOpen = (id: string, url: string) => {
+        // optimistisch
+        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
+
+        router.get(
+            route('notifications.read', { id }),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => router.visit(url),
+                onError: () => {
+                    // rollback op fout
+                    setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+                    // fallback: ga alsnog naar de url (optioneel; laat anders weg)
+                    router.visit(url);
+                },
+            },
+        );
     };
 
     if (isDesktop) {
@@ -104,7 +132,7 @@ export default function BellBadge() {
                         </Button>
                     </div>
                     <DropdownMenuSeparator />
-                    <NotificationsMenu items={quickItems} loading={loading} onMarkOne={markOne} />
+                    <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
                     <DropdownMenuSeparator />
                     <div className="px-4 py-3">
                         <Link href={route('notifications.index')} className="block">
@@ -153,7 +181,7 @@ export default function BellBadge() {
                         </Button>
                     </DrawerHeader>
 
-                    <NotificationsMenu items={quickItems} loading={loading} onMarkOne={markOne} />
+                    <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
 
                     <DrawerFooter className="border-t px-4 py-3">
                         <Link href={route('notifications.index')} className="block w-full">
