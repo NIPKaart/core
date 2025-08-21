@@ -66,7 +66,7 @@ class ParkingSpaceObserver
         $spaceId = $parkingSpace->getRouteKey();
 
         // (1) Always notify the owner
-        if ($parkingSpace->user || $parkingSpace->user()->withTrashed()->exists()) {
+        if ($parkingSpace->user) {
             Notification::send(
                 $parkingSpace->user,
                 new CommunitySpace\Deleted(

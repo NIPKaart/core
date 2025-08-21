@@ -20,7 +20,6 @@ export function getNotificationLabel(tGlobal: TFunction, type?: string | null): 
 }
 
 /**
- * 
  * Resolve the title for a notification row - table
  */
 export function resolveNotificationTitleBackend(tBackend: TFunction, type: string, params?: Record<string, unknown>): string {

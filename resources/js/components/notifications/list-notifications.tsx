@@ -262,7 +262,7 @@ export function NotificationsList({ items, loading = false, onMarkOne, onOpen }:
     }
 
     return (
-        <div className="max-h=[70vh] overflow-auto">
+        <div className="max-h-[70vh] overflow-auto">
             <div className="space-y-4 p-3">
                 {Object.entries(groups).map(([label, arr]) => (
                     <Fragment key={label}>

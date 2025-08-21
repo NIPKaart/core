@@ -79,9 +79,7 @@ export default function BellBadge() {
         );
     };
 
-    // 👉 nieuw: eerst markeren, dan daadwerkelijk naar de URL
     const markAndOpen = (id: string, url: string) => {
-        // optimistisch
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
         router.get(
@@ -92,9 +90,7 @@ export default function BellBadge() {
                 preserveState: true,
                 onSuccess: () => router.visit(url),
                 onError: () => {
-                    // rollback op fout
                     setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
-                    // fallback: ga alsnog naar de url (optioneel; laat anders weg)
                     router.visit(url);
                 },
             },
