@@ -1,8 +1,9 @@
 {
-    "types": {
+    "labels": {
         "community.space_submitted": "Nieuwe parkeerplek toegevoegd",
         "community.space_status_changed": "Status van parkeerplek gewijzigd",
         "community.space_deleted": "Parkeerplek verwijderd",
+        "community.space_deleted_by_user": "Parkeerplek verwijderd door gebruiker",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding"
     },
