@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class NotificationController extends Controller
@@ -14,10 +14,24 @@ class NotificationController extends Controller
         $user = $request->user();
         $readCsv = $request->input('read');
         $typeCsv = $request->input('type');
-        $types = $typeCsv ? array_filter(explode(',', $typeCsv)) : [];
+
+        $types = $typeCsv ? array_values(array_filter(explode(',', $typeCsv))) : [];
+
+        $typesExact = [];
+        $cats = [];
+        foreach ($types as $t) {
+            if (Str::endsWith($t, '.*')) {
+                $cats[] = Str::beforeLast($t, '.*');
+            } elseif ($t !== '') {
+                $typesExact[] = $t;
+            }
+        }
+
+        $jsonTypeSql = "JSON_UNQUOTE(JSON_EXTRACT(data, '$.type'))";
 
         $query = $user->notifications()->latest();
 
+        // read/unread
         $query->when($readCsv, function ($q, $readCsv) {
             $vals = collect(explode(',', $readCsv));
             $hasRead = $vals->contains('read');
@@ -30,11 +44,18 @@ class NotificationController extends Controller
             }
         });
 
-        $query->when(! empty($types), fn ($q) => $q->whereIn(
-            DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.type'))"),
-            $types
-        )
-        );
+        // type-filter
+        $query->when(! empty($typesExact) || ! empty($cats), function ($q) use ($jsonTypeSql, $typesExact, $cats) {
+            $q->where(function ($qq) use ($jsonTypeSql, $typesExact, $cats) {
+                if (! empty($typesExact)) {
+                    $qq->orWhereIn(DB::raw($jsonTypeSql), $typesExact);
+                }
+                if (! empty($cats)) {
+                    $pattern = '^('.implode('|', array_map('preg_quote', $cats)).')\.';
+                    $qq->orWhereRaw("$jsonTypeSql REGEXP ?", [$pattern]);
+                }
+            });
+        });
 
         $notifications = $query
             ->paginate(20)
@@ -47,6 +68,35 @@ class NotificationController extends Controller
                 'created_at' => optional($n->created_at)->toIso8601String(),
             ]);
 
+        $distinct = $user->notifications()
+            ->selectRaw("
+            DISTINCT
+            {$jsonTypeSql} AS t,
+            SUBSTRING_INDEX({$jsonTypeSql}, '.', 1) AS cat
+        ")
+            ->whereRaw("JSON_EXTRACT(data, '$.type') IS NOT NULL")
+            ->reorder()
+            ->get();
+
+        $countPerCat = [];
+        $oneTypePerCat = [];
+        foreach ($distinct as $row) {
+            $cat = $row->cat ?: $row->t;
+            $countPerCat[$cat] = ($countPerCat[$cat] ?? 0) + 1;
+            $oneTypePerCat[$cat] = $row->t;
+        }
+
+        $typeOptions = [];
+        foreach ($countPerCat as $cat => $cnt) {
+            if ($cnt >= 2) {
+                $typeOptions["{$cat}.*"] = "{$cat}.*";
+            } else {
+                $t = $oneTypePerCat[$cat];
+                $typeOptions[$t] = $t;
+            }
+        }
+        ksort($typeOptions, SORT_NATURAL);
+
         return Inertia::render('backend/notifications/index', [
             'notificationList' => $notifications,
             'filters' => [
@@ -54,7 +104,7 @@ class NotificationController extends Controller
                 'type' => $typeCsv,
             ],
             'options' => [
-                'types' => NotificationType::options(),
+                'types' => $typeOptions,
             ],
         ]);
     }
@@ -103,6 +153,16 @@ class NotificationController extends Controller
         }
 
         return back()->with('success', __('Marked as read'));
+    }
+
+    public function unread(Request $request, string $id)
+    {
+        $n = $request->user()->notifications()->where('id', $id)->firstOrFail();
+        if (! is_null($n->read_at)) {
+            $n->markAsUnread();
+        }
+
+        return back()->with('success', __('Marked as unread'));
     }
 
     public function remove(Request $request, string $id)

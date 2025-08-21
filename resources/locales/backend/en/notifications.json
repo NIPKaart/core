@@ -31,7 +31,8 @@
         "untitled": "Untitled",
         "actions": {
             "open": "Open",
-            "markRead": "Mark as read"
+            "markRead": "Mark as read",
+            "markUnread": "Mark as unread"
         }
     },
     "badges": {
@@ -39,16 +40,15 @@
         "unread": "Unread"
     },
     "types": {
-        "community.space_submitted": "Community space",
-        "community.space_status_changed": "Status changed",
-        "community.space_deleted": "Community space deleted",
-        "system.announcement": "System",
+        "community.*": "Community space",
+        "system.*": "System",
         "default": "Notification"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
         "community.space_status_changed": "Status changed for community space: {{space_label}}",
         "community.space_deleted": "Community space deleted: {{space_label}}",
+        "community.space_deleted_by_user": "Community space deleted by user: {{space_label}}",
         "system.announcement": "System announcement",
         "default": "Notification"
     }

@@ -1,8 +1,9 @@
 {
-    "types": {
+    "labels": {
         "community.space_submitted": "New parking space submitted",
         "community.space_status_changed": "Parking space status changed",
         "community.space_deleted": "Parking space deleted",
+        "community.space_deleted_by_user": "Parking space deleted by user",
         "system.announcement": "System announcement",
         "default": "Notification"
     },

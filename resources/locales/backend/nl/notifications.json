@@ -31,7 +31,8 @@
         "untitled": "Zonder titel",
         "actions": {
             "open": "Openen",
-            "markRead": "Markeren als gelezen"
+            "markRead": "Markeren als gelezen",
+            "markUnread": "Markeren als ongelezen"
         }
     },
     "badges": {
@@ -39,16 +40,15 @@
         "unread": "Ongelezen"
     },
     "types": {
-        "community.space_submitted": "Community locatie",
-        "community.space_status_changed": "Status gewijzigd",
-        "community.space_deleted": "Community locatie verwijderd",
-        "system.announcement": "Systeem aankondiging",
+        "community.*": "Community locatie",
+        "system.*": "Systeem",
         "default": "Melding"
     },
     "titles": {
         "community.space_submitted": "Nieuwe community locatie: {{space_label}}",
         "community.space_status_changed": "Status gewijzigd voor community locatie: {{space_label}}",
         "community.space_deleted": "Community locatie verwijderd: {{space_label}}",
+        "community.space_deleted_by_user": "Community locatie verwijderd door gebruiker: {{space_label}}",
         "system_announcement": "Systeem aankondiging",
         "default": "Melding"
     }

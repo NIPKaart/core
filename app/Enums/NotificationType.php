@@ -7,6 +7,7 @@ enum NotificationType: string
     case CommunitySpaceSubmitted = 'community.space_submitted';
     case CommunitySpaceStatusChanged = 'community.space_status_changed';
     case CommunitySpaceDeleted = 'community.space_deleted';
+    case CommunitySpaceDeletedByUser = 'community.space_deleted_by_user';
     case SystemAnnouncement = 'system.announcement';
 
     public function label(): string

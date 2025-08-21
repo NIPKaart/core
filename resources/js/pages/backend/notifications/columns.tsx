@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { NotificationItem, Translations } from '@/types';
+import { resolveNotificationTitleBackend, resolveTypeLabelBackend } from '@/utils/notifications';
 import { Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ExternalLink, MoreVertical } from 'lucide-react';
@@ -27,27 +28,25 @@ const dtf = new Intl.DateTimeFormat(undefined, {
     minute: '2-digit',
 });
 
-/**
- * Resolves the title for a notification item.
- * It first checks if there is an explicit title in the data,
- * then looks for a translation key, and finally falls back to a default value.
- */
-const resolveNotificationTitle = (n: NotificationItem, t: Translations['t']) => {
-    const data = (n.data ?? {}) as Record<string, unknown>;
-    const params = (typeof data.params === 'object' && data.params !== null ? data.params : {}) as Record<string, unknown>;
-    const explicit = typeof data.title === 'string' ? data.title.trim() : '';
+const resolveTitleForRow = (n: NotificationItem, tBackend: Translations['t']) => {
+    const raw = (n.data ?? {}) as Record<string, unknown>;
+    const params = (typeof raw.params === 'object' && raw.params !== null ? (raw.params as Record<string, unknown>) : {}) as Record<string, unknown>;
+    const explicit = typeof raw.title === 'string' ? raw.title.trim() : '';
 
-    const key =
-        (typeof data.title_key === 'string' ? (data.title_key as string) : '') ||
-        (typeof n.type === 'string' ? n.type : '') ||
-        (typeof data.type === 'string' ? (data.type as string) : '');
+    if (explicit) return explicit;
 
-    const translated = key ? t(`titles.${key}`, { ...params, defaultValue: '' }) : '';
+    const type = (typeof n.type === 'string' && n.type) || (typeof raw.type === 'string' && (raw.type as string)) || '';
+
+    if (type) {
+        const translated = resolveNotificationTitleBackend(tBackend, type, params);
+        if (translated) return translated;
+    }
 
     const fallbackSpace =
-        (typeof params.space_label === 'string' ? params.space_label : '') || (typeof data.space_label === 'string' ? data.space_label : '');
+        (typeof params.space_label === 'string' ? (params.space_label as string) : '') ||
+        (typeof raw.space_label === 'string' ? (raw.space_label as string) : '');
 
-    return explicit || translated || fallbackSpace || t('table.untitled');
+    return fallbackSpace || tBackend('table.untitled');
 };
 
 export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {
@@ -79,10 +78,11 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
             enableHiding: false,
             cell: ({ row }) => {
                 const n = row.original;
-                const data = (n.data ?? {}) as Record<string, unknown>;
-                const url = typeof data.url === 'string' ? (data.url as string) : undefined;
+                const raw = (n as { data?: unknown }).data;
+                const data = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : undefined;
+                const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
 
-                const title = resolveNotificationTitle(n, t);
+                const title = resolveTitleForRow(n, t);
 
                 return url ? (
                     <Link href={url} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
@@ -98,8 +98,8 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
             accessorKey: 'type',
             header: t('table.type'),
             cell: ({ row }) => {
-                const type = row.original.type ?? '—';
-                const label = t(`types.${type}`, { defaultValue: type });
+                const type = row.original.type ?? 'default';
+                const label = resolveTypeLabelBackend(t, type);
                 return <Badge variant="outline">{label}</Badge>;
             },
         },
@@ -133,6 +133,22 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 const data = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : undefined;
                 const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
 
+                const markRead = () =>
+                    router.get(
+                        route('notifications.read', { id: n.id }),
+                        {},
+                        { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
+                    );
+
+                const markUnread = () =>
+                    router.get(
+                        route('notifications.unread', { id: n.id }),
+                        {},
+                        { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
+                    );
+
+                const toggleRead = () => (isUnread ? markRead() : markUnread());
+
                 return (
                     <div className="flex justify-end">
                         <DropdownMenu>
@@ -156,24 +172,15 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                                     </DropdownMenuItem>
                                 )}
 
-                                {isUnread && (
-                                    <DropdownMenuItem
-                                        className="cursor-pointer"
-                                        onSelect={(e) => {
-                                            e.preventDefault();
-                                            router.get(
-                                                route('notifications.read', { id: n.id }),
-                                                {},
-                                                {
-                                                    preserveState: true,
-                                                    onSuccess: () => router.reload({ only: ['notifications'] }),
-                                                },
-                                            );
-                                        }}
-                                    >
-                                        {t('table.actions.markRead')}
-                                    </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onSelect={(e) => {
+                                        e.preventDefault();
+                                        toggleRead();
+                                    }}
+                                >
+                                    {isUnread ? t('table.actions.markRead') : t('table.actions.markUnread')}
+                                </DropdownMenuItem>
 
                                 <DropdownMenuSeparator />
 

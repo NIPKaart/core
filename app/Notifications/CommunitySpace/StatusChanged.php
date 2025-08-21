@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
 class StatusChanged extends Notification implements ShouldQueue
 {
@@ -65,7 +66,7 @@ class StatusChanged extends Notification implements ShouldQueue
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'id' => (string) \Str::uuid(),
+            'id' => (string) Str::uuid(),
             'type' => NotificationType::CommunitySpaceStatusChanged->value,
             'params' => [
                 'space_label' => $this->spaceLabel,

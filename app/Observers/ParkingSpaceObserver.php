@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\ParkingSpace;
+use App\Models\User;
 use App\Notifications\CommunitySpace;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -35,11 +36,13 @@ class ParkingSpaceObserver
         $oldEnum = $parkingSpace->getOriginal('status');
         $newEnum = $parkingSpace->status;
 
+        $spaceId = $parkingSpace->getRouteKey();
+
         if ($parkingSpace->user) {
             Notification::send(
                 $parkingSpace->user,
                 new CommunitySpace\StatusChanged(
-                    spaceId: $parkingSpace->id,
+                    spaceId: $spaceId,
                     spaceLabel: $label,
                     oldStatus: $oldEnum,
                     newStatus: $newEnum,
@@ -60,15 +63,35 @@ class ParkingSpaceObserver
             ? $parkingSpace->label()
             : ($parkingSpace->street ?: "Space #{$parkingSpace->id}");
 
+        $spaceId = $parkingSpace->getRouteKey();
+
+        // (1) Always notify the owner
         if ($parkingSpace->user) {
             Notification::send(
                 $parkingSpace->user,
                 new CommunitySpace\Deleted(
-                    spaceId: $parkingSpace->id,
+                    spaceId: $spaceId,
                     spaceLabel: $label,
                     actedByUserId: $actorId
                 )
             );
+        }
+
+        // (2) If the owner deletes it themselves, notify admins/mods
+        if ($actorId && (int) $actorId === (int) $parkingSpace->user_id) {
+            $admins = User::role(['admin', 'moderator'])->get();
+
+            if ($admins->isNotEmpty()) {
+                Notification::send(
+                    $admins,
+                    new CommunitySpace\DeletedByUser(
+                        spaceId: $spaceId,
+                        spaceLabel: $label,
+                        ownerName: $parkingSpace->user?->name ?? 'Unknown user',
+                        ownerId: (int) $parkingSpace->user_id
+                    )
+                );
+            }
         }
     }
 

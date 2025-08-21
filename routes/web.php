@@ -35,6 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::patch('bulk', 'bulk')->name('bulk');
             Route::get('{id}/read', 'read')->name('read');
+            Route::get('{id}/unread', 'unread')->name('unread');
             Route::get('read/all', 'readAll')->name('readAll');
             Route::delete('{id}/remove', 'remove')->name('remove');
             Route::get('remove/all', 'removeAll')->name('removeAll');

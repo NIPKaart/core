@@ -12,6 +12,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { getNotificationColumns } from './columns';
+import { resolveTypeLabelBackend } from '@/utils/notifications';
 
 type PageProps = {
     notificationList: PaginatedResponse<NotificationItem>;
@@ -34,11 +35,15 @@ export default function NotificationsIndex({ notificationList, filters, options 
 
     const typeOptions = useMemo(
         () =>
-            Object.entries(options.types).map(([value, serverLabel]) => ({
-                value,
-                label: t(`types.${value}`, serverLabel || value),
-                count: notificationList.data.filter((n) => n.type === value).length,
-            })),
+            Object.keys(options.types).map((value) => {
+                const label = resolveTypeLabelBackend(t, value);
+                const isWildcard = value.endsWith('.*');
+                const prefix = isWildcard ? value.slice(0, -2) + '.' : null;
+
+                const count = notificationList.data.filter((n) => (isWildcard ? (n.type ?? '').startsWith(prefix!) : n.type === value)).length;
+
+                return { value, label, count };
+            }),
         [options.types, notificationList.data, t],
     );
 

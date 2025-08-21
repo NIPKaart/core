@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class Submitted extends Notification implements ShouldQueue
+class DeletedByUser extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -20,7 +20,8 @@ class Submitted extends Notification implements ShouldQueue
     public function __construct(
         public string $spaceId,
         public string $spaceLabel,
-        public ?int $submittedByUserId = null
+        public string $ownerName,
+        public int $ownerId,
     ) {}
 
     /**
@@ -30,49 +31,41 @@ class Submitted extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        if (
-            $this->submittedByUserId !== null &&
-            (int) $notifiable->getKey() === (int) $this->submittedByUserId
-        ) {
-            return [];
-        }
-
         return ['database', 'broadcast'];
     }
 
-    /**
-     * Send the notification via the database channel.
-     */
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'type' => NotificationType::CommunitySpaceSubmitted->value,
+            'type' => NotificationType::CommunitySpaceDeletedByUser->value,
             'params' => [
                 'space_label' => $this->spaceLabel,
+                'owner_name' => $this->ownerName,
             ],
-            'url' => route('app.parking-spaces.show', (string) $this->spaceId),
+            'url' => route('app.parking-spaces.trash'),
+
             'meta' => [
                 'space_id' => $this->spaceId,
-                'submitted_by' => $this->submittedByUserId,
+                'deleted_by' => $this->ownerId,
+                'trashed' => true,
             ],
         ]);
     }
 
-    /**
-     * Send the notification via the broadcast channel.
-     */
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
             'id' => (string) Str::uuid(),
-            'type' => NotificationType::CommunitySpaceSubmitted->value,
+            'type' => NotificationType::CommunitySpaceDeletedByUser->value,
             'params' => [
                 'space_label' => $this->spaceLabel,
+                'owner_name' => $this->ownerName,
             ],
-            'url' => route('app.parking-spaces.show', (string) $this->spaceId),
+            'url' => route('app.parking-spaces.trash'),
             'meta' => [
                 'space_id' => $this->spaceId,
-                'submitted_by' => $this->submittedByUserId,
+                'deleted_by' => $this->ownerId,
+                'trashed' => true,
             ],
         ]);
     }
