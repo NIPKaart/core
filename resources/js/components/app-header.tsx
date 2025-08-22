@@ -12,8 +12,10 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { useState } from 'react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
+import AboutResponsive from './modals/modal-about-dialog';
 
 const mainNavItems: NavItem[] = [
     {
@@ -46,6 +48,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+    const [aboutOpen, setAboutOpen] = useState(false);
+
     return (
         <>
             <div className="border-b border-sidebar-border/80">
@@ -164,7 +168,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end">
-                                <UserMenuContent user={auth.user} />
+                                <UserMenuContent user={auth.user} onOpenAbout={() => setAboutOpen(true)} />
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -177,6 +181,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
                 </div>
             )}
+
+            <AboutResponsive open={aboutOpen} onOpenChange={setAboutOpen} />
         </>
     );
 }
