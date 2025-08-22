@@ -11,6 +11,7 @@
         "copy": "Details kopiëren",
         "copying": "Bezig met kopiëren…",
         "copied": "Gekopieerd",
-        "close": "Sluiten"
+        "close": "Sluiten",
+        "copy_unavailable": "Kopiëren niet beschikbaar"
     }
 }

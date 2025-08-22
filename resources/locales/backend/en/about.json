@@ -11,6 +11,7 @@
         "copy": "Copy details",
         "copying": "Copying…",
         "copied": "Copied",
-        "close": "Close"
+        "close": "Close",
+        "copy_unavailable": "Copy unavailable"
     }
 }

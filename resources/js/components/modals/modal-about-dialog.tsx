@@ -36,22 +36,13 @@ export default function AboutResponsive({ open, onOpenChange }: { open: boolean;
     const [copying, setCopying] = useState(false);
     const [copied, setCopied] = useState(false);
 
+    const canCopy = typeof window !== 'undefined' && window.isSecureContext && typeof navigator !== 'undefined' && !!navigator.clipboard?.writeText;
+
     async function handleCopy() {
+        if (!canCopy) return;
         try {
             setCopying(true);
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(copyText);
-            } else {
-                const el = document.createElement('textarea');
-                el.value = copyText;
-                el.setAttribute('readonly', '');
-                el.style.position = 'absolute';
-                el.style.left = '-9999px';
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-            }
+            await navigator.clipboard.writeText(copyText);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } finally {
@@ -84,8 +75,16 @@ export default function AboutResponsive({ open, onOpenChange }: { open: boolean;
 
     const DesktopActions = (
         <>
-            <Button variant="outline" size="sm" onClick={handleCopy} disabled={copying} aria-live="polite" className="cursor-pointer">
-                {copied ? t('actions.copied') : copying ? t('actions.copying') : t('actions.copy')}
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopy}
+                disabled={!canCopy || copying}
+                className="cursor-pointer"
+                aria-live="polite"
+                title={!canCopy ? t('actions.copy_unavailable') : undefined}
+            >
+                {copied ? t('actions.copied') : copying ? t('actions.copying') : canCopy ? t('actions.copy') : t('actions.copy_unavailable')}
             </Button>
             <Button size="sm" onClick={() => onOpenChange(false)} className="cursor-pointer">
                 {t('actions.close')}
@@ -94,8 +93,15 @@ export default function AboutResponsive({ open, onOpenChange }: { open: boolean;
     );
 
     const MobileActions = (
-        <Button variant="outline" onClick={handleCopy} disabled={copying} aria-live="polite" className="cursor-pointer">
-            {copied ? t('actions.copied') : copying ? t('actions.copying') : t('actions.copy')}
+        <Button
+            variant="outline"
+            onClick={handleCopy}
+            disabled={!canCopy || copying}
+            className="cursor-pointer"
+            aria-live="polite"
+            title={!canCopy ? t('actions.copy_unavailable') : undefined}
+        >
+            {copied ? t('actions.copied') : copying ? t('actions.copying') : canCopy ? t('actions.copy') : t('actions.copy_unavailable')}
         </Button>
     );
 
