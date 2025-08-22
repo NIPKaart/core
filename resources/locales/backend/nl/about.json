@@ -1,0 +1,17 @@
+{
+    "title": "Over {{app}}",
+    "description": "Build- en frameworkversies",
+    "labels": {
+        "app": "App",
+        "laravel": "Laravel",
+        "php": "PHP",
+        "build": "Build"
+    },
+    "actions": {
+        "copy": "Details kopiëren",
+        "copying": "Bezig met kopiëren…",
+        "copied": "Gekopieerd",
+        "close": "Sluiten",
+        "copy_unavailable": "Kopiëren niet beschikbaar"
+    }
+}

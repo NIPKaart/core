@@ -1,0 +1,17 @@
+{
+    "title": "About {{app}}",
+    "description": "Build & framework versions",
+    "labels": {
+        "app": "App",
+        "laravel": "Laravel",
+        "php": "PHP",
+        "build": "Build"
+    },
+    "actions": {
+        "copy": "Copy details",
+        "copying": "Copying…",
+        "copied": "Copied",
+        "close": "Close",
+        "copy_unavailable": "Copy unavailable"
+    }
+}
