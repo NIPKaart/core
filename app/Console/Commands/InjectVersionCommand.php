@@ -33,6 +33,7 @@ class InjectVersionCommand extends Command
         }
 
         $this->info("Wrote .version = {$version}");
+
         return self::SUCCESS;
     }
 }
