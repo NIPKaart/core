@@ -71,7 +71,7 @@ final class AppVersion
         $head = trim((string) file_get_contents($headFile));
         $commit = null;
 
-        if (preg_match('/^[0-9a-f]{40}$/i', $head)) {
+        if (preg_match('/^[0-9a-f]{' . self::SHA1_HASH_LENGTH . '}$/i', $head)) {
             $commit = $head;
         } elseif (str_starts_with($head, 'ref: ')) {
             $ref = trim(substr($head, 5)); // bv. "refs/heads/main"
@@ -89,7 +89,7 @@ final class AppVersion
                             continue;
                         }
                         // "commitSHA␠ref"
-                        if (preg_match('/^([0-9a-f]{40})\s+'.preg_quote($ref, '/').'$/i', $line, $m)) {
+                        if (preg_match('/^([0-9a-f]{' . self::GIT_SHA_LENGTH . '})\s+'.preg_quote($ref, '/').'$/i', $line, $m)) {
                             $commit = $m[1];
                             break;
                         }
@@ -98,8 +98,8 @@ final class AppVersion
             }
         }
 
-        if ($commit && preg_match('/^[0-9a-f]{40}$/i', $commit)) {
-            return substr($commit, 0, 7);
+        if ($commit && preg_match('/^[0-9a-f]{' . self::SHA1_HEX_LENGTH . '}$/i', $commit)) {
+            return substr($commit, 0, self::SHORT_SHA_LENGTH);
         }
 
         return null;
