@@ -39,12 +39,10 @@ export function UserMenuContent({ user, onOpenAbout }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             {hasRole('admin') && (
-                <>
-                    <DropdownMenuItem onSelect={() => onOpenAbout()} className="cursor-pointer">
-                        <Info className="mr-2" />
-                        {t('about')}
-                    </DropdownMenuItem>
-                </>
+                <DropdownMenuItem onSelect={() => onOpenAbout()} className="cursor-pointer">
+                    <Info className="mr-2" />
+                    {t('about')}
+                </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
