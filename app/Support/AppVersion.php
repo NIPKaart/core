@@ -20,23 +20,14 @@ final class AppVersion
             }
         }
 
-        // 3) composer.json "version"
-        $composer = base_path('composer.json');
-        if (is_file($composer)) {
-            $json = json_decode((string) file_get_contents($composer), true);
-            if (! empty($json['version'])) {
-                return (string) $json['version'];
-            }
-        }
-
-        // 4) only in non-production environments, use git short SHA
+        // 3) only in non-production environments, use git short SHA
         if (! app()->environment('production')) {
             if ($sha = self::gitShortSha()) {
                 return 'dev-'.$sha;
             }
         }
 
-        // 5) fallback
+        // 4) fallback
         return 'dev';
     }
 

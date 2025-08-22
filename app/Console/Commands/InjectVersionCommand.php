@@ -28,7 +28,8 @@ class InjectVersionCommand extends Command
         $version = (string) $this->argument('version');
         $result = file_put_contents(base_path('.version'), $version);
         if ($result === false) {
-            $this->error("Failed to write to .version file.");
+            $this->error('Failed to write to .version file.');
+
             return self::FAILURE;
         }
 
