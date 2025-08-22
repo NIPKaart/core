@@ -18,23 +18,21 @@ class InjectVersionCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Write version to .version and (optionally) cache config';
+    protected $description = 'Write version to .version';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $version = (string) $this->argument('version');
-        $build = (string) ($this->option('build') ?? '');
-
         file_put_contents(base_path('.version'), $version);
 
-        $this->callSilently('config:clear');
-        $this->callSilently('config:cache');
+        if ($build = $this->option('build')) {
+            $this->line("Build: {$build}");
+        }
 
-        $this->info("Wrote .version = {$version}".($build ? " (build: {$build})" : ''));
-
+        $this->info("Wrote .version = {$version}");
         return self::SUCCESS;
     }
 }
