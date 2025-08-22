@@ -11,7 +11,7 @@ class InjectVersionCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:inject-version {version} {--build=}';
+    protected $signature = 'app:inject-version {version}';
 
     /**
      * The console command description.
@@ -26,10 +26,10 @@ class InjectVersionCommand extends Command
     public function handle(): int
     {
         $version = (string) $this->argument('version');
-        file_put_contents(base_path('.version'), $version);
-
-        if ($build = $this->option('build')) {
-            $this->line("Build: {$build}");
+        $result = file_put_contents(base_path('.version'), $version);
+        if ($result === false) {
+            $this->error("Failed to write to .version file.");
+            return self::FAILURE;
         }
 
         $this->info("Wrote .version = {$version}");
