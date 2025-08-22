@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the version and build of your application. This
+    | information can be used for various purposes, such as displaying in
+    | the footer of your application or for debugging purposes.
+    |
+    */
+
+    'version' => env('APP_VERSION', null),
+    'build' => env('APP_BUILD', null),
+
 ];

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\ParkingSpace;
 use App\Models\User;
+use App\Support\AppVersion;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -46,6 +47,12 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'locale' => App::getLocale(),
+            'meta' => fn () => [
+                'appVersion' => AppVersion::get(),
+                'build' => AppVersion::getBuild(),
+                'laravelVersion' => app()->version(),
+                'phpVersion' => PHP_VERSION,
+            ],
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'flash' => [
                 'success' => session('success'),
