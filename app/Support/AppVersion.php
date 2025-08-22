@@ -4,110 +4,84 @@ namespace App\Support;
 
 final class AppVersion
 {
-    private const FULL_SHA_LEN = 40;
-
-    private const SHORT_SHA_LEN = 7;
-
-    private static ?string $cachedVersion = null;
-
-    private static ?string $cachedBuild = null;
-
     public static function get(): string
     {
-        if (self::$cachedVersion !== null) {
-            return self::$cachedVersion;
-        }
-
         // 1) ENV / config
-        $v = (string) (config('app.version') ?? '');
-        if ($v !== '') {
-            return self::$cachedVersion = $v;
+        if ($v = (string) (config('app.version') ?? '')) {
+            return $v;
         }
 
         // 2) .version file
-        $file = base_path('.version');
-        if (is_file($file) && is_readable($file)) {
-            $text = trim((string) file_get_contents($file));
-            if ($text !== '') {
-                return self::$cachedVersion = $text;
+        $verFile = base_path('.version');
+        if (is_file($verFile)) {
+            $t = trim((string) file_get_contents($verFile));
+            if ($t !== '') {
+                return $t;
             }
         }
 
         // 3) composer.json "version"
         $composer = base_path('composer.json');
-        if (is_file($composer) && is_readable($composer)) {
+        if (is_file($composer)) {
             $json = json_decode((string) file_get_contents($composer), true);
-            $cver = isset($json['version']) ? (string) $json['version'] : '';
-            if ($cver !== '') {
-                return self::$cachedVersion = $cver;
+            if (! empty($json['version'])) {
+                return (string) $json['version'];
             }
         }
 
-        // 4) only in non-production environments
+        // 4) only in non-production environments, use git short SHA
         if (! app()->environment('production')) {
             if ($sha = self::gitShortSha()) {
-                return self::$cachedVersion = "dev-{$sha}";
+                return 'dev-'.$sha;
             }
         }
 
         // 5) fallback
-        return self::$cachedVersion = 'dev';
+        return 'dev';
     }
 
     public static function getBuild(): ?string
     {
-        if (self::$cachedBuild !== null) {
-            return self::$cachedBuild;
+        if ($b = (string) (config('app.build') ?? '')) {
+            return $b;
         }
 
-        $b = (string) (config('app.build') ?? '');
-        if ($b !== '') {
-            return self::$cachedBuild = $b;
-        }
-
-        if (! app()->environment('production')) {
-            return self::$cachedBuild = self::gitShortSha();
-        }
-
-        return self::$cachedBuild = null;
+        return app()->environment('production')
+            ? null
+            : self::gitShortSha();
     }
 
     private static function gitShortSha(): ?string
     {
-        $gitDir = base_path('.git');
-        if (! is_dir($gitDir) || ! is_readable($gitDir)) {
+        $git = base_path('.git');
+        if (! is_dir($git)) {
             return null;
         }
 
-        $headFile = $gitDir.DIRECTORY_SEPARATOR.'HEAD';
-        if (! is_file($headFile) || ! is_readable($headFile)) {
+        $head = @trim((string) file_get_contents($git.'/HEAD'));
+        if ($head === '') {
             return null;
         }
 
-        $head = trim((string) file_get_contents($headFile));
         $commit = null;
 
-        if (preg_match('/^[0-9a-f]{'.self::FULL_SHA_LEN.'}$/i', $head)) {
+        if (preg_match('/^[0-9a-f]{40}$/i', $head)) {
             $commit = $head;
-        }
+        } elseif (str_starts_with($head, 'ref: ')) {
+            $ref = trim(substr($head, 5));
 
-        elseif (str_starts_with($head, 'ref: ')) {
-            $ref = trim(substr($head, 5)); // bv. "refs/heads/main"
-
-            $refPath = $gitDir.DIRECTORY_SEPARATOR.$ref;
-            if (is_file($refPath) && is_readable($refPath)) {
+            $refPath = $git.'/'.$ref;
+            if (is_file($refPath)) {
                 $commit = trim((string) file_get_contents($refPath));
             } else {
                 // packed-refs fallback
-                $packed = $gitDir.DIRECTORY_SEPARATOR.'packed-refs';
-                if (is_file($packed) && is_readable($packed)) {
-                    $lines = file($packed, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
-                    $pattern = '/^([0-9a-f]{'.self::FULL_SHA_LEN.'})\s+'.preg_quote($ref, '/').'$/i';
-                    foreach ($lines as $line) {
+                $packed = $git.'/packed-refs';
+                if (is_file($packed)) {
+                    foreach (file($packed, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
                         if ($line === '' || $line[0] === '#') {
                             continue;
                         }
-                        if (preg_match($pattern, $line, $m)) {
+                        if (preg_match('/^([0-9a-f]{40})\s+'.preg_quote($ref, '/').'$/i', $line, $m)) {
                             $commit = $m[1];
                             break;
                         }
@@ -116,10 +90,8 @@ final class AppVersion
             }
         }
 
-        if ($commit && preg_match('/^[0-9a-f]{'.self::FULL_SHA_LEN.'}$/i', $commit)) {
-            return substr($commit, 0, self::SHORT_SHA_LEN);
-        }
-
-        return null;
+        return ($commit && preg_match('/^[0-9a-f]{40}$/i', $commit))
+            ? substr($commit, 0, 7)
+            : null;
     }
 }
