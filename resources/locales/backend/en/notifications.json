@@ -49,6 +49,7 @@
         "community.space_status_changed": "Status changed for community space: {{space_label}}",
         "community.space_deleted": "Community space deleted: {{space_label}}",
         "community.space_deleted_by_user": "Community space deleted by user: {{space_label}}",
+        "community.space_restored": "Community space restored: {{space_label}}",
         "system.announcement": "System announcement",
         "default": "Notification"
     }

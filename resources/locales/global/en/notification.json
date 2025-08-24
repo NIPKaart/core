@@ -4,6 +4,7 @@
         "community.space_status_changed": "Parking space status changed",
         "community.space_deleted": "Parking space deleted",
         "community.space_deleted_by_user": "Parking space deleted by user",
+        "community.space_restored": "Parking space restored",
         "system.announcement": "System announcement",
         "default": "Notification"
     },

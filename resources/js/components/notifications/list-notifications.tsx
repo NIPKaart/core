@@ -3,7 +3,7 @@ import { NotificationItem } from '@/types';
 import { getNotificationLabel } from '@/utils/notifications';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
-import { BellRing, Check, ChevronRight, Inbox, MapPin, Pencil } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Inbox, MapPin, Pencil, RotateCcw } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,6 +19,7 @@ const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     'community.space_submitted': MapPin,
     'community.space_status_changed': Pencil,
+    'community.space_restored': RotateCcw,
     default: BellRing,
 };
 

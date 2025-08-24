@@ -49,6 +49,7 @@
         "community.space_status_changed": "Status gewijzigd voor community locatie: {{space_label}}",
         "community.space_deleted": "Community locatie verwijderd: {{space_label}}",
         "community.space_deleted_by_user": "Community locatie verwijderd door gebruiker: {{space_label}}",
+        "community.space_restored": "Community locatie hersteld: {{space_label}}",
         "system_announcement": "Systeem aankondiging",
         "default": "Melding"
     }
