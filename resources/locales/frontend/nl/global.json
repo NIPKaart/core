@@ -11,5 +11,13 @@
         "mapbox": "Mapbox Straten",
         "google": "Google Hybride",
         "parkingOverlay": "Dichtbijzijnde Parkeerplaatsen"
+    },
+    "legend": {
+        "title": "Legenda",
+        "available": "Genoeg plek",
+        "almostFull": "Bijna vol",
+        "full": "Vol",
+        "noData": "Geen data",
+        "disabledSpot": "Invalide parkeerplek"
     }
 }
