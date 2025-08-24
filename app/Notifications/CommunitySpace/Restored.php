@@ -10,7 +10,7 @@ use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class DeletedByUser extends Notification implements ShouldQueue
+class Restored extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -18,10 +18,9 @@ class DeletedByUser extends Notification implements ShouldQueue
      * Create a new notification instance.
      */
     public function __construct(
-        public string $spaceId,
+        public int $spaceId,
         public string $spaceLabel,
-        public string $ownerName,
-        public int $ownerId,
+        public ?int $actedByUserId = null
     ) {}
 
     /**
@@ -31,6 +30,10 @@ class DeletedByUser extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        if ($this->actedByUserId !== null && (int) $notifiable->getKey() === (int) $this->actedByUserId) {
+            return [];
+        }
+
         return ['database', 'broadcast'];
     }
 
@@ -40,17 +43,14 @@ class DeletedByUser extends Notification implements ShouldQueue
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
-            'type' => NotificationType::CommunitySpaceDeletedByUser->value,
+            'type' => NotificationType::CommunitySpaceRestored->value,
             'params' => [
                 'space_label' => $this->spaceLabel,
-                'owner_name' => $this->ownerName,
             ],
-            'url' => route('app.parking-spaces.trash'),
-
+            'url' => route('app.parking-spaces.show', ['parking_space' => $this->spaceId]),
             'meta' => [
                 'space_id' => $this->spaceId,
-                'deleted_by' => $this->ownerId,
-                'trashed' => true,
+                'restored_by' => $this->actedByUserId,
             ],
         ]);
     }
@@ -62,16 +62,14 @@ class DeletedByUser extends Notification implements ShouldQueue
     {
         return new BroadcastMessage([
             'id' => (string) Str::uuid(),
-            'type' => NotificationType::CommunitySpaceDeletedByUser->value,
+            'type' => NotificationType::CommunitySpaceRestored->value,
             'params' => [
                 'space_label' => $this->spaceLabel,
-                'owner_name' => $this->ownerName,
             ],
-            'url' => route('app.parking-spaces.trash'),
+            'url' => route('app.parking-spaces.show', ['parking_space' => $this->spaceId]),
             'meta' => [
                 'space_id' => $this->spaceId,
-                'deleted_by' => $this->ownerId,
-                'trashed' => true,
+                'restored_by' => $this->actedByUserId,
             ],
         ]);
     }

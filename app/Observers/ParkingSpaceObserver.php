@@ -100,7 +100,22 @@ class ParkingSpaceObserver
      */
     public function restored(ParkingSpace $parkingSpace): void
     {
-        //
+        $actorId = optional(Auth::user())->getKey();
+
+        $label = method_exists($parkingSpace, 'label')
+            ? $parkingSpace->label()
+            : ($parkingSpace->street ?: "Space #{$parkingSpace->id}");
+
+        if ($parkingSpace->user) {
+            Notification::send(
+                $parkingSpace->user,
+                new CommunitySpace\Restored(
+                    spaceId: (int) $parkingSpace->id,
+                    spaceLabel: (string) $label,
+                    actedByUserId: $actorId
+                )
+            );
+        }
     }
 
     /**
