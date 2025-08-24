@@ -11,5 +11,13 @@
         "mapbox": "Mapbox Streets",
         "google": "Google Hybrid",
         "parkingOverlay": "Nearby Parking Spaces"
+    },
+    "legend": {
+        "title": "Legend",
+        "available": "Available",
+        "almostFull": "Almost full",
+        "full": "Full",
+        "noData": "No data",
+        "disabledSpot": "Disabled parking spot"
     }
 }

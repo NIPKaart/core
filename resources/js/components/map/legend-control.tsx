@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMap } from 'react-leaflet';
 
 interface LegendControlProps {
@@ -8,6 +9,7 @@ interface LegendControlProps {
 
 export default function LegendControl({ position = 'bottomleft' }: LegendControlProps) {
     const map = useMap();
+    const { t } = useTranslation('frontend/global');
 
     useEffect(() => {
         const Legend = L.Control.extend({
@@ -22,7 +24,7 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
 
                 // Toggle button
                 const toggle = L.DomUtil.create('button', 'legend-toggle', div);
-                toggle.innerText = 'Legenda';
+                toggle.innerText = t('legend.title');
                 toggle.onclick = () => {
                     div.classList.toggle('collapsed');
                 };
@@ -35,11 +37,11 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
                 };
 
                 const content = L.DomUtil.create('div', 'legend-content', div);
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>Genoeg plek</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>Bijna VOL</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>VOL</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>Geen data</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>Invalide parkeerplek</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>${t('legend.available')}</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>${t('legend.almostFull')}</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>${t('legend.full')}</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>${t('legend.noData')}</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>${t('legend.disabledSpot')}</span><br>`;
 
                 return div;
             },
@@ -51,7 +53,7 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
         return () => {
             map.removeControl(legend);
         };
-    }, [map, position]);
+    }, [map, position, t]);
 
     return null;
 }
