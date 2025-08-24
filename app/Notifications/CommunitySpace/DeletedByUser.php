@@ -34,6 +34,9 @@ class DeletedByUser extends Notification implements ShouldQueue
         return ['database', 'broadcast'];
     }
 
+    /**
+     * Send the notification via the database channel.
+     */
     public function toDatabase($notifiable): DatabaseMessage
     {
         return new DatabaseMessage([
@@ -52,6 +55,9 @@ class DeletedByUser extends Notification implements ShouldQueue
         ]);
     }
 
+    /**
+     * Send the notification via the broadcast channel.
+     */
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
