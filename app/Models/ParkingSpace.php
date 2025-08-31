@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class ParkingSpace extends Model
 {
     /** @use HasFactory<\Database\Factories\ParkingSpaceFactory> */
-    use Favoritable, HasFactory, SoftDeletes;
+    use Favoritable, HasFactory, Searchable, SoftDeletes;
 
     protected $table = 'parking_spaces';
 
@@ -104,14 +105,46 @@ class ParkingSpace extends Model
         return $this->belongsTo(Municipality::class);
     }
 
-    // /**
-    //  * Scope a query to only include approved parking spaces.
-    //  *
-    //  * @param  \Illuminate\Database\Eloquent\Builder  $query
-    //  * @return \Illuminate\Database\Eloquent\Builder
-    //  */
-    // public function scopeApproved($query): mixed
-    // {
-    //     return $query->where('status', ParkingStatus::APPROVED);
-    // }
+    /**
+     * Get the searchable index name for the model.
+     */
+    public function searchableAs(): string
+    {
+        return 'parking_spaces';
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return (string) $this->status === ParkingStatus::APPROVED->value;
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => (string) $this->id,
+            'street' => (string) $this->street,
+            'city' => (string) $this->city,
+            'postcode' => (string) $this->postcode,
+            'suburb' => (string) ($this->suburb ?? ''),
+            'neighbourhood' => (string) ($this->neighbourhood ?? ''),
+            'amenity' => (string) ($this->amenity ?? ''),
+            'description' => (string) ($this->description ?? ''),
+            'orientation' => $this->orientation?->value ?? (string) $this->orientation,
+            'status' => $this->status?->value ?? (string) $this->status,
+            'country_id' => (int) $this->country_id,
+            'province_id' => (int) $this->province_id,
+            'municipality_id' => (int) $this->municipality_id,
+            '_geo' => ['lat' => (float) $this->latitude, 'lng' => (float) $this->longitude],
+            'created_at' => optional($this->created_at)->toAtomString(),
+            'updated_at' => optional($this->updated_at)->toAtomString(),
+        ];
+    }
 }
