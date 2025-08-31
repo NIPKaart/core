@@ -78,7 +78,7 @@ class ParkingOffstreet extends Model
      */
     public function shouldBeSearchable(): bool
     {
-        return (bool) $this->visibility === true;
+        return (bool) $this->visibility;
     }
 
     /**
