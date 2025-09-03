@@ -66,7 +66,7 @@ export default function UserForm({ roles, action, method = 'post', initial, isEd
                                     id="password"
                                     name="password"
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="password"
                                     autoComplete="new-password"
                                     disabled={processing}
                                 />
@@ -78,7 +78,7 @@ export default function UserForm({ roles, action, method = 'post', initial, isEd
                                     id="password_confirmation"
                                     name="password_confirmation"
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder="password"
                                     autoComplete="new-password"
                                     disabled={processing}
                                 />

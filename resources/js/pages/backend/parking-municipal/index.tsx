@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
+import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { BreadcrumbItem, Municipality, PaginatedResponse, ParkingMunicipal } from '@/types';
 import { ParkingOrientation } from '@/types/enum';
 import { Head, Link, router } from '@inertiajs/react';
@@ -62,15 +64,15 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
         if (visibility.length > 0) query.visibility = visibility.join(',');
         if (orientation.length > 0) query.orientation = orientation.join(',');
 
-        router.get(route('app.parking-municipal.municipalities.index', { municipality: municipality.id }), query, {
+        router.get(app.parkingMunicipal.municipality({ municipality: municipality.id }), query, {
             preserveScroll: true,
             preserveState: true,
         });
     };
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.parking-municipal.municipalities') },
-        { title: municipality.name, href: route('app.parking-municipal.municipalities.index', { municipality: municipality.id }) },
+        { title: t('breadcrumbs.index'), href: parkingMunicipal.index() },
+        { title: municipality.name, href: app.parkingMunicipal.municipality({ municipality: municipality.id }) },
     ];
 
     return (
@@ -87,7 +89,7 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
                 </div>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end">
                     <Button asChild variant="outline" className="w-full sm:w-auto">
-                        <Link href={route('app.parking-municipal.municipalities')}>
+                        <Link href={app.parkingMunicipal.index()}>
                             <ArrowLeft className="h-4 w-4" />
                             {tGlobal('common.back')}
                         </Link>

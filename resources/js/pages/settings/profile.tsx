@@ -2,6 +2,7 @@ import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 
+import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
 import LanguageField from '@/components/forms/language-field';
 import HeadingSmall from '@/components/heading-small';
@@ -12,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import i18n from '@/i18n';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import profile from '@/routes/profile';
+import verification from '@/routes/verification';
 import { useTranslation } from 'react-i18next';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
@@ -22,7 +25,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: tSettings('profile.title'),
-            href: route('profile.edit'),
+            href: profile.edit().url,
         },
     ];
 
@@ -35,8 +38,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     <HeadingSmall title={tSettings('profile.title')} description={tSettings('profile.description')} />
 
                     <Form
-                        method="patch"
-                        action={route('profile.update')}
+                        {...ProfileController.update.form()}
                         options={{
                             preserveScroll: true,
                         }}
@@ -84,7 +86,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                         <p className="-mt-4 text-sm text-muted-foreground">
                                             {tSettings('profile.verify_message')}{' '}
                                             <Link
-                                                href={route('verification.send')}
+                                                href={verification.send()}
                                                 method="post"
                                                 as="button"
                                                 className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"

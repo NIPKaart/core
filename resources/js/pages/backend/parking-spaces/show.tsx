@@ -9,6 +9,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import { BreadcrumbItem, ParkingSpace, ParkingSpaceConfirmation } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import clsx from 'clsx';
@@ -125,8 +126,8 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
     ];
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
-        { title: parkingSpace.id, href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
+        { title: t('breadcrumbs.index'), href: app.parkingSpaces.index() },
+        { title: parkingSpace.id, href: app.parkingSpaces.show({ parking_space: parkingSpace.id }) },
     ];
 
     return (
@@ -143,7 +144,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
 
                     <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
                         <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
-                            <Link href={route('app.parking-spaces.index')}>
+                            <Link href={app.parkingSpaces.index()}>
                                 <ArrowLeft className="h-4 w-4" />
                                 {tGlobal('common.back')}
                             </Link>
@@ -151,7 +152,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
 
                         {can('parking-space.update') && (
                             <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
-                                <Link href={route('app.parking-spaces.edit', { id: parkingSpace.id })}>
+                                <Link href={app.parkingSpaces.edit({ parking_space: parkingSpace.id })}>
                                     <Edit className="h-4 w-4" />
                                     {tGlobal('common.edit')}
                                 </Link>
@@ -270,7 +271,7 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                                             variant="outline"
                                             className="transition-colors hover:bg-accent hover:text-accent-foreground"
                                         >
-                                            <Link href={route('app.parking-spaces.confirmations.index', { parking_space: parkingSpace.id })}>
+                                            <Link href={app.parkingSpaces.confirmations.index({ parking_space: parkingSpace.id })}>
                                                 {t('show.cards.confirmations.show_all')}
                                             </Link>
                                         </Button>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import { BreadcrumbItem, PaginatedResponse, Role } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -23,7 +24,7 @@ export default function Index({ roles }: PageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('breadcrumbs.index'),
-            href: route('app.roles.index'),
+            href: app.roles.index(),
         },
     ];
 
@@ -40,7 +41,7 @@ export default function Index({ roles }: PageProps) {
     };
 
     const deleteRole = (id: number) => {
-        router.delete(route('app.roles.destroy', { id }), {
+        router.delete(app.roles.destroy(id), {
             onSuccess: () => toast.success(t('toasts.deleted')),
             onError: () => toast.error(t('toasts.error')),
         });
@@ -57,7 +58,7 @@ export default function Index({ roles }: PageProps) {
                         <h1 className="text-2xl font-bold">{t('head.title')}</h1>
                         {can('role.create') && (
                             <Button variant="outline" asChild>
-                                <Link href={route('app.roles.create')}>
+                                <Link href={app.roles.create()}>
                                     <Plus className="h-4 w-4" />
                                     {t('buttons.add')}
                                 </Link>

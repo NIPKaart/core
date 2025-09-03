@@ -6,6 +6,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
@@ -26,8 +27,8 @@ export default function Index({ spaces }: PageProps) {
     const columns = getParkingTrashColumns(can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
-        { title: t('breadcrumbs.trash'), href: route('app.parking-spaces.trash') },
+        { title: t('breadcrumbs.index'), href: app.parkingSpaces.index() },
+        { title: t('breadcrumbs.trash'), href: app.parkingSpaces.trash() },
     ];
 
     return (

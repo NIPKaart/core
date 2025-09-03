@@ -9,6 +9,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import notifications from '@/routes/notifications';
 import type { NotificationItem, Translations } from '@/types';
 import { resolveNotificationTitleBackend, resolveTypeLabelBackend } from '@/utils/notifications';
 import { Link, router } from '@inertiajs/react';
@@ -135,14 +136,14 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
 
                 const markRead = () =>
                     router.get(
-                        route('notifications.read', { id: n.id }),
+                        notifications.read({ id: n.id }),
                         {},
                         { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
                     );
 
                 const markUnread = () =>
                     router.get(
-                        route('notifications.unread', { id: n.id }),
+                        notifications.unread({ id: n.id }),
                         {},
                         { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
                     );
@@ -188,7 +189,7 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                                     className="cursor-pointer text-destructive"
                                     onSelect={(e) => {
                                         e.preventDefault();
-                                        router.delete(route('notifications.remove', { id: n.id }), {
+                                        router.delete(notifications.remove({ id: n.id }), {
                                             preserveState: true,
                                             onSuccess: () => router.reload({ only: ['notifications'] }),
                                         });

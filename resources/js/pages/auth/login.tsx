@@ -2,6 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { register } from '@/routes';
+import password from '@/routes/password';
 
 interface LoginProps {
     status?: string;
@@ -22,7 +25,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         <AuthLayout title={t('login.title')} description={t('login.description')}>
             <Head title={t('login.title')} />
 
-            <Form method="post" action={route('login')} resetOnSuccess={['password']} className="flex flex-col gap-6">
+            <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="flex flex-col gap-6">
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
@@ -45,7 +48,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 <div className="flex items-center">
                                     <Label htmlFor="password">{t('login.password')}</Label>
                                     {canResetPassword && (
-                                        <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
+                                        <TextLink href={password.request()} className="ml-auto text-sm" tabIndex={5}>
                                             {t('login.forgot')}
                                         </TextLink>
                                     )}
@@ -75,7 +78,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                         <div className="text-center text-sm text-muted-foreground">
                             {t('login.no_account')}{' '}
-                            <TextLink href={route('register')} tabIndex={5}>
+                            <TextLink href={register()} tabIndex={5}>
                                 {t('login.signup')}
                             </TextLink>
                         </div>

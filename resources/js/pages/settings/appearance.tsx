@@ -6,6 +6,7 @@ import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { appearance } from '@/routes';
 import { useTranslation } from 'react-i18next';
 
 export default function Appearance() {
@@ -14,7 +15,7 @@ export default function Appearance() {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('appearance.meta.breadcrumb'),
-            href: '/settings/appearance',
+            href: appearance().url,
         },
     ];
 

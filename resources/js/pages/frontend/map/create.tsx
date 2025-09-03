@@ -4,6 +4,7 @@ import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
 import AddParkingModal from '@/components/modals/modal-add-parking';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
+import locationMap from '@/routes/location-map';
 import { NominatimAddress, ParkingSpace } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet';
@@ -152,8 +153,8 @@ export default function AddLocation() {
 
     const actionWithQuery =
         markerPosition && Array.isArray(markerPosition)
-            ? `${route('map.store')}?latitude=${lat}&longitude=${lng}&nominatim=${encodeURIComponent(JSON.stringify(nominatimData ?? {}))}`
-            : route('map.store');
+            ? `${locationMap.store().url}?latitude=${lat}&longitude=${lng}&nominatim=${encodeURIComponent(JSON.stringify(nominatimData ?? {}))}`
+            : locationMap.store().url;
 
     return (
         <>

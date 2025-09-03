@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import parkingOffstreet from '@/routes/app/parking-offstreet';
 import { ParkingOffstreet, Translations } from '@/types';
 import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -176,7 +177,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
                         className="cursor-pointer"
                         onCheckedChange={(checked) => {
                             router.post(
-                                route('app.parking-offstreet.toggle-visibility'),
+                                parkingOffstreet.toggleVisibility(),
                                 {
                                     ids: [space.id],
                                     visibility: checked,

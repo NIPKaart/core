@@ -6,10 +6,12 @@ import { Transition } from '@headlessui/react';
 import { Form, Head } from '@inertiajs/react';
 import { useRef } from 'react';
 
+import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import password from '@/routes/password';
 import { useTranslation } from 'react-i18next';
 
 export default function Password() {
@@ -21,7 +23,7 @@ export default function Password() {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('password.meta.breadcrumb'),
-            href: '/settings/password',
+            href: password.edit().url,
         },
     ];
 
@@ -34,8 +36,7 @@ export default function Password() {
                     <HeadingSmall title={t('password.title')} description={t('password.description')} />
 
                     <Form
-                        method="put"
-                        action={route('password.update')}
+                        {...PasswordController.update.form()}
                         options={{
                             preserveScroll: true,
                         }}

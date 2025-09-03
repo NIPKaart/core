@@ -5,6 +5,7 @@ import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import profile from '@/routes/profile';
 import { BreadcrumbItem, ParkingSpace } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Building2, Clock4, Compass, Globe, Hash, Home, Landmark, MapPin, Tag, Trash2 } from 'lucide-react';
@@ -28,8 +29,8 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
     const { t, tGlobal } = useResourceTranslation('backend/profile');
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('parking_spaces.breadcrumbs.index'), href: route('profile.parking-spaces.index') },
-        { title: t('parking_spaces.breadcrumbs.show'), href: route('profile.parking-spaces.show', { id: parkingSpace.id }) },
+        { title: t('parking_spaces.breadcrumbs.index'), href: profile.parkingSpaces.index() },
+        { title: t('parking_spaces.breadcrumbs.show'), href: profile.parkingSpaces.show({ id: parkingSpace.id }) },
     ];
 
     const statusOpt = selectOptions.statuses.find((s) => s.value === parkingSpace.status)!;
@@ -47,7 +48,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
     };
 
     const deleteParkingSpace = (id: string) => {
-        router.delete(route('profile.parking-spaces.destroy', { id }), {
+        router.delete(profile.parkingSpaces.destroy({ id }), {
             onSuccess: () => toast.success(t('parking_spaces.toast.success')),
             onError: () => toast.error(t('parking_spaces.toast.error')),
         });
@@ -124,7 +125,7 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
                 <h1 className="text-2xl font-bold tracking-tight">{t('parking_spaces.heading.show', { id: parkingSpace.id })}</h1>
                 <div className="flex w-full gap-2 sm:w-auto sm:justify-end sm:self-start">
                     <Button asChild variant="outline" className="w-1/2 sm:w-auto">
-                        <Link href={route('profile.parking-spaces.index')}>
+                        <Link href={profile.parkingSpaces.index()}>
                             <ArrowLeft className="h-4 w-4" />
                             {tGlobal('common.back')}
                         </Link>

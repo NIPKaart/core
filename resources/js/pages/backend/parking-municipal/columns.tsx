@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { ParkingMunicipal, Translations } from '@/types';
 import { ParkingOrientation } from '@/types/enum';
 import { router } from '@inertiajs/react';
@@ -79,7 +80,7 @@ export function getParkingMunicipalColumns(
                         className="cursor-pointer"
                         onCheckedChange={(checked) => {
                             router.post(
-                                route('app.parking-municipal.toggle-visibility'),
+                                parkingMunicipal.toggleVisibility(),
                                 {
                                     ids: [space.id],
                                     visibility: checked,

@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
+import { locationMap } from '@/routes';
+import profile from '@/routes/profile';
 import { Favorite } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { HeartCrack, Landmark, MapPin, Warehouse } from 'lucide-react';
@@ -34,7 +36,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
         );
     }, [favorites, search]);
 
-    const breadcrumbs = [{ title: t('favorites.breadcrumbs.index'), href: route('profile.favorites.index') }];
+    const breadcrumbs = [{ title: t('favorites.breadcrumbs.index'), href: profile.favorites.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -58,7 +60,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                         <span className="text-lg font-semibold text-muted-foreground">{t('favorites.empty.title')}</span>
                         <span className="text-sm text-muted-foreground">{t('favorites.empty.subtitle')}</span>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
-                            <Link href={route('map')}>
+                            <Link href={locationMap()}>
                                 <MapPin className="h-5 w-5" />
                                 {t('common.actions.go_to_map')}
                             </Link>

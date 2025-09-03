@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
+import locationMap from '@/routes/location-map';
+import profile from '@/routes/profile';
 import { BreadcrumbItem, ParkingSpace } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { AlertCircle, CheckCircle, MapPin, Plus, XCircle } from 'lucide-react';
@@ -32,7 +34,7 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
         );
     }, [parkingSpaces, search]);
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('parking_spaces.breadcrumbs.index'), href: route('profile.parking-spaces.index') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('parking_spaces.breadcrumbs.index'), href: profile.parkingSpaces.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -59,7 +61,7 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
                             <span className="text-sm text-muted-foreground">{t('parking_spaces.empty.subtitle')}</span>
                         </div>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
-                            <Link href={route('map.add')}>
+                            <Link href={locationMap.add()}>
                                 <Plus className="h-5 w-5" />
                                 {t('common.actions.add_first_parking_space')}
                             </Link>
@@ -92,9 +94,7 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
                                         <StatusBadge status={space.status} label={statusOpt?.label ?? space.status} />
                                         <div className="flex gap-1">
                                             <Button asChild size="sm" variant="outline" className="me-1">
-                                                <Link href={route('profile.parking-spaces.show', { id: space.id })}>
-                                                    {t('common.actions.details')}
-                                                </Link>
+                                                <Link href={profile.parkingSpaces.show({ id: space.id })}>{t('common.actions.details')}</Link>
                                             </Button>
                                             {space.status === 'approved' && (
                                                 <Button asChild size="sm" variant="default" title={t('common.actions.view_on_map')}>

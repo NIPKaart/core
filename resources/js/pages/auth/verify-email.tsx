@@ -2,9 +2,11 @@
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
+import EmailVerificationNotificationController from '@/actions/App/Http/Controllers/Auth/EmailVerificationNotificationController';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import AuthLayout from '@/layouts/auth-layout';
+import { logout } from '@/routes';
 import { useTranslation } from 'react-i18next';
 
 export default function VerifyEmail({ status }: { status?: string }) {
@@ -16,7 +18,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
 
             {status === 'verification-link-sent' && <div className="mb-4 text-center text-sm font-medium text-green-600">{t('verify.sent')}</div>}
 
-            <Form method="post" action={route('verification.send')} className="space-y-6 text-center">
+            <Form {...EmailVerificationNotificationController.store.form()} className="space-y-6 text-center">
                 {({ processing }) => (
                     <>
                         <Button disabled={processing} variant="secondary">
@@ -24,7 +26,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
                             {t('verify.resend')}
                         </Button>
 
-                        <TextLink href={route('logout')} method="post" className="mx-auto block text-sm">
+                        <TextLink href={logout()} method="post" className="mx-auto block text-sm">
                             {t('verify.logout')}
                         </TextLink>
                     </>
