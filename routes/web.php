@@ -14,9 +14,9 @@ use Inertia\Inertia;
 // Frontend routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 // Map
-Route::get('map', [ParkingSpaceController::class, 'map'])->name('map');
-Route::get('map/add', [ParkingSpaceController::class, 'locationAdd'])->name('map.add');
-Route::post('map/add', [ParkingSpaceController::class, 'store'])->name('map.store');
+Route::get('map', [ParkingSpaceController::class, 'map'])->name('location-map');
+Route::get('map/add', [ParkingSpaceController::class, 'locationAdd'])->name('location-map.add');
+Route::post('map/add', [ParkingSpaceController::class, 'store'])->name('location-map.store');
 // Other frontend routes
 Route::get('garages', [GarageController::class, 'index'])->name('garages');
 Route::get('about', [AboutController::class, 'index'])->name('about');
@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Single actions
             Route::patch('{parking_space}/restore', [Admin\ParkingSpaceController::class, 'restore'])->name('restore');
-            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-destroy');
+            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-delete');
 
             // Bulk actions
             Route::prefix('bulk')->as('bulk.')->group(function () {
@@ -82,7 +82,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // ParkingOffstreet routes
         Route::prefix('parking-offstreet')->as('parking-offstreet.')->group(function () {
-            Route::get('index', [Admin\ParkingOffstreetController::class, 'index'])->name('index');
+            Route::get('/', [Admin\ParkingOffstreetController::class, 'index'])->name('index');
             Route::post('toggle-visibility', [Admin\ParkingOffstreetController::class, 'toggleVisibility'])->name('toggle-visibility');
 
             Route::prefix('bulk')->as('bulk.')->group(function () {
@@ -92,8 +92,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // ParkingMunicipal routes
         Route::prefix('parking-municipal')->as('parking-municipal.')->group(function () {
-            Route::get('municipalities', [Admin\ParkingMunicipalController::class, 'municipalities'])->name('municipalities');
-            Route::get('municipalities/{municipality}', [Admin\ParkingMunicipalController::class, 'index'])->name('municipalities.index');
+            Route::get('/', [Admin\ParkingMunicipalController::class, 'index'])->name('index');
+            Route::get('/{municipality}', [Admin\ParkingMunicipalController::class, 'municipality'])->name('municipality');
 
             // Toggle visibility
             Route::post('toggle-visibility', [Admin\ParkingMunicipalController::class, 'toggleVisibility'])->name('toggle-visibility');

@@ -118,7 +118,12 @@ class ParkingSpace extends Model
      */
     public function shouldBeSearchable(): bool
     {
-        return (string) $this->status === ParkingStatus::APPROVED->value;
+        $status = $this->status;
+
+        if ($status instanceof ParkingStatus) {
+            return $status === ParkingStatus::APPROVED;
+        }
+        return (string) $status === ParkingStatus::APPROVED->value;
     }
 
     /**

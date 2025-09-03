@@ -28,4 +28,18 @@ class UpdateRoleRequest extends FormRequest
             'permissions.*' => ['integer', 'exists:permissions,id'],
         ];
     }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (is_array($this->permissions)) {
+            $this->merge([
+                'permissions' => collect($this->permissions)
+                    ->map(fn ($v) => (int) $v)
+                    ->all(),
+            ]);
+        }
+    }
 }
