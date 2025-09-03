@@ -87,7 +87,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
         );
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: notifications.index().url }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: notifications.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

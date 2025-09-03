@@ -15,8 +15,8 @@ export default function Create({ roles }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/users');
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: app.users.index().url },
-        { title: t('breadcrumbs.create'), href: app.users.create().url },
+        { title: t('breadcrumbs.index'), href: app.users.index() },
+        { title: t('breadcrumbs.create'), href: app.users.create() },
     ];
 
     return (

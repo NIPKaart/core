@@ -35,7 +35,7 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
         return municipalities.filter((m) => m.name.toLowerCase().includes(s));
     }, [municipalities, search]);
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingMunicipal.index().url }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingMunicipal.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

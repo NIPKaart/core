@@ -17,8 +17,8 @@ export default function Edit({ user, userRole, roles }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/users');
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: app.users.index().url },
-        { title: t('breadcrumbs.edit', { name: user.name }), href: app.users.edit({ user: user.id }).url },
+        { title: t('breadcrumbs.index'), href: app.users.index() },
+        { title: t('breadcrumbs.edit', { name: user.name }), href: app.users.edit({ user: user.id }) },
     ];
 
     return (

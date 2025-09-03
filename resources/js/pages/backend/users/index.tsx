@@ -34,7 +34,7 @@ export default function Index({ users }: PageProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('breadcrumbs.index'),
-            href: app.users.index().url,
+            href: app.users.index(),
         },
     ];
 

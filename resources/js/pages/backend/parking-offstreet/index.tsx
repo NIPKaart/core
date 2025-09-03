@@ -113,7 +113,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         );
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingOffstreet.index().url }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingOffstreet.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

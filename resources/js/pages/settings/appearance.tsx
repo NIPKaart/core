@@ -15,7 +15,7 @@ export default function Appearance() {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('appearance.meta.breadcrumb'),
-            href: appearance().url,
+            href: appearance(),
         },
     ];
 

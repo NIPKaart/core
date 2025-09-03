@@ -23,7 +23,7 @@ export default function Password() {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('password.meta.breadcrumb'),
-            href: password.edit().url,
+            href: password.edit(),
         },
     ];
 

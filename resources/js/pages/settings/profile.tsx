@@ -25,7 +25,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: tSettings('profile.title'),
-            href: profile.edit().url,
+            href: profile.edit(),
         },
     ];
 
