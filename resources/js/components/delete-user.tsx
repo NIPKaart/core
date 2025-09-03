@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 
 import HeadingSmall from '@/components/heading-small';
 
+import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -34,8 +35,7 @@ export default function DeleteUser() {
                         <DialogDescription>{tSettings('profile.delete.dialog.description')}</DialogDescription>
 
                         <Form
-                            method="delete"
-                            action={route('profile.destroy')}
+                            {...ProfileController.destroy.form()}
                             options={{
                                 preserveScroll: true,
                             }}

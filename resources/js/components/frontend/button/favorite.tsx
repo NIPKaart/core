@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
+import profile from '@/routes/profile';
 import { router } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
@@ -21,7 +22,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
         if (!user || loading) return;
         setLoading(true);
         if (isFavorited) {
-            router.delete(route('profile.favorites.destroy'), {
+            router.delete(profile.favorites.destroy(), {
                 data: { type, id },
                 preserveScroll: true,
                 preserveState: true,
@@ -31,7 +32,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
             });
         } else {
             router.post(
-                route('profile.favorites.store'),
+                profile.favorites.store(),
                 { type, id },
                 {
                     preserveScroll: true,

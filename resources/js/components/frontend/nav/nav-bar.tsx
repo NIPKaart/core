@@ -3,7 +3,10 @@ import LanguageSwitcher from '@/components/language-switcher';
 import BellBadge from '@/components/notifications/badge-bell';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
+import { useIsActive } from '@/lib/is-active';
 import { cn } from '@/lib/utils';
+import { about, contact, dashboard, garages, home, locationMap, login, logout } from '@/routes';
+import { add } from '@/routes/location-map';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
@@ -20,28 +23,28 @@ export default function Navbar() {
     const page = usePage<SharedData>();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { auth } = page.props;
+    const { isActive } = useIsActive();
 
     const navigation = [
-        { name: t('home'), href: route('home'), routeName: 'home' },
+        { name: t('home'), href: home() },
         {
             name: t('map.title'),
-            routeName: 'map',
             children: [
                 {
                     name: t('map.view.title'),
-                    href: route('map'),
+                    href: locationMap(),
                     description: t('map.view.description'),
                 },
                 {
                     name: t('map.add.title'),
-                    href: route('map.add'),
+                    href: add(),
                     description: t('map.add.description'),
                 },
             ],
         },
-        { name: t('garages'), href: route('garages'), routeName: 'garages' },
-        { name: t('about'), href: route('about'), routeName: 'about' },
-        { name: t('contact'), href: route('contact'), routeName: 'contact' },
+        { name: t('garages'), href: garages() },
+        { name: t('about'), href: about() },
+        { name: t('contact'), href: contact() },
     ];
 
     useEffect(() => {
@@ -57,7 +60,7 @@ export default function Navbar() {
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-[18px] lg:px-8 lg:py-5" aria-label="Global">
                     {/* Logo */}
                     <div className="z-50 flex lg:flex-1">
-                        <Link href={route('home')} className="-m-1.5 p-1.5">
+                        <Link href={home()} className="-m-1.5 p-1.5">
                             <span className="sr-only">NIPKaart</span>
                             <img src="/assets/images/logo-light.svg" alt="NIPKaart" className="h-8 w-auto dark:hidden" />
                             <img src="/assets/images/logo-dark.svg" alt="NIPKaart" className="hidden h-8 w-auto dark:block" />
@@ -98,7 +101,7 @@ export default function Navbar() {
                                             <NavigationMenuTrigger
                                                 className={cn(
                                                     'h-10 rounded bg-transparent px-6 text-base font-medium transition hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 dark:hover:bg-transparent',
-                                                    route().current(item.routeName + '*')
+                                                    item.children.some((child) => isActive(child.href))
                                                         ? 'text-orange-600 dark:text-orange-400'
                                                         : 'text-gray-900 dark:text-white',
                                                 )}
@@ -113,7 +116,7 @@ export default function Navbar() {
                                                                 href={child.href}
                                                                 className={cn(
                                                                     'block rounded-md px-3 py-2 transition-colors hover:bg-accent focus:bg-accent',
-                                                                    route().current(child.href)
+                                                                    isActive(child.href)
                                                                         ? 'text-orange-600 dark:text-orange-400'
                                                                         : 'text-gray-900 dark:text-neutral-100',
                                                                 )}
@@ -131,11 +134,10 @@ export default function Navbar() {
                                     ) : (
                                         <NavItem
                                             name={item.name}
-                                            href={item.href}
-                                            routeName={item.routeName}
+                                            href={item.href.url}
                                             className={cn(
                                                 'h-10 px-6 text-base',
-                                                route().current(item.routeName) && 'font-semibold text-orange-600 dark:text-orange-400',
+                                                isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
                                             )}
                                         />
                                     )}
@@ -155,7 +157,7 @@ export default function Navbar() {
                         {auth.user ? (
                             <UserNavMenu />
                         ) : (
-                            <Link href={route('login')} className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <Link href={login()} className="text-sm font-semibold text-gray-900 dark:text-white">
                                 {t('login')} →
                             </Link>
                         )}
@@ -181,7 +183,7 @@ export default function Navbar() {
                                         <AccordionTrigger
                                             className={cn(
                                                 'px-4 py-2 text-left text-base font-medium transition',
-                                                route().current(item.routeName + '*')
+                                                item.children.some((child) => isActive(child.href))
                                                     ? 'text-orange-600 dark:text-orange-400'
                                                     : 'text-gray-800 dark:text-white',
                                             )}
@@ -196,7 +198,7 @@ export default function Navbar() {
                                                     onClick={() => setMobileMenuOpen(false)}
                                                     className={cn(
                                                         'block px-2 py-1 text-sm transition',
-                                                        route().current(child.href)
+                                                        isActive(child.href)
                                                             ? 'font-semibold text-orange-600 dark:text-orange-400'
                                                             : 'text-gray-700 hover:underline dark:text-neutral-200',
                                                     )}
@@ -207,13 +209,7 @@ export default function Navbar() {
                                         </AccordionContent>
                                     </AccordionItem>
                                 ) : (
-                                    <NavItem
-                                        key={item.name}
-                                        name={item.name}
-                                        href={item.href}
-                                        routeName={item.routeName}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    />
+                                    <NavItem key={item.name} name={item.name} href={item.href.url} onClick={() => setMobileMenuOpen(false)} />
                                 ),
                             )}
                         </Accordion>
@@ -224,7 +220,7 @@ export default function Navbar() {
                                 <>
                                     <div className="flex items-center justify-between">
                                         <Link
-                                            href={route('dashboard')}
+                                            href={dashboard()}
                                             onClick={() => setMobileMenuOpen(false)}
                                             className="flex items-center gap-2 text-base font-medium text-gray-800 hover:underline dark:text-white"
                                         >
@@ -233,7 +229,7 @@ export default function Navbar() {
                                         </Link>
 
                                         <Link
-                                            href={route('logout')}
+                                            href={logout()}
                                             method="post"
                                             as="button"
                                             onClick={() => setMobileMenuOpen(false)}
@@ -252,7 +248,7 @@ export default function Navbar() {
                             ) : (
                                 <div className="flex items-center justify-between">
                                     <Link
-                                        href={route('login')}
+                                        href={login()}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="font-semibold text-gray-900 dark:text-white"
                                     >

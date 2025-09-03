@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import app from '@/routes/app';
+import { Link } from '@inertiajs/react';
 import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, MapPinned, Share2, X } from 'lucide-react';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -194,12 +196,12 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                     <div className="overflow-y-auto">{loading ? <LoadingSkeleton /> : error ? <ErrorBlock /> : <TabBlock />}</div>
                     <DialogFooter className="flex flex-row justify-between gap-2">
                         {can('parking-space.view') && data?.id && (
-                            <a href={route('app.parking-spaces.show', { id: data.id })} target="_blank" rel="noopener">
+                            <Link href={app.parkingSpaces.show({ parking_space: data.id })} target="_blank" rel="noopener">
                                 <Button variant="outline" className="flex cursor-pointer items-center gap-2" title="Go to admin page">
                                     <Eye className="h-4 w-4" />
                                     Show
                                 </Button>
-                            </a>
+                            </Link>
                         )}
                         <Button className="cursor-pointer" variant="secondary" onClick={onClose}>
                             {tGlobal('common.close')}
@@ -239,12 +241,12 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                 </div>
                 <DrawerFooter className="flex flex-row gap-2">
                     {can('parking-space.view') && data?.id && (
-                        <a href={route('app.parking-spaces.show', { id: data.id })} target="_blank" rel="noopener" className="flex-1">
+                        <Link href={app.parkingSpaces.show({ parking_space: data.id })} target="_blank" rel="noopener" className="flex-1">
                             <Button variant="outline" className="flex w-full items-center gap-2" title="Go to admin page">
                                 <Eye className="h-4 w-4" />
                                 Show
                             </Button>
-                        </a>
+                        </Link>
                     )}
                     <DrawerClose asChild>
                         <Button variant="secondary" className="flex-1">

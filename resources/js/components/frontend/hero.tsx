@@ -1,3 +1,6 @@
+import { contact, locationMap } from '@/routes';
+import { Link } from '@inertiajs/react';
+
 export default function Hero() {
     return (
         <div className="relative isolate px-6 pt-20 lg:px-8">
@@ -22,15 +25,15 @@ export default function Hero() {
                     en help anderen navigeren door de wirwar van regels.
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <a
-                        href={route('map')}
+                    <Link
+                        href={locationMap()}
                         className="rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
                     >
                         Bekijk de kaart
-                    </a>
-                    <a href={route('contact')} className="text-sm leading-6 font-semibold text-gray-900 dark:text-white">
+                    </Link>
+                    <Link href={contact()} className="text-sm leading-6 font-semibold text-gray-900 dark:text-white">
                         Meer weten <span aria-hidden="true">→</span>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>
