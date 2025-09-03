@@ -39,7 +39,7 @@ export default function Edit({ user, userRole, roles }: PageProps) {
             <div className="px-4 py-6 sm:px-6">
                 <UserForm
                     roles={roles}
-                    action={app.users.update({ id: user.id }).url}
+                    action={app.users.update({ user: user.id }).url}
                     method="put"
                     initial={{ name: user.name, email: user.email, role: userRole }}
                     isEdit

@@ -63,7 +63,7 @@ export function useSpaceActionDialog(options: Options = {}) {
         },
         forceDelete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(app.parkingSpaces.forceDelete({ parking_space: dialogSubject.id }), {
+            router.delete(app.parkingSpaces.forceDestroy({ parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(t('toast.forceDelete.success'));

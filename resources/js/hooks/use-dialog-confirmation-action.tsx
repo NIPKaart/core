@@ -67,7 +67,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 closeDialog();
                 return;
             }
-            router.delete(app.parkingSpaces.confirmations.bulk.destroy(parking_space_id), {
+            router.delete(app.parkingSpaces.confirmations.bulk.destroy({ parking_space: parking_space_id }), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {

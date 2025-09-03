@@ -70,7 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Single actions
             Route::patch('{parking_space}/restore', [Admin\ParkingSpaceController::class, 'restore'])->name('restore');
-            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-delete');
+            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-destroy');
 
             // Bulk actions
             Route::prefix('bulk')->as('bulk.')->group(function () {
