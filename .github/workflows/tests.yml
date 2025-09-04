@@ -43,8 +43,8 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
-      - name: Run migrations
-        run: php artisan migrate --no-interaction
+      - name: Generate Wayfinder types (debug)
+        run: php artisan wayfinder:generate --with-form -vvv
 
       - name: Build Assets
         run: npm run build
