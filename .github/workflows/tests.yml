@@ -29,7 +29,7 @@ jobs:
     env:
       APP_ENV: testing
       DB_CONNECTION: mysql
-      DB_URL: mysql://laravel_user:${{ secrets.DB_PASSWORD }}@127.0.0.1:${{ job.services.mysql.ports[3306] }}/db_test_laravel
+      DB_URL: mysql://laravel_user:${{ secrets.DB_PASSWORD }}@127.0.0.1:33306/db_test_laravel
     steps:
       - name: Checkout
         uses: actions/checkout@v5
