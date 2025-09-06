@@ -43,7 +43,7 @@ jobs:
           extensions: pdo_mysql
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22.19.0'
           cache: 'npm'
