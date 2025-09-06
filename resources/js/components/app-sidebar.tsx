@@ -2,6 +2,15 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { dashboard, garages, home, locationMap } from '@/routes';
+import parkingMunicipal from '@/routes/app/parking-municipal';
+import parkingOffstreet from '@/routes/app/parking-offstreet';
+import parkingRules from '@/routes/app/parking-rules';
+import parkingSpaces from '@/routes/app/parking-spaces';
+import roles from '@/routes/app/roles';
+import users from '@/routes/app/users';
+import logViewer from '@/routes/log-viewer';
+import profile from '@/routes/profile';
 import { NavGroup, SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { icons } from 'lucide-react';
@@ -24,17 +33,17 @@ export function AppSidebar() {
         items: [
             {
                 title: t('dashboard'),
-                href: route('dashboard'),
+                href: dashboard(),
                 icon: icons.LayoutGrid,
             },
             {
                 title: t('map'),
-                href: route('map'),
+                href: locationMap(),
                 icon: icons.Map,
             },
             {
                 title: t('garages'),
-                href: route('garages'),
+                href: garages(),
                 icon: icons.SquareParking,
             },
         ].filter(Boolean) as NavItem[],
@@ -45,13 +54,13 @@ export function AppSidebar() {
         items: [
             {
                 title: t('my_locations'),
-                href: route('profile.parking-spaces.index'),
+                href: profile.parkingSpaces.index(),
                 icon: icons.MapPin,
                 badge: activeUserParkingSpaces || undefined,
             },
             {
                 title: t('my_favorites'),
-                href: route('profile.favorites.index'),
+                href: profile.favorites.index(),
                 icon: icons.Heart,
             },
         ].filter(Boolean) as NavItem[],
@@ -62,28 +71,28 @@ export function AppSidebar() {
         items: [
             can('parking-space.view_any') && {
                 title: t('community_spaces'),
-                href: route('app.parking-spaces.index'),
+                href: parkingSpaces.index(),
                 icon: icons.MapPin,
                 badge: activeParkingSpaces,
             },
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),
-                href: route('app.parking-offstreet.index'),
+                href: parkingOffstreet.index(),
                 icon: icons.SquareParking,
             },
             can('parking-municipal.view_any') && {
                 title: t('municipalities'),
-                href: route('app.parking-municipal.municipalities'),
+                href: parkingMunicipal.index(),
                 icon: icons.Building,
             },
             can('parking-rule.view_any') && {
                 title: t('rules'),
-                href: route('app.parking-rules.index'),
+                href: parkingRules.index(),
                 icon: icons.Gavel,
             },
             can('parking-space.restore') && {
                 title: t('trash'),
-                href: route('app.parking-spaces.trash'),
+                href: parkingSpaces.trash(),
                 icon: icons.Trash2,
                 badge: trashedParkingSpaces || undefined,
             },
@@ -95,13 +104,13 @@ export function AppSidebar() {
         items: [
             can('user.view_any') && {
                 title: t('users'),
-                href: route('app.users.index'),
+                href: users.index(),
                 icon: icons.Users,
                 badge: userCount,
             },
             can('role.view_any') && {
                 title: t('roles'),
-                href: route('app.roles.index'),
+                href: roles.index(),
                 icon: icons.Shield,
             },
         ].filter(Boolean) as NavItem[],
@@ -110,19 +119,19 @@ export function AppSidebar() {
     const footerNavItems: NavItem[] = [
         // {
         //     title: 'Repository',
-        //     href: route('log-viewer.index'),
+        //     href: logViewer.index(),
         //     target: '_blank',
         //     icon: Folder,
         // },
         hasRole('admin') && {
             title: t('logs'),
-            href: route('log-viewer.index'),
+            href: logViewer.index(),
             target: '_blank',
             icon: icons.Logs,
         },
         {
             title: t('back_to_frontend'),
-            href: route('home'),
+            href: home(),
             icon: icons.ArrowLeft,
         },
     ].filter(Boolean) as NavItem[];

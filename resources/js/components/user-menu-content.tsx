@@ -2,6 +2,8 @@ import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSep
 import { UserInfo } from '@/components/user-info';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { logout } from '@/routes';
+import profile from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { Info, LogOut, Settings } from 'lucide-react';
@@ -32,7 +34,7 @@ export function UserMenuContent({ user, onOpenAbout }: UserMenuContentProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                    <Link className="block w-full cursor-pointer" href={route('profile.edit')} as="button" prefetch onClick={handleLogout}>
+                    <Link className="block w-full cursor-pointer" href={profile.edit()} as="button" prefetch onClick={handleLogout}>
                         <Settings className="mr-2" />
                         {t('settings')}
                     </Link>
@@ -46,7 +48,7 @@ export function UserMenuContent({ user, onOpenAbout }: UserMenuContentProps) {
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link className="block w-full cursor-pointer" method="post" href={route('logout')} as="button" onClick={cleanup}>
+                <Link className="block w-full cursor-pointer" href={logout()} as="button" onClick={cleanup}>
                     <LogOut className="mr-2" />
                     {t('logout')}
                 </Link>

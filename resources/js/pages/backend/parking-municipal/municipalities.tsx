@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import app from '@/routes/app';
+import parkingMunicipal from '@/routes/app/parking-municipal';
 import { BreadcrumbItem } from '@/types';
 
 type Municipality = {
@@ -33,7 +35,7 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
         return municipalities.filter((m) => m.name.toLowerCase().includes(s));
     }, [municipalities, search]);
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('app.parking-municipal.municipalities') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingMunicipal.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -65,7 +67,7 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
                         {filtered.map((municipality) => (
                             <Link
                                 key={municipality.id}
-                                href={route('app.parking-municipal.municipalities.index', { municipality: municipality.id })}
+                                href={app.parkingMunicipal.municipality({ municipality: municipality.id })}
                                 className={cn(
                                     'group relative overflow-hidden rounded-2xl border border-border/70 bg-background p-5 shadow-sm transition-all hover:shadow-md',
                                 )}

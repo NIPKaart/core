@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import parkingOffstreet from '@/routes/app/parking-offstreet';
 import { BreadcrumbItem, PaginatedResponse, ParkingOffstreet } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { RowSelectionState } from '@tanstack/react-table';
@@ -75,7 +76,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         if (municipality.length > 0) query.municipality_id = municipality.join(',');
         if (visibility.length > 0) query.visibility = visibility.join(',');
 
-        router.get(route('app.parking-offstreet.index'), query, {
+        router.get(parkingOffstreet.index(), query, {
             preserveState: true,
             replace: true,
         });
@@ -89,7 +90,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         if (!selectedVisibility || ids.length === 0) return;
 
         router.patch(
-            route('app.parking-offstreet.bulk.toggle-visibility'),
+            parkingOffstreet.bulk.toggleVisibility(),
             {
                 ids,
                 visibility: selectedVisibility === 'true' ? true : false,
@@ -112,7 +113,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         );
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('app.parking-offstreet.index') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: parkingOffstreet.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

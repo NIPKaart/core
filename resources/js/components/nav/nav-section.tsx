@@ -28,7 +28,12 @@ function SimpleNavItem({ item, active, iconOnly }: { item: NavItem; active: bool
     return (
         <SidebarMenuItem data-active={active ? 'true' : undefined}>
             <SidebarMenuButton asChild isActive={active} tooltip={{ children: item.title }}>
-                <Link href={item.href!} prefetch target={item.target} className={`flex w-full items-center ${iconOnly ? 'justify-center' : ''}`}>
+                <Link
+                    href={`${typeof item.href === 'string' ? item.href : (item.href?.url ?? '/')}`}
+                    prefetch
+                    target={item.target}
+                    className={`flex w-full items-center ${iconOnly ? 'justify-center' : ''}`}
+                >
                     {item.icon && <item.icon className={iconOnly ? 'h-5 w-5' : 'mr-2 h-4 w-4'} />}
                     {!iconOnly && <span className="flex-1">{item.title}</span>}
                     {item.badge !== undefined && <SidebarMenuBadge className={badgeClass}>{item.badge}</SidebarMenuBadge>}
@@ -42,7 +47,7 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        setOpen(!!item.children?.some((sub) => getPath(sub.href) === getPath(currentUrl)));
+        setOpen(!!item.children?.some((sub) => getPath(typeof sub.href === 'string' ? sub.href : sub.href?.url) === getPath(currentUrl)));
     }, [currentUrl, item.children]);
 
     return (
@@ -61,7 +66,11 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
                         <span className="absolute top-0 bottom-0 left-4 w-px bg-gray-200 dark:bg-gray-700" aria-hidden="true" />
                         <div className="pl-7">
                             {(item.children ?? []).map((sub) => (
-                                <SimpleNavItem key={sub.title} item={sub} active={getPath(sub.href) === getPath(currentUrl)} />
+                                <SimpleNavItem
+                                    key={sub.title}
+                                    item={sub}
+                                    active={getPath(typeof sub.href === 'string' ? sub.href : sub.href?.url) === getPath(currentUrl)}
+                                />
                             ))}
                         </div>
                     </SidebarMenu>
@@ -81,7 +90,12 @@ export function NavSection({ group }: { group: NavGroup }) {
             <SidebarGroup className="px-2 py-0">
                 <SidebarMenu>
                     {flat.map((item: NavItem) => (
-                        <SimpleNavItem key={item.title} item={item} active={getPath(item.href) === getPath(page.url)} iconOnly />
+                        <SimpleNavItem
+                            key={item.title}
+                            item={item}
+                            active={getPath(typeof item.href === 'string' ? item.href : item.href?.url) === getPath(page.url)}
+                            iconOnly
+                        />
                     ))}
                 </SidebarMenu>
             </SidebarGroup>
@@ -96,7 +110,11 @@ export function NavSection({ group }: { group: NavGroup }) {
                     item.children?.length ? (
                         <CollapsibleNavItem key={item.title} item={item} currentUrl={page.url} />
                     ) : (
-                        <SimpleNavItem key={item.title} item={item} active={getPath(item.href) === getPath(page.url)} />
+                        <SimpleNavItem
+                            key={item.title}
+                            item={item}
+                            active={getPath(typeof item.href === 'string' ? item.href : item.href?.url) === getPath(page.url)}
+                        />
                     ),
                 )}
             </SidebarMenu>

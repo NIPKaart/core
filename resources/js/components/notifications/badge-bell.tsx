@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import notifications from '@/routes/notifications';
 import type { NotificationItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check } from 'lucide-react';
@@ -49,7 +50,7 @@ export default function BellBadge() {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => ({ ...n, read_at: new Date().toISOString() })));
 
         router.get(
-            route('notifications.readAll'),
+            notifications.readAll(),
             {},
             {
                 preserveScroll: true,
@@ -66,7 +67,7 @@ export default function BellBadge() {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
         router.get(
-            route('notifications.read', { id }),
+            notifications.read(id),
             {},
             {
                 preserveScroll: true,
@@ -83,7 +84,7 @@ export default function BellBadge() {
         setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
 
         router.get(
-            route('notifications.read', { id }),
+            notifications.read(id),
             {},
             {
                 preserveScroll: true,
@@ -131,7 +132,7 @@ export default function BellBadge() {
                     <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
                     <DropdownMenuSeparator />
                     <div className="px-4 py-3">
-                        <Link href={route('notifications.index')} className="block">
+                        <Link href={notifications.index()} className="block">
                             <Button variant="secondary" className="w-full cursor-pointer">
                                 {t('actions.viewAll')}
                             </Button>
@@ -180,7 +181,7 @@ export default function BellBadge() {
                     <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
 
                     <DrawerFooter className="border-t px-4 py-3">
-                        <Link href={route('notifications.index')} className="block w-full">
+                        <Link href={notifications.index()} className="block w-full">
                             <Button variant="secondary" className="w-full">
                                 {t('actions.viewAll')}
                             </Button>

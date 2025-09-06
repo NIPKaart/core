@@ -13,7 +13,23 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: db_test_laravel
+          MYSQL_USER: laravel_user
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 33306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -P 3306 -u$$MYSQL_USER -p$$MYSQL_PASSWORD || exit 1"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: mysql
+      DB_URL: mysql://laravel_user:${{ secrets.DB_PASSWORD }}@127.0.0.1:33306/db_test_laravel
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -24,6 +40,7 @@ jobs:
           php-version: 8.4
           tools: composer:v2
           coverage: xdebug
+          extensions: pdo_mysql
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -34,9 +51,6 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci
 
-      - name: Build Assets
-        run: npm run build
-
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
@@ -45,6 +59,15 @@ jobs:
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      # - name: Generate Wayfinder types (debug)
+      #   run: php artisan wayfinder:generate --with-form -vvv
+
+      - name: Build Assets
+        run: npm run build
 
       - name: Tests
         run: ./vendor/bin/pest

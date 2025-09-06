@@ -5,6 +5,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useConfirmationActionDialog } from '@/hooks/use-dialog-confirmation-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import { BreadcrumbItem, PaginatedResponse, ParkingSpaceConfirmation } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { RowSelectionState } from '@tanstack/react-table';
@@ -30,8 +31,8 @@ export default function Index({ confirmations, parkingSpace, options }: PageProp
     const columns = getConfirmationColumns(options.confirmationStatuses, can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.spaces'), href: route('app.parking-spaces.index') },
-        { title: t('breadcrumbs.show'), href: route('app.parking-spaces.show', { id: parkingSpace.id }) },
+        { title: t('breadcrumbs.spaces'), href: app.parkingSpaces.index() },
+        { title: t('breadcrumbs.show'), href: app.parkingSpaces.show({ parking_space: parkingSpace.id }) },
         { title: t('breadcrumbs.confirmations'), href: '' },
     ];
 
@@ -51,7 +52,7 @@ export default function Index({ confirmations, parkingSpace, options }: PageProp
 
                     <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
                         <Button asChild variant="outline" className="h-10 min-w-[140px] flex-1 sm:h-9 sm:flex-none sm:px-3">
-                            <Link href={route('app.parking-spaces.show', { id: parkingSpace.id })}>
+                            <Link href={app.parkingSpaces.show({ parking_space: parkingSpace.id })}>
                                 <ArrowLeft className="h-4 w-4" />
                                 {t('back')}
                             </Link>

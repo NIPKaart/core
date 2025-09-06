@@ -1,5 +1,6 @@
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { home } from '@/routes';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -17,7 +18,7 @@ export default function AuthSplitLayout({ children, title, description }: PropsW
             <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
                 <div className="absolute inset-0 bg-[url('/assets/images/backgrounds/disabled_parking_2x.webp')] bg-cover bg-center" />
                 <div className="absolute inset-0 bg-black/60" />
-                <Link href={route('home')} className="relative z-20 flex items-center text-lg font-medium">
+                <Link href={home()} className="relative z-20 flex items-center text-lg font-medium">
                     <AppLogo size="lg" forceDark />
                 </Link>
                 {quote && (
@@ -31,7 +32,7 @@ export default function AuthSplitLayout({ children, title, description }: PropsW
             </div>
             <div className="w-full lg:p-8">
                 <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <Link href={route('home')} className="relative z-20 flex items-center justify-center lg:hidden">
+                    <Link href={home()} className="relative z-20 flex items-center justify-center lg:hidden">
                         <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
                     </Link>
                     <div className="flex flex-col items-center gap-2 text-center">

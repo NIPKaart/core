@@ -7,6 +7,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import app from '@/routes/app';
 import type { Role, Translations } from '@/types';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -65,7 +66,7 @@ export function getRoleColumns(can: (permission: string) => boolean, openDialog:
                                 {can('role.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.roles.edit', { id: role.id })}>{tGlobal('common.edit')}</Link>
+                                            <Link href={app.roles.edit({ id: role.id })}>{tGlobal('common.edit')}</Link>
                                         </DropdownMenuItem>
                                     </>
                                 )}

@@ -13,6 +13,7 @@ import { UserInfo } from '@/components/user-info';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useInitials } from '@/hooks/use-initials';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { dashboard, logout } from '@/routes';
 import { SharedData } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Home, LogOut } from 'lucide-react';
@@ -29,7 +30,7 @@ export function UserNavMenu() {
     if (!user) return null;
 
     const handleLogout = () => {
-        router.post(route('logout'));
+        router.post(logout());
     };
 
     return (
@@ -62,7 +63,7 @@ export function UserNavMenu() {
 
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                        <Link href={route('dashboard')} className="cursor-pointer" prefetch>
+                        <Link href={dashboard()} className="cursor-pointer" prefetch>
                             <Home className="mr-2 h-4 w-4" />
                             {t('dashboard')}
                         </Link>

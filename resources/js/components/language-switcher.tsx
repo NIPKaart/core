@@ -1,4 +1,5 @@
 import { useSyncLocale } from '@/hooks/use-sync-locale';
+import locale from '@/routes/locale';
 import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import clsx from 'clsx';
@@ -26,16 +27,16 @@ export default function LanguageSwitcher() {
         setSelected(newLocale);
 
         if (auth?.user) {
-            // 👤 Logged in user → update in database
+            // Logged in user → update in database
             router.patch(
-                route('locale.update'),
+                locale.update(),
                 { locale: newLocale },
                 {
                     onSuccess: () => router.reload(),
                 },
             );
         } else {
-            // 🙍 Guest user → set cookie and reload
+            // Guest user → set cookie and reload
             document.cookie = `locale=${newLocale}; path=/; max-age=31536000`;
             router.reload();
         }

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import RoleForm from '@/pages/backend/form-role';
+import app from '@/routes/app';
 import { BreadcrumbItem, Permission, Role } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -18,11 +19,11 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('breadcrumbs.index'),
-            href: route('app.roles.index'),
+            href: app.roles.index(),
         },
         {
             title: t('breadcrumbs.edit', { name: role.name }),
-            href: route('app.roles.edit', { role: role.id }),
+            href: app.roles.edit({ role: role.id }),
         },
     ];
 
@@ -33,7 +34,7 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
                 <h1 className="text-2xl font-bold tracking-tight">{t('head.edit', { name: role.name })}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
-                    <Link href={route('app.roles.index')}>
+                    <Link href={app.roles.index()}>
                         <ArrowLeft className="h-4 w-4" />
                         {tGlobal('common.back')}
                     </Link>
@@ -44,7 +45,7 @@ export default function Edit({ role, rolePermissions, allPermissions }: PageProp
                 <RoleForm
                     role={role}
                     allPermissions={allPermissions}
-                    action={route('app.roles.update', { role: role.id })}
+                    action={app.roles.update({ role: role.id }).url}
                     method="put"
                     initial={{ name: role.name, permissions: rolePermissions }}
                 />

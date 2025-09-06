@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import app from '@/routes/app';
 import { ParkingSpaceConfirmation } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
@@ -9,10 +10,14 @@ export type ConfirmationDialogType = 'delete' | 'bulkDelete';
 type DialogSubject = ParkingSpaceConfirmation | { ids: string[] } | null;
 
 type Options = {
-    parkingSpaceId?: number;
+    parkingSpaceId?: string | number;
     onSuccess?: () => void;
     onError?: () => void;
 };
+
+function asRouteParam(id: string | number): string | { id: string } {
+    return typeof id === 'string' ? id : { id: String(id) };
+}
 
 export function useConfirmationActionDialog(options: Options = {}) {
     const { t } = useTranslation('backend/parking/confirmations');
@@ -35,8 +40,8 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 return;
             }
             router.delete(
-                route('app.parking-spaces.confirmations.destroy', {
-                    parking_space: parking_space_id,
+                app.parkingSpaces.confirmations.destroy({
+                    parking_space: asRouteParam(parking_space_id),
                     confirmation: dialogSubject.id,
                 }),
                 {
@@ -62,25 +67,20 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 closeDialog();
                 return;
             }
-            router.delete(
-                route('app.parking-spaces.confirmations.bulk.destroy', {
-                    parking_space: parking_space_id,
-                }),
-                {
-                    data: { ids: dialogSubject.ids },
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        toast.success(t('toast.bulkDelete.success'));
-                        closeDialog();
-                        options.onSuccess?.();
-                    },
-                    onError: () => {
-                        toast.error(t('toast.bulkDelete.error'));
-                        closeDialog();
-                        options.onError?.();
-                    },
+            router.delete(app.parkingSpaces.confirmations.bulk.destroy({ parking_space: parking_space_id }), {
+                data: { ids: dialogSubject.ids },
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success(t('toast.bulkDelete.success'));
+                    closeDialog();
+                    options.onSuccess?.();
                 },
-            );
+                onError: () => {
+                    toast.error(t('toast.bulkDelete.error'));
+                    closeDialog();
+                    options.onError?.();
+                },
+            });
         },
     };
 

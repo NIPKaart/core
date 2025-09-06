@@ -2,12 +2,14 @@ import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { login } from '@/routes';
 
 export default function Register() {
     const { t } = useTranslation('backend/auth');
@@ -17,8 +19,7 @@ export default function Register() {
             <Head title={t('register.title')} />
 
             <Form
-                method="post"
-                action={route('register')}
+                {...RegisteredUserController.store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
                 className="flex flex-col gap-6"
@@ -82,7 +83,7 @@ export default function Register() {
 
                         <div className="text-center text-sm text-muted-foreground">
                             {t('register.already_have')}{' '}
-                            <TextLink href={route('login')} tabIndex={6}>
+                            <TextLink href={login()} tabIndex={6}>
                                 {t('register.login')}
                             </TextLink>
                         </div>

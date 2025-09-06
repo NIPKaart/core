@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import notifications from '@/routes/notifications';
 import type { BreadcrumbItem, NotificationItem, PaginatedResponse } from '@/types';
+import { resolveTypeLabelBackend } from '@/utils/notifications';
 import { Head, router } from '@inertiajs/react';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { getNotificationColumns } from './columns';
-import { resolveTypeLabelBackend } from '@/utils/notifications';
 
 type PageProps = {
     notificationList: PaginatedResponse<NotificationItem>;
@@ -60,7 +61,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
         if (read.length > 0) query.read = read.join(',');
         if (type.length > 0) query.type = type.join(',');
 
-        router.get(route('notifications.index'), query, { preserveScroll: true, preserveState: true });
+        router.get(notifications.index(), query, { preserveScroll: true, preserveState: true });
     };
 
     const columns = getNotificationColumns({ t, tGlobal });
@@ -70,7 +71,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
         if (!selectedAction || ids.length === 0) return;
 
         router.patch(
-            route('notifications.bulk'),
+            notifications.bulk(),
             { ids, action: selectedAction },
             {
                 preserveState: true,
@@ -86,7 +87,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
         );
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('notifications.index') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: notifications.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

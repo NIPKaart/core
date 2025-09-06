@@ -16,7 +16,7 @@ class ParkingMunicipalController extends Controller
     /**
      * Show a list of municipalities with stats and links.
      */
-    public function municipalities()
+    public function index()
     {
         Gate::authorize('viewAny', ParkingMunicipal::class);
 
@@ -48,7 +48,7 @@ class ParkingMunicipalController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, Municipality $municipality)
+    public function municipality(Request $request, Municipality $municipality)
     {
         Gate::authorize('viewAny', ParkingMunicipal::class);
 

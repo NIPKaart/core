@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpaceForm, { FormValues } from '@/pages/backend/form-parking-space';
+import app from '@/routes/app';
 import type { BreadcrumbItem, Country, Municipality, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -63,7 +64,7 @@ export default function Edit() {
             parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
         };
 
-        router.put(route('app.parking-spaces.update', { id: parkingSpace.id }), payload, {
+        router.put(app.parkingSpaces.update({ parking_space: parkingSpace.id }), payload, {
             preserveScroll: true,
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
@@ -77,8 +78,8 @@ export default function Edit() {
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') },
-        { title: parkingSpace.id, href: route('app.parking-spaces.edit', { id: parkingSpace.id }) },
+        { title: t('breadcrumbs.index'), href: app.parkingSpaces.index() },
+        { title: parkingSpace.id, href: app.parkingSpaces.edit({ parking_space: parkingSpace.id }) },
     ];
 
     return (
@@ -95,7 +96,7 @@ export default function Edit() {
 
                     <div className="flex flex-wrap gap-2 sm:auto-cols-max sm:flex-nowrap sm:justify-end">
                         <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
-                            <Link href={route('app.parking-spaces.index')}>
+                            <Link href={app.parkingSpaces.index()}>
                                 <ArrowLeft className="h-4 w-4" />
                                 {tGlobal('common.back')}
                             </Link>

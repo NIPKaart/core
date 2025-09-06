@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import type { BreadcrumbItem, Country, Municipality, PaginatedResponse, ParkingRule } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: t('breadcrumbs.index'),
-            href: route('app.parking-rules.index'),
+            href: app.parkingRules.index(),
         },
     ];
 
@@ -61,7 +62,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     };
 
     const deleteParkingRule = (id: number) => {
-        router.delete(route('app.parking-rules.destroy', { id }), {
+        router.delete(app.parkingRules.destroy({ parking_rule: id }), {
             onSuccess: () => toast.success(t('toasts.deleted')),
             onError: () => toast.error(t('toasts.error')),
             preserveScroll: true,
@@ -125,7 +126,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                 isEdit={false}
                 countries={countries}
                 municipalities={municipalities}
-                action={route('app.parking-rules.store')}
+                action={app.parkingRules.store().url}
                 method="post"
                 initial={initialAdd}
                 onSuccess={() => {
@@ -141,7 +142,7 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                 isEdit
                 countries={countries}
                 municipalities={editMunicipalities}
-                action={editRule ? route('app.parking-rules.update', { id: editRule.id }) : '#'}
+                action={editRule ? app.parkingRules.update({ parking_rule: editRule.id }).url : '#'}
                 method="put"
                 initial={initialEdit}
                 onSuccess={() => {

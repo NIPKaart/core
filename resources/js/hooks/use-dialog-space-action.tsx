@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import app from '@/routes/app';
 import { ParkingSpace } from '@/types';
 import { router } from '@inertiajs/react';
 import { ReactNode, useState } from 'react';
@@ -26,7 +27,7 @@ export function useSpaceActionDialog(options: Options = {}) {
     const handlers: Record<DialogType, () => void> = {
         delete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.parking-spaces.destroy', { parking_space: dialogSubject.id }), {
+            router.delete(app.parkingSpaces.destroy({ parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(t('toast.delete.success'));
@@ -43,7 +44,7 @@ export function useSpaceActionDialog(options: Options = {}) {
         restore: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
             router.patch(
-                route('app.parking-spaces.restore', { parking_space: dialogSubject.id }),
+                app.parkingSpaces.restore({ parking_space: dialogSubject.id }),
                 {},
                 {
                     preserveScroll: true,
@@ -62,7 +63,7 @@ export function useSpaceActionDialog(options: Options = {}) {
         },
         forceDelete: () => {
             if (!dialogSubject || !('id' in dialogSubject)) return;
-            router.delete(route('app.parking-spaces.forceDelete', { parking_space: dialogSubject.id }), {
+            router.delete(app.parkingSpaces.forceDestroy({ parking_space: dialogSubject.id }), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.success(t('toast.forceDelete.success'));
@@ -79,7 +80,7 @@ export function useSpaceActionDialog(options: Options = {}) {
         bulkRestore: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
-                route('app.parking-spaces.bulk.restore'),
+                app.parkingSpaces.bulk.restore(),
                 { ids: dialogSubject.ids },
                 {
                     preserveScroll: true,
@@ -98,7 +99,7 @@ export function useSpaceActionDialog(options: Options = {}) {
         },
         bulkForceDelete: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
-            router.delete(route('app.parking-spaces.bulk.force-delete'), {
+            router.delete(app.parkingSpaces.bulk.forceDelete(), {
                 data: { ids: dialogSubject.ids },
                 preserveScroll: true,
                 onSuccess: () => {

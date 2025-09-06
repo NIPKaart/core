@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import UserForm from '@/pages/backend/form-user';
+import app from '@/routes/app';
 import { BreadcrumbItem, Role } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -14,8 +15,8 @@ export default function Create({ roles }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/users');
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.users.index') },
-        { title: t('breadcrumbs.create'), href: route('app.users.create') },
+        { title: t('breadcrumbs.index'), href: app.users.index() },
+        { title: t('breadcrumbs.create'), href: app.users.create() },
     ];
 
     return (
@@ -26,7 +27,7 @@ export default function Create({ roles }: PageProps) {
                 <h1 className="text-2xl font-bold tracking-tight">{t('head.create')}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
-                    <Link href={route('app.users.index')}>
+                    <Link href={app.users.index()}>
                         <ArrowLeft className="h-4 w-4" />
                         {tGlobal('common.back')}
                     </Link>
@@ -36,7 +37,7 @@ export default function Create({ roles }: PageProps) {
             <div className="px-4 py-6 sm:px-6">
                 <UserForm
                     roles={roles}
-                    action={route('app.users.store')}
+                    action={app.users.store().url}
                     method="post"
                     initial={{ name: '', email: '', password: '', password_confirmation: '', role: '' }}
                 />

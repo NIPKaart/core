@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { DialogType } from '@/hooks/use-dialog-space-action';
+import app from '@/routes/app';
 import type { ParkingSpace, Translations } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
@@ -116,19 +117,19 @@ export function getParkingSpaceColumns(
                                 <DropdownMenuLabel>{tGlobal('common.actions')}</DropdownMenuLabel>
                                 {can('parking-space.view') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.parking-spaces.show', { id: space.id })}>{tGlobal('common.show')}</Link>
+                                        <Link href={app.parkingSpaces.show({ parking_space: space.id })}>{tGlobal('common.show')}</Link>
                                     </DropdownMenuItem>
                                 )}
                                 {can('parking-space.update') && (
                                     <DropdownMenuItem asChild className="cursor-pointer">
-                                        <Link href={route('app.parking-spaces.edit', { id: space.id })}>{tGlobal('common.edit')}</Link>
+                                        <Link href={app.parkingSpaces.edit({ parking_space: space.id })}>{tGlobal('common.edit')}</Link>
                                     </DropdownMenuItem>
                                 )}
                                 {can('parking-space-confirmation.view_any') && (
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.parking-spaces.confirmations.index', { id: space.id })}>
+                                            <Link href={app.parkingSpaces.confirmations.index({ parking_space: space.id })}>
                                                 {t('table.actions.confirmations')}
                                             </Link>
                                         </DropdownMenuItem>

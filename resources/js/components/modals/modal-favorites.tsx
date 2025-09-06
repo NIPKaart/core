@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import profile from '@/routes/profile';
 import { Favorite } from '@/types';
 import { Heart, HeartCrack, Landmark, MapPin, Warehouse, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -30,7 +31,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     useEffect(() => {
         if (!open) return;
         setLoading(true);
-        fetch(route('profile.favorites.list'))
+        fetch(profile.favorites.list.url())
             .then((res) => res.json())
             .then((data) => setFavorites(data.favorites ?? []))
             .catch(() => setFavorites([]))

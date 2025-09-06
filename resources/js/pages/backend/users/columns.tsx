@@ -8,6 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import app from '@/routes/app';
 import type { Translations, User } from '@/types';
 import { Link } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -106,7 +107,7 @@ export function getUserColumns(
                                 {can('user.update') && (
                                     <>
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link href={route('app.users.edit', { id: user.id })}>{tGlobal('common.edit')}</Link>
+                                            <Link href={app.users.edit({ id: user.id })}>{tGlobal('common.edit')}</Link>
                                         </DropdownMenuItem>
                                         {!isSelf && (
                                             <>

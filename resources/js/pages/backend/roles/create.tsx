@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import RoleForm from '@/pages/backend/form-role';
+import app from '@/routes/app';
 import { BreadcrumbItem, Permission } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
@@ -14,8 +15,8 @@ export default function Create({ allPermissions }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/roles');
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: t('breadcrumbs.index'), href: route('app.roles.index') },
-        { title: t('breadcrumbs.create'), href: route('app.roles.create') },
+        { title: t('breadcrumbs.index'), href: app.roles.index() },
+        { title: t('breadcrumbs.create'), href: app.roles.create() },
     ];
 
     return (
@@ -25,7 +26,7 @@ export default function Create({ allPermissions }: PageProps) {
                 <h1 className="text-2xl font-bold tracking-tight">{t('head.create')}</h1>
 
                 <Button asChild variant="outline" className="inline-flex items-center gap-2">
-                    <Link href={route('app.roles.index')}>
+                    <Link href={app.roles.index()}>
                         <ArrowLeft className="h-4 w-4" />
                         {tGlobal('common.back')}
                     </Link>
@@ -33,7 +34,7 @@ export default function Create({ allPermissions }: PageProps) {
             </div>
 
             <div className="px-4 py-6 sm:px-6">
-                <RoleForm allPermissions={allPermissions} action={route('app.roles.store')} method="post" initial={{ name: '', permissions: [] }} />
+                <RoleForm allPermissions={allPermissions} action={app.roles.store().url} method="post" initial={{ name: '', permissions: [] }} />
             </div>
         </AppLayout>
     );

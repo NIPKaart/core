@@ -2,6 +2,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import app from '@/routes/app';
 import { Form } from '@inertiajs/react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,7 +28,7 @@ export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirm
     return (
         <Form
             method="post"
-            action={route('app.parking-spaces.confirm', spaceId)}
+            action={app.parkingSpaces.confirm(spaceId)}
             options={{ preserveScroll: true }}
             onSuccess={() => {
                 setStatus('confirmed');

@@ -8,6 +8,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Head, router } from '@inertiajs/react';
@@ -65,7 +66,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         if (status.length > 0) query.status = status.join(',');
         if (municipality.length > 0) query.municipality_id = municipality.join(',');
 
-        router.get(route('app.parking-spaces.index'), query, { preserveScroll: true, preserveState: true });
+        router.get(app.parkingSpaces.index(), query, { preserveScroll: true, preserveState: true });
     };
 
     // Get the columns for the data table
@@ -77,7 +78,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         if (!selectedStatus || ids.length === 0) return;
 
         router.patch(
-            route('app.parking-spaces.bulk.update'),
+            app.parkingSpaces.bulk.update(),
             {
                 ids,
                 status: selectedStatus,
@@ -102,7 +103,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
         );
     };
 
-    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: route('app.parking-spaces.index') }];
+    const breadcrumbs: BreadcrumbItem[] = [{ title: t('breadcrumbs.index'), href: app.parkingSpaces.index() }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
