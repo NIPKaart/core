@@ -67,6 +67,25 @@ export function getUserColumns(
                 ),
         },
         {
+            id: 'email_verified',
+            header: t('table.email_verified'),
+            accessorFn: (row) => (row.email_verified_at ? 1 : 0),
+            enableSorting: true,
+            enableHiding: true,
+            cell: ({ row }) => {
+                const verifiedAt = row.original.email_verified_at;
+                return verifiedAt ? (
+                    <Badge variant="outline" className="border-emerald-200 text-emerald-700 dark:border-emerald-900 dark:text-emerald-300">
+                        {t('table.verified')}
+                    </Badge>
+                ) : (
+                    <Badge variant="outline" className="border-red-200 text-red-700 dark:border-red-900 dark:text-red-300">
+                        {t('table.unverified')}
+                    </Badge>
+                );
+            },
+        },
+        {
             accessorKey: 'created_at',
             header: t('table.created_at'),
             enableSorting: true,
