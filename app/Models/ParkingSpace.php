@@ -123,6 +123,7 @@ class ParkingSpace extends Model
         if ($status instanceof ParkingStatus) {
             return $status === ParkingStatus::APPROVED;
         }
+
         return (string) $status === ParkingStatus::APPROVED->value;
     }
 

@@ -21,7 +21,7 @@ export default function VerifyEmail({ status }: { status?: string }) {
             <Form {...EmailVerificationNotificationController.store.form()} className="space-y-6 text-center">
                 {({ processing }) => (
                     <>
-                        <Button disabled={processing} variant="secondary">
+                        <Button disabled={processing} variant="secondary" className="cursor-pointer">
                             {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                             {t('verify.resend')}
                         </Button>
