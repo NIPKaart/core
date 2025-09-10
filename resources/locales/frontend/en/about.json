@@ -1,0 +1,68 @@
+{
+    "meta": {
+        "title": "About NIPKaart",
+        "description": "NIPKaart makes data on accessible parking and garage occupancy easy to understand, so you know where to go before you leave.",
+        "keywords": ["nipkaart", "about", "accessible parking", "parking", "park and ride", "garage", "rules", "accessibility"]
+    },
+    "hero": {
+        "eyebrow": "About NIPKaart",
+        "title": "Makes data insightful for you",
+        "subtitle": "We've compiled information about disabled parking, local regulations, and (semi-)live garage occupancy. This way, you can be sure you're well-prepared for your trip."
+    },
+    "intro": {
+        "heading": "Why NIPKaart?",
+        "body": [
+            "Whether you hold a disabled parking card (GPK) or support someone who does, NIPKaart shows you in advance where you can park, what conditions apply, and which alternatives are available.",
+            "Originating from a geoweb study project, it has since grown into a platform with data for the Netherlands and an increasing number of European locations. In 2025 the platform was rebuilt from the ground up for better performance, accessibility, and maintainability."
+        ]
+    },
+    "stats": {
+        "euCoverage": "Expanding across Europe",
+        "openData": "Open data where possible",
+        "communityPowered": "Community-powered",
+        "rebuiltBadge": "Rebuilt in 2025"
+    },
+    "what": {
+        "heading": "What you can do",
+        "text": "For each location we show, among other things:",
+        "list": [
+            "The orientation of the parking space",
+            "Time limits and conditions (e.g., blue zone or time windows).",
+            "A link to local parking rules where available.",
+            "A Navigate button to instantly start a route in your maps app.",
+            "Garage or P+R as fallback, with (semi-)live occupancy."
+        ]
+    },
+    "features": {
+        "heading": "Key features",
+        "items": {
+            "addSpot": {
+                "title": "Add a spot",
+                "desc": "Missing a disabled parking space? Add it quickly in just a few steps—we'll post it online after review.",
+                "cta": "Add location"
+            },
+            "share": {
+                "title": "Share a map view",
+                "desc": "Share exactly what you see: Copy the URL from your address bar and others will instantly open the same area with disabled spots around their destination.",
+                "cta": "Open map"
+            },
+            "offstreet": {
+                "title": "Garage & P+R occupancy",
+                "desc": "Check (semi-)live occupancy to avoid encountering a closed barrier. Note: Parking in a garage is often paid.",
+                "cta": "View garages"
+            },
+            "search": {
+                "title": "Fast search",
+                "desc": "Find by place, street, or garage name and jump straight there on the map.",
+                "cta": "Search"
+            }
+        }
+    },
+    "disclaimer": "All information on the website is indicative. Parking is at your own risk; no rights can be derived.",
+    "cta": {
+        "heading": "Get started now",
+        "body": "Missing a spot or planning your next trip?",
+        "primary": "Add location",
+        "secondary": "Open map"
+    }
+}

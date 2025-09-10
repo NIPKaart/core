@@ -1,0 +1,68 @@
+{
+    "meta": {
+        "title": "Over NIPKaart",
+        "description": "NIPKaart maakt data over invalide parkeerplaatsen en garagebezetting inzichtelijk, zodat je vooraf weet waar je terechtkunt.",
+        "keywords": ["nipkaart", "over", "invalide parkeerplaats", "gpk", "parkeren", "p+r", "garage", "regels", "toegankelijk"]
+    },
+    "hero": {
+        "eyebrow": "Over NIPKaart",
+        "title": "Maakt data inzichtelijk voor jou",
+        "subtitle": "We bundelen informatie over invalide parkeerplaatsen, lokale regels en (semi-)live garagebezetting. Zo weet je zeker dat je goed voorbereid op pad gaat."
+    },
+    "intro": {
+        "heading": "Waarom NIPKaart?",
+        "body": [
+            "Of je nu een gehandicaptenparkeerkaart (GPK) hebt of iemand begeleidt: NIPKaart laat je vooraf zien waar je kunt parkeren, welke voorwaarden gelden en welke alternatieven er zijn.",
+            "Ontstaan vanuit een geoweb-project voor studie, inmiddels een groeiend platform met data voor Nederland en steeds meer Europese locaties. In 2025 is het platform vanaf de basis opnieuw herontwikkeld voor betere performance, toegankelijkheid en onderhoudbaarheid."
+        ]
+    },
+    "stats": {
+        "euCoverage": "Uitbreiding binnen Europa",
+        "openData": "Open data waar mogelijk",
+        "communityPowered": "Aangevuld door de community",
+        "rebuiltBadge": "Herontwikkeld in 2025"
+    },
+    "what": {
+        "heading": "Wat je met NIPKaart kunt",
+        "text": "Per locatie tonen we onder andere:",
+        "list": [
+            "De orientate van een parkeerplek",
+            "Tijdslimieten en voorwaarden (bijv. blauwe zone of venstertijden).",
+            "Een link naar lokale parkeerregels als die beschikbaar is.",
+            "Een Navigeer-knop om direct een route te starten in je kaarten-app.",
+            "Garage of P+R als alternatief, inclusief (semi-)live bezettingsinformatie."
+        ]
+    },
+    "features": {
+        "heading": "Belangrijkste functies",
+        "items": {
+            "addSpot": {
+                "title": "Voeg een plek toe",
+                "desc": "Ontbreekt er een invalideparkeerplaats? Voeg hem snel toe in een paar stappen — na controle zetten we hem online.",
+                "cta": "Locatie toevoegen"
+            },
+            "share": {
+                "title": "Deel een kaartweergave",
+                "desc": "Deel precies wat je ziet: kopieer de URL uit je adresbalk en anderen openen direct hetzelfde gebied met invalideplekken rond hun bestemming.",
+                "cta": "Open de kaart"
+            },
+            "offstreet": {
+                "title": "Garage & P+R bezetting",
+                "desc": "Zie (semi-)live bezetting om te voorkomen dat je voor een dichte slagboom komt te staan. Let op: parkeren in een garage is vaak betaald.",
+                "cta": "Bekijk garages"
+            },
+            "search": {
+                "title": "Snel zoeken",
+                "desc": "Zoek op plaats, straat of garage naam en spring meteen naar de juiste plek op de kaart.",
+                "cta": "Zoeken"
+            }
+        }
+    },
+    "disclaimer": "Alle informatie op de website is indicatief. Parkeren is op eigen risico; aan de informatie kunnen geen rechten worden ontleend.",
+    "cta": {
+        "heading": "Meteen aan de slag?",
+        "body": "Mis je een plek of wil je nu plannen voor je volgende rit?",
+        "primary": "Locatie toevoegen",
+        "secondary": "Bekijk de kaart"
+    }
+}
