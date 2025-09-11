@@ -6,9 +6,11 @@ use App\Http\Controllers\Frontend;
 Route::get('/', [Frontend\HomeController::class, 'index'])->name('home');
 
 // Map
-Route::get('map', [Frontend\ParkingSpaceController::class, 'map'])->name('location-map');
-Route::get('map/add', [Frontend\ParkingSpaceController::class, 'locationAdd'])->name('location-map.add');
-Route::post('map/add', [Frontend\ParkingSpaceController::class, 'store'])->name('location-map.store');
+Route::prefix('map')->controller(Frontend\ParkingSpaceController::class)->group(function () {
+    Route::get('/', 'map')->name('location-map');
+    Route::get('add', 'locationAdd')->name('location-map.add');
+    Route::post('add', 'store')->name('location-map.store');
+});
 
 // Other frontend routes
 Route::get('garages', [Frontend\GarageController::class, 'index'])->name('garages');
