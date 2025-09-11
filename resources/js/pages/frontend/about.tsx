@@ -44,7 +44,7 @@ export default function About() {
             icon: Plus,
             title: t('features.items.addSpot.title'),
             desc: t('features.items.addSpot.desc'),
-            href: '/map/add',
+            href: locationAdd().url,
             cta: t('features.items.addSpot.cta'),
         },
         {
