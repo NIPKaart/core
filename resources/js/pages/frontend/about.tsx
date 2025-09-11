@@ -1,5 +1,6 @@
 import { locationAdd } from '@/actions/App/Http/Controllers/Frontend/ParkingSpaceController';
 import FeatureCard from '@/components/frontend/feature-card';
+import Footer from '@/components/frontend/footer';
 import HeroAbout from '@/components/frontend/hero-about';
 import FrontendLayout from '@/layouts/frontend-layout';
 import { garages, locationMap } from '@/routes';
@@ -150,6 +151,7 @@ export default function About() {
                     </div>
                 </section>
             </main>
+            <Footer />
         </FrontendLayout>
     );
 }
