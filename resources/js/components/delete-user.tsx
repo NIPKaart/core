@@ -28,7 +28,9 @@ export default function DeleteUser() {
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="destructive">{tSettings('profile.delete.button')}</Button>
+                        <Button variant="destructive" data-test="delete-user-button">
+                            {tSettings('profile.delete.button')}
+                        </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogTitle>{tSettings('profile.delete.dialog.title')}</DialogTitle>
@@ -70,7 +72,9 @@ export default function DeleteUser() {
                                         </DialogClose>
 
                                         <Button variant="destructive" disabled={processing} asChild>
-                                            <button type="submit">{tSettings('profile.delete.dialog.submit')}</button>
+                                            <button type="submit" data-test="confirm-delete-user-button">
+                                                {tSettings('profile.delete.dialog.submit')}
+                                            </button>
                                         </Button>
                                     </DialogFooter>
                                 </>

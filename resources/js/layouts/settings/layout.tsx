@@ -2,7 +2,7 @@ import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { appearance } from '@/routes';
+import { edit as editAppearance } from '@/routes/appearance';
 import password from '@/routes/password';
 import profile from '@/routes/profile';
 import { type NavItem } from '@/types';
@@ -32,7 +32,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         },
         {
             title: t('sidebar.appearance'),
-            href: appearance(),
+            href: editAppearance(),
             icon: null,
         },
     ];
