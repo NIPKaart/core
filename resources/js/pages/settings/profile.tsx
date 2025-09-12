@@ -102,7 +102,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 )}
 
                                 <div className="flex items-center gap-4">
-                                    <Button disabled={processing}>{t('common.save')}</Button>
+                                    <Button disabled={processing} data-test="update-profile-button">
+                                        {t('common.save')}
+                                    </Button>
 
                                     <Transition
                                         show={recentlySuccessful}

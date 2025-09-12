@@ -34,7 +34,14 @@ export function UserMenuContent({ user, onOpenAbout }: UserMenuContentProps) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
-                    <Link className="block w-full cursor-pointer" href={profile.edit()} as="button" prefetch onClick={handleLogout}>
+                    <Link
+                        className="block w-full cursor-pointer"
+                        href={profile.edit()}
+                        as="button"
+                        prefetch
+                        onClick={handleLogout}
+                        data-test="profile-button"
+                    >
                         <Settings className="mr-2" />
                         {t('settings')}
                     </Link>
@@ -48,7 +55,7 @@ export function UserMenuContent({ user, onOpenAbout }: UserMenuContentProps) {
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link className="block w-full cursor-pointer" href={logout()} as="button" onClick={cleanup}>
+                <Link className="block w-full cursor-pointer" href={logout()} as="button" onClick={cleanup} data-test="logout-button">
                     <LogOut className="mr-2" />
                     {t('logout')}
                 </Link>
