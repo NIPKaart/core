@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
@@ -155,7 +154,7 @@ return [
                 'sortableAttributes' => ['created_at', 'updated_at'],
             ],
             ParkingOffstreet::class => [
-                'searchableAttributes' => ['name', 'url'],
+                'searchableAttributes' => ['name', 'url', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
                     'visibility', 'country_id', 'province_id', 'municipality_id',
                     'parking_type', 'api_state',
@@ -165,16 +164,11 @@ return [
                 ],
             ],
             ParkingMunicipal::class => [
-                'searchableAttributes' => ['street'],
+                'searchableAttributes' => ['street', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
                     'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation',
                 ],
                 'sortableAttributes' => ['created_at', 'number'],
-            ],
-            Municipality::class => [
-                'searchableAttributes' => ['name'],
-                'filterableAttributes' => ['country_id', 'province_id'],
-                'sortableAttributes' => ['name'],
             ],
         ],
     ],
