@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Profile;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,6 +12,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // Search route
+    Route::get('search', function (Request $request) {
+        return Inertia::render('backend/search/index', [
+            'q' => (string) $request->query('q', ''),
+        ]);
+    })->name('search');
 
     // Notification routes
     Route::prefix('notifications')->as('notifications.')
