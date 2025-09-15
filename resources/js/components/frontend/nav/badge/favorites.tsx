@@ -5,7 +5,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
 
-export function FavoritesNavButton({ closeMobileMenu }: { closeMobileMenu?: () => void }) {
+export function FavoritesButton({ closeMobileMenu }: { closeMobileMenu?: () => void }) {
     const { user } = useAuthorization();
     const [open, setOpen] = useState(false);
 
