@@ -3,6 +3,8 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { router } from '@inertiajs/react';
 import BellBadge from './notifications/badge-bell';
+import SearchBar from './search/search-bar';
+import SearchButton from './search/search-button';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
@@ -13,7 +15,17 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             </div>
 
             <div className="ml-auto flex items-center gap-2">
-                <BellBadge />
+                {/* Desktop: bar + bell */}
+                <SearchBar className="w-[420px]" placeholder="Search users, roles, parking…" />
+                <div className="hidden md:block">
+                    <BellBadge />
+                </div>
+
+                {/* Mobile: icon + bell */}
+                <div className="flex items-center gap-2 md:hidden">
+                    <SearchButton variant="icon" tooltip="Search" />
+                    <BellBadge />
+                </div>
             </div>
         </header>
     );

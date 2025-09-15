@@ -1,3 +1,4 @@
+import SearchOverlay from '@/components/search/search-overlay';
 import { useSyncLocale } from '@/hooks/use-sync-locale';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -14,6 +15,9 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
             {children}
+
+            {/* Overlay for search results */}
+            <SearchOverlay />
         </AppLayoutTemplate>
     );
 };

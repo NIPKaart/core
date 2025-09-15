@@ -101,6 +101,8 @@ class ParkingMunicipal extends Model
             'country_id' => (int) $this->country_id,
             'province_id' => (int) $this->province_id,
             'municipality_id' => (int) $this->municipality_id,
+            'municipality_name' => (string) optional($this->municipality)->name,
+            'province_name' => (string) optional($this->province)->name,
             '_geo' => ['lat' => (float) $this->latitude, 'lng' => (float) $this->longitude],
             'created_at' => optional($this->created_at)->toAtomString(),
             'updated_at' => optional($this->updated_at)->toAtomString(),

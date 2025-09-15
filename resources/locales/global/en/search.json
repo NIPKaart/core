@@ -1,0 +1,15 @@
+{
+    "title": "Search",
+    "description": "Search for municipalities, garages or community spaces.",
+    "tip": "Tip: press Enter to search",
+    "placeholder": "Search for a city, garage or space…",
+    "aria_input": "Search query",
+    "recent": "Recent",
+    "clear": "Clear",
+    "clear_recent": "Clear recent searches",
+    "apply_chip": "Search for “{{term}}”",
+    "searching": "Searching…",
+    "start_typing": "Start typing to search",
+    "no_results": "No results",
+    "error": "Something went wrong. Please try again."
+}

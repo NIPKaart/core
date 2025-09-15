@@ -1,0 +1,21 @@
+{
+    "head": {
+        "title": "Zoeken",
+        "description": "Razendsnel zoeken naar gehandicaptenparkeerplaatsen: gemeentelijk, garages/P+R en community plekken — overal waar je heen gaat."
+    },
+    "breadcrumbs": {
+        "index": "Zoeken"
+    },
+    "results": {
+        "count": "{{count}} resultaten voor “{{q}}”"
+    },
+    "filters": {
+        "all": "Alle",
+        "municipal": "Gemeentelijk",
+        "offstreet": "Garage / P+R",
+        "community": "Community"
+    },
+    "actions": {
+        "clear": "Wissen"
+    }
+}

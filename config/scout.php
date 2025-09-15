@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
@@ -150,31 +149,26 @@ return [
                     'street', 'city', 'postcode', 'suburb', 'neighbourhood', 'amenity', 'description',
                 ],
                 'filterableAttributes' => [
-                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation',
+                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation', 'city',
                 ],
                 'sortableAttributes' => ['created_at', 'updated_at'],
             ],
             ParkingOffstreet::class => [
-                'searchableAttributes' => ['name', 'url'],
+                'searchableAttributes' => ['name', 'url', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
                     'visibility', 'country_id', 'province_id', 'municipality_id',
-                    'parking_type', 'api_state',
+                    'parking_type', 'api_state', 'municipality_name',
                 ],
                 'sortableAttributes' => [
                     'created_at', 'free_space_short', 'short_capacity',
                 ],
             ],
             ParkingMunicipal::class => [
-                'searchableAttributes' => ['street'],
+                'searchableAttributes' => ['street', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
-                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation',
+                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation', 'postcode', 'municipality_name',
                 ],
                 'sortableAttributes' => ['created_at', 'number'],
-            ],
-            Municipality::class => [
-                'searchableAttributes' => ['name'],
-                'filterableAttributes' => ['country_id', 'province_id'],
-                'sortableAttributes' => ['name'],
             ],
         ],
     ],

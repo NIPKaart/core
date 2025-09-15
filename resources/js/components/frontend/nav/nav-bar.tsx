@@ -1,6 +1,7 @@
 import { Icon } from '@/components/icon';
 import LanguageSwitcher from '@/components/language-switcher';
 import BellBadge from '@/components/notifications/badge-bell';
+import SearchButton from '@/components/search/search-button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { useIsActive } from '@/lib/is-active';
@@ -13,13 +14,14 @@ import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FavoritesNavButton } from './badge/favorites';
+import { FavoritesButton } from './badge/favorites';
 import { UserNavMenu } from './badge/user';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
 export default function Navbar() {
     const { t } = useTranslation('frontend/navbar');
+    const { t: tSearch } = useTranslation('global/search');
     const page = usePage<SharedData>();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { auth } = page.props;
@@ -72,7 +74,10 @@ export default function Navbar() {
                         {auth.user && (
                             <div className="me-1 flex items-center gap-1">
                                 <div className="relative flex min-w-8 justify-center">
-                                    <FavoritesNavButton />
+                                    <SearchButton variant="icon" tooltip={tSearch('title')} />
+                                </div>
+                                <div className="relative flex min-w-8 justify-center">
+                                    <FavoritesButton />
                                 </div>
                                 <div className="relative flex min-w-8 justify-center">
                                     <BellBadge />
@@ -149,7 +154,8 @@ export default function Navbar() {
                     {/* Desktop right side */}
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
-                            {auth.user && <FavoritesNavButton />}
+                            <SearchButton variant="icon" tooltip={tSearch('title')} />
+                            {auth.user && <FavoritesButton />}
                             {auth.user && <BellBadge />}
                             {!auth.user && <LanguageSwitcher />}
                             {!auth.user && <ThemeToggle />}

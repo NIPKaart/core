@@ -41,7 +41,7 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
                 content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>${t('legend.almostFull')}</span><br>`;
                 content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>${t('legend.full')}</span><br>`;
                 content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>${t('legend.noData')}</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>${t('legend.disabledSpot')}</span><br>`;
+                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>${t('legend.disabledSpace')}</span><br>`;
 
                 return div;
             },

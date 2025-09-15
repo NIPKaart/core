@@ -37,13 +37,13 @@
         "heading": "Key features",
         "items": {
             "addSpot": {
-                "title": "Add a spot",
+                "title": "Add a parking space",
                 "desc": "Missing a disabled parking space? Add it quickly in just a few steps—we'll post it online after review.",
                 "cta": "Add location"
             },
             "share": {
                 "title": "Share a map view",
-                "desc": "Share exactly what you see: Copy the URL from your address bar and others will instantly open the same area with disabled spots around their destination.",
+                "desc": "Share exactly what you see: Copy the URL from your address bar and others will instantly open the same area with parking spaces around their destination.",
                 "cta": "Open map"
             },
             "offstreet": {
@@ -61,7 +61,7 @@
     "disclaimer": "All information on the website is indicative. Parking is at your own risk; no rights can be derived.",
     "cta": {
         "heading": "Get started now",
-        "body": "Missing a spot or planning your next trip?",
+        "body": "Missing a parking space or planning your next trip?",
         "primary": "Add location",
         "secondary": "Open map"
     }

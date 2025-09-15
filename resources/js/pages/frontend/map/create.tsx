@@ -1,8 +1,8 @@
-import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
 import AddParkingModal from '@/components/modals/modal-add-parking';
+import MapLayout from '@/layouts/map-layout';
 import { getOrangeMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
 import locationMap from '@/routes/location-map';
 import { NominatimAddress, ParkingSpace } from '@/types';
@@ -157,52 +157,49 @@ export default function AddLocation() {
             : locationMap.store().url;
 
     return (
-        <>
+        <MapLayout>
             <Head title={t('head.title')} />
-            <div className="flex h-[100dvh] flex-col">
-                <Navbar />
-                <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
-                    <LayersControl position="topright">
-                        <BaseLayer name={tGlobal('layers.mapbox')}>
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                                url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                tileSize={512}
-                                zoomOffset={-1}
-                            />
-                        </BaseLayer>
-
-                        <BaseLayer checked name={tGlobal('layers.google')}>
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                                url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                                maxZoom={20}
-                            />
-                        </BaseLayer>
-
-                        {/* Overlay for nearby parking spaces */}
-                        <Overlay checked name={tGlobal('layers.parkingOverlay')}>
-                            <ClusteredParkingMarkers spaces={parkingSpaces} />
-                        </Overlay>
-                    </LayersControl>
-
-                    {/* Click handler to set marker position */}
-                    <ClickHandler onMapClick={handleMapClick} />
-                    {markerPosition && (
-                        <Marker
-                            position={markerPosition}
-                            icon={getOrangeMarkerIcon()}
-                            draggable
-                            eventHandlers={{ dragend: handleDragEnd, click: handleMarkerClick }}
+            <MapContainer center={[52.3676, 4.9041]} zoom={13} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                <LayersControl position="topright">
+                    <BaseLayer name={tGlobal('layers.mapbox')}>
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                            url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                            tileSize={512}
+                            zoomOffset={-1}
                         />
-                    )}
+                    </BaseLayer>
 
-                    <LegendControl />
-                    <LocateControl />
-                    <ZoomControl />
-                </MapContainer>
-            </div>
+                    <BaseLayer checked name={tGlobal('layers.google')}>
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                            url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                            subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                            maxZoom={20}
+                        />
+                    </BaseLayer>
+
+                    {/* Overlay for nearby parking spaces */}
+                    <Overlay checked name={tGlobal('layers.parkingOverlay')}>
+                        <ClusteredParkingMarkers spaces={parkingSpaces} />
+                    </Overlay>
+                </LayersControl>
+
+                {/* Click handler to set marker position */}
+                <ClickHandler onMapClick={handleMapClick} />
+                {markerPosition && (
+                    <Marker
+                        position={markerPosition}
+                        icon={getOrangeMarkerIcon()}
+                        draggable
+                        eventHandlers={{ dragend: handleDragEnd, click: handleMarkerClick }}
+                    />
+                )}
+
+                <LegendControl />
+                <LocateControl />
+                <ZoomControl />
+            </MapContainer>
 
             {modalOpen && markerPosition && Array.isArray(markerPosition) && (
                 <AddParkingModal
@@ -218,6 +215,6 @@ export default function AddLocation() {
                     onSuccess={successHandler}
                 />
             )}
-        </>
+        </MapLayout>
     );
 }
