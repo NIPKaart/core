@@ -1,0 +1,21 @@
+{
+    "head": {
+        "title": "Search",
+        "description": "Find accessible parking fast: municipal bays, garages/P+R, and community spaces—wherever you're headed."
+    },
+    "breadcrumbs": {
+        "index": "Search"
+    },
+    "results": {
+        "count": "{{count}} results for “{{q}}”"
+    },
+    "filters": {
+        "all": "All",
+        "municipal": "Municipal",
+        "offstreet": "Garage / P+R",
+        "community": "Community"
+    },
+    "actions": {
+        "clear": "Clear"
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "title": "Zoeken",
+    "description": "Zoek naar gemeenten, garages of community plekken.",
+    "tip": "Tip: gebruik Enter om te zoeken",
+    "placeholder": "Zoek op stad, garage of plek…",
+    "aria_input": "Zoekopdracht",
+    "recent": "Recent",
+    "clear": "Leegmaken",
+    "clear_recent": "Recente zoekopdrachten verwijderen",
+    "apply_chip": "Zoek op “{{term}}”",
+    "searching": "Zoeken…",
+    "start_typing": "Begin met typen om te zoeken",
+    "no_results": "Geen resultaten",
+    "error": "Er ging iets mis. Probeer het opnieuw."
+}
