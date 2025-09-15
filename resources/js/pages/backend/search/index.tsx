@@ -13,6 +13,7 @@ import { useRecentSearches } from '@/hooks/use-search-recent';
 
 import Heading from '@/components/heading';
 import { Input } from '@/components/ui/input';
+import { highlight, mapHref } from '@/lib/search';
 import { search } from '@/routes';
 import { ArrowRight, Building2, MapPin, Search as SearchIcon, SquareParking, X } from 'lucide-react';
 
@@ -27,24 +28,6 @@ const iconFor = (t: Hit['type']) =>
     ) : (
         <MapPin className="h-4 w-4" />
     );
-
-const zoom: Record<Hit['type'], number> = { community: 18, municipal: 18, offstreet: 16, other: 14 };
-const mapHref = (h: Hit) =>
-    typeof h.lat === 'number' && typeof h.lng === 'number' ? `/map#${zoom[h.type] ?? 16}/${h.lat.toFixed(5)}/${h.lng.toFixed(5)}` : h.href;
-
-const highlight = (text: string, q: string) => {
-    const s = q.trim();
-    if (!s) return text;
-    const i = text.toLowerCase().indexOf(s.toLowerCase());
-    if (i === -1) return text;
-    return (
-        <>
-            {text.slice(0, i)}
-            <mark className="rounded bg-yellow-200/50 px-0.5 font-medium dark:bg-yellow-300/20">{text.slice(i, i + s.length)}</mark>
-            {text.slice(i + s.length)}
-        </>
-    );
-};
 
 export default function Index() {
     const page = usePage<PageProps>();

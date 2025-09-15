@@ -4,6 +4,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useSearchQuery as useSearchRQ } from '@/hooks/use-search-query';
 import { useRecentSearches } from '@/hooks/use-search-recent';
+import { highlight, mapHref } from '@/lib/search';
 import { cn } from '@/lib/utils';
 import type { Hit } from '@/types/search';
 import { Link } from '@inertiajs/react';
@@ -16,30 +17,6 @@ import { closeSearch, setSearchQuery, useSearchOpen, useSearchQuery as useSearch
 
 const icon = (t: Hit['type']): JSX.Element =>
     t === 'offstreet' ? <Building2 className="h-4 w-4" /> : t === 'community' ? <User className="h-4 w-4" /> : <MapPin className="h-4 w-4" />;
-
-const zoom: Record<Hit['type'], number> = {
-    community: 18,
-    municipal: 18,
-    offstreet: 16,
-    other: 14,
-};
-
-const highlight = (text: string, q: string) => {
-    const s = q.trim();
-    if (!s) return text;
-    const i = text.toLowerCase().indexOf(s.toLowerCase());
-    if (i === -1) return text;
-    return (
-        <>
-            {text.slice(0, i)}
-            <mark className="rounded bg-yellow-200/50 px-0.5 font-medium dark:bg-yellow-300/20">{text.slice(i, i + s.length)}</mark>
-            {text.slice(i + s.length)}
-        </>
-    );
-};
-
-const mapHref = (h: Hit) =>
-    typeof h.lat === 'number' && typeof h.lng === 'number' ? `/map#${zoom[h.type] ?? 16}/${h.lat.toFixed(5)}/${h.lng.toFixed(5)}` : h.href;
 
 export default function SearchOverlay(): JSX.Element {
     const { t } = useTranslation('global/search');
