@@ -171,6 +171,7 @@ class SearchController extends Controller
         if (str_contains($q, ',')) {
             [$left, $right] = array_map('trim', explode(',', $q, 2));
             $place = $left !== '' ? $left : null;
+
             return [$place, $right, $postcode];
         }
 
