@@ -149,7 +149,7 @@ return [
                     'street', 'city', 'postcode', 'suburb', 'neighbourhood', 'amenity', 'description',
                 ],
                 'filterableAttributes' => [
-                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation',
+                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation', 'city',
                 ],
                 'sortableAttributes' => ['created_at', 'updated_at'],
             ],
@@ -157,7 +157,7 @@ return [
                 'searchableAttributes' => ['name', 'url', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
                     'visibility', 'country_id', 'province_id', 'municipality_id',
-                    'parking_type', 'api_state',
+                    'parking_type', 'api_state', 'municipality_name',
                 ],
                 'sortableAttributes' => [
                     'created_at', 'free_space_short', 'short_capacity',
@@ -166,7 +166,7 @@ return [
             ParkingMunicipal::class => [
                 'searchableAttributes' => ['street', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
-                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation',
+                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation', 'postcode', 'municipality_name',
                 ],
                 'sortableAttributes' => ['created_at', 'number'],
             ],
