@@ -2,18 +2,18 @@ import Navbar from '@/components/frontend/nav/nav-bar';
 import SearchOverlay from '@/components/search/search-overlay';
 import { useSyncLocale } from '@/hooks/use-sync-locale';
 
-interface FrontendLayoutProps {
+interface MapLayoutProps {
     children: React.ReactNode;
 }
 
-export default function FrontendLayout({ children }: FrontendLayoutProps) {
+export default function MapLayout({ children }: MapLayoutProps) {
     useSyncLocale();
 
     return (
         <>
-            <div className="bg-white text-black transition-colors dark:bg-neutral-900 dark:text-white">
+            <div className="flex h-[100dvh] flex-col">
                 <Navbar />
-                <main>{children}</main>
+                {children}
             </div>
 
             {/* Overlay for search results */}

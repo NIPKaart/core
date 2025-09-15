@@ -1,4 +1,3 @@
-import Navbar from '@/components/frontend/nav/nav-bar';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
@@ -12,6 +11,7 @@ import { HashSync } from '@/components/map/hash-sync';
 import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
 import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/modal-main';
 import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
+import MapLayout from '@/layouts/map-layout';
 import { getGarageOccupancyStatus, getGarageStatusIcon, getInvalidParkingIcon } from '@/lib/icon-factory';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -134,90 +134,86 @@ export default function Map() {
     );
 
     return (
-        <>
+        <MapLayout>
             <Head title={t('head.title')} />
-            <div className="flex h-[100dvh] flex-col">
-                <Navbar />
+            <div className="flex-1">
+                <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                    <HashSync />
+                    <LayersControl position="topright">
+                        <BaseLayer checked name={tGlobal('layers.mapbox')}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                                url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                                tileSize={512}
+                                zoomOffset={-1}
+                            />
+                        </BaseLayer>
 
-                <div className="flex-1">
-                    <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
-                        <HashSync />
-                        <LayersControl position="topright">
-                            <BaseLayer checked name={tGlobal('layers.mapbox')}>
-                                <TileLayer
-                                    attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                    tileSize={512}
-                                    zoomOffset={-1}
-                                />
-                            </BaseLayer>
+                        <BaseLayer name={tGlobal('layers.google')}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                                maxZoom={20}
+                            />
+                        </BaseLayer>
+                    </LayersControl>
 
-                            <BaseLayer name={tGlobal('layers.google')}>
-                                <TileLayer
-                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                                    url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                                    maxZoom={20}
-                                />
-                            </BaseLayer>
-                        </LayersControl>
+                    <MarkerClusterGroup
+                        key={'parking'}
+                        spiderfyOnMaxZoom={false}
+                        disableClusteringAtZoom={16}
+                        maxClusterRadius={80}
+                        removeOutsideVisibleBound={true}
+                    >
+                        {parkingMarkers}
+                    </MarkerClusterGroup>
+                    <MarkerClusterGroup
+                        key={'offstreet'}
+                        spiderfyOnMaxZoom={false}
+                        disableClusteringAtZoom={16}
+                        maxClusterRadius={80}
+                        removeOutsideVisibleBound={true}
+                    >
+                        {offstreetMarkers}
+                    </MarkerClusterGroup>
 
-                        <MarkerClusterGroup
-                            key={'parking'}
-                            spiderfyOnMaxZoom={false}
-                            disableClusteringAtZoom={16}
-                            maxClusterRadius={80}
-                            removeOutsideVisibleBound={true}
-                        >
-                            {parkingMarkers}
-                        </MarkerClusterGroup>
-                        <MarkerClusterGroup
-                            key={'offstreet'}
-                            spiderfyOnMaxZoom={false}
-                            disableClusteringAtZoom={16}
-                            maxClusterRadius={80}
-                            removeOutsideVisibleBound={true}
-                        >
-                            {offstreetMarkers}
-                        </MarkerClusterGroup>
-
-                        <LegendControl />
-                        <LocateControl />
-                        <ZoomControl />
-                    </MapContainer>
-                </div>
-
-                {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                    <ParkingSpaceModal
-                        spaceId={selectedSpaceId}
-                        open={modalOpen}
-                        onClose={() => setModalOpen(false)}
-                        latitude={selectedLat}
-                        longitude={selectedLng}
-                        confirmationStatusOptions={selectOptions.confirmationStatus}
-                    />
-                )}
-
-                {selectedType === 'municipal' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                    <ParkingMunicipalModal
-                        spaceId={selectedSpaceId}
-                        open={modalOpen}
-                        onClose={() => setModalOpen(false)}
-                        latitude={selectedLat}
-                        longitude={selectedLng}
-                    />
-                )}
-
-                {selectedType === 'offstreet' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                    <ParkingOffstreetModal
-                        spaceId={selectedSpaceId}
-                        open={modalOpen}
-                        onClose={() => setModalOpen(false)}
-                        latitude={selectedLat}
-                        longitude={selectedLng}
-                    />
-                )}
+                    <LegendControl />
+                    <LocateControl />
+                    <ZoomControl />
+                </MapContainer>
             </div>
-        </>
+
+            {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
+                <ParkingSpaceModal
+                    spaceId={selectedSpaceId}
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    latitude={selectedLat}
+                    longitude={selectedLng}
+                    confirmationStatusOptions={selectOptions.confirmationStatus}
+                />
+            )}
+
+            {selectedType === 'municipal' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
+                <ParkingMunicipalModal
+                    spaceId={selectedSpaceId}
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    latitude={selectedLat}
+                    longitude={selectedLng}
+                />
+            )}
+
+            {selectedType === 'offstreet' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
+                <ParkingOffstreetModal
+                    spaceId={selectedSpaceId}
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    latitude={selectedLat}
+                    longitude={selectedLng}
+                />
+            )}
+        </MapLayout>
     );
 }
