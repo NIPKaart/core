@@ -10,7 +10,7 @@ function readRecent(): string[] {
         const arr = JSON.parse(raw);
         return Array.isArray(arr) ? arr.filter((x) => typeof x === 'string') : [];
     } catch (err) {
-        if (import.meta?.env?.DEV) console.debug('readRecent failed', err);
+        if (import.meta.env.DEV) console.debug('readRecent failed', err);
         return [];
     }
 }
@@ -19,7 +19,7 @@ function writeRecent(list: string[]) {
     try {
         localStorage.setItem(KEY, JSON.stringify(list));
     } catch (err) {
-        if (import.meta?.env?.DEV) console.debug('writeRecent failed', err);
+        if (import.meta.env.DEV) console.debug('writeRecent failed', err);
     }
 }
 

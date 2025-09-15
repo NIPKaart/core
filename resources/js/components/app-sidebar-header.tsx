@@ -21,7 +21,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     <BellBadge />
                 </div>
 
-                {/* Mobiel: icon + bell */}
+                {/* Mobile: icon + bell */}
                 <div className="flex items-center gap-2 md:hidden">
                     <SearchButton variant="icon" tooltip="Search" />
                     <BellBadge />

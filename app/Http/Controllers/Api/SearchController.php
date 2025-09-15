@@ -159,25 +159,22 @@ class SearchController extends Controller
     private function parseQuery(string $q): array
     {
         $q = trim(preg_replace('/\s+/', ' ', $q));
+
+        // 1) Zipcode detection: "1234 AB Amsterdam" or "Amsterdam 1234 AB"
         $postcode = $this->extractPostcode($q);
         if ($postcode !== null) {
+            // Remove postcode from query
             $q = trim(str_ireplace($postcode, '', $q));
         }
 
-        if (preg_match('/^(?:municipal|in|city|municipality)\s*:\s*(.+?)(?:\s+|,)(.*)$/iu', $q, $m)) {
-            $place = trim((string) ($m[1] ?? ''));
-            $free = trim((string) ($m[2] ?? ''));
-
-            return [$place !== '' ? $place : null, $free, $postcode];
-        }
-
+        // 2) Comma-split: "Amsterdam, Keizersgracht 10"
         if (str_contains($q, ',')) {
             [$left, $right] = array_map('trim', explode(',', $q, 2));
             $place = $left !== '' ? $left : null;
-
             return [$place, $right, $postcode];
         }
 
+        // 3) No explicit place
         return [null, $q, $postcode];
     }
 
