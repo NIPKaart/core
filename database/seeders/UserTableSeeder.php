@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class UserTableSeeder extends Seeder
 {
@@ -20,10 +21,10 @@ class UserTableSeeder extends Seeder
         ];
 
         foreach ($users as $data) {
-            $user = User::factory()->create([
+            $user = User::firstOrCreate([
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'password' => bcrypt('password'),
+                'password' => Hash::make('password'),
                 'locale' => 'en',
             ]);
 
