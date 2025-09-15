@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 const isMac = (): boolean => typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent);
 
 /**
- * Bind ⌘K (Mac) of Ctrl+K (Win/Linux) to open the search overlay.
+ * Bind ⌘K (Mac) or Ctrl+K (Win/Linux) to open the search overlay.
  */
 export function useSearchHotkey(): void {
     useEffect(() => {

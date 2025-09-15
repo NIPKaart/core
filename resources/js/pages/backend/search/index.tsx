@@ -13,21 +13,12 @@ import { useRecentSearches } from '@/hooks/use-search-recent';
 
 import Heading from '@/components/heading';
 import { Input } from '@/components/ui/input';
-import { highlight, mapHref } from '@/lib/search';
+import { highlight, HitIcon, mapHref } from '@/lib/search';
 import { search } from '@/routes';
-import { ArrowRight, Building2, MapPin, Search as SearchIcon, SquareParking, X } from 'lucide-react';
+import { ArrowRight, Search as SearchIcon, X } from 'lucide-react';
 
 type PageProps = { q: string };
 type FilterType = 'all' | 'municipal' | 'offstreet' | 'community';
-
-const iconFor = (t: Hit['type']) =>
-    t === 'offstreet' ? (
-        <Building2 className="h-4 w-4" />
-    ) : t === 'community' ? (
-        <SquareParking className="h-4 w-4" />
-    ) : (
-        <MapPin className="h-4 w-4" />
-    );
 
 export default function Index() {
     const page = usePage<PageProps>();
@@ -213,7 +204,7 @@ export default function Index() {
                                             className="group flex cursor-pointer items-center gap-3 py-3 transition hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                                         >
                                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                                                {iconFor(h.type)}
+                                                <HitIcon type={h.type} />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate text-sm font-medium">{highlight(String(h.label), q)}</div>

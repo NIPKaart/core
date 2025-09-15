@@ -1,9 +1,24 @@
 import type { Hit } from '@/types/search';
+import { Building2, LucideIcon, MapPin, SquareParking } from 'lucide-react';
 import { ReactNode } from 'react';
 
 export type SearchResponse = {
     hits: Hit[];
     estimatedTotalHits?: number;
+};
+
+type HitIconProps = {
+    type: Hit['type'] | 'other';
+    className?: string;
+    iconMap?: typeof ICON_MAP_DEFAULT;
+    label?: string;
+};
+
+export const ICON_MAP_DEFAULT: Record<Hit['type'] | 'other', LucideIcon> = {
+    offstreet: Building2,
+    community: SquareParking,
+    municipal: MapPin,
+    other: MapPin,
 };
 
 /**
@@ -61,5 +76,17 @@ export function highlight(text: string, q: string): ReactNode {
             <mark className="rounded bg-yellow-200/50 px-0.5 font-medium dark:bg-yellow-300/20">{text.slice(i, i + s.length)}</mark>
             {text.slice(i + s.length)}
         </>
+    );
+}
+
+export function HitIcon({ type, className = 'h-4 w-4', iconMap = ICON_MAP_DEFAULT, label }: HitIconProps) {
+    const Icon = iconMap[type] ?? iconMap.other ?? MapPin;
+
+    const a11yProps = label ? ({ role: 'img', 'aria-label': label } as const) : ({ 'aria-hidden': true } as const);
+
+    return (
+        <Icon className={className} focusable={false} {...a11yProps}>
+            {label ? <title>{label}</title> : null}
+        </Icon>
     );
 }

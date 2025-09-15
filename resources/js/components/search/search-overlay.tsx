@@ -4,19 +4,16 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useSearchQuery as useSearchRQ } from '@/hooks/use-search-query';
 import { useRecentSearches } from '@/hooks/use-search-recent';
-import { highlight, mapHref } from '@/lib/search';
+import { highlight, HitIcon, mapHref } from '@/lib/search';
 import { cn } from '@/lib/utils';
 import type { Hit } from '@/types/search';
 import { Link } from '@inertiajs/react';
 import { Root as VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { ArrowRight, Building2, MapPin, Search as SearchIcon, Sparkles, User, X } from 'lucide-react';
+import { ArrowRight, Search as SearchIcon, Sparkles, X } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { JSX } from 'react/jsx-runtime';
 import { closeSearch, setSearchQuery, useSearchOpen, useSearchQuery as useSearchStoreQuery } from './search-store';
-
-const icon = (t: Hit['type']): JSX.Element =>
-    t === 'offstreet' ? <Building2 className="h-4 w-4" /> : t === 'community' ? <User className="h-4 w-4" /> : <MapPin className="h-4 w-4" />;
 
 export default function SearchOverlay(): JSX.Element {
     const { t } = useTranslation('global/search');
@@ -131,7 +128,9 @@ export default function SearchOverlay(): JSX.Element {
                                 }}
                                 className="group flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-muted/60"
                             >
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">{icon(h.type)}</div>
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                                    <HitIcon type={h.type} />
+                                </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="truncate text-sm font-medium">{highlight(h.label, q)}</div>
                                     {h.sub && <div className="truncate text-xs text-muted-foreground">{highlight(h.sub, q)}</div>}
