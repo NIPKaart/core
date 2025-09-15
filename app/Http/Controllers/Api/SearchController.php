@@ -9,7 +9,7 @@ use Meilisearch\Contracts\SearchQuery;
 
 class SearchController extends Controller
 {
-    public function __construct(private Client $meili) {}
+    public function __construct(private Client $meilisearchClient) {}
 
     public function search(Request $request)
     {
@@ -109,7 +109,7 @@ class SearchController extends Controller
             $queries[] = $sq;
         }
 
-        $resp = $this->meili->multiSearch($queries);
+        $resp = $this->meilisearchClient->multiSearch($queries);
         $hits = [];
         $total = 0;
 
