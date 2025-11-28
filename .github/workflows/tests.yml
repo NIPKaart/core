@@ -32,7 +32,7 @@ jobs:
       DB_URL: mysql://laravel_user:${{ secrets.DB_PASSWORD }}@127.0.0.1:33306/db_test_laravel
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
