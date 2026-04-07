@@ -21,7 +21,7 @@
         "laravel/wayfinder": "^0.1.10",
         "meilisearch/meilisearch-php": "^1.15",
         "opcodesio/log-viewer": "^3.15",
-        "spatie/laravel-backup": "^9.3",
+        "spatie/laravel-backup": "^10.0",
         "spatie/laravel-permission": "^7.0"
     },
     "require-dev": {
