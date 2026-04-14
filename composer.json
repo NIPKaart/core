@@ -13,7 +13,7 @@
         "http-interop/http-factory-guzzle": "^1.2",
         "inertiajs/inertia-laravel": "^3.0",
         "itsgoingd/clockwork": "^5.3",
-        "laravel/framework": "^12.0",
+        "laravel/framework": "^13.0",
         "laravel/reverb": "^1.5",
         "laravel/sanctum": "^4.0",
         "laravel/scout": "^10.19",
