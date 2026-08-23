@@ -7,7 +7,7 @@ declare global {
 }
 window.Pusher = Pusher;
 
-const tls = import.meta.env.VITE_REVERB_TLS === 'true';
+const tls = import.meta.env.VITE_REVERB_SCHEME !== 'http';
 const host = import.meta.env.VITE_REVERB_HOST || window.location.hostname;
 const port = Number(import.meta.env.VITE_REVERB_PORT || (tls ? 443 : 80));
 
