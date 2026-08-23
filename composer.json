@@ -16,7 +16,7 @@
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.5",
         "laravel/sanctum": "^4.0",
-        "laravel/scout": "^10.19",
+        "laravel/scout": "^11.0",
         "laravel/tinker": "^3.0.0",
         "laravel/wayfinder": "^0.1.10",
         "meilisearch/meilisearch-php": "^1.15",
