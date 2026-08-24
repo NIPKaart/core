@@ -32,10 +32,10 @@ jobs:
       DB_URL: mysql://laravel_user:${{ secrets.DB_PASSWORD }}@127.0.0.1:33306/db_test_laravel
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.1.0
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.37.2
         with:
           php-version: 8.4
           tools: composer:v2
@@ -43,7 +43,7 @@ jobs:
           extensions: pdo_mysql
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.5.0
         with:
           node-version: '24.14.1'
           cache: 'npm'
