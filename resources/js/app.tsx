@@ -1,9 +1,6 @@
 import '../css/app.css';
 import '../css/leaflet-legend.css';
 
-// Import the Echo configuration
-import '@/echo';
-
 import { createInertiaApp, router } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentType } from 'react';

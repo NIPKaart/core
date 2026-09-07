@@ -1,4 +1,5 @@
 import SearchOverlay from '@/components/search/search-overlay';
+import { useNotifications } from '@/hooks/use-notifications';
 import { useSyncLocale } from '@/hooks/use-sync-locale';
 import AppLayoutTemplate from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -11,6 +12,7 @@ interface AppLayoutProps {
 
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     useSyncLocale();
+    useNotifications();
 
     return (
         <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>

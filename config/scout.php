@@ -20,7 +20,7 @@ return [
     |
     */
 
-    'driver' => env('SCOUT_DRIVER', 'algolia'),
+    'driver' => env('SCOUT_DRIVER', 'meilisearch'),
 
     /*
     |--------------------------------------------------------------------------
@@ -149,7 +149,7 @@ return [
                     'street', 'city', 'postcode', 'suburb', 'neighbourhood', 'amenity', 'description',
                 ],
                 'filterableAttributes' => [
-                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation', 'city',
+                    'status', 'country_id', 'province_id', 'municipality_id', 'orientation', 'city', 'postcode',
                 ],
                 'sortableAttributes' => ['created_at', 'updated_at'],
             ],

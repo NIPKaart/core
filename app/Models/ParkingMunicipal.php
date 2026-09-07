@@ -81,7 +81,7 @@ class ParkingMunicipal extends Model
      */
     public function searchableAs(): string
     {
-        return 'parking_municipal_spaces';
+        return config('scout.prefix').'parking_municipal_spaces';
     }
 
     /**

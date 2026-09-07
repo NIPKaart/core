@@ -4,13 +4,15 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
 test('API errors are JSON even when the client accepts HTML', function (string $path, int $status) {
+    Route::get('/api/test-auth', fn () => response()->json([]))->middleware('auth');
+
     $this->get($path, ['Accept' => 'text/html'])
         ->assertStatus($status)
         ->assertHeader('Content-Type', 'application/json')
         ->assertJsonStructure(['message']);
 })->with([
     'missing route' => ['/api/does-not-exist', 404],
-    'unauthenticated' => ['/api/user', 401],
+    'unauthenticated' => ['/api/test-auth', 401],
     'missing parking space' => ['/api/parking-spaces/00000000-0000-4000-8000-000000000000', 404],
 ]);
 
