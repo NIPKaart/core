@@ -1,6 +1,6 @@
 # Backend skeleton decisions
 
-Issue #1160 reconciles the established NIPKaart backend with the Laravel 13 React Starter Kit. Comparison date: 2026-09-07. Sources: the upstream [provider](https://github.com/laravel/react-starter-kit/blob/main/app/Providers/AppServiceProvider.php), [bootstrap](https://github.com/laravel/react-starter-kit/blob/main/bootstrap/app.php) and [Composer manifest](https://github.com/laravel/react-starter-kit/blob/main/composer.json). These upstream links track a moving branch; the decisions below describe this reconciliation.
+Issue #1160 reconciles the established NIPKaart backend with the Laravel 13 React Starter Kit. Comparison date: 2026-09-07. Sources: the upstream [provider](https://github.com/laravel/react-starter-kit/blob/main/app/Providers/AppServiceProvider.php), [bootstrap](https://github.com/laravel/react-starter-kit/blob/main/bootstrap/app.php) and [Composer manifest](https://github.com/laravel/react-starter-kit/blob/main/composer.json). These upstream links track a moving branch; the decisions below describe this reconciliation. This is a historical snapshot: Sanctum/Scout removal is recorded in [infrastructure](infrastructure.md), Fortify and administrator provisioning in [auth security](auth-security.md), and Pest 5 adoption in [quality checks](quality-checks.md).
 
 | Area | Classification | Decision |
 | --- | --- | --- |
