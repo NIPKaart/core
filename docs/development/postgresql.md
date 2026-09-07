@@ -82,7 +82,7 @@ This is a tested implementation, not a production deployment. Production provisi
 
 ## DDS reference and sources
 
-The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable SSR/Vite integration and reject unexpected HTTP requests. PostgreSQL remains the test database rather than DDS's SQLite.
+The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable Vite integration and reject unexpected HTTP requests. SSR is disabled in application configuration. PostgreSQL remains the test database rather than DDS's SQLite.
 
 DDS's dedicated backup disk, mandatory encrypted backup command and production-only run/monitor/cleanup schedules are a reference for the later operational rollout. No remote backup destination or scheduler was activated here.
 

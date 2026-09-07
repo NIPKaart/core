@@ -1,48 +1,44 @@
 import '../css/app.css';
 import '../css/leaflet-legend.css';
 
-// Import the i18n configuration
-import '@/i18n';
-
 // Import the Echo configuration
 import '@/echo';
 
-import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
-
+import { createInertiaApp } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { ComponentType } from 'react';
+import { initializeTheme } from './hooks/use-appearance';
+import i18n from './i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-
-// Create a single QueryClient instance (outside setup for HMR)
+const pages = import.meta.glob<{ default: ComponentType }>('./pages/**/*.tsx');
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             retry: 1,
-            staleTime: 10_000, // 10s "vers"
-            gcTime: 5 * 60_000, // 5 min cache
+            staleTime: 10_000,
+            gcTime: 5 * 60_000,
             refetchOnWindowFocus: false,
         },
     },
 });
 
-createInertiaApp({
+void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob<ResolvedComponent>('./pages/**/*.tsx', { import: 'default' })),
-    setup({ el, App, props }) {
-        const root = createRoot(el);
-        root.render(
-            <QueryClientProvider client={queryClient}>
-                <App {...props} />
-            </QueryClientProvider>,
-        );
+    resolve: async (name) => {
+        const load = pages[`./pages/${name}.tsx`];
+        if (!load) throw new Error(`Unknown Inertia page: ${name}`);
+        return (await load()).default;
+    },
+    strictMode: true,
+    withApp(app, { page }) {
+        // Initialize from the shared Laravel locale; later visits use useSyncLocale.
+        void i18n.changeLanguage(String(page.props.locale || 'en'));
+        return <QueryClientProvider client={queryClient}>{app}</QueryClientProvider>;
     },
     progress: {
         color: '#4B5563',
     },
 });
 
-// This will set light / dark mode on load...
 initializeTheme();

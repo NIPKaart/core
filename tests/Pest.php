@@ -20,7 +20,6 @@ use function Pest\Laravel\withoutVite;
 
 pest()->extend(TestCase::class)
     ->beforeEach(function () {
-        config()->set('inertia.ssr.enabled', false);
         withoutVite();
         Http::preventStrayRequests();
 

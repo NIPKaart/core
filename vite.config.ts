@@ -13,14 +13,13 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
-            ssr: 'resources/js/ssr.tsx',
             refresh: true,
         }),
         react(),
         tailwindcss(),
         wayfinder({
             formVariants: true,
-        })
+        }),
     ],
     server: {
         // respond to all network requests
@@ -33,8 +32,5 @@ export default defineConfig({
         cors: {
             origin: corsOrigin,
         },
-    },
-    esbuild: {
-        jsx: 'automatic',
     },
 });

@@ -15,7 +15,7 @@ composer ci:test
 composer ci:check
 ```
 
-`ci:lint` generates ignored Wayfinder route helpers before checking Pint, Prettier, ESLint and TypeScript. All formatting and lint checks are read-only; generated route helpers and build artifacts are expected outputs, not source fixes. `ci:test` builds both production client and SSR bundles and runs Pest through the existing Composer test command. An SSR build checks compilation, not live SSR rendering.
+`ci:lint` generates ignored Wayfinder route helpers before checking Pint, Prettier, ESLint and TypeScript. All formatting and lint checks are read-only; generated route helpers and build artifacts are expected outputs, not source fixes. `ci:test` builds the production client bundle and runs Pest through the existing Composer test command. React renders in the browser; SSR is explicitly disabled in application configuration. Feature tests use that real configuration rather than overriding it. See [frontend baseline](frontend-baseline.md) for the architecture decision.
 
 Tests require the dedicated `nipkaart_test` PostgreSQL database with PostGIS available. They reset test data. For DDEV, `ddev test` provisions that database; then use:
 
