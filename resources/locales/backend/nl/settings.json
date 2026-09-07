@@ -2,7 +2,8 @@
     "sidebar": {
         "profile": "Profiel",
         "password": "Wachtwoord",
-        "appearance": "Uiterlijk"
+        "appearance": "Uiterlijk",
+        "security": "Beveiliging"
     },
     "meta": {
         "title": "Instellingen",

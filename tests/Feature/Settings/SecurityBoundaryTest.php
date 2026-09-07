@@ -42,7 +42,7 @@ test('unverified users can correct their email and retain locale and roles', fun
 test('unverified users cannot read or update password settings', function () {
     $user = User::factory()->unverified()->create();
     $this->actingAs($user)->get(route('password.edit'))->assertRedirect(route('verification.notice'));
-    $this->put(route('password.update'), [
+    $this->put(route('user-password.update'), [
         'current_password' => 'password',
         'password' => 'new-password',
         'password_confirmation' => 'new-password',
@@ -73,7 +73,7 @@ test('sensitive settings limit password guesses', function (string $method, stri
 })->with([
     ['patch', 'profile.update', ['name' => 'Changed', 'email' => 'changed@example.com', 'current_password' => 'wrong']],
     ['delete', 'profile.destroy', ['password' => 'wrong']],
-    ['put', 'password.update', ['current_password' => 'wrong', 'password' => 'new-password', 'password_confirmation' => 'new-password']],
+    ['put', 'user-password.update', ['current_password' => 'wrong', 'password' => 'new-password', 'password_confirmation' => 'new-password']],
 ]);
 
 test('suspended users cannot mutate settings', function () {
@@ -101,7 +101,7 @@ test('settings share a user budget without blocking verification or other users'
         $this->delete(route('profile.destroy'), ['password' => 'wrong'])->assertSessionHasErrors('password');
     }
     $this->patch(route('profile.update'), ['name' => $user->name, 'email' => $user->email])->assertStatus(429);
-    $this->put(route('password.update'), [])->assertStatus(429);
+    $this->put(route('user-password.update'), [])->assertStatus(429);
     $this->post(route('verification.send'))->assertRedirect();
 
     $other = User::factory()->create();

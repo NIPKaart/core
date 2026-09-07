@@ -2,7 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
+import RegisteredUserController from '@/actions/Laravel/Fortify/Http/Controllers/RegisteredUserController';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
