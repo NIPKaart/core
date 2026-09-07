@@ -16,8 +16,15 @@
       "addLabels": ["javascript"]
     },
     {
-      "matchManagers": ["npm", "composer"],
+      "matchManagers": ["composer"],
       "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "PHP dependencies",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "JavaScript dependencies",
       "automerge": false
     },
     {
