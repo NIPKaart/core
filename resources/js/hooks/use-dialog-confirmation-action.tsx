@@ -10,14 +10,10 @@ export type ConfirmationDialogType = 'delete' | 'bulkDelete';
 type DialogSubject = ParkingSpaceConfirmation | { ids: string[] } | null;
 
 type Options = {
-    parkingSpaceId?: string | number;
+    parkingSpaceId?: string;
     onSuccess?: () => void;
     onError?: () => void;
 };
-
-function asRouteParam(id: string | number): string | { id: string } {
-    return typeof id === 'string' ? id : { id: String(id) };
-}
 
 export function useConfirmationActionDialog(options: Options = {}) {
     const { t } = useTranslation('backend/parking/confirmations');
@@ -41,7 +37,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
             }
             router.delete(
                 app.parkingSpaces.confirmations.destroy({
-                    parking_space: asRouteParam(parking_space_id),
+                    parking_space: parking_space_id,
                     confirmation: dialogSubject.id,
                 }),
                 {

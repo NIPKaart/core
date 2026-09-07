@@ -134,14 +134,18 @@ class NotificationController extends Controller
                 break;
         }
 
-        return back()->with('success', __('Updated notifications'));
+        Inertia::flash('success', __('Updated notifications'));
+
+        return back();
     }
 
     public function readAll(Request $request)
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return back()->with('success', __('Marked all as read'));
+        Inertia::flash('success', __('Marked all as read'));
+
+        return back();
     }
 
     public function read(Request $request, string $id)
@@ -151,7 +155,9 @@ class NotificationController extends Controller
             $n->markAsRead();
         }
 
-        return back()->with('success', __('Marked as read'));
+        Inertia::flash('success', __('Marked as read'));
+
+        return back();
     }
 
     public function unread(Request $request, string $id)
@@ -161,20 +167,26 @@ class NotificationController extends Controller
             $n->markAsUnread();
         }
 
-        return back()->with('success', __('Marked as unread'));
+        Inertia::flash('success', __('Marked as unread'));
+
+        return back();
     }
 
     public function remove(Request $request, string $id)
     {
         $request->user()->notifications()->where('id', $id)->delete();
 
-        return back()->with('success', __('Deleted'));
+        Inertia::flash('success', __('Deleted'));
+
+        return back();
     }
 
     public function removeAll(Request $request)
     {
         $request->user()->notifications()->delete();
 
-        return back()->with('success', __('Deleted all notifications'));
+        Inertia::flash('success', __('Deleted all notifications'));
+
+        return back();
     }
 }

@@ -136,8 +136,9 @@ class ParkingMunicipalController extends Controller
 
         $parkingMunicipal->update($request->validated());
 
-        return redirect()->route('app.parking-municipal.index', ['municipality' => $parkingMunicipal->municipality_id])
-            ->with('success', 'Parking space updated.');
+        Inertia::flash('success', 'Parking space updated.');
+
+        return redirect()->route('app.parking-municipal.index', ['municipality' => $parkingMunicipal->municipality_id]);
     }
 
     /**
@@ -165,6 +166,8 @@ class ParkingMunicipalController extends Controller
 
         $parkingMunicipal->delete();
 
-        return back()->with('success', 'Parking space deleted.');
+        Inertia::flash('success', 'Parking space deleted.');
+
+        return back();
     }
 }

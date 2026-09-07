@@ -13,7 +13,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { LayersControl, MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import Swal from 'sweetalert2';
+import { toast } from 'sonner';
 
 const { BaseLayer, Overlay } = LayersControl;
 
@@ -138,15 +138,8 @@ export default function AddLocation() {
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
     const successHandler = () => {
-        Swal.fire({
-            title: t('modal.success.title'),
-            text: t('modal.success.text'),
-            icon: 'success',
-            confirmButtonText: t('modal.success.confirm'),
-            confirmButtonColor: '#f97316',
-        }).then(() => {
-            setModalOpen(false);
-        });
+        setModalOpen(false);
+        toast.success(t('modal.success.title'), { description: t('modal.success.text') });
     };
 
     const [lat, lng] = (markerPosition as [number, number]) ?? [];

@@ -53,12 +53,6 @@ class HandleInertiaRequests extends Middleware
                 'phpVersion' => PHP_VERSION,
             ],
             'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'flash' => [
-                'success' => session('success'),
-                'error' => session('error'),
-                'warning' => session('warning'),
-                'info' => session('info'),
-            ],
             'auth' => [
                 'user' => $request->user(),
                 'roles' => $request->user()?->roles->pluck('name')->all() ?? [],
