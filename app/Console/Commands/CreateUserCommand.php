@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use Spatie\Permission\Models\Role;
 
 class CreateUserCommand extends Command
@@ -63,7 +64,7 @@ class CreateUserCommand extends Command
         // Validate role existence
         try {
             $role = Role::findByName($roleName);
-        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+        } catch (RoleDoesNotExist $e) {
             $this->error("The role '{$roleName}' does not exist.");
 
             return Command::FAILURE;

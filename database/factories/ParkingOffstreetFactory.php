@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\ApiState;
 use App\Models\Municipality;
+use App\Models\ParkingOffstreet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingOffstreet>
+ * @extends Factory<ParkingOffstreet>
  */
 class ParkingOffstreetFactory extends Factory
 {

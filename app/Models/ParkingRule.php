@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\ParkingRuleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParkingRule extends Model
 {
-    /** @use HasFactory<\Database\Factories\ParkingRuleFactory> */
+    /** @use HasFactory<ParkingRuleFactory> */
     use HasFactory;
 
     protected $table = 'parking_rules';

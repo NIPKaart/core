@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Municipality;
+use App\Models\ParkingRule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingRule>
+ * @extends Factory<ParkingRule>
  */
 class ParkingRuleFactory extends Factory
 {

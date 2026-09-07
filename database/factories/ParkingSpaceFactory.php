@@ -5,12 +5,13 @@ namespace Database\Factories;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Models\Municipality;
+use App\Models\ParkingSpace;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingSpace>
+ * @extends Factory<ParkingSpace>
  */
 class ParkingSpaceFactory extends Factory
 {

@@ -36,15 +36,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile routes
     Route::prefix('profile')->as('profile.')->group(function () {
         // Profile routes
-        Route::get('parking-spaces', [profile\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
-        Route::get('parking-spaces/{id}', [profile\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
-        Route::delete('parking-spaces/{id}', [profile\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
+        Route::get('parking-spaces', [Profile\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
+        Route::get('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
+        Route::delete('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
 
         // Favorites routes
-        Route::get('favorites', [profile\FavoriteController::class, 'index'])->name('favorites.index');
-        Route::get('favorites/list', [profile\FavoriteController::class, 'list'])->name('favorites.list');
-        Route::post('favorites', [profile\FavoriteController::class, 'store'])->name('favorites.store');
-        Route::delete('favorites', [profile\FavoriteController::class, 'destroy'])->name('favorites.destroy');
+        Route::get('favorites', [Profile\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::get('favorites/list', [Profile\FavoriteController::class, 'list'])->name('favorites.list');
+        Route::post('favorites', [Profile\FavoriteController::class, 'store'])->name('favorites.store');
+        Route::delete('favorites', [Profile\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
     // App routes
