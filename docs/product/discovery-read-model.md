@@ -2,6 +2,8 @@
 
 This document supports the product roadmap epic and deliberately does **not** propose merging `ParkingSpace`, `ParkingMunicipal` and `ParkingOffstreet` persistence models.
 
+Implementation status: `App\Services\ParkingDiscovery` already combines the three sources for bounded PostGIS radius/viewport queries, including source-qualified identity and publication filters. The frontend map still loads separate collections. Extend this service toward the richer contract below; see the [domain audit](../development/domain-model-audit.md) for current model boundaries and remaining integrity/provenance work.
+
 ## Problem
 
 The current map and search code know about three separate datasets and normalize them ad hoc in presentation/search code. The next product experience needs to ask a source-agnostic question:
