@@ -30,6 +30,10 @@ test('broadcast authorization still protects private user channels', function ()
     config()->set('broadcasting.connections.reverb.key', 'test-key');
     config()->set('broadcasting.connections.reverb.secret', 'test-secret');
     config()->set('broadcasting.connections.reverb.app_id', 'test-app');
+
+    // Register the application's channels on this driver, regardless of the boot-time default.
+    require base_path('routes/channels.php');
+
     $user = User::factory()->create();
 
     $this->actingAs($user)->postJson('/broadcasting/auth', [
