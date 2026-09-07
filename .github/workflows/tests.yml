@@ -100,9 +100,6 @@ jobs:
           php artisan db:seed --class=MunicipalityWithParkingSeeder --force
           php artisan db:seed --class=MunicipalityWithOffstreetSeeder --force
 
-      - name: Rehearse PostgreSQL backup and restore
-        run: docker exec -i "${{ job.services.postgres.id }}" bash < tests/Support/postgres-backup-restore.sh
-
       - name: Build Assets
         run: npm run build
 

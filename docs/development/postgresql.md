@@ -62,7 +62,7 @@ For #1176, coverage polygons can use `geometry(MultiPolygon,4326)` and a GiST in
 
 Spatie backups use the configured PostgreSQL connection and verify that generated archives can be opened and contain files. Every backup worker needs a client matching the PostgreSQL server major version. A restore target must have PostGIS packages. Archive verification alone does not prove database restorability.
 
-CI runs `tests/Support/postgres-backup-restore.sh` inside its disposable PostgreSQL service. The script refuses application database names, dumps/restores to a new temporary database, compares every public table's row count, verifies the three generated parking columns and a known SRID-4326 point, then removes its fixtures. For real operational backups, keep dumps private and rehearse restoration against a new target before adopting a destination/retention policy.
+A one-time native dump/restore rehearsal succeeded locally and in [CI on 2026-09-07](https://github.com/NIPKaart/core/actions/runs/34133702813). It compared every public table's row count and verified the three generated parking columns and a known SRID-4326 point. This is migration evidence; there is no permanent backup/restore script or CI job in the project.
 
 ```sh
 pg_dump --format=custom --no-owner --no-acl --file=nipkaart.dump "$SOURCE_PG_URL"
@@ -76,13 +76,13 @@ For a fresh application deployment, configure `SCOUT_DRIVER=meilisearch`, the ho
 
 ## Validation and deployment boundary
 
-Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 17 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI repeats the database suite and rehearsals. Remote CI and review status are reported on the PR.
+Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 17 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the database suite and Scout rebuild checks. Remote CI and review status are reported on the PR.
 
 This is a tested implementation, not a production deployment. Production provisioning, enabling PostGIS with the actual role, choosing newly imported datasets, configuring the backup destination/retention, and application rollout remain operational actions. No historical-data transfer is required under the fresh-start decision.
 
 ## DDS reference and sources
 
-The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed, backup and search checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable SSR/Vite integration and reject unexpected HTTP requests. PostgreSQL remains the test database rather than DDS's SQLite.
+The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed and search checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable SSR/Vite integration and reject unexpected HTTP requests. PostgreSQL remains the test database rather than DDS's SQLite.
 
 DDS's dedicated backup disk, mandatory encrypted backup command and production-only run/monitor/cleanup schedules are a reference for the later operational rollout. No remote backup destination or scheduler was activated here.
 
