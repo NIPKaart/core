@@ -30,7 +30,7 @@ The map is a means to answer these questions, not the product goal by itself.
 | Community contribution | Works/partial | Map create flow + `ParkingSpace` domain | Redesign as contribution lifecycle with moderation/trust |
 | Community confirmations | Works | `ParkingSpaceConfirmation` + policy/UI | Evolve into explicit verification/trust signal |
 | Favorites | Works | Favorite domain/profile/map UI | Keep; integrate into destination workflow |
-| Search | Works/partial | Meilisearch multi-index search | Shift from record search toward destination + nearby parking discovery |
+| Search | Works/partial | PostgreSQL parking-record text search (#1195) | Shift from record search toward destination + nearby parking discovery |
 | Internationalization | Mostly works | #329; frontend home/contact remain incomplete | Product-wide requirement, not a standalone feature |
 | Garage overview | Placeholder | #668 and placeholder page | Rethink around fallback/discovery rather than a simple list |
 | Home page | Placeholder/legacy | #246/#329; current page minimal | Rebuild around destination search and product promise |
@@ -85,7 +85,7 @@ Offstreet parking should be a first-class fallback when a suitable on-street opt
 
 ### 6. Search, geo and ranking
 
-Build a shared parking discovery/read layer across the three parking aggregates. Keep source tables separate. Use geospatial/radius querying and/or Meilisearch geo capabilities to retrieve candidates near a destination.
+Build a shared parking discovery/read layer across the three parking aggregates. Keep source tables separate. Use PostgreSQL/PostGIS radius and viewport queries to retrieve candidates near a destination resolved by a separate geocoding provider.
 
 Ranking should be explainable and initially conservative: distance, parking category, source/trust and live availability where semantically valid. Personal suitability scoring is a later feature and must be based only on explicit, non-sensitive preferences.
 
