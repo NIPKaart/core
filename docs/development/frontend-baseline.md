@@ -30,7 +30,7 @@ The explicit lazy page resolver currently returns the default component, as requ
 | DDEV | Preserve host `0.0.0.0`, strict port 5173, primary-URL asset origin and DDEV CORS matching. |
 | i18next, QueryClient, Echo | Preserve behavior; usage cleanup belongs to the integration audit in #1166. |
 | Radix/shadcn, fonts | Preserve during framework reconciliation; make visual choices during mobile UX work. |
-| Toasts and forms | Coordinate shared feedback and form simplification with #1164. |
+| Toasts and forms | One app-level Sonner renderer and native Inertia flash; retain RHF for the map editor. See [forms and feedback audit](forms-feedback.md) (#1164). |
 | Unrelated dependency majors | Excluded. |
 
 A later mobile UX decision is whether map and garage list are separate destinations or alternate views sharing filters and selection. This does not block the framework cleanup.
