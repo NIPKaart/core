@@ -19,9 +19,9 @@ class VirtualPasskey
 
     private int $counter = 0;
 
-    public function __construct()
+    public function __construct(?OpenSSLAsymmetricKey $key = null)
     {
-        $this->key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        $this->key = $key ?? openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
         $this->id = random_bytes(32);
     }
 
@@ -32,8 +32,8 @@ class VirtualPasskey
             ->add(UnsignedIntegerObject::create(1), UnsignedIntegerObject::create(2))
             ->add(UnsignedIntegerObject::create(3), NegativeIntegerObject::create(-7))
             ->add(NegativeIntegerObject::create(-1), UnsignedIntegerObject::create(1))
-            ->add(NegativeIntegerObject::create(-2), ByteStringObject::create($details['x']))
-            ->add(NegativeIntegerObject::create(-3), ByteStringObject::create($details['y']));
+            ->add(NegativeIntegerObject::create(-2), ByteStringObject::create(str_pad($details['x'], 32, "\0", STR_PAD_LEFT)))
+            ->add(NegativeIntegerObject::create(-3), ByteStringObject::create(str_pad($details['y'], 32, "\0", STR_PAD_LEFT)));
         $data = hash('sha256', $options['rp']['id'], true).chr(0x45).pack('N', 0)
             .str_repeat(chr(0), 16).pack('n', strlen($this->id)).$this->id.(string) $cose;
         $attestation = MapObject::create()
