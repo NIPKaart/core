@@ -40,17 +40,7 @@ jobs:
         options: >-
           --health-cmd="pg_isready -U db -d nipkaart_test"
           --health-interval=5s --health-timeout=5s --health-retries=20
-      meilisearch:
-        image: getmeili/meilisearch:v1.41
-        env:
-          MEILI_MASTER_KEY: ci-rehearsal-key
-          MEILI_NO_ANALYTICS: 'true'
-        ports:
-          - 7700:7700
     env:
-      MEILISEARCH_REHEARSAL: 'true'
-      MEILISEARCH_HOST: http://127.0.0.1:7700
-      MEILISEARCH_KEY: ci-rehearsal-key
       APP_ENV: testing
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1

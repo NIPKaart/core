@@ -26,7 +26,7 @@ DDEV manages Laravel's local connection settings (`pgsql`, host `db`, port `5432
 
 `ddev test` creates the dedicated `nipkaart_test` database and clears cached configuration before running Pest. PHPUnit clears `DB_URL` and fixes the connection and database name to avoid accidentally selecting the application's database. For host execution, supply `DB_HOST`, `DB_PORT`, `DB_USERNAME` and `DB_PASSWORD` for the test server before running `vendor/bin/pest`.
 
-The default CountrySeeder/ProvinceSeeder are fresh-install seeders, not data transfer or recovery tools. They delete reference rows and ProvinceSeeder depends on the initial country IDs. Do not rerun them on a populated database. CI also exercises the existing municipal and offstreet sample seeders after the baseline seed. This repository currently contains no provider-specific dataset importer; the sample seeders and query-builder upsert/write tests exercise the available write paths.
+The default CountrySeeder/ProvinceSeeder are fresh-install seeders, not data transfer or recovery tools. They delete reference rows and ProvinceSeeder depends on the initial country IDs. Do not rerun them on a populated database. CI also exercises the existing municipal and offstreet sample seeders after the baseline seed. This repository currently contains no provider-specific dataset importer; CI exercises the available sample seeders.
 
 ## Database schema
 
@@ -70,19 +70,19 @@ createdb --maintenance-db="$ADMIN_PG_URL" nipkaart_restore
 pg_restore --exit-on-error --no-owner --no-acl --dbname="$RESTORE_PG_URL" nipkaart.dump
 ```
 
-Meilisearch is derived data. CI uses a disposable service and sets `MEILISEARCH_REHEARSAL=true` to run the Scout rebuild test. It imports public records for all three models, removes indexed documents and rebuilds them from PostgreSQL, verifying IDs and coordinates. Outside CI this test is opt-in because it clears the three parking indexes: enable it only against an explicitly disposable Meilisearch server.
+Meilisearch is derived data. A one-time rehearsal rebuilt the three parking indexes from PostgreSQL, verifying public IDs and coordinates. The new Scout regression test and disposable CI service were removed at the owner's request; permanent coverage is deferred to the planned Pest 5 work.
 
 For a fresh application deployment, configure `SCOUT_DRIVER=meilisearch`, the host/key and worker settings, then run `php artisan scout:import` separately for `App\Models\ParkingSpace`, `App\Models\ParkingMunicipal` and `App\Models\ParkingOffstreet`. Wait for asynchronous Meilisearch tasks and inspect failures before treating search as ready.
 
 ## Validation and deployment boundary
 
-Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 15 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the database suite and Scout rebuild checks. Remote CI and review status are reported on the PR.
+Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 15 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the existing test suite against PostgreSQL. The newly introduced spatial, relationship, notification and Scout regression tests were removed at the owner's request; the earlier successful runs remain implementation evidence, not ongoing regression coverage. Remote CI and review status are reported on the PR.
 
 This is a tested implementation, not a production deployment. Production provisioning, enabling PostGIS with the actual role, choosing newly imported datasets, configuring the backup destination/retention, and application rollout remain operational actions. No historical-data transfer is required under the fresh-start decision.
 
 ## DDS reference and sources
 
-The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed and search checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable SSR/Vite integration and reject unexpected HTTP requests. PostgreSQL remains the test database rather than DDS's SQLite.
+The lint/test workflows follow [DDS Platform at 27ae3a2](https://github.com/dutchdronesquad/dds-platform/tree/27ae3a222e86d1c891a97c42ff739c66ac00a686): pinned actions, PHP 8.4/8.5 and coverage reporting. NIPKaart retains its branch triggers and npm cache and adds PostgreSQL/PostGIS, migration/seed checks. DDS-specific Rector/PHPStan/browser steps are omitted because these tools/suites are absent here; its 95% coverage target is not imposed on this existing suite. Feature tests disable SSR/Vite integration and reject unexpected HTTP requests. PostgreSQL remains the test database rather than DDS's SQLite.
 
 DDS's dedicated backup disk, mandatory encrypted backup command and production-only run/monitor/cleanup schedules are a reference for the later operational rollout. No remote backup destination or scheduler was activated here.
 
