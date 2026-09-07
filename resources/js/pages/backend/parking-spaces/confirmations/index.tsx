@@ -15,7 +15,7 @@ import { getConfirmationColumns } from './columns';
 
 type PageProps = {
     confirmations: PaginatedResponse<ParkingSpaceConfirmation>;
-    parkingSpace: { id: number; street: string; city: string; municipality: string };
+    parkingSpace: { id: string; street: string; city: string; municipality: string };
     options: { confirmationStatuses: Record<string, string> };
 };
 

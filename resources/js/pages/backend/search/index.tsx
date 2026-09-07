@@ -86,7 +86,7 @@ export default function Index() {
         };
 
         return (
-            <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="-mx-4 [scrollbar-width:none] overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden">
                 <nav className="flex w-max max-w-full items-center gap-4">
                     <Item value="all" label={t('filters.all', { defaultValue: 'Alle' })} count={counts.all} />
                     <Item value="municipal" label={t('filters.municipal', { defaultValue: 'Municipal' })} count={counts.municipal} />
@@ -155,7 +155,7 @@ export default function Index() {
                                         {tSearch('clear', { defaultValue: 'Clear' })}
                                     </button>
                                 </div>
-                                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                <div className="-mx-1 flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden">
                                     {recent.slice(0, 10).map((r) => (
                                         <button
                                             key={r}

@@ -74,6 +74,21 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "lint:check": "pint --test",
+        "ci:lint": [
+            "@php artisan wayfinder:generate --with-form",
+            "@lint:check",
+            "npm run check"
+        ],
+        "ci:test": [
+            "Composer\\Config::disableProcessTimeout",
+            "npm run build:ssr",
+            "@test"
+        ],
+        "ci:check": [
+            "@ci:lint",
+            "@ci:test"
         ]
     },
     "extra": {

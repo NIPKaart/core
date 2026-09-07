@@ -23,10 +23,8 @@ jobs:
         include:
           - name: PHP 8.4
             php-version: '8.4'
-            coverage: xdebug
           - name: PHP 8.5
             php-version: '8.5'
-            coverage: xdebug
 
     services:
       postgres:
@@ -60,7 +58,7 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           tools: composer:v2
-          coverage: ${{ matrix.coverage }}
+          coverage: none
           extensions: pdo_pgsql
 
       - name: Setup Node
@@ -90,8 +88,5 @@ jobs:
           php artisan db:seed --class=MunicipalityWithParkingSeeder --force
           php artisan db:seed --class=MunicipalityWithOffstreetSeeder --force
 
-      - name: Build Assets
-        run: npm run build
-
-      - name: Tests with Coverage
-        run: ./vendor/bin/pest --compact --coverage
+      - name: Build client and SSR assets and run tests
+        run: composer ci:test

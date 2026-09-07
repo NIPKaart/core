@@ -3,6 +3,7 @@
 use Database\Seeders\PermissionsTableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
 
 use function Pest\Laravel\withoutVite;
 
@@ -17,7 +18,7 @@ use function Pest\Laravel\withoutVite;
 |
 */
 
-pest()->extend(Tests\TestCase::class)
+pest()->extend(TestCase::class)
     ->beforeEach(function () {
         config()->set('inertia.ssr.enabled', false);
         withoutVite();

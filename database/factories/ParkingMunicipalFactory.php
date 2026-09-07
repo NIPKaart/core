@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\ParkingOrientation;
 use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ParkingMunicipal>
+ * @extends Factory<ParkingMunicipal>
  */
 class ParkingMunicipalFactory extends Factory
 {

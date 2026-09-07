@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ParkingOrientation;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
+use Database\Factories\ParkingMunicipalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Laravel\Scout\Searchable;
 
 class ParkingMunicipal extends Model
 {
-    /** @use HasFactory<\Database\Factories\ParkingMunicipalFactory> */
+    /** @use HasFactory<ParkingMunicipalFactory> */
     use Favoritable, HasFactory, HasParkingLocation, Searchable;
 
     protected $table = 'parking_municipal_spaces';
