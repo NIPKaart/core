@@ -77,7 +77,7 @@ return [
              * For a complete list of available customization options, see https://github.com/spatie/db-dumper
              */
             'databases' => [
-                env('DB_CONNECTION', 'mysql'),
+                env('DB_CONNECTION', 'pgsql'),
             ],
         ],
 
@@ -174,6 +174,9 @@ return [
          * available on your system.
          */
         'encryption' => 'default',
+
+        // Verify that each generated archive opens and contains files.
+        'verify_backup' => true,
 
         /*
          * The number of attempts, in case the backup command encounters an exception

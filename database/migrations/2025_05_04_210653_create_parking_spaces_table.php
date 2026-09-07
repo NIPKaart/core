@@ -4,6 +4,7 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,6 +14,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement('CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public');
+
         Schema::create('parking_spaces', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignId('user_id')
@@ -38,6 +41,12 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->decimal('latitude', 10, 7);
 
+            // Existing API/import coordinates remain the only writable location.
+            $table->geography('location', subtype: 'point', srid: 4326)
+                ->storedAs('ST_SetSRID(ST_MakePoint(longitude::double precision, latitude::double precision), 4326)::geography');
+            $table->spatialIndex('location', 'parking_spaces_location_gist');
+            $table->spatialIndex([DB::raw('(location::geometry)')], 'parking_spaces_viewport_gist');
+
             // Parking space availability
             $table->bigInteger('parking_time')->nullable();
             $table->enum('orientation', ParkingOrientation::all());
@@ -48,6 +57,8 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+
+        DB::statement('ALTER TABLE parking_spaces ADD CONSTRAINT parking_spaces_coordinates_check CHECK (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)');
     }
 
     /**

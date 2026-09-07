@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+## Description: Run Pest against the dedicated PostgreSQL test database
+## Usage: test [Pest arguments]
+## Example: ddev test --filter=PostgresBaseline
+
+set -euo pipefail
+export PGPASSWORD=db
+if ! psql -h db -U db -d db -tAc "SELECT 1 FROM pg_database WHERE datname = 'nipkaart_test'" | grep -q 1; then
+    createdb -h db -U db nipkaart_test
+fi
+unset DB_URL
+export DB_CONNECTION=pgsql DB_HOST=db DB_PORT=5432 DB_DATABASE=nipkaart_test DB_USERNAME=db DB_PASSWORD=db
+php artisan config:clear
+php artisan test "$@"

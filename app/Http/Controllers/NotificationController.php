@@ -27,7 +27,7 @@ class NotificationController extends Controller
             }
         }
 
-        $jsonTypeSql = "JSON_UNQUOTE(JSON_EXTRACT(data, '$.type'))";
+        $jsonTypeSql = "(data::jsonb ->> 'type')";
 
         $query = $user->notifications()->latest();
 
@@ -50,9 +50,8 @@ class NotificationController extends Controller
                 if (! empty($typesExact)) {
                     $qq->orWhereIn(DB::raw($jsonTypeSql), $typesExact);
                 }
-                if (! empty($cats)) {
-                    $pattern = '^('.implode('|', array_map('preg_quote', $cats)).')\.';
-                    $qq->orWhereRaw("$jsonTypeSql REGEXP ?", [$pattern]);
+                foreach ($cats as $category) {
+                    $qq->orWhereRaw("starts_with({$jsonTypeSql}, ?)", [$category.'.']);
                 }
             });
         });
@@ -72,9 +71,9 @@ class NotificationController extends Controller
             ->selectRaw("
             DISTINCT
             {$jsonTypeSql} AS t,
-            SUBSTRING_INDEX({$jsonTypeSql}, '.', 1) AS cat
+            split_part({$jsonTypeSql}, '.', 1) AS cat
         ")
-            ->whereRaw("JSON_EXTRACT(data, '$.type') IS NOT NULL")
+            ->whereRaw("{$jsonTypeSql} IS NOT NULL")
             ->reorder()
             ->get();
 

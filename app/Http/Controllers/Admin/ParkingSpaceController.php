@@ -11,6 +11,7 @@ use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\Province;
+use App\Support\GeoPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -85,19 +86,7 @@ class ParkingSpaceController extends Controller
             ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->orderByRaw('
-                (6371 * acos(
-                    cos(radians(?)) *
-                    cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) *
-                    sin(radians(latitude))
-                ))
-            ', [
-                $parkingSpace->latitude,
-                $parkingSpace->longitude,
-                $parkingSpace->latitude,
-            ])
+            ->nearestTo(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude))
             ->limit($limit)
             ->get();
 
@@ -138,19 +127,7 @@ class ParkingSpaceController extends Controller
             ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->orderByRaw('
-                (6371 * acos(
-                    cos(radians(?)) *
-                    cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) *
-                    sin(radians(latitude))
-                ))
-            ', [
-                $parkingSpace->latitude,
-                $parkingSpace->longitude,
-                $parkingSpace->latitude,
-            ])
+            ->nearestTo(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude))
             ->limit($limit)
             ->get();
 

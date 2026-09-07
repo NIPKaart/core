@@ -2,6 +2,9 @@
 
 use Database\Seeders\PermissionsTableSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+
+use function Pest\Laravel\withoutVite;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +19,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 pest()->extend(Tests\TestCase::class)
     ->beforeEach(function () {
+        config()->set('inertia.ssr.enabled', false);
+        withoutVite();
+        Http::preventStrayRequests();
+
         $this->seed(PermissionsTableSeeder::class);
     })
     ->use(RefreshDatabase::class)

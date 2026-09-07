@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Country;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,10 +20,10 @@ class ParkingRuleFactory extends Factory
         $municipality = fake()->city();
 
         return [
-            'country_id' => fn () => Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id,
-            'municipality' => $municipality,
+            'municipality_id' => Municipality::factory(),
+            'country_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->country_id,
             'url' => "https://{$this->slugify($municipality)}.gov.example/parking-rules",
-            'nationwide' => fake()->boolean,
+            'nationwide' => false,
         ];
     }
 

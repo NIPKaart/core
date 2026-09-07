@@ -3,6 +3,7 @@
 use App\Enums\ApiState;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -33,6 +34,12 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->decimal('latitude', 10, 7);
 
+            // Existing API/import coordinates remain the only writable location.
+            $table->geography('location', subtype: 'point', srid: 4326)
+                ->storedAs('ST_SetSRID(ST_MakePoint(longitude::double precision, latitude::double precision), 4326)::geography');
+            $table->spatialIndex('location', 'parking_offstreet_spaces_location_gist');
+            $table->spatialIndex([DB::raw('(location::geometry)')], 'parking_offstreet_spaces_viewport_gist');
+
             $table->enum('api_state', ApiState::all())->nullable();
             $table->boolean('visibility');
             $table->timestamps();
@@ -40,6 +47,8 @@ return new class extends Migration
             // Indexes
             $table->index('municipality_id');
         });
+
+        DB::statement('ALTER TABLE parking_offstreet_spaces ADD CONSTRAINT parking_offstreet_spaces_coordinates_check CHECK (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)');
     }
 
     /**
