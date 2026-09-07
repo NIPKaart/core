@@ -57,7 +57,7 @@ class RoleController extends Controller
      */
     public function show(Role $role)
     {
-        Gate::authorize('view', Role::class);
+        Gate::authorize('view', $role);
 
         return Inertia::render('backend/roles/show', [
             'role' => $role,
@@ -99,7 +99,7 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        Gate::authorize('delete', Role::class);
+        Gate::authorize('delete', $role);
 
         $role->delete();
 

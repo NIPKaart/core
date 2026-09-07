@@ -1,3 +1,4 @@
+import { RemoveFavoriteButton } from '@/components/frontend/button/remove-favorite';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -19,6 +20,7 @@ const iconMap = {
     Community: MapPin,
     Municipal: Landmark,
     Offstreet: Warehouse,
+    Unknown: HeartCrack,
 };
 
 export default function FavoritesDialog({ open, onClose, onGotoLocation }: FavoritesDialogProps) {
@@ -39,6 +41,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
     }, [open]);
 
     const handleFavoriteClick = (fav: Favorite) => {
+        if (!fav.available) return;
         window.location.href = `/map#18/${fav.latitude}/${fav.longitude}`;
         onClose();
         onGotoLocation?.();
@@ -57,20 +60,19 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
             {favorites.map((fav) => {
                 const Icon = iconMap[fav.type] || MapPin;
                 return (
-                    <div
-                        key={`${fav.type}-${fav.id}`}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition hover:bg-orange-50 dark:hover:bg-orange-900"
-                        onClick={() => handleFavoriteClick(fav)}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Go to ${fav.title} on map`}
-                    >
+                    <div key={fav.favorite_id} className="flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm">
                         <div className="flex items-center justify-center rounded-lg bg-red-50 p-2">
                             <Icon className="h-5 w-5 text-red-500" />
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <button
+                            type="button"
+                            className="min-w-0 flex-1 rounded text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+                            disabled={!fav.available}
+                            onClick={() => handleFavoriteClick(fav)}
+                            aria-label={fav.available ? t('goToLocation', { title: fav.title }) : t('unavailable')}
+                        >
                             <div className="truncate font-medium">
-                                {fav.title}
+                                {fav.available ? fav.title : t('unavailable')}
                                 {(fav.city || fav.municipality?.name) && (
                                     <span className="font-normal text-muted-foreground">
                                         {' — '}
@@ -79,7 +81,11 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                                 )}
                             </div>
                             <div className="text-xs text-zinc-500 capitalize">{fav.type.toLowerCase()}</div>
-                        </div>
+                        </button>
+                        <RemoveFavoriteButton
+                            favoriteId={fav.favorite_id}
+                            onRemoved={() => setFavorites((items) => items.filter((item) => item.favorite_id !== fav.favorite_id))}
+                        />
                     </div>
                 );
             })}

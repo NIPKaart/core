@@ -166,7 +166,7 @@ return [
             ParkingMunicipal::class => [
                 'searchableAttributes' => ['street', 'municipality_name', 'province_name'],
                 'filterableAttributes' => [
-                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation', 'postcode', 'municipality_name',
+                    'visibility', 'country_id', 'province_id', 'municipality_id', 'orientation', 'municipality_name',
                 ],
                 'sortableAttributes' => ['created_at', 'number'],
             ],

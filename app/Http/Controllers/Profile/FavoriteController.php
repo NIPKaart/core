@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Profile;
 
+use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FavoriteResource;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class FavoriteController extends Controller
@@ -67,15 +69,16 @@ class FavoriteController extends Controller
     {
         $request->validate([
             'type' => ['required', 'in:parking_space,parking_municipal,parking_offstreet'],
-            'id' => ['required', 'string'],
+            'id' => ['required', 'string', Rule::when($request->type === 'parking_space', ['uuid'])],
         ]);
 
         $user = $request->user();
         $model = $this->findModel($request->type, $request->id);
 
-        if (! $model->favoritedByUsers()->where('user_id', $user->id)->exists()) {
-            $model->favoritedByUsers()->attach($user->id);
-        }
+        $user->favorites()->firstOrCreate([
+            'favoritable_type' => $model->getMorphClass(),
+            'favoritable_id' => (string) $model->getKey(),
+        ]);
 
         return redirect()->back();
     }
@@ -86,15 +89,18 @@ class FavoriteController extends Controller
     public function destroy(Request $request)
     {
         $request->validate([
-            'type' => ['required', 'in:parking_space,parking_municipal,parking_offstreet'],
-            'id' => ['required', 'string'],
+            'favorite_id' => ['sometimes', 'required', 'integer'],
+            'type' => ['required_without:favorite_id', 'in:parking_space,parking_municipal,parking_offstreet'],
+            'id' => ['required_without:favorite_id', 'string'],
         ]);
 
         $user = $request->user();
-        $model = $this->findModel($request->type, $request->id);
-
-        if ($model->favoritedByUsers()->where('user_id', $user->id)->exists()) {
-            $model->favoritedByUsers()->detach($user->id);
+        if ($request->has('favorite_id')) {
+            $user->favorites()->findOrFail($request->integer('favorite_id'))->delete();
+        } else {
+            $modelClass = $this->modelClass($request->type);
+            $user->favorites()->where('favoritable_type', (new $modelClass)->getMorphClass())
+                ->where('favoritable_id', $request->id)->delete();
         }
 
         return redirect()->back();
@@ -105,10 +111,21 @@ class FavoriteController extends Controller
      */
     private function findModel($type, $id)
     {
+        $modelClass = $this->modelClass($type);
+        $query = $modelClass::query();
+        $type === 'parking_space'
+            ? $query->where('status', ParkingStatus::APPROVED)
+            : $query->where('visibility', true);
+
+        return $query->findOrFail($id);
+    }
+
+    private function modelClass(string $type): string
+    {
         return match ($type) {
-            'parking_space' => ParkingSpace::findOrFail($id),
-            'parking_municipal' => ParkingMunicipal::findOrFail($id),
-            'parking_offstreet' => ParkingOffstreet::findOrFail($id),
+            'parking_space' => ParkingSpace::class,
+            'parking_municipal' => ParkingMunicipal::class,
+            'parking_offstreet' => ParkingOffstreet::class,
             default => abort(404),
         };
     }

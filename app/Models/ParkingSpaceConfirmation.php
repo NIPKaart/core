@@ -3,11 +3,16 @@
 namespace App\Models;
 
 use App\Enums\ParkingConfirmationStatus;
+use Database\Factories\ParkingSpaceConfirmationFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParkingSpaceConfirmation extends Model
 {
+    /** @use HasFactory<ParkingSpaceConfirmationFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'parking_space_id',
         'user_id',
@@ -19,12 +24,6 @@ class ParkingSpaceConfirmation extends Model
     protected $casts = [
         'status' => ParkingConfirmationStatus::class,
         'confirmed_at' => 'datetime',
-    ];
-
-    protected $dates = [
-        'confirmed_at',
-        'created_at',
-        'updated_at',
     ];
 
     public function parkingSpace(): BelongsTo

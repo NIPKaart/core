@@ -21,7 +21,7 @@ class ParkingRuleController extends Controller
         Gate::authorize('viewAny', ParkingRule::class);
 
         $countries = Country::all();
-        $existingMunicipalityIds = ParkingRule::pluck('municipality_id')->toArray();
+        $existingMunicipalityIds = ParkingRule::whereNotNull('municipality_id')->pluck('municipality_id')->toArray();
 
         $availableMunicipalities = Municipality::whereNotIn('id', $existingMunicipalityIds)
             ->orderBy('name')
@@ -88,7 +88,7 @@ class ParkingRuleController extends Controller
      */
     public function destroy(ParkingRule $parkingRule)
     {
-        Gate::authorize('delete', ParkingRule::class);
+        Gate::authorize('delete', $parkingRule);
 
         $parkingRule->delete();
 

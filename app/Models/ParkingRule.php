@@ -14,6 +14,8 @@ class ParkingRule extends Model
 
     protected $table = 'parking_rules';
 
+    protected $casts = ['nationwide' => 'boolean'];
+
     /**
      * The attributes that are mass assignable.
      */

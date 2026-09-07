@@ -19,6 +19,7 @@ use App\Traits\ParsesNominatimAddress;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ParkingSpaceController extends Controller
@@ -86,16 +87,16 @@ class ParkingSpaceController extends Controller
             );
 
             $parkingSpace = new ParkingSpace([
-                'id' => uniqid(),
+                'id' => (string) Str::uuid(),
                 'user_id' => Auth::id(),
                 'ip_address' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $request->getClientIp(),
                 'latitude' => $validated['latitude'],
                 'longitude' => $validated['longitude'],
                 'orientation' => $validated['orientation'],
-                'parking_time' => $this->calculateParkingTime($validated['parking_hours'], $validated['parking_minutes']),
+                'parking_time' => $this->calculateParkingTime($validated['parking_hours'] ?? null, $validated['parking_minutes'] ?? null),
                 'parking_disc' => ! empty($validated['parking_hours']) || ! empty($validated['parking_minutes']),
                 'window_times' => $validated['window_times'],
-                'description' => $validated['message'],
+                'description' => $validated['message'] ?? null,
                 'status' => ParkingStatus::PENDING,
                 'country_id' => $countryId,
                 'province_id' => $province->id,
@@ -120,7 +121,7 @@ class ParkingSpaceController extends Controller
                 )
             );
 
-            return redirect()->route('map');
+            return redirect()->route('location-map');
         } catch (\Throwable $e) {
             Log::error('Error storing parking location', [
                 'error' => $e->getMessage(),

@@ -61,8 +61,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('trash', [Admin\ParkingSpaceController::class, 'trash'])->name('trash');
 
             // Single actions
-            Route::patch('{parking_space}/restore', [Admin\ParkingSpaceController::class, 'restore'])->name('restore');
-            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->name('force-destroy');
+            Route::patch('{parking_space}/restore', [Admin\ParkingSpaceController::class, 'restore'])->whereUuid('parking_space')->name('restore');
+            Route::delete('{parking_space}/force-delete', [Admin\ParkingSpaceController::class, 'forceDelete'])->whereUuid('parking_space')->name('force-destroy');
 
             // Bulk actions
             Route::prefix('bulk')->as('bulk.')->group(function () {
@@ -90,8 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Toggle visibility
             Route::post('toggle-visibility', [Admin\ParkingMunicipalController::class, 'toggleVisibility'])->name('toggle-visibility');
 
-            // Single actions
-            Route::patch('{parking_municipal}/restore', [Admin\ParkingMunicipalController::class, 'restore'])->name('restore');
         });
 
         // Suspend user route

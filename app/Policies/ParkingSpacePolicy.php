@@ -66,7 +66,7 @@ class ParkingSpacePolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, string $class): bool
+    public function restore(User $user, ParkingSpace $parkingSpace): bool
     {
         return $user->can('parking-space.restore');
     }
@@ -82,7 +82,7 @@ class ParkingSpacePolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, string $class): bool
+    public function forceDelete(User $user, ParkingSpace $parkingSpace): bool
     {
         return $user->can('parking-space.force-delete');
     }

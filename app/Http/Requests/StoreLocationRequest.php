@@ -25,8 +25,8 @@ class StoreLocationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'latitude' => ['required', 'numeric'],
-            'longitude' => ['required', 'numeric'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'parking_hours' => ['nullable', 'numeric', 'min:0'],
             'parking_minutes' => ['nullable', 'numeric', 'min:0'],
             'orientation' => ['required', Rule::in(ParkingOrientation::all())],
@@ -52,9 +52,9 @@ class StoreLocationRequest extends FormRequest
     /**
      * Convert to boolean
      */
-    private function toBoolean($boolean): bool
+    private function toBoolean($boolean): mixed
     {
-        return filter_var($boolean, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return filter_var($boolean, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $boolean;
     }
 
     /**

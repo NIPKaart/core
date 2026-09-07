@@ -28,7 +28,7 @@ class UpdateParkingMunicipalRequest extends FormRequest
         return [
             'street' => ['nullable', 'string', 'max:255'],
             'orientation' => ['nullable', Rule::in(ParkingOrientation::all())],
-            'number' => ['nullable', 'integer', 'min:1'],
+            'number' => ['required', 'integer', 'min:1'],
             'visibility' => ['required', 'boolean'],
         ];
     }
