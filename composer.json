@@ -32,8 +32,8 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest": "^5.0",
+        "pestphp/pest-plugin-laravel": "^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -68,8 +68,13 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
-            "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php vendor/bin/pest --no-tia"
+        ],
+        "test:tia": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php vendor/bin/pest --parallel --tia --baselined"
         ],
         "lint:check": "pint --test",
         "ci:lint": [
