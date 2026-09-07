@@ -30,7 +30,7 @@ The default CountrySeeder/ProvinceSeeder are fresh-install seeders, not data tra
 
 ## Database schema
 
-The extension migration runs `CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public`. PostGIS packages must already be installed. With restricted deployment roles, ask the database administrator to enable the extension before running migrations. Rolling back application migrations deliberately retains the extension; Laravel excludes `spatial_ref_sys` from `migrate:fresh`.
+The first parking-table migration runs `CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public`. PostGIS packages must already be installed. With restricted deployment roles, ask the database administrator to enable the extension before running migrations. Rolling back application migrations deliberately retains the extension; Laravel excludes `spatial_ref_sys` from `migrate:fresh`.
 
 Existing Laravel schema types compile on PostgreSQL: enums use string/check constraints, UUIDs retain their type, JSON remains JSON, `ipAddress` becomes `inet`, and foreign IDs and incrementing keys use compatible bigint types. PostgreSQL does not enforce Laravel's unsigned modifiers; existing permission keys and queue counters do not rely on MySQL unsigned casts. There are no raw MySQL DDL statements, SET columns, custom collations or MySQL JSON indexes in the migrations.
 
@@ -38,7 +38,7 @@ Two initial-schema fixes ensure real relationships: favorites use string target 
 
 ## Spatial representation
 
-Each parking table has a stored, generated `geography(Point,4326)` location and two GiST indexes: geography for radius queries, and a geometry expression for exact rectangular viewports. Coordinates are checked against valid latitude/longitude ranges before generating the point. PostGIS X/Y order is explicitly longitude, latitude.
+The three existing parking-table migrations directly create a stored, generated `geography(Point,4326)` location and two GiST indexes: geography for radius queries, and a geometry expression for exact rectangular viewports. Coordinates are checked against valid latitude/longitude ranges before generating the point. PostGIS X/Y order is explicitly longitude, latitude.
 
 The existing scalar columns remain the only writable coordinates during the current API/import transition. PostgreSQL derives `location` for every insert/update, including bulk/query-builder writes. There are no independently writable duplicate locations or model-event synchronization requirements. The generated column is hidden from model JSON. A future change may reverse the interface and derive scalars from a writable spatial point, but must migrate all scalar writers together.
 
@@ -76,7 +76,7 @@ For a fresh application deployment, configure `SCOUT_DRIVER=meilisearch`, the ho
 
 ## Validation and deployment boundary
 
-Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 17 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the database suite and Scout rebuild checks. Remote CI and review status are reported on the PR.
+Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 15 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the database suite and Scout rebuild checks. Remote CI and review status are reported on the PR.
 
 This is a tested implementation, not a production deployment. Production provisioning, enabling PostGIS with the actual role, choosing newly imported datasets, configuring the backup destination/retention, and application rollout remain operational actions. No historical-data transfer is required under the fresh-start decision.
 
