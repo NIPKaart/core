@@ -8,9 +8,9 @@ beforeEach(function () {
     config(['passkeys.relying_party_id' => 'nipkaart.test', 'passkeys.allowed_origins' => ['https://nipkaart.test']]);
 });
 
-function enrollPasskey($test, User $user): array
+function enrollPasskey($test, User $user, ?VirtualPasskey $device = null): array
 {
-    $device = new VirtualPasskey;
+    $device ??= new VirtualPasskey;
     $options = $test->actingAs($user)->withSession(['auth.password_confirmed_at' => time()])
         ->getJson(route('passkey.registration-options'))->assertOk()->json('options');
     $credential = $device->register($options, 'https://nipkaart.test');
@@ -19,9 +19,15 @@ function enrollPasskey($test, User $user): array
     return [$device, $options['user']['id']];
 }
 
-test('passkey registration login and reauthentication use real signatures', function () {
+test('passkey registration login and reauthentication use real signatures', function (?int $privateScalar) {
+    $key = $privateScalar === null ? null : openssl_pkey_new([
+        'ec' => [
+            'curve_name' => 'prime256v1',
+            'd' => hex2bin(str_pad(dechex($privateScalar), 64, '0', STR_PAD_LEFT)),
+        ],
+    ]);
     $user = User::factory()->create();
-    [$device, $handle] = enrollPasskey($this, $user);
+    [$device, $handle] = enrollPasskey($this, $user, new VirtualPasskey($key));
     expect($user->passkeys()->count())->toBe(1);
     Auth::logout();
     $options = $this->getJson(route('passkey.login-options'))->assertOk()->json('options');
@@ -36,7 +42,11 @@ test('passkey registration login and reauthentication use real signatures', func
     $this->get(route('security.edit'))->assertOk();
     $this->deleteJson(route('passkey.destroy', $user->passkeys()->first()->id))->assertOk();
     expect($user->passkeys()->count())->toBe(0);
-});
+})->with([
+    'random key' => [null],
+    'leading zero in x coordinate' => [379],
+    'leading zero in y coordinate' => [43],
+]);
 
 test('passkeys reject wrong origin challenge signature and missing user verification', function (string $fault) {
     $user = User::factory()->create();
