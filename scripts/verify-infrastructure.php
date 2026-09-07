@@ -1,15 +1,11 @@
 <?php
 
 // Run with: ddev exec php scripts/verify-infrastructure.php
-// Uses only newly created databases/indexes and a temporary local backup disk.
-use App\Models\ParkingMunicipal;
-use App\Models\ParkingOffstreet;
-use App\Models\ParkingSpace;
+// Uses only newly created databases and a temporary local backup disk.
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Meilisearch\Client;
 use Symfony\Component\Process\Process;
 
 require __DIR__.'/../vendor/autoload.php';
@@ -33,12 +29,7 @@ $run = function (array $arguments): string {
 
     return $process->getOutput();
 };
-$client = app(Client::class);
-$models = [ParkingSpace::class, ParkingOffstreet::class, ParkingMunicipal::class];
 config([
-    'scout.prefix' => $id.'_',
-    'scout.driver' => null,
-    'scout.queue' => false,
     'database.default' => 'pgsql',
     'database.connections.pgsql.url' => null,
     'database.connections.pgsql.host' => 'db',
@@ -93,41 +84,10 @@ try {
         throw new RuntimeException('Restored PostGIS data does not match.');
     }
     echo "PASS: encrypted Spatie backup restored into a separate PostgreSQL/PostGIS database.\n";
-
-    if (Artisan::call('search:configure') !== 0) {
-        throw new RuntimeException(Artisan::output());
-    }
-    // Exercise real settings, document ingestion, postcode filtering and geo payloads.
-    foreach ($models as $model) {
-        $index = $client->index((new $model)->searchableAs());
-        $task = $index->addDocuments([[
-            'id' => 'probe', 'street' => 'Audit street', 'name' => 'Audit garage',
-            'postcode' => '1234 AB', 'city' => 'Amsterdam', 'municipality_name' => 'Amsterdam',
-            '_geo' => ['lat' => 52.3, 'lng' => 4.9],
-        ]], 'id');
-        $result = $client->waitForTask($task['taskUid'], 120000);
-        if ($result['status'] !== 'succeeded') {
-            throw new RuntimeException(json_encode($result));
-        }
-        $options = $model === ParkingSpace::class ? ['filter' => 'postcode = "1234 AB"'] : [];
-        $hits = $index->search('Audit', $options)->getHits();
-        if (count($hits) !== 1 || $hits[0]['_geo']['lat'] !== 52.3) {
-            throw new RuntimeException('Search/geo round trip failed.');
-        }
-    }
-    echo "PASS: three fresh Meilisearch indexes configured, populated and searched.\n";
 } catch (Throwable $exception) {
     fwrite(STDERR, $exception->getMessage()."\n".Artisan::output());
     $failed = true;
 } finally {
-    foreach ($models as $model) {
-        try {
-            $task = $client->deleteIndex((new $model)->searchableAs());
-            $client->waitForTask($task['taskUid'], 120000);
-        } catch (Throwable $exception) {
-            fwrite(STDERR, 'Index cleanup: '.$exception->getMessage()."\n");
-        }
-    }
     DB::disconnect('pgsql');
     foreach ([$source, $target] as $database) {
         $run(['dropdb', '-h', 'db', '-U', 'db', '--if-exists', $database]);

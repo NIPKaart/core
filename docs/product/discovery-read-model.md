@@ -44,8 +44,8 @@ Source-specific detail remains available behind the result; normalization must n
 - Do not merge the three database tables for convenience.
 - Do not claim general garage occupancy means accessible parking availability.
 - Do not hide provenance/source type.
-- Do not make Meilisearch the domain model. It can be one query implementation behind the discovery service.
-- Keep a database/geospatial fallback path in mind for exact radius/bounds queries.
+- PostgreSQL owns parking-record text search; a separate geocoding provider resolves destinations (#1195/#1169).
+- Use PostgreSQL/PostGIS for exact radius/bounds queries.
 - Avoid sending every parking record to the browser as the dataset grows; move toward viewport/radius queries.
 - Result ranking must remain deterministic/testable and should expose the reason for important ordering choices.
 

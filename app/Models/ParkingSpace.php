@@ -12,12 +12,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
 
 class ParkingSpace extends Model
 {
     /** @use HasFactory<ParkingSpaceFactory> */
-    use Favoritable, HasFactory, HasParkingLocation, Searchable, SoftDeletes;
+    use Favoritable, HasFactory, HasParkingLocation, SoftDeletes;
 
     protected $table = 'parking_spaces';
 
@@ -108,54 +107,5 @@ class ParkingSpace extends Model
     public function municipality(): BelongsTo
     {
         return $this->belongsTo(Municipality::class);
-    }
-
-    /**
-     * Get the searchable index name for the model.
-     */
-    public function searchableAs(): string
-    {
-        return config('scout.prefix').'parking_spaces';
-    }
-
-    /**
-     * Determine if the model should be searchable.
-     */
-    public function shouldBeSearchable(): bool
-    {
-        $status = $this->status;
-
-        if ($status instanceof ParkingStatus) {
-            return $status === ParkingStatus::APPROVED;
-        }
-
-        return (string) $status === ParkingStatus::APPROVED->value;
-    }
-
-    /**
-     * Get the indexable data array for the model.
-     *
-     * @return array<string, mixed>
-     */
-    public function toSearchableArray(): array
-    {
-        return [
-            'id' => (string) $this->id,
-            'street' => (string) $this->street,
-            'city' => (string) $this->city,
-            'postcode' => (string) $this->postcode,
-            'suburb' => (string) ($this->suburb ?? ''),
-            'neighbourhood' => (string) ($this->neighbourhood ?? ''),
-            'amenity' => (string) ($this->amenity ?? ''),
-            'description' => (string) ($this->description ?? ''),
-            'orientation' => $this->orientation?->value ?? (string) $this->orientation,
-            'status' => $this->status?->value ?? (string) $this->status,
-            'country_id' => (int) $this->country_id,
-            'province_id' => (int) $this->province_id,
-            'municipality_id' => (int) $this->municipality_id,
-            '_geo' => ['lat' => (float) $this->latitude, 'lng' => (float) $this->longitude],
-            'created_at' => optional($this->created_at)->toAtomString(),
-            'updated_at' => optional($this->updated_at)->toAtomString(),
-        ];
     }
 }

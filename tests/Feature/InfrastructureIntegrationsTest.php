@@ -5,9 +5,8 @@ use App\Models\User;
 use App\Notifications\CommunitySpace\DeletedByUser;
 use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
-use Meilisearch\Client;
-use Meilisearch\Endpoints\Indexes;
 use Symfony\Component\Process\Process;
 
 test('log viewer denies guests and non administrators', function (string $route) {
@@ -70,14 +69,6 @@ test('notifications retain database and broadcast delivery on the private user c
     Queue::assertPushed(SendQueuedNotifications::class, 2);
 });
 
-test('search configuration waits for asynchronous settings and reports failures', function () {
-    $index = Mockery::mock(Indexes::class);
-    $index->shouldReceive('updateSettings')->once()->andReturn(['taskUid' => 42]);
-    $client = Mockery::mock(Client::class);
-    $client->shouldReceive('index')->once()->with('parking_spaces')->andReturn($index);
-    $client->shouldReceive('waitForTask')->once()->with(42, 120000)
-        ->andReturn(['status' => 'failed', 'error' => ['code' => 'invalid_settings']]);
-    $this->app->instance(Client::class, $client);
-
-    $this->artisan('search:configure')->assertFailed();
+test('search needs no external indexing commands', function () {
+    expect(array_keys(Artisan::all()))->not->toContain('search:configure', 'scout:import');
 });
