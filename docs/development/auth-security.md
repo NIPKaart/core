@@ -10,7 +10,7 @@ Implementation for [#1162](https://github.com/NIPKaart/core/issues/1162), 2026-0
 
 **Passkeys: enabled, opt-in, separately approved.** Laravel's passkeys backend and official `@laravel/passkeys` client handle registration, login and confirmation. Users name and remove credentials in Security. A passkey is an alternative to password plus TOTP, not a third step: WebAuthn requires user verification (device PIN/biometrics) and discoverable credentials. Account creation still requires a password; email change, password update and account deletion still ask for that password. Password reset remains the recovery path, and does not disable TOTP or remove passkeys. Users should retain recovery codes and/or another registered device.
 
-**Authorization: policies and Spatie v7 retained.** Policies decide domain resource/action access; Spatie stores roles and permissions; frontend visibility is UX only. No v8 upgrade or policy replacement accompanies this migration.
+**Authorization: policies retained, Spatie upgraded to v8.3.0.** Policies decide domain resource/action access; Spatie stores roles and permissions; frontend visibility is UX only. The owner also approved the v8 upgrade. No policy replacement accompanies it.
 
 The implementation follows the [Fortify documentation](https://laravel.com/docs/13.x/fortify), [starter settings routes](https://github.com/laravel/react-starter-kit/blob/main/routes/settings.php), and the installed [Laravel passkeys backend](https://github.com/laravel/passkeys-server/tree/a76656ada41b2b4a591f075eddae5ddc67e8ab9c). Small passkey action adapters translate invalid WebAuthn origin/challenge/signature/attestation failures into credential validation errors; cryptographic validation remains in the package. Unexpected database or infrastructure exceptions are not swallowed.
 
@@ -66,3 +66,15 @@ Registration/login/confirmation use the supported browser client; cancellation a
 Existing Auth and Settings suites continue to cover registration, passwords, reset, verification, locale, suspension and policy enforcement. New tests cover confirmed TOTP enrollment, invalid codes, recovery-code consumption/regeneration, challenge throttling, suspension during challenge and generic reset responses. A software WebAuthn authenticator tests real registration, login and reauthentication, rejecting wrong origins/challenges/signatures, absent user verification, replayed/sessionless challenges, cross-user access and suspended accounts. Removal/verification gates and cascading deletion are covered separately.
 
 Local validation completed with 102 tests / 439 assertions using cached routes, Pint, Prettier, ESLint, TypeScript and the DDEV production build. Chromium with a virtual authenticator exercised password confirmation, TOTP setup (including invalid-code feedback), recovery display, passkey enrollment, passkey login and passkey confirmation. The Dutch Security page was checked at 390px without horizontal overflow. Browser validation used only the dedicated test database.
+
+## Spatie Permission v8 compatibility
+
+Upgraded 7.4.2 to 8.3.0 following the [official upgrade guide](https://spatie.be/docs/laravel-permission/v8/upgrading). The v8 Role/Permission contracts accept `BackedEnum|string` for `findByName` and `findOrCreate`. `App\Models\Role` inherits these methods without overrides; User uses the package traits and Permission uses the package model, so no custom signatures need adaptation.
+
+Compared the installed v7 and v8 config/migration stubs: both are unchanged between these versions. The published application config was older, so it now includes the default nullable `models.team` and `models.default_model` entries, current event class names and corrected wildcard-config comment. The application's custom Role model, disabled teams/events/wildcards, guard, table/column names and cache settings are retained.
+
+The existing database migration has equivalent columns, primary/unique indexes and cascading foreign keys; differences from the v8 stub are helper syntax, comments and rollback idempotency. No schema migration or data rewrite is needed for Permission v8. Deployment should clear the permission cache with `php artisan permission:cache-reset` and rebuild the configuration cache using the normal deployment process.
+
+Regression coverage exercises enum-based role lookup/assignment and server-side authorization after role-permission revocation, direct grants and direct-grant revocation. Existing Fortify registration and policy tests continue to validate the default role and authorization boundary.
+
+After the Permission v8 upgrade, the full suite passed with 104 tests / 449 assertions.
