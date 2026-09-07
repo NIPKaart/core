@@ -6,18 +6,13 @@ import { edit as editAppearance } from '@/routes/appearance';
 import password from '@/routes/password';
 import profile from '@/routes/profile';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { t } = useTranslation('backend/settings');
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    const currentPath = window.location.pathname;
+    const currentPath = usePage().url.split(/[?#]/)[0];
 
     const sidebarNavItems: NavItem[] = [
         {

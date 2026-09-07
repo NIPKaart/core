@@ -88,5 +88,5 @@ jobs:
           php artisan db:seed --class=MunicipalityWithParkingSeeder --force
           php artisan db:seed --class=MunicipalityWithOffstreetSeeder --force
 
-      - name: Build client and SSR assets and run tests
+      - name: Build client assets and run tests
         run: composer ci:test
