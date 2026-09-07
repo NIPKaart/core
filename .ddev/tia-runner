@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+set -eu
+
+token_file="${1}"
+shift
+GH_TOKEN="$(cat "${token_file}")"
+export GH_TOKEN
+export XDEBUG_MODE=coverage
+
+export PGPASSWORD=db
+if ! psql -h db -U db -d db -tAc "SELECT 1 FROM pg_database WHERE datname = 'nipkaart_test'" | grep -q 1; then
+    createdb -h db -U db nipkaart_test
+fi
+unset DB_URL
+export DB_CONNECTION=pgsql DB_HOST=db DB_PORT=5432 DB_DATABASE=nipkaart_test DB_USERNAME=db DB_PASSWORD=db
+
+exec composer test:tia -- "$@"

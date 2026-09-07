@@ -74,7 +74,7 @@
         "test:tia": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan config:clear --ansi @no_additional_args",
-            "@php vendor/bin/pest --parallel --tia --baselined"
+            "@php vendor/bin/pest --parallel --tia --baselined --filtered"
         ],
         "lint:check": "pint --test",
         "ci:lint": [
