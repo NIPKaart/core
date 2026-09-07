@@ -13,7 +13,7 @@ use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
 dbimage_extra_packages: [postgresql-18-postgis-3, postgresql-18-postgis-3-scripts]
-webimage_extra_packages: [postgresql-client-18]
+webimage_extra_packages: [postgresql-client-18, gh]
 corepack_enable: false
 web_extra_exposed_ports:
   - name: vite

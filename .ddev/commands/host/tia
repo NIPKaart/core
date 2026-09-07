@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+## Description: Run impacted Pest tests with the shared GitHub TIA baseline
+## Usage: tia [Pest options]
+## Example: ddev tia --processes=2
+
+set -euo pipefail
+
+if ! command -v gh >/dev/null 2>&1; then
+    echo 'GitHub CLI (gh) is required on the host: https://cli.github.com' >&2
+    exit 1
+fi
+
+if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+    echo 'GitHub CLI is not authenticated. Run: gh auth login --hostname github.com' >&2
+    exit 1
+fi
+
+if ! ddev exec sh -c 'command -v gh >/dev/null'; then
+    echo 'GitHub CLI is missing in DDEV. Run ddev restart to install the configured packages.' >&2
+    exit 1
+fi
+
+xdebug_was_enabled="$(ddev exec php -r 'echo extension_loaded("xdebug") ? "1" : "0";')"
+token_file=""
+
+cleanup() {
+    local result=$?
+    if [[ -n "${token_file}" ]]; then
+        rm -f "${token_file}"
+    fi
+    if [[ "${xdebug_was_enabled}" == "0" ]]; then
+        if ! ddev xdebug off >/dev/null; then
+            echo 'Unable to restore Xdebug. Run ddev xdebug off.' >&2
+            if [[ "${result}" == "0" ]]; then
+                result=1
+            fi
+        fi
+    fi
+    exit "${result}"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+if [[ "${xdebug_was_enabled}" == "0" ]]; then
+    ddev xdebug on
+fi
+
+token_file="$(mktemp "${DDEV_APPROOT}/.ddev/.tia-gh-token.XXXXXX")"
+chmod 600 "${token_file}"
+gh auth token --hostname github.com > "${token_file}"
+token_file_name="${token_file##*/}"
+
+ddev exec sh /mnt/ddev_config/tia-runner "/mnt/ddev_config/${token_file_name}" "$@"

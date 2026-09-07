@@ -27,3 +27,4 @@ yarn-error.log
 /.zed
 
 .version
+/.ddev/.tia-gh-token.*
