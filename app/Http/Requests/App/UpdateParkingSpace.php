@@ -28,8 +28,9 @@ class UpdateParkingSpace extends FormRequest
     {
         return [
             'country_id' => ['required', 'exists:countries,id'],
-            'province_id' => ['required', 'exists:provinces,id'],
-            'municipality_id' => ['required', 'exists:municipalities,id'],
+            'province_id' => ['required', Rule::exists('provinces', 'id')->where('country_id', $this->input('country_id'))],
+            'municipality_id' => ['required', Rule::exists('municipalities', 'id')
+                ->where('country_id', $this->input('country_id'))->where('province_id', $this->input('province_id'))],
 
             'city' => ['nullable', 'string'],
             'suburb' => ['nullable', 'string'],

@@ -6,5 +6,8 @@
         "description": "Blader door de kaart en klik op het hartpictogram om locaties als favoriet te markeren."
     },
     "loading": "Laden...",
-    "goToLocation": "Ga naar {{title}} op de kaart"
+    "goToLocation": "Ga naar {{title}} op de kaart",
+    "unavailable": "Locatie niet meer beschikbaar",
+    "remove": "Favoriet verwijderen",
+    "remove_error": "De favoriet kon niet worden verwijderd. Probeer het opnieuw."
 }

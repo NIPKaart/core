@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApiState;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
 use Database\Factories\ParkingOffstreetFactory;
@@ -30,6 +31,7 @@ class ParkingOffstreet extends Model
         'country_id',
         'province_id',
         'municipality_id',
+        'visibility',
     ];
 
     /**
@@ -40,6 +42,14 @@ class ParkingOffstreet extends Model
     protected $casts = [
         'id' => 'string',
         'prices' => 'array',
+        'api_state' => ApiState::class,
+        'visibility' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'free_space_short' => 'integer',
+        'free_space_long' => 'integer',
+        'short_capacity' => 'integer',
+        'long_capacity' => 'integer',
         'updated_at' => 'datetime',
     ];
 
@@ -100,7 +110,7 @@ class ParkingOffstreet extends Model
             'short_capacity' => (int) $this->short_capacity,
             'long_capacity' => $this->long_capacity !== null ? (int) $this->long_capacity : null,
             'visibility' => (bool) $this->visibility,
-            'api_state' => $this->api_state?->value ?? (string) $this->api_state,
+            'api_state' => $this->api_state?->value,
             'country_id' => (int) $this->country_id,
             'province_id' => (int) $this->province_id,
             'municipality_id' => (int) $this->municipality_id,

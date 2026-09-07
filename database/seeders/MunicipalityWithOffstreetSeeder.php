@@ -12,9 +12,10 @@ class MunicipalityWithOffstreetSeeder extends Seeder
 {
     public function run(): void
     {
-        $country = Country::firstOrCreate(['name' => 'Netherlands'], ['code' => 'NL']);
+        $country = Country::firstOrCreate(['code' => 'NL'], ['name' => 'Netherlands']);
         $province = Province::firstOrCreate(
-            ['name' => 'Noord-Holland', 'country_id' => $country->id]
+            ['geocode' => 'NL-NH', 'country_id' => $country->id],
+            ['name' => 'Noord-Holland']
         );
 
         $municipalities = ['Amsterdam', 'Haarlem', 'Alkmaar', 'Hilversum', 'Den Helder'];

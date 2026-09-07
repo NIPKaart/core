@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\MunicipalityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Municipality extends Model
@@ -17,6 +18,26 @@ class Municipality extends Model
         'country_id',
         'province_id',
     ];
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function province(): BelongsTo
+    {
+        return $this->belongsTo(Province::class);
+    }
+
+    public function parkingOffstreets(): HasMany
+    {
+        return $this->hasMany(ParkingOffstreet::class);
+    }
+
+    public function parkingRules(): HasMany
+    {
+        return $this->hasMany(ParkingRule::class);
+    }
 
     /**
      * Get the parking spaces for the municipality.

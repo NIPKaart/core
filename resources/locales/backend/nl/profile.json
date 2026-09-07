@@ -11,7 +11,8 @@
         "types": {
             "community": "Gemeenschap",
             "municipal": "Gemeentelijk",
-            "offstreet": "Off-street"
+            "offstreet": "Off-street",
+            "unknown": "Onbekend"
         },
         "empty": {
             "title": "Je hebt nog geen favorieten toegevoegd.",
@@ -19,7 +20,8 @@
         },
         "search": {
             "placeholder": "Zoek favorieten op naam, stad of gemeente..."
-        }
+        },
+        "unavailable": "Locatie niet meer beschikbaar"
     },
     "parking_spaces": {
         "title": {

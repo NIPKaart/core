@@ -77,7 +77,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     /**
      * Get the parking space confirmations for the user.
      */
-    public function confirmations()
+    public function confirmations(): HasMany
     {
         return $this->hasMany(ParkingSpaceConfirmation::class);
     }

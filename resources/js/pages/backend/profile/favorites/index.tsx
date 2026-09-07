@@ -1,3 +1,4 @@
+import { RemoveFavoriteButton } from '@/components/frontend/button/remove-favorite';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ const iconMap = {
     Community: MapPin,
     Municipal: Landmark,
     Offstreet: Warehouse,
+    Unknown: HeartCrack,
 };
 
 export default function FavoritesPage({ favorites = [] }: PageProps) {
@@ -72,7 +74,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                             const Icon = iconMap[fav.type] || MapPin;
                             return (
                                 <Card
-                                    key={`${fav.type}-${fav.id}`}
+                                    key={fav.favorite_id}
                                     className="rounded-2xl border border-border/70 bg-card shadow-sm transition-all duration-150 hover:shadow-md"
                                 >
                                     <CardHeader className="flex flex-row items-center gap-3 pb-2">
@@ -81,7 +83,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <CardTitle className="truncate text-base leading-tight font-semibold lg:text-lg">
-                                                {fav.title}
+                                                {fav.available ? fav.title : t('favorites.unavailable')}
                                                 {(fav.city || fav.municipality) && (
                                                     <span className="font-normal text-muted-foreground">
                                                         {' — '}
@@ -102,12 +104,15 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                 </span>
                                             )}
                                         </div>
-                                        <Button asChild size="sm" variant="outline" className="ml-auto" title="View on map">
-                                            <a href={`/map#18/${fav.latitude}/${fav.longitude}`} rel="noopener noreferrer">
-                                                <MapPin className="mr-1 h-4 w-4" />
-                                                {t('common.actions.view_on_map')}
-                                            </a>
-                                        </Button>
+                                        <RemoveFavoriteButton favoriteId={fav.favorite_id} />
+                                        {fav.available && (
+                                            <Button asChild size="sm" variant="outline" className="ml-auto">
+                                                <a href={`/map#18/${fav.latitude}/${fav.longitude}`} rel="noopener noreferrer">
+                                                    <MapPin className="mr-1 h-4 w-4" />
+                                                    {t('common.actions.view_on_map')}
+                                                </a>
+                                            </Button>
+                                        )}
                                     </CardFooter>
                                 </Card>
                             );

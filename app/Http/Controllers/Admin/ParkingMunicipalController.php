@@ -150,7 +150,8 @@ class ParkingMunicipalController extends Controller
         $ids = (array) $request->input('ids', []);
         $visibility = $request->boolean('visibility', true);
 
-        ParkingMunicipal::whereIn('id', $ids)->update(['visibility' => $visibility]);
+        ParkingMunicipal::whereIn('id', $ids)
+            ->eachById(fn (ParkingMunicipal $space) => $space->update(['visibility' => $visibility]));
 
         return back();
     }

@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use Database\Factories\FavoriteFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Favorite extends Model
 {
+    /** @use HasFactory<FavoriteFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'favoritable_id',
@@ -19,8 +24,8 @@ class Favorite extends Model
         return $this->morphTo();
     }
 
-    public function favoritedByUsers(): MorphToMany
+    public function user(): BelongsTo
     {
-        return $this->morphToMany(User::class, 'favoritable', 'favorites');
+        return $this->belongsTo(User::class);
     }
 }

@@ -47,6 +47,9 @@ class ParkingMunicipal extends Model
         'updated_at' => 'datetime',
         'created_at' => 'datetime',
         'visibility' => 'boolean',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'number' => 'integer',
     ];
 
     /**

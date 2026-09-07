@@ -110,19 +110,11 @@ class ParkingSpaceObserver
             Notification::send(
                 $parkingSpace->user,
                 new CommunitySpace\Restored(
-                    spaceId: (int) $parkingSpace->id,
+                    spaceId: (string) $parkingSpace->getRouteKey(),
                     spaceLabel: (string) $label,
                     actedByUserId: $actorId
                 )
             );
         }
-    }
-
-    /**
-     * Handle the ParkingSpace "force deleted" event.
-     */
-    public function forceDeleted(ParkingSpace $parkingSpace): void
-    {
-        $this->deleted($parkingSpace);
     }
 }

@@ -191,12 +191,12 @@ class ParkingSpaceController extends Controller
 
         $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['required', 'string', 'exists:parking_spaces,id'],
+            'ids.*' => ['required', 'uuid', 'exists:parking_spaces,id'],
             'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
         ]);
 
         ParkingSpace::whereIn('id', $request->input('ids'))
-            ->update(['status' => $request->input('status')]);
+            ->eachById(fn (ParkingSpace $space) => $space->update(['status' => $request->input('status')]));
 
         return back();
     }
@@ -256,12 +256,12 @@ class ParkingSpaceController extends Controller
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_spaces,id'],
+            'ids.*' => ['uuid', 'exists:parking_spaces,id'],
         ]);
 
         ParkingSpace::onlyTrashed()
             ->whereIn('id', $validated['ids'])
-            ->restore();
+            ->eachById(fn (ParkingSpace $space) => $space->restore());
 
         return back();
     }
@@ -275,12 +275,12 @@ class ParkingSpaceController extends Controller
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_spaces,id'],
+            'ids.*' => ['uuid', 'exists:parking_spaces,id'],
         ]);
 
         ParkingSpace::onlyTrashed()
             ->whereIn('id', $validated['ids'])
-            ->forceDelete();
+            ->eachById(fn (ParkingSpace $space) => $space->forceDelete());
 
         return back();
     }

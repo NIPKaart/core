@@ -11,7 +11,8 @@
         "types": {
             "community": "Community",
             "municipal": "Municipal",
-            "offstreet": "Off-street"
+            "offstreet": "Off-street",
+            "unknown": "Unknown"
         },
         "empty": {
             "title": "You haven't added any favorites yet.",
@@ -19,7 +20,8 @@
         },
         "search": {
             "placeholder": "Search favorites by name, city, or municipality..."
-        }
+        },
+        "unavailable": "Location no longer available"
     },
     "parking_spaces": {
         "title": {

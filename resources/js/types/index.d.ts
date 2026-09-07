@@ -239,18 +239,20 @@ export type NominatimAddress = {
     [key: string]: unknown;
 };
 
-export type FavoriteType = 'Community' | 'Municipal' | 'Offstreet';
+export type FavoriteType = 'Community' | 'Municipal' | 'Offstreet' | 'Unknown';
 
 export type Favorite = {
-    id: string | null;
+    favorite_id: number;
+    id: string;
     type: FavoriteType;
     title: string;
-    latitude: float;
-    longitude: float;
-    municipality?: Municipality;
-    country?: string;
+    available: boolean;
+    latitude: number | null;
+    longitude: number | null;
+    municipality?: Pick<Municipality, 'id' | 'name'> | null;
+    country?: string | null;
     address?: string;
-    city?: string;
+    city?: string | null;
 };
 
 export type ParkingSpaceConfirmation = {

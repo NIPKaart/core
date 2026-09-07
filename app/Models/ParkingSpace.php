@@ -61,6 +61,9 @@ class ParkingSpace extends Model
     protected $casts = [
         'status' => ParkingStatus::class,
         'orientation' => ParkingOrientation::class,
+        'parking_disc' => 'boolean',
+        'window_times' => 'boolean',
+        'parking_time' => 'integer',
         'latitude' => 'float',
         'longitude' => 'float',
         'updated_at' => 'datetime',

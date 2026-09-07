@@ -27,6 +27,11 @@ class Country extends Model
         return $this->hasMany(Province::class);
     }
 
+    public function municipalities(): HasMany
+    {
+        return $this->hasMany(Municipality::class);
+    }
+
     /**
      * Get parking spaces in the country.
      */

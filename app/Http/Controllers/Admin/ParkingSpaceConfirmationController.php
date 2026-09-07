@@ -8,8 +8,10 @@ use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ParkingSpaceConfirmationController extends Controller
@@ -23,23 +25,28 @@ class ParkingSpaceConfirmationController extends Controller
 
         $user = Auth::user();
 
-        $alreadyConfirmed = $parkingSpace->confirmations()
-            ->where('user_id', $user->id)
-            ->whereDate('confirmed_at', now()->toDateString())
-            ->exists();
+        DB::transaction(function () use ($parkingSpace, $user, $request) {
+            // Serialize submissions for this space before checking the existing daily rule.
+            $space = ParkingSpace::whereKey($parkingSpace->id)->lockForUpdate()->firstOrFail();
+            $now = now();
+            $alreadyConfirmed = $space->confirmations()
+                ->where('user_id', $user->id)
+                ->whereDate('confirmed_at', $now->toDateString())
+                ->exists();
 
-        if ($alreadyConfirmed) {
-            return redirect()->back()->withErrors([
-                'general' => 'You already confirmed this space today.',
-            ])->withInput();
-        }
+            if ($alreadyConfirmed) {
+                throw ValidationException::withMessages([
+                    'general' => 'You already confirmed this space today.',
+                ]);
+            }
 
-        $parkingSpace->confirmations()->create([
-            'user_id' => $user->id,
-            'confirmed_at' => now(),
-            'status' => $request->input('status'),
-            'comment' => $request->input('comment') ?? null,
-        ]);
+            $space->confirmations()->create([
+                'user_id' => $user->id,
+                'confirmed_at' => $now,
+                'status' => $request->input('status'),
+                'comment' => $request->input('comment'),
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Confirmation recorded successfully.');
     }
@@ -76,16 +83,16 @@ class ParkingSpaceConfirmationController extends Controller
         return back();
     }
 
-    public function bulkDelete(Request $request)
+    public function bulkDelete(Request $request, ParkingSpace $parkingSpace)
     {
         Gate::authorize('bulkDelete', ParkingSpaceConfirmation::class);
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
-            'ids.*' => ['string', 'exists:parking_space_confirmations,id'],
+            'ids.*' => ['integer', Rule::exists('parking_space_confirmations', 'id')->where('parking_space_id', $parkingSpace->id)],
         ]);
 
-        ParkingSpaceConfirmation::whereIn('id', $validated['ids'])->delete();
+        $parkingSpace->confirmations()->whereIn('id', $validated['ids'])->delete();
 
         return back();
     }

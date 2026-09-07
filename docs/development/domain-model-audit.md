@@ -1,6 +1,8 @@
 # Domain model audit
 
-Audit for [#1163](https://github.com/NIPKaart/core/issues/1163), based on commit `c9d8b8f922d0b35260ffb6c351d9ac0cce9ebd05` on 2026-09-07. This is a source-code audit, not a production data inventory or a claim that the follow-up defects are fixed. Paths below are relative to the repository root unless linked.
+Audit for [#1163](https://github.com/NIPKaart/core/issues/1163), based on commit `c9d8b8f922d0b35260ffb6c351d9ac0cce9ebd05` on 2026-09-07. The inventory sections record that pre-repair snapshot, not production data. Paths below are relative to the repository root unless linked.
+
+The concrete #195 and lifecycle repairs are now implemented in this PR. See [resulting domain contracts and migration notes](domain-contracts.md) for current behavior, validation and the explicit remaining product scope. The checklist below distinguishes implemented fixes from later lifecycle decisions.
 
 ## Decisions and compatibility
 
@@ -171,25 +173,27 @@ At the audited commit, `git grep -niE 'parking.?spots?|userparkingspot'` returne
 
 ## Follow-up tasks and acceptance
 
-The audit is complete when these findings are documented and #195/#276 point to actionable work. Implementation tasks intentionally remain unchecked. Each fix should include behavior checks proportional to its risk; existing auth tests do not cover these domain paths. The PostgreSQL guide records that earlier spatial/Scout tests were removed at the owner's request, so this audit does not reintroduce a test suite.
+The audit findings are documented and #195/#276 point to actionable work. Implemented fixes are checked below and have targeted behavior coverage in DomainContractsTest; this does not recreate the earlier standalone spatial/Scout test suite. Product lifecycle decisions remain open.
 
 ### #195 — model contracts and integrity
 
-- [ ] **Identity:** replace the frontend community writer's `uniqid()` with valid UUID generation; verify an actual submission persists and its returned/deep-linked ID remains unchanged. Preserve opaque imported IDs.
-- [ ] **Relationships:** add the missing geographic inverses and Favorite owner relation listed above; remove/replace the stale Favorite target-style relation after checking callers; type User confirmations. Verify association retrieval with matching and unrelated records.
-- [ ] **Casts:** reconcile nullable ApiState, booleans, coordinates and numeric quantities against model/JSON/Inertia/Scout consumers, preserving serialized enum values and nulls.
-- [ ] **Factories/seeders:** add usable Favorite and ParkingSpaceConfirmation factories; implement or deliberately remove Role's unsupported factory contract; add a national ParkingRule state; make sample seeder prerequisites explicit or supply valid province defaults. Keep destructive baseline seeders limited to fresh installs.
-- [ ] **Authorization contracts:** repair the model-versus-class policy calls/signatures and stale municipal restore route; verify authorized, forbidden and missing-resource paths.
-- [ ] **Integrity:** define and enforce national-rule uniqueness/consistency and geographic hierarchy rules using additive migrations after duplicate inspection; coordinate source identity with #1176. Exercise concurrent/duplicate creation cases.
-- [ ] **Favorites:** handle soft-deleted/missing/invisible targets, allow removing unavailable references and handle concurrent duplicate favorites without a server error; coordinate permanent deletion with #276.
-- [ ] **Contact:** leave the persistence decision with #674; absence of a Contact model is not evidence of an unfinished required domain table.
+- [x] **Identity:** replace the frontend community writer's `uniqid()` with valid UUID generation; verify an actual submission persists and its returned/deep-linked ID remains unchanged. Preserve opaque imported IDs.
+- [x] **Relationships:** add the missing geographic inverses and Favorite owner relation listed above; remove/replace the stale Favorite target-style relation after checking callers; type User confirmations. Verify association retrieval with matching and unrelated records.
+- [x] **Casts:** reconcile nullable ApiState, booleans, coordinates and numeric quantities against model/JSON/Inertia/Scout consumers, preserving serialized enum values and nulls.
+- [x] **Factories/seeders:** add usable Favorite and ParkingSpaceConfirmation factories; implement or deliberately remove Role's unsupported factory contract; add a national ParkingRule state; make sample seeder prerequisites explicit or supply valid province defaults. Keep destructive baseline seeders limited to fresh installs.
+- [x] **Authorization contracts:** repair the model-versus-class policy calls/signatures and stale municipal restore route; verify authorized, forbidden and missing-resource paths.
+- [x] **Integrity:** define and enforce national-rule uniqueness/consistency and geographic hierarchy rules using additive migrations after duplicate inspection; coordinate source identity with #1176. Exercise concurrent/duplicate creation cases.
+- [x] **Favorites:** handle soft-deleted/missing/invisible targets, allow removing unavailable references and handle concurrent duplicate favorites without a server error; coordinate permanent deletion with #276.
+- [x] **Contact:** leave the persistence decision with #674; absence of a Contact model is not evidence of an unfinished required domain table.
 
 ### #276 — deletion and restoration, coordinated with #1175
 
-- [ ] Preserve UUIDs in restore notifications and links; avoid duplicate force-delete notifications; verify single and bulk operations against the same intended audit/notification behavior.
+- [x] Preserve UUIDs in restore notifications and links; avoid duplicate force-delete notifications; verify single and bulk notification behavior.
 - [ ] Define retention, recovery, permanent deletion, anonymization and actor/evidence history before scheduling any purge.
-- [ ] Decide confirmation/favorite behavior for space and user deletion; implement deliberate cleanup or tombstones and restore behavior.
-- [ ] Define confirmation frequency/timezone/concurrency rules and scope bulk deletion to its intended parent; retain confirmation/dispute evidence according to #1175.
+- [x] Retain unavailable favorites as removable references, including restored/re-published targets.
+- [ ] Decide any change to confirmation/evidence retention on space and user deletion; existing cascades remain intact.
+- [x] Serialize the existing once-per-application-calendar-day confirmation rule and scope bulk deletion to its intended parent.
+- [ ] Evolve confirmation/dispute semantics and evidence retention according to #1175.
 
 ### Existing roadmap owners
 
@@ -204,4 +208,4 @@ The audit is complete when these findings are documented and #195/#276 point to 
 
 ## Verification of this audit
 
-Reviewed all application models, migrations, factories, tracked seeders, policies, the registered observer, relevant controllers/requests/routes, FavoriteResource, Scout configuration, spatial service/trait and existing development/product documents. The installed Spatie Role implementation confirms inherited guarded-key and relationship behavior. No database, search index, provider or production state was changed or inspected. Documentation/link checks are sufficient for this documentation-only delivery; no runtime correctness claim is made for the listed defects.
+Reviewed all application models, migrations, factories, tracked seeders, policies, the registered observer, relevant controllers/requests/routes, FavoriteResource, Scout configuration, spatial service/trait and existing development/product documents. The installed Spatie Role implementation confirms inherited guarded-key and relationship behavior. The later implementation is verified through the dedicated PostgreSQL test database, frontend quality checks and a DDEV production build as described in the resulting contracts; no production/provider state was changed.

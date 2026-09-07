@@ -79,7 +79,8 @@ class ParkingOffstreetController extends Controller
         $ids = (array) $request->input('ids', []);
         $visibility = $request->boolean('visibility', true);
 
-        ParkingOffstreet::whereIn('id', $ids)->update(['visibility' => $visibility]);
+        ParkingOffstreet::whereIn('id', $ids)
+            ->eachById(fn (ParkingOffstreet $space) => $space->update(['visibility' => $visibility]));
 
         return back();
     }
@@ -98,7 +99,7 @@ class ParkingOffstreetController extends Controller
         ]);
 
         ParkingOffstreet::whereIn('id', $validated['ids'])
-            ->update(['visibility' => $validated['visibility']]);
+            ->eachById(fn (ParkingOffstreet $space) => $space->update(['visibility' => $validated['visibility']]));
 
         return back();
     }

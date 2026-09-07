@@ -6,5 +6,8 @@
         "description": "Browse the map and click the heart icon to favorite locations."
     },
     "loading": "Loading...",
-    "goToLocation": "Go to {{title}} on map"
+    "goToLocation": "Go to {{title}} on map",
+    "unavailable": "Location no longer available",
+    "remove": "Remove favorite",
+    "remove_error": "Could not remove this favorite. Please try again."
 }

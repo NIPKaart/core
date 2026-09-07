@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingRule;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,15 @@ class ParkingRuleFactory extends Factory
             'url' => "https://{$this->slugify($municipality)}.gov.example/parking-rules",
             'nationwide' => false,
         ];
+    }
+
+    public function nationwide(): static
+    {
+        return $this->state(fn () => [
+            'country_id' => Country::factory(),
+            'municipality_id' => null,
+            'nationwide' => true,
+        ]);
     }
 
     protected function slugify(string $value): string

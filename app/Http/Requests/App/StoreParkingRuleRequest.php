@@ -5,6 +5,7 @@ namespace App\Http\Requests\App;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class StoreParkingRuleRequest extends FormRequest
 {
@@ -24,25 +25,29 @@ class StoreParkingRuleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'country_id' => ['required', 'exists:countries,id'],
+            'country_id' => [
+                'required', 'integer', 'exists:countries,id',
+                Rule::when($this->boolean('nationwide'), [
+                    Rule::unique('parking_rules', 'country_id')->whereNull('municipality_id')->ignore($this->route('parking_rule')),
+                ]),
+            ],
             'municipality_id' => [
                 'required_unless:nationwide,true',
                 'nullable',
-                'exists:municipalities,id',
+                'integer',
+                Rule::exists('municipalities', 'id')->where('country_id', $this->input('country_id')),
+                Rule::unique('parking_rules', 'municipality_id')->where('country_id', $this->input('country_id'))->ignore($this->route('parking_rule')),
             ],
-            'url' => ['required', 'url', 'max:2048'],
+            'url' => ['required', 'url', 'max:255'],
             'nationwide' => ['required', 'boolean'],
         ];
     }
 
-    public function validated($key = null, $default = null)
+    protected function prepareForValidation(): void
     {
-        $data = parent::validated($key, $default);
-        if (isset($data['nationwide']) && $data['nationwide']) {
-            $data['municipality_id'] = null;
+        if ($this->boolean('nationwide')) {
+            $this->merge(['municipality_id' => null]);
         }
-
-        return $data;
     }
 
     public function messages(): array
