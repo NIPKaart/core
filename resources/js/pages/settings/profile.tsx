@@ -15,10 +15,12 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import profile from '@/routes/profile';
 import verification from '@/routes/verification';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
+    const [email, setEmail] = useState(auth.user.email);
     const { t } = useTranslation('backend/global');
     const { t: tSettings } = useTranslation('backend/settings');
 
@@ -39,6 +41,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                     <Form
                         {...ProfileController.update.form()}
+                        resetOnSuccess={['current_password']}
                         options={{
                             preserveScroll: true,
                         }}
@@ -69,7 +72,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                         id="email"
                                         type="email"
                                         className="mt-1 block w-full"
-                                        defaultValue={auth.user.email}
+                                        value={email}
+                                        onChange={(event) => setEmail(event.target.value)}
                                         name="email"
                                         required
                                         autoComplete="username"
@@ -78,6 +82,21 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
 
                                     <InputError className="mt-2" message={errors.email} />
                                 </div>
+
+                                {email !== auth.user.email && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="current_password">{tSettings('password.current')}</Label>
+                                        <Input
+                                            id="current_password"
+                                            name="current_password"
+                                            type="password"
+                                            autoComplete="current-password"
+                                            required
+                                        />
+                                        <p className="text-sm text-muted-foreground">{tSettings('profile.email_password_help')}</p>
+                                        <InputError message={errors.current_password} />
+                                    </div>
+                                )}
 
                                 <LanguageField label={tSettings('profile.language')} error={errors.locale} initial={i18n.language || 'en'} />
 

@@ -2,13 +2,15 @@
     "sidebar": {
         "profile": "Profiel",
         "password": "Wachtwoord",
-        "appearance": "Uiterlijk"
+        "appearance": "Uiterlijk",
+        "security": "Beveiliging"
     },
     "meta": {
         "title": "Instellingen",
         "description": "Beheer je profiel- en accountinstellingen."
     },
     "profile": {
+        "email_password_help": "Bevestig je huidige wachtwoord om je e-mailadres te wijzigen.",
         "meta": {
             "breadcrumb": "Profielinstellingen",
             "title": "Profielinstellingen"

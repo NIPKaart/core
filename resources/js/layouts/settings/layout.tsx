@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
 import password from '@/routes/password';
 import profile from '@/routes/profile';
+import security from '@/routes/security';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -25,6 +26,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
             href: password.edit(),
             icon: null,
         },
+        { title: t('sidebar.security'), href: security.edit(), icon: null },
         {
             title: t('sidebar.appearance'),
             href: editAppearance(),

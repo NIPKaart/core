@@ -30,11 +30,11 @@ test('production password policy applies to every password entry point', functio
             'name' => 'Test User',
             'email' => 'production@example.com',
         ]),
-        'reset' => $this->post(route('password.store'), $data + [
+        'reset' => $this->post(route('password.update'), $data + [
             'email' => $user->email,
             'token' => Password::createToken($user),
         ]),
-        'update' => $this->actingAs($user)->put(route('password.update'), $data + [
+        'update' => $this->actingAs($user)->put(route('user-password.update'), $data + [
             'current_password' => 'password',
         ]),
     };

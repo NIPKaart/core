@@ -2,8 +2,9 @@
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 
-import ConfirmablePasswordController from '@/actions/App/Http/Controllers/Auth/ConfirmablePasswordController';
+import ConfirmablePasswordController from '@/actions/Laravel/Fortify/Http/Controllers/ConfirmablePasswordController';
 import InputError from '@/components/input-error';
+import PasskeyButton from '@/components/passkey-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +44,7 @@ export default function ConfirmPassword() {
                     </div>
                 )}
             </Form>
+            <PasskeyButton confirmation />
         </AuthLayout>
     );
 }
