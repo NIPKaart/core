@@ -7,7 +7,8 @@ import type { BreadcrumbItem, Country, Municipality, ParkingSpace, Province } fr
 import type { ParkingStatusOption } from '@/types/enum';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, CalendarCheck, CheckCircle, MapPinned, ThumbsDown, TimerIcon, User as UserIcon } from 'lucide-react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 const iconMap = {
     pending: TimerIcon,
@@ -58,14 +59,15 @@ export default function Edit() {
         },
     });
 
-    const handleSubmit = form.handleSubmit((data) => {
-        const payload = {
-            ...data,
-            parking_time: (Number(data.parking_hours) || 0) * 60 + (Number(data.parking_minutes) || 0),
-        };
+    const [submitting, setSubmitting] = useState(false);
 
-        router.put(app.parkingSpaces.update({ parking_space: parkingSpace.id }), payload, {
+    const handleSubmit = form.handleSubmit((data) => {
+        form.clearErrors();
+
+        router.put(app.parkingSpaces.update({ parking_space: parkingSpace.id }), data, {
             preserveScroll: true,
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
             onError: (errors) => {
                 Object.entries(errors).forEach(([field, message]) => {
                     form.setError(field as keyof FormValues, {
@@ -144,19 +146,17 @@ export default function Edit() {
                     </div>
                 </div>
 
-                <FormProvider {...form}>
-                    <ParkingSpaceForm
-                        form={form}
-                        countries={countries}
-                        provinces={provinces}
-                        municipalities={municipalities}
-                        statusOptions={statusOptions}
-                        orientationOptions={selectOptions.orientation}
-                        onSubmit={handleSubmit}
-                        submitting={false}
-                        nearbySpaces={nearbySpaces}
-                    />
-                </FormProvider>
+                <ParkingSpaceForm
+                    form={form}
+                    countries={countries}
+                    provinces={provinces}
+                    municipalities={municipalities}
+                    statusOptions={statusOptions}
+                    orientationOptions={selectOptions.orientation}
+                    onSubmit={handleSubmit}
+                    submitting={submitting}
+                    nearbySpaces={nearbySpaces}
+                />
             </div>
         </AppLayout>
     );

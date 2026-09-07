@@ -4,9 +4,10 @@ import '../css/leaflet-legend.css';
 // Import the Echo configuration
 import '@/echo';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentType } from 'react';
+import { toast, Toaster } from 'sonner';
 import { initializeTheme } from './hooks/use-appearance';
 import i18n from './i18n';
 
@@ -23,6 +24,16 @@ const queryClient = new QueryClient({
     },
 });
 
+// Register before initialization so initial loads and later visits share one handler.
+// Inertia flash data is excluded from browser history; equal messages on new visits still display.
+const removeFlashListener = router.on('flash', ({ detail: { flash } }) => {
+    for (const level of ['success', 'error', 'warning', 'info'] as const) {
+        const message = flash[level];
+        if (typeof message === 'string' && message.length > 0) toast[level](message);
+    }
+});
+import.meta.hot?.dispose(removeFlashListener);
+
 void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: async (name) => {
@@ -34,7 +45,12 @@ void createInertiaApp({
     withApp(app, { page }) {
         // Initialize from the shared Laravel locale; later visits use useSyncLocale.
         void i18n.changeLanguage(String(page.props.locale || 'en'));
-        return <QueryClientProvider client={queryClient}>{app}</QueryClientProvider>;
+        return (
+            <QueryClientProvider client={queryClient}>
+                {app}
+                <Toaster position="top-right" />
+            </QueryClientProvider>
+        );
     },
     progress: {
         color: '#4B5563',

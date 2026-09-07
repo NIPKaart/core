@@ -49,7 +49,9 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->validated('permissions'));
 
-        return redirect()->route('app.roles.index')->with('success', 'Role created successfully.');
+        Inertia::flash('success', 'Role created successfully.');
+
+        return redirect()->route('app.roles.index');
     }
 
     /**
@@ -91,7 +93,9 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->validated('permissions'));
 
-        return redirect()->route('app.roles.index')->with('success', 'Role updated successfully.');
+        Inertia::flash('success', 'Role updated successfully.');
+
+        return redirect()->route('app.roles.index');
     }
 
     /**

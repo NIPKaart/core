@@ -52,7 +52,9 @@ class UserController extends Controller
         ]);
         $user->syncRoles($data['role']);
 
-        return redirect()->route('app.users.index')->with('success', 'User created successfully');
+        Inertia::flash('success', 'User created successfully');
+
+        return redirect()->route('app.users.index');
     }
 
     /**
@@ -104,7 +106,9 @@ class UserController extends Controller
         $user->save();
         $user->syncRoles($data['role']);
 
-        return redirect()->route('app.users.index')->with('success', 'User updated successfully');
+        Inertia::flash('success', 'User updated successfully');
+
+        return redirect()->route('app.users.index');
     }
 
     /**
@@ -125,7 +129,7 @@ class UserController extends Controller
     public function suspend(User $user)
     {
         if (auth()->id() === $user->id) {
-            return redirect()->back()->with('error', 'You cannot suspend yourself.');
+            return redirect()->back()->withErrors(['suspended_at' => 'You cannot suspend yourself.']);
         }
 
         $user->suspended_at = $user->suspended_at ? null : now();

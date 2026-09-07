@@ -48,7 +48,9 @@ class ParkingSpaceConfirmationController extends Controller
             ]);
         });
 
-        return redirect()->back()->with('success', 'Confirmation recorded successfully.');
+        Inertia::flash('success', 'Confirmation recorded successfully.');
+
+        return redirect()->back();
     }
 
     public function index(Request $request, ParkingSpace $parkingSpace)

@@ -15,6 +15,7 @@ use App\Support\GeoPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class ParkingSpaceController extends Controller
 {
@@ -166,9 +167,10 @@ class ParkingSpaceController extends Controller
 
         $parkingSpace->update($data);
 
+        Inertia::flash('success', __('parking_spaces.flash.updated'));
+
         return redirect()
-            ->route('app.parking-spaces.index')
-            ->with('success', __('parking_spaces.flash.updated'));
+            ->route('app.parking-spaces.index');
     }
 
     /**
