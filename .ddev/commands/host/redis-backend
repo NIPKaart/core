@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #ddev-generated
 
-## Description: Use a different key-value store for Redis
+## Description: Choose a Redis-compatible key-value backend
 ## Usage: redis-backend <image> [optimize]
 ## Example: ddev redis-backend redis-alpine optimize
 
@@ -20,15 +20,15 @@ the "command:" in the docker-compose.redis_extra.yaml file
 Available aliases:
   redis            redis:7
   redis-alpine     redis:7-alpine
-  valkey           valkey/valkey:8
-  valkey-alpine    valkey/valkey:8-alpine
+  valkey           valkey/valkey:9.1
+  valkey-alpine    valkey/valkey:9.1-alpine
 
 Custom backend:
   You can specify any Docker image, e.g.:
     ddev redis-backend redis:6
 
 Optional:
-  optimize         Apply additional Redis configuration with resource limits
+  optimize         Apply additional backend configuration with resource limits
   optimized        Same as optimize
 
 Examples:
@@ -80,12 +80,12 @@ case "$REDIS_DOCKER_IMAGE" in
     REDIS_DOCKER_IMAGE="redis:7-alpine"
     ;;
   valkey)
-    NAME="Valkey 8"
-    REDIS_DOCKER_IMAGE="valkey/valkey:8"
+    NAME="Valkey 9.1"
+    REDIS_DOCKER_IMAGE="valkey/valkey:9.1"
     ;;
   valkey-alpine)
-    NAME="Valkey 8 Alpine"
-    REDIS_DOCKER_IMAGE="valkey/valkey:8-alpine"
+    NAME="Valkey 9.1 Alpine"
+    REDIS_DOCKER_IMAGE="valkey/valkey:9.1-alpine"
     ;;
   ""|--help|-h)
     show_help
@@ -102,15 +102,15 @@ optimize_config
 use_docker_image
 
 echo
-echo "✅ Redis backend: $REDIS_DOCKER_IMAGE"
+echo "✅ Key-value backend: $REDIS_DOCKER_IMAGE"
 if [[ "$REDIS_CONFIG" == "optimized" || "$REDIS_CONFIG" == "optimize" ]]; then
-  echo "⚙️ Redis config: optimized"
+  echo "⚙️ Backend config: optimized"
 else
-  echo "⚙️ Redis config: default"
+  echo "⚙️ Backend config: default"
 fi
 
 echo
 echo "📝 Commit the '.ddev' directory to version control"
 
 echo
-echo "🔄 Redis config available after 'ddev restart'"
+echo "🔄 Backend config available after 'ddev restart'"
