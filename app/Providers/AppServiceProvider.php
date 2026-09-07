@@ -8,6 +8,7 @@ use App\Observers\ParkingSpaceObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Opcodes\LogViewer\Facades\LogViewer;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
 
         Model::shouldBeStrict(! $this->app->isProduction());
         DB::prohibitDestructiveCommands($this->app->isProduction());
+
+        Password::defaults(fn (): ?Password => app()->isProduction()
+            ? Password::min(12)->mixedCase()->letters()->numbers()->symbols()->uncompromised()
+            : null);
 
         ParkingSpace::observe(ParkingSpaceObserver::class);
 
