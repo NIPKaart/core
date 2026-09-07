@@ -82,7 +82,7 @@ class ParkingOffstreet extends Model
      */
     public function searchableAs(): string
     {
-        return 'parking_offstreet_spaces';
+        return config('scout.prefix').'parking_offstreet_spaces';
     }
 
     /**

@@ -115,7 +115,7 @@ class ParkingSpace extends Model
      */
     public function searchableAs(): string
     {
-        return 'parking_spaces';
+        return config('scout.prefix').'parking_spaces';
     }
 
     /**

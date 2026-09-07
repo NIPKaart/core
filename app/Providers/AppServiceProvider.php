@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
         ParkingSpace::observe(ParkingSpaceObserver::class);
 
         LogViewer::auth(function ($request) {
-            return $request->user() && $request->user()->hasRole(UserRole::ADMIN);
+            return $request->user() && ! $request->user()->suspended_at && $request->user()->hasRole(UserRole::ADMIN);
         });
     }
 }

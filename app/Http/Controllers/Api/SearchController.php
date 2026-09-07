@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
+use App\Models\ParkingSpace;
 use Illuminate\Http\Request;
 use Meilisearch\Client;
 use Meilisearch\Contracts\SearchQuery;
@@ -27,7 +30,7 @@ class SearchController extends Controller
         $postcodeGroup = $postcode ? $this->equalsGroup('postcode', $this->postcodeVariants($postcode)) : null;
 
         $indices = [
-            'parking_spaces' => [
+            (new ParkingSpace)->searchableAs() => [
                 'type' => 'community',
                 'route' => route('location-map'),
                 'placeField' => 'city',
@@ -45,7 +48,7 @@ class SearchController extends Controller
                 ),
             ],
 
-            'parking_offstreet_spaces' => [
+            (new ParkingOffstreet)->searchableAs() => [
                 'type' => 'offstreet',
                 'route' => route('garages'),
                 'placeField' => 'municipality_name',
@@ -62,11 +65,11 @@ class SearchController extends Controller
                 ),
             ],
 
-            'parking_municipal_spaces' => [
+            (new ParkingMunicipal)->searchableAs() => [
                 'type' => 'municipal',
                 'route' => route('location-map'),
                 'placeField' => 'municipality_name',
-                'supportsPostcode' => true,
+                'supportsPostcode' => false,
                 'label' => fn (array $d) => $this->firstNonEmpty(
                     trim(implode(' ', array_filter([
                         (string) ($d['street'] ?? ''),

@@ -1,4 +1,4 @@
-import { echo } from '@/echo';
+import { getEcho } from '@/echo';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
@@ -14,6 +14,9 @@ export function useNotifications(onNew?: (payload: unknown) => void) {
     useEffect(() => {
         if (!userId) return;
 
+        const echo = getEcho();
+        if (!echo) return;
+
         const channelName = `App.Models.User.${userId}`;
         const channel = echo.private(channelName);
 
@@ -26,7 +29,7 @@ export function useNotifications(onNew?: (payload: unknown) => void) {
 
         return () => {
             channel.stopListening('.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated');
-            echo.leave(`private-${channelName}`);
+            echo.leave(channelName);
         };
     }, [userId, onNew]);
 }
