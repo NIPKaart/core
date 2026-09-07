@@ -78,3 +78,31 @@ The existing database migration has equivalent columns, primary/unique indexes a
 Regression coverage exercises enum-based role lookup/assignment and server-side authorization after role-permission revocation, direct grants and direct-grant revocation. Existing Fortify registration and policy tests continue to validate the default role and authorization boundary.
 
 After the Permission v8 upgrade, the full suite passed with 104 tests / 449 assertions.
+
+## Create or promote an administrator
+
+After migrations and the normal permission seeding, run this command in the target application's shell (locally use `ddev artisan` instead of `php artisan`; in production use the application's operator console):
+
+```sh
+php artisan nipkaart:make-admin admin@example.com --name="Administrator"
+```
+
+This follows DDS Platform's `dds:make-admin` flow. A new account is email-verified and receives the canonical `admin` role through Spatie Permission. Omitting `--password` generates a secure 24-character password, displayed only after successful creation. Store it immediately in a password manager; it cannot be retrieved by rerunning the command. The command does not send credentials by email or write them to seeders/configuration.
+
+Without an email or new-account name, interactive execution prompts for them. For unattended execution, supply both and add `--no-interaction`; missing or invalid input fails without creating an account. Email addresses must be lowercase, consistent with registration. `--password` accepts an explicit password subject to the application's password policy, including production checks. Prefer generated passwords to avoid putting an explicit password into shell history or process arguments, and keep command output out of shared logs.
+
+To promote an existing active user, or safely rerun for an administrator:
+
+```sh
+php artisan nipkaart:make-admin existing@example.com --no-interaction
+```
+
+Promotion preserves the name, password, verification state, locale, security settings, other roles and permissions. `--name` and `--password` only apply to new users and produce a warning when supplied for an existing account. Existing unverified users must still complete normal email verification. Suspended accounts are rejected, including suspended administrators; this command never lifts a suspension.
+
+The command requires the existing `admin` role for the `web` guard. If it is missing, it exits unsuccessfully with setup instructions. Initialize the standard roles and permissions, then rerun:
+
+```sh
+php artisan db:seed --class=PermissionsTableSeeder
+```
+
+Production seeding may require Laravel's confirmation or `--force` when running non-interactively. The administrator command does not seed or overwrite role permissions automatically. User creation and role assignment run in one transaction, so a failed assignment leaves no partial bootstrap account.
