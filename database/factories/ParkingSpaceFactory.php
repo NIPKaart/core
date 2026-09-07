@@ -4,8 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
-use App\Models\Country;
-use App\Models\Province;
+use App\Models\Municipality;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Str;
@@ -29,21 +28,12 @@ class ParkingSpaceFactory extends Factory
             },
             'status' => fake()->randomElement(ParkingStatus::all()),
             'ip_address' => fake()->ipv4(),
-            'country_id' => function (): mixed {
-                return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
-            },
-            'province_id' => function (): mixed {
-                $countryId = Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
-
-                return Province::where('country_id', $countryId)
-                    ->inRandomOrder()
-                    ->value('id')
-                    ?? Province::factory()->create(['country_id' => $countryId])->id;
-            },
-            'municipality' => fake()->city,
+            'municipality_id' => Municipality::factory(),
+            'province_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->province_id,
+            'country_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->country_id,
             'city' => fake()->city,
             'suburb' => fake()->optional()->citySuffix,
-            'neighborhood' => fake()->optional()->word,
+            'neighbourhood' => fake()->optional()->word,
             'postcode' => fake()->postcode,
             'street' => fake()->streetName,
             'amenity' => fake()->optional()->word,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Favoritable;
+use App\Traits\HasParkingLocation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Laravel\Scout\Searchable;
 class ParkingOffstreet extends Model
 {
     /** @use HasFactory<\Database\Factories\ParkingOffstreetFactory> */
-    use Favoritable, HasFactory, Searchable;
+    use Favoritable, HasFactory, HasParkingLocation, Searchable;
 
     protected $table = 'parking_offstreet_spaces';
 

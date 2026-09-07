@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ParkingOrientation;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,9 +20,9 @@ class ParkingMunicipalFactory extends Factory
     {
         return [
             'id' => 'MUNI_'.$this->faker->unique()->bothify('##??##'),
-            'country_id' => null,
-            'province_id' => null,
-            'municipality_id' => null,
+            'municipality_id' => Municipality::factory(),
+            'province_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->province_id,
+            'country_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->country_id,
 
             // Parking details
             'street' => $this->faker->streetName,

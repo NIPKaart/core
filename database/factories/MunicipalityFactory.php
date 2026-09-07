@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Province;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,8 +19,8 @@ class MunicipalityFactory extends Factory
     {
         return [
             'name' => $this->faker->city,
-            'country_id' => null,
-            'province_id' => null,
+            'province_id' => Province::factory(),
+            'country_id' => fn (array $attributes) => Province::findOrFail($attributes['province_id'])->country_id,
         ];
     }
 }

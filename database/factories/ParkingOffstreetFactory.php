@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ApiState;
+use App\Models\Municipality;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,9 +23,9 @@ class ParkingOffstreetFactory extends Factory
             'id' => 'OFST_'.fake()->unique()->bothify('##??##'),
 
             'name' => fake()->company,
-            'country_id' => null,
-            'province_id' => null,
-            'municipality_id' => null,
+            'municipality_id' => Municipality::factory(),
+            'province_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->province_id,
+            'country_id' => fn (array $attributes) => Municipality::findOrFail($attributes['municipality_id'])->country_id,
 
             // Parking details
             'free_space_short' => $free_space_short,
