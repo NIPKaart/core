@@ -1,5 +1,7 @@
 # Domain model audit
 
+Search architecture update: #1195 supersedes this audit's Scout/Meilisearch observations and reconciliation recommendations. See the [replacement inventory](infrastructure.md); publication and related-name changes are now read directly from PostgreSQL.
+
 Audit for [#1163](https://github.com/NIPKaart/core/issues/1163), based on commit `c9d8b8f922d0b35260ffb6c351d9ac0cce9ebd05` on 2026-09-07. The inventory sections record that pre-repair snapshot, not production data. Paths below are relative to the repository root unless linked.
 
 The concrete #195 and lifecycle repairs are now implemented in this PR. See [resulting domain contracts and migration notes](domain-contracts.md) for current behavior, validation and the explicit remaining product scope. The checklist below distinguishes implemented fixes from later lifecycle decisions.

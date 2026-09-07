@@ -6,7 +6,7 @@ Implementation for #1163 / #195 and the concrete restoration/deletion defects fr
 
 Community submissions generate UUIDs compatible with `parking_spaces.id`, accept omitted optional parking-time/description fields and redirect to the actual `location-map` route. Requests reject out-of-range coordinates. Imported IDs remain opaque strings.
 
-Restore policy methods receive a ParkingSpace instance, and restore notifications retain its UUID in both database and broadcast payloads. Permanent deletion emits one deletion notification per owner per action. Bulk status changes, restores and permanent deletes visit models in ID chunks so they execute the same model/Scout observers as individual operations. UUID constraints on individual restore/delete routes prevent the `bulk` path segment being mistaken for a parking ID. The nonexistent municipal restore route is removed; municipal data does not acquire soft deletes.
+Restore policy methods receive a ParkingSpace instance, and restore notifications retain its UUID in both database and broadcast payloads. Permanent deletion emits one deletion notification per owner per action. Bulk status changes, restores and permanent deletes visit models in ID chunks so they execute the same model observers as individual operations. UUID constraints on individual restore/delete routes prevent the `bulk` path segment being mistaken for a parking ID. The nonexistent municipal restore route is removed; municipal data does not acquire soft deletes.
 
 Confirmations retain the existing limit of one contribution per user/space/calendar day in the configured application timezone (`UTC` by default). The HTTP writer locks the parent space inside a transaction before checking and inserting, serializing simultaneous requests. Bulk confirmation deletion validates and deletes through the space from the route. This does not invent new report/moderation semantics or a global uniqueness rule for historical imports.
 
@@ -31,9 +31,9 @@ Country and Province expose municipalities; Municipality exposes country, provin
 
 Favorite, ParkingSpaceConfirmation and Role now have factories. ParkingRule has a `nationwide()` factory state. Sample municipal/offstreet seeders resolve the country by code and can supply a complete Noord-Holland province (`NL-NH`) without the baseline reference seeders. The existing CountrySeeder/ProvinceSeeder remain fresh-install-only tools.
 
-Parking booleans, numeric quantities, coordinates, nationwide rules and nullable ApiState now have explicit casts. Serialized backed enum values remain strings; unknown/null ApiState remains null in model JSON and Scout output. ParkingOffstreet permits assignment of local `visibility` alongside geographic FKs; source-controlled facility/occupancy fields remain guarded.
+Parking booleans, numeric quantities, coordinates, nationwide rules and nullable ApiState now have explicit casts. Serialized backed enum values remain strings; unknown/null ApiState remains null in model JSON. ParkingOffstreet permits assignment of local `visibility` alongside geographic FKs; source-controlled facility/occupancy fields remain guarded.
 
-Municipal/offstreet bulk visibility writes use model events so Scout receives updates/removals. The nonexistent municipal `postcode` filter setting is removed. Full related-geography reindexing, transaction/index failure recovery and production index reconciliation remain in #1166; a model event reaching Scout does not prove a remote indexing task has completed.
+Municipal/offstreet bulk visibility writes retain model events. Under #1195, PostgreSQL search reads publication flags and related geography directly; changes are visible without remote indexing or reconciliation. See the [search audit](infrastructure.md).
 
 ## Database integrity and rollout
 
@@ -78,6 +78,6 @@ Take normal migration backups and allow for table validation/index creation lock
 
 ## Verification and remaining architecture
 
-`tests/Feature/DomainContractsTest.php` exercises real submission, favorite and authorization endpoints, notification identity/counts, bulk lifecycle behavior, daily confirmations, parent-scoped deletion, persisted casts/relations/factories, sample seeders and PostgreSQL constraints. Scout tests use a mock engine to assert the actual callback; they do not contact the live index.
+`tests/Feature/DomainContractsTest.php` exercises real submission, favorite and authorization endpoints, notification identity/counts, bulk lifecycle behavior, daily confirmations, parent-scoped deletion, persisted casts/relations/factories, sample seeders and PostgreSQL constraints. Search tests execute real PostgreSQL queries, including visibility changes without index synchronization.
 
 The source-qualified identity migration, separation of facility metadata/live observations, richer discovery API and durable moderation history remain with #1176, #1177, #1170/#1172 and #1175/#276 respectively. Their benefits and compatibility costs are documented in the audit. These product models are not silently invented by the baseline repair, and #276 remains open.

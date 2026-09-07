@@ -23,8 +23,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
-use Laravel\Scout\EngineManager;
-use Laravel\Scout\Engines\Engine;
 
 beforeEach(function () {
     Notification::fake();
@@ -162,15 +160,14 @@ test('factories and inverse relationships preserve the geographic hierarchy and 
         ->and($role->guard_name)->toBe('web');
 });
 
-test('casts preserve JSON and searchable enum and nullable quantity contracts', function () {
+test('casts preserve JSON enum and nullable quantity contracts', function () {
     $garage = ParkingOffstreet::factory()->create(['api_state' => ApiState::OK, 'free_space_long' => null, 'long_capacity' => null, 'visibility' => true]);
     $space = ParkingSpace::factory()->create(['parking_disc' => true, 'window_times' => false, 'parking_time' => null]);
     $municipal = ParkingMunicipal::factory()->create(['number' => 2, 'orientation' => null]);
     $rule = ParkingRule::factory()->nationwide()->create();
     expect($garage->fresh()->api_state)->toBe(ApiState::OK)
         ->and($garage->fresh()->toArray()['api_state'])->toBe('ok')
-        ->and($garage->toSearchableArray()['api_state'])->toBe('ok')
-        ->and($garage->toSearchableArray()['free_space_long'])->toBeNull()
+        ->and($garage->fresh()->toArray()['free_space_long'])->toBeNull()
         ->and($space->fresh()->parking_disc)->toBeTrue()
         ->and($space->fresh()->window_times)->toBeFalse()
         ->and($space->fresh()->parking_time)->toBeNull()
@@ -284,16 +281,13 @@ test('sample parking seeders supply valid geographic defaults without baseline r
         ->and(Country::where('code', 'NL')->count())->toBe(1);
 });
 
-test('bulk visibility changes reach Scout through model events', function (string $model, string $route, string $permission) {
+test('bulk visibility changes immediately remove public search results', function (string $model, string $route, string $permission) {
     $space = $model::factory()->create(['visibility' => true]);
-    $engine = Mockery::mock(Engine::class);
-    $engine->shouldReceive('delete')->once()->withArgs(fn ($models) => $models->modelKeys() === [$space->id]);
-    app(EngineManager::class)->extend('domain-test', fn () => $engine);
-    config(['scout.driver' => 'domain-test', 'scout.queue' => false]);
     $operator = User::factory()->create();
     $operator->givePermissionTo($permission);
     $this->actingAs($operator)->post(route($route), ['ids' => [$space->id], 'visibility' => false])->assertRedirect();
     expect($space->fresh()->visibility)->toBeFalse();
+    $this->getJson('/api/search?q='.urlencode($space->street ?? $space->name))->assertJsonPath('hits', []);
 })->with([
     'municipal' => [ParkingMunicipal::class, 'app.parking-municipal.toggle-visibility', 'parking-municipal.update'],
     'offstreet' => [ParkingOffstreet::class, 'app.parking-offstreet.toggle-visibility', 'parking-offstreet.update'],

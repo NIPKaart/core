@@ -22,7 +22,7 @@ export const ICON_MAP_DEFAULT: Record<Hit['type'] | 'other', LucideIcon> = {
 };
 
 /**
- * Perform a search query to our API route, which proxies to Meilisearch.
+ * Search published parking records through the PostgreSQL-backed API.
  */
 export async function searchApi(q: string, signal?: AbortSignal, limit = 10): Promise<SearchResponse> {
     const qs = new URLSearchParams({ q, limit: String(limit) });

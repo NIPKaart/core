@@ -6,7 +6,7 @@ This implements [#1180](https://github.com/NIPKaart/core/issues/1180). PostgreSQ
 
 On 2026-09-07, the project owner explicitly chose a fresh database instead of retaining or transferring existing MySQL data. Work package C's legacy transfer/row-reconciliation requirement is therefore superseded by a validated fresh install. This PR does not claim that any historical production/community data was migrated. Existing local MySQL volumes have not been deleted by the implementation work.
 
-Before deployment, confirm the chosen environment is intended to start empty. Provision a new PostgreSQL database, enable PostGIS, configure the app and workers, migrate, seed baseline reference/permission data, then import any newly selected sources and rebuild search. Keep the previous release and database available until the new deployment is accepted. Reverting after new PostgreSQL writes requires deciding how to preserve those writes; changing connection settings alone is not a data reconciliation strategy.
+Before deployment, confirm the chosen environment is intended to start empty. Provision a new PostgreSQL database, enable PostGIS, configure the app and workers, migrate, seed baseline reference/permission data, then import any newly selected sources. Enable `pg_trgm` for parking-record text search; no search-index rebuild is required. Keep the previous release and database available until the new deployment is accepted. Reverting after new PostgreSQL writes requires deciding how to preserve those writes; changing connection settings alone is not a data reconciliation strategy.
 
 ## Fresh development environment
 
@@ -70,13 +70,11 @@ createdb --maintenance-db="$ADMIN_PG_URL" nipkaart_restore
 pg_restore --exit-on-error --no-owner --no-acl --dbname="$RESTORE_PG_URL" nipkaart.dump
 ```
 
-Meilisearch is derived data. A one-time rehearsal rebuilt the three parking indexes from PostgreSQL, verifying public IDs and coordinates. The new Scout regression test and disposable CI service were removed at the owner's request; permanent coverage is deferred to the planned Pest 5 work.
-
-For a fresh application deployment, configure `SCOUT_DRIVER=meilisearch`, the host/key and worker settings, then run `php artisan scout:import` separately for `App\Models\ParkingSpace`, `App\Models\ParkingMunicipal` and `App\Models\ParkingOffstreet`. Wait for asynchronous Meilisearch tasks and inspect failures before treating search as ready.
+Parking-record search now reads PostgreSQL directly under #1195. Enable `pg_trgm` using the additive migration and verify `/api/search` after restore. See the [search audit and operational procedure](infrastructure.md). No external search service, synchronization or rebuild is required.
 
 ## Validation and deployment boundary
 
-Local validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 15 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the existing test suite against PostgreSQL. The newly introduced spatial, relationship, notification and Scout regression tests were removed at the owner's request; the earlier successful runs remain implementation evidence, not ongoing regression coverage. Remote CI and review status are reported on the PR.
+Historical #1180 validation includes fresh DDEV/PHP 8.4/PostgreSQL 18.4/PostGIS 3.6 startup, all 15 migrations, baseline/sample seeders, SQL-coordinate derivation, radius/distance/viewport behavior, mixed-source visibility, real GiST query-plan use, native backup/restore and real Scout rebuilds. CI runs the existing test suite against PostgreSQL. The newly introduced spatial, relationship, notification and Scout regression tests were removed at the owner's request; the earlier successful runs remain implementation evidence, not ongoing regression coverage. Remote CI and review status are reported on the PR.
 
 This is a tested implementation, not a production deployment. Production provisioning, enabling PostGIS with the actual role, choosing newly imported datasets, configuring the backup destination/retention, and application rollout remain operational actions. No historical-data transfer is required under the fresh-start decision.
 
