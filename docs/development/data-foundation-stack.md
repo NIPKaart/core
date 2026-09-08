@@ -1,6 +1,6 @@
 # Concrete techstack voor batchimports
 
-Status: aanbevolen implementatiestack, 2026-09-08. De gekozen batchaanpak vervangt de eerdere aanbeveling voor een interne worker-API en machine-authenticatie via Sanctum. Voor #1214 zijn opis/json-schema 2.6.0 en de geïsoleerde Python-testdependency jsonschema 4.26.0 met expliciete toestemming toegevoegd en gelockt. Er zijn geen diensten geprovisioned. Overige nieuwe dependencies worden per implementatie beoordeeld conform de repositoryregels. Zie [productbasis](../product/data-foundation.md), [batchcontract](data-import-contract.md) en [uitvoering](data-foundation-delivery.md).
+Status: aanbevolen implementatiestack, 2026-09-08. De gekozen batchaanpak vervangt de eerdere aanbeveling voor een interne worker-API en machine-authenticatie via Sanctum. Voor #1214 zijn opis/json-schema 2.6.0 in core en jsonschema 4.26.0 in disabled-parking met expliciete toestemming toegevoegd en gelockt. Er zijn geen diensten geprovisioned. Overige nieuwe dependencies worden per implementatie beoordeeld conform de repositoryregels. Zie [productbasis](../product/data-foundation.md), [batchcontract](data-import-contract.md) en [uitvoering](data-foundation-delivery.md).
 
 ## 1. Eerste versie
 

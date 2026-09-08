@@ -46,7 +46,7 @@ Deze acties horen bij de eerste adapter in [disabled-parking#774](https://github
 
 Records zijn UTF-8 zonder BOM, één JSON-object per regel, uitsluitend LF en altijd een afsluitende LF. Geen compressie, lege regels of impliciete ontbrekende velden. Producers schrijven JSON via een encoder, geen handmatige stringconcatenatie. Tijdstippen gebruiken UTC-seconden `YYYY-MM-DDTHH:mm:ssZ`, echte kalenderdatums, geen leap seconds. Nullwaarden staan expliciet in het bestand. Onbekende velden worden afgewezen; uitbreidingen krijgen een afgesproken contractversie. V1 omvat alleen gemeentelijke snapshots, geen offstreet- of livevelden.
 
-`SnapshotContract::check()` en de onafhankelijke Python-referentie controleren een lokaal recordsbestand en de **exacte manifestbytes**. Het pad en de context komen van de vertrouwde consumer, niet uit het manifest. Context bevat bron/geografische toelating, actuele config/scope en de volledige bewaarde batch-/sequencehistorie voor deze source. Een manifest kan zijn eigen bron of scope niet toelaten.
+`SnapshotContract::check()` in core en de onafhankelijke Python-referentie in disabled-parking controleren een lokaal recordsbestand en de **exacte manifestbytes**. Het pad en de context komen van de vertrouwde consumer, niet uit het manifest. Context bevat bron/geografische toelating, actuele config/scope en de volledige bewaarde batch-/sequencehistorie voor deze source. Een manifest kan zijn eigen bron of scope niet toelaten.
 
 | Resultaat | Betekenis |
 | --- | --- |
@@ -57,7 +57,7 @@ Records zijn UTF-8 zonder BOM, één JSON-object per regel, uitsluitend LF en al
 | `review` | Technisch geldig maar leeg, gewijzigde config/scope, onbekende/persoonlijke toegang of onbegrepen beperkingen. Geen automatische publicatie. |
 | `valid` | De begrensde contractcheck slaagt. **Geen publicatiebesluit**: eerste import, aantalsdaling, brondatumregressie, verschillen en correctiebehoud worden pas in #1215/#1218 beoordeeld. |
 
-Een identieke levering moet ook dezelfde manifestserialisatie behouden. Hashes omvatten exacte bytes, inclusief LF. De checker raadpleegt geen objectopslag of database en bewijst geen bestaande objectversie, locking, queueherstel of transactionele publicatie. De consumer moet state onder lock opnieuw controleren vóór publicatie. De Python-code is een kleine testreferentie; de producerimplementatie blijft in disabled-parking.
+Een identieke levering moet ook dezelfde manifestserialisatie behouden. Hashes omvatten exacte bytes, inclusief LF. De checker raadpleegt geen objectopslag of database en bewijst geen bestaande objectversie, locking, queueherstel of transactionele publicatie. De consumer moet state onder lock opnieuw controleren vóór publicatie. Zowel de Python-contractproef als de latere producerimplementatie staan in disabled-parking. Core bevat alleen schemas, fixtures en PHP. Offstreet krijgt een eigen aansluiting wanneer zijn werkpakket start.
 
 ## Verplichte pilotlimieten
 
@@ -77,15 +77,23 @@ De 180 werkelijk gemeten bronrecords normaliseren in de proef naar 79.566 bytes,
 
 ## Reproduceren
 
-Vanaf de repositoryroot:
+In core:
 
 ```sh
 vendor/bin/pest tests/Unit/Support/SnapshotContractTest.php --no-tia --compact
-poetry -C tests/Support/import_contract env use python3.14
-poetry -C tests/Support/import_contract install --no-interaction
-poetry -C tests/Support/import_contract run python -m unittest -v
 ```
 
-PHP en Python gebruiken dezelfde bestanden uit [de fixturelijst](../../tests/Fixtures/import/v1/cases.json). De Python-testreference is uitsluitend contractcompatibiliteit, zonder bronpackages, netwerkfetches of producerlogica. Een aparte deadlineproef gebruikt een gecontroleerde monotone klok. Normale CI doet geen bronrequests en gebruikt de vastgelegde dependencies. Een nieuwe read-only bronproef hoort in de importrepository of een tijdelijke onderzoeksomgeving, met `eindhoven==5.1.0` en CPython 3.14.2. Gebruik de bovenstaande package-aanroep en controleer op dezelfde response `nhits`, rijenaantal, unieke IDs en bytes. De publieke [packagevoorbeeldcode](https://github.com/klaasnicolaas/python-eindhoven/tree/v5.1.0/examples) toont het ophalen. Voor de meting is via een aiohttp trace callback de ongewijzigde response geteld; de package zelf exposeert de completenessmetadata nog niet.
+In de lokale checkout van disabled-parking, met een pad naar de core-checkout waarvan je het contract wilt testen:
+
+```sh
+poetry install --only contract --no-interaction
+NIPKAART_CORE_PATH=../core poetry run python -m unittest discover -s tests/contracts -v
+```
+
+PHP en Python gebruiken dezelfde bestanden uit [de fixturelijst](../../tests/Fixtures/import/v1/cases.json); kopieer de schemas of fixtures niet naar een tweede repository. Disabled-parking CI pint de core-commit, zodat een wijziging in main niet ongemerkt zijn contract verandert. Bij een nieuwe contractversie worden eerst de core-schemas/fixtures beoordeeld en daarna expliciet de producerpin en mapping bijgewerkt. Beide PR's moeten slagen voordat #1214 volledig is afgerond.
+
+De Python-test is uitsluitend contractcompatibiliteit en voert geen bronfetches of uploads uit. Een aparte deadlineproef gebruikt een gecontroleerde monotone klok. Normale CI doet geen bronrequests en gebruikt de vastgelegde dependencies.
+
+Een nieuwe read-only bronproef hoort in de importrepository of een tijdelijke onderzoeksomgeving, met `eindhoven==5.1.0` en CPython 3.14.2. Gebruik de bovenstaande package-aanroep en controleer op dezelfde response `nhits`, rijenaantal, unieke IDs en bytes. De publieke [packagevoorbeeldcode](https://github.com/klaasnicolaas/python-eindhoven/tree/v5.1.0/examples) toont het ophalen. Voor de meting is via een aiohttp trace callback de ongewijzigde response geteld; de package zelf exposeert de completenessmetadata nog niet.
 
 Herhaal die proef bij bron-/packagewijzigingen; voeg live netwerkafhankelijkheid of een bronadapter niet toe aan core. De normale tests blijven offline.
