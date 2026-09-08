@@ -1,6 +1,6 @@
-# Contractproef 1.0: Eindhoven
+# Brononderzoek: kandidaat Eindhoven
 
-Status: implementatie van [#1214](https://github.com/NIPKaart/core/issues/1214), 2026-09-08. Dit bevriest het gemeentelijke snapshotformaat en levert offline PHP/Python-contractchecks. Eindhoven is de gekozen **contractpilot**; publicatie blijft geblokkeerd door onderstaande bronvoorwaarden. Er is geen producer, opslagintegratie, database-import of productieaansluiting gebouwd.
+Status: onderzochte kandidaat voor [#1214](https://github.com/NIPKaart/core/issues/1214), 2026-09-08. Eindhoven is nog geen geaccepteerde aansluiting of bewezen bruikbare pilotbron. Onderstaande bevindingen blijven behouden; de selectie staat open. Er is geen definitief contract 1.0 en geen producer, database-import of productieaansluiting gebouwd.
 
 ## Bron en bewijs
 
@@ -23,7 +23,7 @@ Read-only meting op 2026-09-08, met `ODPEindhoven.locations(limit=1000, parking_
 
 Dit is één actuele netwerkproef, geen beschikbaarheids-SLA en geen bewijs van volledige gemeentelijke dekking. De metadata noemt ook `temporal: t/m juli 2018`. Portalverwerking in 2026 bewijst daarom geen recente veldcontrole.
 
-## Mapping en concrete aansluitvoorwaarden voor #774
+## Voorlopige mapping en open bronvragen
 
 | Onderwerp | Afspraak en beperking |
 | --- | --- |
@@ -38,62 +38,18 @@ Dit is één actuele netwerkproef, geen beschikbaarheids-SLA en geen bewijs van 
 | Datums | `record_timestamp` en portal `modified` zijn verwerkingsmetadata; niet presenteren als veldwaarneming. In de genormaliseerde pilot is `source_updated_at=null`. `fetched_*` beschrijft alleen onze fetch. |
 | Hergebruik | De datasetmetadata is de basis voor het opgenomen minimale fixture. Hercontroleer voorwaarden en bronbetekenis vóór aansluiting; licentietekst of gebruiksvoorwaarden veranderen niet ongemerkt mee met een manifest. |
 
-Deze acties horen bij de eerste adapter in [disabled-parking#774](https://github.com/NIPKaart/disabled-parking/issues/774). Het contract kan onafhankelijk worden geïmplementeerd door #1215. Brononderzoek blijft buiten core; bovenstaande punten zijn concrete toelatingsvoorwaarden voor deze ene aansluiting.
+Deze bronvragen moeten bij #1214 worden opgelost of tot een andere bronkeuze leiden. Daarna bouwt [disabled-parking#774](https://github.com/NIPKaart/disabled-parking/issues/774) de export en #1215 de coreverwerking. Brononderzoek blijft buiten core; bovenstaande punten zijn concrete toelatingsvoorwaarden voor deze ene aansluiting.
 
-## Normatief formaat en validatiegrens
+## Status van de eerdere contractproef
 
-[Manifestschema](../../resources/schemas/import/v1/manifest.schema.json) en [gemeentelijk recordschema](../../resources/schemas/import/v1/municipal-record.schema.json) zijn JSON Schema Draft 2020-12, contract `1.0`. Er zijn geen externe `$ref`-verwijzingen of schema's uit leveringen. De validator laadt uitsluitend deze lokale vertrouwde schema's; Python heeft bovendien een resolver die netwerkreferenties weigert. Een `$id` is een identifier, geen te downloaden bestand.
+De schemas, gesaniteerde voorbeelden en PHP-validator in [PR #1222](https://github.com/NIPKaart/core/pull/1222) zijn experimenteel. De paden `resources/schemas/import/v1` en de daarin opgenomen waarde `1.0` zijn namen uit dat prototype, geen vrijgegeven contractversie. De [voorlopige gegevenslevering](data-import-contract.md) is het actuele uitgangspunt.
 
-Records zijn UTF-8 zonder BOM, één JSON-object per regel, uitsluitend LF en altijd een afsluitende LF. Geen compressie, lege regels of impliciete ontbrekende velden. Producers schrijven JSON via een encoder, geen handmatige stringconcatenatie. Tijdstippen gebruiken UTC-seconden `YYYY-MM-DDTHH:mm:ssZ`, echte kalenderdatums, geen leap seconds. Nullwaarden staan expliciet in het bestand. Onbekende velden worden afgewezen; uitbreidingen krijgen een afgesproken contractversie. V1 omvat alleen gemeentelijke snapshots, geen offstreet- of livevelden.
+De eerdere offline proef dekte onder meer voorloopnullen, onbekend versus nul, ongeldige coördinaten, incomplete/lege bestanden en conflicterende leveringen. Er is nog geen producer of beoordeelde core-import gebouwd. De Python-proef staat lokaal en ongecommit in disabled-parking; een bijbehorende PR en vastgepinde CI-workflow bestaan nog niet. Core bevat geen Python-code of Poetry-omgeving.
 
-`SnapshotContract::check()` in core en de onafhankelijke Python-referentie in disabled-parking controleren een lokaal recordsbestand en de **exacte manifestbytes**. Het pad en de context komen van de vertrouwde consumer, niet uit het manifest. Context bevat bron/geografische toelating, actuele config/scope en de volledige bewaarde batch-/sequencehistorie voor deze source. Een manifest kan zijn eigen bron of scope niet toelaten.
+De metingen uit de eerdere proef blijven onderzoeksgegevens: 180 bronrecords werden 79.566 bytes, met maximaal 457 bytes per regel. Een synthetische 10.000-recordproef gebruikte 4.409.201 bytes; validatietijden waren PHP 0,024 / 0,600 seconden en Python 0,051 / 1,900 seconden voor respectievelijk 180 / 10.000 records. Dit rechtvaardigt geen definitief formaat, verplichte productielimieten of claim over databasepublicatie.
 
-| Resultaat | Betekenis |
-| --- | --- |
-| `invalid` | Vorm, integriteit, volledigheid, geografie of limiet faalt; niet verwerken. |
-| `conflict` | Bekende batch-ID met andere exacte manifestbytes, of reeds gebruikte sequence; niet verwerken zonder onderzoek. |
-| `duplicate` | Dezelfde batch en exacte manifesthash na bestandsvalidatie; consumer bepaalt hervatten of overslaan. |
-| `superseded` | Sequence ouder dan/gelijk aan de vertrouwde high-watermark; nooit nieuwere data terugdraaien. |
-| `review` | Technisch geldig maar leeg, gewijzigde config/scope, onbekende/persoonlijke toegang of onbegrepen beperkingen. Geen automatische publicatie. |
-| `valid` | De begrensde contractcheck slaagt. **Geen publicatiebesluit**: eerste import, aantalsdaling, brondatumregressie, verschillen en correctiebehoud worden pas in #1215/#1218 beoordeeld. |
+## Eerstvolgende bronbeslissing
 
-Een identieke levering moet ook dezelfde manifestserialisatie behouden. Hashes omvatten exacte bytes, inclusief LF. De checker raadpleegt geen objectopslag of database en bewijst geen bestaande objectversie, locking, queueherstel of transactionele publicatie. De consumer moet state onder lock opnieuw controleren vóór publicatie. Zowel de Python-contractproef als de latere producerimplementatie staan in disabled-parking. Core bevat alleen schemas, fixtures en PHP. Offstreet krijgt een eigen aansluiting wanneer zijn werkpakket start.
+Eindhoven kan pas de bruikbare pilotbron worden nadat bronidentiteit, aantoonbare volledigheid en toegangsbetekenis voldoende zijn vastgesteld. Een generieke package-uitbreiding kan daarvoor nodig zijn. Als die gaten niet praktisch kunnen worden opgelost, kiezen we een andere bron voor de eerste keten. We schuiven deze selectie niet als voldongen feit door naar de adapterimplementatie.
 
-## Verplichte pilotlimieten
-
-| Limiet | Waarde |
-| --- | --- |
-| Ready-manifest | 16.384 bytes |
-| JSONL-regel inclusief LF | 16.384 bytes |
-| Recordsbestand | 33.554.432 bytes (32 MiB), ongecomprimeerd |
-| Records per snapshot | 10.000 |
-| Fetch inclusief requests, retries en parsing | 1.800 seconden |
-| Lokale contractvalidatie | 30 seconden monotone verstreken tijd |
-| Probe | 30 seconden totaal, 15 seconden request-timeout, één fetch, geen automatische retries |
-
-Deze zijn harde pilotplafonds, geen schaalbelofte. Producer en consumer moeten ze afdwingen. De lokale validator telt werkelijke bytes en regels tijdens streaming; een manifest mag niet met kleine metadata een groter bestand toestaan. Deadlinecontrole gebeurt tussen regels en bij afronding. De opslagdownload moet in #1215/#1216 zelfstandig een byte- en wall-clockgrens krijgen; een geblokkeerde storage-read wordt niet door deze lokale checker onderbroken. Een nieuwe bron die niet past krijgt een bewuste limiet-/capaciteitsbeslissing, geen stilzwijgende verhoging.
-
-De 180 werkelijk gemeten bronrecords normaliseren in de proef naar 79.566 bytes, maximaal 457 bytes per regel. Een synthetische 10.000-recordproef gebruikt 4.409.201 bytes. De ceilings bieden ruimte boven deze bron, met begrensd geheugengebruik voor de set externe ID's. Gemeten validatietijden voor 180 / 10.000 records: PHP 0,024 / 0,600 seconden, Python 0,051 / 1,900 seconden. Dit is contractvalidatie op de ontwikkelmachine; databasepublicatie en stagingcapaciteit moeten afzonderlijk worden gemeten.
-
-## Reproduceren
-
-In core:
-
-```sh
-vendor/bin/pest tests/Unit/Support/SnapshotContractTest.php --no-tia --compact
-```
-
-In de lokale checkout van disabled-parking, met een pad naar de core-checkout waarvan je het contract wilt testen:
-
-```sh
-poetry install --only contract --no-interaction
-NIPKAART_CORE_PATH=../core poetry run python -m unittest discover -s tests/contracts -v
-```
-
-PHP en Python gebruiken dezelfde bestanden uit [de fixturelijst](../../tests/Fixtures/import/v1/cases.json); kopieer de schemas of fixtures niet naar een tweede repository. Disabled-parking CI pint de core-commit, zodat een wijziging in main niet ongemerkt zijn contract verandert. Bij een nieuwe contractversie worden eerst de core-schemas/fixtures beoordeeld en daarna expliciet de producerpin en mapping bijgewerkt. Beide PR's moeten slagen voordat #1214 volledig is afgerond.
-
-De Python-test is uitsluitend contractcompatibiliteit en voert geen bronfetches of uploads uit. Een aparte deadlineproef gebruikt een gecontroleerde monotone klok. Normale CI doet geen bronrequests en gebruikt de vastgelegde dependencies.
-
-Een nieuwe read-only bronproef hoort in de importrepository of een tijdelijke onderzoeksomgeving, met `eindhoven==5.1.0` en CPython 3.14.2. Gebruik de bovenstaande package-aanroep en controleer op dezelfde response `nhits`, rijenaantal, unieke IDs en bytes. De publieke [packagevoorbeeldcode](https://github.com/klaasnicolaas/python-eindhoven/tree/v5.1.0/examples) toont het ophalen. Voor de meting is via een aiohttp trace callback de ongewijzigde response geteld; de package zelf exposeert de completenessmetadata nog niet.
-
-Herhaal die proef bij bron-/packagewijzigingen; voeg live netwerkafhankelijkheid of een bronadapter niet toe aan core. De normale tests blijven offline.
+De bestaande echte bronrij in `tests/Fixtures/import/v1/pilot-source.json` is bruikbaar onderzoeksmateriaal. De afgeleide fixture met onbekende toegang en benodigde beoordeling is geen bewijs dat de bron als algemeen toegankelijke parkeerdata kan worden gepubliceerd. Voor afronding van #1214 is één bruikbare bron met een onderbouwde voorlopige voorbeeldlevering nodig; dat staat nog open.

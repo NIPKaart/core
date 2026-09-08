@@ -1,5 +1,7 @@
 # Europese databasis voor NIPKaart
 
+Actuele uitvoeringsgrens: eerst [één bruikbare bron en een voorlopige levering](../development/data-import-contract.md), daarna een lokale export en beoordeelde core-import. De technische uitwerkingen hieronder zijn richtinggevend voor later; PR #1222 is een onvoltooid prototype, geen definitief contract of bewijs van die keten.
+
 Status: overeengekomen richting met een voorgesteld technisch ontwerp; nog niet geïmplementeerd. Vastgelegd op 2026-09-08 naar aanleiding van de product- en architectuurgesprekken met de eigenaar. Technische defaults en open beslissingen zijn hieronder expliciet gemarkeerd. Dit document is geen bewijs van werkende imports, Europese dekking of productieacceptatie.
 
 De gekozen uitvoering is een zelfstandige batchaanpak: importrepositories plannen het ophalen en publiceren complete bestanden; core ontdekt en verwerkt die leveringen. Dit vervangt het eerdere voorstel waarin core opdrachten aan workers uitdeelde.

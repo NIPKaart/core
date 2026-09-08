@@ -1,8 +1,8 @@
 # Concrete techstack voor batchimports
 
-Status: aanbevolen implementatiestack, 2026-09-08. De gekozen batchaanpak vervangt de eerdere aanbeveling voor een interne worker-API en machine-authenticatie via Sanctum. Voor #1214 zijn opis/json-schema 2.6.0 in core en jsonschema 4.26.0 in disabled-parking met expliciete toestemming toegevoegd en gelockt. Er zijn geen diensten geprovisioned. Overige nieuwe dependencies worden per implementatie beoordeeld conform de repositoryregels. Zie [productbasis](../product/data-foundation.md), [batchcontract](data-import-contract.md) en [uitvoering](data-foundation-delivery.md).
+Status: opties voor latere implementatie, 2026-09-08. Eerst bewijzen we de [handmatige keten](data-import-contract.md). De onderstaande stack legt geen aanvullende voorwaarden op aan #1214 en is geen infrastructuurbesluit. Opis/json-schema is onderdeel van de onvoltooide core-proef; jsonschema staat in lokale, ongecommitte wijzigingen in disabled-parking. Deze dependencies zijn goedgekeurd, maar bewijzen geen definitief ontwerp. Er zijn geen diensten geprovisioned. De bestaande Laravel/PostgreSQL- en Poetry-basis blijft gelden.
 
-## 1. Eerste versie
+## 1. Opties voor implementatie na de bron- en leveringproef
 
 | Onderdeel | Concrete keuze | Status en reden |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ Poetry installeert gelockte dependencies tijdens imagebuild. Start productie zon
 
 ## 4. Contract en coreverwerking
 
-De schemas in een core-contractrelease zijn normatief. Dataclasses valideren geen JSON. Python gebruikt [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/), PHP [Opis](https://opis.io/json-schema/2.x/); A bewijst dezelfde Draft 2020-12-subset met positieve en negatieve fixtures. Datum-/URI-formatchecks zijn expliciet en externe netwerkresolutie van schema-referenties staat uit. Er is voor bestanduitwisseling geen OpenAPI-specificatie nodig.
+De schemas in een core-contractrelease zijn normatief. Dataclasses valideren geen JSON. Python gebruikt [jsonschema](https://python-jsonschema.readthedocs.io/en/stable/), PHP [Opis](https://opis.io/json-schema/2.x/); Als deze schema-aanpak wordt gekozen, toetsen de implementatiestappen dezelfde subset met positieve en negatieve fixtures. #1214 stelt nog geen definitieve schema-release vast. Datum-/URI-formatchecks zijn expliciet en externe netwerkresolutie van schema-referenties staat uit. Er is voor bestanduitwisseling geen OpenAPI-specificatie nodig.
 
 Core gebruikt unieke batchregistratie, sequencecontrole en transacties voor idempotente verwerking. Jobs worden na commit beschikbaar gemaakt en een herstelcontrole herplant duurzaam geregistreerde niet-afgeronde imports. Alleen after-commit dispatch is geen garantie tegen een crash vóór dispatch; zie de [queue-transactiedocumentatie](https://laravel.com/docs/13.x/queues#jobs-and-database-transactions).
 

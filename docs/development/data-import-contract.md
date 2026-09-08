@@ -1,192 +1,66 @@
-# Batchimportcontract
+# Voorlopige gegevenslevering
 
-Status: snapshotcontract 1.0, 2026-09-08; schemas en offline contractvalidatie zijn uitgewerkt in [de Eindhoven-contractproef](data-import-pilot.md). De eigenaar heeft gekozen voor geplande batchleveringen. Dit vervangt het eerdere workerprotocol; core deelt geen opdrachten uit en registreert geen workers. Zie de [productbasis](../product/data-foundation.md), [techstack](data-foundation-stack.md) en het [uitvoeringsplan](data-foundation-delivery.md). Opslaglevering, scheduling, review en publicatie zijn vervolgstappen en nog niet geïmplementeerd.
+Status: werkafspraak voor de eerste handmatige keten, 2026-09-08. Er is nog geen vrijgegeven contract 1.0. De schemas en validator in [PR #1222](https://github.com/NIPKaart/core/pull/1222) zijn een onvoltooid prototype; hun opslagvelden en uitvoeringsmechanismen zijn geen vastgestelde eisen. Dit document vervangt de eerdere verplichting om eerst een volledig automatisch afleverprotocol te bouwen.
 
-## 1. Eigenaarschap
+Het doel is één bruikbare bron via één lokaal bestand beoordeeld in core verwerken. Zie [#1214](https://github.com/NIPKaart/core/issues/1214), de [bronbevindingen](data-import-pilot.md) en de [uitvoeringsvolgorde](data-foundation-delivery.md).
 
-De repositories `disabled-parking` en `offstreet-parking` beheren adapters, bronconfiguratie en ophaalplanning. Een geplande Python-uitvoering gebruikt universele bronpackages en produceert een genormaliseerde levering. Core ontdekt gereedgemelde leveringen en beheert validatie, beoordeling, correcties en publicatie.
+## Verantwoordelijkheden
 
-Het bestandcontract is de grens. Python heeft geen coretoken of databaseverbinding nodig; core heeft geen gemeentelijke API-credentials nodig. Private objectopslag heeft afzonderlijke toegangsrechten voor producent en consumer. Universele packages kennen dit NIPKaart-contract niet.
-
-De eerste versie ondersteunt volledige snapshots. Delta's/cursors volgen alleen wanneer een concrete bron ze nodig maakt. Livebezetting is een aparte leveringssoort en verandert geen catalogusidentiteit.
-
-## 2. Configuratie zonder twee planners
-
-| Gegeven | Plaats |
+| Onderdeel | Verantwoordelijkheid |
 | --- | --- |
-| Endpoint, adapter, broncredentials, filters en ophaalritme | Importrepository/configuratie en secrets van de importomgeving |
-| Stabiele source-ID, scopeversie en contractversie | Afspraak tussen importconfiguratie en toegelaten dataset in core |
-| Toegelaten opslagprefix, recordsoort, geografische mapping, voorwaarden | Core-datasetregistratie |
-| Verwachte maximale leveringsleeftijd | Core als signaleringsgrens; geen bronplanning |
-| Publicatiebeleid, zichtbaarheid en correcties | Core |
+| Universele bronpackage | Begrijpt de gemeentelijke API, haalt de afgesproken selectie volledig op en exposeert bron-ID's, oorspronkelijke waarden en informatie over volledigheid. Kent NIPKaart niet. |
+| disabled-parking | Kiest dataset/filter, vertaalt de betekenis naar NIPKaart en maakt de lokale levering. Hier staan Python-code, bronpackages en Python-tests. Schrijft niet rechtstreeks in de core-database. |
+| core | Beschrijft welke gegevens het kan verwerken, valideert die in PHP, toont verschillen en beheert beoordeling, publicatie en communitycorrecties. Bevat geen Python-omgeving of gemeentelijke API-clients. |
+| offstreet-parking | Vervult dezelfde producerrol voor voorzieningen zodra dat werkpakket begint. We ontwerpen nu geen gedeeld producerframework. |
 
-Een nieuwe source of scope wordt eerst in core toegelaten. Een manifest kan dat niet zelf autoriseren. Scopewijzigingen krijgen een versie en een beoordeelde baseline. Ophalen pauzeren gebeurt in de importomgeving; verwerken/publiceren pauzeren gebeurt in core. Het beheer maakt dit onderscheid zichtbaar. Er is aanvankelijk geen coreknop om een nieuwe fetch te starten.
+Een bronpackage mag generieke verbeteringen nodig hebben voor paginering of bron-ID's. Dat is geen reden om het ophalen naar core te verplaatsen. Onderzoek naar mogelijke bronnen blijft buiten het platform.
 
-## 3. Een levering gereedmelden
+## Eén voorbeeld
 
-Voorgestelde opslagstructuur:
+Een fictieve gemeente biedt parkeerplek `000123` aan, aan de Voorbeeldstraat, op een bekende WGS84-locatie. Het bronveld betekent expliciet twee algemene gehandicaptenparkeerplaatsen. Dit voorbeeld beschrijft een gewenste gegevensstroom, niet een bevestigde interpretatie van de Eindhoven-dataset.
 
-```text
-sources/<source_id>/batches/<batch_id>/records.jsonl
-sources/<source_id>/ready/<batch_id>.json
-```
+De package geeft de oorspronkelijke gegevens terug. De adapter in disabled-parking vertaalt deze naar onderstaande betekenis. Core herkent de plek aan de combinatie van dataset en bron-ID.
 
-Een batch heeft een unieke batch-ID, een binnen de source oplopende `source_sequence`, scopeversie en één recordsbestand. Het bestand is UTF-8 JSONL, in de pilot ongecomprimeerd en begrensd. Het ready-bestand is het manifest en wordt als laatste geschreven.
+| Gegeven | Voorbeeld | Betekenis |
+| --- | --- | --- |
+| Dataset | `voorbeeldgemeente-toegankelijk` | Aangesloten dataset met bekende herkomst en geografische mapping |
+| Unieke levering | `levering-001` | Herkennen dat hetzelfde bestand opnieuw wordt aangeboden; geen voorgeschreven UUID- of opslagmechanisme |
+| Opgehaald op | `2026-09-08T08:00:00Z` | Tijdstip van onze fetch, geen bewijs van veldcontrole |
+| Selectie | Alle algemene gehandicaptenparkeerplaatsen in deze dataset | Expliciete afbakening om volledigheid en ontbrekende records te kunnen beoordelen |
+| Volledigheid | Volledig, met onderbouwing uit de bronresponse | Alleen verklaren wanneer alle resultaten van de selectie zijn opgehaald |
+| Formaatrevisie | Voorlopig voorbeeld A | Nog geen stabiele release of compatibiliteitsbelofte |
+| Bron-ID | `000123` | String; behoud voorloopnullen, gebruik geen coördinaten als identiteit |
+| Positie | Latitude `52.3702`, longitude `4.8952` | Benoemde WGS84-coördinaten, geen impliciete volgorde |
+| Toegankelijk aantal | `2` | Niet-negatief geheel aantal; onbekend blijft `null` |
+| Toegang | Algemeen toegankelijk met gehandicaptenparkeerkaart | Onderscheiden van persoonsgebonden en onbekende toegang |
+| Beperkingen | Onbekend tenzij de bron ze expliciet beschrijft | Geen ontbrekend veld vertalen naar “geen beperkingen” |
+| Brondatum | Onbekend | Alleen invullen wanneer de betekenis van de brondatum bekend is |
 
-1. De runner reserveert een sequence vóór ophalen en bewaart batchidentiteit en uitvoeringsmoment duurzaam. Eén producer is eigenaar van een source; een hostlock voorkomt overlap tijdens de eerste single-hostopzet.
-2. De adapter haalt volledig op, vertaalt en valideert. Ontbrekende pagina's of parsefouten maken de levering onvolledig.
-3. De runner schrijft een tijdelijk bestand, berekent recordaantal, bytes en SHA-256 en uploadt naar de unieke batchkey.
-4. De referentieopslag heeft versioning; de runner bewaart de exacte recordsobjectversion-ID.
-5. Alleen na succesvolle volledige bestandsupload schrijft de runner het ready-manifest met key, version-ID en checksum. Gebruik create-only voor manifestkeys waar ondersteund; dezelfde batch-ID krijgt nooit andere inhoud.
-6. Core legt ook de manifestversie/checksum vast en leest de exacte recordsversie. Een latere key-overwrite verandert een al geaccepteerde levering niet.
+De gekozen echte bron moet een toegestane bronrij en een veld-voor-veldvertaling opleveren. Dit fictieve voorbeeld is daarvoor geen vervanging. Het is nog niet besloten of leveringsinformatie en records in één bestand of twee bestanden komen; een bestaande JSONL/manifestproef mag een mogelijkheid aantonen, maar legt de keuze niet vast.
 
-Bij een onzekere uploadrespons controleert de runner de bestaande versie en checksum. Hetzelfde geproduceerde bestand kan opnieuw worden gereedgemeld. Opnieuw ophalen van mogelijk veranderde data is een nieuwe batch met een nieuwe sequence. Gaten door mislukte runs zijn toegestaan. Na restart/restore wordt de sequence niet teruggezet: herstel aan de hand van duurzaam bewaarde staat en de hoogste reeds gereedgemelde sequence. De lokale gereserveerde high-watermark blijft leidend voor nog niet gereedgemelde runs. Als staat verloren is, retentie oude manifesten heeft verwijderd of oude producers nog kunnen schrijven: pauzeer en reconcileer met core plus opslag, trek oude schrijfrechten in en kies pas daarna een sequence boven alle bekende reserveringen/leveringen. Een lege listing is geen toestemming om bij 1 te beginnen.
+## Gedrag bij vervolggevallen
 
-Een batch-ID bepaalt geen volgorde. Sequence bepaalt de catalogusvolgorde binnen de source, niet directoryvolgorde, UUID of eindtijd. Beschikbare brondatum/versie wordt daarnaast gecontroleerd; ook een nieuwe fetch kan een oude bronversie teruggeven. Dat vereist beoordeling.
-
-Er is in de pilot geen mutable `latest.json` als enige verwijzing. Het ready-prefix bevat de ontdekbare reeks, zodat late uploads geen nieuwere levering onzichtbaar maken.
-
-## 4. Ontdekken en idempotent verwerken
-
-Core inspecteert periodiek de toegelaten ready-prefixen via de opslag-SDK met volledige paginering. De pilot scant de bewaarde manifestreeks per bron en registreert `(source_id, batch_id)` uniek. Listingvolgorde is geen uitvoeringsvolgorde; core sorteert op source-sequence.
-
-Retentie van manifesten én recordsversies is langer dan de afgesproken maximale core-uitval. Python krijgt geen ontvangstbevestiging, dus opslagretentie is onderdeel van de leveringsgarantie. Uitval voorbij die termijn vereist een nieuwe volledige snapshot en een expliciete herstelactie. Een index of opslagnotificatie kan later discovery versnellen; periodieke reconciliatie blijft nodig. Een gepagineerde volledige scan is alleen de pilotkeuze bij gemeten beheersbaar volume.
-
-Core accepteert uitsluitend geconfigureerde source/prefix/scope/recordsoort/contractversie. Het volgt geen willekeurige URL uit het manifest. Cross-sourcekeys, ongeldige paden, onbekende versies, te grote bestanden en ongeldige inhoud worden afgewezen.
-
-Dezelfde batch met dezelfde manifest-/artifactidentiteit wordt overgeslagen of hervat. Dezelfde batch-ID met andere inhoud is een integriteitsconflict. Een dubbele sequence met een andere batch vereist eveneens beoordeling. Oudere sequences worden eventueel `superseded`, maar draaien geen nieuwere publicatie terug.
-
-Na een crash tussen ontvangstregistratie en queuedispatch herplant een periodieke herstelcontrole niet-afgeronde imports. De Laravel-taken blijven idempotent. Er is geen HTTP-completionprotocol nodig.
-
-## 5. Illustratief ready-manifest
-
-Dit is een syntactisch JSON-voorbeeld; IDs, versies en checksum zijn illustratief. De normatieve [schema's en fixtures](data-import-pilot.md#normatief-formaat-en-validatiegrens) leggen verplichte velden en enums vast. Dit voorbeeld is geen gemeten of uploadbaar artifact.
-
-```json
-{
-  "contract_version": "1.0",
-  "batch_id": "batch-example-001",
-  "source_id": "source-example-amsterdam",
-  "source_sequence": 42,
-  "source_config_version": 1,
-  "scope_version": 1,
-  "mode": "snapshot",
-  "record_kind": "municipal",
-  "adapter": {"key": "amsterdam.accessible_parking", "version": "0.1.0"},
-  "packages": [{"name": "example-source-package", "version": "1.0.0"}],
-  "fetched_started_at": "2026-09-08T08:00:00Z",
-  "fetched_finished_at": "2026-09-08T08:00:20Z",
-  "source_updated_at": null,
-  "source_version": null,
-  "completeness": {
-    "status": "complete",
-    "pages_fetched": 2,
-    "pagination_exhausted": true,
-    "expected_records": null,
-    "records_seen": 125,
-    "records_filtered_out": 2,
-    "records_emitted": 123,
-    "records_failed": 0
-  },
-  "artifact": {
-    "key": "sources/source-example-amsterdam/batches/batch-example-001/records.jsonl",
-    "version_id": "example-object-version",
-    "format": "jsonl",
-    "bytes": 45678,
-    "record_count": 123,
-    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  }
-}
-```
-
-De runner verklaart volledigheid; core toetst aantallen, scope, bronkennis en inhoud. Uitgeputte paginering bewijst geen consistente momentopname als de bron tijdens ophalen verandert. Die beperking wordt in adapter-/bronbeleid vastgelegd. Filterredenen zijn expliciet en aantallen sluiten aan. Een volledige maar onverwacht lege snapshot kan gereedgemeld worden en wordt in core tegengehouden; een technisch mislukte run krijgt geen ready-manifest.
-
-## 6. Illustratief record
-
-Dit voorbeeld is uitgeschreven voor leesbaarheid; in JSONL staat ieder record op één regel.
-
-```json
-{
-  "external_id": "00123",
-  "source_updated_at": null,
-  "position": {"latitude": 52.3702, "longitude": 4.8952},
-  "geometry_method": "source_point",
-  "country_code": "NL",
-  "administrative_codes": [],
-  "name": null,
-  "street": "Voorbeeldstraat",
-  "accessible_capacity": 2,
-  "access_category": "designated_accessible",
-  "orientation": null,
-  "restrictions": [],
-  "unmapped_fields": [],
-  "source_record_url": null
-}
-```
-
-Minimale regels:
-
-- Externe ID's zijn begrensde niet-lege strings, uniek binnen source en batch. Behoud voorloopnullen; coördinaten zijn geen generieke identiteit.
-- Posities zijn eindige WGS84-getallen met expliciete lat/lon, geldige grenzen en passende scope. Bron-CRS en conversie blijven herleidbaar. Een polygonenmiddelpunt is niet automatisch een navigatie-ingang.
-- Aantallen zijn niet-negatieve gehele getallen of `null`; onbekend is niet nul. Onderscheid algemene toegankelijke versus persoonsgebonden plekken. Neem kentekens niet mee voor publieke classificatie.
-- Records zijn volledige weergaven. Verplichte velden mogen niet ontbreken; `null` maakt een oude bronwaarde onbekend. Onbegrepen veiligheidsrelevante beperkingen blokkeren automatische publicatie.
-- Begrens tekst, regellengte, bestandsgrootte en recordaantal. Geen uitvoerbare HTML, credentials of lokale paden. Schemas volgen geen externe netwerkreferenties.
-- Buitenlandse administratieve niveaus vragen een expliciete mapping naar de huidige geografische relaties; adapters hardcoden geen interne land-/provincie-ID's.
-
-Offstreetcatalogi krijgen afzonderlijke velden voor voorzieningstype, algemene/toegankelijke capaciteit, ingang en URL. Live `observations` bevatten bronrecord-ID, ophaaltijd, bekende/onbekende waarnemingstijd en afzonderlijke algemene/toegankelijke vrije aantallen. Oudere brontijd overschrijft geen nieuwere meting. Zonder brontijd blijft actualiteit een als zodanig benoemde schatting op basis van ophalen. Een meting voor een onbekende voorziening wacht op een cataloguskoppeling. Deze varianten worden met echte package-output beproefd vóór aansluiting.
-
-## 7. Coreopslag en publicatie
-
-| Verantwoordelijkheid | Invariant |
+| Gebeurtenis | Verwacht gedrag |
 | --- | --- |
-| Datasetregistratie | Toegelaten source/prefix/scope, herkomst, voorwaarden, verwachte leveringsleeftijd en publicatiebeleid |
-| Importhistorie | Unieke batch en sequencecontrole; immutable artifactreferentie, verwerkingstijden, status en fout |
-| Bronrecordidentiteit | Uniek `(source_id, external_id)` met stabiele verwijzing naar bestaande doeltype/ID |
-| Bronrevisie | Alleen inhoudelijke wijzigingen maken een nieuwe revisie; noodzakelijke historie blijft herstelbaar |
-| Lokale correctie/besluit | Bronwaarde en geaccepteerde correctie apart, met actor, reden, basisversie en waarnemingsdatum |
+| De bron wijzigt het aantal van dezelfde plek | Nieuwe bronwaarde bij dezelfde dataset + bron-ID; core toont het verschil voor beoordeling. |
+| Hetzelfde bestand wordt opnieuw aangeboden | Geen dubbele parkeerplek of dubbele publicatie. De consumer herkent de levering. |
+| Een plek ontbreekt bij de volgende volledige selectie | Toon als mogelijk verdwenen; niet automatisch verwijderen. |
+| Fetch of paginering mislukt | Geen complete levering presenteren. De bestaande publicatie blijft staan. |
+| Capaciteit ontbreekt | Bewaar onbekend; maak er geen nul van. |
+| Toegangsbetekenis is onduidelijk | Niet automatisch als algemene gehandicaptenparkeerplek publiceren. |
+| Een gebruiker meldt een correctie | Core beoordeelt deze. Een geaccepteerde correctie blijft afzonderlijk van de bronwaarde bestaan. |
+| Een volgende bronwaarde wijkt af van een geaccepteerde correctie | Toon het conflict; overschrijf de correctie niet stilzwijgend. |
+| De selectie verandert | Vergelijk afwezigheid niet ongemerkt met de oude selectie; beoordeel eerst de gewijzigde afbakening. |
 
-Dit zijn opslagverantwoordelijkheden, geen verplichte aparte frameworks. Importstatus: `discovered → validating → awaiting_review | ready → publishing → published`; andere resultaten zijn `failed`, `rejected`, `superseded` en `unchanged`. Deze states beschrijven coreverwerking, niet het externe ophaalproces.
+Bestaande bronmodellen en detail-/favorietverwijzingen blijven behouden. Het bestandsformaat bepaalt geen publicatiebeleid.
 
-1. Download de exacte recordsversie en verifieer bytes/checksum. De checksum bewijst integriteit, niet bronjuistheid.
-2. Valideer in staging en bereken de diff tegenover een expliciete actuele bron-/publicatieversie.
-3. Beoordeel eerste import, scopewijzigingen, onverwachte aantallen, verdwijningen en conflicten. Latere normale updates volgen pas na pilotacceptatie een automatisch beleid.
-4. Controleer vlak vóór publicatie sequence, basisversie en correctieversie opnieuw. Verouderde diffs worden herberekend/beoordeeld.
-5. Publiceer de begrensde pilot in één korte transactie met importstatus en actuele waarden. Taken zijn na commit beschikbaar of worden vanuit duurzame status hersteld.
+## Eerst bewijzen, daarna automatiseren
 
-Geen publieke tussentoestand door chunks alvast te publiceren. Grotere datasets vereisen een loadproef en eventueel versieerbare publicaties met atomair omschakelen. Bestaande bronmodellen, detail- en favorietidentiteit blijven behouden.
+1. **#1214:** bruikbare bron selecteren, betekenis controleren, één voorlopige voorbeeldlevering vastleggen en de verantwoordelijkheden afbakenen.
+2. **disabled-parking #774:** vanuit de echte package een lokaal bestand maken met expliciete mapping en volledigheidscontrole.
+3. **core #1215:** dat bestand lezen, fouten en verschillen tonen en na beoordeling verwerken. Herimport behoudt identiteit en verwijdert ontbrekende records niet automatisch. Correctiebehoud krijgt een expliciete aansluiting op #1218.
+4. **Vervolgwerk:** automatisch ophalen, overdragen en ontdekken van bestanden nadat de lokale keten werkt.
 
-Hash genormaliseerde inhoud zonder ophaaltijd en irrelevante volgorde om ongewijzigde records te herkennen. Ongewijzigde snapshots bevestigen controle en aanwezigheid binnen die scope, maar vernieuwen geen brondatum en veroorzaken geen nieuwe publicatie. Veranderde lokale correcties worden onafhankelijk daarvan verwerkt.
+Integriteit, begrensde invoer en veilige herverwerking blijven nodig. De bestaande prototypekeuzes voor hashes, JSONL, exacte tijdsyntax en byte-/recordlimieten moeten bij de echte levering opnieuw worden beoordeeld. Opslagkeys, objectversies, ready-manifest-last, duurzame producersequences en herstel over meerdere hosts worden pas verplicht als het ontwerp voor automatische overdracht dat rechtvaardigt.
 
-Alleen afwezigheid binnen dezelfde complete snapshotscope betekent `missing_from_source`; dit wordt in de pilot beoordeeld en nooit vooraf verwijderd. Een terugkeer behoudt identiteit. Livebezetting en mislukte runs verwijderen geen voorzieningen. Een goedgekeurde lokale veldcorrectie blijft gelden bij herimport; een afwijkende nieuwe bronwaarde registreert een conflict zonder de correctie te wissen.
-
-## 8. Uitval en herstel
-
-| Scenario | Gedrag |
-| --- | --- |
-| Fetch/parsing mislukt | Geen ready-manifest; foutmelding in importomgeving, core signaleert uitblijvende levering |
-| Upload half voltooid | Geen ready-manifest; weesobject na retentie opruimen |
-| Manifestupload mislukt na geslaagde bestandsupload | Dezelfde artifactversie opnieuw gereedmelden zonder opnieuw ophalen |
-| Records ontbreken/checksum fout | Afwijzen of begrensd opnieuw lezen; niet publiceren |
-| Core tijdelijk uitgevallen | Gereedgemelde batches blijven liggen; volledige discovery vindt ze na herstel |
-| Batch opnieuw ontdekt | Overslaan of eerdere verwerking hervatten |
-| Oude levering arriveert later | Sequence/basisversie voorkomt terugdraaien |
-| Twee processors verwerken dezelfde batch | Unieke registratie en transactionele publicatie voorkomen dubbelen |
-| Lege/sterk kleinere snapshot | Review; bestaande publicatie blijft staan |
-| Crash tijdens publiceren | Transactierollback en herstel vanuit duurzame status |
-| Communitycorrectie tijdens import | Versiecontrole en correctiebehoud |
-
-De importomgeving beheert retries/backoff, HTTP-timeouts, bron-429 en totale deadlines. Pilot: maximaal drie pogingen binnen een harde catalogusdeadline van 30 minuten. De [contractproef](data-import-pilot.md#verplichte-pilotlimieten) legt byte-, regel-, record- en validatielimieten vast. Verhogingen vereisen een nieuwe capaciteitsbeslissing. Snapshots halen gemiste tijdsloten niet onbeperkt in; de volgende actuele fetch heeft voorrang. Bezettingsprocessen bouwen evenmin een reeks verouderde meetopdrachten op.
-
-Bronhouderlimieten gelden inclusief package-interne requests. De pilot voert één bronhouder tegelijk uit met pacing en een gedeelde hostlock als beide repos dezelfde aanbieder aanspreken. Meerdere hosts vereisen expliciete coördinatie of exclusieve bronverdeling; extra containers alleen garanderen dit niet.
-
-## 9. Gezondheid zonder aansturing vanuit core
-
-Core toont laatste ontvangen, gevalideerde en gepubliceerde batch apart, met brondatum en verwachte maximale leveringsleeftijd. Uitblijven wordt `overdue`; een oud succes blijft niet onbeperkt gezond.
-
-Directe fetchfouten staan in de logs/meldingen van de importomgeving. Core kan uit afwezigheid niet bepalen of bron, host, credentials of opslag faalt. Geen manifest schrijven om een fout als succes te maskeren. Een statusfeed is alleen een latere uitbreiding als beheer die nodig heeft.
-
-## 10. Contractbewijs
-
-Schemas en fixtures zijn versieerbaar in core en worden door beide importrepos getest. Normale tests gebruiken gesaniteerde fixtures zonder bronnetwerk. Aparte read-only bronprobes bevestigen actuele bereikbaarheid en veldbetekenis.
-
-Minimale gevallen: volledige/lege/incomplete snapshot, nul versus onbekend, voorloopnullen, dubbele ID, ongeldige geo, scopewijziging, late oudere sequence, gewijzigde inhoud onder dezelfde batch-ID, half bestand zonder manifest, ontbrekende objectversie, herontdekking na uitval en herimport na lokale correctie. Handmatig bestand en objectopslag gebruiken dezelfde verwerking. Release pas na gelijke contractinterpretatie in PHP en Python.
+Het contract wordt pas vastgezet nadat de eerste keten is beproefd. Testresultaten van een losstaande validator bewijzen die keten niet.

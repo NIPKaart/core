@@ -70,6 +70,6 @@ Permanent spatial coverage lives in `ParkingLocationTest`, `ParkingDiscoveryTest
 
 See [Pest TIA documentation](https://pestphp.com/docs/tia) for baseline storage, invalidation and replay behavior.
 
-## Snapshot contract parity
+## Snapshot contract prototype
 
-The PHP unit suite includes `tests/Unit/Support/SnapshotContractTest.php`. Core owns the versioned schemas and byte fixtures. The Python interpretation, dependency and CI job live in [disabled-parking](https://github.com/NIPKaart/disabled-parking), where CI checks out a pinned core revision and validates those same files without source requests. Core does not contain Python code or a Poetry environment. See the [contract proof](data-import-pilot.md) for the cross-repository commands, source evidence and mandatory limits.
+The PHP unit suite includes `tests/Unit/Support/SnapshotContractTest.php`, an experimental validator from draft PR #1222. Its passing fixtures do not prove a working adapter or reviewed import. Core contains no Python environment. A Python proof exists locally in disabled-parking; no companion PR or cross-repository CI has been delivered. See the [current delivery scope](data-import-contract.md) and [source findings](data-import-pilot.md) before treating the prototype as a settled contract.

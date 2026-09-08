@@ -1,30 +1,27 @@
 # Batchimports: uitvoering en beheer
 
-Status: uitvoeringsvoorstel, 2026-09-08. De eigenaar heeft de zelfstandige batchaanpak gekozen. Dit document vervangt de werkpakketten voor door core aangestuurde workers. De uitvoering is op 2026-09-08 in GitHub gepland met 13 nieuwe subissues, bijgewerkte epics en native parent-/blockingrelaties. De [contractproef voor #1214](data-import-pilot.md) voegt goedgekeurde validators, schemas en fixtures toe. Er zijn geen importjobs gestart of productiegegevens geïmporteerd. Zie [productbasis](../product/data-foundation.md), [batchcontract](data-import-contract.md) en [techstack](data-foundation-stack.md).
+Status: gefaseerd uitvoeringsvoorstel, 2026-09-08. De actuele eerste stap is [#1214](https://github.com/NIPKaart/core/issues/1214): één bruikbare bron en één voorlopige levering beschrijven. [PR #1222](https://github.com/NIPKaart/core/pull/1222) blijft een onvoltooid prototype. Er zijn geen importjobs gestart of productiegegevens geïmporteerd. Zie de [productbasis](../product/data-foundation.md), [voorlopige gegevenslevering](data-import-contract.md) en [bronbevindingen](data-import-pilot.md).
 
 ## Eenvoud als uitgangspunt voor uitvoering
 
-De eerste versie heeft één dataset, één adapter rond een bestaand universeel package en één volledige snapshot. De adapter produceert een bestand; core beoordeelt en verwerkt het. Automatisering verandert alleen hoe dat bestand verschijnt. Brononderzoek/CRM, generieke adapterbouwers, karma en een mobiele app blijven buiten deze eerste keten.
+De eerste werkende keten is: universele bronpackage → lokaal bestand vanuit disabled-parking → beoordeling en verwerking in core. De huidige planning omvat meerdere issues; #1214 hoeft niet de hele keten te implementeren.
 
-Drie kleine opleveringen:
+1. **Bron en betekenis, #1214:** kies een bruikbare bron, onderbouw de veldbetekenis en beschrijf één voorlopige voorbeeldlevering. Leg verantwoordelijkheden en foutgevallen vast.
+2. **Lokale export, disabled-parking #774:** gebruik de echte package om dat bestand te produceren. Controleer selectie, identiteit, onbekende waarden en volledigheid.
+3. **Beoordeelde verwerking, core #1215:** lees het bestand, toon verschillen en verwerk na beoordeling. Herimport behoudt dezelfde plekken; ontbrekende records worden niet automatisch verwijderd.
+4. **Vervolgwerk:** correctiebehoud verder uitwerken in #1218 en ophalen/overdracht/discovery automatiseren nadat de lokale keten werkt. Een geaccepteerde correctie mag vanaf haar introductie nooit door import worden gewist.
 
-1. **Bestand naar correcte parkeerdata:** fixture/package naar JSONL en manifest, dezelfde validatie in Python en core, handmatig gestart importproces en beoordeelde publicatie.
-2. **Bestanden automatisch leveren en ontdekken:** geplande batchuitvoering in de importomgeving, records uploaden en als laatste gereedmelden; core ontdekt en verwerkt zonder runner-API.
-3. **Correctie behouden:** een beoordeelde veldcorrectie op een geïmporteerde plek blijft na herimport bestaan en kan expliciet worden ingetrokken.
+Brononderzoek/CRM, generieke adapterbouwers, karma en een mobiele app blijven buiten deze eerste keten. Het bestandsformaat wordt pas vastgezet na de praktijkproef. Een losse validator of bereikbare API bewijst geen werkende import.
 
-De eerste stap werkt lokaal met een fixture; uiteindelijke pilotacceptatie vereist een echte toegestane bron en stagingtransport. Integreer alleen de opslag en UI die deze stappen vereisen. Het beheer begint met datasetinstellingen en een importoverzicht met verschillen, publiceren en afwijzen.
-
-| Direct nodig | Later wanneer aangetoond nodig |
+| Nu vastleggen | Later uitwerken |
 | --- | --- |
-| Volledige snapshots en stabiele bron-ID | Deltafeeds/cursors |
-| Klaar-manifest pas na volledige upload | Opslagnotificaties of extra delivery-index |
-| Unieke batchregistratie en sourcevolgorde | Meerdere productiehosts met coördinatie |
-| Eén begrensde publicatietransactie na staging | Grote versioned publicaties met atomair omschakelen |
-| Veldcorrectie apart van bronwaarde | Uitgebreid bewijs-/vertrouwensmodel |
-| Ongewijzigde records niet herschrijven | Bronafhankelijke conditional requests |
-| Bestaande Poetry-tooling | Zelfstandige toolingmigratie indien nuttig |
+| Bron-ID en betekenis van gegevens | Cloudobjectkeys en version-ID's |
+| Afbakening en aantoonbare volledigheid | Ready-manifest-last en opslagdiscovery |
+| Bron, levering, ophaaltijd en onbekende waarden | Producersequence, planning en herstel over hosts |
+| Verwacht gedrag bij herhaling, verdwijning en correctie | Precieze transport- en schaalmechanismen |
+| Verantwoordelijkheden per repository | Hosting, bewaartermijnen en operationele limieten |
 
-Correctheid blijft verplicht: beperkte opslagrechten, volledige levering controleren, oudere batches weigeren, idempotente verwerking, stabiele verwijzingen, behoud van correcties en onbekend niet als nul of vrij presenteren.
+Integriteit, begrensde invoer, veilige herverwerking en correctiebehoud blijven nodig. De precieze mechanismen volgen uit de eerste werkende keten. De hieronder bewaarde latere werkpakketten en operationele voorstellen voegen geen extra acceptatiecriteria toe aan #1214.
 
 ## 1. Roadmapkoppeling
 
@@ -63,26 +60,32 @@ De [data-epic #1176](https://github.com/NIPKaart/core/issues/1176) hangt onder [
 | Vervolg | [core#1221](https://github.com/NIPKaart/core/issues/1221) | Bezettingscontract en coreconsumer |
 | Vervolg | [offstreet-parking#657](https://github.com/NIPKaart/offstreet-parking/issues/657) | Liveproducer en integratie |
 
-Start met de contractproef in core#1214. Daarna kunnen adapter en core-bestandintake afzonderlijk worden uitgewerkt. Stagingbeslissingen blokkeren de lokale bestandproef niet. De gemeentelijke ketenacceptatie blokkeert verdere bronuitbreiding; de offstreetconsumer wordt eerst op fixtures bewezen voordat de liveproducer integreert.
+Start met de bronkeuze en voorlopige voorbeeldlevering in core#1214. Daarna volgen de echte adapterexport en de core-bestandintake. Stagingbeslissingen blokkeren de lokale bestandproef niet. De gemeentelijke ketenacceptatie blokkeert verdere bronuitbreiding; de offstreetconsumer wordt eerst op fixtures bewezen voordat de liveproducer integreert.
 
 ## 2. Werkpakketten
 
-### A — Package naar bestandcontract
+### A — Bruikbare bron en voorlopige levering (#1214)
 
-Repos: core voor schemas/fixtures, disabled-parking voor adapter. Geen infrastructuur vereist.
+Core bewaart de leveringsafspraak en voorbeelden; brongebonden Python-onderzoek hoort in disabled-parking of een tijdelijke onderzoeksomgeving. Er is geen infrastructuur vereist.
 
-- [ ] Selecteer één echte bron op stabiele ID, begrijpelijke scope en voorwaarden. Amsterdam is kandidaat, niet vooraf geaccepteerd.
-- [ ] Controleer packageversie, doelruntime, paginering, nullwaarden, brondata en geografische mapping.
-- [ ] Leg toegestane gesaniteerde fixtures vast en maak manifest-/recordschemas volgens het batchcontract.
-- [ ] Bouw expliciete adaptermapping en bestanduitvoer; het universele package krijgt geen NIPKaart-afhankelijkheid.
-- [ ] Laat Python en PHP dezelfde positieve/negatieve voorbeelden accepteren of afwijzen.
-- [ ] Bepaal verplichte grenzen voor bytes, records, regels en uitvoeringsduur op basis van de pilot.
+- [ ] Selecteer één bruikbare bron met onderbouwde bronidentiteit, scope, veldbetekenis en hergebruikvoorwaarden. Eindhoven is een onderzochte kandidaat, nog geen geaccepteerde keuze.
+- [ ] Controleer package-output, volledige ophaling, onbekende waarden, brondata en geografische mapping. Los blokkers op of kies een andere bron.
+- [ ] Leg één toegestane bronrij en de voorgestelde NIPKaart-weergave vast, met uitleg per veld.
+- [ ] Beschrijf leveringidentiteit, dataset, selectie, ophaaltijd, volledigheid en de voorlopige formaatkeuze zonder verplichte opslagvelden.
+- [ ] Leg herhaling, wijziging, verdwijning, fetchfout en correctiebehoud uit.
+- [ ] Leg de overdracht naar disabled-parking #774 en core #1215 vast.
 
-Klaar wanneer een lokaal gemaakt bestand reproduceerbaar geldig is. Een API bereikbaar krijgen bewijst geen volledige of semantisch juiste dataset.
+Klaar wanneer de bron bruikbaar is en één onderbouwde voorlopige levering beschreven is. Het formaat is dan nog geen vrijgegeven 1.0-contract.
+
+### A2 — Daadwerkelijke lokale export (disabled-parking #774)
+
+De adapter gebruikt de echte universele package en schrijft de afgesproken levering lokaal. Test de mapping en belangrijke foutgevallen zonder bronnetwerk in gewone tests. Een generieke verbetering aan bronophaling hoort in de package; NIPKaart-mapping hoort in disabled-parking. Geen directe databasewrites of verplichte cloudcredentials.
+
+Klaar wanneer hetzelfde bronvoorbeeld reproduceerbaar door de adapter als bestand wordt geleverd. Deze implementatie hoort niet bij het beschrijven van de afspraak in #1214.
 
 ### B — Bestand ontvangen, vergelijken en publiceren
 
-Repo: core. Afhankelijk van A; voltooit de eerste kleine oplevering.
+Repo: core (#1215). Gebruikt de voorlopige afspraak uit A en wordt uiteindelijk met de echte export uit A2 beproefd.
 
 - [ ] Registreer een toegelaten dataset met source-ID, scope, herkomst, voorwaarden, geografische mapping en publicatiebeleid; geen onderzoeksworkflow.
 - [ ] Bouw één toepassingsservice voor intake vanaf een lokaal/uploadbestand en later objectopslag. Geen directe spreadsheetwrites naar parkeertabellen.
