@@ -21,6 +21,7 @@
         "laravel/wayfinder": "^0.1.10",
         "league/flysystem-aws-s3-v3": "^3.0",
         "opcodesio/log-viewer": "^3.15",
+        "opis/json-schema": "^2",
         "spatie/laravel-backup": "^10.0",
         "spatie/laravel-permission": "^8.0"
     },

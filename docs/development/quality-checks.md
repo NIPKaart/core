@@ -69,3 +69,7 @@ Additional plugins were evaluated individually: agent output is optional and the
 Permanent spatial coverage lives in `ParkingLocationTest`, `ParkingDiscoveryTest`, `GeoPointTest` and `GeoBoundsTest`: all source models, generated SRID/coordinate order and bulk updates, metre distances, deterministic ties, inclusive bounds, antimeridian queries, public filtering, and invalid inputs. There is no application coverage-polygon/intersection API yet; no speculative polygon model or tests of bare PostGIS functions are introduced. Query-plan assertions are intentionally omitted: tiny transactional fixtures do not meaningfully predict planner choices, while exact query results are stable regression contracts.
 
 See [Pest TIA documentation](https://pestphp.com/docs/tia) for baseline storage, invalidation and replay behavior.
+
+## Snapshot contract parity
+
+The PHP unit suite includes `tests/Unit/Support/SnapshotContractTest.php`. The **Python 3.14 import contract** job validates the same byte fixtures with the isolated Poetry environment under `tests/Support/import_contract`. Run `poetry -C tests/Support/import_contract install --no-interaction` and `poetry -C tests/Support/import_contract run python -m unittest -v` after selecting Python 3.14 for that environment. It has no source packages or network fetches. See the [contract proof](data-import-pilot.md) for source evidence and mandatory limits; passing these checks does not validate deployment or publication.

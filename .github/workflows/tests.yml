@@ -89,3 +89,21 @@ jobs:
 
       - name: Build client assets and run tests
         run: composer ci:test
+
+  import-contract-python:
+    name: Python 3.14 import contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14.2'
+      - name: Install locked contract dependencies
+        run: |
+          pipx install poetry==2.4.3
+          poetry -C tests/Support/import_contract install --no-interaction
+      - name: Check shared fixtures without source network
+        run: poetry -C tests/Support/import_contract run python -m unittest -v

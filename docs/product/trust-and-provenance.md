@@ -2,6 +2,8 @@
 
 NIPKaart combines information with very different trust characteristics. The UI must make those differences understandable instead of flattening everything into identical markers.
 
+The [European data foundation](data-foundation.md), [batch import contract](../development/data-import-contract.md) and [delivery plan](../development/data-foundation-delivery.md) elaborate this direction as of 2026-09-08. Independent Python producers schedule collection and publish complete versioned files; core discovers, validates and publishes their information while preserving corrections. Core does not coordinate workers. Source research and CRM workflows remain outside the platform. These are design documents, not implemented capabilities.
+
 ## Source classes
 
 ### Community (`ParkingSpace`)
