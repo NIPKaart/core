@@ -1,0 +1,214 @@
+[
+  {
+    "name": "unknown-capacity",
+    "expected": "valid"
+  },
+  {
+    "name": "zero-capacity",
+    "expected": "valid"
+  },
+  {
+    "name": "leading-zero-identities",
+    "expected": "valid"
+  },
+  {
+    "name": "complete-empty",
+    "expected": "review"
+  },
+  {
+    "name": "record-external_id-123",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-external_id-",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-accessible_capacity--1",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-accessible_capacity-1.5",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-accessible_capacity-True",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-country_code-DE",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-source_updated_at-2026-02-30T080000Z",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-source_updated_at-2026-09-08T080060Z",
+    "expected": "invalid"
+  },
+  {
+    "name": "missing-capacity",
+    "expected": "invalid"
+  },
+  {
+    "name": "unknown-record-field",
+    "expected": "invalid"
+  },
+  {
+    "name": "invalid-latitude",
+    "expected": "invalid"
+  },
+  {
+    "name": "invalid-longitude",
+    "expected": "invalid"
+  },
+  {
+    "name": "outside-source-bounds",
+    "expected": "invalid"
+  },
+  {
+    "name": "duplicate-records",
+    "expected": "invalid"
+  },
+  {
+    "name": "restriction-needs-review",
+    "expected": "review"
+  },
+  {
+    "name": "unmapped-needs-review",
+    "expected": "review"
+  },
+  {
+    "name": "personal-needs-review",
+    "expected": "review"
+  },
+  {
+    "name": "new-scope",
+    "expected": "review"
+  },
+  {
+    "name": "new-config",
+    "expected": "review"
+  },
+  {
+    "name": "incomplete",
+    "expected": "invalid"
+  },
+  {
+    "name": "pagination-not-exhausted",
+    "expected": "invalid"
+  },
+  {
+    "name": "parse-failures",
+    "expected": "invalid"
+  },
+  {
+    "name": "expected-count-mismatch",
+    "expected": "invalid"
+  },
+  {
+    "name": "filtered-count-mismatch",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-count-mismatch",
+    "expected": "invalid"
+  },
+  {
+    "name": "checksum-mismatch",
+    "expected": "invalid"
+  },
+  {
+    "name": "byte-count-mismatch",
+    "expected": "invalid"
+  },
+  {
+    "name": "cross-source-path",
+    "expected": "invalid"
+  },
+  {
+    "name": "unadmitted-source",
+    "expected": "invalid"
+  },
+  {
+    "name": "missing-version",
+    "expected": "invalid"
+  },
+  {
+    "name": "null-object-version",
+    "expected": "invalid"
+  },
+  {
+    "name": "unknown-contract",
+    "expected": "invalid"
+  },
+  {
+    "name": "invalid-manifest-date",
+    "expected": "invalid"
+  },
+  {
+    "name": "backwards-time",
+    "expected": "invalid"
+  },
+  {
+    "name": "fetch-deadline",
+    "expected": "invalid"
+  },
+  {
+    "name": "sequence-gap",
+    "expected": "valid"
+  },
+  {
+    "name": "late-batch",
+    "expected": "superseded"
+  },
+  {
+    "name": "duplicate-sequence",
+    "expected": "conflict"
+  },
+  {
+    "name": "duplicate-batch",
+    "expected": "duplicate"
+  },
+  {
+    "name": "conflicting-batch",
+    "expected": "conflict"
+  },
+  {
+    "name": "truncated-line",
+    "expected": "invalid"
+  },
+  {
+    "name": "invalid-json",
+    "expected": "invalid"
+  },
+  {
+    "name": "blank-line",
+    "expected": "invalid"
+  },
+  {
+    "name": "line-limit",
+    "expected": "invalid"
+  },
+  {
+    "name": "manifest-limit",
+    "expected": "invalid"
+  },
+  {
+    "name": "artifact-declared-limit",
+    "expected": "invalid"
+  },
+  {
+    "name": "record-declared-limit",
+    "expected": "invalid"
+  },
+  {
+    "name": "non-json-number",
+    "expected": "invalid"
+  },
+  {
+    "name": "pilot-normalized",
+    "expected": "review"
+  }
+]

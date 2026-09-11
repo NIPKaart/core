@@ -1,0 +1,26 @@
+{
+  "fields": {
+    "straat": "Winkelcentrum Woensel",
+    "type_en_merk": "Parkeerplaats Gehandicapten",
+    "geo_point_2d": [
+      51.469735439493796,
+      5.478167744280201
+    ],
+    "geo_shape": {
+      "coordinates": [
+        5.478167744280201,
+        51.469735439493796
+      ],
+      "type": "Point"
+    },
+    "aantal": 1.0,
+    "objectid": 12338
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [
+      5.478167744280201,
+      51.469735439493796
+    ]
+  }
+}

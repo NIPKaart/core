@@ -69,3 +69,7 @@ Additional plugins were evaluated individually: agent output is optional and the
 Permanent spatial coverage lives in `ParkingLocationTest`, `ParkingDiscoveryTest`, `GeoPointTest` and `GeoBoundsTest`: all source models, generated SRID/coordinate order and bulk updates, metre distances, deterministic ties, inclusive bounds, antimeridian queries, public filtering, and invalid inputs. There is no application coverage-polygon/intersection API yet; no speculative polygon model or tests of bare PostGIS functions are introduced. Query-plan assertions are intentionally omitted: tiny transactional fixtures do not meaningfully predict planner choices, while exact query results are stable regression contracts.
 
 See [Pest TIA documentation](https://pestphp.com/docs/tia) for baseline storage, invalidation and replay behavior.
+
+## Snapshot contract prototype
+
+The PHP unit suite includes `tests/Unit/Support/SnapshotContractTest.php`, an experimental validator from draft PR #1222. Its passing fixtures do not prove a working adapter or reviewed import. Core contains no Python environment. A Python proof exists locally in disabled-parking; no companion PR or cross-repository CI has been delivered. See the [current delivery scope](data-import-contract.md) and [source findings](data-import-pilot.md) before treating the prototype as a settled contract.
