@@ -1,55 +1,101 @@
-# Brononderzoek: kandidaat Eindhoven
+# Pilot: algemene gehandicaptenparkeerplaatsen Amsterdam
 
-Status: onderzochte kandidaat voor [#1214](https://github.com/NIPKaart/core/issues/1214), 2026-09-08. Eindhoven is nog geen geaccepteerde aansluiting of bewezen bruikbare pilotbron. Onderstaande bevindingen blijven behouden; de selectie staat open. Er is geen definitief contract 1.0 en geen producer, database-import of productieaansluiting gebouwd.
+Status: geselecteerd voor implementatie van [#1214](https://github.com/NIPKaart/core/issues/1214), bronproef 2026-09-13. Amsterdam biedt bruikbare broninhoud en een controleerbaar totaal. De bestaande package verliest nog relevante velden; de live aansluiting is daarom nog niet gereed. Eerst de generieke package verbeteren, vervolgens disabled-parking #774 en core #1215. Geen productiepublicatie of automatische levering is uitgevoerd.
 
-## Bron en bewijs
+## Waarom deze bron
 
-De bron is [Gemeente Eindhoven — Parkeerplaatsen](https://data.eindhoven.nl/explore/dataset/parkeerplaatsen/information/), met filter `type_en_merk = 'Parkeerplaats Gehandicapten'`. De [datasetmetadata](https://data.eindhoven.nl/api/explore/v2.1/catalog/datasets/parkeerplaatsen) noemt Gemeente Eindhoven als uitgever, “Publiek domein” als licentie en geen aanvullende licentie-URL. De geselecteerde bronrij bevat uitsluitend parkeerlocatiegegevens; `tests/Fixtures/import/v1/pilot-source.json` behoudt de relevante velden en verwijdert portalwrapper, portal-ID en timestamp. Herkomst blijft hier vastgelegd. De overige randgevallen zijn door ons gemaakte fictieve gegevens; ze zijn geen meldingen over echte parkeerplaatsen.
+De selectie `eType=E6a` benoemt algemene gehandicaptenparkeerplaatsen expliciet. Dat voorkomt de onbewezen algemene/persoonsgebonden interpretatie bij Eindhoven. Amsterdam levert oorspronkelijke string-ID's, parkeervlakken, aantallen, regimes en versie-informatie. De read-only proef ontving 1.420 unieke records; een afzonderlijke count-query meldde hetzelfde totaal. De [officiële datasetdocumentatie](https://api.data.amsterdam.nl/v1/docs/datasets/parkeervakken.html) beschrijft de velden. `aantal` is een geschatte capaciteit en `versiedatum` de geldigheidsdatum van de dataset; presenteer die niet als telling of veldcontrole.
 
-De bestaande universele package [eindhoven 5.1.0](https://github.com/klaasnicolaas/python-eindhoven/releases/tag/v5.1.0) is op CPython 3.14.2 uitgevoerd. De packagecode is MIT; dat is een afzonderlijk gegeven van de datasetlicentie. Deze bronproef is uitgevoerd in een tijdelijke, geïsoleerde omgeving; core heeft geen dependency op de Eindhoven-package. De importrepository gebruikt nog een oudere major; #774 moet de nieuwe geneste datamodellen expliciet verwerken.
+De leverancier is Gemeente Amsterdam. De dataset wordt in de [overheidscatalogus](https://data.overheid.nl/dataset/318a98b8-ef87-4335-9674-f5405f2bc4be) als CC0 aangeboden, bevestigd in de [CKAN-metadata](https://data.overheid.nl/data/api/3/action/package_show?id=318a98b8-ef87-4335-9674-f5405f2bc4be). De catalogus linkt oudere ontsluitingen van dezelfde dataset; het licentieveld in de huidige REST-documentatie is leeg. Dit is het traceerbare hergebruikbewijs voor de technische pilot, geen afzonderlijke nieuwe licentieverklaring van de REST-API. Hercontroleer deze koppeling en eventuele voorwaarden vóór publieke ingebruikname. De licentie van de Python-package is daarvan onafhankelijk. Bewaar bronvermelding bij de aansluiting, ook wanneer geen attributie verplicht is.
 
-Read-only meting op 2026-09-08, met `ODPEindhoven.locations(limit=1000, parking_type=ParkingType.DISABLED_PARKING)`:
+| Onderdeel | Afbakening |
+| --- | --- |
+| Datasetcode | `nl-amsterdam-parkeervakken-e6a` |
+| Selectiecode | `e6a-all` = alle records uit `parkeervakken/parkeervakken` met exact `eType=E6a`; geen bbox of aanvullende stille filtering. |
+| Package | `odp-amsterdam` 6.0.0 is onderzocht; de verbeterde versie moet vóór gebruik expliciet worden vastgelegd. |
+| Identiteit | `properties.id`, als volledige string binnen de dataset. De GeoJSON-wrapper `parkeervakken.<id>` wordt niet als tweede identiteit gebruikt. |
+| Geografie | Nederland (`NL`), Noord-Holland (`NL-NH`), gemeente Amsterdam (`nl:cbs:municipality`, `0363`). Core koppelt deze codes aan relaties. |
+| Betekenis | Algemene gehandicaptenparkeerplaats, mogelijk met tijdsbeperkingen. Geen actuele beschikbaarheid, geen garantie op toegankelijkheid voor ieder voertuig. |
+| Granulariteit | Eén bronrecord beschrijft een parkeervlak met aantal; niet omzetten naar verzonnen individuele communityplekken. |
+
+## Gemeten bewijs en beperkingen
 
 | Meting | Uitkomst |
 | --- | --- |
-| HTTP-verzoeken | 1 |
-| `nhits` / ontvangen / unieke portal-ID's / unieke `objectid` | 180 / 180 / 180 / 180 |
-| Responsebytes / grootste losse bronrij | 88.805 / 506 bytes |
-| Totale fetch inclusief packageparsing | 0,317 seconden |
-| Response SHA-256 | `9100542741d1d37f69eb82101f89729b545afb5bdb4c01a44c6692e5dd7d99ef` |
-| Recordtimestamps | Allemaal `2026-08-10T21:45:03.036Z` |
-| Portal `modified` | `2026-08-10T21:45:24Z` |
-| Geografische uitersten, west/zuid/oost/noord | `5.450612694939047, 51.426665509086355, 5.4905604066468765, 51.47076467693479` |
+| Volledige GeoJSON-response | 1.420 features / 1.420 unieke `properties.id` |
+| Onafhankelijke count-query | `X-Total-Count=1420`, `page.totalElements=1420` |
+| Omvang | 1.332.469 bytes |
+| SHA-256 volledige onderzoeksresponse | `b330ae455f3efbeb8373b419da6fad4f24da351cd0cf90547cb928811e0e6efa` |
+| Geometrie | Alle records Polygon in WGS84 |
+| Packageparser | Alle 1.420 bronrecords zijn met de geïnstalleerde parser gelezen |
+| Regimes | 1.579 regimes; 159 records hebben meerdere regimes, 172 hebben tijdsvakken en 13 een opmerking |
+| Toegang | Alle aangetroffen regimes beschrijven algemene gehandicaptenparkeerplaatsen; kentekenvelden zijn leeg |
+| Versiedatum | Alle records `2026-09-11`; datasetgeldigheid, geen afzonderlijke recordwijziging of veldcontrole |
+| Tijdstip | HTTP Date volledige response `2026-09-13T21:55:18Z`; count-response `2026-09-13T21:55:56Z` |
 
-Dit is één actuele netwerkproef, geen beschikbaarheids-SLA en geen bewijs van volledige gemeentelijke dekking. De metadata noemt ook `temporal: t/m juli 2018`. Portalverwerking in 2026 bewijst daarom geen recente veldcontrole.
+Requests: [volledige selectie](https://api.data.amsterdam.nl/v1/parkeervakken/parkeervakken?_pageSize=2000&eType=E6a&_format=geojson) met header `Accept-Crs: EPSG:4326`, en [count-query](https://api.data.amsterdam.nl/v1/parkeervakken/parkeervakken?_pageSize=1&eType=E6a&_count=true). De GeoJSON-response heeft geen volgende pagina (`_links: []`).
 
-## Voorlopige mapping en open bronvragen
+Dit bewijst volledige ontvangst ten opzichte van het toen gerapporteerde totaal, geen volledige werkelijkheid op straat of gegarandeerde transactiesnapshot. Het bronbestand blijft tijdelijk onderzoeksmateriaal; we voegen geen gemeentelijke fixturecorpus toe aan core.
 
-| Onderwerp | Afspraak en beperking |
-| --- | --- |
-| Source/scope | `nl-eindhoven-accessible`, scope 1 = genoemde dataset en exact filter. Geen dynamisch afwijkend geografisch filter onder dezelfde scopeversie. |
-| Identiteit | Gebruik bronveld `objectid` als string, gekoppeld aan deze source; nooit coördinaten. In deze response zijn alle 180 waarden aanwezig en uniek. Langdurige stabiliteit/hernummering moet de aansluiting nog vaststellen. De package geeft alleen portal-`recordid` door en laat `objectid` weg: **blokker voor de adapter**, op te lossen door een generieke package-uitbreiding. Geen stilzwijgende fallback naar portalhash. |
-| Volledigheid | De package doet één request, exposeert `nhits` niet en heeft geen offset/paginering. In deze meting past alles in één response en is ontvangen = `nhits`; `limit=1000` alleen is geen bewijs. Voor gereedmelding moet de package generiek het totaal en volledige iteratie beschikbaar maken, of aantoonbaar één complete response met totaal teruggeven. Bij meer resultaten, afgekapt antwoord, gewijzigde datasetversie tijdens ophalen of onbekende volledigheid: geen ready-manifest. |
-| Bronplatform | De package gebruikt [Search API v1](https://help.opendatasoft.com/apis/ods-search-v1/), die de aanbieder deprecated noemt. Kies de ondersteunde API bij de generieke pagination/identity-uitbreiding; kopieer de oude client niet naar core. |
-| Positie | Bron-GeoJSON is Point in WGS84; `[longitude, latitude]` wordt expliciet `position.longitude/latitude`. Geen centroid nodig. Het is een parkeerlocatie, geen bewezen navigatie-ingang. |
-| Geografie | `country_code=NL`, `administrative_codes=[{"scheme":"nl:cbs:municipality","code":"0772"}]`. Core koppelt dit aan zijn bestaande relaties; geen interne database-ID's in de adapter. De testbounds `[5.3,51.3,5.6,51.6]` zijn een grove foutcontrole, geen gemeentegrens. |
-| Capaciteit | `aantal` is een brongetal (double in metadata); alleen integrale, niet-negatieve waarden overnemen. `null` blijft onbekend en is geen nul. Package 5.1.0 typeert dit als int; de adapter mag een ontbrekend of fractioneel brongetal niet onopgemerkt laten coerceren. |
-| Toegangsbetekenis | Het bronlabel zegt gehandicaptenparkeerplaats, maar bevat geen aantoonbaar onderscheid tussen algemene en persoonsgebonden reservering of tijdsbeperkingen. Pilotfixture gebruikt daarom `access_category=unknown` en `unmapped_fields=["reservation_status"]`, wat review oplevert. Publicatie vereist bronverduidelijking of een concrete beoordeelde waarneming. |
-| Datums | `record_timestamp` en portal `modified` zijn verwerkingsmetadata; niet presenteren als veldwaarneming. In de genormaliseerde pilot is `source_updated_at=null`. `fetched_*` beschrijft alleen onze fetch. |
-| Hergebruik | De datasetmetadata is de basis voor het opgenomen minimale fixture. Hercontroleer voorwaarden en bronbetekenis vóór aansluiting; licentietekst of gebruiksvoorwaarden veranderen niet ongemerkt mee met een manifest. |
+De bestaande package doet één request met een limiet, geeft geen totalen/paginering door en gebruikt slechts delen van het eerste regime. Daardoor verdwijnen tijdsbeperkingen en de versiedatum; `int(aantal)` kan bovendien ongeldige fractionele waarden afronden. Succesvol parsen betekent dus niet dat de levering inhoudelijk volledig is.
 
-Deze bronvragen moeten bij #1214 worden opgelost of tot een andere bronkeuze leiden. Daarna bouwt [disabled-parking#774](https://github.com/NIPKaart/disabled-parking/issues/774) de export en #1215 de coreverwerking. Brononderzoek blijft buiten core; bovenstaande punten zijn concrete toelatingsvoorwaarden voor deze ene aansluiting.
+ID's zijn nu uniek en als bron-ID beschikbaar, maar toekomstige hernummering is niet uitgesloten. Grote identiteitswisselingen en verdwenen records vragen beoordeling. Niet terugvallen op coördinatenmatching. De API-documentatie kondigt verplichte API-keys aan; de proef werkte zonder key. Ondersteuning voor eventuele bronauthenticatie hoort in de universele package/producer, nooit in het afleverbestand. De bron biedt geen bewezen mutatieversie over meerdere pagina's: controleer aantallen vóór/na en geef bij verschillen geen complete levering af; gelijke aantallen bewijzen geen snapshotisolatie.
 
-## Status van de eerdere contractproef
+## Concrete bronrij en vertaling
 
-De schemas, gesaniteerde voorbeelden en PHP-validator in [PR #1222](https://github.com/NIPKaart/core/pull/1222) zijn experimenteel. De paden `resources/schemas/import/v1` en de daarin opgenomen waarde `1.0` zijn namen uit dat prototype, geen vrijgegeven contractversie. De [voorlopige gegevenslevering](data-import-contract.md) is het actuele uitgangspunt.
+Onderstaand voorbeeld is de echte bronrij `114323484886`, met alleen relevante velden. Het lege `kenteken` is weggelaten. Beide regimes blijven behouden; hun onderlinge betekenis wordt niet door de adapter gegokt.
 
-De eerdere offline proef dekte onder meer voorloopnullen, onbekend versus nul, ongeldige coördinaten, incomplete/lege bestanden en conflicterende leveringen. Er is nog geen producer of beoordeelde core-import gebouwd. De Python-proef staat lokaal en ongecommit in disabled-parking; een bijbehorende PR en vastgepinde CI-workflow bestaan nog niet. Core bevat geen Python-code of Poetry-omgeving.
+```json
+{
+  "id": "114323484886",
+  "straatnaam": "Pieter Calandlaan",
+  "eType": "E6a",
+  "type": "Haaks",
+  "aantal": 1.0,
+  "versiedatum": "2026-09-11",
+  "geometry": {"type": "Polygon", "coordinates": [[[4.790157860968076, 52.35038717769686], [4.790188598734742, 52.3503934444639], [4.79020922008023, 52.3503552603837], [4.790178482337059, 52.35034899362201], [4.790157860968076, 52.35038717769686]]]},
+  "regimes": [
+    {"soort": "MULDER", "eType": "E6a", "eTypeDescription": "Gehandicaptenparkeerplaats algemeen", "aantal": 1.0, "bord": "", "beginTijd": null, "eindTijd": null, "beginDatum": null, "eindDatum": null, "dagen": [], "opmerking": null, "typeUitzondering": "Venstertijden"},
+    {"soort": "MULDER", "eType": "E6a", "eTypeDescription": "Gehandicaptenparkeerplaats algemeen", "aantal": 1.0, "bord": "", "beginTijd": "09:00:00", "eindTijd": "16:00:00", "beginDatum": null, "eindDatum": null, "dagen": ["ma", "di", "wo", "do"], "opmerking": null, "typeUitzondering": "Venstertijden"}
+  ]
+}
+```
 
-De metingen uit de eerdere proef blijven onderzoeksgegevens: 180 bronrecords werden 79.566 bytes, met maximaal 457 bytes per regel. Een synthetische 10.000-recordproef gebruikte 4.409.201 bytes; validatietijden waren PHP 0,024 / 0,600 seconden en Python 0,051 / 1,900 seconden voor respectievelijk 180 / 10.000 records. Dit rechtvaardigt geen definitief formaat, verplichte productielimieten of claim over databasepublicatie.
+De NIPKaart-representatie gebruikt onderstaande mapping. `geometry` en de twee `regimes` worden uit het voorbeeld ongewijzigd overgenomen; ze worden hier niet nogmaals gekopieerd.
 
-## Eerstvolgende bronbeslissing
+| Bron | Levering | Uitleg |
+| --- | --- | --- |
+| `properties.id` | `external_id="114323484886"` | Bronidentiteit; geen numerieke conversie of verkorting. |
+| `geometry` | `geometry` | Volledig Polygon behouden. Core berekent pas bij intake een kaartpunt met PostGIS `ST_PointOnSurface`; geen Python-geometrieafhankelijkheid. |
+| `aantal=1.0` | `number=1` | Alleen na controle dat het getal eindig, geheel en niet-negatief is. `null` blijft onbekend, nul blijft nul. |
+| `straatnaam` | `street="Pieter Calandlaan"` | Bronstraat, geen geocoding of afgeleid huisnummer. |
+| `eType` en alle regimebeschrijvingen | `access_category="general"` | Alleen bij consistente algemene betekenis; onbekend of persoonsgebonden wordt niet algemeen verklaard. |
+| Alle `regimes` | `source_attributes.regimes` | Tijd, dagen, datums, bord, uitzondering en opmerking blijven zichtbaar voor review. Geen berekende “nu beschikbaar”-status. |
+| `type` | `source_attributes.orientation="Haaks"` | Oorspronkelijke plaatsingsaanduiding. |
+| `versiedatum` | `source_attributes.version_date="2026-09-11"` | Datasetgeldigheid behouden; `source_updated_at=null` omdat dit geen afzonderlijke recordwijziging is. |
+| `kenteken=null` | Niet afleveren | Verwacht leeg voor deze selectie. Een ingevuld kenteken of onverwachte persoonsgebonden betekenis blokkeert de levering; niet wegfilteren en alsnog compleet verklaren. |
+| Wrapper-ID, buurtcode en dubbele broncategorie `soort` | Geen afzonderlijk generiek veld | Identiteit, geografie en categorie zijn al expliciet vastgelegd; regimegebonden `soort` blijft behouden. |
 
-Eindhoven kan pas de bruikbare pilotbron worden nadat bronidentiteit, aantoonbare volledigheid en toegangsbetekenis voldoende zijn vastgesteld. Een generieke package-uitbreiding kan daarvoor nodig zijn. Als die gaten niet praktisch kunnen worden opgelost, kiezen we een andere bron voor de eerste keten. We schuiven deze selectie niet als voldongen feit door naar de adapterimplementatie.
+Regimes zijn broninformatie die core moet tonen voordat deze records worden gepubliceerd. Het samengaan van een basisregime en tijdvenster wordt niet vertaald naar een belofte van onbeperkte toegang. Onbegrepen beperkingen blijven in review; een beheerder moet de betekenis kunnen onderbouwen of publicatie achterwege laten.
 
-De bestaande echte bronrij in `tests/Fixtures/import/v1/pilot-source.json` is bruikbaar onderzoeksmateriaal. De afgeleide fixture met onbekende toegang en benodigde beoordeling is geen bewijs dat de bron als algemeen toegankelijke parkeerdata kan worden gepubliceerd. Voor afronding van #1214 is één bruikbare bron met een onderbouwde voorlopige voorbeeldlevering nodig; dat staat nog open.
+De volledige levering volgt [het ene JSON-bestand](data-import-contract.md): `format=nipkaart-municipal-pilot-1`, bovengenoemde dataset/selectie, een werkelijke delivery-UUID en ophaaltijd, `complete=true`, een gecontroleerd `source_count` en alle records. Het voorbeeld hierboven is één record en mag nooit als volledige Amsterdamse levering worden aangeleverd. De toekomstige export mag 1.420 niet hardcoderen.
+
+## Eerst oplossen in de universele package
+
+Dit is de eerste afhankelijkheid van disabled-parking #774, geen Python-werk in core:
+
+1. Stel de bron-ID, volledige geometrie, alle regimes en versiedatum beschikbaar. Bewaar oorspronkelijke aantallen zonder verliesgevende conversie; test onbekend, nul, fractioneel en meerdere regimes.
+2. Bied een publieke volledige ophaling met totalen/pagina-informatie aan. Controleer de laatste pagina en unieke ID's; één `limit=2000` is geen blijvend volledigheidsbewijs. Behoud de bestaande beperkte ophaalmethode voor andere packagegebruikers indien die onderdeel is van de publieke API.
+3. Test generieke paginering en gewijzigde/ontbrekende bronvelden upstream. Maak geen NIPKaart-bestandsformaat of publicatiebeleid onderdeel van de package.
+4. Leg de geteste packageversie en één afzonderlijke begrensde live proef vast. Pas daarna de adapter op de nieuwe publieke package-interface aansluiten.
+
+#774 maakt vervolgens één live commando en vervangt de tijdelijke Hamburg-route. #1215 implementeert één intakepad met geometryvalidatie, beoordeling en veilig behoud van identiteit/correcties. De eerste werkende keten blijft handmatig; de private bucket volgt bij automatisering.
+
+## Andere onderzochte kandidaten
+
+- **Eindhoven:** de [metadata](https://data.eindhoven.nl/api/explore/v2.1/catalog/datasets/parkeerplaatsen) is opnieuw gecontroleerd; de eerdere proef van 2026-09-08 vond 180 records, maar de metadata noemt dekking tot juli 2018; de package verliest `objectid` en volledigheidsinformatie en de toegang is niet aantoonbaar algemeen. Niet geselecteerd. De vroegere uitgebreide proef blijft in de gitgeschiedenis; de #1222-fixtures zijn geen geaccepteerde aansluiting.
+- **Hamburg:** de [actuele collectie](https://api.hamburg.de/datasets/v1/behindertenstellplaetze/collections?f=json) en [WFS](https://geodienste.hamburg.de/wfs_behindertenstellplaetze?REQUEST=GetFeature&SERVICE=WFS&VERSION=2.0.0&typename=de.hh.up%3Abehindertenstellplaetze) zijn onderzocht. Het endpoint van package 3.0.0 geeft 404; de nieuwe collectie bestaat maar de itemsrequests liepen bij deze proef vast. WFS leverde 936 unieke features en een afzonderlijke hits-query meldde 936, maar de normale response meldt `numberMatched=unknown` en `numberReturned=0`. Een alternatief protocol en CRS-verwerking zijn extra werk. De oude Hamburg-fixture bewijst geen huidige packagewerking.
+
+## Broncontrole na implementatie
+
+Offline tests bewijzen gedrag tegen bekende voorbeelden. Een periodieke begrensde live controle in #775 controleert daarnaast endpoint, velden, identiteit en volledigheid. Ook een HTTP 200 met gewijzigde betekenis kan een fout zijn. Bij een bronfout geen nieuwe complete levering publiceren; de laatste geaccepteerde gegevens blijven staan en de producent meldt de storing. De broncheck staat los van gewone package-CI.

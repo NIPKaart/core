@@ -1,66 +1,77 @@
 # Voorlopige gegevenslevering
 
-Status: werkafspraak voor de eerste handmatige keten, 2026-09-08. Er is nog geen vrijgegeven contract 1.0. De schemas en validator in [PR #1222](https://github.com/NIPKaart/core/pull/1222) zijn een onvoltooid prototype; hun opslagvelden en uitvoeringsmechanismen zijn geen vastgestelde eisen. Dit document vervangt de eerdere verplichting om eerst een volledig automatisch afleverprotocol te bouwen.
+Status: werkafspraak voor [#1214](https://github.com/NIPKaart/core/issues/1214). Eén JSON-bestand voor de eerste handmatige import; het formaat wordt pas vastgezet nadat de producer en core samen zijn beproefd. De schema's en validator uit [PR #1222](https://github.com/NIPKaart/core/pull/1222) blijven een prototype en worden in #1215 vervangen of verwijderd.
 
-Het doel is één bruikbare bron via één lokaal bestand beoordeeld in core verwerken. Zie [#1214](https://github.com/NIPKaart/core/issues/1214), de [bronbevindingen](data-import-pilot.md) en de [uitvoeringsvolgorde](data-foundation-delivery.md).
+## Van bron naar gebruiker
 
-## Verantwoordelijkheden
+`gemeentelijke API → universele Python-package → disabled-parking → JSON-bestand → core: valideren, vergelijken en beoordelen → gemeentelijke parkeergegevens → publieke discovery`
+
+De eerste overdracht gebeurt lokaal. Daarna uploadt de producent hetzelfde formaat naar een private bucket en ontdekt core de complete bestanden. De bucket hoort bij de automatische architectuur. R2 is een kandidaat; provider en overdrachtsmechanisme worden in #1217 gekozen. Er komt geen directe producerverbinding met de core-API of database.
 
 | Onderdeel | Verantwoordelijkheid |
 | --- | --- |
-| Universele bronpackage | Begrijpt de gemeentelijke API, haalt de afgesproken selectie volledig op en exposeert bron-ID's, oorspronkelijke waarden en informatie over volledigheid. Kent NIPKaart niet. |
-| disabled-parking | Kiest dataset/filter, vertaalt de betekenis naar NIPKaart en maakt de lokale levering. Hier staan Python-code, bronpackages en Python-tests. Schrijft niet rechtstreeks in de core-database. |
-| core | Beschrijft welke gegevens het kan verwerken, valideert die in PHP, toont verschillen en beheert beoordeling, publicatie en communitycorrecties. Bevat geen Python-omgeving of gemeentelijke API-clients. |
-| offstreet-parking | Vervult dezelfde producerrol voor voorzieningen zodra dat werkpakket begint. We ontwerpen nu geen gedeeld producerframework. |
+| Universele package | Bronprotocol, volledige ophaling van een selectie, bron-ID's, oorspronkelijke waarden en volledigheidsinformatie. Zelfstandig bruikbaar zonder NIPKaart. |
+| disabled-parking | Datasetselectie, vertaling, leveringsmetadata en bestand schrijven. Python en bronspecifieke tests staan hier of upstream. |
+| core | Toegelaten dataset, bestandsvalidatie, verschillen, beoordeling, publicatie en behoud van correcties. Geen Python-omgeving. |
+| offstreet-parking | Later een eigen producent voor voorzieningen; pas bij werkelijk gedeelde behoeften uitvoeringscode delen. |
 
-Een bronpackage mag generieke verbeteringen nodig hebben voor paginering of bron-ID's. Dat is geen reden om het ophalen naar core te verplaatsen. Onderzoek naar mogelijke bronnen blijft buiten het platform.
+## Eén bestand
 
-## Eén voorbeeld
+UTF-8 JSON met één object en een `records`-array. Geen apart manifest, JSONL, schemarelease of opslagprovider-ID voor de lokale pilot. De concrete bronrij en mapping staan in de [pilotbeschrijving](data-import-pilot.md).
 
-Een fictieve gemeente biedt parkeerplek `000123` aan, aan de Voorbeeldstraat, op een bekende WGS84-locatie. Het bronveld betekent expliciet twee algemene gehandicaptenparkeerplaatsen. Dit voorbeeld beschrijft een gewenste gegevensstroom, niet een bevestigde interpretatie van de Eindhoven-dataset.
-
-De package geeft de oorspronkelijke gegevens terug. De adapter in disabled-parking vertaalt deze naar onderstaande betekenis. Core herkent de plek aan de combinatie van dataset en bron-ID.
-
-| Gegeven | Voorbeeld | Betekenis |
-| --- | --- | --- |
-| Dataset | `voorbeeldgemeente-toegankelijk` | Aangesloten dataset met bekende herkomst en geografische mapping |
-| Unieke levering | `levering-001` | Herkennen dat hetzelfde bestand opnieuw wordt aangeboden; geen voorgeschreven UUID- of opslagmechanisme |
-| Opgehaald op | `2026-09-08T08:00:00Z` | Tijdstip van onze fetch, geen bewijs van veldcontrole |
-| Selectie | Alle algemene gehandicaptenparkeerplaatsen in deze dataset | Expliciete afbakening om volledigheid en ontbrekende records te kunnen beoordelen |
-| Volledigheid | Volledig, met onderbouwing uit de bronresponse | Alleen verklaren wanneer alle resultaten van de selectie zijn opgehaald |
-| Formaatrevisie | Voorlopig voorbeeld A | Nog geen stabiele release of compatibiliteitsbelofte |
-| Bron-ID | `000123` | String; behoud voorloopnullen, gebruik geen coördinaten als identiteit |
-| Positie | Latitude `52.3702`, longitude `4.8952` | Benoemde WGS84-coördinaten, geen impliciete volgorde |
-| Toegankelijk aantal | `2` | Niet-negatief geheel aantal; onbekend blijft `null` |
-| Toegang | Algemeen toegankelijk met gehandicaptenparkeerkaart | Onderscheiden van persoonsgebonden en onbekende toegang |
-| Beperkingen | Onbekend tenzij de bron ze expliciet beschrijft | Geen ontbrekend veld vertalen naar “geen beperkingen” |
-| Brondatum | Onbekend | Alleen invullen wanneer de betekenis van de brondatum bekend is |
-
-De gekozen echte bron moet een toegestane bronrij en een veld-voor-veldvertaling opleveren. Dit fictieve voorbeeld is daarvoor geen vervanging. Het is nog niet besloten of leveringsinformatie en records in één bestand of twee bestanden komen; een bestaande JSONL/manifestproef mag een mogelijkheid aantonen, maar legt de keuze niet vast.
-
-## Gedrag bij vervolggevallen
-
-| Gebeurtenis | Verwacht gedrag |
+| Veld | Betekenis |
 | --- | --- |
-| De bron wijzigt het aantal van dezelfde plek | Nieuwe bronwaarde bij dezelfde dataset + bron-ID; core toont het verschil voor beoordeling. |
-| Hetzelfde bestand wordt opnieuw aangeboden | Geen dubbele parkeerplek of dubbele publicatie. De consumer herkent de levering. |
-| Een plek ontbreekt bij de volgende volledige selectie | Toon als mogelijk verdwenen; niet automatisch verwijderen. |
-| Fetch of paginering mislukt | Geen complete levering presenteren. De bestaande publicatie blijft staan. |
-| Capaciteit ontbreekt | Bewaar onbekend; maak er geen nul van. |
-| Toegangsbetekenis is onduidelijk | Niet automatisch als algemene gehandicaptenparkeerplek publiceren. |
-| Een gebruiker meldt een correctie | Core beoordeelt deze. Een geaccepteerde correctie blijft afzonderlijk van de bronwaarde bestaan. |
-| Een volgende bronwaarde wijkt af van een geaccepteerde correctie | Toon het conflict; overschrijf de correctie niet stilzwijgend. |
-| De selectie verandert | Vergelijk afwezigheid niet ongemerkt met de oude selectie; beoordeel eerst de gewijzigde afbakening. |
+| `format` | `nipkaart-municipal-pilot-1`; één voorlopige revisie voor producer en consumer. Vervangt `municipal-records-draft`, geen compatibiliteitslaag. |
+| `dataset` | Vaste, door core toegelaten datasetcode. Bronhouder, licentie en geografische mapping horen bij deze aansluiting. |
+| `delivery_id` | UUID, één keer gemaakt per geslaagde ophaling. Een retry van hetzelfde bestand behoudt ID en bytes. |
+| `retrieved_at` | UTC-tijdstip waarop de ophaling begon, RFC 3339 met `Z`; sorteert leveringen. Geen waarnemingsdatum. Eén actieve ophaling per dataset. |
+| `selection` | Vaste code voor de afgesproken collectie/filter, bijvoorbeeld `all`. Een scopewijziging vereist eerst een nieuwe beoordeelde aansluiting of selectie. |
+| `complete` | Moet `true` zijn voor intake. Producent verklaart dit alleen op basis van bronbewijs. |
+| `source_count` | Aantal dat de bron voor deze selectie meldt; gelijk aan aantal ontvangen unieke records. Een totaal alleen bewijst geen volledigheid wanneer nog een volgende pagina bestaat. |
+| `records` | Alle records van de selectie, zonder stilzwijgend afgekeurde of overgeslagen bronrijen. |
 
-Bestaande bronmodellen en detail-/favorietverwijzingen blijven behouden. Het bestandsformaat bepaalt geen publicatiebeleid.
+De producent controleert bronpagina's, aantallen en unieke ID's voordat het bestand wordt geschreven. Opvangen van parsefouten en doorgaan met de overige records is geen complete levering. Als een bron geen totaal aanbiedt, wordt eerst een andere aantoonbare volledigheidscontrole afgesproken; verzin geen `source_count` uit alleen de ontvangen lijst.
 
-## Eerst bewijzen, daarna automatiseren
+Core accepteert alleen het bekende formaat en de toegelaten dataset/selectie; valideert typen en inhoud en weigert dubbele JSON-sleutels en bron-ID's. Geen remote schemaresolutie of door het bestand aangeleverde download-URL uitvoeren. Begin met de bestaande grenzen van 10.000 records en 32 MiB; de Amsterdamse bronproef van ongeveer 1,33 MB valt daar ruim binnen. Valideer vóór databasepublicatie.
 
-1. **#1214:** bruikbare bron selecteren, betekenis controleren, één voorlopige voorbeeldlevering vastleggen en de verantwoordelijkheden afbakenen.
-2. **disabled-parking #774:** vanuit de echte package een lokaal bestand maken met expliciete mapping en volledigheidscontrole.
-3. **core #1215:** dat bestand lezen, fouten en verschillen tonen en na beoordeling verwerken. Herimport behoudt identiteit en verwijdert ontbrekende records niet automatisch. Correctiebehoud krijgt een expliciete aansluiting op #1218.
-4. **Vervolgwerk:** automatisch ophalen, overdragen en ontdekken van bestanden nadat de lokale keten werkt.
+## Een record
 
-Integriteit, begrensde invoer en veilige herverwerking blijven nodig. De bestaande prototypekeuzes voor hashes, JSONL, exacte tijdsyntax en byte-/recordlimieten moeten bij de echte levering opnieuw worden beoordeeld. Opslagkeys, objectversies, ready-manifest-last, duurzame producersequences en herstel over meerdere hosts worden pas verplicht als het ontwerp voor automatische overdracht dat rechtvaardigt.
+| Veld | Regel |
+| --- | --- |
+| `external_id` | Niet-lege oorspronkelijke ID als string. Identiteit is `(dataset, external_id)`; behoud volledige ID en voorloopnullen. Geen coördinatenhash of interne core-ID. |
+| `geometry` | Oorspronkelijke GeoJSON `Polygon` in WGS84 voor Amsterdam, met `[longitude, latitude]`. Behoud ringen; begrens omvang en valideer bereik en geometrie. Geen verzonnen bronpunt. |
+| `number` | Niet-negatief geheel aantal of `null`. Nul en onbekend blijven verschillend; maak van een bronaggregaat geen verzonnen losse bays. |
+| `street` | Bronadres of `null`; een nabijheidsadres is geen exact parkeeradres. |
+| `access_category` | `general`, `personal` of `unknown`. `general` betekent niet persoonsgebonden gehandicaptenparkeren, geen beschikbaarheid of parkeren zonder vergunning. |
+| `source_attributes` | Voor Amsterdam: `regimes`, `orientation` en `version_date`. Alle regimes met hun tijden/dagen/datums/opmerkingen behouden; geen generiek regelsysteem of uitspraak “nu beschikbaar”. |
+| `source_updated_at` | Alleen een datum met bekende betekenis als wijziging van het bronrecord; anders `null`. Portaalverwerking is geen veldcontrole. |
 
-Het contract wordt pas vastgezet nadat de eerste keten is beproefd. Testresultaten van een losstaande validator bewijzen die keten niet.
+Core bewaart de brongeometrie bij de bronclaim en gebruikt na validatie PostGIS `ST_PointOnSurface` voor het afgeleide kaartpunt (`geometry_method=point_on_surface`). Dit blijft een benadering binnen het parkeervlak, geen ingang of individueel vak. Core schrijft de bestaande latitude/longitude-kolommen; PostgreSQL blijft de bestaande `location` afleiden. Zo zijn geen extra Python-geometriepackage of twee concurrerende afleidingen nodig. Zie [PostGIS](https://postgis.net/docs/ST_PointOnSurface.html) en de [bestaande opslagafspraak](postgresql.md#spatial-representation).
+
+Land en administratieve relaties worden door core uit de toegelaten datasetconfiguratie gekoppeld. Geen Nederlandse verplichte codes voor Europese bronnen en geen interne foreign keys in het bestand. Deze pilot ondersteunt alleen de aangetroffen Polygon-geometrie. Puntbronnen of andere geometrieën krijgen pas ondersteuning wanneer ze worden aangesloten. Nuttige broninformatie wordt daarbij nooit stilzwijgend weggegooid.
+
+## Herhaling en wijzigingen
+
+| Geval | Gedrag |
+| --- | --- |
+| Eerste complete levering | Valideren, verschillen en kaartsteekproef tonen; publicatie na beoordeling. |
+| Zelfde dataset en delivery-ID, dezelfde bytes | Bestaande importstatus teruggeven; geen tweede verwerking of publicatie. Core bewaart de SHA-256 van de ontvangen bytes. |
+| Zelfde delivery-ID, andere bytes | Conflict afwijzen; nooit een bestaande levering vervangen. |
+| Nieuwe levering, ongewijzigde records | Geen dubbele plekken of inhoudsrevisies; wel nieuwe ontvangst vastleggen. |
+| Oudere `retrieved_at` dan de laatst geaccepteerde levering | Geen actuele gegevens overschrijven. Gelijke tijd met verschillende delivery-ID's is een conflict, geen willekeurige winnaar. |
+| Een veld wijzigt bij dezelfde bron-ID | Nieuwe bronwaarde tonen voor beoordeling; identiteit, favorieten en detailverwijzingen behouden. |
+| Een record ontbreekt in een complete selectie | Markeren als mogelijk verdwenen en beoordelen; geen automatische verwijdering. Terugkeer gebruikt dezelfde identiteit. |
+| Lege/incomplete/ongeldige levering of mislukte fetch | Geen publicatie; bestaande gegevens en laatste geldige export blijven behouden. |
+| Bronwaarde botst met geaccepteerde correctie | Bronwaarde afzonderlijk bijwerken; correctie behouden en conflict tonen. Ook in de eerste importimplementatie. |
+| Onbekende toegang of gewijzigde scope | Geen automatische algemene publicatie of vergelijking van ontbrekende records; eerst beoordelen. |
+
+Core controleert volgorde en actuele correcties opnieuw bij publicatie, ook als twee beoordeelde imports tegelijk klaarstaan. `retrieved_at` is een eenvoudige volgorderegel voor één producent met correcte UTC-klok; het bewijst geen transactiesnapshot bij de bron. Toekomstige of onlogische tijdstippen vragen beoordeling. Geen gedistribueerde teller bouwen voor de pilot.
+
+## Concrete overdracht
+
+1. **#1214:** bronkeuze, toegestane voorbeeldrij, betekenis en deze voorlopige afspraak.
+2. **disabled-parking #774:** eventuele generieke bronpackagefix eerst, daarna één live commando dat dit bestand atomair schrijft. Vervang draftformaat, null-volledigheidsmetadata en achterhaalde voorbeeldroute; behoud slechts nuttige kleine tests.
+3. **core #1215:** één intakepad met beoordeling en veilige eerste, gewijzigde, herhaalde, oudere, ontbrekende en conflicterende levering. Vervang/verwijder de oude #1222-schema's en validatie in dezelfde implementatie.
+4. **#1217, disabled-parking #775 en core #1216:** provider kiezen, dezelfde levering automatisch uploaden en ontdekken. De gekozen opslaggrens moet voorkomen dat core een gedeeltelijk bestand verwerkt.
+
+Gewone CI werkt offline met kleine voorbeelden van packageobjecten. Eén afzonderlijke begrensde live proef bewijst bronophaling; een daadwerkelijke beoordeelde core-import bewijst de volgende stap. Geen van beide wordt door alleen een fixturetest vervangen.

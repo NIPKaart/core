@@ -59,7 +59,7 @@ De [bestaande PostgreSQL-afspraak](../development/postgresql.md#fresh-start-deci
 | Mobiel is een toekomstige productrichting | Verwerking centraal en herbruikbaar; geen mobiele app bouwen in deze eerste oplevering |
 | Vertrouwen kan later verwerking versnellen | Nu onderbouwde bijdrage- en beslisgeschiedenis verzamelen; nog geen automatische karmadrempels |
 
-De batchgrens is gekozen. Exacte manifestvelden, termijnen en infrastructuurdetails blijven ontwerpvoorstellen. Werkpakket A valideert en bevriest het eerste bestandcontract voordat productiecode erop vertrouwt.
+De batchgrens en private bucket voor automatische overdracht zijn gekozen. De eerste proef gebruikt één lokaal JSON-bestand. Werkpakket A beschrijft het voorlopige formaat; producer en core beproeven dit vóór het wordt vastgezet. Opslagprovider en voltooiingsmechanisme horen bij #1217.
 
 ## 4. Verantwoordelijkheden
 
@@ -67,8 +67,8 @@ De batchgrens is gekozen. Exacte manifestvelden, termijnen en infrastructuurdeta
 flowchart TD
     U[Universele Python-packages] --> A[Adapters in de twee importrepositories]
     T[Planning in importomgeving] --> A
-    A --> B[Recordsbestand uploaden]
-    B --> M[Ready-manifest als laatste in private opslag]
+    A --> B[Eén JSON-bestand]
+    B --> M[Private bucket na de lokale proef]
     M --> C[Core ontdekt complete leveringen]
     C --> V[Core: validatie en vergelijking]
     R[Communitywaarnemingen en correcties] --> D[Beoordeling en publicatiebesluiten]
@@ -81,13 +81,13 @@ flowchart TD
 | --- | --- | --- |
 | Universeel package | Bronprotocol, pagina's ophalen, bronobjecten en bronfouten | NIPKaart-identiteit, moderatie of distributiebeleid |
 | NIPKaart-adapter | Veldbetekenis vertalen, bron-ID behouden, filterscope en volledigheid rapporteren | Gemeentelijke bronwaarden stilzwijgend vervangen door lokale correcties |
-| Python-batchrunner | Eigen sourceplanning, begrensd ophalen, bestanden uploaden, als laatste gereedmelden en fetchfouten melden | Core aanroepen om werk te claimen of parkeerinformatie publiceren |
-| Core | Toegelaten datasets, manifestdiscovery, importhistorie, validatie, beoordeling, publicatie en uitblijvende leveringen signaleren | Bronfetches plannen, broncredentials beheren of onderzoeksworkflow aanbieden |
+| Python-batchrunner | Eigen sourceplanning, begrensd ophalen, complete bestanden afleveren en fetchfouten melden | Core aanroepen om werk te claimen of parkeerinformatie publiceren |
+| Core | Toegelaten datasets, bestandsdiscovery, importhistorie, validatie, beoordeling, publicatie en uitblijvende leveringen signaleren | Bronfetches plannen, broncredentials beheren of onderzoeksworkflow aanbieden |
 | Beheerder | Bron toelaten, uitzonderingen beoordelen, voorwaarden en kwaliteit vastleggen | Iedere normale herimport handmatig overtypen |
 
 Er zijn twee verschillende soorten achtergrondwerk: Python verzamelt brondata; Laravel verwerkt aanleveringen en besluiten. Python leest geen Laravel-queuetabellen en krijgt geen databasecredentials.
 
-Core beheert het versieerbare bestandcontract en voorbeelden; beide importrepositories testen tegen dezelfde release. Gedeelde Python-uitvoeringslogica wordt pas losgetrokken wanneer een tweede repository die werkelijk nodig heeft. De universele bronclients blijven daarvan onafhankelijk.
+Core bewaart de leveringsafspraak en voorbeelden; de producent en consumer gebruiken hetzelfde beproefde formaat. Een aparte schemarelease is geen voorwaarde voor de pilot. Gedeelde Python-uitvoeringslogica wordt pas losgetrokken wanneer een tweede repository die werkelijk nodig heeft. De universele bronclients blijven daarvan onafhankelijk.
 
 ## 5. Aangesloten datasets beheren
 
@@ -153,7 +153,7 @@ Actualiteit wordt per informatietype beoordeeld. Een verouderde bezettingsmeting
 
 ### Terugkerende import
 
-De importomgeving haalt volgens eigen planning op en schrijft pas na volledige bestandsupload een ready-manifest. Core ontdekt dit, valideert en vergelijkt. Normale wijzigingen mogen na pilotacceptatie automatisch publiceren; afwijkingen komen in de beoordelingslijst. Core toont uitblijvende leveringen als achterstand en houdt ontvangst, validatie en publicatie apart. De oorzaak van een fetchfout staat in de importomgeving. Ophalen pauzeren en corepublicatie pauzeren zijn afzonderlijke handelingen.
+De importomgeving haalt volgens eigen planning op en levert een compleet bestand af in de private bucket. Het in #1217 gekozen mechanisme voorkomt dat core een gedeeltelijke upload verwerkt. Core ontdekt het bestand, valideert en vergelijkt. Normale wijzigingen mogen na pilotacceptatie automatisch publiceren; afwijkingen komen in de beoordelingslijst. Core toont uitblijvende leveringen als achterstand en houdt ontvangst, validatie en publicatie apart. De oorzaak van een fetchfout staat in de importomgeving. Ophalen pauzeren en corepublicatie pauzeren zijn afzonderlijke handelingen.
 
 ### Bijdragen en onderhouden
 
