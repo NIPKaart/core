@@ -67,7 +67,7 @@ De NIPKaart-representatie gebruikt onderstaande mapping. `geometry` en de twee `
 | --- | --- | --- |
 | `properties.id` | `external_id="114323484886"` | Bronidentiteit; geen numerieke conversie of verkorting. |
 | `geometry` | `geometry` | Volledig Polygon behouden. Core berekent pas bij intake een kaartpunt met PostGIS `ST_PointOnSurface`; geen Python-geometrieafhankelijkheid. |
-| `aantal=1.0` | `number=1` | Alleen na controle dat het getal eindig, geheel en niet-negatief is. `null` blijft onbekend, nul blijft nul. |
+| `aantal=1.0` | `number=1` | Geschatte capaciteit volgens de bron. Alleen na controle dat het getal eindig, geheel en niet-negatief is. `null` blijft onbekend, nul blijft nul. |
 | `straatnaam` | `street="Pieter Calandlaan"` | Bronstraat, geen geocoding of afgeleid huisnummer. |
 | `eType` en alle regimebeschrijvingen | `access_category="general"` | Alleen bij consistente algemene betekenis; onbekend of persoonsgebonden wordt niet algemeen verklaard. |
 | Alle `regimes` | `source_attributes.regimes` | Tijd, dagen, datums, bord, uitzondering en opmerking blijven zichtbaar voor review. Geen berekende “nu beschikbaar”-status. |
@@ -82,7 +82,7 @@ De volledige levering volgt [het ene JSON-bestand](data-import-contract.md): `fo
 
 ## Eerst oplossen in de universele package
 
-Dit is de eerste afhankelijkheid van disabled-parking #774, geen Python-werk in core:
+Uitvoerbaar package-issue: [python-odp-amsterdam #1291](https://github.com/klaasnicolaas/python-odp-amsterdam/issues/1291). Dit is de eerste afhankelijkheid van disabled-parking #774, geen Python-werk in core:
 
 1. Stel de bron-ID, volledige geometrie, alle regimes en versiedatum beschikbaar. Bewaar oorspronkelijke aantallen zonder verliesgevende conversie; test onbekend, nul, fractioneel en meerdere regimes.
 2. Bied een publieke volledige ophaling met totalen/pagina-informatie aan. Controleer de laatste pagina en unieke ID's; één `limit=2000` is geen blijvend volledigheidsbewijs. Behoud de bestaande beperkte ophaalmethode voor andere packagegebruikers indien die onderdeel is van de publieke API.

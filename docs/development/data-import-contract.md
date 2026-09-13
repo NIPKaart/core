@@ -40,7 +40,7 @@ Core accepteert alleen het bekende formaat en de toegelaten dataset/selectie; va
 | --- | --- |
 | `external_id` | Niet-lege oorspronkelijke ID als string. Identiteit is `(dataset, external_id)`; behoud volledige ID en voorloopnullen. Geen coördinatenhash of interne core-ID. |
 | `geometry` | Oorspronkelijke GeoJSON `Polygon` in WGS84 voor Amsterdam, met `[longitude, latitude]`. Behoud ringen; begrens omvang en valideer bereik en geometrie. Geen verzonnen bronpunt. |
-| `number` | Niet-negatief geheel aantal of `null`. Nul en onbekend blijven verschillend; maak van een bronaggregaat geen verzonnen losse bays. |
+| `number` | Niet-negatief geheel aantal of `null`; voor Amsterdam een bronschatting, geen geverifieerde telling. Nul en onbekend blijven verschillend; maak van een bronaggregaat geen verzonnen losse bays. |
 | `street` | Bronadres of `null`; een nabijheidsadres is geen exact parkeeradres. |
 | `access_category` | `general`, `personal` of `unknown`. `general` betekent niet persoonsgebonden gehandicaptenparkeren, geen beschikbaarheid of parkeren zonder vergunning. |
 | `source_attributes` | Voor Amsterdam: `regimes`, `orientation` en `version_date`. Alle regimes met hun tijden/dagen/datums/opmerkingen behouden; geen generiek regelsysteem of uitspraak “nu beschikbaar”. |
