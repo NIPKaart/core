@@ -1,0 +1,70 @@
+#ddev-generated
+# RustFS: S3-compatible object storage for local dev, replacing ddev/ddev-minio.
+#
+# Written rather than taken from koengsen/ddev-rustfs, which does not fit: it creates
+# exactly one bucket from AWS__DEFAULT_BUCKET rather than letting a project name its
+# own, it pulls the ~400MB amazon/aws-cli image only to create it, and it gates rustfs
+# on 'service_completed_successfully' for a container that runs 'tail -f /dev/null' and
+# therefore never completes.
+#
+# Its own opt-in add-on rather than part of a general-purpose one, because DDEV
+# activates every .ddev/docker-compose.*.yaml unconditionally -- folding it in would
+# start a RustFS container in every project that installed it, S3 or not.
+#
+# The S3 API keeps the external ports ddev/ddev-minio published (10100 http, 10101
+# https), so a project switching backends does not have to change its endpoint.
+services:
+  rustfs:
+    container_name: ddev-${DDEV_SITENAME}-rustfs
+    # Pinned, not ':latest'. RustFS is pre-1.0 (this is 1.0.0-beta.12), so 'latest'
+    # could change behaviour under us with no change to this repo.
+    image: rustfs/rustfs:1.0.0-beta.12
+    hostname: ${DDEV_SITENAME}-rustfs
+    environment:
+      RUSTFS_ACCESS_KEY: rustfs
+      RUSTFS_SECRET_KEY: rustfs123
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      # The console is a Next.js app compiled into the rustfs binary, served at the
+      # path /rustfs/console/ -- NOT at the root. The console port's / is handled by
+      # the S3 API and answers <Error><Code>AccessDenied</Code></Error>, with no
+      # redirect, so probing / makes it look as though no UI exists. Use the full path.
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CORS_ALLOWED_ORIGINS: "*"
+      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: "*"
+      # How DDEV's router publishes the S3 API (10100/10101, the ports ddev-minio used)
+      # and the console (9089/9090, likewise). Both schemes are listed because the site
+      # is served over https and s3fs forces https file URLs on a secure request, while
+      # plain http stays useful for curl.
+      #
+      # Note RUSTFS_SERVER_DOMAINS is deliberately unset. Per `rustfs server --help`,
+      # it is what would make virtual-hosted-style addressing (bucket.host) work; with
+      # it unset RustFS supports path style only -- which is what
+      # settings.development.php configures s3fs to use.
+      VIRTUAL_HOST: $DDEV_HOSTNAME
+      HTTP_EXPOSE: "10100:9000,9089:9001"
+      HTTPS_EXPOSE: "10101:9000,9090:9001"
+    # No ownership fixup container: /data is owned by rustfs:rustfs (uid 10001) in
+    # the image itself, and Docker preserves that when it initialises a fresh named
+    # volume, so the non-root process can write from first start.
+    volumes:
+      - "rustfs-data:/data"
+    expose:
+      - "9000"
+      - "9001"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    x-ddev:
+      describe-info: |
+        User: rustfs
+        Pass: rustfs123
+        API: ${DDEV_PRIMARY_URL}:10101
+        Buckets: ddev s3-init
+
+volumes:
+  rustfs-data:
+    name: ddev-${DDEV_SITENAME}-rustfs-data
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
