@@ -2,7 +2,7 @@
 
 use App\Services\MunicipalDeliveryStorage;
 use Aws\S3\Exception\S3Exception;
-use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -29,8 +29,9 @@ it('round trips immutable deliveries through the local S3 service', function () 
         expect($listed)->not->toBeNull();
         expect($storage->read($key, $listed['etag']))->toBe($json);
 
-        $anonymous = (new Client)->get('http://rustfs:9000/'.$storage->bucket().'/'.$key, ['http_errors' => false, 'timeout' => 10]);
-        expect($anonymous->getStatusCode())->toBe(403);
+        $url = 'http://rustfs:9000/'.$storage->bucket().'/'.$key;
+        Http::allowStrayRequests([$url]);
+        expect(Http::timeout(10)->withoutRedirecting()->get($url)->status())->toBe(403);
 
         try {
             $client->putObject($object);
@@ -47,7 +48,9 @@ it('round trips immutable deliveries through the local S3 service', function () 
             expect($exception->getStatusCode())->toBe(412);
         }
 
-        $client->putObject(array_replace($object, ['IfNoneMatch' => null, 'Metadata' => ['sha256' => str_repeat('0', 64)]]));
+        unset($object['IfNoneMatch']);
+        $object['Metadata'] = ['sha256' => str_repeat('0', 64)];
+        $client->putObject($object);
         $etag = $client->headObject(['Bucket' => $storage->bucket(), 'Key' => $key])['ETag'];
         expect(fn () => $storage->read($key, $etag))->toThrow(ValidationException::class);
     } finally {

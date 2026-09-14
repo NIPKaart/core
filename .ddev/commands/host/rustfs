@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+#ddev-generated
 ## Description: Open the local RustFS console (rustfs / rustfs123)
 ## Usage: rustfs
 ## Example: ddev rustfs

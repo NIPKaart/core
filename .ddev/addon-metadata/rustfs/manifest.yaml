@@ -7,5 +7,8 @@ project_files:
     - rustfs/rustfs-env.sh
     - commands/host/aws
     - commands/host/s3-init
+    - docker-compose.rustfs_extra.yaml
+    - config.rustfs.yaml
+    - commands/host/rustfs
 global_files: []
 removal_actions: []

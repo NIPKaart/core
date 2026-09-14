@@ -1,4 +1,12 @@
+#ddev-generated
 services:
+  rustfs:
+    x-ddev:
+      describe-info: |
+        Console: ddev rustfs
+        User: rustfs
+        Pass: rustfs123
+        Private import bucket: nipkaart-imports (created on start)
   web:
     environment:
       MUNICIPAL_R2_ENDPOINT: http://rustfs:9000
