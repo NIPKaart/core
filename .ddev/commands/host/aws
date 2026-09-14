@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Run the aws CLI against this project's local RustFS
+## Usage: aws [aws-cli args...]
+## Example: "ddev aws s3 ls" or "ddev aws s3 sync ./photos s3://BUCKET/photos"
+## OSTypes: darwin,linux
+## HostBinaryExists: /opt/homebrew/bin/aws,/usr/local/bin/aws,/usr/bin/aws
+
+set -euo pipefail
+
+# A host command, not a web command: ddev-webserver ships no aws CLI, the S3 API is
+# published by DDEV's router, and running on the host means `s3 sync` can read paths
+# anywhere on your machine rather than only inside the project -- which is the point of
+# having it.
+#
+# Everything it adds is boilerplate you would otherwise retype every time: endpoint,
+# credentials, region and CA bundle. Path-style addressing needs no flag; it is the
+# default for a custom endpoint, and per `rustfs server --help` it is all RustFS supports
+# unless RUSTFS_SERVER_DOMAINS is set, which docker-compose.rustfs.yaml leaves unset.
+
+project_root="${DDEV_APPROOT:?must be run through ddev}"
+# shellcheck source=rustfs/rustfs-env.sh
+source "$project_root/.ddev/rustfs/rustfs-env.sh"
+rustfs_env
+
+exec aws --endpoint-url "$RUSTFS_ENDPOINT" "$@"

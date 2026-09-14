@@ -1,3 +1,4 @@
 hooks:
   post-start:
-    - exec: "if [ -f vendor/autoload.php ]; then php artisan config:clear && php .ddev/rustfs-setup.php; else echo 'Run ddev restart after composer install.'; fi"
+    - exec: "if [ -f vendor/autoload.php ]; then php artisan config:clear; fi"
+    - exec-host: "ddev aws s3api head-bucket --bucket nipkaart-imports >/dev/null 2>&1 || ddev aws s3api create-bucket --bucket nipkaart-imports"

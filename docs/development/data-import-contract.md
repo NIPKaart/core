@@ -114,13 +114,13 @@ Keep R2 retention longer than the agreed maximum core outage. Losing the pending
 
 ## Local object storage with DDEV
 
-DDEV runs RustFS with its built-in web console and a persistent Docker volume. `ddev start` creates the private local `nipkaart-imports` bucket if absent and clears Laravel's configuration cache. Install Composer dependencies first, or restart DDEV after installing them. Open the console with `ddev rustfs`; the local-only account and key are both `ddevrustfs`.
+DDEV uses `Rapid-Development-Group/ddev-rustfs` v1.0.2, the same add-on as DDS, with its bundled RustFS `1.0.0-beta.12` image and persistent Docker volume. Install the host AWS CLI (`brew install awscli` on macOS). `ddev start` creates the private local `nipkaart-imports` bucket through `ddev aws` if absent and clears Laravel's configuration cache when dependencies are installed. Open the console with `ddev rustfs`; the local account is `rustfs` and its key is `rustfs123`. Do not use `ddev s3-init` for import buckets: that command enables public reads.
 
 | Connection | Address |
 | --- | --- |
 | Core inside DDEV | `http://rustfs:9000` |
-| S3 API from the host | `https://nipkaart-core.ddev.site:9090` |
-| Web console | `https://nipkaart-core.ddev.site:9091` |
+| S3 API from the host | `https://nipkaart-core.ddev.site:10101` |
+| Web console | `https://nipkaart-core.ddev.site:9090/rustfs/console/` |
 
 The DDEV Compose override supplies the existing `MUNICIPAL_R2_*` settings with local values, taking precedence over `.env` inside the web container. Leave those connection values empty when copying `.env.example` for DDEV. Their names are retained for compatibility; the disk uses the same S3 client for RustFS and R2. No cloud credentials are needed for local development. Automatic discovery remains opt-in; to run one local scan use `ddev exec env MUNICIPAL_DELIVERIES_ENABLED=true php artisan nipkaart:discover-municipal-deliveries`. The queue worker also needs that flag enabled. Register the dataset first and retain the normal review/publication flow.
 
@@ -132,7 +132,7 @@ Run the explicit local storage test with:
 ddev exec env DB_HOST=db RUN_RUSTFS_TESTS=1 php artisan test --compact tests/Feature/RustfsStorageTest.php
 ```
 
-It checks conditional PUT replay, prefix listing, ETag conditions and SHA-256 validation through core's actual storage service, then deletes only its own uniquely named test object. It refuses non-local endpoint/bucket configuration. Ordinary CI skips this test and retains the existing isolated import tests. The pinned RustFS image is currently a release candidate; local success does not replace the real R2 permission and recovery rehearsal.
+It checks conditional PUT replay, prefix listing, ETag conditions and SHA-256 validation through core's actual storage service, then deletes only its own uniquely named test object. It refuses non-local endpoint/bucket configuration. Ordinary CI skips this test and retains the existing isolated import tests. The add-on uses a pinned pre-1.0 RustFS image; local success does not replace the real R2 permission and recovery rehearsal.
 
 ## Isolated staging rehearsal (#1217)
 

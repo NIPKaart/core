@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+#ddev-generated
+## Description: Create buckets in this project's RustFS and make them publicly readable
+## Usage: s3-init [bucket...]
+## Example: "ddev s3-init" or "ddev s3-init my-bucket other-bucket"
+## OSTypes: darwin,linux
+## HostBinaryExists: /opt/homebrew/bin/aws,/usr/local/bin/aws,/usr/bin/aws
+
+set -euo pipefail
+
+# Framework-agnostic: buckets come from the command line. With no arguments it tries to
+# discover one from Drupal's s3fs config, which is a convenience for the common case, not
+# a requirement -- nothing here needs Drupal, or PHP, to exist.
+#
+# Replaces the two things the MinIO/RustFS web console was otherwise used for -- create a
+# bucket, set its access policy to public -- and the `ddev mc mb` /
+# `ddev mc anonymous set download` pair that ddev/ddev-minio provided.
+#
+# Idempotent.
+
+project_root="${DDEV_APPROOT:?must be run through ddev}"
+# shellcheck source=rustfs/rustfs-env.sh
+source "$project_root/.ddev/rustfs/rustfs-env.sh"
+rustfs_env
+
+buckets=("$@")
+
+if [ "${#buckets[@]}" -eq 0 ]; then
+  # Best-effort discovery for Drupal + s3fs. Silent about its own failure: on a project
+  # that is not Drupal this is simply not the way buckets get named, which is not an
+  # error worth reporting -- the usage message below covers it.
+  # No --quiet: drush's --quiet suppresses the value as well as the noise, so the
+  # discovery silently returned nothing. stderr is redirected instead.
+  discovered="$(ddev drush config:get s3fs.settings bucket --format=string 2>/dev/null \
+    | tr -d '\r' | head -1 || true)"
+  if [ -n "$discovered" ]; then
+    buckets=("$discovered")
+    echo "Bucket from Drupal s3fs config: $discovered"
+  fi
+fi
+
+if [ "${#buckets[@]}" -eq 0 ]; then
+  echo "s3-init: no bucket given, and none found in Drupal's s3fs config." >&2
+  echo "Usage: ddev s3-init [bucket...]" >&2
+  exit 64
+fi
+
+for bucket in "${buckets[@]}"; do
+  echo "--- $bucket"
+
+  # 'aws s3api head-bucket' rather than 'create-bucket || true': creating a bucket that
+  # exists is an error on some S3 implementations and silently fine on others, and
+  # swallowing the failure would also swallow a real one.
+  if aws --endpoint-url "$RUSTFS_ENDPOINT" s3api head-bucket --bucket "$bucket" >/dev/null 2>&1; then
+    echo "already exists"
+  else
+    aws --endpoint-url "$RUSTFS_ENDPOINT" s3api create-bucket --bucket "$bucket" >/dev/null
+    echo "created"
+  fi
+
+  # Public read, so a browser can load files straight from the emulator. Without this,
+  # uploads succeed and every file 403s, which reads as a broken upload.
+  #
+  # Safe by construction rather than by check: RUSTFS_ENDPOINT always points at this
+  # project's own RustFS, so a world-readable policy cannot reach a real bucket.
+  aws --endpoint-url "$RUSTFS_ENDPOINT" s3api put-bucket-policy --bucket "$bucket" \
+    --policy "{
+      \"Version\": \"2012-10-17\",
+      \"Statement\": [{
+        \"Sid\": \"PublicReadGetObject\",
+        \"Effect\": \"Allow\",
+        \"Principal\": \"*\",
+        \"Action\": [\"s3:GetObject\"],
+        \"Resource\": [\"arn:aws:s3:::$bucket/*\"]
+      }]
+    }" >/dev/null
+  echo "public-read policy set"
+done

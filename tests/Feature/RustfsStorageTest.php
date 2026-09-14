@@ -2,6 +2,7 @@
 
 use App\Services\MunicipalDeliveryStorage;
 use Aws\S3\Exception\S3Exception;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -27,6 +28,9 @@ it('round trips immutable deliveries through the local S3 service', function () 
         $listed = collect(iterator_to_array($storage->objects($dataset)))->firstWhere('key', $key);
         expect($listed)->not->toBeNull();
         expect($storage->read($key, $listed['etag']))->toBe($json);
+
+        $anonymous = (new Client)->get('http://rustfs:9000/'.$storage->bucket().'/'.$key, ['http_errors' => false, 'timeout' => 10]);
+        expect($anonymous->getStatusCode())->toBe(403);
 
         try {
             $client->putObject($object);

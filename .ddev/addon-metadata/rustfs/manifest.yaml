@@ -1,0 +1,11 @@
+name: rustfs
+repository: Rapid-Development-Group/ddev-rustfs
+version: v1.0.2
+install_date: "2026-09-14T17:39:45+02:00"
+project_files:
+    - docker-compose.rustfs.yaml
+    - rustfs/rustfs-env.sh
+    - commands/host/aws
+    - commands/host/s3-init
+global_files: []
+removal_actions: []

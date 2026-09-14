@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-## Description: Open the local RustFS console (ddevrustfs / ddevrustfs)
+## Description: Open the local RustFS console (rustfs / rustfs123)
 ## Usage: rustfs
 ## Example: ddev rustfs
 
 set -euo pipefail
 if [[ "${DDEV_PRIMARY_URL}" == https://* ]]; then
-    ddev launch :9091
+    ddev launch :9090/rustfs/console/
 else
-    ddev launch :9081
+    ddev launch :9089/rustfs/console/
 fi
