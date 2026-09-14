@@ -221,6 +221,47 @@ it('blocks source conflicts with manual values and preserves nonconflicting corr
     expect($import->fresh()->state)->toBe('pending');
 });
 
+it('blocks publication when the previous import values disappear after review', function () {
+    $this->freezeTime();
+    $source = DatasetSource::factory()->create();
+    $user = importReviewer();
+    approveMunicipal(stageMunicipal(municipalDelivery(), $user), $user);
+    $space = ParkingMunicipal::firstOrFail();
+    $publishedAt = $source->fresh()->last_published_retrieved_at;
+    $this->travel(2)->minutes();
+    $data = municipalDelivery();
+    $data['records'][0]['number'] = 2;
+    $import = stageMunicipal($data, $user);
+    $service = app(MunicipalImportService::class);
+    $token = $service->review($import)['token'];
+    $space->forceFill(['last_imported_values' => null])->save();
+
+    expect(fn () => $service->decide($import, $user, 'publish', 'Reviewed', $token))->toThrow(ValidationException::class);
+
+    expect($service->review($import)['counts']['conflict'])->toBe(1);
+    expect($space->fresh())->number->toBeNull()->last_imported_values->toBeNull();
+    expect($import->fresh())->state->toBe('pending')->reviewed_at->toBeNull();
+    expect($source->fresh()->last_published_retrieved_at->equalTo($publishedAt))->toBeTrue();
+});
+
+it('requires an explicit unknown source update date for the Amsterdam pilot', function (mixed $value) {
+    DatasetSource::factory()->create();
+    $data = municipalDelivery();
+    $data['records'][0]['source_updated_at'] = $value;
+    $file = UploadedFile::fake()->createWithContent('delivery.json', json_encode($data));
+
+    $this->actingAs(importReviewer())->post(route('app.municipal-imports.store'), ['file' => $file])
+        ->assertSessionHasErrors('records.0.source_updated_at');
+
+    $this->assertDatabaseCount('municipal_imports', 0);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+})->with([
+    'date with unverified meaning' => ['2026-01-01T00:00:00Z'],
+    'empty string' => [''],
+    'empty array' => [[]],
+    'boolean' => [false],
+]);
+
 it('rechecks ordering and review state immediately before publication', function () {
     $this->freezeTime();
     DatasetSource::factory()->create();

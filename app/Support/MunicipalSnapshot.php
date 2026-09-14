@@ -69,7 +69,7 @@ final class MunicipalSnapshot
                 'number' => ['present', 'nullable', 'integer', 'min:0', 'max:2147483647'],
                 'street' => ['present', 'nullable', 'string', 'max:255'],
                 'access_category' => ['required', 'in:general'],
-                'source_updated_at' => ['present', 'prohibited'],
+                'source_updated_at' => ['present'],
                 'source_attributes' => ['required', 'array:regimes,orientation,version_date'],
                 'source_attributes.orientation' => ['present', 'nullable', 'string', 'max:255'],
                 'source_attributes.version_date' => ['present', 'nullable', 'date_format:Y-m-d'],
@@ -84,6 +84,9 @@ final class MunicipalSnapshot
                 $this->fail("$prefix.external_id", 'Bron-ID is ongeldig of dubbel.');
             }
             $seen[$record['external_id']] = true;
+            if ($record['source_updated_at'] !== null) {
+                $this->fail("$prefix.source_updated_at", 'De bronwijzigingsdatum is onbekend voor deze Amsterdam-pilot; verwacht null.');
+            }
             if ($record['number'] !== null && ! is_int($record['number'])) {
                 $this->fail("$prefix.number", 'Verwacht een geheel aantal of null.');
             }

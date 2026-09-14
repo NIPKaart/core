@@ -169,7 +169,7 @@ class MunicipalImportService
             $values = $record['values'];
             if ($space) {
                 foreach ($values as $field => $value) {
-                    if (MunicipalSnapshot::fingerprint($this->value($space, $field)) !== MunicipalSnapshot::fingerprint($space->last_imported_values[$field])) {
+                    if ($space->last_imported_values === null || MunicipalSnapshot::fingerprint($this->value($space, $field)) !== MunicipalSnapshot::fingerprint($space->last_imported_values[$field])) {
                         $values[$field] = $this->value($space, $field);
                     }
                 }
