@@ -9,7 +9,9 @@ type Props = {
     longitude: number;
     onChange?: (lat: number, lng: number) => void;
     draggable?: boolean;
+    scrollWheelZoom?: boolean;
     nearbySpaces?: ParkingSpace[];
+    children?: React.ReactNode;
 };
 
 const { BaseLayer, Overlay } = LayersControl;
@@ -25,7 +27,7 @@ const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({ spaces }
     return <FeatureGroup>{markers}</FeatureGroup>;
 });
 
-export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpaces }: Props) {
+export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpaces, children, scrollWheelZoom = true }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
 
     return (
@@ -33,7 +35,7 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
             <MapContainer
                 center={[latitude, longitude]}
                 zoom={19}
-                scrollWheelZoom
+                scrollWheelZoom={scrollWheelZoom}
                 zoomControl={false}
                 className="h-80 w-full rounded-xl border md:h-[500px]"
             >
@@ -64,6 +66,7 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
                 </LayersControl>
 
                 <ZoomControl position="topleft" />
+                {children}
 
                 <Marker
                     position={[latitude, longitude]}

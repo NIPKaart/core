@@ -99,6 +99,8 @@ Accessibility is a product requirement across every stream. Map-only interaction
 
 ## Proposed delivery horizons
 
+The [data foundation plan](data-foundation.md) refines this sequencing as of 2026-09-08: the minimum operational dataset registry, import history and correction preservation are part of the first data delivery, rather than waiting for Horizon 2. The [work packages](../development/data-foundation-delivery.md) define the implementation and acceptance gates. Broader coverage, automated contributor trust and mobile remain later work; source research/CRM is outside platform scope.
+
 ### Horizon 1 — Relaunchable core
 
 - destination/address search

@@ -55,6 +55,7 @@ export function getParkingMunicipalColumns(
         {
             accessorKey: 'number',
             header: t('table.count'),
+            cell: ({ row }) => row.original.number ?? t('filters.options.unknown'),
         },
         {
             accessorKey: 'orientation',

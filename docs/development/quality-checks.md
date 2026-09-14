@@ -69,3 +69,9 @@ Additional plugins were evaluated individually: agent output is optional and the
 Permanent spatial coverage lives in `ParkingLocationTest`, `ParkingDiscoveryTest`, `GeoPointTest` and `GeoBoundsTest`: all source models, generated SRID/coordinate order and bulk updates, metre distances, deterministic ties, inclusive bounds, antimeridian queries, public filtering, and invalid inputs. There is no application coverage-polygon/intersection API yet; no speculative polygon model or tests of bare PostGIS functions are introduced. Query-plan assertions are intentionally omitted: tiny transactional fixtures do not meaningfully predict planner choices, while exact query results are stable regression contracts.
 
 See [Pest TIA documentation](https://pestphp.com/docs/tia) for baseline storage, invalidation and replay behavior.
+
+## Municipal file intake
+
+`tests/Feature/MunicipalImportTest.php` controleert de daadwerkelijke intake, autorisatie, PostGIS-validatie, beoordeling, herhaling, bronvolgorde, bescherming van handmatige waarden en transactieherstel op de afzonderlijke PostgreSQL/PostGIS-testdatabase. Kleine inline voorbeelden vervangen de experimentele schema's, Opis-validator en fixturecorpus uit #1222. Core bevat geen Python-omgeving.
+
+Een geslaagde test bewijst geen geldige livebron of toestemming voor productiepublicatie. Zie de [uitvoering en herstelafspraken](data-import-contract.md#lokale-uitvoering-en-herstel) en de [afzonderlijke bronproef](data-import-pilot.md). De Amsterdamse export bevat tien zelfdoorsnijdende polygonen. De intake stelt daarvoor een afzonderlijke geometrie-afleiding voor die expliciete review vereist; onbruikbare afleidingen blokkeren de levering. De tests bewijzen behoud van het origineel, goedkeuring/afwijzing, herhaling en later herstel bij de bron. De publieke kaart blijft uitsluitend markers tonen.

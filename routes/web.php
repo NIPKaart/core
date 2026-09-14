@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
         });
 
+        Route::post('municipal-imports/datasets/{dataset_source}/enable', [Admin\MunicipalImportController::class, 'enable'])->name('municipal-imports.datasets.enable');
+        Route::resource('municipal-imports', Admin\MunicipalImportController::class)->only(['index', 'store', 'show', 'update'])->parameters(['municipal-imports' => 'municipal_import'])->middleware('throttle:20,1');
+
         // ParkingMunicipal routes
         Route::prefix('parking-municipal')->as('parking-municipal.')->group(function () {
             Route::get('/', [Admin\ParkingMunicipalController::class, 'index'])->name('index');
