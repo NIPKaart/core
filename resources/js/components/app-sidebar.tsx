@@ -1,3 +1,4 @@
+import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
 import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -85,6 +86,7 @@ export function AppSidebar() {
                 href: parkingMunicipal.index(),
                 icon: icons.Building,
             },
+            hasRole('admin') && { title: t('municipal_imports'), href: municipalImports(), icon: icons.FileInput },
             can('parking-rule.view_any') && {
                 title: t('rules'),
                 href: parkingRules.index(),

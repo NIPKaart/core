@@ -183,7 +183,7 @@ export type ParkingMunicipal = {
     municipality_id: number;
     municipality: Municipality;
     street: string | null;
-    number: number;
+    number: number | null;
     orientation: string | null;
     longitude: float;
     latitude: float;

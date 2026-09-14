@@ -17,6 +17,8 @@ class ParkingMunicipal extends Model
 
     protected $table = 'parking_municipal_spaces';
 
+    protected $hidden = ['source_record', 'last_imported_values'];
+
     protected $primaryKey = 'id';
 
     protected $keyType = 'string';
@@ -42,6 +44,9 @@ class ParkingMunicipal extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'source_record' => 'array',
+        'last_imported_values' => 'array',
+        'last_checked_at' => 'immutable_datetime',
         'orientation' => ParkingOrientation::class,
         'updated_at' => 'datetime',
         'created_at' => 'datetime',

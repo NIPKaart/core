@@ -1,6 +1,6 @@
 # Pilot: algemene gehandicaptenparkeerplaatsen Amsterdam
 
-Status: geselecteerd voor implementatie van [#1214](https://github.com/NIPKaart/core/issues/1214), bronproef 2026-09-13. Amsterdam biedt bruikbare broninhoud en een controleerbaar totaal. De bestaande package verliest nog relevante velden; de live aansluiting is daarom nog niet gereed. Eerst de generieke package verbeteren, vervolgens disabled-parking #774 en core #1215. Geen productiepublicatie of automatische levering is uitgevoerd.
+Status 2026-09-14: `odp-amsterdam` 7.0.0 is uitgebracht en [disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) is gemerged. De live producer levert het afgesproken bestand. De eerste daadwerkelijke core-intake in #1215 weigert de volledige levering vanwege tien zelfdoorsnijdende polygonen. Bronophaling is bewezen; succesvolle ketenacceptatie en publieke ingebruikname nog niet.
 
 ## Waarom deze bron
 
@@ -12,7 +12,7 @@ De leverancier is Gemeente Amsterdam. De dataset wordt in de [overheidscatalogus
 | --- | --- |
 | Datasetcode | `nl-amsterdam-parkeervakken-e6a` |
 | Selectiecode | `e6a-all` = alle records uit `parkeervakken/parkeervakken` met exact `eType=E6a`; geen bbox of aanvullende stille filtering. |
-| Package | `odp-amsterdam` 6.0.0 is onderzocht; de verbeterde versie moet vóór gebruik expliciet worden vastgelegd. |
+| Package | `odp-amsterdam==7.0.0` wordt door de producer gebruikt; de eerste onderzoeksproef gebruikte 6.0.0. |
 | Identiteit | `properties.id`, als volledige string binnen de dataset. De GeoJSON-wrapper `parkeervakken.<id>` wordt niet als tweede identiteit gebruikt. |
 | Geografie | Nederland (`NL`), Noord-Holland (`NL-NH`), gemeente Amsterdam (`nl:cbs:municipality`, `0363`). Core koppelt deze codes aan relaties. |
 | Betekenis | Algemene gehandicaptenparkeerplaats, mogelijk met tijdsbeperkingen. Geen actuele beschikbaarheid, geen garantie op toegankelijkheid voor ieder voertuig. |
@@ -37,7 +37,7 @@ Requests: [volledige selectie](https://api.data.amsterdam.nl/v1/parkeervakken/pa
 
 Dit bewijst volledige ontvangst ten opzichte van het toen gerapporteerde totaal, geen volledige werkelijkheid op straat of gegarandeerde transactiesnapshot. Het bronbestand blijft tijdelijk onderzoeksmateriaal; we voegen geen gemeentelijke fixturecorpus toe aan core.
 
-De bestaande package doet één request met een limiet, geeft geen totalen/paginering door en gebruikt slechts delen van het eerste regime. Daardoor verdwijnen tijdsbeperkingen en de versiedatum; `int(aantal)` kan bovendien ongeldige fractionele waarden afronden. Succesvol parsen betekent dus niet dat de levering inhoudelijk volledig is.
+De destijds onderzochte package 6.0.0 deed één request met een limiet, geeft geen totalen/paginering door en gebruikt slechts delen van het eerste regime. Daardoor verdwijnen tijdsbeperkingen en de versiedatum; `int(aantal)` kan bovendien ongeldige fractionele waarden afronden. Succesvol parsen betekent dus niet dat de levering inhoudelijk volledig is.
 
 ID's zijn nu uniek en als bron-ID beschikbaar, maar toekomstige hernummering is niet uitgesloten. Grote identiteitswisselingen en verdwenen records vragen beoordeling. Niet terugvallen op coördinatenmatching. De API-documentatie kondigt verplichte API-keys aan; de proef werkte zonder key. Ondersteuning voor eventuele bronauthenticatie hoort in de universele package/producer, nooit in het afleverbestand. De bron biedt geen bewezen mutatieversie over meerdere pagina's: controleer aantallen vóór/na en geef bij verschillen geen complete levering af; gelijke aantallen bewijzen geen snapshotisolatie.
 
@@ -80,16 +80,16 @@ Regimes zijn broninformatie die core moet tonen voordat deze records worden gepu
 
 De volledige levering volgt [het ene JSON-bestand](data-import-contract.md): `format=nipkaart-municipal-pilot-1`, bovengenoemde dataset/selectie, een werkelijke delivery-UUID en ophaaltijd, `complete=true`, een gecontroleerd `source_count` en alle records. Het voorbeeld hierboven is één record en mag nooit als volledige Amsterdamse levering worden aangeleverd. De toekomstige export mag 1.420 niet hardcoderen.
 
-## Eerst oplossen in de universele package
+## Opgelost in de universele package
 
-Uitvoerbaar package-issue: [python-odp-amsterdam #1291](https://github.com/klaasnicolaas/python-odp-amsterdam/issues/1291). Dit is de eerste afhankelijkheid van disabled-parking #774, geen Python-werk in core:
+Afgerond met packageversie 7.0.0, oorspronkelijk package-issue: [python-odp-amsterdam #1291](https://github.com/klaasnicolaas/python-odp-amsterdam/issues/1291). Deze afhankelijkheid van disabled-parking #774 is inmiddels geleverd. De oorspronkelijke opdracht was:
 
 1. Stel de bron-ID, volledige geometrie, alle regimes en versiedatum beschikbaar. Bewaar oorspronkelijke aantallen zonder verliesgevende conversie; test onbekend, nul, fractioneel en meerdere regimes.
 2. Bied een publieke volledige ophaling met totalen/pagina-informatie aan. Controleer de laatste pagina en unieke ID's; één `limit=2000` is geen blijvend volledigheidsbewijs. Behoud de bestaande beperkte ophaalmethode voor andere packagegebruikers indien die onderdeel is van de publieke API.
 3. Test generieke paginering en gewijzigde/ontbrekende bronvelden upstream. Maak geen NIPKaart-bestandsformaat of publicatiebeleid onderdeel van de package.
 4. Leg de geteste packageversie en één afzonderlijke begrensde live proef vast. Pas daarna de adapter op de nieuwe publieke package-interface aansluiten.
 
-#774 maakt vervolgens één live commando en vervangt de tijdelijke Hamburg-route. #1215 implementeert één intakepad met geometryvalidatie, beoordeling en veilig behoud van identiteit/correcties. De eerste werkende keten blijft handmatig; de private bucket volgt bij automatisering.
+[disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) levert inmiddels het live commando en heeft de tijdelijke Hamburg-route vervangen. #1215 implementeert de ontvangende kant met geometrievalidatie, beoordeling en behoud van identiteit/correcties. De eerste werkende keten blijft handmatig; de private bucket volgt bij automatisering.
 
 ## Andere onderzochte kandidaten
 
@@ -99,3 +99,19 @@ Uitvoerbaar package-issue: [python-odp-amsterdam #1291](https://github.com/klaas
 ## Broncontrole na implementatie
 
 Offline tests bewijzen gedrag tegen bekende voorbeelden. Een periodieke begrensde live controle in #775 controleert daarnaast endpoint, velden, identiteit en volledigheid. Ook een HTTP 200 met gewijzigde betekenis kan een fout zijn. Bij een bronfout geen nieuwe complete levering publiceren; de laatste geaccepteerde gegevens blijven staan en de producent meldt de storing. De broncheck staat los van gewone package-CI.
+
+## Werkelijke producer → core-proef op 2026-09-14
+
+De live export bevat 1.420 unieke bronrecords en 1.579 regimes, is 1.384.804 bytes groot en heeft SHA-256 `99a6744f950a5c4307d9851524a84790f4a9ff3bb704819d02bd976df1abcd31`. Leverings-ID: `7982ffb8-87d7-401e-8989-424a81284738`; ophaalstart: `2026-09-13T23:41:47.974385Z`. Dit is een andere representatie dan de oorspronkelijke onderzoeksresponse hierboven.
+
+PostGIS controleerde alle geometrieën op de afzonderlijke core-testdatabase. Alle liggen binnen de ingestelde bbox, maar `ST_IsValidReason` meldt een zelfdoorsnijding voor bron-ID's `114185488210`, `114187488001`, `118990486331`, `119459482101`, `119478482386`, `121780485119`, `123005483477`, `123773490356`, `123778490343` en `124156485525`.
+
+Daarom is niets uit deze levering gepubliceerd of gedeeltelijk geïmporteerd. De foutmelding identificeert alle betrokken bron-ID's. De producer garandeert structurele volledigheid; dat is geen garantie op geometrische geldigheid. Kleine synthetische voorbeelden testen het veilige publicatiepad, maar vervangen deze ontbrekende acceptatie niet.
+
+Vervolg vóór het afvinken van #1215/#774: laat de brongeometrie corrigeren, of spreek expliciet een beoordeelde geometrie-afleiding af die de oorspronkelijke claim bewaart en afwijkingen zichtbaar maakt. Daarna dezelfde volledige keten opnieuw beproeven. Geen stil `ST_MakeValid`, geen tien records overslaan en alsnog `complete=true` verklaren. Bucketautomatisering blijft afhankelijk van een geaccepteerde lokale keten.
+
+## Afzonderlijke implementatiecontrole
+
+`composer ci:check` slaagde lokaal met 276 backendtests (1.106 assertions), drie frontendtests, linting, types en productiebuild. De gerichte importtests draaien ook op DDEV/PHP 8.4 met PostGIS. De frontendbuild draaide op de host omdat de lokaal geïnstalleerde native buildmodule voor macOS is; dezelfde `node_modules` in de Linux-container gebruiken is niet ondersteund.
+
+Een afzonderlijke operationele proef op `nipkaart_test` liet twee PHP-processen gelijktijdig dezelfde synthetische levering publiceren terwijl de datasetrij eerst vergrendeld was. Eén publicatie slaagde, de andere kreeg “Deze levering is al beoordeeld”; er bleef precies één gemeentelijk record bestaan. De browserproef controleerde desktop en 390px mobiel, de polygoon/kaartpuntweergave en daadwerkelijke goedkeuring van een synthetische wijziging van onbekende capaciteit naar nul. Dit bewijst implementatiegedrag, geen geaccepteerde Amsterdam-import of productiepublicatie.

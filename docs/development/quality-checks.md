@@ -70,6 +70,8 @@ Permanent spatial coverage lives in `ParkingLocationTest`, `ParkingDiscoveryTest
 
 See [Pest TIA documentation](https://pestphp.com/docs/tia) for baseline storage, invalidation and replay behavior.
 
-## Snapshot contract prototype
+## Municipal file intake
 
-The PHP unit suite includes `tests/Unit/Support/SnapshotContractTest.php`, an experimental validator from draft PR #1222. Its passing fixtures do not prove a working adapter or reviewed import. Core contains no Python environment. A Python proof exists locally in disabled-parking; no companion PR or cross-repository CI has been delivered. See the [current delivery scope](data-import-contract.md) and [source findings](data-import-pilot.md) before treating the prototype as a settled contract.
+`tests/Feature/MunicipalImportTest.php` controleert de daadwerkelijke intake, autorisatie, PostGIS-validatie, beoordeling, herhaling, bronvolgorde, bescherming van handmatige waarden en transactieherstel op de afzonderlijke PostgreSQL/PostGIS-testdatabase. Kleine inline voorbeelden vervangen de experimentele schema's, Opis-validator en fixturecorpus uit #1222. Core bevat geen Python-omgeving.
+
+Een geslaagde test bewijst geen geldige livebron of toestemming voor productiepublicatie. Zie de [uitvoering en herstelafspraken](data-import-contract.md#lokale-uitvoering-en-herstel) en de [afzonderlijke bronproef](data-import-pilot.md). De huidige Amsterdamse export bevat tien zelfdoorsnijdende polygonen en wordt volledig geweigerd; de lokale ketenacceptatie blijft daarom open.
