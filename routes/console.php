@@ -23,3 +23,7 @@ if (config('backup.enabled')) {
             ->withoutOverlapping(180);
     }
 }
+
+if (config('municipal-deliveries.enabled')) {
+    Schedule::command('nipkaart:discover-municipal-deliveries')->everyFiveMinutes()->onOneServer()->withoutOverlapping(10);
+}

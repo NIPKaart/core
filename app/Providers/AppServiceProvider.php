@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Enums\UserRole;
 use App\Models\ParkingSpace;
 use App\Observers\ParkingSpaceObserver;
+use App\Services\MunicipalDeliveryStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Opcodes\LogViewer\Facades\LogViewer;
@@ -18,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(MunicipalDeliveryStorage::class, fn () => new MunicipalDeliveryStorage(Storage::disk('municipal-deliveries')->getClient()));
     }
 
     /**

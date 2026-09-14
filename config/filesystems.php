@@ -29,6 +29,18 @@ return [
     */
 
     'disks' => [
+        'municipal-deliveries' => [
+            'driver' => 's3',
+            'key' => env('MUNICIPAL_R2_ACCESS_KEY_ID'),
+            'secret' => env('MUNICIPAL_R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('MUNICIPAL_R2_BUCKET'),
+            'endpoint' => env('MUNICIPAL_R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => true,
+            'http' => ['connect_timeout' => 5, 'timeout' => 20],
+            'retries' => 1,
+        ],
 
         'local' => [
             'driver' => 'local',
