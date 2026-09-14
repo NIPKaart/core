@@ -1,19 +1,19 @@
 # Provisional data delivery contract
 
-Status: working agreement for [#1214](https://github.com/NIPKaart/core/issues/1214). One JSON file supports the initial manual import; the format is finalized only after the producer and core have been tested together. The schemas, validator, Opis dependency and fixture corpus from [PR #1222](https://github.com/NIPKaart/core/pull/1222) were replaced by a single working intake in #1215. Ten invalid Amsterdam polygons receive a geometry derivation in core that requires explicit review. The format is not yet an accepted production integration.
+Status: working agreement for [#1214](https://github.com/NIPKaart/core/issues/1214). One JSON file supports the initial manual import; the format is finalized only after the collector and core have been tested together. The schemas, validator, Opis dependency and fixture corpus from [PR #1222](https://github.com/NIPKaart/core/pull/1222) were replaced by a single working intake in #1215. Ten invalid Amsterdam polygons receive a geometry derivation in core that requires explicit review. The format is not yet an accepted production integration.
 
 ## From source to user
 
 `municipal API → reusable Python package → disabled-parking → JSON file → core: validate, compare and review → municipal parking data → public discovery`
 
-The first handoff uses a local file. The producer then uploads the same format to a private bucket, where core discovers complete files. The bucket is part of the automated architecture. Cloudflare R2 has been selected; provisioning and operational acceptance belong to #1217. The producer never connects directly to the core API or database.
+The first handoff uses a local file. The collector then uploads the same format to a private bucket, where core discovers complete files. The bucket is part of the automated architecture. Cloudflare R2 has been selected; provisioning and operational acceptance belong to #1217. The collector never connects directly to the core API or database.
 
 | Component | Responsibility |
 | --- | --- |
 | Reusable package | Source protocol, complete retrieval of a selection, source IDs, original values and completeness evidence. Independently usable without NIPKaart. |
 | disabled-parking | Dataset selection, mapping, delivery metadata and file output. Python and source-specific tests belong here or upstream. |
 | core | Allowed datasets, file validation, differences, review, publication and preservation of corrections. No Python environment. |
-| offstreet-parking | A separate producer for facilities later; share execution code only when actual common needs emerge. |
+| offstreet-parking | A separate collector for facilities later; share execution code only when actual common needs emerge. |
 
 ## One file
 
@@ -21,16 +21,16 @@ UTF-8 JSON containing one object and a `records` array. No separate manifest, JS
 
 | Field | Meaning |
 | --- | --- |
-| `format` | `nipkaart-municipal-pilot-1`; one provisional revision shared by producer and consumer. Replaces `municipal-records-draft` without a compatibility layer. |
+| `format` | `nipkaart-municipal-pilot-1`; one provisional revision shared by collector and consumer. Replaces `municipal-records-draft` without a compatibility layer. |
 | `dataset` | Fixed dataset code allowed by core. The source owner, license and geographical mapping belong to this integration. |
 | `delivery_id` | UUID created once per successful retrieval. Retrying the same file preserves its ID and bytes. |
 | `retrieved_at` | UTC retrieval start, RFC 3339 with `Z`; orders deliveries. Not an observation date. One active retrieval per dataset. |
 | `selection` | Fixed code for the agreed collection/filter, such as `all`. A scope change first requires a newly reviewed integration or selection. |
-| `complete` | Must be `true` for intake. The producer declares this only on the basis of source evidence. |
+| `complete` | Must be `true` for intake. The collector declares this only on the basis of source evidence. |
 | `source_count` | Count reported by the source for this selection; equal to the number of unique received records. A total alone does not prove completeness when another page remains. |
 | `records` | Every record in the selection, without silently rejected or skipped source rows. |
 
-The producer checks source pages, counts and unique IDs before writing the file. Catching parsing failures and continuing with the remaining records does not produce a complete delivery. If a source provides no total, agree another demonstrable completeness check first; do not invent `source_count` from the received list alone.
+The collector checks source pages, counts and unique IDs before writing the file. Catching parsing failures and continuing with the remaining records does not produce a complete delivery. If a source provides no total, agree another demonstrable completeness check first; do not invent `source_count` from the received list alone.
 
 Core accepts only the known format and allowed dataset/selection, validates types and content, and rejects duplicate JSON keys and source IDs. Do not resolve remote schemas or follow download URLs supplied by the file. Start with the existing limits of 10,000 records and 32 MiB; the Amsterdam source sample of approximately 1.33 MB fits comfortably. Validate before database publication.
 
@@ -65,7 +65,7 @@ Core associates country and administrative relationships using the allowed datas
 | Source value conflicts with an accepted correction | Store the source value in the received delivery, preserve the correction and block publication on conflict, including in the first import implementation. |
 | Unknown access or changed scope | No automatic general publication or missing-record comparison; review first. |
 
-Core rechecks ordering and current corrections at publication, including when two reviewed imports are ready concurrently. `retrieved_at` provides a simple ordering rule for one producer with an accurate UTC clock; it does not establish a transactional source snapshot. Future or implausible timestamps require review. Do not build a distributed counter for the pilot.
+Core rechecks ordering and current corrections at publication, including when two reviewed imports are ready concurrently. `retrieved_at` provides a simple ordering rule for one collector with an accurate UTC clock; it does not establish a transactional source snapshot. Future or implausible timestamps require review. Do not build a distributed counter for the pilot.
 
 ## Delivery milestones
 
@@ -81,7 +81,7 @@ Regular CI runs offline with small package-object examples. A separate bounded l
 1. Run migrations in the intended development environment and ensure Amsterdam's existing geographical relationships are present. No legacy data is automatically associated or replaced.
 2. Register the integration using `php artisan nipkaart:register-amsterdam <municipality-id>`. The command checks Amsterdam, country `NL` and province `NL-NH`; publication is disabled by default. The configured bbox `[4.65, 52.2, 5.15, 52.5]` is a broad operational boundary, not an official municipal boundary.
 3. As an administrator, open **Municipal imports** (shown as **Gemeentelijke imports** in the Dutch interface). Check source terms and record the supporting evidence before the first delivery to be published. Configuration changes invalidate earlier reviews; retrieve a new delivery afterwards.
-4. Submit the unchanged producer file. Set PHP `upload_max_filesize` to at least `32M`, and `post_max_size` and the web server body limit above 32 MiB to allow multipart overhead. Smaller server limits apply before application validation.
+4. Submit the unchanged collector file. Set PHP `upload_max_filesize` to at least `32M`, and `post_max_size` and the web server body limit above 32 MiB to allow multipart overhead. Smaller server limits apply before application validation.
 5. Check counts, original source fields, every restriction and a map sample. The list displays up to 50 records per page; each record's parking area and derived point can be expanded. Approval and rejection require a reason. Records with a derivation appear first. Only the administration screen displays the original and derived geometry together for review, distinguished by lines and colors. Publishing a delivery with derivations requires explicit confirmation that every derivation has been reviewed; rejection does not require this confirmation. The service enforces this too.
 
 `MunicipalImportService::intake()` is the shared entry point for uploads and the future bucket consumer. Authorization also applies inside the service. Publication locks one dataset row and rechecks current source records and import status. An outdated review token requires another review. The delivery, mutations and latest published retrieval timestamp are committed or rolled back together. Resubmitting identical bytes returns the existing status, including after a configuration change.
@@ -94,8 +94,8 @@ Rolling back the migration removes the import audit and source association. Back
 
 ## Automatic R2 handoff (#775 / #1216)
 
-The producer uploads the same file in one `PutObject` to `municipal/nl-amsterdam-parkeervakken-e6a/<delivery_id>.json` in a private Cloudflare R2 bucket. `If-None-Match: *` prevents this uploader from overwriting objects. `Content-MD5` contains the base64-encoded binary MD5 digest of the file bytes (not the hexadecimal digest) and checks transport integrity; `sha256` metadata contains the SHA-256 of the exact bytes. When an object name already exists, the producer compares its full remote content with the retained pending file. Only identical bytes count as a successful retry. No multipart upload or separate manifest. See the [supported R2 operations](https://developers.cloudflare.com/r2/api/s3/api/).
+The collector uploads the same file in one `PutObject` to `municipal/nl-amsterdam-parkeervakken-e6a/<delivery_id>.json` in a private Cloudflare R2 bucket. `If-None-Match: *` prevents this uploader from overwriting objects. `Content-MD5` contains the base64-encoded binary MD5 digest of the file bytes (not the hexadecimal digest) and checks transport integrity; `sha256` metadata contains the SHA-256 of the exact bytes. When an object name already exists, the collector compares its full remote content with the retained pending file. Only identical bytes count as a successful retry. No multipart upload or separate manifest. See the [supported R2 operations](https://developers.cloudflare.com/r2/api/s3/api/).
 
 The consumer still to be implemented in core #1216 will discover complete objects within the allowed prefix, limit downloads to 32 MiB, and check SHA-256, file contents and agreement between object name, dataset and delivery ID before calling the same intake. Metadata is not an independent source of trust. Existing intake rules for conflicts, retries, ordering and review remain in force; receiving a file never publishes it automatically.
 
-One persistent producer container on an owner-managed Linux host runs finite commands serially. The default wait after success is 24 hours; after failures, at most five minutes. A volume retains `pending.json` until upload is acknowledged, then keeps `last.json`. After a restart, the same bytes are retried before fetching new data. The final region, retention exceeding the allowed core outage, budget and verified access rights remain part of #1217. Implementation and local tests do not replace recovery rehearsal against actual staging R2 and core.
+One persistent collector container on an owner-managed Linux host runs finite commands serially. The default wait after success is 24 hours; after failures, at most five minutes. A volume retains `pending.json` until upload is acknowledged, then keeps `last.json`. After a restart, the same bytes are retried before fetching new data. The final region, retention exceeding the allowed core outage, budget and verified access rights remain part of #1217. Implementation and local tests do not replace recovery rehearsal against actual staging R2 and core.

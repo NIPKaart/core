@@ -33,9 +33,9 @@ Issues behouden hun eigen acceptatiecriteria. Een merge van een voorbeeld, groen
 
 ## Automatisering na de handmatige proef
 
-`gemeentelijke API → universele package → producer → private bucket → core intake/review → PostgreSQL/PostGIS → publieke discovery`
+`gemeentelijke API → universele package → collector → private bucket → core intake/review → PostgreSQL/PostGIS → publieke discovery`
 
-De bucket is de afgesproken automatische overdracht. De producent heeft geen coretoken of databaseverbinding en blijft verantwoordelijk voor ophaalplanning. Core verwerkt leveringen en beheert beoordeling en publicatie.
+De bucket is de afgesproken automatische overdracht. De collector heeft geen coretoken of databaseverbinding en blijft verantwoordelijk voor ophaalplanning. Core verwerkt leveringen en beheert beoordeling en publicatie.
 
 Begin met één geplande eindige uitvoering en maximaal één actieve ophaling per dataset. Stel deadlines en beperkte retries in; houd rekening met bronlimieten. De implementatie van host/timer, uploadvoltooiing en herstel hoort bij #775/#1217. Geen verplicht manifest, version-ID, gedistribueerde teller of permanente runnerstaat zonder aantoonbare behoefte.
 
@@ -50,10 +50,10 @@ Automatische discovery gebruikt dezelfde validatie en importservice als de lokal
 | Core-uitval | Complete bestanden later opnieuw ontdekken; eerder ontvangen en afgeronde leveringen herkennen. |
 | Onjuiste of verdachte levering | Publicatie blokkeren en beoordelen; niet automatisch bestaande records verwijderen. |
 | Bron botst met lokale correctie | Bronwaarde afzonderlijk bewaren; correctie behouden en conflict tonen. |
-| Gecompromitteerde producent | Rechten intrekken, ophaling en intake voor die dataset pauzeren en betrokken leveringen beoordelen. |
+| Gecompromitteerde collector | Rechten intrekken, ophaling en intake voor die dataset pauzeren en betrokken leveringen beoordelen. |
 | Foute publicatie | Een nieuw herstelbesluit met behoud van actuele communitycorrecties; geen oude database over nieuwe bijdragen terugzetten. |
 
-Core toont wanneer iets is ontvangen, gevalideerd en gepubliceerd. Een verwerkingsdatum is geen veldwaarneming. De producent meldt fetch-/uploadfouten; core kan zonder aanvullende status alleen zien dat een levering uitblijft. Een apart monitoringplatform of statusfeed is geen pilotvoorwaarde.
+Core toont wanneer iets is ontvangen, gevalideerd en gepubliceerd. Een verwerkingsdatum is geen veldwaarneming. De collector meldt fetch-/uploadfouten; core kan zonder aanvullende status alleen zien dat een levering uitblijft. Een apart monitoringplatform of statusfeed is geen pilotvoorwaarde.
 
 Vóór staging: keuze voor host/bucket, scoped rechten, harde grenzen en budget. Vóór productie: retentie, maximaal te overbruggen uitval, herstelproef, attributie en beheerrechten. Private opslag beschermt de operatie; de voorwaarden van iedere bron blijven gelden. Publieke discovery blijft begrensd en vraagt geen account voor basisgebruik.
 
