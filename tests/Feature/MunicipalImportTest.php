@@ -117,7 +117,8 @@ it('rejects invalid source files without publishing', function (Closure $mutate)
     'personal' => fn (&$d) => $d['records'][0]['source_attributes']['regimes'][0]['kenteken'] = 'AA-01-BB',
     'unclosed geometry' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0][4] = [4.8, 52.3],
     'outside area' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[10, 52], [11, 52], [11, 53], [10, 52]],
-    'invalid topology' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]],
+    'collapsed polygon' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.3], [4.92, 52.3], [4.9, 52.3]],
+    'polygon with collapsed spike' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.3], [4.92, 52.3], [4.91, 52.3], [4.91, 52.31], [4.9, 52.31], [4.9, 52.3]],
     'future' => fn (&$d) => $d['retrieved_at'] = now()->addDay()->format('Y-m-d\TH:i:s\Z'),
 ]);
 
@@ -142,10 +143,10 @@ it('reuses identical deliveries but refuses conflicting bytes', function () {
     $this->assertDatabaseCount('municipal_imports', 1);
 });
 
-it('reports every invalid polygon without staging a partial delivery', function () {
+it('reports every unusable polygon without staging a partial delivery', function () {
     DatasetSource::factory()->create();
     $data = municipalDelivery();
-    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.3], [4.92, 52.3], [4.9, 52.3]];
     $data['records'][] = [...$data['records'][0], 'external_id' => '000456'];
     $data['source_count'] = 2;
     $this->actingAs(importReviewer())->post(route('app.municipal-imports.store'), [
@@ -298,4 +299,93 @@ it('refuses equally dated deliveries and retains subsecond ordering', function (
     $later = stageMunicipal(municipalDelivery(['retrieved_at' => $at.'.200000Z']), $user);
     approveMunicipal($later, $user);
     expect($later->fresh()->state)->toBe('published');
+});
+
+it('keeps the original geometry and requires explicit review before publishing its derivation', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $import = stageMunicipal($data, $user);
+    $review = app(MunicipalImportService::class)->review($import);
+    $decision = ['decision' => 'publish', 'reason' => 'Both polygon parts reviewed.', 'review_token' => $review['token']];
+
+    expect($import->state)->toBe('pending');
+
+    $this->actingAs($user)->get(route('app.municipal-imports.show', $import))->assertInertia(fn (Assert $page) => $page
+        ->where('review.derivations', 1)
+        ->where('review.rows.0.after.geometry', $data['records'][0]['geometry'])
+        ->where('review.rows.0.geometry_derivation.geometry.type', 'MultiPolygon'));
+    $this->patch(route('app.municipal-imports.update', $import), $decision)->assertSessionHasErrors('geometry_reviewed');
+    expect($import->fresh()->state)->toBe('pending');
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $this->patch(route('app.municipal-imports.update', $import), [...$decision, 'geometry_reviewed' => '1'])->assertSessionHasNoErrors();
+
+    $space = ParkingMunicipal::firstOrFail();
+    expect($space->source_record)->toEqual($data['records'][0]);
+    expect($space->geometry_derivation)->toMatchArray(['method' => 'st_makevalid_linework']);
+    expect($space->geometry_derivation['geometry']['coordinates'])->toHaveCount(2);
+    expect($space->geometry_derivation['reason'])->toContain('Self-intersection');
+    $geometry = DB::selectOne('SELECT ST_IsValid(ST_GeomFromGeoJSON(?)) AS valid, ST_Covers(ST_GeomFromGeoJSON(?), ST_SetSRID(ST_MakePoint(?, ?), 4326)) AS contains_point', [json_encode($space->geometry_derivation['geometry']), json_encode($space->geometry_derivation['geometry']), $space->longitude, $space->latitude]);
+    expect($geometry)->valid->toBeTrue()->contains_point->toBeTrue();
+    expect($import->fresh())->state->toBe('published')->reviewed_by->toBe($user->id);
+    $this->get('/map')->assertInertia(fn (Assert $page) => $page
+        ->component('frontend/map/index')
+        ->has('municipalSpaces', 1)
+        ->where('municipalSpaces.0.id', $space->id)
+        ->where('municipalSpaces.0.latitude', $space->latitude)
+        ->where('municipalSpaces.0.longitude', $space->longitude)
+        ->missing('municipalSpaces.0.geometry')
+        ->missing('municipalSpaces.0.geometry_derivation')
+        ->missing('municipalSpaces.0.source_record'));
+});
+
+it('retains reviewed derivations on repeat and clears them when the source becomes valid', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $validGeometry = $data['records'][0]['geometry'];
+    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $service = app(MunicipalImportService::class);
+    $first = stageMunicipal($data, $user);
+    $service->decide($first, $user, 'publish', 'Reviewed geometry.', $service->review($first)['token'], true);
+    $space = ParkingMunicipal::firstOrFail();
+    $originalDerivation = $space->geometry_derivation;
+    $originalUpdated = $space->updated_at;
+    $space->update(['visibility' => false]);
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $repeat = stageMunicipal($data, $user);
+
+    expect($service->review($repeat)['counts']['unchanged'])->toBe(1);
+    $service->decide($repeat, $user, 'publish', 'Reviewed repeated geometry.', $service->review($repeat)['token'], true);
+    expect($space->fresh())->geometry_derivation->toEqual($originalDerivation)->updated_at->toEqual($originalUpdated)->visibility->toBeFalse();
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $data['records'][0]['geometry'] = $validGeometry;
+    $corrected = stageMunicipal($data, $user);
+    expect($service->review($corrected)['derivations'])->toBe(0);
+    approveMunicipal($corrected, $user);
+
+    expect($space->fresh())->source_record->toEqual($data['records'][0])->geometry_derivation->toBeNull()->visibility->toBeFalse();
+    expect(json_decode($corrected->fresh()->before_values[$space->id]['geometry_derivation'], true))->toEqual($originalDerivation);
+    $this->assertDatabaseCount('parking_municipal_spaces', 1);
+});
+
+it('can reject a delivery with derived geometries without approving those geometries', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $import = stageMunicipal($data, $user);
+
+    $this->actingAs($user)->patch(route('app.municipal-imports.update', $import), [
+        'decision' => 'reject', 'reason' => 'The proposed shape does not match the parking area.',
+        'review_token' => app(MunicipalImportService::class)->review($import)['token'],
+    ])->assertSessionHasNoErrors();
+    expect($import->fresh()->state)->toBe('rejected');
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });

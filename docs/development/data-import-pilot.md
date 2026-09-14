@@ -1,6 +1,6 @@
 # Pilot: algemene gehandicaptenparkeerplaatsen Amsterdam
 
-Status 2026-09-14: `odp-amsterdam` 7.0.0 is uitgebracht en [disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) is gemerged. De live producer levert het afgesproken bestand. De eerste daadwerkelijke core-intake in #1215 weigert de volledige levering vanwege tien zelfdoorsnijdende polygonen. Bronophaling is bewezen; succesvolle ketenacceptatie en publieke ingebruikname nog niet.
+Status 2026-09-14: `odp-amsterdam` 7.0.0 is uitgebracht en [disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) is gemerged. De live producer levert het afgesproken bestand. De eerste core-intake vond tien zelfdoorsnijdende polygonen. De gekozen vervolgafspraak is een afzonderlijke beoordeelde geometrie-afleiding in core, met behoud van de oorspronkelijke bron. Publieke ingebruikname is niet uitgevoerd.
 
 ## Waarom deze bron
 
@@ -106,12 +106,24 @@ De live export bevat 1.420 unieke bronrecords en 1.579 regimes, is 1.384.804 byt
 
 PostGIS controleerde alle geometrieën op de afzonderlijke core-testdatabase. Alle liggen binnen de ingestelde bbox, maar `ST_IsValidReason` meldt een zelfdoorsnijding voor bron-ID's `114185488210`, `114187488001`, `118990486331`, `119459482101`, `119478482386`, `121780485119`, `123005483477`, `123773490356`, `123778490343` en `124156485525`.
 
-Daarom is niets uit deze levering gepubliceerd of gedeeltelijk geïmporteerd. De foutmelding identificeert alle betrokken bron-ID's. De producer garandeert structurele volledigheid; dat is geen garantie op geometrische geldigheid. Kleine synthetische voorbeelden testen het veilige publicatiepad, maar vervangen deze ontbrekende acceptatie niet.
+In die eerste proef is daarom niets uit deze levering gepubliceerd of gedeeltelijk geïmporteerd. De foutmelding identificeert alle betrokken bron-ID's. De producer garandeert structurele volledigheid; dat is geen garantie op geometrische geldigheid. Kleine synthetische voorbeelden testen het veilige publicatiepad, maar vervangen deze ontbrekende acceptatie niet.
 
-Vervolg vóór het afvinken van #1215/#774: laat de brongeometrie corrigeren, of spreek expliciet een beoordeelde geometrie-afleiding af die de oorspronkelijke claim bewaart en afwijkingen zichtbaar maakt. Daarna dezelfde volledige keten opnieuw beproeven. Geen stil `ST_MakeValid`, geen tien records overslaan en alsnog `complete=true` verklaren. Bucketautomatisering blijft afhankelijk van een geaccepteerde lokale keten.
+Vervolgkeuze van de eigenaar op 2026-09-14: beoordeelde geometrie-afleiding in core, met behoud van de oorspronkelijke brongeometrie. `ST_MakeValid` met expliciete methode `linework` levert voor alle tien een geldige MultiPolygon met twee delen op (totale oppervlakte circa 11,43–15,71 m²). Dit is geometrische bruikbaarheid, geen bewijs van de werkelijkheid op straat. Origineel, afleiding en afgeleid kaartpunt staan alleen samen op de beheerkaart. Op de publieke kaart verschijnt uitsluitend de marker. Geen tien records overslaan en alsnog `complete=true` verklaren; elke afleiding vereist review.
 
 ## Afzonderlijke implementatiecontrole
 
-`composer ci:check` slaagde lokaal met 276 backendtests (1.106 assertions), drie frontendtests, linting, types en productiebuild. De gerichte importtests draaien ook op DDEV/PHP 8.4 met PostGIS. De frontendbuild draaide op de host omdat de lokaal geïnstalleerde native buildmodule voor macOS is; dezelfde `node_modules` in de Linux-container gebruiken is niet ondersteund.
+`composer ci:check` slaagde lokaal met 280 backendtests (1.167 assertions), drie frontendtests, linting, types en productiebuild. De gerichte importtests draaien ook op DDEV/PHP 8.4 met PostGIS. De frontendbuild draaide op de host omdat de lokaal geïnstalleerde native buildmodule voor macOS is; dezelfde `node_modules` in de Linux-container gebruiken is niet ondersteund.
 
 Een afzonderlijke operationele proef op `nipkaart_test` liet twee PHP-processen gelijktijdig dezelfde synthetische levering publiceren terwijl de datasetrij eerst vergrendeld was. Eén publicatie slaagde, de andere kreeg “Deze levering is al beoordeeld”; er bleef precies één gemeentelijk record bestaan. De browserproef controleerde desktop en 390px mobiel, de polygoon/kaartpuntweergave en daadwerkelijke goedkeuring van een synthetische wijziging van onbekende capaciteit naar nul. Dit bewijst implementatiegedrag, geen geaccepteerde Amsterdam-import of productiepublicatie.
+
+## Lokale keten na beoordeelde geometrie-afleiding
+
+Het oorspronkelijke producerbestand met bovenstaande SHA-256 is na deze wijziging volledig ter beoordeling aangeboden: 1.420 nieuwe records, tien afleidingen, intake en vergelijking in circa 0,85 seconde op de lokale testomgeving. Alle oorspronkelijke bronclaims zijn vergeleken met de gepubliceerde `source_record`-waarden en gelijk gebleven. De tien afleidingen behouden de bronbegrenzing; hun kleinste delen beslaan circa 0,00000044–0,00017 m². Alle tien opgeslagen markerpunten liggen binnen hun afgeleide vorm. Er ontstaan geen extra parkeerplaatsen of markers uit deze delen.
+
+De daadwerkelijke browserpublicatie op `nipkaart_test` is eerst zonder geometriebevestiging geprobeerd en geblokkeerd. Na technische beoordeling en expliciete bevestiging is de volledige levering gepubliceerd. Een gecontroleerde herhaling behield alle 1.420 identiteiten en inhoudstijdstippen; een gewijzigde testkopie toonde één gewijzigde en één ontbrekende bronrij, waarbij het ontbrekende record behouden bleef. Een volgende testkopie botste met een handmatig aangepast aantal en werd geblokkeerd. Deze varianten zijn testmutaties van het vastgelegde bestand, geen nieuwe gemeentelijke waarnemingen.
+
+De publieke `/map`-pagina is ook mobiel gecontroleerd: alleen bestaande parkeermarkers, geen bron- of afgeleide polygonen. Voor de visuele controle is de bestaande Google Hybride-laag gebruikt; de lokale Mapbox-laag laadde geen achtergrond. De publieke discoverygegevens bevatten identiteit, titel, coördinaten en afstand; de geometrieclaims blijven bij intake/review. Alleen daar worden de twee vormen getoond om het markerpunt te beoordelen.
+
+De uitgebreide proef hield aanvankelijk meerdere volledige imports tegelijk vast en overschreed de lokale PHP-limiet van 128 MiB. De afzonderlijke conflictproef slaagde met een piek van 108 MiB. Dit is geen capaciteitstest voor de volledige bestandslimiet van 32 MiB: benchmark geheugen en verwerkingsduur vóór grotere datasets of langlevende workers. Een mislukte poging bleef ongepubliceerd; er is geen dataset gedeeltelijk vervangen.
+
+Deze resultaten bewijzen de lokale technische keten met het vastgelegde bronbestand. De review van deze PR, hercontrole van bronvoorwaarden en eventuele publieke activering blijven afzonderlijke stappen. Er zijn geen productiegegevens of bucketinstellingen gewijzigd.

@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Form, Head, Link } from '@inertiajs/react';
-import type { Polygon } from 'geojson';
+import type { MultiPolygon, Polygon } from 'geojson';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GeoJSON } from 'react-leaflet';
 import type { Dataset, Import } from './index';
 
 type Claim = { external_id: string; street: string | null; number: number | null; geometry: Polygon; source_attributes: Record<string, unknown> };
+type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 type Row = {
     external_id: string;
     status: string;
@@ -21,12 +22,14 @@ type Row = {
     before: Claim | null;
     after: Claim | null;
     current: Record<string, unknown> | null;
+    geometry_derivation?: Derivation | null;
+    previous_geometry_derivation?: Derivation | null;
     point?: { latitude: number; longitude: number };
 };
 type Props = {
     import: Import;
     dataset: Dataset;
-    review: { counts: Record<string, number>; blockers: string[]; rows: Row[]; token: string };
+    review: { derivations: number; counts: Record<string, number>; blockers: string[]; rows: Row[]; token: string };
     page: number;
     pages: number;
 };
@@ -58,6 +61,11 @@ export default function Show({ import: delivery, dataset, review, page, pages }:
                         </div>
                     ))}
                 </dl>
+                {review.derivations > 0 && (
+                    <p role="status" className="rounded-lg border p-4">
+                        {t('derivations_notice', { count: review.derivations })}
+                    </p>
+                )}
                 <p className="text-sm text-muted-foreground">{t('missing_note')}</p>
                 {delivery.state !== 'pending' && <p className="text-sm text-muted-foreground">{t('current_comparison')}</p>}
                 {delivery.state === 'pending' && (
@@ -69,12 +77,18 @@ export default function Show({ import: delivery, dataset, review, page, pages }:
                                 ))}
                             </ul>
                         )}
-                        <Form {...update.form(delivery.id)} className="flex flex-col gap-3 rounded-lg border p-4">
+                        <Form key={review.token} {...update.form(delivery.id)} className="flex flex-col gap-3 rounded-lg border p-4">
                             {({ errors, processing }) => (
                                 <>
                                     <input type="hidden" name="review_token" value={review.token} />
                                     <Label htmlFor="reason">{t('reason')}</Label>
                                     <Textarea id="reason" name="reason" required maxLength={2000} />
+                                    {review.derivations > 0 && (
+                                        <Label className="flex items-start gap-2 leading-relaxed">
+                                            <input type="checkbox" name="geometry_reviewed" value="1" className="mt-1 shrink-0" />
+                                            <span>{t('geometry_confirm', { count: review.derivations })}</span>
+                                        </Label>
+                                    )}
                                     {Object.entries(errors).map(([field, message]) => (
                                         <InputError key={field} message={message} />
                                     ))}
@@ -103,6 +117,18 @@ export default function Show({ import: delivery, dataset, review, page, pages }:
                                 {row.after?.street ?? row.before?.street ?? t('unknown_street')} · {t(`counts.${row.status}`)}
                             </h2>
                             <p className="text-sm break-all text-muted-foreground">{row.external_id}</p>
+                            {row.geometry_derivation && (
+                                <div className="mt-3 rounded border p-3">
+                                    <p className="font-medium">{t('derived')}</p>
+                                    <p className="text-sm">{t('derived_note')}</p>
+                                    <details className="mt-2">
+                                        <summary className="cursor-pointer">{t('derivation_details')}</summary>
+                                        <pre className="mt-2 max-h-80 overflow-auto text-xs break-all whitespace-pre-wrap">
+                                            {JSON.stringify(row.geometry_derivation, null, 2)}
+                                        </pre>
+                                    </details>
+                                </div>
+                            )}
                             {row.point && row.after && (
                                 <div className="mt-3">
                                     <Button
@@ -116,8 +142,15 @@ export default function Show({ import: delivery, dataset, review, page, pages }:
                                     {mapRecord === row.external_id && (
                                         <div className="mt-3">
                                             <p className="mb-2 text-sm text-muted-foreground">{t('map_note')}</p>
+                                            {row.geometry_derivation && <p className="mb-2 text-sm">{t('geometry_legend')}</p>}
                                             <LocationMarkerCard {...row.point} draggable={false}>
-                                                <GeoJSON data={row.after.geometry} />
+                                                {row.geometry_derivation && (
+                                                    <GeoJSON data={row.geometry_derivation.geometry} style={{ color: '#38bdf8' }} />
+                                                )}
+                                                <GeoJSON
+                                                    data={row.after.geometry}
+                                                    style={row.geometry_derivation ? { color: '#f97316', dashArray: '8 6', fill: false } : undefined}
+                                                />
                                             </LocationMarkerCard>
                                         </div>
                                     )}
@@ -149,6 +182,14 @@ export default function Show({ import: delivery, dataset, review, page, pages }:
                                     </div>
                                 ))}
                             </div>
+                            {row.previous_geometry_derivation && (
+                                <details className="mt-3">
+                                    <summary className="cursor-pointer">{t('previous_derivation')}</summary>
+                                    <pre className="mt-2 max-h-80 overflow-auto text-xs break-all whitespace-pre-wrap">
+                                        {JSON.stringify(row.previous_geometry_derivation, null, 2)}
+                                    </pre>
+                                </details>
+                            )}
                             {row.current && (
                                 <details className="mt-3">
                                     <summary className="cursor-pointer">{t('current')}</summary>

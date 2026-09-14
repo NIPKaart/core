@@ -46,6 +46,7 @@ return new class extends Migration
             $table->foreignId('dataset_source_id')->nullable()->constrained()->restrictOnDelete();
             $table->string('external_id')->nullable();
             $table->jsonb('source_record')->nullable();
+            $table->jsonb('geometry_derivation')->nullable();
             $table->jsonb('last_imported_values')->nullable();
             $table->timestampTz('last_checked_at')->nullable();
             $table->unique(['dataset_source_id', 'external_id']);
@@ -57,7 +58,7 @@ return new class extends Migration
         Schema::table('parking_municipal_spaces', function (Blueprint $table) {
             $table->dropUnique(['dataset_source_id', 'external_id']);
             $table->dropConstrainedForeignId('dataset_source_id');
-            $table->dropColumn(['external_id', 'source_record', 'last_imported_values', 'last_checked_at']);
+            $table->dropColumn(['external_id', 'source_record', 'geometry_derivation', 'last_imported_values', 'last_checked_at']);
         });
         Schema::dropIfExists('municipal_imports');
         Schema::dropIfExists('dataset_sources');

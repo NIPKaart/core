@@ -51,9 +51,17 @@
         "street": "Straat",
         "source_attributes": "Regelingen, oriëntatie of brondatum",
         "source_updated_at": "Bronwijzigingsdatum",
-        "access_category": "Toegang"
+        "access_category": "Toegang",
+        "geometry_derivation": "Geometrie-afleiding"
     },
     "current_comparison": "Deze vergelijking gebruikt de huidige gegevens in NIPKaart. Na publicatie kunnen de aantallen en verschillen dus veranderen.",
     "map": "Parkeervlak op kaart bekijken",
-    "map_note": "Bronvlak met afgeleid kaartpunt; dit punt is geen ingang of afzonderlijk parkeervak."
+    "map_note": "Bronvlak met afgeleid kaartpunt; dit punt is geen ingang of afzonderlijk parkeervak.",
+    "derivations_notice": "Deze levering bevat {{count}} afgeleide geometrieën. Ze staan bovenaan de lijst en vereisen een expliciete beoordeling.",
+    "geometry_confirm": "Ik heb alle {{count}} afgeleide geometrieën vergeleken met de bron en beoordeeld als bruikbare basis voor de kaartmarker.",
+    "derived": "Afgeleid parkeervlak",
+    "derived_note": "De brongeometrie is ongeldig. Core stelt een apart hersteld vlak voor; het origineel blijft behouden. De delen zijn geen afzonderlijke parkeerplaatsen.",
+    "derivation_details": "Foutreden en afleiding bekijken",
+    "geometry_legend": "Oranje gestreept: oorspronkelijke bron. Blauw vlak: voorgestelde afleiding. Marker: afgeleid kaartpunt.",
+    "previous_derivation": "Eerder gepubliceerde afleiding"
 }

@@ -52,8 +52,9 @@ class MunicipalImportController extends Controller
         $data = $request->validate([
             'decision' => ['required', 'in:publish,reject'], 'reason' => ['required', 'string', 'max:2000'],
             'review_token' => ['required', 'string', 'size:64'],
+            'geometry_reviewed' => ['sometimes', 'boolean'],
         ]);
-        $service->decide($municipalImport, $request->user(), $data['decision'], $data['reason'], $data['review_token']);
+        $service->decide($municipalImport, $request->user(), $data['decision'], $data['reason'], $data['review_token'], (bool) ($data['geometry_reviewed'] ?? false));
 
         return to_route('app.municipal-imports.show', $municipalImport);
     }

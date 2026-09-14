@@ -46,7 +46,7 @@ class MunicipalImportService
                 'dataset_source_id' => $source->id, 'delivery_id' => $data['delivery_id'],
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
                 'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor->id,
-            ]);
+            ])->refresh();
         });
     }
 
@@ -88,11 +88,16 @@ class MunicipalImportService
                     }
                 }
             }
+            if ($space && MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null) !== MunicipalSnapshot::fingerprint($space->geometry_derivation)) {
+                $fields[] = 'geometry_derivation';
+            }
             $status = ! $space ? 'new' : ($conflicts ? 'conflict' : ($fields ? 'changed' : 'unchanged'));
             $counts[$status]++;
             $rows[] = [
                 'external_id' => $id, 'status' => $status, 'fields' => $fields, 'conflicts' => $conflicts,
                 'before' => $space?->source_record, 'after' => $record['source'],
+                'geometry_derivation' => $record['geometry_derivation'] ?? null,
+                'previous_geometry_derivation' => $space?->geometry_derivation,
                 'point' => ['latitude' => $record['values']['latitude'], 'longitude' => $record['values']['longitude']],
                 'current' => $space?->only(['id', 'number', 'street', 'orientation', 'latitude', 'longitude', 'visibility']),
             ];
@@ -102,6 +107,8 @@ class MunicipalImportService
             $counts['missing']++;
             $rows[] = ['external_id' => $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'current' => $space->only(['id', 'visibility'])];
         }
+        $rows = collect($rows)->sortByDesc(fn ($row) => ! empty($row['geometry_derivation']))->values()->all();
+        $derivations = count(array_filter($rows, fn ($row) => ! empty($row['geometry_derivation'])));
         $blockers = [];
         if (! $source->publication_enabled) {
             $blockers[] = 'Publicatie is nog niet ingeschakeld voor deze dataset. Bevestig eerst de bronvoorwaarden.';
@@ -116,13 +123,13 @@ class MunicipalImportService
             $blockers[] = 'Bronwijzigingen conflicteren met handmatig aangepaste velden. Publicatie is geblokkeerd.';
         }
 
-        return ['rows' => $rows, 'counts' => $counts, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows])];
+        return ['rows' => $rows, 'counts' => $counts, 'derivations' => $derivations, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows])];
     }
 
-    public function decide(MunicipalImport $import, User $actor, string $decision, string $reason, string $reviewToken): void
+    public function decide(MunicipalImport $import, User $actor, string $decision, string $reason, string $reviewToken, bool $geometryReviewed = false): void
     {
         Gate::forUser($actor)->authorize('update', $import);
-        DB::transaction(function () use ($import, $actor, $decision, $reason, $reviewToken) {
+        DB::transaction(function () use ($import, $actor, $decision, $reason, $reviewToken, $geometryReviewed) {
             $source = DatasetSource::whereKey($import->dataset_source_id)->lockForUpdate()->firstOrFail();
             $import = MunicipalImport::whereKey($import->id)->lockForUpdate()->firstOrFail();
             $import->setRelation('datasetSource', $source);
@@ -133,6 +140,9 @@ class MunicipalImportService
                 $review = $this->review($import, true);
                 if ($review['blockers'] || ! hash_equals($review['token'], $reviewToken)) {
                     throw ValidationException::withMessages(['decision' => $review['blockers'] ?: ['De gegevens zijn veranderd. Bekijk de verschillen opnieuw.']]);
+                }
+                if ($review['derivations'] > 0 && ! $geometryReviewed) {
+                    throw ValidationException::withMessages(['geometry_reviewed' => 'Bevestig dat je de afgeleide geometrieën hebt beoordeeld.']);
                 }
                 $this->publish($import, $source);
                 $source->last_published_retrieved_at = $import->retrieved_at;
@@ -153,7 +163,7 @@ class MunicipalImportService
         foreach ($import->records as $record) {
             $externalId = $record['source']['external_id'];
             $space = $existing->get($externalId);
-            if ($space && MunicipalSnapshot::fingerprint($space->source_record) === MunicipalSnapshot::fingerprint($record['source'])) {
+            if ($space && MunicipalSnapshot::fingerprint($space->source_record) === MunicipalSnapshot::fingerprint($record['source']) && MunicipalSnapshot::fingerprint($space->geometry_derivation) === MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null)) {
                 continue;
             }
             $values = $record['values'];
@@ -172,12 +182,13 @@ class MunicipalImportService
                 'country_id' => $municipality->country_id, 'province_id' => $municipality->province_id, 'municipality_id' => $municipality->id,
                 ...$values, 'visibility' => $space?->visibility ?? true,
                 'source_record' => json_encode($record['source'], JSON_THROW_ON_ERROR),
+                'geometry_derivation' => isset($record['geometry_derivation']) ? json_encode($record['geometry_derivation'], JSON_THROW_ON_ERROR) : null,
                 'last_imported_values' => json_encode($record['values'], JSON_THROW_ON_ERROR),
                 'last_checked_at' => now(), 'created_at' => $space?->created_at ?? now(), 'updated_at' => now(),
             ];
         }
         foreach (array_chunk($updates, 100) as $chunk) {
-            ParkingMunicipal::upsert($chunk, ['id'], ['street', 'number', 'orientation', 'latitude', 'longitude', 'source_record', 'last_imported_values', 'last_checked_at', 'updated_at']);
+            ParkingMunicipal::upsert($chunk, ['id'], ['street', 'number', 'orientation', 'latitude', 'longitude', 'source_record', 'geometry_derivation', 'last_imported_values', 'last_checked_at', 'updated_at']);
         }
         ParkingMunicipal::where('dataset_source_id', $source->id)
             ->whereIn('external_id', array_column(array_column($import->records, 'source'), 'external_id'))

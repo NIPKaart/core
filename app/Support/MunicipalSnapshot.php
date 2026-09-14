@@ -113,20 +113,34 @@ final class MunicipalSnapshot
             WITH shapes AS (
                 SELECT item->>'external_id' AS external_id, ST_SetSRID(ST_GeomFromGeoJSON((item->'geometry')::text),4326) AS shape
                 FROM jsonb_array_elements(?::jsonb) AS item
-            ) SELECT external_id, ST_IsValid(shape) AS valid, ST_IsValidReason(shape) AS validity_reason,
-                ST_CoveredBy(shape, ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside,
-                ST_X(ST_PointOnSurface(shape)) AS longitude, ST_Y(ST_PointOnSurface(shape)) AS latitude
-            FROM shapes
+            ), assessed AS (
+                SELECT *, ST_IsValid(shape) AS original_valid, ST_IsValidReason(shape) AS reason FROM shapes
+            ), derived AS (
+                SELECT *, CASE WHEN original_valid THEN shape ELSE ST_MakeValid(shape, 'method=linework') END AS usable FROM assessed
+            ), points AS (
+                SELECT *, ST_PointOnSurface(usable) AS point FROM derived
+            ) SELECT external_id, original_valid, reason,
+                ST_IsValid(usable) AND NOT ST_IsEmpty(usable) AND GeometryType(usable) IN ('POLYGON', 'MULTIPOLYGON') AS usable,
+                ST_CoveredBy(ST_Envelope(shape), ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside,
+                ST_X(point) AS longitude, ST_Y(point) AS latitude,
+                CASE WHEN NOT original_valid THEN ST_AsGeoJSON(usable, 15, 0) END AS geometry,
+                PostGIS_Lib_Version() || ' / GEOS ' || PostGIS_GEOS_Version() AS engine
+            FROM points
             SQL, [json_encode($data['records'], JSON_THROW_ON_ERROR), $west, $south, $east, $north]);
         $points = [];
+        $derivations = [];
         $errors = [];
         foreach ($rows as $row) {
-            if (! $row->valid || ! $row->inside) {
-                $errors["geometry.{$row->external_id}"] = "Bron-ID {$row->external_id}: ".(! $row->valid ? $row->validity_reason : 'buiten het toegelaten gebied.');
+            if (! $row->usable || ! $row->inside) {
+                $errors["geometry.{$row->external_id}"] = "Bron-ID {$row->external_id}: ".(! $row->inside ? 'buiten het toegelaten gebied.' : "geen bruikbaar parkeervlak na afleiding: {$row->reason}");
 
                 continue;
             }
             $points[$row->external_id] = ['longitude' => round($row->longitude, 7), 'latitude' => round($row->latitude, 7)];
+            $derivations[$row->external_id] = $row->original_valid ? null : [
+                'method' => 'st_makevalid_linework', 'reason' => $row->reason, 'engine' => $row->engine,
+                'geometry' => json_decode($row->geometry, true, 32, JSON_THROW_ON_ERROR),
+            ];
         }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
@@ -134,6 +148,7 @@ final class MunicipalSnapshot
 
         return array_map(fn ($record) => [
             'source' => $record,
+            'geometry_derivation' => $derivations[$record['external_id']],
             'values' => [
                 'street' => $record['street'], 'number' => $record['number'],
                 'orientation' => match ($record['source_attributes']['orientation']) {

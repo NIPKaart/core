@@ -51,9 +51,17 @@
         "street": "Street",
         "source_attributes": "Restrictions, orientation or source date",
         "source_updated_at": "Source update date",
-        "access_category": "Access"
+        "access_category": "Access",
+        "geometry_derivation": "Geometry derivation"
     },
     "current_comparison": "This comparison uses the current NIPKaart data. Counts and differences can therefore change after publication.",
     "map": "View parking polygon on map",
-    "map_note": "Source polygon with a derived map point; this point is not an entrance or individual parking bay."
+    "map_note": "Source polygon with a derived map point; this point is not an entrance or individual parking bay.",
+    "derivations_notice": "This delivery contains {{count}} derived geometries. They appear first in the list and require explicit review.",
+    "geometry_confirm": "I have compared all {{count}} derived geometries with the source and reviewed them as a usable basis for the map marker.",
+    "derived": "Derived parking polygon",
+    "derived_note": "The source geometry is invalid. Core proposes a separate repaired area and retains the original. Its parts are not individual parking spaces.",
+    "derivation_details": "View invalidity reason and derivation",
+    "geometry_legend": "Dashed orange: original source. Blue area: proposed derivation. Marker: derived map point.",
+    "previous_derivation": "Previously published derivation"
 }

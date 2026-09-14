@@ -17,7 +17,7 @@ class ParkingMunicipal extends Model
 
     protected $table = 'parking_municipal_spaces';
 
-    protected $hidden = ['source_record', 'last_imported_values'];
+    protected $hidden = ['source_record', 'geometry_derivation', 'last_imported_values'];
 
     protected $primaryKey = 'id';
 
@@ -45,6 +45,7 @@ class ParkingMunicipal extends Model
      */
     protected $casts = [
         'source_record' => 'array',
+        'geometry_derivation' => 'array',
         'last_imported_values' => 'array',
         'last_checked_at' => 'immutable_datetime',
         'orientation' => ParkingOrientation::class,
