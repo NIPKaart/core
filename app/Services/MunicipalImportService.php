@@ -19,7 +19,23 @@ class MunicipalImportService
     public function intake(string $json, User $actor): MunicipalImport
     {
         Gate::forUser($actor)->authorize('create', MunicipalImport::class);
+
+        return $this->stage($json, $actor, $this->snapshot->decode($json));
+    }
+
+    public function intakeFromStorage(string $json, string $dataset, string $deliveryId): MunicipalImport
+    {
         $data = $this->snapshot->decode($json);
+        if ($data['dataset'] !== $dataset || $data['delivery_id'] !== $deliveryId) {
+            throw ValidationException::withMessages(['file' => 'Object identity does not match its contents.']);
+        }
+
+        return $this->stage($json, null, $data);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function stage(string $json, ?User $actor, array $data): MunicipalImport
+    {
         $source = DatasetSource::where('code', $data['dataset'])->first();
         if (! $source) {
             throw ValidationException::withMessages(['dataset' => 'Deze dataset is niet geregistreerd.']);
@@ -45,7 +61,7 @@ class MunicipalImportService
             return MunicipalImport::create([
                 'dataset_source_id' => $source->id, 'delivery_id' => $data['delivery_id'],
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
-                'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor->id,
+                'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor?->id,
             ])->refresh();
         });
     }
