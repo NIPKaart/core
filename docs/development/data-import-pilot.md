@@ -1,6 +1,6 @@
 # Pilot: algemene gehandicaptenparkeerplaatsen Amsterdam
 
-Status 2026-09-14: `odp-amsterdam` 7.0.0 is uitgebracht en [disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) is gemerged. De live producer levert het afgesproken bestand. De eerste core-intake vond tien zelfdoorsnijdende polygonen. De gekozen vervolgafspraak is een afzonderlijke beoordeelde geometrie-afleiding in core, met behoud van de oorspronkelijke bron. Publieke ingebruikname is niet uitgevoerd.
+Status 2026-09-14: `odp-amsterdam` 7.0.0 is uitgebracht en [disabled-parking #783](https://github.com/NIPKaart/disabled-parking/pull/783) is gemerged. De live collector levert het afgesproken bestand. De eerste core-intake vond tien zelfdoorsnijdende polygonen. De gekozen vervolgafspraak is een afzonderlijke beoordeelde geometrie-afleiding in core, met behoud van de oorspronkelijke bron. Publieke ingebruikname is niet uitgevoerd.
 
 ## Waarom deze bron
 
@@ -12,7 +12,7 @@ De leverancier is Gemeente Amsterdam. De dataset wordt in de [overheidscatalogus
 | --- | --- |
 | Datasetcode | `nl-amsterdam-parkeervakken-e6a` |
 | Selectiecode | `e6a-all` = alle records uit `parkeervakken/parkeervakken` met exact `eType=E6a`; geen bbox of aanvullende stille filtering. |
-| Package | `odp-amsterdam==7.0.0` wordt door de producer gebruikt; de eerste onderzoeksproef gebruikte 6.0.0. |
+| Package | `odp-amsterdam==7.0.0` wordt door de collector gebruikt; de eerste onderzoeksproef gebruikte 6.0.0. |
 | Identiteit | `properties.id`, als volledige string binnen de dataset. De GeoJSON-wrapper `parkeervakken.<id>` wordt niet als tweede identiteit gebruikt. |
 | Geografie | Nederland (`NL`), Noord-Holland (`NL-NH`), gemeente Amsterdam (`nl:cbs:municipality`, `0363`). Core koppelt deze codes aan relaties. |
 | Betekenis | Algemene gehandicaptenparkeerplaats, mogelijk met tijdsbeperkingen. Geen actuele beschikbaarheid, geen garantie op toegankelijkheid voor ieder voertuig. |
@@ -39,7 +39,7 @@ Dit bewijst volledige ontvangst ten opzichte van het toen gerapporteerde totaal,
 
 De destijds onderzochte package 6.0.0 deed één request met een limiet, geeft geen totalen/paginering door en gebruikt slechts delen van het eerste regime. Daardoor verdwijnen tijdsbeperkingen en de versiedatum; `int(aantal)` kan bovendien ongeldige fractionele waarden afronden. Succesvol parsen betekent dus niet dat de levering inhoudelijk volledig is.
 
-ID's zijn nu uniek en als bron-ID beschikbaar, maar toekomstige hernummering is niet uitgesloten. Grote identiteitswisselingen en verdwenen records vragen beoordeling. Niet terugvallen op coördinatenmatching. De API-documentatie kondigt verplichte API-keys aan; de proef werkte zonder key. Ondersteuning voor eventuele bronauthenticatie hoort in de universele package/producer, nooit in het afleverbestand. De bron biedt geen bewezen mutatieversie over meerdere pagina's: controleer aantallen vóór/na en geef bij verschillen geen complete levering af; gelijke aantallen bewijzen geen snapshotisolatie.
+ID's zijn nu uniek en als bron-ID beschikbaar, maar toekomstige hernummering is niet uitgesloten. Grote identiteitswisselingen en verdwenen records vragen beoordeling. Niet terugvallen op coördinatenmatching. De API-documentatie kondigt verplichte API-keys aan; de proef werkte zonder key. Ondersteuning voor eventuele bronauthenticatie hoort in de universele package/collector, nooit in het afleverbestand. De bron biedt geen bewezen mutatieversie over meerdere pagina's: controleer aantallen vóór/na en geef bij verschillen geen complete levering af; gelijke aantallen bewijzen geen snapshotisolatie.
 
 ## Concrete bronrij en vertaling
 
@@ -98,15 +98,15 @@ Afgerond met packageversie 7.0.0, oorspronkelijk package-issue: [python-odp-amst
 
 ## Broncontrole na implementatie
 
-Offline tests bewijzen gedrag tegen bekende voorbeelden. Een periodieke begrensde live controle in #775 controleert daarnaast endpoint, velden, identiteit en volledigheid. Ook een HTTP 200 met gewijzigde betekenis kan een fout zijn. Bij een bronfout geen nieuwe complete levering publiceren; de laatste geaccepteerde gegevens blijven staan en de producent meldt de storing. De broncheck staat los van gewone package-CI.
+Offline tests bewijzen gedrag tegen bekende voorbeelden. Een periodieke begrensde live controle in #775 controleert daarnaast endpoint, velden, identiteit en volledigheid. Ook een HTTP 200 met gewijzigde betekenis kan een fout zijn. Bij een bronfout geen nieuwe complete levering publiceren; de laatste geaccepteerde gegevens blijven staan en de collector meldt de storing. De broncheck staat los van gewone package-CI.
 
-## Werkelijke producer → core-proef op 2026-09-14
+## Werkelijke collector → core-proef op 2026-09-14
 
 De live export bevat 1.420 unieke bronrecords en 1.579 regimes, is 1.384.804 bytes groot en heeft SHA-256 `99a6744f950a5c4307d9851524a84790f4a9ff3bb704819d02bd976df1abcd31`. Leverings-ID: `7982ffb8-87d7-401e-8989-424a81284738`; ophaalstart: `2026-09-13T23:41:47.974385Z`. Dit is een andere representatie dan de oorspronkelijke onderzoeksresponse hierboven.
 
 PostGIS controleerde alle geometrieën op de afzonderlijke core-testdatabase. Alle liggen binnen de ingestelde bbox, maar `ST_IsValidReason` meldt een zelfdoorsnijding voor bron-ID's `114185488210`, `114187488001`, `118990486331`, `119459482101`, `119478482386`, `121780485119`, `123005483477`, `123773490356`, `123778490343` en `124156485525`.
 
-In die eerste proef is daarom niets uit deze levering gepubliceerd of gedeeltelijk geïmporteerd. De foutmelding identificeert alle betrokken bron-ID's. De producer garandeert structurele volledigheid; dat is geen garantie op geometrische geldigheid. Kleine synthetische voorbeelden testen het veilige publicatiepad, maar vervangen deze ontbrekende acceptatie niet.
+In die eerste proef is daarom niets uit deze levering gepubliceerd of gedeeltelijk geïmporteerd. De foutmelding identificeert alle betrokken bron-ID's. De collector garandeert structurele volledigheid; dat is geen garantie op geometrische geldigheid. Kleine synthetische voorbeelden testen het veilige publicatiepad, maar vervangen deze ontbrekende acceptatie niet.
 
 Vervolgkeuze van de eigenaar op 2026-09-14: beoordeelde geometrie-afleiding in core, met behoud van de oorspronkelijke brongeometrie. `ST_MakeValid` met expliciete methode `linework` levert voor alle tien een geldige MultiPolygon met twee delen op (totale oppervlakte circa 11,43–15,71 m²). Dit is geometrische bruikbaarheid, geen bewijs van de werkelijkheid op straat. Origineel, afleiding en afgeleid kaartpunt staan alleen samen op de beheerkaart. Op de publieke kaart verschijnt uitsluitend de marker. Geen tien records overslaan en alsnog `complete=true` verklaren; elke afleiding vereist review.
 
@@ -118,7 +118,7 @@ Een afzonderlijke operationele proef op `nipkaart_test` liet twee PHP-processen 
 
 ## Lokale keten na beoordeelde geometrie-afleiding
 
-Het oorspronkelijke producerbestand met bovenstaande SHA-256 is na deze wijziging volledig ter beoordeling aangeboden: 1.420 nieuwe records, tien afleidingen, intake en vergelijking in circa 0,85 seconde op de lokale testomgeving. Alle oorspronkelijke bronclaims zijn vergeleken met de gepubliceerde `source_record`-waarden en gelijk gebleven. De tien afleidingen behouden de bronbegrenzing; hun kleinste delen beslaan circa 0,00000044–0,00017 m². Alle tien opgeslagen markerpunten liggen binnen hun afgeleide vorm. Er ontstaan geen extra parkeerplaatsen of markers uit deze delen.
+Het oorspronkelijke collectorbestand met bovenstaande SHA-256 is na deze wijziging volledig ter beoordeling aangeboden: 1.420 nieuwe records, tien afleidingen, intake en vergelijking in circa 0,85 seconde op de lokale testomgeving. Alle oorspronkelijke bronclaims zijn vergeleken met de gepubliceerde `source_record`-waarden en gelijk gebleven. De tien afleidingen behouden de bronbegrenzing; hun kleinste delen beslaan circa 0,00000044–0,00017 m². Alle tien opgeslagen markerpunten liggen binnen hun afgeleide vorm. Er ontstaan geen extra parkeerplaatsen of markers uit deze delen.
 
 De daadwerkelijke browserpublicatie op `nipkaart_test` is eerst zonder geometriebevestiging geprobeerd en geblokkeerd. Na technische beoordeling en expliciete bevestiging is de volledige levering gepubliceerd. Een gecontroleerde herhaling behield alle 1.420 identiteiten en inhoudstijdstippen; een gewijzigde testkopie toonde één gewijzigde en één ontbrekende bronrij, waarbij het ontbrekende record behouden bleef. Een volgende testkopie botste met een handmatig aangepast aantal en werd geblokkeerd. Deze varianten zijn testmutaties van het vastgelegde bestand, geen nieuwe gemeentelijke waarnemingen.
 

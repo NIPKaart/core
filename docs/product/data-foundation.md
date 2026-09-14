@@ -53,13 +53,13 @@ De [bestaande PostgreSQL-afspraak](../development/postgresql.md#fresh-start-deci
 | Adapters en batchuitvoering horen in de twee importrepositories | NIPKaart-vertaling en ophaalplanning gebeuren buiten de universele packages |
 | Het bestandcontract scheidt verzamelen en verwerken | Importomgeving plant fetches; core ontdekt complete leveringen en beheert publicatie |
 | Brononderzoek blijft buiten het platform | Alleen operationeel datasetbeheer; geen CRM, leads, contacthistorie of onderzoeksworkflow |
-| Python levert bestanden, core publiceert parkeerinformatie | Beperkte opslagrechten voor producenten; geen coretoken of databaseverbinding |
+| Python levert bestanden, core publiceert parkeerinformatie | Beperkte opslagrechten voor collectors; geen coretoken of databaseverbinding |
 | Datasets en communitykennis zijn beide nodig | Correcties op geïmporteerde plekken horen bij de basis |
-| Code mag open zijn, de operatie is gecontroleerd | Private opslag, gescheiden producent-/consumerrechten en beheerde bulktoegang |
+| Code mag open zijn, de operatie is gecontroleerd | Private opslag, gescheiden collector-/consumerrechten en beheerde bulktoegang |
 | Mobiel is een toekomstige productrichting | Verwerking centraal en herbruikbaar; geen mobiele app bouwen in deze eerste oplevering |
 | Vertrouwen kan later verwerking versnellen | Nu onderbouwde bijdrage- en beslisgeschiedenis verzamelen; nog geen automatische karmadrempels |
 
-De batchgrens en private bucket voor automatische overdracht zijn gekozen. De eerste proef gebruikt één lokaal JSON-bestand. Werkpakket A beschrijft het voorlopige formaat; producer en core beproeven dit vóór het wordt vastgezet. Opslagprovider en voltooiingsmechanisme horen bij #1217.
+De batchgrens en private bucket voor automatische overdracht zijn gekozen. De eerste proef gebruikt één lokaal JSON-bestand. Werkpakket A beschrijft het voorlopige formaat; collector en core beproeven dit vóór het wordt vastgezet. Opslagprovider en voltooiingsmechanisme horen bij #1217.
 
 ## 4. Verantwoordelijkheden
 
@@ -87,7 +87,7 @@ flowchart TD
 
 Er zijn twee verschillende soorten achtergrondwerk: Python verzamelt brondata; Laravel verwerkt aanleveringen en besluiten. Python leest geen Laravel-queuetabellen en krijgt geen databasecredentials.
 
-Core bewaart de leveringsafspraak en voorbeelden; de producent en consumer gebruiken hetzelfde beproefde formaat. Een aparte schemarelease is geen voorwaarde voor de pilot. Gedeelde Python-uitvoeringslogica wordt pas losgetrokken wanneer een tweede repository die werkelijk nodig heeft. De universele bronclients blijven daarvan onafhankelijk.
+Core bewaart de leveringsafspraak en voorbeelden; de collector en consumer gebruiken hetzelfde beproefde formaat. Een aparte schemarelease is geen voorwaarde voor de pilot. Gedeelde Python-uitvoeringslogica wordt pas losgetrokken wanneer een tweede repository die werkelijk nodig heeft. De universele bronclients blijven daarvan onafhankelijk.
 
 ## 5. Aangesloten datasets beheren
 
