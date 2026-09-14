@@ -1,0 +1,37 @@
+services:
+  rustfs:
+    container_name: ddev-${DDEV_SITENAME}-rustfs
+    image: rustfs/rustfs:1.0.0-rc.6
+    command: /data
+    environment:
+      RUSTFS_ACCESS_KEY: ddevrustfs
+      RUSTFS_SECRET_KEY: ddevrustfs
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_OBS_LOGGER_LEVEL: warn
+      VIRTUAL_HOST: ${DDEV_HOSTNAME}
+      HTTP_EXPOSE: "9080:9000,9081:9001"
+      HTTPS_EXPOSE: "9090:9000,9091:9001"
+    volumes:
+      - rustfs:/data
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 1g
+    restart: "no"
+
+  web:
+    environment:
+      MUNICIPAL_R2_ENDPOINT: http://rustfs:9000
+      MUNICIPAL_R2_BUCKET: nipkaart-imports
+      MUNICIPAL_R2_ACCESS_KEY_ID: ddevrustfs
+      MUNICIPAL_R2_SECRET_ACCESS_KEY: ddevrustfs
+
+volumes:
+  rustfs:

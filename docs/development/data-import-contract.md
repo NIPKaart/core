@@ -84,7 +84,7 @@ Regular CI runs offline with small package-object examples. A separate bounded l
 4. Submit the unchanged collector file. Set PHP `upload_max_filesize` to at least `32M`, and `post_max_size` and the web server body limit above 32 MiB to allow multipart overhead. Smaller server limits apply before application validation.
 5. Check counts, original source fields, every restriction and a map sample. The list displays up to 50 records per page; each record's parking area and derived point can be expanded. Approval and rejection require a reason. Records with a derivation appear first. Only the administration screen displays the original and derived geometry together for review, distinguished by lines and colors. Publishing a delivery with derivations requires explicit confirmation that every derivation has been reviewed; rejection does not require this confirmation. The service enforces this too.
 
-`MunicipalImportService::intake()` is the shared entry point for uploads and the future bucket consumer. Authorization also applies inside the service. Publication locks one dataset row and rechecks current source records and import status. An outdated review token requires another review. The delivery, mutations and latest published retrieval timestamp are committed or rolled back together. Resubmitting identical bytes returns the existing status, including after a configuration change.
+`MunicipalImportService::intake()` authorizes manual uploads; the bucket consumer uses `intakeFromStorage()` after verifying the configured storage identity. Both use the same validation and staging implementation. Publication locks one dataset row and rechecks current source records and import status. An outdated review token requires another review. The delivery, mutations and latest published retrieval timestamp are committed or rolled back together. Resubmitting identical bytes returns the existing status, including after a configuration change.
 
 Source claims remain unchanged in `source_record`. For repairs, `geometry_derivation` separately stores the proposed shape, error reason, method and PostGIS/GEOS version; the received delivery retains the same derivation. Normal review records the reviewer, timestamp and reason. MultiPolygon components are not converted into individual parking spaces. A new delivery with the same derivation does not change content; a later source-repaired polygon removes the current derivation while preserving the previous one in the import audit. Source and derivation are covered by the review token, so a changed derivation requires review again. `last_imported_values` stores the last derived values. Current fields are the effective values: a difference from the previous import is conservatively treated as a manual correction. Non-conflicting corrections and visibility are preserved; a concurrent conflicting source change blocks publication. `last_checked_at` records the successful check; `source_updated_at` remains unknown. Existing municipal records that are not connected to this integration remain untouched; linking or reconciling them is separate work.
 
@@ -111,3 +111,74 @@ The additive `municipal_deliveries` table records object identity and discovery 
 Successful receipt records `received_at` and `validated_at` separately from the source retrieval timestamp and later publication review. `late_on_receipt` records whether the source retrieval was already beyond the configured expected age at intake; it is not a continuously updated freshness indicator. Late retained files can still be reviewed after an outage, while existing publication ordering prevents older data replacing newer published data. Machine intake has no human submitter (`submitted_by = null`); it enters the same validation and staging implementation through an internal storage entry point. Manual upload authorization and publication policies remain unchanged. Bucket receipt never approves or publishes a delivery.
 
 Keep R2 retention longer than the agreed maximum core outage. Losing the pending queue does not lose receipt identity; losing a retained object before intake prevents its recovery. A database rollback of this migration drops transport receipts but retains the existing import/review records; reconstruct receipts from retained objects, which remain subject to existing delivery-ID deduplication. Verify real R2 access boundaries, retention and outage/replay behavior in isolated staging before production activation. Local SDK-stub tests do not prove the deployed bucket configuration or real multi-worker behavior.
+
+## Local object storage with DDEV
+
+DDEV runs RustFS with its built-in web console and a persistent Docker volume. `ddev start` creates the private local `nipkaart-imports` bucket if absent and clears Laravel's configuration cache. Install Composer dependencies first, or restart DDEV after installing them. Open the console with `ddev rustfs`; the local-only account and key are both `ddevrustfs`.
+
+| Connection | Address |
+| --- | --- |
+| Core inside DDEV | `http://rustfs:9000` |
+| S3 API from the host | `https://nipkaart-core.ddev.site:9090` |
+| Web console | `https://nipkaart-core.ddev.site:9091` |
+
+The DDEV Compose override supplies the existing `MUNICIPAL_R2_*` settings with local values. Their names are retained for compatibility; the disk uses the same S3 client for RustFS and R2. No cloud credentials are needed for local development. Automatic discovery remains opt-in; to run one local scan use `ddev exec env MUNICIPAL_DELIVERIES_ENABLED=true php artisan nipkaart:discover-municipal-deliveries`. The queue worker also needs that flag enabled. Register the dataset first and retain the normal review/publication flow.
+
+For a collector running on the host, use the host S3 endpoint, bucket `nipkaart-imports` and the same local credentials in its existing `R2_ENDPOINT`, `R2_BUCKET`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` variables. The collector requires HTTPS; let its SDK trust DDEV's local CA using `AWS_CA_BUNDLE` pointing to `rootCA.pem` under `mkcert -CAROOT`. Do not disable certificate verification. A collector in Docker needs the same reachable endpoint and CA mounted inside that container; `localhost` would refer to the collector itself.
+
+Run the explicit local storage test with:
+
+```sh
+ddev exec env DB_HOST=db RUN_RUSTFS_TESTS=1 php artisan test --compact tests/Feature/RustfsStorageTest.php
+```
+
+It checks conditional PUT replay, prefix listing, ETag conditions and SHA-256 validation through core's actual storage service, then deletes only its own uniquely named test object. It refuses non-local endpoint/bucket configuration. Ordinary CI skips this test and retains the existing isolated import tests. The pinned RustFS image is currently a release candidate; local success does not replace the real R2 permission and recovery rehearsal.
+
+## Isolated staging rehearsal (#1217)
+
+The collector is merged in disabled-parking#787 and core intake in core#1234. The owner has created the R2 bucket `nipkaart-imports`; its actual configuration and credentials have not yet been verified. The following is an execution plan, not completed staging evidence. Record the selected host, core environment, bucket, jurisdiction, approved budget and actual results in #1217 before closing operational acceptance. Use an isolated core database, queue and cache, and a dedicated staging collector volume. Keep publication paused until the review part of the rehearsal.
+
+Proposed pilot settings, pending owner agreement:
+
+| Setting | Proposal |
+| --- | --- |
+| Storage | One private, Amsterdam-only R2 Standard bucket in EU jurisdiction; public access disabled. |
+| Collector | Existing owner-managed Linux host, the repository's Compose service and a dedicated persistent volume; one retrieval per day. |
+| Retention | Expire complete pilot deliveries after 30 days; tolerate up to seven days of core downtime. Retained files are replayable, not a backup of core's review history. |
+| Recovery target | Validate retained files within 30 minutes after core and storage access recover, measured during rehearsal. This is a target, not a measured guarantee. |
+| Data-loss boundary | No loss of completed retained deliveries during that outage window. Missed or failed upstream retrievals cannot be reconstructed; there is no guarantee of observing every source change. |
+| Cost review | Review at US$1/month of attributable R2 usage or 1 GiB retained pilot data. These are proposed review thresholds, not enforced spending caps. |
+
+At one file per day, 30 files at the 32 MiB limit occupy at most 960 MiB, excluding retries with different identities or rehearsal objects. Five-minute discovery adds about 8,640 list requests per 30 days when each listing fits one page. Check actual account usage and [current R2 pricing](https://developers.cloudflare.com/r2/pricing/) before approval; the free allowance is not a dedicated per-bucket budget.
+
+### Access and configuration
+
+Use separate credentials: core receives **Object Read only** scoped to the staging bucket; the collector needs object write plus read access to compare uncertain uploads. Standard R2 tokens are bucket-scoped, not restricted to the dataset prefix. Do not claim that a collector write token prevents deletion or overwriting: test its actual capabilities with disposable objects and record the result. The collector's conditional PUT is application behavior, not an access-control boundary. Keep bucket configuration and lifecycle management with the operator. If strict write-without-delete or per-prefix credentials are required, settle that mechanism before continuous operation. See [R2 authentication](https://developers.cloudflare.com/r2/api/tokens/).
+
+| Value | disabled-parking `.env` | core environment |
+| --- | --- | --- |
+| Jurisdiction-specific S3 endpoint | `R2_ENDPOINT` | `MUNICIPAL_R2_ENDPOINT` |
+| Same staging bucket | `R2_BUCKET` | `MUNICIPAL_R2_BUCKET` |
+| Separate access key IDs | `AWS_ACCESS_KEY_ID` | `MUNICIPAL_R2_ACCESS_KEY_ID` |
+| Separate secret keys | `AWS_SECRET_ACCESS_KEY` | `MUNICIPAL_R2_SECRET_ACCESS_KEY` |
+| Collector cadence | `COLLECTOR_INTERVAL_SECONDS=86400` | Not configured here |
+| Enable core discovery | Not configured here | `MUNICIPAL_DELIVERIES_ENABLED=true` |
+
+Enter secrets directly into each environment's private configuration, not issue comments or command arguments. Start the existing collector with `docker compose up -d --build` from its checkout after configuration. In core, apply migrations, register Amsterdam, refresh configuration and run the existing scheduler and queue worker. Use a persistent queue connection, not `sync`, for outage and worker tests. The queue and cache must be shared by both test workers. Do not run a second collector against the same volume during normal operation.
+
+Configure retention through the bucket's **Settings → Object Lifecycle Rules** after approval, limited to `municipal/nl-amsterdam-parkeervakken-e6a/`. Expiration is asynchronous; do not rely on exact deletion timing for a spending cap. See [R2 lifecycle behavior](https://developers.cloudflare.com/r2/buckets/object-lifecycles/).
+
+### Execute and record evidence
+
+| Rehearsal | Required evidence |
+| --- | --- |
+| Access boundary | With disposable objects, verify core can list/read but cannot put/delete; record collector read/write/overwrite/delete results. Verify both tokens cannot access another operator-approved test bucket. Never probe production objects. |
+| First delivery | Record collector/core commit IDs, delivery UUID, SHA-256 and UTC retrieval/receipt/validation times. One complete object produces one validated receipt and one reviewable import, with no automatic publication. |
+| Interrupted upload | Interrupt staging storage connectivity during a single PUT. Record whether R2 retained no object or the entire matching object; a truncated visible delivery fails acceptance. Restore connectivity and confirm the retained pending UUID and exact bytes are retried. |
+| Restart and replay | Restart the collector with pending bytes and later replay the same completed file. Confirm one object identity, one receipt and one import, without a new upstream fetch for the pending retry. |
+| Core outage | Stop only the isolated core scheduler/workers, allow a complete upload, then stop the collector. Restore core and discover the retained file. Measure time to validation and confirm recovery required no municipal request. |
+| Two workers | With two workers on the isolated queue/cache/database, process deliveries and a deliberately duplicated job for one receipt. Record one import per delivery and no partial state. Unique dispatch alone does not demonstrate concurrent row-lock behavior. |
+| Publication boundary | Confirm publication pause blocks acceptance, then explicitly review one staging import. Replay an older retained delivery and verify it cannot replace newer published data. |
+| Credential rotation | Replace each credential separately, refresh core configuration/restart its workers or recreate the collector as appropriate, verify delivery resumes, then revoke the old credential and verify denial. Preserve the collector volume. |
+
+Keep safe timestamps, counts, hashes and observed outcomes in #1217; do not paste raw payloads or credentials. A failed case stays open with its cause and next action. After rehearsal, stop temporary workers/collectors, disable automatic intake if the environment is not intended to remain running, and remove only explicitly disposable test objects. Retain pending files and review evidence until recovery has been accepted. No production activation is implied. Continuous freshness display follows in #1219; `late_on_receipt` alone does not satisfy that issue.

@@ -1,0 +1,3 @@
+hooks:
+  post-start:
+    - exec: "if [ -f vendor/autoload.php ]; then php artisan config:clear && php .ddev/rustfs-setup.php; else echo 'Run ddev restart after composer install.'; fi"
