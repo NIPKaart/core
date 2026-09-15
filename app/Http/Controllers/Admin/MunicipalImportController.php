@@ -7,6 +7,7 @@ use App\Http\Requests\App\StoreMunicipalImportRequest;
 use App\Models\DatasetSource;
 use App\Models\MunicipalImport;
 use App\Services\MunicipalImportService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,13 +16,21 @@ use Inertia\Response;
 
 class MunicipalImportController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', MunicipalImport::class);
 
+        $request->validate(['q' => ['nullable', 'string', 'max:200'], 'state' => ['nullable', 'in:all,pending,published,rejected']]);
+        $query = trim($request->string('q')->toString());
+        $state = $request->string('state', 'all')->toString() ?: 'all';
+
         return Inertia::render('backend/municipal-imports/index', [
             'datasets' => DatasetSource::orderBy('name')->get(),
-            'imports' => MunicipalImport::with('datasetSource:id,name')->latest('id')->paginate(20),
+            'imports' => MunicipalImport::with('datasetSource:id,name')
+                ->when($state !== 'all', fn (Builder $builder) => $builder->where('state', $state))
+                ->when($query !== '', fn (Builder $builder) => $builder->whereHas('datasetSource', fn (Builder $source) => $source->where('name', 'ilike', '%'.$query.'%')))
+                ->latest('id')->paginate(20)->withQueryString(),
+            'filters' => ['q' => $query, 'state' => $state],
         ]);
     }
 
@@ -36,13 +45,32 @@ class MunicipalImportController extends Controller
     {
         Gate::authorize('view', $municipalImport);
         $review = $service->review($municipalImport);
-        $page = max(1, min((int) $request->query('page', 1), max(1, (int) ceil(count($review['rows']) / 50))));
-        $total = count($review['rows']);
-        $review['rows'] = array_slice($review['rows'], ($page - 1) * 50, 50);
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:200'],
+            'filter' => ['nullable', 'in:all,geometry,new,changed,unchanged,missing,conflict'],
+        ]);
+        $query = trim($request->string('q')->toString());
+        $filter = $request->string('filter', 'all')->toString() ?: 'all';
+        $rows = array_values(array_filter($review['rows'], function (array $row) use ($query, $filter): bool {
+            $matchesFilter = match ($filter) {
+                'all' => true,
+                'geometry' => ! empty($row['geometry_derivation']),
+                default => $row['status'] === $filter,
+            };
+            $searchable = implode(' ', [$row['external_id'], $row['after']['street'] ?? '', $row['before']['street'] ?? '']);
+
+            return $matchesFilter && ($query === '' || mb_stripos($searchable, $query) !== false);
+        }));
+        $total = count($rows);
+        $pages = max(1, (int) ceil($total / 25));
+        $page = max(1, min((int) $request->query('page', 1), $pages));
+        $review['rows'] = array_slice($rows, ($page - 1) * 25, 25);
 
         return Inertia::render('backend/municipal-imports/show', [
             'import' => $municipalImport, 'dataset' => $municipalImport->datasetSource,
-            'review' => $review, 'page' => $page, 'pages' => max(1, (int) ceil($total / 50)),
+            'municipalityName' => $municipalImport->datasetSource->municipality->name,
+            'review' => $review, 'page' => $page, 'pages' => $pages,
+            'total' => $total, 'filters' => ['q' => $query, 'filter' => $filter],
         ]);
     }
 
@@ -59,12 +87,10 @@ class MunicipalImportController extends Controller
         return to_route('app.municipal-imports.show', $municipalImport);
     }
 
-    public function enable(Request $request, DatasetSource $datasetSource): RedirectResponse
+    public function enable(DatasetSource $datasetSource): RedirectResponse
     {
         Gate::authorize('create', MunicipalImport::class);
-        $request->validate(['terms_confirmed' => ['accepted'], 'reason' => ['required', 'string', 'max:2000']]);
         $datasetSource->publication_enabled = true;
-        $datasetSource->terms_review = ['user_id' => $request->user()->id, 'at' => now()->toIso8601String(), 'reason' => $request->string('reason')->toString()];
         $datasetSource->save();
 
         return to_route('app.municipal-imports.index');
