@@ -303,16 +303,18 @@ it('rolls back all records and import state on a database failure and permits re
     expect($import->fresh()->state)->toBe('published');
 });
 
-it('records source terms before staging and blocks publication when disabled or reconfigured', function () {
+it('enables a source without a terms attestation and blocks publication when disabled or reconfigured', function () {
     $source = DatasetSource::factory()->create(['publication_enabled' => false]);
     $user = importReviewer();
     $service = app(MunicipalImportService::class);
     $blocked = stageMunicipal(municipalDelivery(), $user);
     expect($service->review($blocked)['blockers'])->not->toBeEmpty();
     expect(fn () => approveMunicipal($blocked, $user))->toThrow(ValidationException::class);
-    $this->actingAs($user)->post(route('app.municipal-imports.datasets.enable', $source), ['terms_confirmed' => true, 'reason' => 'CC0 catalogue and current API terms reviewed'])->assertRedirect();
-    expect($source->fresh()->terms_review['user_id'])->toBe($user->id);
+    $this->actingAs($user)->post(route('app.municipal-imports.datasets.enable', $source))->assertRedirect();
+    expect($source->fresh()->publication_enabled)->toBeTrue();
+    expect($source->terms_review)->toBeNull();
     $import = stageMunicipal(municipalDelivery(), $user);
+    expect($service->review($import)['blockers'])->toBeEmpty();
     $source->refresh()->update(['bounds' => [4.8, 52.2, 5.15, 52.5]]);
     expect(fn () => approveMunicipal($import, $user))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
@@ -354,6 +356,7 @@ it('keeps the original geometry and requires explicit review before publishing i
     expect($import->state)->toBe('pending');
 
     $this->actingAs($user)->get(route('app.municipal-imports.show', $import))->assertInertia(fn (Assert $page) => $page
+        ->where('municipalityName', 'Amsterdam')
         ->where('review.derivations', 1)
         ->where('review.rows.0.after.geometry', $data['records'][0]['geometry'])
         ->where('review.rows.0.geometry_derivation.geometry.type', 'MultiPolygon'));
@@ -429,4 +432,56 @@ it('can reject a delivery with derived geometries without approving those geomet
     ])->assertSessionHasNoErrors();
     expect($import->fresh()->state)->toBe('rejected');
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
+});
+
+it('searches and filters the whole delivery without narrowing its publication review', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $record = $data['records'][0];
+    $data['records'] = [];
+    for ($index = 0; $index < 26; $index++) {
+        $data['records'][] = [...$record, 'external_id' => sprintf('record-%02d', $index), 'street' => $index === 25 ? 'Unieke straat' : 'Teststraat'];
+    }
+    $data['source_count'] = 26;
+    $import = stageMunicipal($data, $user);
+    $token = app(MunicipalImportService::class)->review($import)['token'];
+
+    $this->actingAs($user)->get(route('app.municipal-imports.show', $import))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 25)->where('total', 26)->where('pages', 2));
+    $this->get(route('app.municipal-imports.show', [$import, 'q' => 'UNIEKE', 'filter' => 'new', 'page' => 2]))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 1)->where('review.rows.0.external_id', 'record-25')
+        ->where('total', 1)->where('page', 1)->where('pages', 1)
+        ->where('review.counts.new', 26)->where('review.token', $token));
+    $this->get(route('app.municipal-imports.show', [$import, 'q' => 'record-25']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 1)->where('review.rows.0.external_id', 'record-25'));
+    $this->get(route('app.municipal-imports.show', [$import, 'filter' => 'changed']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 0)->where('total', 0)->where('pages', 1)->where('review.counts.new', 26));
+});
+
+it('filters derived geometries without changing the required review count', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][] = [...$data['records'][0], 'external_id' => 'derived'];
+    $data['records'][1]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $data['source_count'] = 2;
+    $import = stageMunicipal($data, $user);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.show', [$import, 'filter' => 'geometry']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 1)->where('review.rows.0.external_id', 'derived')->where('review.derivations', 1)->where('review.counts.new', 2));
+});
+
+it('filters the delivery overview by source name and review status', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $pending = stageMunicipal(municipalDelivery(), $user);
+    $published = stageMunicipal(municipalDelivery(), $user);
+    approveMunicipal($published, $user);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.index', ['q' => 'AMSTERDAM', 'state' => 'pending']))->assertInertia(fn (Assert $page) => $page
+        ->has('imports.data', 1)->where('imports.data.0.id', $pending->id)->where('imports.total', 1)
+        ->where('filters.q', 'AMSTERDAM')->where('filters.state', 'pending'));
+    $this->get(route('app.municipal-imports.index', ['q' => 'No matching source']))->assertInertia(fn (Assert $page) => $page
+        ->has('imports.data', 0)->where('imports.total', 0));
 });
