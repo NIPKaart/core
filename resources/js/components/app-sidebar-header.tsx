@@ -16,13 +16,13 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
             <div className="ml-auto flex items-center gap-2">
                 {/* Desktop: bar + bell */}
-                <SearchBar className="w-[420px]" placeholder="Search users, roles, parking…" />
-                <div className="hidden md:block">
+                <SearchBar className="w-[220px] md:hidden lg:block xl:w-[420px]" placeholder="Search users, roles, parking…" />
+                <div className="hidden lg:block">
                     <BellBadge />
                 </div>
 
                 {/* Mobile: icon + bell */}
-                <div className="flex items-center gap-2 md:hidden">
+                <div className="flex items-center gap-2 lg:hidden">
                     <SearchButton variant="icon" tooltip="Search" />
                     <BellBadge />
                 </div>

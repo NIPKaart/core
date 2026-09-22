@@ -127,7 +127,7 @@ class MunicipalImportService
         $derivations = count(array_filter($rows, fn ($row) => ! empty($row['geometry_derivation'])));
         $blockers = [];
         if (! $source->publication_enabled) {
-            $blockers[] = 'Publicatie is nog niet ingeschakeld voor deze dataset. Bevestig eerst de bronvoorwaarden.';
+            $blockers[] = 'Publicatie is nog niet ingeschakeld voor deze dataset. Schakel publicatie in bij de gekoppelde bronnen.';
         }
         if (MunicipalSnapshot::fingerprint($source->configuration()) !== MunicipalSnapshot::fingerprint($import->dataset_config)) {
             $blockers[] = 'De datasetconfiguratie is gewijzigd sinds ontvangst. Lever een nieuw bestand aan.';

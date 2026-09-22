@@ -30,7 +30,7 @@ class RegisterAmsterdamDataset extends Command
             'bounds' => [4.65, 52.2, 5.15, 52.5],
             'publication_enabled' => false,
         ]);
-        $this->info('Dataset registered. Confirm the source terms in the import screen before publication.');
+        $this->info('Dataset registered. Enable publication for the source in the import screen.');
 
         return self::SUCCESS;
     }

@@ -22,6 +22,9 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     filters?: React.ReactNode;
+    search?: React.ReactNode;
+    enableSorting?: boolean;
+    onRowClick?: (row: TData) => void;
     rowSelection?: RowSelectionState;
     onRowSelectionChange?: OnChangeFn<RowSelectionState>;
     initialState?: {
@@ -34,6 +37,9 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     filters,
+    search,
+    enableSorting = true,
+    onRowClick,
     rowSelection,
     onRowSelectionChange,
     initialState,
@@ -60,18 +66,21 @@ export function DataTable<TData, TValue>({
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         enableRowSelection: true,
+        enableSorting,
         globalFilterFn: customGlobalFilterFn,
     });
 
     return (
         <div className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Input
-                    placeholder={t('search.placeholder')}
-                    value={globalFilter}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-full sm:max-w-sm"
-                />
+                {search ?? (
+                    <Input
+                        placeholder={t('search.placeholder')}
+                        value={globalFilter}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        className="w-full sm:max-w-sm"
+                    />
+                )}
                 {filters && <div className="w-full sm:w-auto">{filters}</div>}
                 <ColumnsSelector table={table} />
             </div>
@@ -92,7 +101,34 @@ export function DataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && 'selected'}
+                                    tabIndex={onRowClick ? 0 : undefined}
+                                    className={
+                                        onRowClick
+                                            ? 'cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring'
+                                            : undefined
+                                    }
+                                    onClick={
+                                        onRowClick
+                                            ? (event) => {
+                                                  event.currentTarget.focus();
+                                                  onRowClick(row.original);
+                                              }
+                                            : undefined
+                                    }
+                                    onKeyDown={
+                                        onRowClick
+                                            ? (event) => {
+                                                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                                                      event.preventDefault();
+                                                      onRowClick(row.original);
+                                                  }
+                                              }
+                                            : undefined
+                                    }
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id} className={getCellAlignment(cell.column.columnDef.meta)}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
