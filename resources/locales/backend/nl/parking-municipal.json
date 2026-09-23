@@ -1,12 +1,12 @@
 {
     "head": {
-        "index": "Gemeenten",
+        "index": "Gemeentelijke parkeerdata",
         "detail": "Parkeerplaatsen in {{municipality}}"
     },
     "breadcrumbs": {
-        "index": "Gemeenten"
+        "index": "Gemeentelijke parkeerdata"
     },
-    "description": "Hier vind je alle gemeenten die geregistreerde parkeerplaatsen hebben. Gebruik de zoekbalk om snel een specifieke gemeente te vinden.",
+    "description": "Beheer parkeerlocaties per gemeente. Bronnen en leveringshistorie vind je in hetzelfde overzicht.",
     "search": {
         "placeholder": "Zoek gemeente..."
     },
@@ -18,7 +18,8 @@
         "total": "{{count}} totaal",
         "visible": "{{count}} zichtbaar",
         "hidden": "{{count}} verborgen",
-        "updated_value": "Bijgewerkt {{date, datetime}}"
+        "updated_value": "Bijgewerkt {{date, datetime}}",
+        "locations": "parkeerlocaties"
     },
     "detail": {
         "title": "{{municipality}} – Parkeerlocaties",

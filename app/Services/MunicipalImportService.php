@@ -7,6 +7,7 @@ use App\Models\MunicipalImport;
 use App\Models\ParkingMunicipal;
 use App\Models\User;
 use App\Support\MunicipalSnapshot;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -113,6 +114,9 @@ class MunicipalImportService
                 'external_id' => $id, 'status' => $status, 'fields' => $fields, 'conflicts' => $conflicts,
                 'before' => $space?->source_record, 'after' => $record['source'],
                 'geometry_derivation' => $record['geometry_derivation'] ?? null,
+                'geometry_review_required' => ! empty($record['geometry_derivation']) && (! $space
+                    || MunicipalSnapshot::fingerprint($record['source']['geometry']) !== MunicipalSnapshot::fingerprint($space->source_record['geometry'] ?? null)
+                    || MunicipalSnapshot::fingerprint($record['geometry_derivation']) !== MunicipalSnapshot::fingerprint($space->geometry_derivation)),
                 'previous_geometry_derivation' => $space?->geometry_derivation,
                 'point' => ['latitude' => $record['values']['latitude'], 'longitude' => $record['values']['longitude']],
                 'current' => $space?->only(['id', 'number', 'street', 'orientation', 'latitude', 'longitude', 'visibility']),
@@ -123,13 +127,10 @@ class MunicipalImportService
             $counts['missing']++;
             $rows[] = ['external_id' => $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'current' => $space->only(['id', 'visibility'])];
         }
-        $rows = collect($rows)->sortByDesc(fn ($row) => ! empty($row['geometry_derivation']))->values()->all();
-        $derivations = count(array_filter($rows, fn ($row) => ! empty($row['geometry_derivation'])));
+        $rows = collect($rows)->sortByDesc(fn ($row) => $row['geometry_review_required'] ?? false)->values()->all();
+        $derivations = count(array_filter($rows, fn ($row) => $row['geometry_review_required'] ?? false));
         $blockers = [];
-        if (! $source->publication_enabled) {
-            $blockers[] = 'Publicatie is nog niet ingeschakeld voor deze dataset. Schakel publicatie in bij de gekoppelde bronnen.';
-        }
-        if (MunicipalSnapshot::fingerprint($source->configuration()) !== MunicipalSnapshot::fingerprint($import->dataset_config)) {
+        if (MunicipalSnapshot::fingerprint($source->configuration()) !== MunicipalSnapshot::fingerprint(Arr::except($import->dataset_config, ['publication_enabled']))) {
             $blockers[] = 'De datasetconfiguratie is gewijzigd sinds ontvangst. Lever een nieuw bestand aan.';
         }
         if ($source->last_published_retrieved_at && $import->retrieved_at->lessThanOrEqualTo($source->last_published_retrieved_at)) {
@@ -142,7 +143,7 @@ class MunicipalImportService
         return ['rows' => $rows, 'counts' => $counts, 'derivations' => $derivations, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows])];
     }
 
-    public function decide(MunicipalImport $import, User $actor, string $decision, string $reason, string $reviewToken, bool $geometryReviewed = false): void
+    public function decide(MunicipalImport $import, User $actor, string $decision, ?string $reason, string $reviewToken, bool $geometryReviewed = false): void
     {
         Gate::forUser($actor)->authorize('update', $import);
         DB::transaction(function () use ($import, $actor, $decision, $reason, $reviewToken, $geometryReviewed) {

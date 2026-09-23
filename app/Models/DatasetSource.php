@@ -6,6 +6,9 @@ use Database\Factories\DatasetSourceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Arr;
 
 class DatasetSource extends Model
 {
@@ -23,9 +26,24 @@ class DatasetSource extends Model
         return $this->belongsTo(Municipality::class);
     }
 
+    public function latestImport(): HasOne
+    {
+        return $this->hasOne(MunicipalImport::class)->ofMany(['retrieved_at' => 'max', 'id' => 'max']);
+    }
+
+    public function latestDelivery(): HasOne
+    {
+        return $this->hasOne(MunicipalDelivery::class)->latestOfMany();
+    }
+
+    public function municipalSpaces(): HasMany
+    {
+        return $this->hasMany(ParkingMunicipal::class);
+    }
+
     /** @return array<string, mixed> */
     public function configuration(): array
     {
-        return [...$this->only($this->fillable), 'country_id' => $this->municipality->country_id, 'province_id' => $this->municipality->province_id];
+        return [...Arr::except($this->only($this->fillable), ['publication_enabled']), 'country_id' => $this->municipality->country_id, 'province_id' => $this->municipality->province_id];
     }
 }

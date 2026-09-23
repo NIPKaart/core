@@ -5,12 +5,24 @@ namespace App\Services;
 use App\Jobs\ProcessMunicipalDelivery;
 use App\Models\DatasetSource;
 use App\Models\MunicipalDelivery;
+use App\Models\MunicipalImport;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class MunicipalDeliveryService
 {
     public function __construct(private MunicipalDeliveryStorage $storage, private MunicipalImportService $imports) {}
+
+    public function upload(string $json, User $actor): MunicipalImport
+    {
+        return DB::transaction(function () use ($json, $actor): MunicipalImport {
+            $import = $this->imports->intake($json, $actor);
+            $this->storage->archive($json, $import->datasetSource->code, $import->delivery_id);
+
+            return $import;
+        });
+    }
 
     public function discover(): void
     {

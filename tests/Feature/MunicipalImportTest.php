@@ -3,9 +3,11 @@
 use App\Enums\UserRole;
 use App\Models\DatasetSource;
 use App\Models\Favorite;
+use App\Models\MunicipalDelivery;
 use App\Models\MunicipalImport;
 use App\Models\ParkingMunicipal;
 use App\Models\User;
+use App\Services\MunicipalDeliveryStorage;
 use App\Services\MunicipalImportService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
@@ -55,6 +57,7 @@ it('stages an authorized upload and publishes only after review', function () {
     $data = municipalDelivery();
     $file = UploadedFile::fake()->createWithContent('delivery.json', json_encode($data));
 
+    $this->mock(MunicipalDeliveryStorage::class)->shouldReceive('archive')->once();
     $this->actingAs($user)->post(route('app.municipal-imports.store'), ['file' => $file])->assertRedirect();
     $import = MunicipalImport::firstOrFail();
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
@@ -70,6 +73,28 @@ it('stages an authorized upload and publishes only after review', function () {
     expect($import->fresh())->state->toBe('published')->reviewed_by->toBe($user->id);
 });
 
+it('records a decision with an optional note', function (string $decision, string $state, array $note, ?string $expectedNote) {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $import = stageMunicipal(municipalDelivery(), $user);
+    $review = app(MunicipalImportService::class)->review($import);
+
+    $this->actingAs($user)->patch(route('app.municipal-imports.update', $import), [
+        'decision' => $decision, 'review_token' => $review['token'], ...$note,
+    ])->assertSessionHasNoErrors()->assertRedirect();
+
+    expect($import->fresh())->state->toBe($state)->review_reason->toBe($expectedNote)
+        ->reviewed_by->toBe($user->id)->reviewed_at->not->toBeNull();
+    $this->assertDatabaseCount('parking_municipal_spaces', $decision === 'publish' ? 1 : 0);
+})->with([
+    'publish' => ['publish', 'published'],
+    'reject' => ['reject', 'rejected'],
+])->with([
+    'omitted' => [[], null],
+    'empty' => [['reason' => ''], null],
+    'provided' => [['reason' => 'Brongegevens gecontroleerd.'], 'Brongegevens gecontroleerd.'],
+]);
+
 it('requires administrator authorization for every intake and review action', function (UserRole $role) {
     $source = DatasetSource::factory()->create();
     $import = MunicipalImport::factory()->for($source)->create();
@@ -81,7 +106,6 @@ it('requires administrator authorization for every intake and review action', fu
     $this->get(route('app.municipal-imports.show', $import))->assertForbidden();
     $this->post(route('app.municipal-imports.store'))->assertForbidden();
     $this->patch(route('app.municipal-imports.update', $import))->assertForbidden();
-    $this->post(route('app.municipal-imports.datasets.enable', $source))->assertForbidden();
 })->with([UserRole::USER, UserRole::MODERATOR]);
 
 it('redirects guests and reports invalid files without staging records', function () {
@@ -303,24 +327,38 @@ it('rolls back all records and import state on a database failure and permits re
     expect($import->fresh()->state)->toBe('published');
 });
 
-it('enables a source without a terms attestation and blocks publication when disabled or reconfigured', function () {
+it('publishes an existing delivery after the legacy publication switch changes', function (bool $enabled) {
     $source = DatasetSource::factory()->create(['publication_enabled' => false]);
     $user = importReviewer();
     $service = app(MunicipalImportService::class);
-    $blocked = stageMunicipal(municipalDelivery(), $user);
-    expect($service->review($blocked)['blockers'])->not->toBeEmpty();
-    expect(fn () => approveMunicipal($blocked, $user))->toThrow(ValidationException::class);
-    $this->actingAs($user)->post(route('app.municipal-imports.datasets.enable', $source))->assertRedirect();
-    expect($source->fresh()->publication_enabled)->toBeTrue();
-    expect($source->terms_review)->toBeNull();
     $import = stageMunicipal(municipalDelivery(), $user);
-    expect($service->review($import)['blockers'])->toBeEmpty();
-    $source->refresh()->update(['bounds' => [4.8, 52.2, 5.15, 52.5]]);
+    $import->update(['dataset_config' => [...$import->dataset_config, 'publication_enabled' => false]]);
+    $source->update(['publication_enabled' => $enabled]);
+
+    $review = $service->review($import->fresh());
+
+    expect($review['blockers'])->toBeEmpty();
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $this->actingAs($user)->patch(route('app.municipal-imports.update', $import), [
+        'decision' => 'publish', 'reason' => 'Brongegevens gecontroleerd.', 'review_token' => $review['token'],
+    ])->assertSessionHasNoErrors()->assertRedirect();
+    expect($import->fresh()->state)->toBe('published');
+    $this->assertDatabaseCount('parking_municipal_spaces', 1);
+})->with([false, true]);
+
+it('still blocks publication when the source geography changes', function () {
+    $source = DatasetSource::factory()->create();
+    $user = importReviewer();
+    $import = stageMunicipal(municipalDelivery(), $user);
+    $source->update(['bounds' => [4.8, 52.2, 5.15, 52.5]]);
+
+    expect(app(MunicipalImportService::class)->review($import)['blockers'])
+        ->toContain('De datasetconfiguratie is gewijzigd sinds ontvangst. Lever een nieuw bestand aan.');
     expect(fn () => approveMunicipal($import, $user))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });
 
-it('registers only the selected Amsterdam geography without enabling publication', function () {
+it('registers only the selected Amsterdam geography for manual review', function () {
     $source = DatasetSource::factory()->make();
     $municipality = $source->municipality;
     $this->artisan('nipkaart:register-amsterdam', ['municipality' => $municipality->id])->assertSuccessful();
@@ -404,7 +442,9 @@ it('retains reviewed derivations on repeat and clears them when the source becom
     $repeat = stageMunicipal($data, $user);
 
     expect($service->review($repeat)['counts']['unchanged'])->toBe(1);
-    $service->decide($repeat, $user, 'publish', 'Reviewed repeated geometry.', $service->review($repeat)['token'], true);
+    expect($service->review($repeat)['derivations'])->toBe(0);
+    $this->actingAs($user)->get(route('app.municipal-imports.show', [$repeat, 'filter' => 'geometry']))->assertInertia(fn (Assert $page) => $page->has('review.rows', 0));
+    $service->decide($repeat, $user, 'publish', null, $service->review($repeat)['token']);
     expect($space->fresh())->geometry_derivation->toEqual($originalDerivation)->updated_at->toEqual($originalUpdated)->visibility->toBeFalse();
     $this->travel(2)->minutes();
     $data['delivery_id'] = (string) Str::uuid();
@@ -475,13 +515,94 @@ it('filters derived geometries without changing the required review count', func
 it('filters the delivery overview by source name and review status', function () {
     DatasetSource::factory()->create();
     $user = importReviewer();
-    $pending = stageMunicipal(municipalDelivery(), $user);
     $published = stageMunicipal(municipalDelivery(), $user);
     approveMunicipal($published, $user);
+    $this->travel(2)->minutes();
+    $pending = stageMunicipal(municipalDelivery(), $user);
 
     $this->actingAs($user)->get(route('app.municipal-imports.index', ['q' => 'AMSTERDAM', 'state' => 'pending']))->assertInertia(fn (Assert $page) => $page
         ->has('imports.data', 1)->where('imports.data.0.id', $pending->id)->where('imports.total', 1)
         ->where('filters.q', 'AMSTERDAM')->where('filters.state', 'pending'));
     $this->get(route('app.municipal-imports.index', ['q' => 'No matching source']))->assertInertia(fn (Assert $page) => $page
         ->has('imports.data', 0)->where('imports.total', 0));
+});
+
+it('requires renewed geometry review when the source geometry changes', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.31], [4.91, 52.3], [4.9, 52.31], [4.9, 52.3]];
+    $service = app(MunicipalImportService::class);
+    $first = stageMunicipal($data, $user);
+    $service->decide($first, $user, 'publish', null, $service->review($first)['token'], true);
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $data['records'][0]['geometry']['coordinates'][0][1][0] = 4.92;
+    $changed = stageMunicipal($data, $user);
+    $review = $service->review($changed);
+
+    expect($review['derivations'])->toBe(1);
+    $this->actingAs($user)->patch(route('app.municipal-imports.update', $changed), [
+        'decision' => 'publish', 'review_token' => $review['token'],
+    ])->assertSessionHasErrors('geometry_reviewed');
+    expect($changed->fresh()->state)->toBe('pending');
+    expect(ParkingMunicipal::firstOrFail()->source_record)->toEqual($first->records[0]['source']);
+});
+
+it('shows changes by default while keeping unchanged records available', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    approveMunicipal(stageMunicipal($data, $user), $user);
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $repeat = stageMunicipal($data, $user);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.show', $repeat))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.filter', 'changes')->has('review.rows', 0)->where('review.counts.unchanged', 1));
+    $this->get(route('app.municipal-imports.show', [$repeat, 'filter' => 'all']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 1)->where('review.rows.0.status', 'unchanged'));
+});
+
+it('summarizes each municipal source and scopes its delivery history', function () {
+    $source = DatasetSource::factory()->create();
+    $user = importReviewer();
+    $published = stageMunicipal(municipalDelivery(), $user);
+    approveMunicipal($published, $user);
+    $this->travel(2)->minutes();
+    $latest = stageMunicipal(municipalDelivery(), $user);
+    $old = MunicipalImport::factory()->for($source)->create(['retrieved_at' => now()->subDays(3)]);
+    MunicipalDelivery::factory()->create(['dataset_source_id' => $source->id, 'state' => 'rejected', 'error_code' => 'invalid_delivery']);
+    $other = DatasetSource::factory()->for($source->municipality)->create(['code' => 'other-source', 'name' => 'ZZ Other']);
+    MunicipalImport::factory()->for($other)->create(['retrieved_at' => now()->subDays(3)]);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.tab', 'sources')->has('datasets', 2)
+        ->where('datasets.0.latest_import.id', $latest->id)->where('datasets.0.needs_review', true)
+        ->where('datasets.0.visible_locations_count', 1)->where('datasets.0.stale', false)
+        ->where('datasets.0.latest_delivery.error_code', 'invalid_delivery')
+        ->where('datasets.1.stale', true));
+    $this->get(route('app.municipal-imports.index', ['tab' => 'deliveries', 'dataset' => $source->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.dataset', $source->id)->where('filters.tab', 'deliveries')
+        ->has('imports.data', 3)->where('imports.data.0.id', $old->id));
+    approveMunicipal($latest, $user);
+    $this->get(route('app.municipal-imports.index'))->assertInertia(fn (Assert $page) => $page->where('datasets.0.needs_review', false));
+});
+
+it('marks superseded pending deliveries as history without changing their stored decision', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $older = stageMunicipal(municipalDelivery(), $user);
+    $this->travel(2)->minutes();
+    $published = stageMunicipal(municipalDelivery(), $user);
+    approveMunicipal($published, $user);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.index', ['state' => 'pending']))->assertInertia(fn (Assert $page) => $page->has('imports.data', 0));
+    $this->get(route('app.municipal-imports.index', ['state' => 'superseded']))->assertInertia(fn (Assert $page) => $page
+        ->has('imports.data', 1)->where('imports.data.0.id', $older->id)->where('imports.data.0.superseded', true));
+    $this->get(route('app.municipal-imports.show', $older))->assertInertia(fn (Assert $page) => $page->where('import.superseded', true));
+    $this->get(route('app.municipal-imports.show', $published))->assertInertia(fn (Assert $page) => $page->where('import.superseded', false));
+    expect($older->fresh()->state)->toBe('pending');
 });

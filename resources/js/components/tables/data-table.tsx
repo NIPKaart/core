@@ -22,6 +22,7 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     filters?: React.ReactNode;
+    emptyState?: React.ReactNode;
     search?: React.ReactNode;
     enableSorting?: boolean;
     onRowClick?: (row: TData) => void;
@@ -39,6 +40,7 @@ export function DataTable<TData, TValue>({
     filters,
     search,
     enableSorting = true,
+    emptyState = 'No results.',
     onRowClick,
     rowSelection,
     onRowSelectionChange,
@@ -139,7 +141,7 @@ export function DataTable<TData, TValue>({
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    No results.
+                                    {emptyState}
                                 </TableCell>
                             </TableRow>
                         )}

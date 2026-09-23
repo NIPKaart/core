@@ -26,8 +26,8 @@ function getPath(href?: string) {
 
 function SimpleNavItem({ item, active, iconOnly }: { item: NavItem; active: boolean; iconOnly?: boolean }) {
     return (
-        <SidebarMenuItem data-active={active ? 'true' : undefined}>
-            <SidebarMenuButton asChild isActive={active} tooltip={{ children: item.title }}>
+        <SidebarMenuItem data-active={(item.isActive ?? active) ? 'true' : undefined}>
+            <SidebarMenuButton asChild isActive={item.isActive ?? active} tooltip={{ children: item.title }}>
                 <Link
                     href={`${typeof item.href === 'string' ? item.href : (item.href?.url ?? '/')}`}
                     prefetch

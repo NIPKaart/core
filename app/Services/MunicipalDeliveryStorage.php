@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Support\MunicipalSnapshot;
+use Aws\Exception\AwsException;
 use Aws\S3\S3ClientInterface;
 use Generator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class MunicipalDeliveryStorage
@@ -43,6 +45,38 @@ class MunicipalDeliveryStorage
                     yield ['key' => $object['Key'], 'etag' => $object['ETag']];
                 }
             }
+        }
+    }
+
+    public function archive(string $json, string $dataset, string $deliveryId): void
+    {
+        $key = 'municipal/'.$dataset.'/'.$deliveryId.'.json';
+        if ($this->deliveryId($key, $dataset) === null) {
+            throw ValidationException::withMessages(['file' => 'Deze bron is niet toegestaan voor bucketopslag.']);
+        }
+
+        try {
+            try {
+                $this->client->putObject([
+                    'Bucket' => $this->bucket(), 'Key' => $key, 'Body' => $json,
+                    'ContentType' => 'application/json', 'IfNoneMatch' => '*',
+                    'ContentMD5' => base64_encode(md5($json, true)),
+                    'Metadata' => ['sha256' => hash('sha256', $json)],
+                ]);
+            } catch (AwsException $exception) {
+                if ($exception->getStatusCode() !== 412) {
+                    throw $exception;
+                }
+                $head = $this->client->headObject(['Bucket' => $this->bucket(), 'Key' => $key]);
+                $existing = $this->read($key, $head['ETag']);
+                if (! hash_equals(hash('sha256', $json), hash('sha256', $existing))) {
+                    throw ValidationException::withMessages(['file' => 'Deze levering bestaat al in de bucket met andere inhoud. Het bestand is niet overschreven.']);
+                }
+            }
+        } catch (AwsException $exception) {
+            Log::warning('Municipal upload archive failed.', ['status' => $exception->getStatusCode(), 'code' => $exception->getAwsErrorCode()]);
+
+            throw ValidationException::withMessages(['file' => 'Het bestand kon niet in de bucket worden opgeslagen. Controleer de verbinding en schrijfrechten en probeer opnieuw.']);
         }
     }
 
