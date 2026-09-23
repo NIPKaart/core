@@ -1,6 +1,8 @@
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
 import InputError from '@/components/input-error';
 import LocationMarkerCard from '@/components/map/card-location-marker';
+import MunicipalDateTime from '@/components/municipal-date-time';
+import MunicipalNavigation from '@/components/municipal-navigation';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +32,7 @@ type Row = {
     after: Claim | null;
     current: Record<string, unknown> | null;
     geometry_derivation?: Derivation | null;
+    geometry_review_required?: boolean;
     previous_geometry_derivation?: Derivation | null;
     point?: { latitude: number; longitude: number };
 };
@@ -46,6 +49,7 @@ type Props = {
 
 export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, total, filters }: Props) {
     const { t, i18n } = useTranslation('backend/municipal-imports');
+    const [geometryReviewedForToken, setGeometryReviewedForToken] = useState<string | null>(null);
     const [selectedRecord, setSelectedRecord] = useState<Row | null>(null);
     const selectedIndex = review.rows.findIndex((row) => row.external_id === selectedRecord?.external_id);
     const recordTrigger = useRef<HTMLElement | null>(null);
@@ -70,7 +74,14 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
             accessorKey: 'status',
             header: t('status'),
             cell: ({ row }) => (
-                <Badge variant={row.original.status === 'conflict' ? 'destructive' : 'outline'}>{t(`counts.${row.original.status}`)}</Badge>
+                <div className="max-w-64 space-y-1">
+                    <Badge variant={row.original.status === 'conflict' ? 'destructive' : 'outline'}>{t(`counts.${row.original.status}`)}</Badge>
+                    {row.original.fields.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                            {row.original.fields.map((field) => t(`fields.${field}`, { defaultValue: field })).join(', ')}
+                        </p>
+                    )}
+                </div>
             ),
         },
         {
@@ -81,7 +92,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                 row.original.geometry_derivation ? (
                     <Badge variant="outline" className="border-amber-300 text-amber-800 dark:border-amber-800 dark:text-amber-300">
                         <TriangleAlert aria-hidden="true" />
-                        {t(delivery.state === 'pending' ? 'geometry_review' : 'derived')}
+                        {t(delivery.state === 'pending' && row.original.geometry_review_required ? 'geometry_review' : 'derived')}
                     </Badge>
                 ) : (
                     '—'
@@ -96,27 +107,33 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
             ]}
         >
             <Head title={`${t('review')} #${delivery.id}`} />
-            <div className="flex min-w-0 flex-col gap-6 px-4 py-6 sm:px-6">
+            <div className="flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8">
                 <header className="space-y-4">
-                    <Link href={index()} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                    <Link
+                        href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}
+                        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    >
                         <ArrowLeft className="size-4" aria-hidden="true" />
-                        {t('back')}
+                        {t('back_to_source_history')}
                     </Link>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="space-y-2">
                             <div className="flex flex-wrap items-center gap-3">
-                                <h1 className="text-xl font-bold tracking-tight">{dataset.name}</h1>
-                                <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>{t(`states.${delivery.state}`)}</Badge>
+                                <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
+                                <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
+                                    {t(`states.${delivery.superseded ? 'superseded' : delivery.state}`)}
+                                </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                {t('delivery_number', { number: delivery.id })} · {t('retrieved')}{' '}
-                                <time dateTime={delivery.retrieved_at}>{new Date(delivery.retrieved_at).toLocaleString(i18n.language)}</time>
+                                {t('delivery_number', { number: delivery.id })} · {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
                         </div>
-                        {delivery.state === 'pending' && (
+                        {delivery.state === 'pending' && !delivery.superseded && (
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button>{t('review')}</Button>
+                                    <Button variant={review.blockers.length ? 'outline' : 'default'}>
+                                        {t(review.blockers.length ? 'decision' : 'review')}
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
                                     <DialogHeader>
@@ -152,22 +169,29 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                         {({ errors, processing }) => (
                                             <>
                                                 <input type="hidden" name="review_token" value={review.token} />
-                                                <Label htmlFor="reason">{t('reason')}</Label>
-                                                <Textarea
-                                                    id="reason"
-                                                    name="reason"
-                                                    required
-                                                    maxLength={2000}
-                                                    rows={3}
-                                                    placeholder={t('reason_placeholder')}
-                                                    aria-invalid={!!errors.reason}
-                                                    aria-describedby={errors.reason ? 'reason-error' : undefined}
-                                                />
+                                                <details>
+                                                    <summary className="cursor-pointer text-sm font-medium">{t('reason')}</summary>
+                                                    <Textarea
+                                                        className="mt-3"
+                                                        aria-label={t('reason')}
+                                                        id="reason"
+                                                        name="reason"
+                                                        maxLength={2000}
+                                                        rows={3}
+                                                        placeholder={t('reason_placeholder')}
+                                                        aria-invalid={!!errors.reason}
+                                                        aria-describedby={errors.reason ? 'reason-error' : undefined}
+                                                    />
+                                                </details>
                                                 {review.derivations > 0 && (
                                                     <Label className="flex items-start gap-3 rounded-lg border bg-background p-4 leading-relaxed">
                                                         <input
                                                             type="checkbox"
                                                             name="geometry_reviewed"
+                                                            checked={geometryReviewedForToken === review.token}
+                                                            onChange={(event) =>
+                                                                setGeometryReviewedForToken(event.target.checked ? review.token : null)
+                                                            }
                                                             value="1"
                                                             aria-invalid={!!errors.geometry_reviewed}
                                                             aria-describedby={errors.geometry_reviewed ? 'geometry_reviewed-error' : undefined}
@@ -184,7 +208,11 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                         type="submit"
                                                         name="decision"
                                                         value="publish"
-                                                        disabled={processing || review.blockers.length > 0}
+                                                        disabled={
+                                                            processing ||
+                                                            review.blockers.length > 0 ||
+                                                            (review.derivations > 0 && geometryReviewedForToken !== review.token)
+                                                        }
                                                     >
                                                         {processing ? t('saving') : t('publish')}
                                                     </Button>
@@ -200,17 +228,42 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         )}
                     </div>
                 </header>
-                <dl className="grid grid-cols-6 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
+                <MunicipalNavigation active="deliveries" />
+                {delivery.superseded ? (
+                    <section role="status" className="rounded-xl border bg-muted/30 p-5">
+                        <h2 className="font-semibold">{t('superseded_title')}</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('superseded_hint')}</p>
+                    </section>
+                ) : delivery.state === 'pending' && review.blockers.length > 0 ? (
+                    <section role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+                        <h2 className="font-semibold">{t('publication_blocked')}</h2>
+                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+                            {review.blockers.map((message) => (
+                                <li key={message}>{message}</li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null}
+                <nav aria-label={t('filter_records')} className="grid grid-cols-6 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-5">
                     {Object.entries(review.counts).map(([kind, count]) => (
                         <div
                             key={kind}
-                            className={`bg-background p-3 sm:col-span-1 sm:p-4 ${kind === 'missing' || kind === 'conflict' ? 'col-span-3' : 'col-span-2'}`}
+                            className={`bg-background sm:col-span-1 ${kind === 'missing' || kind === 'conflict' ? 'col-span-3' : 'col-span-2'}`}
                         >
-                            <dt className="text-xs text-muted-foreground sm:text-sm">{t(`counts.${kind}`)}</dt>
-                            <dd className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">{count.toLocaleString(i18n.language)}</dd>
+                            <Link
+                                href={show(delivery.id, { query: { filter: kind } })}
+                                preserveScroll
+                                aria-current={filters.filter === kind ? 'true' : undefined}
+                                className={`block h-full p-3 transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:p-4 ${filters.filter === kind ? 'bg-muted ring-2 ring-primary ring-inset' : ''}`}
+                            >
+                                <span className="block text-xs text-muted-foreground sm:text-sm">{t(`counts.${kind}`)}</span>
+                                <span className="mt-1 block text-xl font-semibold tabular-nums sm:text-2xl">
+                                    {count.toLocaleString(i18n.language)}
+                                </span>
+                            </Link>
                         </div>
                     ))}
-                </dl>
+                </nav>
                 {delivery.state === 'pending' && review.derivations > 0 && (
                     <div
                         role="status"
@@ -240,7 +293,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         <h2 className="font-semibold">{t('decision_reason')}</h2>
                         {delivery.reviewed_at && (
                             <p className="text-sm text-muted-foreground">
-                                <time dateTime={delivery.reviewed_at}>{new Date(delivery.reviewed_at).toLocaleString(i18n.language)}</time>
+                                <MunicipalDateTime value={delivery.reviewed_at} />
                             </p>
                         )}
                         <p className="text-sm whitespace-pre-wrap">{delivery.review_reason}</p>
@@ -298,6 +351,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                             )
                                         }
                                     >
+                                        <option value="changes">{t('changes_only')}</option>
                                         <option value="all">{t('all_records')}</option>
                                         <option value="geometry">
                                             {t('geometry_review')} ({review.derivations})
@@ -308,6 +362,21 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                             </option>
                                         ))}
                                     </select>
+                                }
+                                emptyState={
+                                    <div className="space-y-3 px-4 py-6">
+                                        <p className="font-medium">
+                                            {t(filters.filter === 'changes' && !filters.q ? 'no_changes_title' : 'no_matching_records')}
+                                        </p>
+                                        <p className="mx-auto max-w-lg text-sm text-muted-foreground">
+                                            {t(filters.filter === 'changes' && !filters.q ? 'no_changes' : 'try_other_filter')}
+                                        </p>
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={show(delivery.id, { query: { filter: 'all' } })} preserveScroll>
+                                                {t('all_records')}
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 }
                                 data={review.rows}
                                 onRowClick={(row) => {
@@ -361,25 +430,27 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                 </DialogContent>
                             </Dialog>
                         </section>
-                        <nav className="flex items-center justify-between gap-4" aria-label={t('pages')}>
-                            <Button asChild={page > 1} variant="outline" disabled={page <= 1}>
-                                {page > 1 ? (
-                                    <Link href={show(delivery.id, { query: { ...filters, page: page - 1 } })}>{t('previous')}</Link>
-                                ) : (
-                                    t('previous')
-                                )}
-                            </Button>
-                            <span>
-                                {page} / {pages}
-                            </span>
-                            <Button asChild={page < pages} variant="outline" disabled={page >= pages}>
-                                {page < pages ? (
-                                    <Link href={show(delivery.id, { query: { ...filters, page: page + 1 } })}>{t('next')}</Link>
-                                ) : (
-                                    t('next')
-                                )}
-                            </Button>
-                        </nav>
+                        {pages > 1 && (
+                            <nav className="flex items-center justify-between gap-4" aria-label={t('pages')}>
+                                <Button asChild={page > 1} variant="outline" disabled={page <= 1}>
+                                    {page > 1 ? (
+                                        <Link href={show(delivery.id, { query: { ...filters, page: page - 1 } })}>{t('previous')}</Link>
+                                    ) : (
+                                        t('previous')
+                                    )}
+                                </Button>
+                                <span>
+                                    {page} / {pages}
+                                </span>
+                                <Button asChild={page < pages} variant="outline" disabled={page >= pages}>
+                                    {page < pages ? (
+                                        <Link href={show(delivery.id, { query: { ...filters, page: page + 1 } })}>{t('next')}</Link>
+                                    ) : (
+                                        t('next')
+                                    )}
+                                </Button>
+                            </nav>
+                        )}
                     </div>
                 </div>
             </div>
@@ -400,7 +471,10 @@ function RecordDetails({ row }: { row: Row }) {
                     {row.external_id} · {t(`counts.${row.status}`)}
                 </DialogDescription>
             </DialogHeader>
-            <Tabs defaultValue={hasMap ? 'map' : 'source'} className="gap-4">
+            <Tabs
+                defaultValue={hasMap && (row.geometry_review_required || row.fields.includes('geometry') || row.status === 'new') ? 'map' : 'source'}
+                className="gap-4"
+            >
                 <TabsList>
                     <TabsTrigger value="map" disabled={!hasMap}>
                         {t('map_tab')}

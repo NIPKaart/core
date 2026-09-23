@@ -10,7 +10,7 @@ class RegisterAmsterdamDataset extends Command
 {
     protected $signature = 'nipkaart:register-amsterdam {municipality : Existing Amsterdam municipality ID}';
 
-    protected $description = 'Register the Amsterdam E6a pilot for local review, with publication disabled';
+    protected $description = 'Register the Amsterdam E6a dataset for manual import review';
 
     public function handle(): int
     {
@@ -28,9 +28,8 @@ class RegisterAmsterdamDataset extends Command
             'terms_url' => 'https://data.overheid.nl/dataset/318a98b8-ef87-4335-9674-f5405f2bc4be',
             'municipality_id' => $municipality->id,
             'bounds' => [4.65, 52.2, 5.15, 52.5],
-            'publication_enabled' => false,
         ]);
-        $this->info('Dataset registered. Enable publication for the source in the import screen.');
+        $this->info('Dataset registered. Review each delivery in the import screen before publishing.');
 
         return self::SUCCESS;
     }

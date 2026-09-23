@@ -1,13 +1,12 @@
+import MunicipalNavigation from '@/components/municipal-navigation';
 import { Head, Link } from '@inertiajs/react';
-import { Building2, MapPin, Search } from 'lucide-react';
+import { ArrowUpRight, Building2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import { BreadcrumbItem } from '@/types';
@@ -26,7 +25,7 @@ type PageProps = {
 };
 
 export default function MunicipalitiesPage({ municipalities }: PageProps) {
-    const { t } = useTranslation('backend/parking-municipal');
+    const { t, i18n } = useTranslation('backend/parking-municipal');
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
@@ -40,11 +39,13 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.index')} />
-            <div className="space-y-6 px-4 py-6 sm:px-6">
-                <div className="flex flex-col gap-1">
-                    <Heading title={t('head.index')} description={t('description')} />
-                </div>
+            <div className="w-full space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+                <header className="space-y-2">
+                    <h1 className="text-2xl font-semibold tracking-tight">{t('head.index')}</h1>
+                    <p className="text-sm text-muted-foreground">{t('description')}</p>
+                </header>
 
+                <MunicipalNavigation active="locations" />
                 <div className="relative w-full sm:max-w-sm">
                     <Input
                         className="w-full pl-9"
@@ -68,42 +69,40 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
                             <Link
                                 key={municipality.id}
                                 href={app.parkingMunicipal.municipality({ municipality: municipality.id })}
-                                className={cn(
-                                    'group relative overflow-hidden rounded-2xl border border-border/70 bg-background p-5 shadow-sm transition-all hover:shadow-md',
-                                )}
+                                className="group flex flex-col gap-5 rounded-xl border bg-card p-5 shadow-xs transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-6"
                             >
-                                {/* Background Icon */}
-                                <Building2 className="absolute top-3 right-3 h-20 w-20 text-muted-foreground/10 transition-transform group-hover:scale-105" />
-
-                                {/* Content */}
-                                <div className="relative z-10 flex flex-col gap-3">
-                                    <div className="text-lg font-semibold text-foreground">{municipality.name}</div>
-
-                                    <div className="flex flex-wrap gap-2 text-sm">
-                                        <Badge variant="outline" className="text-muted-foreground">
-                                            <MapPin className="mr-1 h-3.5 w-3.5" />
-                                            {t('card.total', { count: municipality.total_spaces })}
-                                        </Badge>
-
-                                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
-                                            {t('card.visible', { count: municipality.visible_spaces })}
-                                        </Badge>
-
-                                        {municipality.hidden_spaces > 0 && (
-                                            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
-                                                {t('card.hidden', { count: municipality.hidden_spaces })}
-                                            </Badge>
-                                        )}
-
-                                        {municipality.last_updated && (
-                                            <Badge variant="secondary" className="text-muted-foreground">
-                                                {t('card.updated_value', {
-                                                    date: new Date(municipality.last_updated),
-                                                })}
-                                            </Badge>
-                                        )}
+                                <div className="flex items-center gap-3">
+                                    <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">
+                                        <Building2 className="size-5 text-muted-foreground" aria-hidden="true" />
                                     </div>
+                                    <h2 className="flex-1 text-lg font-semibold">{municipality.name}</h2>
+                                    <ArrowUpRight
+                                        className="size-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                                        aria-hidden="true"
+                                    />
                                 </div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl font-semibold tabular-nums">
+                                        {municipality.total_spaces.toLocaleString(i18n.language)}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">{t('card.locations')}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        className="border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                    >
+                                        {t('card.visible', { count: municipality.visible_spaces })}
+                                    </Badge>
+                                    {municipality.hidden_spaces > 0 && (
+                                        <Badge variant="secondary">{t('card.hidden', { count: municipality.hidden_spaces })}</Badge>
+                                    )}
+                                </div>
+                                {municipality.last_updated && (
+                                    <p className="border-t pt-4 text-xs text-muted-foreground">
+                                        {t('card.updated_value', { date: new Date(municipality.last_updated) })}
+                                    </p>
+                                )}
                             </Link>
                         ))}
                     </div>

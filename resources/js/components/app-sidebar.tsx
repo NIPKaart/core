@@ -21,7 +21,7 @@ import { NavSection } from './nav/nav-section';
 
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
-    const { props } = usePage<SharedData>();
+    const { props, url } = usePage<SharedData>();
     const { t } = useTranslation('backend/sidebar');
 
     // Sidebar badge counts
@@ -81,12 +81,14 @@ export function AppSidebar() {
                 href: parkingOffstreet.index(),
                 icon: icons.SquareParking,
             },
-            can('parking-municipal.view_any') && {
-                title: t('municipalities'),
-                href: parkingMunicipal.index(),
+            (can('parking-municipal.view_any') || hasRole('admin')) && {
+                title: t('municipal_data'),
+                href: hasRole('admin') ? municipalImports() : parkingMunicipal.index(),
+                isActive: [municipalImports.url(), parkingMunicipal.index.url()].some(
+                    (path) => url.split('?')[0] === path || url.startsWith(`${path}/`),
+                ),
                 icon: icons.Building,
             },
-            hasRole('admin') && { title: t('municipal_imports'), href: municipalImports(), icon: icons.FileInput },
             can('parking-rule.view_any') && {
                 title: t('rules'),
                 href: parkingRules.index(),

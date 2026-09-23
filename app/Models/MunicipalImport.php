@@ -20,6 +20,13 @@ class MunicipalImport extends Model
 
     protected $hidden = ['records', 'before_values', 'dataset_config'];
 
+    public function isSuperseded(): bool
+    {
+        $publishedAt = $this->datasetSource->last_published_retrieved_at;
+
+        return $this->state === 'pending' && $publishedAt !== null && $this->retrieved_at->lessThanOrEqualTo($publishedAt);
+    }
+
     public function datasetSource(): BelongsTo
     {
         return $this->belongsTo(DatasetSource::class);

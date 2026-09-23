@@ -1,12 +1,12 @@
 {
     "head": {
-        "index": "Municipalities",
+        "index": "Municipal parking data",
         "detail": "Parking Spaces in {{municipality}}"
     },
     "breadcrumbs": {
-        "index": "Municipalities"
+        "index": "Municipal parking data"
     },
-    "description": "Here you can find all municipalities that have registered parking spaces. Use the search bar to quickly find a specific municipality.",
+    "description": "Manage parking locations by municipality. Sources and delivery history are available in the same overview.",
     "search": {
         "placeholder": "Search municipality..."
     },
@@ -18,7 +18,8 @@
         "total": "{{count}} total",
         "visible": "{{count}} visible",
         "hidden": "{{count}} hidden",
-        "updated_value": "Updated {{date, datetime}}"
+        "updated_value": "Updated {{date, datetime}}",
+        "locations": "parking locations"
     },
     "detail": {
         "title": "{{municipality}} – Parking Locations",

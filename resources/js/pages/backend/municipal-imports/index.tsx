@@ -1,5 +1,7 @@
-import { enable, index, show, store } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index, show, store } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
 import InputError from '@/components/input-error';
+import MunicipalDateTime from '@/components/municipal-date-time';
+import MunicipalNavigation from '@/components/municipal-navigation';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -7,18 +9,19 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
+import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { PaginatedResponse } from '@/types';
-import { Form, Head, router } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ExternalLink, FileUp, Search } from 'lucide-react';
+import { ArrowUpRight, Database, ExternalLink, FileUp, MapPin, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type Dataset = { id: number; name: string; attribution: string; terms_url: string; source_url: string; publication_enabled: boolean };
+export type Dataset = { id: number; name: string; attribution: string; terms_url: string; source_url: string };
 export type Import = {
     id: number;
     state: string;
+    superseded?: boolean;
     delivery_id: string;
     retrieved_at: string;
     reviewed_at: string | null;
@@ -26,7 +29,16 @@ export type Import = {
     dataset_source?: Dataset;
 };
 
-type Props = { datasets: Dataset[]; imports: PaginatedResponse<Import>; filters: { q: string; state: string } };
+type Source = Dataset & {
+    municipality_id: number;
+    latest_import: Pick<Import, 'id' | 'state' | 'retrieved_at'> | null;
+    latest_delivery: { state: string; error_code: string | null } | null;
+    last_published_retrieved_at: string | null;
+    visible_locations_count: number;
+    needs_review: boolean;
+    stale: boolean;
+};
+type Props = { datasets: Source[]; imports: PaginatedResponse<Import>; filters: { q: string; state: string; dataset: number | null; tab: string } };
 
 export default function Index({ datasets, imports, filters }: Props) {
     const { t, i18n } = useTranslation('backend/municipal-imports');
@@ -36,7 +48,13 @@ export default function Index({ datasets, imports, filters }: Props) {
             header: t('source'),
             cell: ({ row: { original: item } }) => (
                 <div className="min-w-48 py-1">
-                    <span className="block font-medium whitespace-normal">{item.dataset_source?.name}</span>
+                    <Link
+                        href={show(item.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        className="block font-medium whitespace-normal hover:underline"
+                    >
+                        {item.dataset_source?.name}
+                    </Link>
                     <span className="mt-1 block text-xs text-muted-foreground">{t('delivery_number', { number: item.id })}</span>
                 </div>
             ),
@@ -44,25 +62,25 @@ export default function Index({ datasets, imports, filters }: Props) {
         {
             accessorKey: 'retrieved_at',
             header: t('retrieved'),
-            cell: ({ row: { original: item } }) => (
-                <time dateTime={item.retrieved_at}>{new Date(item.retrieved_at).toLocaleString(i18n.language)}</time>
-            ),
+            cell: ({ row: { original: item } }) => <MunicipalDateTime value={item.retrieved_at} />,
         },
         {
             accessorKey: 'state',
             header: t('status'),
             cell: ({ row: { original: item } }) => (
-                <Badge variant={item.state === 'pending' ? 'secondary' : 'outline'}>{t(`states.${item.state}`)}</Badge>
+                <Badge variant={item.state === 'pending' && !item.superseded ? 'secondary' : 'outline'}>
+                    {t(`states.${item.superseded ? 'superseded' : item.state}`)}
+                </Badge>
             ),
         },
     ];
     return (
         <AppLayout breadcrumbs={[{ title: t('title'), href: index() }]}>
             <Head title={t('title')} />
-            <div className="flex min-w-0 flex-col gap-6 px-4 py-6 sm:px-6">
+            <div className="flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8">
                 <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <div className="space-y-2">
-                        <h1 className="text-xl font-bold tracking-tight">{t('title')}</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
                         <p className="text-sm text-muted-foreground">{t('intro')}</p>
                     </div>
                     <Dialog>
@@ -72,17 +90,22 @@ export default function Index({ datasets, imports, filters }: Props) {
                                 {t('manual_upload')}
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>{t('upload')}</DialogTitle>
                                 <DialogDescription>{t('upload_hint')}</DialogDescription>
                             </DialogHeader>
-                            <Form {...store.form()} className="flex flex-col gap-3">
+                            <Form {...store.form()} className="flex flex-col gap-4">
                                 {({ errors, processing, progress }) => (
                                     <>
+                                        <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-4 text-sm">
+                                            <FileUp className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                            <p className="leading-relaxed">{t('upload_process')}</p>
+                                        </div>
                                         <Label htmlFor="file">{t('file')}</Label>
                                         <Input
                                             id="file"
+                                            className="h-auto cursor-pointer bg-muted/20 p-3 file:mr-3 file:rounded-md file:bg-background file:px-3"
                                             type="file"
                                             name="file"
                                             accept=".json,application/json"
@@ -105,17 +128,33 @@ export default function Index({ datasets, imports, filters }: Props) {
                         </DialogContent>
                     </Dialog>
                 </header>
-                <Tabs defaultValue="deliveries" className="gap-6">
-                    <TabsList>
-                        <TabsTrigger value="deliveries">{t('deliveries')}</TabsTrigger>
-                        <TabsTrigger value="sources">
-                            {t('connected_sources')} ({datasets.length})
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="deliveries" className="min-w-0 space-y-4">
+                <MunicipalNavigation active={filters.tab === 'deliveries' ? 'deliveries' : 'sources'} />
+                {filters.tab === 'deliveries' ? (
+                    <div className="min-w-0 space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h2 className="font-semibold">{datasets.find((source) => source.id === filters.dataset)?.name ?? t('all_deliveries')}</h2>
+                            {filters.dataset && (
+                                <Link href={index({ query: { tab: 'deliveries' } })} className="text-sm underline">
+                                    {t('all_deliveries')}
+                                </Link>
+                            )}
+                        </div>
                         <DataTable
                             columns={columns}
                             data={imports.data}
+                            emptyState={
+                                <div className="space-y-2 px-4 py-6">
+                                    <p className="font-medium">{t('no_deliveries')}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t(filters.q || filters.state !== 'all' ? 'history_no_matches' : 'no_deliveries_hint')}
+                                    </p>
+                                    {(filters.q || filters.state !== 'all') && (
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link href={index({ query: { tab: 'deliveries', dataset: filters.dataset } })}>{t('clear_filters')}</Link>
+                                        </Button>
+                                    )}
+                                </div>
+                            }
                             enableSorting={false}
                             onRowClick={(item) => router.visit(show(item.id))}
                             search={
@@ -126,6 +165,8 @@ export default function Index({ datasets, imports, filters }: Props) {
                                     className="flex min-w-0 flex-1 gap-2 sm:max-w-md"
                                 >
                                     <input type="hidden" name="state" value={filters.state} />
+                                    <input type="hidden" name="tab" value="deliveries" />
+                                    {filters.dataset && <input type="hidden" name="dataset" value={filters.dataset} />}
                                     <Input
                                         key={filters.q}
                                         name="q"
@@ -147,13 +188,13 @@ export default function Index({ datasets, imports, filters }: Props) {
                                     onChange={(event) =>
                                         router.get(
                                             index.url(),
-                                            { q: filters.q, state: event.target.value },
+                                            { q: filters.q, state: event.target.value, dataset: filters.dataset, tab: 'deliveries' },
                                             { preserveState: true, preserveScroll: true },
                                         )
                                     }
                                 >
                                     <option value="all">{t('all_deliveries')}</option>
-                                    {['pending', 'published', 'rejected'].map((state) => (
+                                    {['pending', 'published', 'rejected', 'superseded'].map((state) => (
                                         <option key={state} value={state}>
                                             {t(`states.${state}`)}
                                         </option>
@@ -162,64 +203,132 @@ export default function Index({ datasets, imports, filters }: Props) {
                             }
                         />
                         {imports.total > 0 && <DataTablePagination pagination={imports} />}
-                    </TabsContent>
-                    <TabsContent value="sources">
+                    </div>
+                ) : (
+                    <div>
                         {datasets.length === 0 && (
                             <p className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">{t('no_datasets')}</p>
                         )}
-                        <div className="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+                        <div className="space-y-4">
                             {datasets.map((dataset) => (
-                                <section key={dataset.id} className="min-w-0 rounded-xl border">
-                                    <div className="space-y-3 p-5">
-                                        <h2 className="font-semibold">{dataset.name}</h2>
-                                        <Badge variant={dataset.publication_enabled ? 'secondary' : 'outline'}>
-                                            {t(dataset.publication_enabled ? 'publication_ready' : 'publication_disabled')}
-                                        </Badge>
-                                    </div>
-                                    <div className="space-y-4 border-t p-4 text-sm">
-                                        <p className="text-muted-foreground">{dataset.attribution}</p>
-                                        <div className="flex flex-wrap gap-3">
-                                            <a
-                                                className="inline-flex items-center gap-1 underline underline-offset-4"
-                                                href={dataset.source_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                {t('source')}
-                                                <ExternalLink className="size-3" aria-hidden="true" />
-                                            </a>
-                                            <a
-                                                className="inline-flex items-center gap-1 underline underline-offset-4"
-                                                href={dataset.terms_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                {t('terms')}
-                                                <ExternalLink className="size-3" aria-hidden="true" />
-                                            </a>
+                                <section key={dataset.id} className="overflow-hidden rounded-xl border bg-card shadow-xs">
+                                    <div className="flex flex-col gap-6 p-5 sm:p-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="hidden size-11 shrink-0 items-center justify-center rounded-xl border bg-muted/40 sm:flex">
+                                                <Database className="size-5 text-muted-foreground" aria-hidden="true" />
+                                            </div>
+                                            <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                                                <h2 className="max-w-2xl text-base leading-relaxed font-semibold">{dataset.name}</h2>
+                                                <div className="flex shrink-0 flex-wrap gap-2">
+                                                    <Badge
+                                                        variant={dataset.needs_review ? 'secondary' : 'outline'}
+                                                        className={
+                                                            dataset.last_published_retrieved_at &&
+                                                            !dataset.needs_review &&
+                                                            dataset.latest_import?.state !== 'rejected'
+                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        {t(
+                                                            dataset.needs_review
+                                                                ? 'states.pending'
+                                                                : dataset.latest_import?.state === 'rejected'
+                                                                  ? 'states.rejected'
+                                                                  : dataset.last_published_retrieved_at
+                                                                    ? 'states.published'
+                                                                    : 'no_deliveries',
+                                                        )}
+                                                    </Badge>
+                                                    {dataset.stale && <Badge variant="destructive">{t('source_stale')}</Badge>}
+                                                </div>
+                                            </div>
                                         </div>
-                                        {dataset.publication_enabled ? (
-                                            <p className="text-muted-foreground">{t('publication_enabled')}</p>
-                                        ) : (
-                                            <Form {...enable.form(dataset.id)} className="flex flex-col gap-3">
-                                                {({ errors, processing }) => (
-                                                    <>
-                                                        {Object.entries(errors).map(([field, message]) => (
-                                                            <InputError key={field} message={message} />
-                                                        ))}
-                                                        <Button type="submit" disabled={processing}>
-                                                            {t('enable')}
-                                                        </Button>
-                                                    </>
-                                                )}
-                                            </Form>
+                                        <dl className="grid gap-5 rounded-lg bg-muted/30 p-4 sm:grid-cols-3 sm:gap-6">
+                                            <div>
+                                                <dt className="text-xs font-medium text-muted-foreground">{t('on_map')}</dt>
+                                                <dd className="mt-2 text-2xl font-semibold tabular-nums">
+                                                    {dataset.visible_locations_count.toLocaleString(i18n.language)}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-xs font-medium text-muted-foreground">{t('last_retrieved')}</dt>
+                                                <dd className="mt-2 text-sm font-medium">
+                                                    {dataset.latest_import ? <MunicipalDateTime value={dataset.latest_import.retrieved_at} /> : '—'}
+                                                </dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-xs font-medium text-muted-foreground">{t('published_source_date')}</dt>
+                                                <dd className="mt-2 text-sm font-medium">
+                                                    {dataset.last_published_retrieved_at ? (
+                                                        <MunicipalDateTime value={dataset.last_published_retrieved_at} />
+                                                    ) : (
+                                                        '—'
+                                                    )}
+                                                </dd>
+                                            </div>
+                                        </dl>
+                                        {(dataset.latest_delivery?.error_code || dataset.latest_delivery?.state === 'rejected') && (
+                                            <p role="status" className="text-sm text-destructive">
+                                                {t('intake_problem')}
+                                            </p>
                                         )}
+                                        {dataset.latest_delivery?.state === 'pending' && !dataset.latest_delivery.error_code && (
+                                            <p className="text-sm text-muted-foreground">{t('intake_pending')}</p>
+                                        )}
+                                        <div className="flex flex-wrap gap-2">
+                                            {dataset.needs_review && dataset.latest_import && (
+                                                <Button asChild>
+                                                    <Link href={show(dataset.latest_import.id)}>
+                                                        {t('review_changes')}
+                                                        <ArrowUpRight aria-hidden="true" />
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                            <Button variant="outline" asChild>
+                                                <Link href={parkingMunicipal.municipality(dataset.municipality_id)}>
+                                                    <MapPin aria-hidden="true" />
+                                                    {t('locations')}
+                                                </Link>
+                                            </Button>
+                                            <Button variant="ghost" asChild>
+                                                <Link href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>{t('history')}</Link>
+                                            </Button>
+                                        </div>
                                     </div>
+                                    <details className="border-t px-5 py-4 text-sm sm:px-6">
+                                        <summary className="w-fit cursor-pointer text-muted-foreground hover:text-foreground">
+                                            {t('source_information')}
+                                        </summary>
+                                        <div className="mt-4 space-y-3">
+                                            <p className="text-muted-foreground">{dataset.attribution}</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                <a
+                                                    className="inline-flex items-center gap-1 underline underline-offset-4"
+                                                    href={dataset.source_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {t('source')}
+                                                    <ExternalLink className="size-3" aria-hidden="true" />
+                                                </a>
+                                                <a
+                                                    className="inline-flex items-center gap-1 underline underline-offset-4"
+                                                    href={dataset.terms_url}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {t('terms')}
+                                                    <ExternalLink className="size-3" aria-hidden="true" />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </details>
                                 </section>
                             ))}
                         </div>
-                    </TabsContent>
-                </Tabs>
+                    </div>
+                )}
             </div>
         </AppLayout>
     );

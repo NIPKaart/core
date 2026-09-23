@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Jobs\ProcessMunicipalDelivery;
 use App\Models\DatasetSource;
 use App\Models\MunicipalDelivery;
 use App\Models\MunicipalImport;
+use App\Models\User;
 use App\Services\MunicipalDeliveryService;
 use App\Services\MunicipalDeliveryStorage;
 use App\Services\MunicipalImportService;
@@ -11,7 +13,9 @@ use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
@@ -86,7 +90,7 @@ it('intakes retained bytes without a user and never publishes automatically', fu
     $import = MunicipalImport::sole();
     expect($import)->submitted_by->toBeNull()->state->toBe('pending');
     expect($delivery->fresh())->state->toBe('validated')->municipal_import_id->toBe($import->id)->received_at->not->toBeNull()->validated_at->not->toBeNull();
-    expect(app(MunicipalImportService::class)->review($import)['blockers'])->not->toBeEmpty();
+    expect(app(MunicipalImportService::class)->review($import)['blockers'])->toBeEmpty();
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });
 
@@ -225,4 +229,90 @@ it('retries an interrupted stream rather than permanently rejecting the delivery
     $handler->append(bucketObject($json));
     app(MunicipalDeliveryService::class)->process($delivery->id);
     expect($delivery->fresh())->state->toBe('validated');
+});
+
+it('archives a manual upload before opening review and reuses it during automatic intake', function () {
+    [$handler] = bucketClient();
+    $source = DatasetSource::factory()->create();
+    $user = User::factory()->create();
+    $user->assignRole(UserRole::ADMIN);
+    $json = bucketPayload();
+    $data = json_decode($json, true);
+    $key = 'municipal/'.$source->code.'/'.$data['delivery_id'].'.json';
+    $handler->append(function ($command) use ($json, $key) {
+        expect($command->getName())->toBe('PutObject');
+        expect($command['Key'])->toBe($key);
+        expect((string) $command['Body'])->toBe($json);
+        expect($command['IfNoneMatch'])->toBe('*');
+        expect($command['ContentMD5'])->toBe(base64_encode(md5($json, true)));
+        expect($command['Metadata']['sha256'])->toBe(hash('sha256', $json));
+
+        return new Result(['ETag' => '"uploaded"']);
+    });
+
+    $response = $this->actingAs($user)->post(route('app.municipal-imports.store'), [
+        'file' => UploadedFile::fake()->createWithContent('downloaded-file.json', $json),
+    ]);
+
+    $import = MunicipalImport::firstOrFail();
+    $response->assertSessionHasNoErrors()->assertRedirect(route('app.municipal-imports.show', $import));
+    expect($import)->state->toBe('pending')->submitted_by->toBe($user->id);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $receipt = MunicipalDelivery::factory()->create(['dataset_source_id' => $source->id, 'object_key' => $key, 'etag' => '"uploaded"']);
+    $handler->append(bucketObject($json));
+    app(MunicipalDeliveryService::class)->process($receipt->id);
+    expect($receipt->fresh())->state->toBe('validated')->municipal_import_id->toBe($import->id);
+    $this->assertDatabaseCount('municipal_imports', 1);
+});
+
+it('rolls back a manual upload when its archive cannot be stored', function (int $status) {
+    [$handler, $client] = bucketClient();
+    DatasetSource::factory()->create();
+    $user = User::factory()->create();
+    $user->assignRole(UserRole::ADMIN);
+    $handler->append(new S3Exception('Storage unavailable', $client->getCommand('PutObject'), ['response' => new Response($status)]));
+
+    $this->actingAs($user)->post(route('app.municipal-imports.store'), [
+        'file' => UploadedFile::fake()->createWithContent('delivery.json', bucketPayload()),
+    ])->assertSessionHasErrors(['file' => 'Het bestand kon niet in de bucket worden opgeslagen. Controleer de verbinding en schrijfrechten en probeer opnieuw.']);
+
+    $this->assertDatabaseCount('municipal_imports', 0);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+})->with([403, 503]);
+
+it('accepts an identical archived upload without overwriting the object', function () {
+    [$handler, $client] = bucketClient();
+    DatasetSource::factory()->create();
+    $user = User::factory()->create();
+    $user->assignRole(UserRole::ADMIN);
+    $json = bucketPayload();
+    $existing = app(MunicipalImportService::class)->intake($json, $user);
+    $handler->append(new S3Exception('Already exists', $client->getCommand('PutObject'), ['response' => new Response(412)]));
+    $handler->append(new Result(['ETag' => '"existing"']));
+    $handler->append(bucketObject($json));
+
+    $this->actingAs($user)->post(route('app.municipal-imports.store'), [
+        'file' => UploadedFile::fake()->createWithContent('delivery.json', $json),
+    ])->assertSessionHasNoErrors()->assertRedirect(route('app.municipal-imports.show', $existing));
+
+    $this->assertDatabaseCount('municipal_imports', 1);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+});
+
+it('rejects an upload when its archived identity contains different bytes', function () {
+    [$handler, $client] = bucketClient();
+    DatasetSource::factory()->create();
+    $user = User::factory()->create();
+    $user->assignRole(UserRole::ADMIN);
+    $json = bucketPayload();
+    $handler->append(new S3Exception('Already exists', $client->getCommand('PutObject'), ['response' => new Response(412)]));
+    $handler->append(new Result(['ETag' => '"existing"']));
+    $handler->append(bucketObject($json.' '));
+
+    $this->actingAs($user)->post(route('app.municipal-imports.store'), [
+        'file' => UploadedFile::fake()->createWithContent('delivery.json', $json),
+    ])->assertSessionHasErrors(['file' => 'Deze levering bestaat al in de bucket met andere inhoud. Het bestand is niet overschreven.']);
+
+    $this->assertDatabaseCount('municipal_imports', 0);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });
