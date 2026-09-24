@@ -77,6 +77,6 @@ docker compose logs --tail 100 collector
 
 Voer de herstart alleen uit als het ophalen van de update is geslaagd. Compose behoudt het volume. Na uitsluitend gewijzigde credentials in `.env` gebruik je `docker compose up -d --force-recreate collector`.
 
-Bewaar het Docker-volume: gebruik geen `docker compose down -v`. Stel in de private R2-bucket een bewaartermijn van 30 dagen in voor `municipal/nl-amsterdam-parkeervakken-e6a/`.
+Bewaar het Docker-volume: gebruik geen `docker compose down -v`. Stel in de private R2-bucket een bewaartermijn van 30 dagen in voor `municipal/nl-amsterdam/`.
 
 Heb je eerder met `-p nipkaart-collector-staging` gewerkt, blijf die optie dan gebruiken bij alle Compose-commando’s, zodat je dezelfde container en hetzelfde volume beheert.

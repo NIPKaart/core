@@ -34,7 +34,7 @@ function bucketClient(): array
 function bucketPayload(array $overrides = []): string
 {
     return json_encode(array_replace([
-        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam-parkeervakken-e6a',
+        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam',
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z'),
         'selection' => 'e6a-all', 'complete' => true, 'source_count' => 1,
         'records' => [[
@@ -54,7 +54,7 @@ function bucketReceipt(string $json): MunicipalDelivery
 {
     $data = json_decode($json, true);
 
-    return MunicipalDelivery::factory()->create(['object_key' => 'municipal/nl-amsterdam-parkeervakken-e6a/'.$data['delivery_id'].'.json']);
+    return MunicipalDelivery::factory()->create(['object_key' => 'municipal/nl-amsterdam/'.$data['delivery_id'].'.json']);
 }
 
 it('discovers every listing page and resumes registered but undispatched work', function () {

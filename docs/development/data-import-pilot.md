@@ -10,7 +10,7 @@ De leverancier is Gemeente Amsterdam. De dataset wordt in de [overheidscatalogus
 
 | Onderdeel | Afbakening |
 | --- | --- |
-| Datasetcode | `nl-amsterdam-parkeervakken-e6a` |
+| Datasetcode | `nl-amsterdam` |
 | Selectiecode | `e6a-all` = alle records uit `parkeervakken/parkeervakken` met exact `eType=E6a`; geen bbox of aanvullende stille filtering. |
 | Package | `odp-amsterdam==7.0.0` wordt door de collector gebruikt; de eerste onderzoeksproef gebruikte 6.0.0. |
 | Identiteit | `properties.id`, als volledige string binnen de dataset. De GeoJSON-wrapper `parkeervakken.<id>` wordt niet als tweede identiteit gebruikt. |
