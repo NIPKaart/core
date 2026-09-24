@@ -17,7 +17,7 @@ class ParkingMunicipal extends Model
 
     protected $table = 'parking_municipal_spaces';
 
-    protected $hidden = ['source_record', 'geometry_derivation', 'last_imported_values'];
+    protected $hidden = ['source_record', 'geometry_derivation', 'last_imported_values', 'published_import_id', 'publishedImport'];
 
     protected $primaryKey = 'id';
 
@@ -57,9 +57,11 @@ class ParkingMunicipal extends Model
         'number' => 'integer',
     ];
 
-    /**
-     * Get the country that owns the ParkingSpace
-     */
+    public function publishedImport(): BelongsTo
+    {
+        return $this->belongsTo(MunicipalImport::class, 'published_import_id');
+    }
+
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);

@@ -51,8 +51,13 @@
             "description": "This is an official parking space provided by the municipality. Details are based on open data."
         },
         "table": {
-            "updated_at": "Last updated"
-        }
+            "updated_at": "Last updated",
+            "source": "Source",
+            "terms": "Source terms",
+            "fetched_at": "Data fetched on"
+        },
+        "unknown": "Unknown",
+        "fetched_note": "This is when the data was fetched, not an on-site check of the parking place."
     },
     "offstreet": {
         "modal": {

@@ -19,6 +19,14 @@ export type ParkingSpaceDetail = {
 };
 
 export type MunicipalParkingDetail = {
+    provenance: {
+        name: string | null;
+        attribution: string | null;
+        url: string | null;
+        terms_url: string | null;
+        fetched_at: string | null;
+        source_updated_at: string | null;
+    };
     id: string;
     orientation: EnumOption | null;
     country: string | null;

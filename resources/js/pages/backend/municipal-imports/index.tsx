@@ -38,6 +38,7 @@ type Source = Dataset & {
     visible_locations_count: number;
     needs_review: boolean;
     stale: boolean;
+    delivery_status: 'current' | 'awaiting' | 'overdue' | 'unknown';
 };
 type Props = { datasets: Source[]; imports: PaginatedResponse<Import>; filters: { q: string; state: string; dataset: number | null; tab: string } };
 
@@ -250,6 +251,9 @@ export default function Index({ datasets, imports, filters }: Props) {
                                                         )}
                                                     </Badge>
                                                     {dataset.stale && <Badge variant="destructive">{t('source_stale')}</Badge>}
+                                                    {dataset.delivery_status === 'unknown' && (
+                                                        <Badge variant="outline">{t('freshness_unknown')}</Badge>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -277,6 +281,7 @@ export default function Index({ datasets, imports, filters }: Props) {
                                                 </dd>
                                             </div>
                                         </dl>
+                                        {dataset.stale && <p className="text-sm text-muted-foreground">{t('overdue_note')}</p>}
                                         {(dataset.latest_delivery?.error_code || dataset.latest_delivery?.state === 'rejected') && (
                                             <p role="status" className="text-sm text-destructive">
                                                 {t('intake_problem')}

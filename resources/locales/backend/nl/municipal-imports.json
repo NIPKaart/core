@@ -108,7 +108,7 @@
     "locations": "Parkeerlocaties",
     "on_map": "Locaties op de kaart",
     "last_retrieved": "Laatste brongegevens",
-    "source_stale": "Brongegevens verouderd",
+    "source_stale": "Levering blijft uit",
     "intake_problem": "De laatste aanlevering kon niet worden verwerkt. Controleer de aanlevering.",
     "intake_pending": "Een nieuwe aanlevering wordt verwerkt.",
     "review_changes": "Wijzigingen beoordelen",
@@ -131,5 +131,16 @@
     "no_changes_title": "Geen wijzigingen om te beoordelen",
     "no_matching_records": "Geen locaties gevonden",
     "try_other_filter": "Probeer een andere zoekterm of bekijk alle locaties.",
-    "date_time": "{{date}} om {{time}}"
+    "date_time": "{{date}} om {{time}}",
+    "timeline": "Tijdstippen van deze levering",
+    "timeline_note": "Ophalen, ontvangst en publicatie zijn geen waarneming ter plaatse. Ontbrekende tijdstippen blijven onbekend.",
+    "freshness_unknown": "Leveringsritme onbekend",
+    "overdue_note": "Er is binnen de ingestelde termijn geen recent opgehaalde, geldige levering ontvangen. De oorzaak is hier niet bekend. Bestaande locaties blijven zichtbaar.",
+    "times": {
+        "fetched_at": "Opgehaald bij de bron",
+        "received_at": "Ontvangen uit opslag",
+        "validated_at": "Bestand gevalideerd",
+        "staged_at": "Klaargezet voor beoordeling",
+        "published_at": "Gepubliceerd"
+    }
 }

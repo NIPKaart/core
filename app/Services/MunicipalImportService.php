@@ -209,7 +209,7 @@ class MunicipalImportService
         }
         ParkingMunicipal::where('dataset_source_id', $source->id)
             ->whereIn('external_id', array_column(array_column($import->records, 'source'), 'external_id'))
-            ->toBase()->update(['last_checked_at' => now()]);
+            ->toBase()->update(['last_checked_at' => now(), 'published_import_id' => $import->id]);
         $import->before_values = $before;
     }
 
