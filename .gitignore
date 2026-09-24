@@ -28,3 +28,4 @@ yarn-error.log
 
 .version
 /.ddev/.tia-gh-token.*
+/.env.r2-test

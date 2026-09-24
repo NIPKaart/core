@@ -4,7 +4,7 @@ NIPKaart helps people find accessible parking using community contributions, mun
 
 ## Language
 
-**ParkingSpace**: A community-contributed accessible parking space, subject to publication, verification and correction.
+**ParkingSpace**: One physical accessible parking bay contributed by the community, subject to publication, verification and correction. Adjacent bays remain individual spaces.
 _Avoid_: ParkingSpot, UserParkingSpot, UserparkingSpot
 
 **ParkingSpaceConfirmation**: A person's dated confirmation or dispute about a community parking space, optionally accompanied by a comment.
