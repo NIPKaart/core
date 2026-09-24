@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getParkingTrashColumns } from './columns';
 
 type PageProps = {
@@ -23,7 +23,11 @@ export default function Index({ spaces }: PageProps) {
     const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
-    const selectedIds = spaces.data.filter((space) => rowSelection[space.id]).map((space) => space.id);
+    useEffect(() => {
+        setRowSelection({});
+    }, [spaces.data]);
+
+    const selectedIds = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
     const columns = getParkingTrashColumns(can, openDialog, { t, tGlobal });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -34,8 +38,8 @@ export default function Index({ spaces }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
-            <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('head.title')} description={t('head.description')} />
+            <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+                <Heading level={1} title={t('head.title')} description={t('head.description')} />
 
                 {selectedIds.length > 0 && (
                     <div className="mb-4 flex flex-col rounded-md border bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-muted/40">
@@ -69,6 +73,7 @@ export default function Index({ spaces }: PageProps) {
                     onRowSelectionChange={setRowSelection}
                     initialState={{
                         sorting: [{ id: 'deleted_at', desc: true }],
+                        columnVisibility: { created_at: false, city: false },
                     }}
                 />
                 <DataTablePagination pagination={spaces} />

@@ -1,0 +1,14 @@
+{
+    "intro": "Choose what you want to manage or explore.",
+    "parking": "Parking data",
+    "community_hint": "Review and manage community contributions.",
+    "municipal_hint": "Review deliveries and manage source locations.",
+    "municipal_locations_hint": "View and manage municipal locations.",
+    "offstreet_hint": "Manage parking garages and facilities.",
+    "rules_hint": "Manage parking rules and restrictions.",
+    "users_hint": "View and manage user accounts.",
+    "roles_hint": "Manage roles and permissions.",
+    "locations_hint": "View your contributions.",
+    "favorites_hint": "Find your saved locations.",
+    "map_hint": "Explore parking locations on the map."
+}

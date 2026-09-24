@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { ParkingMunicipal, Translations } from '@/types';
@@ -15,31 +14,9 @@ export function getParkingMunicipalColumns(
 ): ColumnDef<ParkingMunicipal>[] {
     return [
         {
-            id: 'select',
-            enableSorting: false,
-            enableHiding: false,
-            header: ({ table }) => (
-                <Checkbox
-                    checked={table.getIsAllPageRowsSelected()}
-                    onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                    aria-label="Select all"
-                    className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
-                />
-            ),
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                    aria-label="Select row"
-                    className="cursor-pointer"
-                />
-            ),
-        },
-        {
             accessorKey: 'id',
             header: t('table.id'),
             enableSorting: true,
-            enableHiding: false,
             cell: ({ row }) => row.original.id,
         },
         {

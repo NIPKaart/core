@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { Table } from '@tanstack/react-table';
@@ -23,7 +24,7 @@ export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: Column
         return (
             <Drawer>
                 <DrawerTrigger asChild>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="shrink-0">
                         <SlidersHorizontal className="h-4 w-4" />
                         {t('table.columns')}
                     </Button>
@@ -39,12 +40,11 @@ export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: Column
                                 htmlFor={`col-toggle-${column.id}`}
                                 className="flex items-center gap-3 rounded px-2 py-2 transition hover:bg-muted"
                             >
-                                <input
+                                <Checkbox
                                     id={`col-toggle-${column.id}`}
-                                    type="checkbox"
-                                    className="size-5 accent-primary"
+                                    className="size-4"
                                     checked={column.getIsVisible()}
-                                    onChange={() => column.toggleVisibility()}
+                                    onCheckedChange={(checked) => column.toggleVisibility(checked === true)}
                                 />
                                 <span className="text-base capitalize">
                                     {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id}

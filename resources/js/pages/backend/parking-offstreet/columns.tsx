@@ -92,7 +92,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             enableHiding: false,
             cell: ({ row }) => {
                 const { free_space_short, short_capacity } = row.original;
-                if (!short_capacity) return <span className="text-muted-foreground">—</span>;
+                if (!short_capacity || free_space_short == null) return <span className="text-muted-foreground">—</span>;
                 const pct = Math.round(((free_space_short ?? 0) / short_capacity) * 100);
 
                 if (pct <= 5) {
@@ -117,7 +117,8 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             header: t('table.short_parking'),
             cell: ({ row }) => {
                 const { free_space_short, short_capacity } = row.original;
-                const pct = short_capacity ? Math.round(((free_space_short ?? 0) / short_capacity) * 100) : 0;
+                if (!short_capacity || free_space_short == null) return <span className="text-muted-foreground">—</span>;
+                const pct = Math.round((free_space_short / short_capacity) * 100);
                 const label = t('table.short_parking_available', {
                     pct,
                 });
@@ -140,7 +141,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             header: t('table.long_parking'),
             cell: ({ row }) => {
                 const { free_space_long, long_capacity } = row.original;
-                if (!long_capacity) return <span className="text-muted-foreground">—</span>;
+                if (!long_capacity || free_space_long == null) return <span className="text-muted-foreground">—</span>;
                 const pct = long_capacity ? Math.round(((free_space_long ?? 0) / long_capacity) * 100) : 0;
                 const label = t('table.long_parking_available', {
                     pct,
@@ -171,7 +172,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             enableHiding: false,
             cell: ({ row }) => {
                 const space = row.original;
-                return can('parking-municipal.update') ? (
+                return can('parking-offstreet.update') ? (
                     <Switch
                         checked={!!space.visibility}
                         className="cursor-pointer"

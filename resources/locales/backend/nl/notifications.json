@@ -42,7 +42,8 @@
     "types": {
         "community.*": "Community locatie",
         "system.*": "Systeem",
-        "default": "Melding"
+        "default": "Melding",
+        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling"
     },
     "titles": {
         "community.space_submitted": "Nieuwe community locatie: {{space_label}}",
@@ -51,6 +52,7 @@
         "community.space_deleted_by_user": "Community locatie verwijderd door gebruiker: {{space_label}}",
         "community.space_restored": "Community locatie hersteld: {{space_label}}",
         "system_announcement": "Systeem aankondiging",
-        "default": "Melding"
+        "default": "Melding",
+        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling: {{source_name}}"
     }
 }

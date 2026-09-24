@@ -1,0 +1,14 @@
+{
+    "intro": "Kies wat je wilt beheren of bekijken.",
+    "parking": "Parkeergegevens",
+    "community_hint": "Bekijk en beheer bijdragen van gebruikers.",
+    "municipal_hint": "Beoordeel leveringen en beheer bronlocaties.",
+    "municipal_locations_hint": "Bekijk en beheer gemeentelijke locaties.",
+    "offstreet_hint": "Beheer parkeergarages en voorzieningen.",
+    "rules_hint": "Beheer parkeerregels en beperkingen.",
+    "users_hint": "Bekijk en beheer gebruikersaccounts.",
+    "roles_hint": "Beheer rollen en rechten.",
+    "locations_hint": "Bekijk je eigen bijdragen.",
+    "favorites_hint": "Vind je opgeslagen locaties.",
+    "map_hint": "Bekijk parkeerlocaties op de kaart."
+}

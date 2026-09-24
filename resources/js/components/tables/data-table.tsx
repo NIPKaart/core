@@ -24,6 +24,7 @@ interface DataTableProps<TData, TValue> {
     filters?: React.ReactNode;
     emptyState?: React.ReactNode;
     search?: React.ReactNode;
+    toolbar?: React.ReactNode;
     enableSorting?: boolean;
     onRowClick?: (row: TData) => void;
     rowSelection?: RowSelectionState;
@@ -31,6 +32,7 @@ interface DataTableProps<TData, TValue> {
     initialState?: {
         sorting?: SortingState;
         globalFilter?: string;
+        columnVisibility?: Record<string, boolean>;
     };
 }
 
@@ -39,8 +41,9 @@ export function DataTable<TData, TValue>({
     data,
     filters,
     search,
+    toolbar,
     enableSorting = true,
-    emptyState = 'No results.',
+    emptyState,
     onRowClick,
     rowSelection,
     onRowSelectionChange,
@@ -49,7 +52,7 @@ export function DataTable<TData, TValue>({
     const { t } = useTranslation('backend/global');
     const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
     const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
-    const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+    const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(initialState?.columnVisibility ?? {});
 
     const table = useReactTable({
         data,
@@ -74,18 +77,23 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                {search ?? (
-                    <Input
-                        placeholder={t('search.placeholder')}
-                        value={globalFilter}
-                        onChange={(e) => setGlobalFilter(e.target.value)}
-                        className="w-full sm:max-w-sm"
-                    />
-                )}
-                {filters && <div className="w-full sm:w-auto">{filters}</div>}
-                <ColumnsSelector table={table} />
-            </div>
+            {toolbar === undefined ? (
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    {search ?? (
+                        <Input
+                            placeholder={t('table.search_page')}
+                            aria-label={t('table.search_page')}
+                            value={globalFilter}
+                            onChange={(e) => setGlobalFilter(e.target.value)}
+                            className="w-full sm:max-w-sm"
+                        />
+                    )}
+                    <ColumnsSelector table={table} />
+                    {filters && <div className="col-span-2 min-w-0">{filters}</div>}
+                </div>
+            ) : (
+                toolbar
+            )}
 
             <div className="overflow-x-auto rounded-md border">
                 <Table>
@@ -93,7 +101,19 @@ export function DataTable<TData, TValue>({
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id} colSpan={header.colSpan}>
+                                    <TableHead
+                                        key={header.id}
+                                        colSpan={header.colSpan}
+                                        aria-sort={
+                                            header.column.getCanSort()
+                                                ? header.column.getIsSorted() === 'asc'
+                                                    ? 'ascending'
+                                                    : header.column.getIsSorted() === 'desc'
+                                                      ? 'descending'
+                                                      : 'none'
+                                                : undefined
+                                        }
+                                    >
                                         {header.isPlaceholder ? null : <TableHeadWrapper header={header} />}
                                     </TableHead>
                                 ))}
@@ -141,7 +161,7 @@ export function DataTable<TData, TValue>({
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                    {emptyState}
+                                    {emptyState ?? t(globalFilter && !search ? 'table.no_page_results' : 'table.no_results')}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -157,11 +177,14 @@ function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TVa
     const isSorted = header.column.getIsSorted();
     const alignment = getAlignment(header.column.columnDef.meta);
 
+    const Component = isSortable ? 'button' : 'div';
+
     return (
-        <div
+        <Component
+            type={isSortable ? 'button' : undefined}
             onClick={isSortable ? () => header.column.toggleSorting(isSorted === 'asc') : undefined}
             className={`flex items-center gap-1 text-sm font-medium text-muted-foreground ${
-                isSortable ? 'cursor-pointer hover:text-foreground' : ''
+                isSortable ? 'cursor-pointer rounded-sm py-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring' : ''
             } ${alignment}`}
         >
             {flexRender(header.column.columnDef.header, header.getContext())}
@@ -173,7 +196,7 @@ function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TVa
                 ) : (
                     <ArrowUpDown className="h-4 w-4" />
                 ))}
-        </div>
+        </Component>
     );
 }
 

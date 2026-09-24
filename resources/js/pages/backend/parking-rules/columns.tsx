@@ -28,7 +28,6 @@ export function getParkingRuleColumns(
             header: 'ID',
             meta: { align: 'center' },
             enableSorting: true,
-            enableHiding: false,
         },
         {
             accessorKey: 'country',

@@ -35,25 +35,16 @@ export default function NotificationsIndex({ notificationList, filters, options 
     }, [readFilter, typeFilter, notificationList.data]);
 
     const typeOptions = useMemo(
-        () =>
-            Object.keys(options.types).map((value) => {
-                const label = resolveTypeLabelBackend(t, value);
-                const isWildcard = value.endsWith('.*');
-                const prefix = isWildcard ? value.slice(0, -2) + '.' : null;
-
-                const count = notificationList.data.filter((n) => (isWildcard ? (n.type ?? '').startsWith(prefix!) : n.type === value)).length;
-
-                return { value, label, count };
-            }),
-        [options.types, notificationList.data, t],
+        () => Object.keys(options.types).map((value) => ({ value, label: resolveTypeLabelBackend(t, value) })),
+        [options.types, t],
     );
 
     const readOptions = useMemo(
         () => [
-            { value: 'unread', label: t('filters.unread'), count: notificationList.data.filter((n) => !n.read_at).length },
-            { value: 'read', label: t('filters.read'), count: notificationList.data.filter((n) => !!n.read_at).length },
+            { value: 'unread', label: t('filters.unread') },
+            { value: 'read', label: t('filters.read') },
         ],
-        [notificationList.data, t],
+        [t],
     );
 
     const updateFilters = (read: string[], type: string[]) => {
@@ -93,8 +84,8 @@ export default function NotificationsIndex({ notificationList, filters, options 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
 
-            <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('head.title')} description={t('head.description')} />
+            <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+                <Heading level={1} title={t('head.title')} description={t('head.description')} />
 
                 {Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
@@ -134,7 +125,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
                     rowSelection={rowSelection}
                     onRowSelectionChange={setRowSelection}
                     filters={
-                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2">
                             <DataTableFacetFilter
                                 title={t('filters.read_status')}
                                 selected={readFilter}

@@ -25,8 +25,7 @@ export function AppSidebar() {
     const { t } = useTranslation('backend/sidebar');
 
     // Sidebar badge counts
-    const userCount = props.counts.users;
-    const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
+    const { trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
     const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
@@ -74,7 +73,6 @@ export function AppSidebar() {
                 title: t('community_spaces'),
                 href: parkingSpaces.index(),
                 icon: icons.MapPin,
-                badge: activeParkingSpaces,
             },
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),
@@ -110,7 +108,6 @@ export function AppSidebar() {
                 title: t('users'),
                 href: users.index(),
                 icon: icons.Users,
-                badge: userCount,
             },
             can('role.view_any') && {
                 title: t('roles'),
@@ -146,7 +143,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href={dashboard()} prefetch>
                                 <AppLogoSwitcher />
                             </Link>
                         </SidebarMenuButton>

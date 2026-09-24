@@ -39,30 +39,12 @@ export default function Index({ spaces, filters, options }: PageProps) {
         setRowSelection({});
     }, [statusFilter, municipalityFilter, spaces.data]);
 
-    const statusCounts = spaces.data.reduce(
-        (acc, space) => {
-            acc[space.status] = (acc[space.status] ?? 0) + 1;
-            return acc;
-        },
-        {} as Record<string, number>,
-    );
-
-    const statusOptions = Object.entries(options.statuses).map(([value, label]) => ({
-        value,
-        label,
-        count: statusCounts[value] ?? 0,
-    }));
-
-    const municipalityOptions = options.municipalities
-        .map((m) => ({
-            value: String(m.id),
-            label: m.name,
-            count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
-        }))
-        .filter((o) => o.count > 0);
+    const statusOptions = Object.entries(options.statuses).map(([value, label]) => ({ value, label }));
+    const municipalityOptions = options.municipalities.map((municipality) => ({ value: String(municipality.id), label: municipality.name }));
 
     const updateFilters = (status: string[], municipality: string[]) => {
         const query: Record<string, string | null> = {};
+        if (filters.deletion_requested) query.deletion_requested = '1';
         if (status.length > 0) query.status = status.join(',');
         if (municipality.length > 0) query.municipality_id = municipality.join(',');
 
@@ -109,8 +91,8 @@ export default function Index({ spaces, filters, options }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
 
-            <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('head.title')} description={t('head.description')} />
+            <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+                <Heading level={1} title={t('head.title')} description={t('head.description')} />
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
@@ -149,12 +131,13 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 )}
 
                 <DataTable
+                    initialState={{ columnVisibility: { province_name: false } }}
                     columns={columns}
                     data={spaces.data}
                     rowSelection={rowSelection}
                     onRowSelectionChange={setRowSelection}
                     filters={
-                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2">
                             <DataTableFacetFilter
                                 title={t('filters.status')}
                                 selected={statusFilter}

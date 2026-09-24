@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import Heading from '@/components/heading';
 import ParkingRuleModal from '@/components/modals/modal-parking-rule';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
@@ -103,9 +104,9 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
-            <div className="space-y-6 overflow-x-auto px-4 py-6 sm:px-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">{t('head.title')}</h1>
+            <div className="space-y-6 overflow-x-auto px-4 py-6 sm:px-8 sm:py-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <Heading level={1} title={t('head.title')} description={t('head.description')} />
                     {can('parking-rule.create') && (
                         <Button className="cursor-pointer" variant="outline" onClick={() => setOpenAdd(true)}>
                             <Plus className="h-4 w-4" />
@@ -113,9 +114,8 @@ export default function Index({ parkingRules, countries, municipalities }: PageP
                         </Button>
                     )}
                 </div>
-                <p className="text-muted-foreground">{t('head.description')}</p>
 
-                <DataTable columns={columns} data={parkingRules.data} />
+                <DataTable initialState={{ columnVisibility: { id: false, created_at: false } }} columns={columns} data={parkingRules.data} />
                 <DataTablePagination pagination={parkingRules} />
             </div>
 

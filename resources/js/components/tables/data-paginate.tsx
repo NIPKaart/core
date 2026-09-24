@@ -1,6 +1,8 @@
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
 import { PaginatedResponse } from '@/types';
 import { router } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
     pagination: PaginatedResponse;
@@ -8,65 +10,64 @@ type Props = {
 };
 
 export function DataTablePagination({ pagination, preserveScroll = true }: Props) {
+    const { t } = useTranslation('backend/global');
     const goTo = (url: string | null) => {
-        if (url) {
-            router.get(url, {}, { preserveScroll });
-        }
+        if (url) router.get(url, {}, { preserveScroll });
     };
 
-    const hasMultiplePages = pagination.last_page > 1;
-
     return (
-        <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:px-2">
-            <div className="text-center text-sm text-muted-foreground sm:text-left">
-                Showing {pagination.from} – {pagination.to} of {pagination.total} result{pagination.total !== 1 && 's'}
-            </div>
-
-            {hasMultiplePages && (
-                <div className="w-full sm:w-auto">
-                    <Pagination>
-                        <PaginationContent className="flex-wrap justify-center gap-1 sm:justify-end">
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        goTo(pagination.prev_page_url);
-                                    }}
-                                    className={!pagination.prev_page_url ? 'pointer-events-none opacity-50' : ''}
-                                />
-                            </PaginationItem>
-
-                            {pagination.links
-                                .filter((link) => typeof link.label === 'string' && !link.label.includes('Previous') && !link.label.includes('Next'))
-                                .map((link, i) => (
-                                    <PaginationItem key={i}>
-                                        <PaginationLink
-                                            href="#"
-                                            isActive={link.active}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                goTo(link.url);
-                                            }}
-                                        >
-                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                ))}
-
-                            <PaginationItem>
-                                <PaginationNext
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        goTo(pagination.next_page_url);
-                                    }}
-                                    className={!pagination.next_page_url ? 'pointer-events-none opacity-50' : ''}
-                                />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <p className="text-muted-foreground">
+                {pagination.total === 0
+                    ? t('table.no_results')
+                    : t('table.results', { from: pagination.from, to: pagination.to, total: pagination.total })}
+            </p>
+            {pagination.last_page > 1 && (
+                <nav aria-label={t('table.pagination')} className="flex max-w-full flex-wrap items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={!pagination.prev_page_url}
+                        onClick={() => goTo(pagination.prev_page_url)}
+                        aria-label={t('table.previous_page')}
+                    >
+                        <ChevronLeft className="size-4" />
+                    </Button>
+                    <div className="hidden flex-wrap items-center gap-1 sm:flex">
+                        {pagination.links
+                            ?.filter((link) => /^\d+$/.test(link.label) || link.label === '...')
+                            .map((link, index) =>
+                                link.label === '...' ? (
+                                    <span key={index} className="px-1 text-muted-foreground">
+                                        …
+                                    </span>
+                                ) : (
+                                    <Button
+                                        key={index}
+                                        variant={link.active ? 'outline' : 'ghost'}
+                                        size="icon"
+                                        disabled={!link.url}
+                                        aria-current={link.active ? 'page' : undefined}
+                                        onClick={() => goTo(link.url)}
+                                    >
+                                        {link.label}
+                                    </Button>
+                                ),
+                            )}
+                    </div>
+                    <span className="text-muted-foreground sm:hidden">
+                        {t('table.page', { current: pagination.current_page, total: pagination.last_page })}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={!pagination.next_page_url}
+                        onClick={() => goTo(pagination.next_page_url)}
+                        aria-label={t('table.next_page')}
+                    >
+                        <ChevronRight className="size-4" />
+                    </Button>
+                </nav>
             )}
         </div>
     );

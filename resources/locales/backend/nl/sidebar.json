@@ -20,5 +20,7 @@
     "settings": "Instellingen",
     "about": "Over",
     "logout": "Uitloggen",
-    "municipal_data": "Gemeentelijke parkeerdata"
+    "municipal_data": "Gemeentelijke parkeerdata",
+    "search": "Zoeken",
+    "search_placeholder": "Zoek parkeerlocaties…"
 }

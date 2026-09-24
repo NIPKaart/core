@@ -6,7 +6,8 @@
         "community.space_deleted_by_user": "Parking space deleted by user",
         "community.space_restored": "Parking space restored",
         "system.announcement": "System announcement",
-        "default": "Notification"
+        "default": "Notification",
+        "municipal.import_ready_for_review": "Municipal delivery ready for review"
     },
     "actions": {
         "markRead": "Mark as read",

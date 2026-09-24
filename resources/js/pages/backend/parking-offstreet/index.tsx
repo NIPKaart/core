@@ -40,33 +40,12 @@ export default function Index({ spaces, filters, options }: PageProps) {
     }, [countryFilter, provinceFilter, municipalityFilter, visibilityFilter, spaces.data]);
 
     // Update filters based on selected options
-    const countryOptions = options.countries
-        .map((c) => ({
-            value: String(c.id),
-            label: c.name,
-            count: spaces.data.filter((space) => String(space.country?.id) === String(c.id)).length,
-        }))
-        .filter((o) => o.count > 0);
-
-    const provinceOptions = options.provinces
-        .map((p) => ({
-            value: String(p.id),
-            label: p.name,
-            count: spaces.data.filter((space) => String(space.province?.id) === String(p.id)).length,
-        }))
-        .filter((o) => o.count > 0);
-
-    const municipalityOptions = options.municipalities
-        .map((m) => ({
-            value: String(m.id),
-            label: m.name,
-            count: spaces.data.filter((space) => String(space.municipality?.id) === String(m.id)).length,
-        }))
-        .filter((o) => o.count > 0);
-
+    const countryOptions = options.countries.map((country) => ({ value: String(country.id), label: country.name }));
+    const provinceOptions = options.provinces.map((province) => ({ value: String(province.id), label: province.name }));
+    const municipalityOptions = options.municipalities.map((municipality) => ({ value: String(municipality.id), label: municipality.name }));
     const visibilityOptions = [
-        { value: 'true', label: t('filters.visible'), count: spaces.data.filter((s) => s.visibility).length },
-        { value: 'false', label: t('filters.hidden'), count: spaces.data.filter((s) => !s.visibility).length },
+        { value: 'true', label: t('filters.visible') },
+        { value: 'false', label: t('filters.hidden') },
     ];
 
     const updateFilters = (country: string[], province: string[], municipality: string[], visibility: string[]) => {
@@ -118,8 +97,8 @@ export default function Index({ spaces, filters, options }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.index')} />
-            <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('head.index')} description={t('description')} />
+            <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+                <Heading level={1} title={t('head.index')} description={t('description')} />
 
                 <OutdatedMunicipalitiesBanner spaces={spaces.data} minDaysOutdated={2} />
 
@@ -155,12 +134,13 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 )}
 
                 <DataTable
+                    initialState={{ columnVisibility: { long_parking: false, api_state: false } }}
                     columns={columns}
                     data={spaces.data}
                     rowSelection={rowSelection}
                     onRowSelectionChange={setRowSelection}
                     filters={
-                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2">
                             <DataTableFacetFilter
                                 title={t('filters.country')}
                                 selected={countryFilter}

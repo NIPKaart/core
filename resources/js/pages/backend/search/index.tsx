@@ -112,9 +112,9 @@ export default function Index() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={q ? `${t('head.title')} — ${q}` : t('head.title')} />
-            <div className="px-4 py-6 sm:px-6">
+            <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="space-y-6">
-                    <Heading title={t('head.title')} description={t('head.description')} />
+                    <Heading level={1} title={t('head.title')} description={t('head.description')} />
 
                     <section className="space-y-3">
                         <div className="flex items-center rounded-xl border bg-background px-3 sm:px-4">
