@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { PaginatedResponse } from '@/types';
@@ -162,44 +163,52 @@ export default function Index({ datasets, imports, filters }: Props) {
                                     action={index.url()}
                                     method="get"
                                     options={{ preserveState: true, preserveScroll: true }}
-                                    className="flex min-w-0 flex-1 gap-2 sm:max-w-md"
+                                    className="relative w-full sm:max-w-sm"
                                 >
                                     <input type="hidden" name="state" value={filters.state} />
                                     <input type="hidden" name="tab" value="deliveries" />
                                     {filters.dataset && <input type="hidden" name="dataset" value={filters.dataset} />}
                                     <Input
                                         key={filters.q}
+                                        className="w-full pl-9"
                                         name="q"
                                         defaultValue={filters.q}
                                         maxLength={200}
                                         placeholder={t('search_sources')}
                                         aria-label={t('search_sources')}
                                     />
-                                    <Button type="submit" size="icon" variant="outline" aria-label={t('search')}>
-                                        <Search aria-hidden="true" />
-                                    </Button>
+                                    <button
+                                        type="submit"
+                                        className="absolute inset-y-0 left-0 flex w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                                        aria-label={t('search')}
+                                    >
+                                        <Search className="size-4" aria-hidden="true" />
+                                    </button>
                                 </Form>
                             }
                             filters={
-                                <select
-                                    aria-label={t('status')}
+                                <Select
                                     value={filters.state}
-                                    className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                                    onChange={(event) =>
+                                    onValueChange={(state) =>
                                         router.get(
                                             index.url(),
-                                            { q: filters.q, state: event.target.value, dataset: filters.dataset, tab: 'deliveries' },
+                                            { q: filters.q, state, dataset: filters.dataset, tab: 'deliveries' },
                                             { preserveState: true, preserveScroll: true },
                                         )
                                     }
                                 >
-                                    <option value="all">{t('all_deliveries')}</option>
-                                    {['pending', 'published', 'rejected', 'superseded'].map((state) => (
-                                        <option key={state} value={state}>
-                                            {t(`states.${state}`)}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SelectTrigger aria-label={t('status')} className="w-full sm:w-[200px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('all_deliveries')}</SelectItem>
+                                        {['pending', 'published', 'rejected', 'superseded'].map((state) => (
+                                            <SelectItem key={state} value={state}>
+                                                {t(`states.${state}`)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             }
                         />
                         {imports.total > 0 && <DataTablePagination pagination={imports} />}
