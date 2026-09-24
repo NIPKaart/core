@@ -24,7 +24,7 @@ The explicit lazy page resolver currently returns the default component, as requ
 
 | Area | Direction |
 | --- | --- |
-| Vite Plus | Defer. Existing Vite, ESLint and Prettier work with DDEV and CI; replacement needs a demonstrated benefit. |
+| Vite Plus | Defer. Existing Vite, Oxlint and Prettier work with DDEV and CI; replacement needs a demonstrated benefit. |
 | React Compiler | Defer until measured map/mobile performance or a separate compatibility evaluation justifies adoption. |
 | Wayfinder | Keep the supported `wayfinder({ formVariants: true })` integration and generated typed helpers. |
 | DDEV | Preserve host `0.0.0.0`, strict port 5173, primary-URL asset origin and DDEV CORS matching. |
