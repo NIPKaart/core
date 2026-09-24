@@ -78,6 +78,11 @@ A published parking option should support reporting problems such as:
 
 Reports should feed moderation/correction, not instantly mutate trusted source data.
 
+The [proposed contribution terms and retention policy](data-foundation.md#91-algemene-bijdrageafspraken) apply across new community places, confirmations, disputes, reports and corrections. They remain a proposal until explicitly adopted and implemented. Public provenance does not expose contributor identity or private moderation evidence.
+
+[Core #1218](https://github.com/NIPKaart/core/issues/1218) covers corrections to both `ParkingMunicipal` and the relatively static facility information in `ParkingOffstreet`. The existing source records keep their identities; a correction never creates a duplicate `ParkingSpace`. Live occupancy is a separate observation stream, not a manually editable field override. See the [two acceptance checkpoints](../development/data-foundation-delivery.md#correcties-op-geïmporteerde-records-1218) for municipal-first verification and later offstreet integration.
+
+
 ## Coverage transparency
 
 A future area/municipality coverage view should distinguish:

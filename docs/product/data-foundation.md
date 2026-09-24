@@ -183,6 +183,54 @@ Voorwaarden verschillen per bron. [OpenStreetMap](https://www.openstreetmap.org/
 
 Leg voor iedere bron apart vast of ophalen, ruwe opslag, normalisatie, publieke weergave en bulkherdistributie zijn toegestaan, met vereiste attributie. Voor communitybijdragen moeten gebruiksrechten en bewaarbeleid nog worden vastgesteld. Dat zijn lanceerbeslissingen, geen impliciete gevolgen van een code-licentie.
 
+### 9.1 Algemene bijdrageafspraken
+
+Uitwerking van 2026-09-24. Status: **voorstel ter vaststelling**, geen gepubliceerde gebruiksvoorwaarden en geen geïmplementeerde bewaartermijnen. De eigenaar heeft gevraagd de afspraken eerst uit te werken. De reikwijdte is alle communitybijdragen: nieuwe `ParkingSpace`-records, bevestigingen, betwistingen, meldingen en correcties op bestaande community-, gemeentelijke en offstreetrecords. [#1175](https://github.com/NIPKaart/core/issues/1175) beheert deze afspraken; [#1218](https://github.com/NIPKaart/core/issues/1218) past ze toe op correcties van geïmporteerde records.
+
+#### Gebruiksrecht en toegestane inhoud
+
+- De bijdrager behoudt eventuele eigen rechten en verleent NIPKaart een niet-exclusief, kosteloos gebruiksrecht voor opslag, controle, bewerking, samenvoeging en publicatie binnen de dienstverlening. Dit beoogde gebruiksrecht blijft voor geaccepteerde parkeerinformatie bestaan na accountverwijdering; persoonsgegevens en verwijderingsverzoeken worden afzonderlijk behandeld. De definitieve juridische tekst moet deze afbakening vastleggen.
+- Een bijdrage berust op eigen waarneming of een bron waarvan het benodigde gebruik is toegestaan. Een URL of bronvermelding alleen bewijst geen toestemming. Een bijdrager kan geen rechten op informatie van derden weggeven.
+- Het gebruiksrecht omvat geen reeds genomen besluit over openbare bulkherdistributie of een open datalicentie. Bronvoorwaarden blijven per dataset gelden; de licentie van de applicatiecode bepaalt dit niet.
+- Een bijdrage beschrijft parkeerinformatie. Namen, kentekens, contactgegevens, medische informatie en andere niet-noodzakelijke persoonsgegevens horen niet in de vrije tekst. De flow waarschuwt hiervoor en biedt een route om onbedoeld opgenomen persoonsgegevens te laten verwijderen. Foto's blijven een afzonderlijke vervolgstap.
+- Bij indienen worden de toepasselijke versie van de bijdragevoorwaarden en het akkoordmoment vastgelegd. De privacyverklaring beschrijft doelen, grondslagen, toegang en bewaartermijnen afzonderlijk; akkoord met een gebruiksrecht geldt niet automatisch als AVG-toestemming voor alle verwerking. Nieuwe voorwaarden worden niet met terugwerkende kracht aan oude bijdragen toegeschreven.
+
+#### Toegang en zichtbaarheid
+
+| Handeling | Voorgestelde bevoegdheid |
+| --- | --- |
+| Bijdragen, bevestigen of een melding indienen | Ingelogde, niet-geschorste gebruiker met geverifieerd e-mailadres. Geen nieuwe anonieme indienroute in deze uitwerking. |
+| Eigen bijdrage en afhandeling bekijken | Indiener, zolang de gegevens volgens het bewaarbeleid beschikbaar zijn. |
+| Onderbouwing inzien en beoordelen | Moderator of beheerder met de specifieke bevoegdheid; geen goedkeuring van de eigen bijdrage. |
+| Onbeoordeeld voorstel intrekken | Indiener; de intrekking verandert geen gepubliceerde parkeerinformatie. |
+| Geaccepteerde correctie intrekken | Bevoegde moderator of beheerder met reden en actuele basisversie; de indiener kan herbeoordeling vragen. |
+| Persoonsgegevens laten verwijderen of bezwaar maken | Afzonderlijke privacyafhandeling door de verantwoordelijke organisatie; dit is geen inhoudelijk correctiebesluit. |
+
+Basiszoeken en publieke parkeerdetails blijven zonder account beschikbaar. Publiek verschijnen alleen gecontroleerde parkeerwaarden, relevante bekende waarnemingsdata en een tekstuele aanduiding van de herkomst, bijvoorbeeld “beoordeelde communitycorrectie”. Accountidentiteit, persoonlijke onderbouwing en interne moderatienotities worden niet publiek. De indiener krijgt de uitkomst en de daarvoor bedoelde motivering, niet eventuele interne notities over andere personen. Voor nieuw gepubliceerde communityplekken gelden dezelfde grenzen aan het tonen van de bijdrager.
+
+#### Voorgestelde bewaartermijnen
+
+De termijnen hieronder zijn productvoorstellen die de eigenaar per verwerkingsdoel nog moet onderbouwen en vaststellen; het zijn geen wettelijke standaardtermijnen. Persoonsgegevens mogen niet langer worden bewaard dan noodzakelijk. Het verwijderen van een naam of accountkoppeling maakt vrije tekst of een herleidbaar log niet vanzelf anoniem. Zie de [Europese Commissie over opslagbeperking](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en) en de [EDPB over anonimisering en pseudonimisering](https://www.edpb.europa.eu/topics/ai-and-technology/anonymisation-pseudonymisation_en), geraadpleegd op 2026-09-24.
+
+| Gegevens | Voorgestelde termijn en vervolg |
+| --- | --- |
+| Onbeoordeeld voorstel of onbehandelde melding | Na zes maanden zonder afhandeling administratief afsluiten als onbehandeld, niet als inhoudelijk afgewezen; daarna nog zes maanden voor vragen of bezwaar. Dit wijzigt geen publicatie. |
+| Afgewezen of vóór beoordeling ingetrokken bijdrage | Twaalf maanden na afsluiting, daarna vrije tekst en persoonskoppelingen verwijderen. |
+| Actieve geaccepteerde correctie of gepubliceerde communitybijdrage | De noodzakelijke waarden en onderbouwing zolang ze in gebruik zijn; jaarlijks de noodzaak van persoonskoppelingen en bewijs beoordelen. Actief gebruik rechtvaardigt niet automatisch onbeperkte opslag van alle oorspronkelijke gegevens. |
+| Vervangen/ingetrokken correctie of gearchiveerde communitybijdrage | Noodzakelijke onderbouwing en beslisgeschiedenis tot 24 maanden na beëindiging, daarna verwijderen of aantoonbaar anonimiseren. Een blijvend favoriet-/record-ID vereist geen blijvende persoonlijke onderbouwing. |
+| Losse bevestiging of betwisting | Maximaal 24 maanden na registratie. Draagt zij nog een actief besluit, dan alleen het daarvoor noodzakelijke bewijs onder de jaarlijkse beoordeling van dat besluit bewaren. |
+| Back-ups met inmiddels verwijderde gegevens | Maximaal 30 dagen uitloop; geen gewoon applicatiegebruik. Bij herstel verwijderingen opnieuw toepassen voordat de omgeving beschikbaar wordt. |
+
+Een automatische import verlengt deze termijnen niet. Ook een verwijzing vanuit een ander record is op zichzelf geen reden om alles te blijven bewaren. Een concreet geschil kan een beperkte uitzondering vereisen, met vastgelegde reden, toegangsbeperking en herbeoordelingsdatum. De definitieve regeling bepaalt ook de bewaartermijn voor bewijs van voorwaardenacceptatie; deze uitwerking kiest geen onbeperkte termijn daarvoor.
+
+Bij accountverwijdering worden persoonskoppelingen verwijderd en vrije tekst en bronverwijzingen op resterende identificeerbaarheid beoordeeld, tenzij een concreet onderbouwde uitzondering geldt. Geldige niet-persoonlijke parkeerinformatie kan blijven bestaan. De geschiedenis mag dan een verwijderde actor tonen; er wordt geen vervangende identiteit verzonnen. Dit is een voorgestelde toekomstige regeling: de bestaande cascades voor onder meer bevestigingen worden hiermee nog niet gewijzigd.
+
+#### Vaststelling en uitvoerbaarheid vóór publieke opening
+
+Leg de verantwoordelijke organisatie, het privacycontact, de doeleinden en grondslagen per verwerking vast, inclusief een belangenafweging waar die grondslag wordt gebruikt. Stel het gebruiksrecht, de bewaartermijnen, de behandeling van bestaande bijdragen en de voorwaardenacceptatie vast. Publiceer daarna passende bijdragevoorwaarden en privacyinformatie. Controleer met daadwerkelijke verwijder- en herstelproeven dat de applicatie, moderatiegeschiedenis en back-ups het gekozen beleid uitvoeren. Alleen een akkoordvakje of een configuratieschakelaar bewijst deze acceptatie niet.
+
+De toekomstige autorisatie, bewaartaken en privacyafhandeling worden onder #1175 uitgewerkt en voor de correctieflow in #1218 aantoonbaar toegepast. Er worden met dit voorstel geen bestaande bijdragen verwijderd, nieuwe rechten aangenomen of publieke functies geactiveerd.
+
 ## 10. Eerste resultaat en volgorde
 
 Eenvoud is leidend: [de startscope](../development/data-foundation-delivery.md#eenvoud-als-uitgangspunt-voor-uitvoering) splitst de eerste keten in bestandverwerking, automatisering en correctiebehoud. Begin met één bron en expliciete adaptermapping; bouw gedeelde abstracties pas wanneer een tweede bron daar aanleiding toe geeft. De technische uitwerking beschrijft ook latere mogelijkheden en is geen opdracht om alle onderdelen vooraf te bouwen.
