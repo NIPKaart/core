@@ -119,13 +119,13 @@ it('registers Eindhoven idempotently without changing a reviewed source configur
     $source = eindhovenSource();
     $municipality = $source->municipality;
     $source->delete();
-    $this->artisan('nipkaart:register-eindhoven', ['municipality' => $municipality->id])->assertSuccessful();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-eindhoven', 'municipality' => $municipality->id])->assertSuccessful();
     $source = DatasetSource::firstOrFail();
     expect($source->publication_enabled)->toBeFalse();
     expect($source->municipality_id)->toBe($municipality->id);
     $source->update(['attribution' => 'Reviewed source attribution']);
 
-    $this->artisan('nipkaart:register-eindhoven', ['municipality' => $municipality->id])->assertSuccessful();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-eindhoven', 'municipality' => $municipality->id])->assertSuccessful();
 
     $this->assertDatabaseCount('dataset_sources', 1);
     expect($source->fresh()->attribution)->toBe('Reviewed source attribution');
@@ -135,7 +135,7 @@ it('refuses registration for the wrong municipality or province', function (stri
     $municipality = Municipality::factory()->state(['name' => $name])
         ->for(Province::factory()->state(['geocode' => $geocode])->for(Country::factory()->state(['code' => 'NL'])))->create();
 
-    $this->artisan('nipkaart:register-eindhoven', ['municipality' => $municipality->id])->assertFailed();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-eindhoven', 'municipality' => $municipality->id])->assertFailed();
 
     $this->assertDatabaseCount('dataset_sources', 0);
 })->with([['Amsterdam', 'NL-NB'], ['Eindhoven', 'NL-NH']]);

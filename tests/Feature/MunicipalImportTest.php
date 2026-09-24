@@ -364,12 +364,12 @@ it('still blocks publication when the source geography changes', function () {
 it('registers only the selected Amsterdam geography for manual review', function () {
     $source = DatasetSource::factory()->make();
     $municipality = $source->municipality;
-    $this->artisan('nipkaart:register-amsterdam', ['municipality' => $municipality->id])->assertSuccessful();
-    $this->artisan('nipkaart:register-amsterdam', ['municipality' => $municipality->id])->assertSuccessful();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertSuccessful();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertSuccessful();
     $this->assertDatabaseCount('dataset_sources', 1);
     expect(DatasetSource::firstOrFail()->publication_enabled)->toBeFalse();
     $municipality->update(['name' => 'Other municipality']);
-    $this->artisan('nipkaart:register-amsterdam', ['municipality' => $municipality->id])->assertFailed();
+    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertFailed();
 });
 
 it('refuses equally dated deliveries and retains subsecond ordering', function () {
