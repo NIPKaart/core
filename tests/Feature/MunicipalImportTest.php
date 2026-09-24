@@ -28,7 +28,7 @@ function importReviewer(): User
 function municipalDelivery(array $overrides = []): array
 {
     return array_replace([
-        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam-parkeervakken-e6a',
+        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam',
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z'),
         'selection' => 'e6a-all', 'complete' => true, 'source_count' => 1,
         'records' => [[

@@ -20,7 +20,7 @@ class RegisterAmsterdamDataset extends Command
 
             return self::FAILURE;
         }
-        DatasetSource::firstOrCreate(['code' => 'nl-amsterdam-parkeervakken-e6a'], [
+        DatasetSource::firstOrCreate(['code' => 'nl-amsterdam'], [
             'name' => 'Amsterdam — algemene gehandicaptenparkeerplaatsen',
             'selection' => 'e6a-all', 'target_type' => 'municipal',
             'source_url' => 'https://api.data.amsterdam.nl/v1/parkeervakken/parkeervakken/',

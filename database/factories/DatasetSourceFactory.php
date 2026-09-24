@@ -14,7 +14,7 @@ class DatasetSourceFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => 'nl-amsterdam-parkeervakken-e6a', 'name' => 'Amsterdam',
+            'code' => 'nl-amsterdam', 'name' => 'Amsterdam',
             'selection' => 'e6a-all', 'target_type' => 'municipal',
             'source_url' => 'https://api.data.amsterdam.nl/v1/parkeervakken/parkeervakken/',
             'attribution' => 'Gemeente Amsterdam — CC0',

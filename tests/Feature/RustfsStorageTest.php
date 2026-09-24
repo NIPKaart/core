@@ -13,7 +13,7 @@ it('round trips immutable deliveries through the local S3 service', function () 
 
     $client = Storage::disk('municipal-deliveries')->getClient();
     $storage = app(MunicipalDeliveryStorage::class);
-    $dataset = 'nl-amsterdam-parkeervakken-e6a';
+    $dataset = 'nl-amsterdam';
     $key = 'municipal/'.$dataset.'/'.Str::uuid().'.json';
     $json = '{"probe":"local-storage"}';
     $object = [
