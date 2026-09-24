@@ -6,25 +6,20 @@
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix",
+        "lint": "oxlint . --fix",
         "types": "tsc --noEmit",
-        "lint:check": "eslint .",
+        "lint:check": "oxlint .",
         "check": "npm run format:check && npm run lint:check && npm run types && npm run test:unit",
         "test:unit": "node --test tests/frontend/*.test.mjs"
     },
     "devDependencies": {
-        "@eslint/js": "^9.39.0",
         "@laravel/vite-plugin-wayfinder": "^0.1.3",
         "@types/leaflet": "^1.9.17",
         "@types/node": "^25.0.0",
-        "eslint": "^9.39.0",
-        "eslint-config-prettier": "^10.0.1",
-        "eslint-plugin-react": "^7.37.3",
-        "eslint-plugin-react-hooks": "^7.0.0",
+        "oxlint": "^1.85.0",
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.1.0",
-        "prettier-plugin-tailwindcss": "^0.8.0",
-        "typescript-eslint": "^8.23.0"
+        "prettier-plugin-tailwindcss": "^0.8.0"
     },
     "dependencies": {
         "@headlessui/react": "^2.2.0",
@@ -62,7 +57,6 @@
         "cmdk": "^1.1.1",
         "concurrently": "^10.0.0",
         "date-fns": "^4.1.0",
-        "globals": "^17.0.0",
         "i18next": "^26.0.0",
         "i18next-browser-languagedetector": "^8.2.0",
         "laravel-echo": "^2.2.0",
