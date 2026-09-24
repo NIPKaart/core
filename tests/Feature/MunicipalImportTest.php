@@ -197,6 +197,7 @@ it('preserves identities favorites manual visibility and unchanged timestamps', 
     expect(app(MunicipalImportService::class)->review($second)['counts']['unchanged'])->toBe(1);
     approveMunicipal($second, $user);
     expect($space->fresh())->visibility->toBeFalse()->updated_at->toEqual($updated)->last_checked_at->toEqual(now()->startOfSecond());
+    expect($space->fresh()->published_import_id)->toBe($second->id);
     $this->assertModelExists($favorite);
     $this->assertDatabaseCount('parking_municipal_spaces', 1);
 });
@@ -221,6 +222,8 @@ it('records source changes and prior values without removing missing records', f
     expect($space->fresh()->number)->toBe(0);
     expect($import->fresh()->before_values[$space->id]['number'])->toBeNull();
     expect(ParkingMunicipal::where('external_id', 'other')->firstOrFail()->visibility)->toBeTrue();
+    expect($space->fresh()->published_import_id)->toBe($import->id);
+    expect(ParkingMunicipal::where('external_id', 'other')->firstOrFail()->published_import_id)->not->toBe($import->id);
 });
 
 it('blocks source conflicts with manual values and preserves nonconflicting corrections', function () {
@@ -575,6 +578,7 @@ it('summarizes each municipal source and scopes its delivery history', function 
     $latest = stageMunicipal(municipalDelivery(), $user);
     $old = MunicipalImport::factory()->for($source)->create(['retrieved_at' => now()->subDays(3)]);
     MunicipalDelivery::factory()->create(['dataset_source_id' => $source->id, 'state' => 'rejected', 'error_code' => 'invalid_delivery']);
+    config(['municipal-deliveries.sources.other-source.max_age_hours' => 48]);
     $other = DatasetSource::factory()->for($source->municipality)->create(['code' => 'other-source', 'name' => 'ZZ Other']);
     MunicipalImport::factory()->for($other)->create(['retrieved_at' => now()->subDays(3)]);
 

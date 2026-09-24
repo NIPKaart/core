@@ -108,7 +108,7 @@
     "locations": "Parking locations",
     "on_map": "Locations on the map",
     "last_retrieved": "Latest source data",
-    "source_stale": "Source data is outdated",
+    "source_stale": "Delivery overdue",
     "intake_problem": "The latest delivery could not be processed. Check the delivery.",
     "intake_pending": "A new delivery is being processed.",
     "review_changes": "Review changes",
@@ -131,5 +131,16 @@
     "no_changes_title": "No changes to review",
     "no_matching_records": "No locations found",
     "try_other_filter": "Try another search term or view all locations.",
-    "date_time": "{{date}} at {{time}}"
+    "date_time": "{{date}} at {{time}}",
+    "timeline": "Delivery timestamps",
+    "timeline_note": "Fetching, receipt and publication are not on-site observations. Missing timestamps remain unknown.",
+    "freshness_unknown": "Delivery cadence unknown",
+    "overdue_note": "No recently fetched, valid delivery has arrived within the configured interval. The cause is unknown here. Existing locations remain visible.",
+    "times": {
+        "fetched_at": "Fetched from source",
+        "received_at": "Received from storage",
+        "validated_at": "File validated",
+        "staged_at": "Staged for review",
+        "published_at": "Published"
+    }
 }

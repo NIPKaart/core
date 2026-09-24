@@ -8,6 +8,7 @@ use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingRule;
 use App\Models\ParkingSpace;
+use App\Services\MunicipalProvenance;
 
 class SpacesInfoController extends Controller
 {
@@ -69,9 +70,9 @@ class SpacesInfoController extends Controller
         ]);
     }
 
-    public function ParkingMunicipalInfo(string $id)
+    public function ParkingMunicipalInfo(string $id, MunicipalProvenance $provenance)
     {
-        $location = ParkingMunicipal::with(['country', 'province', 'municipality'])
+        $location = ParkingMunicipal::with(['country', 'province', 'municipality', 'publishedImport:id,dataset_source_id,state,retrieved_at,dataset_config'])
             ->where('id', $id)
             ->where('visibility', true)
             ->firstOrFail();
@@ -94,6 +95,7 @@ class SpacesInfoController extends Controller
             'country' => $location->country->name ?? null,
             'province' => $location->province->name ?? null,
             'municipality' => $location->municipality->name ?? null,
+            'provenance' => $provenance->publicDetails($location),
             'orientation' => $location->orientation?->toArray(),
             'street' => $location->street ?? null,
             'rule_url' => $rule ? $rule->url : null,

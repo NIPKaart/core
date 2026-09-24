@@ -8,6 +8,7 @@ use App\Models\DatasetSource;
 use App\Models\MunicipalImport;
 use App\Services\MunicipalDeliveryService;
 use App\Services\MunicipalImportService;
+use App\Services\MunicipalProvenance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use Inertia\Response;
 
 class MunicipalImportController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, MunicipalProvenance $provenance): Response
     {
         Gate::authorize('viewAny', MunicipalImport::class);
 
@@ -29,12 +30,13 @@ class MunicipalImportController extends Controller
             'datasets' => DatasetSource::where('target_type', 'municipal')
                 ->with(['latestImport:municipal_imports.id,municipal_imports.dataset_source_id,retrieved_at,state', 'latestDelivery:municipal_deliveries.id,municipal_deliveries.dataset_source_id,state,error_code,created_at'])
                 ->withCount(['municipalSpaces as visible_locations_count' => fn (Builder $builder) => $builder->where('visibility', true)])
-                ->orderBy('name')->get()->map(function (DatasetSource $source): array {
+                ->orderBy('name')->get()->map(function (DatasetSource $source) use ($provenance): array {
                     $latest = $source->latestImport;
 
                     return [...$source->toArray(),
                         'needs_review' => $latest?->state === 'pending' && (! $source->last_published_retrieved_at || $latest->retrieved_at->gt($source->last_published_retrieved_at)),
-                        'stale' => $latest !== null && $latest->retrieved_at->lt(now()->subHours(config('municipal-deliveries.sources.'.$source->code.'.max_age_hours', 48))),
+                        'stale' => $provenance->deliveryStatus($source) === 'overdue',
+                        'delivery_status' => $provenance->deliveryStatus($source),
                     ];
                 }),
             'imports' => MunicipalImport::with('datasetSource:id,name,last_published_retrieved_at')
@@ -62,7 +64,7 @@ class MunicipalImportController extends Controller
         return to_route('app.municipal-imports.show', $import);
     }
 
-    public function show(Request $request, MunicipalImport $municipalImport, MunicipalImportService $service): Response
+    public function show(Request $request, MunicipalImport $municipalImport, MunicipalImportService $service, MunicipalProvenance $provenance): Response
     {
         Gate::authorize('view', $municipalImport);
         $review = $service->review($municipalImport);
@@ -92,6 +94,7 @@ class MunicipalImportController extends Controller
         return Inertia::render('backend/municipal-imports/show', [
             'import' => [...$municipalImport->toArray(), 'superseded' => $municipalImport->isSuperseded()], 'dataset' => $municipalImport->datasetSource,
             'municipalityName' => $municipalImport->datasetSource->municipality->name,
+            'times' => $provenance->importTimes($municipalImport),
             'review' => $review, 'page' => $page, 'pages' => $pages,
             'total' => $total, 'filters' => ['q' => $query, 'filter' => $filter],
         ]);

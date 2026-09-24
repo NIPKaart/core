@@ -21,7 +21,14 @@ import { useTranslation } from 'react-i18next';
 import { GeoJSON } from 'react-leaflet';
 import type { Dataset, Import } from './index';
 
-type Claim = { external_id: string; street: string | null; number: number | null; geometry: Polygon; source_attributes: Record<string, unknown> };
+type Claim = {
+    source_updated_at?: string | null;
+    external_id: string;
+    street: string | null;
+    number: number | null;
+    geometry: Polygon;
+    source_attributes: Record<string, unknown>;
+};
 type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 type Row = {
     external_id: string;
@@ -37,6 +44,7 @@ type Row = {
     point?: { latitude: number; longitude: number };
 };
 type Props = {
+    times: Record<'fetched_at' | 'received_at' | 'validated_at' | 'staged_at' | 'published_at', string | null>;
     import: Import;
     dataset: Dataset;
     municipalityName: string;
@@ -47,7 +55,7 @@ type Props = {
     filters: { q: string; filter: string };
 };
 
-export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, total, filters }: Props) {
+export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, total, filters, times }: Props) {
     const { t, i18n } = useTranslation('backend/municipal-imports');
     const [geometryReviewedForToken, setGeometryReviewedForToken] = useState<string | null>(null);
     const [selectedRecord, setSelectedRecord] = useState<Row | null>(null);
@@ -228,6 +236,19 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         )}
                     </div>
                 </header>
+                <details className="rounded-lg border p-4">
+                    <summary className="cursor-pointer font-medium">{t('timeline')}</summary>
+                    <p className="mt-2 text-sm text-muted-foreground">{t('timeline_note')}</p>
+                    <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {Object.entries(times).map(([key, value]) => (
+                            <div key={key}>
+                                <dt className="text-xs text-muted-foreground">{t(`times.${key}`)}</dt>
+                                <dd className="mt-1 text-sm">{value ? <MunicipalDateTime value={value} /> : t('unknown')}</dd>
+                            </div>
+                        ))}
+                    </dl>
+                </details>
+
                 <MunicipalNavigation active="deliveries" />
                 {delivery.superseded ? (
                     <section role="status" className="rounded-xl border bg-muted/30 p-5">
@@ -553,6 +574,10 @@ function RecordDetails({ row }: { row: Row }) {
                         {(['before', 'after'] as const).map((side) => (
                             <div key={side}>
                                 <h3 className="font-medium">{t(side)}</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {t('fields.source_updated_at')}:{' '}
+                                    {row[side]?.source_updated_at ? <MunicipalDateTime value={row[side]!.source_updated_at!} /> : t('unknown')}
+                                </p>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {row[side] ? `${t('capacity')}: ${row[side]?.number ?? t('unknown')}` : t('no_source_value')}
                                 </p>

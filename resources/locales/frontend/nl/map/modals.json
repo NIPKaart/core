@@ -51,8 +51,13 @@
             "description": "Dit is een officiële parkeerplaats die wordt aangeboden door de gemeente. De details zijn gebaseerd op open data."
         },
         "table": {
-            "updated_at": "Laatst bijgewerkt"
-        }
+            "updated_at": "Laatst bijgewerkt",
+            "source": "Bron",
+            "terms": "Bronvoorwaarden",
+            "fetched_at": "Gegevens opgehaald op"
+        },
+        "unknown": "Onbekend",
+        "fetched_note": "Dit is de ophaaldatum van de gegevens, geen controle van de parkeerplek."
     },
     "offstreet": {
         "modal": {

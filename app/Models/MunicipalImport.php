@@ -6,6 +6,7 @@ use Database\Factories\MunicipalImportFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MunicipalImport extends Model
 {
@@ -30,5 +31,10 @@ class MunicipalImport extends Model
     public function datasetSource(): BelongsTo
     {
         return $this->belongsTo(DatasetSource::class);
+    }
+
+    public function delivery(): HasOne
+    {
+        return $this->hasOne(MunicipalDelivery::class)->ofMany('id', 'min');
     }
 }

@@ -166,8 +166,43 @@ export function getMunicipalInfoRows(
         },
         {
             icon: <FileText className="h-4 w-4 text-muted-foreground" />,
-            label: t('municipal.table.updated_at'),
-            value: new Date(data.updated_at).toLocaleDateString(),
+            label: t('municipal.table.source'),
+            value: (
+                <div className="space-y-1">
+                    {data.provenance.url ? (
+                        <a
+                            href={data.provenance.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-600 underline dark:text-orange-400"
+                        >
+                            {data.provenance.name ?? t('municipal.table.source')}
+                        </a>
+                    ) : (
+                        <span>{data.provenance.name ?? t('municipal.unknown')}</span>
+                    )}
+                    {data.provenance.attribution && <p className="text-xs text-muted-foreground">{data.provenance.attribution}</p>}
+                    {data.provenance.terms_url && (
+                        <a href={data.provenance.terms_url} target="_blank" rel="noopener noreferrer" className="block text-xs underline">
+                            {t('municipal.table.terms')}
+                        </a>
+                    )}
+                </div>
+            ),
+        },
+        {
+            icon: <FileText className="h-4 w-4 text-muted-foreground" />,
+            label: t('municipal.table.fetched_at'),
+            value: (
+                <div className="space-y-1">
+                    {data.provenance.fetched_at ? (
+                        <time dateTime={data.provenance.fetched_at}>{new Date(data.provenance.fetched_at).toLocaleDateString()}</time>
+                    ) : (
+                        <span>{t('municipal.unknown')}</span>
+                    )}
+                    <p className="text-xs text-muted-foreground">{t('municipal.fetched_note')}</p>
+                </div>
+            ),
         },
         ...(isLoggedIn
             ? [
