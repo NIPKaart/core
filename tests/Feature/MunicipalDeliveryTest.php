@@ -6,6 +6,7 @@ use App\Models\DatasetSource;
 use App\Models\MunicipalDelivery;
 use App\Models\MunicipalImport;
 use App\Models\User;
+use App\Notifications\MunicipalImport\ReadyForReview;
 use App\Services\MunicipalDeliveryService;
 use App\Services\MunicipalDeliveryStorage;
 use App\Services\MunicipalImportService;
@@ -16,6 +17,7 @@ use Aws\S3\S3Client;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
@@ -315,4 +317,55 @@ it('rejects an upload when its archived identity contains different bytes', func
 
     $this->assertDatabaseCount('municipal_imports', 0);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
+});
+
+it('notifies only import reviewers once when a delivery is ready for review', function () {
+    Notification::fake();
+    [$handler] = bucketClient();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $moderator = User::factory()->create();
+    $moderator->assignRole(UserRole::MODERATOR);
+    $user = User::factory()->create();
+    $json = bucketPayload();
+    $delivery = bucketReceipt($json);
+    $handler->append(bucketObject($json));
+
+    $service = app(MunicipalDeliveryService::class);
+    $service->process($delivery->id);
+    $service->process($delivery->id);
+    app(MunicipalImportService::class)->intake($json, $admin);
+
+    Notification::assertSentToTimes($admin, ReadyForReview::class, 1);
+    Notification::assertNotSentTo([$moderator, $user], ReadyForReview::class);
+    Notification::assertSentTo($admin, ReadyForReview::class, function ($notification, $channels) use ($admin) {
+        expect($channels)->toBe(['database', 'broadcast']);
+        expect($notification->afterCommit)->toBeTrue();
+        expect($notification->toDatabase($admin)->data)->toBe([
+            'type' => 'municipal.import_ready_for_review',
+            'params' => ['source_name' => DatasetSource::sole()->name],
+            'url' => route('app.municipal-imports.show', MunicipalImport::sole()),
+            'meta' => ['import_id' => MunicipalImport::sole()->id],
+        ]);
+        expect($notification->toBroadcast($admin)->data)->toBe($notification->toDatabase($admin)->data);
+        $admin->removeRole(UserRole::ADMIN);
+        expect($notification->shouldSend($admin, 'database'))->toBeFalse();
+
+        return true;
+    });
+});
+
+it('does not notify reviewers when delivery validation fails', function () {
+    Notification::fake();
+    [$handler] = bucketClient();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $json = bucketPayload();
+    $delivery = bucketReceipt($json);
+    $handler->append(bucketObject($json, ['Metadata' => []]));
+
+    app(MunicipalDeliveryService::class)->process($delivery->id);
+
+    expect($delivery->fresh()->state)->toBe('rejected');
+    Notification::assertNothingSent();
 });

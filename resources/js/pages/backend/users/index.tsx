@@ -1,3 +1,4 @@
+import Heading from '@/components/heading';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -78,10 +79,10 @@ export default function Index({ users }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
-            <div className="px-4 py-6 sm:px-6">
+            <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold">{t('head.index')}</h1>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <Heading level={1} title={t('head.index')} description={t('head.description')} />
                         {can('user.create') && (
                             <Button variant="outline" asChild>
                                 <Link href={app.users.create()}>
@@ -91,9 +92,12 @@ export default function Index({ users }: PageProps) {
                             </Button>
                         )}
                     </div>
-                    <p className="text-muted-foreground">{t('head.description')}</p>
 
-                    <DataTable columns={columns} data={users.data} />
+                    <DataTable
+                        initialState={{ columnVisibility: { email_verified: false, created_at: false } }}
+                        columns={columns}
+                        data={users.data}
+                    />
                     <DataTablePagination pagination={users} />
                 </div>
             </div>

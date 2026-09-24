@@ -42,7 +42,8 @@
     "types": {
         "community.*": "Community space",
         "system.*": "System",
-        "default": "Notification"
+        "default": "Notification",
+        "municipal.import_ready_for_review": "Municipal delivery ready for review"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
@@ -51,6 +52,7 @@
         "community.space_deleted_by_user": "Community space deleted by user: {{space_label}}",
         "community.space_restored": "Community space restored: {{space_label}}",
         "system.announcement": "System announcement",
-        "default": "Notification"
+        "default": "Notification",
+        "municipal.import_ready_for_review": "Municipal delivery ready for review: {{source_name}}"
     }
 }

@@ -22,6 +22,17 @@
     },
     "table": {
         "columns": "Kolommen",
-        "show_hide_columns": "Toon/verberg kolommen"
+        "show_hide_columns": "Toon/verberg kolommen",
+        "search_page": "Zoek op deze pagina…",
+        "no_results": "Geen resultaten.",
+        "results": "{{from}}–{{to}} van {{total}} resultaten",
+        "pagination": "Paginanavigatie",
+        "previous_page": "Vorige pagina",
+        "next_page": "Volgende pagina",
+        "page": "Pagina {{current}} van {{total}}",
+        "selected": "{{count}} geselecteerd",
+        "filter": "Filter op {{title}}…",
+        "clear_filters": "Filters wissen",
+        "no_page_results": "Geen overeenkomsten op deze pagina."
     }
 }

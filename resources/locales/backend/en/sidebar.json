@@ -20,5 +20,7 @@
     "settings": "Settings",
     "about": "About",
     "logout": "Log out",
-    "municipal_data": "Municipal parking data"
+    "municipal_data": "Municipal parking data",
+    "search": "Search",
+    "search_placeholder": "Search parking locations…"
 }

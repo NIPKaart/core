@@ -6,7 +6,8 @@
         "community.space_deleted_by_user": "Parkeerplek verwijderd door gebruiker",
         "community.space_restored": "Parkeerplek hersteld",
         "system.announcement": "Systeem aankondiging",
-        "default": "Melding"
+        "default": "Melding",
+        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling"
     },
     "actions": {
         "markRead": "Markeren als gelezen",

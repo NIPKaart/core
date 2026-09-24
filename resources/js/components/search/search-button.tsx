@@ -9,7 +9,7 @@ import { openSearch } from './search-store';
 
 type Props = Readonly<
     {
-        variant?: 'icon' | 'bar';
+        variant?: 'icon' | 'bar' | 'responsive';
         placeholder?: string;
         tooltip?: string;
         className?: string;
@@ -21,22 +21,25 @@ const isMac = (): boolean => typeof navigator !== 'undefined' && /Mac/i.test(nav
 export default function SearchButton({ variant = 'icon', placeholder = 'Search…', tooltip = 'Search', className, ...rest }: Props): JSX.Element {
     useSearchHotkey();
 
-    if (variant === 'bar') {
+    if (variant === 'bar' || variant === 'responsive') {
         return (
             <button
                 type="button"
                 onClick={openSearch}
-                aria-label="Open search"
+                aria-label={tooltip}
                 className={cn(
-                    'group hidden h-9 w-full max-w-md items-center gap-2 rounded-md border px-3 text-left text-sm text-muted-foreground',
+                    'group h-9 items-center gap-2 rounded-md text-left text-sm text-muted-foreground',
+                    variant === 'responsive'
+                        ? 'flex w-9 justify-center lg:w-64 lg:justify-start lg:border lg:px-3'
+                        : 'hidden w-full max-w-md border px-3 md:flex',
                     'transition hover:bg-muted/50 focus:ring-2 focus:ring-ring focus:outline-none md:flex',
                     className,
                 )}
                 {...rest}
             >
                 <SearchIcon className="h-4 w-4 opacity-70" aria-hidden="true" />
-                <span className="flex-1 truncate">{placeholder}</span>
-                <kbd className="pointer-events-none hidden items-center gap-1 rounded border bg-muted px-1.5 text-[10px] font-medium sm:inline-flex">
+                <span className={cn('flex-1 truncate', variant === 'responsive' && 'hidden lg:block')}>{placeholder}</span>
+                <kbd className="pointer-events-none hidden items-center gap-1 rounded border bg-muted px-1.5 text-[10px] font-medium lg:inline-flex">
                     <span className="font-sans">{isMac() ? '⌘' : 'Ctrl'}</span> K
                 </kbd>
             </button>

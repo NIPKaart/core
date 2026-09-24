@@ -11,9 +11,8 @@ import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { BreadcrumbItem, Municipality, PaginatedResponse, ParkingMunicipal } from '@/types';
 import { ParkingOrientation } from '@/types/enum';
 import { Head, Link, router } from '@inertiajs/react';
-import type { RowSelectionState } from '@tanstack/react-table';
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getParkingMunicipalColumns } from './columns';
 
 type PageProps = {
@@ -27,35 +26,20 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     const { t, tGlobal } = useResourceTranslation('backend/parking-municipal');
     const { can } = useAuthorization();
 
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [orientationFilter, setOrientationFilter] = useState<string[]>(filters.orientation ? [filters.orientation] : []);
     const [visibilityFilter, setVisibilityFilter] = useState<string[]>(filters.visibility ? [filters.visibility] : []);
 
-    useEffect(() => {
-        setRowSelection({});
-    }, [visibilityFilter, orientationFilter, spaces.data]);
-
-    const orientationCounts = spaces.data.reduce(
-        (acc, space) => {
-            const key = space.orientation ?? 'unknown';
-            acc[key] = (acc[key] ?? 0) + 1;
-            return acc;
-        },
-        {} as Record<string, number>,
-    );
-
     const visibilityOptions = [
-        { value: 'true', label: t('filters.options.true'), count: spaces.data.filter((s) => s.visibility).length },
-        { value: 'false', label: t('filters.options.false'), count: spaces.data.filter((s) => !s.visibility).length },
+        { value: 'true', label: t('filters.options.true') },
+        { value: 'false', label: t('filters.options.false') },
     ];
 
     const orientationOptions = [
         ...Object.entries(options.orientations).map(([value, label]) => ({
             value,
             label,
-            count: orientationCounts[value] ?? 0,
         })),
-        { value: 'unknown', label: t('filters.options.unknown'), count: orientationCounts['unknown'] ?? 0 },
+        { value: 'unknown', label: t('filters.options.unknown') },
     ];
 
     const columns = getParkingMunicipalColumns(can, options.orientations, { t, tGlobal });
@@ -102,10 +86,9 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
                 {/* Data Table */}
                 <div className="space-y-6 pt-6">
                     <DataTable
+                        initialState={{ columnVisibility: { id: false, province_name: false, updated_at: false } }}
                         columns={columns}
                         data={spaces.data}
-                        rowSelection={rowSelection}
-                        onRowSelectionChange={setRowSelection}
                         filters={
                             <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
                                 <DataTableFacetFilter

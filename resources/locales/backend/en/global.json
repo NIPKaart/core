@@ -22,6 +22,17 @@
     },
     "table": {
         "columns": "Columns",
-        "show_hide_columns": "Show/hide columns"
+        "show_hide_columns": "Show/hide columns",
+        "search_page": "Search this page…",
+        "no_results": "No results.",
+        "results": "{{from}}–{{to}} of {{total}} results",
+        "pagination": "Pagination",
+        "previous_page": "Previous page",
+        "next_page": "Next page",
+        "page": "Page {{current}} of {{total}}",
+        "selected": "{{count}} selected",
+        "filter": "Filter {{title}}…",
+        "clear_filters": "Clear filters",
+        "no_page_results": "No matches on this page."
     }
 }

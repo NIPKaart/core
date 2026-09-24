@@ -16,12 +16,19 @@ import { useEffect, useState } from 'react';
 const badgeClass = 'ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100';
 
 function getPath(href?: string) {
-    if (!href) return '/';
-    try {
-        return new URL(href, window.location.origin).pathname.replace(/\/+$/, '') || '/';
-    } catch {
-        return href.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
-    }
+    return new URL(href ?? '/', 'https://navigation.local').pathname.replace(/\/+$/, '') || '/';
+}
+
+export function isNavigationItemActive(item: NavItem, currentUrl: string, siblings: NavItem[] = []): boolean {
+    if (item.isActive !== undefined) return item.isActive;
+    const path = getPath(typeof item.href === 'string' ? item.href : item.href?.url);
+    const current = getPath(currentUrl);
+    if (path === current) return true;
+    if (path === '/' || !current.startsWith(`${path}/`)) return false;
+    return !siblings.some((sibling) => {
+        const siblingPath = getPath(typeof sibling.href === 'string' ? sibling.href : sibling.href?.url);
+        return siblingPath !== path && siblingPath.startsWith(`${path}/`) && (current === siblingPath || current.startsWith(`${siblingPath}/`));
+    });
 }
 
 function SimpleNavItem({ item, active, iconOnly }: { item: NavItem; active: boolean; iconOnly?: boolean }) {
@@ -31,6 +38,7 @@ function SimpleNavItem({ item, active, iconOnly }: { item: NavItem; active: bool
                 <Link
                     href={`${typeof item.href === 'string' ? item.href : (item.href?.url ?? '/')}`}
                     prefetch
+                    aria-current={(item.isActive ?? active) ? 'page' : undefined}
                     target={item.target}
                     className={`flex w-full items-center ${iconOnly ? 'justify-center' : ''}`}
                 >
@@ -47,7 +55,7 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        setOpen(!!item.children?.some((sub) => getPath(typeof sub.href === 'string' ? sub.href : sub.href?.url) === getPath(currentUrl)));
+        setOpen(!!item.children?.some((sub) => isNavigationItemActive(sub, currentUrl, item.children)));
     }, [currentUrl, item.children]);
 
     return (
@@ -66,11 +74,7 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
                         <span className="absolute top-0 bottom-0 left-4 w-px bg-gray-200 dark:bg-gray-700" aria-hidden="true" />
                         <div className="pl-7">
                             {(item.children ?? []).map((sub) => (
-                                <SimpleNavItem
-                                    key={sub.title}
-                                    item={sub}
-                                    active={getPath(typeof sub.href === 'string' ? sub.href : sub.href?.url) === getPath(currentUrl)}
-                                />
+                                <SimpleNavItem key={sub.title} item={sub} active={isNavigationItemActive(sub, currentUrl, item.children)} />
                             ))}
                         </div>
                     </SidebarMenu>
@@ -90,12 +94,7 @@ export function NavSection({ group }: { group: NavGroup }) {
             <SidebarGroup className="px-2 py-0">
                 <SidebarMenu>
                     {flat.map((item: NavItem) => (
-                        <SimpleNavItem
-                            key={item.title}
-                            item={item}
-                            active={getPath(typeof item.href === 'string' ? item.href : item.href?.url) === getPath(page.url)}
-                            iconOnly
-                        />
+                        <SimpleNavItem key={item.title} item={item} active={isNavigationItemActive(item, page.url, group.items)} iconOnly />
                     ))}
                 </SidebarMenu>
             </SidebarGroup>
@@ -110,11 +109,7 @@ export function NavSection({ group }: { group: NavGroup }) {
                     item.children?.length ? (
                         <CollapsibleNavItem key={item.title} item={item} currentUrl={page.url} />
                     ) : (
-                        <SimpleNavItem
-                            key={item.title}
-                            item={item}
-                            active={getPath(typeof item.href === 'string' ? item.href : item.href?.url) === getPath(page.url)}
-                        />
+                        <SimpleNavItem key={item.title} item={item} active={isNavigationItemActive(item, page.url, group.items)} />
                     ),
                 )}
             </SidebarMenu>

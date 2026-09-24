@@ -2,14 +2,17 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\DatasetSource;
 use App\Models\MunicipalImport;
 use App\Models\ParkingMunicipal;
 use App\Models\User;
+use App\Notifications\MunicipalImport\ReadyForReview;
 use App\Support\MunicipalSnapshot;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -59,11 +62,15 @@ class MunicipalImportService
                 throw ValidationException::withMessages(['dataset' => 'De datasetconfiguratie is gewijzigd. Lees het bestand opnieuw in.']);
             }
 
-            return MunicipalImport::create([
+            $import = MunicipalImport::create([
                 'dataset_source_id' => $source->id, 'delivery_id' => $data['delivery_id'],
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
                 'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor?->id,
             ])->refresh();
+
+            Notification::send(User::role(UserRole::ADMIN)->get(), (new ReadyForReview($import->id, $source->name))->afterCommit());
+
+            return $import;
         });
     }
 
@@ -95,7 +102,12 @@ class MunicipalImportService
             if ($space) {
                 foreach (array_unique([...array_keys($record['source']), ...array_keys($space->source_record ?? [])]) as $field) {
                     $value = $record['source'][$field] ?? null;
-                    if (MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($space->source_record[$field] ?? null)) {
+                    $previous = $space->source_record[$field] ?? null;
+                    if ($field === 'source_attributes') {
+                        $value = $this->comparableSourceAttributes($value ?? []);
+                        $previous = $this->comparableSourceAttributes($previous ?? []);
+                    }
+                    if (MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($previous)) {
                         $fields[] = $field;
                     }
                 }
@@ -125,7 +137,7 @@ class MunicipalImportService
         }
         foreach ($existing as $space) {
             $counts['missing']++;
-            $rows[] = ['external_id' => $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'current' => $space->only(['id', 'visibility'])];
+            $rows[] = ['external_id' => $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'point' => ['latitude' => $space->latitude, 'longitude' => $space->longitude], 'current' => $space->only(['id', 'visibility'])];
         }
         $rows = collect($rows)->sortByDesc(fn ($row) => $row['geometry_review_required'] ?? false)->values()->all();
         $derivations = count(array_filter($rows, fn ($row) => $row['geometry_review_required'] ?? false));
@@ -211,6 +223,21 @@ class MunicipalImportService
             ->whereIn('external_id', array_column(array_column($import->records, 'source'), 'external_id'))
             ->toBase()->update(['last_checked_at' => now(), 'published_import_id' => $import->id]);
         $import->before_values = $before;
+    }
+
+    /** @param array<string, mixed> $attributes
+     * @return array<string, mixed>
+     */
+    private function comparableSourceAttributes(array $attributes): array
+    {
+        $attributes = Arr::except($attributes, ['version_date']);
+        if (isset($attributes['regimes'])) {
+            $attributes['regimes'] = collect($attributes['regimes'])
+                ->sortBy(fn (array $regime) => MunicipalSnapshot::fingerprint($regime))
+                ->values()->all();
+        }
+
+        return $attributes;
     }
 
     private function value(ParkingMunicipal $space, string $field): mixed

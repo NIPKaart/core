@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { Button } from '@/components/ui/button';
@@ -52,10 +53,10 @@ export default function Index({ roles }: PageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('head.title')} />
-            <div className="px-4 py-6 sm:px-6">
+            <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold">{t('head.title')}</h1>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <Heading level={1} title={t('head.title')} description={t('head.description')} />
                         {can('role.create') && (
                             <Button variant="outline" asChild>
                                 <Link href={app.roles.create()}>
@@ -65,9 +66,8 @@ export default function Index({ roles }: PageProps) {
                             </Button>
                         )}
                     </div>
-                    <p className="text-muted-foreground">{t('head.description')}</p>
 
-                    <DataTable columns={columns} data={roles.data} />
+                    <DataTable initialState={{ columnVisibility: { guard_name: false, created_at: false } }} columns={columns} data={roles.data} />
                     <DataTablePagination pagination={roles} />
                 </div>
             </div>

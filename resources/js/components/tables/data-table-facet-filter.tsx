@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { CheckIcon, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Option = {
     label: string;
@@ -22,6 +23,7 @@ interface DataTableFacetFilterProps {
 }
 
 export function DataTableFacetFilter({ title, selected, options, onChange, onClear }: DataTableFacetFilterProps) {
+    const { t } = useTranslation('backend/global');
     const [open, setOpen] = useState(false);
 
     const toggle = (value: string) => {
@@ -38,10 +40,10 @@ export function DataTableFacetFilter({ title, selected, options, onChange, onCle
                     {selected.length > 0 && (
                         <>
                             <Separator orientation="vertical" className="mx-2 h-4" />
-                            <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <div className="flex flex-wrap items-center gap-1">
                                 {selected.length > 2 ? (
                                     <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                                        {selected.length} selected
+                                        {t('table.selected', { count: selected.length })}
                                     </Badge>
                                 ) : (
                                     selected.map((val) => {
@@ -60,9 +62,9 @@ export function DataTableFacetFilter({ title, selected, options, onChange, onCle
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
                 <Command>
-                    <CommandInput placeholder={`Filter ${title.toLowerCase()}...`} />
+                    <CommandInput placeholder={t('table.filter', { title: title.toLowerCase() })} />
                     <CommandList>
-                        <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandEmpty>{t('table.no_results')}</CommandEmpty>
                         <CommandGroup>
                             {options.map((option) => {
                                 const isSelected = selected.includes(option.value);
@@ -87,7 +89,7 @@ export function DataTableFacetFilter({ title, selected, options, onChange, onCle
                                 <CommandSeparator />
                                 <CommandGroup>
                                     <CommandItem onSelect={onClear} className="cursor-pointer justify-center text-center">
-                                        Clear filters
+                                        {t('table.clear_filters')}
                                     </CommandItem>
                                 </CommandGroup>
                             </>

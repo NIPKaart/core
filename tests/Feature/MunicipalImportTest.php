@@ -610,3 +610,62 @@ it('marks superseded pending deliveries as history without changing their stored
     $this->get(route('app.municipal-imports.show', $published))->assertInertia(fn (Assert $page) => $page->where('import.superseded', false));
     expect($older->fresh()->state)->toBe('pending');
 });
+
+it('keeps version-only updates out of changes while preserving dates and missing records', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][] = array_replace($data['records'][0], ['external_id' => 'missing']);
+    $data['source_count'] = 2;
+    approveMunicipal(stageMunicipal($data, $user), $user);
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    array_pop($data['records']);
+    $data['source_count'] = 1;
+    $data['records'][0]['source_attributes']['version_date'] = '2026-09-24';
+    $import = stageMunicipal($data, $user);
+
+    $this->actingAs($user)->get(route('app.municipal-imports.show', $import))->assertInertia(fn (Assert $page) => $page
+        ->where('review.counts.changed', 0)->where('review.counts.unchanged', 1)->where('review.counts.missing', 1)
+        ->has('review.rows', 1)->where('review.rows.0.external_id', 'missing')
+        ->where('review.rows.0.point.latitude', (float) ParkingMunicipal::where('external_id', 'missing')->sole()->latitude)
+        ->where('review.rows.0.point.longitude', (float) ParkingMunicipal::where('external_id', 'missing')->sole()->longitude));
+
+    approveMunicipal($import, $user);
+    expect(ParkingMunicipal::where('external_id', '000123')->sole()->source_record['source_attributes']['version_date'])->toBe('2026-09-24');
+    expect(ParkingMunicipal::where('external_id', 'missing')->sole()->visibility)->toBeTrue();
+});
+
+it('still detects changed parking rules alongside a new version date', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    approveMunicipal(stageMunicipal($data, $user), $user);
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $data['records'][0]['source_attributes']['version_date'] = '2026-09-24';
+    $data['records'][0]['source_attributes']['regimes'][0]['beginTijd'] = '10:00:00';
+
+    $review = app(MunicipalImportService::class)->review(stageMunicipal($data, $user));
+
+    expect($review['counts']['changed'])->toBe(1);
+    expect($review['rows'][0]['fields'])->toContain('source_attributes');
+});
+
+it('ignores reordered parking rules but still detects changed rules', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['source_attributes']['regimes'][] = array_replace($data['records'][0]['source_attributes']['regimes'][0], ['beginTijd' => '14:00:00']);
+    approveMunicipal(stageMunicipal($data, $user), $user);
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $data['records'][0]['source_attributes']['regimes'] = array_reverse($data['records'][0]['source_attributes']['regimes']);
+    $service = app(MunicipalImportService::class);
+
+    expect($service->review(stageMunicipal($data, $user))['counts']['unchanged'])->toBe(1);
+
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['records'][0]['source_attributes']['regimes'][0]['beginTijd'] = '15:00:00';
+    expect($service->review(stageMunicipal($data, $user))['counts']['changed'])->toBe(1);
+});
