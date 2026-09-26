@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import type { Hit } from '@/types/search';
 import { Link } from '@inertiajs/react';
 import { Root as VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { ArrowRight, Search as SearchIcon, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Search as SearchIcon, X } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { JSX } from 'react/jsx-runtime';
@@ -52,13 +52,6 @@ export default function SearchOverlay(): JSX.Element {
     }, [open, q, hits.length, isFetching, addRecent]);
 
     // ——— Sections ———
-    const Tip = !isMobile ? (
-        <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-1 rounded-full bg-accent/50 px-2 py-1 text-[11px] font-medium text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5" /> {t('tip')}
-            </div>
-        </div>
-    ) : null;
 
     const SearchInput = (
         <div className="relative flex h-12 items-center rounded-xl border bg-background px-3 sm:px-4">
@@ -148,7 +141,6 @@ export default function SearchOverlay(): JSX.Element {
     const Body = (
         <div className="p-3 sm:p-4">
             <div className="flex flex-col gap-2 sm:gap-3">
-                {Tip}
                 {SearchInput}
                 {RecentChips}
                 {Results}
