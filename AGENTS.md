@@ -9,6 +9,7 @@
 - PostgreSQL with PostGIS is the database baseline. PostGIS owns exact spatial queries; PostgreSQL provides parking-record text search; destination resolution belongs to a separate geocoding provider. Read `docs/development/postgresql.md` before changing storage, coordinates or search responsibilities.
 - Prefer Laravel policies for resource authorization and Spatie Permission for roles and permissions. Read `docs/development/auth-security.md` before changing access control.
 - Keep basic parking discovery available without an account. Read `docs/product/accessibility.md` before changing the public discovery flow.
+- Prefer existing shadcn/ui components and primitives in `resources/js/components/ui` for interactive UI before creating custom equivalents. Compose product-specific behavior from those primitives; only build a new primitive when the existing shadcn set cannot express the required interaction or accessibility.
 - Preserve repository-specific guidance in `.ai/guidelines/`; regenerate the Boost sections with `php artisan boost:update --no-interaction --no-discover`. Read `docs/development/boost.md` before changing agent tooling.
 - Run GitHub `gh` commands outside the sandbox. Keep Markdown paragraphs on logical lines; no forced 88-character wrapping.
 
