@@ -24,6 +24,12 @@ Route::prefix('map/parking')->as('map.parking.')->middleware('throttle:parking-d
     Route::get('viewport', [Frontend\ParkingDiscoveryController::class, 'viewport'])->name('viewport');
 });
 
+// Map records are loaded once per area and clustered in the browser, so responses are browser-cacheable.
+Route::prefix('map/parking')->as('map.parking.')->middleware(['throttle:parking-discovery', 'cache.headers:public;max_age=60;etag'])->group(function () {
+    Route::get('areas', [Frontend\ParkingDiscoveryController::class, 'areas'])->name('areas');
+    Route::get('area/{x}/{y}', [Frontend\ParkingDiscoveryController::class, 'area'])->whereNumber(['x', 'y'])->name('area');
+});
+
 // Destination lookups share a separate budget because they can call external geocoders.
 Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,destinations')->group(function () {
     Route::get('suggestions', [Frontend\DestinationSearchController::class, 'suggestions'])->name('suggestions');

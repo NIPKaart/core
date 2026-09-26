@@ -33,7 +33,8 @@ export function HashSync() {
         const onMove = () => {
             const center = map.getCenter();
             const zoom = map.getZoom();
-            window.location.hash = `#${zoom}/${center.lat.toFixed(5)}/${center.lng.toFixed(5)}`;
+            // replaceState keeps panning out of the browser history and avoids a hashchange round-trip
+            window.history.replaceState(window.history.state, '', `#${Number(zoom.toFixed(2))}/${center.lat.toFixed(5)}/${center.lng.toFixed(5)}`);
         };
         map.on('moveend', onMove);
         return () => {

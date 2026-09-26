@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Services\ParkingDiscovery;
 use App\Support\GeoBounds;
 use App\Support\GeoPoint;
+use App\Support\MapTile;
+use App\Support\ParkingResult;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use InvalidArgumentException;
 
 final class ParkingDiscoveryController extends Controller
 {
@@ -63,5 +67,46 @@ final class ParkingDiscoveryController extends Controller
             'has_more' => $results->count() > $limit,
             'page' => $page,
         ]);
+    }
+
+    /**
+     * Which areas contain public parking, as [x, y, count] at the area zoom.
+     */
+    public function areas(ParkingDiscovery $discovery): JsonResponse
+    {
+        return $this->cached('areas', fn (): array => ['zoom' => ParkingDiscovery::AREA_ZOOM, 'areas' => $discovery->areaIndex()]);
+    }
+
+    /**
+     * Every public record of one area in a compact form, for clustering in the browser.
+     */
+    public function area(int $x, int $y, ParkingDiscovery $discovery): JsonResponse
+    {
+        $area = $this->tile(ParkingDiscovery::AREA_ZOOM, $x, $y);
+
+        return $this->cached("area:{$area->key()}", function () use ($discovery, $area): array {
+            $result = $discovery->area($area);
+
+            return [...$result, 'points' => array_map(fn (ParkingResult $point): array => $point->toCompactArray(), $result['points'])];
+        });
+    }
+
+    private function tile(int $zoom, int $x, int $y): MapTile
+    {
+        try {
+            return new MapTile($zoom, $x, $y);
+        } catch (InvalidArgumentException) {
+            abort(404);
+        }
+    }
+
+    /**
+     * Publication changes (moderation, imports) may take up to the stale window to appear on the map.
+     *
+     * @param  callable(): array<string, mixed>  $payload
+     */
+    private function cached(string $key, callable $payload): JsonResponse
+    {
+        return response()->json(Cache::flexible("parking-discovery:{$key}", [30, 120], $payload));
     }
 }

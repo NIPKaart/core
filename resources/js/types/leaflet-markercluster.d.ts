@@ -7,6 +7,7 @@ declare module 'leaflet' {
         maxClusterRadius?: number;
         removeOutsideVisibleBounds?: boolean;
         animateAddingMarkers?: boolean;
+        chunkedLoading?: boolean;
     }
 
     class MarkerClusterGroup extends FeatureGroup {
