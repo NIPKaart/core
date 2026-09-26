@@ -1,10 +1,12 @@
+import DestinationSearch from '@/components/map/destination-search';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
 import { ParkingMunicipal, ParkingOffstreet, ParkingSpace } from '@/types';
+import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
@@ -13,10 +15,18 @@ import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/moda
 import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
 import MapLayout from '@/layouts/map-layout';
 import { getGarageOccupancyStatus, getGarageStatusIcon, getInvalidParkingIcon } from '@/lib/icon-factory';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
+
+function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
+    const map = useMap();
+    useEffect(() => {
+        if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
+    }, [destination, map]);
+    return destination ? <Marker position={[destination.latitude, destination.longitude]} /> : null;
+}
 
 type PageProps = {
     selectOptions: {
@@ -67,6 +77,15 @@ export default function Map() {
     const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<MarkerType>('community');
+    const [destination, setDestination] = useState<DestinationResult | null>(null);
+    const [nearbyResults, setNearbyResults] = useState<ParkingResult[]>([]);
+
+    async function selectDestination(next: DestinationResult) {
+        setDestination(next);
+        const params = new URLSearchParams({ latitude: String(next.latitude), longitude: String(next.longitude), radius: '1000', limit: '100' });
+        const response = await fetch(`/api/parking/nearby?${params}`, { headers: { Accept: 'application/json' } });
+        if (response.ok) setNearbyResults((await response.json()).results ?? []);
+    }
 
     // Create markers list for parking spaces
     const parkingMarkersList: MapMarker[] = useMemo(
@@ -139,6 +158,7 @@ export default function Map() {
             <div className="flex-1">
                 <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <HashSync />
+                    <DestinationFocus destination={destination} />
                     <LayersControl position="topright">
                         <BaseLayer checked name={tGlobal('layers.mapbox')}>
                             <TileLayer
@@ -181,8 +201,11 @@ export default function Map() {
                     <LegendControl />
                     <LocateControl />
                     <ZoomControl />
+                    <DestinationSearch onSelect={selectDestination} />
                 </MapContainer>
             </div>
+
+            {destination && <div className="sr-only" aria-live="polite">{nearbyResults.length} parking options found near {destination.label}</div>}
 
             {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                 <ParkingSpaceModal
