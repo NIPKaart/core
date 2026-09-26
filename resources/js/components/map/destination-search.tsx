@@ -23,28 +23,31 @@ export default function DestinationSearch({ onSelect }: Props) {
             return;
         }
 
-        const delay = window.setTimeout(async () => {
-            controller.current?.abort();
-            controller.current = new AbortController();
-            setLoading(true);
-            try {
-                const response = await fetch(`/api/destinations/suggestions?q=${encodeURIComponent(value)}`, {
-                    signal: controller.current.signal,
-                    headers: { Accept: 'application/json' },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setResults(data.results ?? []);
-                    setOpen(true);
+        const delay = window.setTimeout(
+            async () => {
+                controller.current?.abort();
+                controller.current = new AbortController();
+                setLoading(true);
+                try {
+                    const response = await fetch(`/api/destinations/suggestions?q=${encodeURIComponent(value)}`, {
+                        signal: controller.current.signal,
+                        headers: { Accept: 'application/json' },
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setResults(data.results ?? []);
+                        setOpen(true);
+                    }
+                } catch (error) {
+                    if (!(error instanceof DOMException && error.name === 'AbortError')) {
+                        setResults([]);
+                    }
+                } finally {
+                    setLoading(false);
                 }
-            } catch (error) {
-                if (!(error instanceof DOMException && error.name === 'AbortError')) {
-                    setResults([]);
-                }
-            } finally {
-                setLoading(false);
-            }
-        }, value.length >= 3 ? 450 : 0);
+            },
+            value.length >= 3 ? 450 : 0,
+        );
 
         return () => window.clearTimeout(delay);
     }, [query]);
@@ -96,11 +99,7 @@ export default function DestinationSearch({ onSelect }: Props) {
                         </Button>
                     </div>
                 </PopoverTrigger>
-                <PopoverContent
-                    className="w-[--radix-popover-trigger-width] p-0"
-                    align="start"
-                    onOpenAutoFocus={(event) => event.preventDefault()}
-                >
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(event) => event.preventDefault()}>
                     <Command shouldFilter={false}>
                         <CommandList>
                             <CommandEmpty>{loading ? 'Searching destinations…' : 'No destinations found.'}</CommandEmpty>
@@ -109,9 +108,7 @@ export default function DestinationSearch({ onSelect }: Props) {
                                     <CommandItem key={result.key} value={result.key} onSelect={() => select(result)}>
                                         <span className="min-w-0">
                                             <span className="block font-medium">{result.label}</span>
-                                            {result.sub && (
-                                                <span className="block truncate text-sm text-muted-foreground">{result.sub}</span>
-                                            )}
+                                            {result.sub && <span className="block truncate text-sm text-muted-foreground">{result.sub}</span>}
                                         </span>
                                     </CommandItem>
                                 ))}
