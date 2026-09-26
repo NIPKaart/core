@@ -186,7 +186,6 @@ export default function Map() {
                         {parkingMarkers}
                     </MarkerClusterGroup>
 
-
                     <LegendControl />
                     <LocateControl />
                     <ZoomControl />
