@@ -16,7 +16,7 @@ Audit date: 2026-09-07. NIPKaart is not yet in production. Laravel 13/PHP 8.4 co
 
 ## Parking search audit and replacement (#1195)
 
-`GET /api/search` is parking-record search, used by `searchApi` / `useSearchQuery` and the shared search overlay in public and authenticated layouts. It returns parking labels, source identity, links and coordinates. No current consumer resolves an arbitrary destination/address to coordinates, uses Meilisearch geo filtering, requests facets or supplies a custom ranking configuration. Destination resolution remains #1169: select a geocoding provider there, then pass coordinates to `ParkingDiscovery` for exact PostGIS radius/viewport queries. Parking records are not an address gazetteer.
+`GET /search/results` is parking-record search, used by `searchApi` / `useSearchQuery` and the shared search overlay in public and authenticated layouts. It returns parking labels, source identity, links and coordinates. No current consumer resolves an arbitrary destination/address to coordinates, uses Meilisearch geo filtering, requests facets or supplies a custom ranking configuration. Destination resolution remains #1169: select a geocoding provider there, then pass coordinates to `ParkingDiscovery` for exact PostGIS radius/viewport queries. Parking records are not an address gazetteer.
 
 | Previous consumer or behavior | Replacement |
 | --- | --- |
@@ -70,7 +70,7 @@ Use `backup:run-encrypted`: it refuses a missing password and runs Spatie with `
 1. Download the archive to a restricted temporary directory and decrypt it with an AES-compatible ZIP tool. Keep the password out of shell history/logs.
 2. Create an empty isolated PostgreSQL database with PostGIS available. Restore SQL using `psql -v ON_ERROR_STOP=1`; never overwrite a live database for a drill.
 3. Verify migrations, representative parking/users/permissions/notifications, spatial queries and constraints. Supply the original application key through secret management and check encrypted fields/authentication.
-4. Start a separate application instance against the restored database, ensure `pg_trgm` is installed and verify `/api/search`. No search-index rebuild is required.
+4. Start a separate application instance against the restored database, ensure `pg_trgm` is installed and verify `/search/results`. No search-index rebuild is required.
 5. Record archive identity, timestamps, sizes, results and recovery duration. Plan any cutover separately and remove temporary decrypted files afterwards.
 
 ## Local verification

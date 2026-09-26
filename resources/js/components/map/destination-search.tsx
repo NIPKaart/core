@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { resolve, suggestions } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
 import { Search } from 'lucide-react';
 import { FormEvent, useEffect, useRef, useState } from 'react';
@@ -29,7 +30,7 @@ export default function DestinationSearch({ onSelect }: Props) {
                 controller.current = new AbortController();
                 setLoading(true);
                 try {
-                    const response = await fetch(`/api/destinations/suggestions?q=${encodeURIComponent(value)}`, {
+                    const response = await fetch(suggestions.url({ query: { q: value } }), {
                         signal: controller.current.signal,
                         headers: { Accept: 'application/json' },
                     });
@@ -69,7 +70,7 @@ export default function DestinationSearch({ onSelect }: Props) {
 
         setLoading(true);
         try {
-            const response = await fetch(`/api/destinations/resolve?q=${encodeURIComponent(value)}`, {
+            const response = await fetch(resolve.url({ query: { q: value } }), {
                 headers: { Accept: 'application/json' },
             });
             if (response.ok) {

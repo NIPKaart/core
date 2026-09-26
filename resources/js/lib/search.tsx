@@ -1,3 +1,4 @@
+import { results } from '@/routes/search';
 import type { Hit } from '@/types/search';
 import { Building2, LucideIcon, MapPin, SquareParking } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -22,11 +23,10 @@ export const ICON_MAP_DEFAULT: Record<Hit['type'] | 'other', LucideIcon> = {
 };
 
 /**
- * Search published parking records through the PostgreSQL-backed API.
+ * Search published parking records through the PostgreSQL-backed search endpoint.
  */
 export async function searchApi(q: string, signal?: AbortSignal, limit = 10): Promise<SearchResponse> {
-    const qs = new URLSearchParams({ q, limit: String(limit) });
-    const res = await fetch(`/api/search?${qs.toString()}`, {
+    const res = await fetch(results.url({ query: { q, limit } }), {
         headers: { Accept: 'application/json' },
         signal,
     });

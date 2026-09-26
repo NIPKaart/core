@@ -5,6 +5,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { show as parkingDetails } from '@/routes/map/parking-offstreet';
 import { Navigation, ParkingSquare, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,7 +39,7 @@ export default function ParkingOffstreetModal({ spaceId, open, onClose, latitude
         if (open && spaceId) {
             setLoading(true);
             setError(null);
-            fetch(`/api/parking-offstreet/${spaceId}`)
+            fetch(parkingDetails.url(spaceId), { headers: { Accept: 'application/json' } })
                 .then((res) => {
                     if (!res.ok) throw new Error('Not found');
                     return res.json();
