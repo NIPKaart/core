@@ -16,11 +16,15 @@ Audit date: 2026-09-07. NIPKaart is not yet in production. Laravel 13/PHP 8.4 co
 
 ## Parking search audit and replacement (#1195)
 
-`GET /search/results` is parking-record search, used by `searchApi` / `useSearchQuery` and the shared search overlay in public and authenticated layouts. It returns parking labels, source identity, links and coordinates. No current consumer resolves an arbitrary destination/address to coordinates, uses Meilisearch geo filtering, requests facets or supplies a custom ranking configuration. Destination resolution remains #1169: select a geocoding provider there, then pass coordinates to `ParkingDiscovery` for exact PostGIS radius/viewport queries. Parking records are not an address gazetteer.
+The active global search is destination-first: `SearchButton` in the frontend navigation and application sidebar opens `SearchOverlay`, mounted in the frontend, application and map layouts. The overlay and the map's `DestinationSearch` call `/destinations/suggestions` and `/destinations/resolve`; selecting a result focuses the map. `DestinationSearch` combines internal published parking matches with configured geocoding providers. `InternalDestinationSearch` still uses `ParkingTextSearch` for those internal matches, so its PostgreSQL matching behavior and tests remain required.
+
+The #1274 consumer audit found that `/search/results` was only called by `resources/js/hooks/use-search-query.tsx` through `resources/js/lib/search.tsx`, solely for the old `backend/search/index.tsx` page. The only incoming link to `/search` was in `SearchBar`, which had no imports or mounted consumers. That obsolete page, route, controller, hook, client helpers, types and page translations have been removed. There is no separate active parking-record search UI to preserve. Matching, visibility, ranking and injection tests now exercise `ParkingTextSearch` directly; HTTP input validation remains covered through destination suggestions.
+
+First-party JSON reads stay on feature-oriented web routes. Viewport and nearby queries share the named `parking-discovery` limiter: 300 requests/minute per authenticated user or guest IP. Destination suggestions and resolution have a separate 60/minute budget because they may call external providers. Exhausting either workload does not consume the other's allowance. Parking details remain session-aware web reads. `/api` is reserved for a future explicitly designed `/api/v1` contract.
 
 | Previous consumer or behavior | Replacement |
 | --- | --- |
-| SearchController multi-index request | `ParkingTextSearch` queries the actual source tables with a SQL union and live municipality/province joins; no copied search tables/documents. |
+| Former SearchController multi-index request | `ParkingTextSearch` queries the actual source tables with a SQL union and live municipality/province joins; no copied search tables/documents. |
 | Community street/city/postcode/suburb/neighbourhood/amenity/description | Case-insensitive token matching against those same columns. |
 | Municipal street/municipality/province; offstreet name/URL/municipality/province | Same fields queried directly, including current related names. |
 | Prefix completion and automatic typo tolerance | Literal case-insensitive partial matching; alphabetic tokens of at least five characters also accept `pg_trgm` word similarity of at least 0.6. Every free-text token must match. This is a defined PostgreSQL replacement, not a promise of identical engine ranking. |
@@ -33,7 +37,7 @@ Audit date: 2026-09-07. NIPKaart is not yet in production. Laravel 13/PHP 8.4 co
 | SCOUT/MEILISEARCH configuration and test/CI overrides | Removed, including `config/scout.php` and `.env.example` settings. Old local/deployment environment values can be discarded. |
 | DDEV service and addon manifest | Removed. Existing installations can reconcile containers on their next normal DDEV restart; this code change does not delete existing service volumes. |
 | `search:configure`, import/flush/rebuild and infrastructure probes | Removed; database restore is sufficient. Infrastructure verification retains the encrypted PostgreSQL/PostGIS backup/restore drill. |
-| Search, domain and infrastructure tests | Real PostgreSQL endpoint coverage replaces client/engine mocks; model JSON and visibility contracts remain covered. |
+| Search, domain and infrastructure tests | Real PostgreSQL service and destination endpoint coverage replaces client/engine mocks; model JSON and visibility contracts remain covered. |
 
 `pg_trgm` is justified by the existing autocomplete's typo-tolerant matching, using PostgreSQL's [word similarity function](https://www.postgresql.org/docs/current/pgtrgm.html). The migration enables it in `public`; a restricted deployment role needs an administrator to enable it beforehand. Rollback retains the shared extension, like PostGIS. No speculative full-text/trigram indexes or synchronized search projections are added: the current query joins related names and uses an explicit similarity threshold. This baseline can scan published rows and sort matches; benchmark representative production-sized data before choosing an indexable query/index strategy. Existing spatial GiST indexes continue serving exact discovery.
 
@@ -70,7 +74,7 @@ Use `backup:run-encrypted`: it refuses a missing password and runs Spatie with `
 1. Download the archive to a restricted temporary directory and decrypt it with an AES-compatible ZIP tool. Keep the password out of shell history/logs.
 2. Create an empty isolated PostgreSQL database with PostGIS available. Restore SQL using `psql -v ON_ERROR_STOP=1`; never overwrite a live database for a drill.
 3. Verify migrations, representative parking/users/permissions/notifications, spatial queries and constraints. Supply the original application key through secret management and check encrypted fields/authentication.
-4. Start a separate application instance against the restored database, ensure `pg_trgm` is installed and verify `/search/results`. No search-index rebuild is required.
+4. Start a separate application instance against the restored database, ensure `pg_trgm` is installed and verify `/destinations/suggestions` with a known published parking query. No search-index rebuild is required.
 5. Record archive identity, timestamps, sizes, results and recovery duration. Plan any cutover separately and remove temporary decrypted files afterwards.
 
 ## Local verification

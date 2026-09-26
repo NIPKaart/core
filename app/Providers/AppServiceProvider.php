@@ -8,8 +8,11 @@ use App\Models\ParkingSpace;
 use App\Observers\ParkingSpaceObserver;
 use App\Services\GeoapifyDestinationGeocoder;
 use App\Services\MunicipalDeliveryStorage;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -31,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('parking-discovery', fn (Request $request): Limit => Limit::perMinute(300)
+            ->by($request->user() ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip()));
+
         Model::automaticallyEagerLoadRelationships();
 
         Model::shouldBeStrict(! $this->app->isProduction());

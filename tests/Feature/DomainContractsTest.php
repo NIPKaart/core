@@ -287,7 +287,7 @@ test('bulk visibility changes immediately remove public search results', functio
     $operator->givePermissionTo($permission);
     $this->actingAs($operator)->post(route($route), ['ids' => [$space->id], 'visibility' => false])->assertRedirect();
     expect($space->fresh()->visibility)->toBeFalse();
-    $this->getJson('/search/results?q='.urlencode($space->street ?? $space->name))->assertJsonPath('hits', []);
+    $this->getJson(route('destinations.suggestions', ['q' => $space->street ?? $space->name]))->assertJsonPath('results', []);
 })->with([
     'municipal' => [ParkingMunicipal::class, 'app.parking-municipal.toggle-visibility', 'parking-municipal.update'],
     'offstreet' => [ParkingOffstreet::class, 'app.parking-offstreet.toggle-visibility', 'parking-offstreet.update'],

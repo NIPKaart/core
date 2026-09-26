@@ -70,7 +70,7 @@ createdb --maintenance-db="$ADMIN_PG_URL" nipkaart_restore
 pg_restore --exit-on-error --no-owner --no-acl --dbname="$RESTORE_PG_URL" nipkaart.dump
 ```
 
-Parking-record search now reads PostgreSQL directly under #1195. Enable `pg_trgm` using the additive migration and verify `/search/results` after restore. See the [search audit and operational procedure](infrastructure.md). No external search service, synchronization or rebuild is required.
+Parking-record search now reads PostgreSQL directly under #1195. Enable `pg_trgm` using the additive migration and verify `/destinations/suggestions` with a known published parking query after restore. See the [search audit and operational procedure](infrastructure.md). No external search service, synchronization or rebuild is required.
 
 ## Validation and deployment boundary
 

@@ -39,7 +39,7 @@ test('map details remain public and use the signed in session for favorites', fu
     'offstreet' => [ParkingOffstreet::class, ['visibility' => true], 'map.parking-offstreet.show', '/api/parking-offstreet/'],
 ]);
 
-test('local parking reads are not blocked after the former request limits', function (string $path, int $status) {
+test('normal interactive parking reads exceed the former limits without throttling', function (string $path, int $status) {
     Cache::flush();
     $this->freezeTime();
 
@@ -50,7 +50,6 @@ test('local parking reads are not blocked after the former request limits', func
     'community details' => ['/map/parking-spaces/00000000-0000-4000-8000-000000000000', 404],
     'municipal details' => ['/map/parking-municipal/00000000-0000-4000-8000-000000000000', 404],
     'offstreet details' => ['/map/parking-offstreet/00000000-0000-4000-8000-000000000000', 404],
-    'search' => ['/search/results?q=', 200],
     'nearby' => ['/map/parking/nearby?latitude=52&longitude=5', 200],
     'viewport' => ['/map/parking/viewport?west=4&south=52&east=5&north=53', 200],
 ]);
@@ -69,7 +68,6 @@ test('destination lookups share a separate budget without blocking local parking
     $this->getJson(route('destinations.resolve', ['q' => 'zz']))->assertStatus(429);
 
     $this->getJson(route('map.parking-spaces.show', $space->id))->assertOk();
-    $this->getJson(route('search.results', ['q' => '']))->assertOk();
     $this->getJson(route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]))->assertOk();
     $this->getJson(route('map.parking.viewport', ['west' => 4, 'south' => 52, 'east' => 5, 'north' => 53]))->assertOk();
 
@@ -97,3 +95,42 @@ test('missing map details return JSON to browser fetch consumers', function (str
     $this->getJson(route($route, '00000000-0000-4000-8000-000000000000'))
         ->assertNotFound()->assertHeader('Content-Type', 'application/json')->assertJsonStructure(['message']);
 })->with(['map.parking-spaces.show', 'map.parking-municipal.show', 'map.parking-offstreet.show']);
+
+test('obsolete parking search pages and endpoints are no longer exposed', function (string $path) {
+    $this->actingAs(User::factory()->create())->getJson($path)->assertNotFound();
+})->with(['/search?q=Museum', '/search/results?q=Museum']);
+
+test('guest discovery has a shared 300 request budget independent of destinations and other IPs', function () {
+    Cache::flush();
+    $this->freezeTime();
+    $viewport = route('map.parking.viewport', ['west' => 4, 'south' => 52, 'east' => 5, 'north' => 53]);
+    $nearby = route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]);
+
+    for ($request = 0; $request < 150; $request++) {
+        $this->getJson($viewport)->assertOk();
+        $this->getJson($nearby)->assertOk();
+    }
+
+    $this->getJson($viewport)->assertStatus(429)->assertHeader('Retry-After', '60');
+    $this->getJson($nearby)->assertStatus(429)->assertHeader('Content-Type', 'application/json');
+    $this->getJson(route('destinations.suggestions', ['q' => 'zz']))->assertOk();
+    $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($viewport)->assertOk();
+    $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1']);
+
+    $this->travel(61)->seconds();
+    $this->getJson($viewport)->assertOk();
+});
+
+test('signed in discovery budgets follow the account rather than its IP', function () {
+    Cache::flush();
+    $this->freezeTime();
+    $this->actingAs(User::factory()->create());
+    $nearby = route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]);
+
+    for ($request = 0; $request < 300; $request++) {
+        $this->getJson($nearby)->assertOk();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($nearby)->assertStatus(429);
+    $this->actingAs(User::factory()->create())->getJson($nearby)->assertOk();
+});

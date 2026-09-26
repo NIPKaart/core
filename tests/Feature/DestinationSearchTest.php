@@ -110,3 +110,11 @@ test('explicit resolution falls back to geoapify when public nominatim budget is
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'api.geoapify.com'));
 });
+
+test('invalid or excessive queries return validation errors', function (array $query, string $field) {
+    $this->getJson('/destinations/suggestions?'.http_build_query($query))->assertUnprocessable()->assertJsonValidationErrors($field);
+})->with([
+    [['q' => ['Canal']], 'q'],
+    [['q' => str_repeat('x', 201)], 'q'],
+    [['q' => 'Canal', 'limit' => 'invalid'], 'limit'],
+]);

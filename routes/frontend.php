@@ -19,9 +19,10 @@ Route::prefix('map')->as('map.')->group(function () {
     Route::get('parking-offstreet/{id}', [Frontend\SpacesInfoController::class, 'ParkingOffstreetInfo'])->name('parking-offstreet.show');
 });
 
-Route::get('search/results', [Frontend\SearchController::class, 'search'])->name('search.results');
-Route::get('map/parking/nearby', [Frontend\ParkingDiscoveryController::class, 'nearby'])->name('map.parking.nearby');
-Route::get('map/parking/viewport', [Frontend\ParkingDiscoveryController::class, 'viewport'])->name('map.parking.viewport');
+Route::prefix('map/parking')->as('map.parking.')->middleware('throttle:parking-discovery')->group(function () {
+    Route::get('nearby', [Frontend\ParkingDiscoveryController::class, 'nearby'])->name('nearby');
+    Route::get('viewport', [Frontend\ParkingDiscoveryController::class, 'viewport'])->name('viewport');
+});
 
 // Destination lookups share a separate budget because they can call external geocoders.
 Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,destinations')->group(function () {
