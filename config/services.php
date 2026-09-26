@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'geoapify' => [
+        'key' => env('GEOAPIFY_API_KEY'),
+    ],
+
+    'nominatim' => [
+        'enabled' => env('NOMINATIM_PUBLIC_ENABLED', true),
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'NIPKaart/1.0 (+https://nipkaart.nl)'),
+    ],
+
 ];
