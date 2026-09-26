@@ -15,4 +15,5 @@ Route::middleware(['throttle:60,1', 'web'])->group(function () {
     Route::get('search', [Api\SearchController::class, 'search']);
     Route::get('destinations/suggestions', [Api\DestinationSearchController::class, 'suggestions']);
     Route::get('destinations/resolve', [Api\DestinationSearchController::class, 'resolve']);
+    Route::get('parking/nearby', [Api\ParkingDiscoveryController::class, 'nearby']);
 });
