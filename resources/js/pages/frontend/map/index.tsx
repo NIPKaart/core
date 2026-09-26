@@ -22,14 +22,21 @@ function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[]
     const map = useMap();
     const controller = useRef<AbortController | null>(null);
     const timeout = useRef<number | null>(null);
+    const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
 
-    function load() {
+    function load(force = false) {
+        const visibleBounds = map.getBounds();
+        if (!force && loadedBounds.current?.contains(visibleBounds)) return;
+
         if (timeout.current !== null) window.clearTimeout(timeout.current);
         timeout.current = window.setTimeout(async () => {
+            const currentVisibleBounds = map.getBounds();
+            if (!force && loadedBounds.current?.contains(currentVisibleBounds)) return;
+
             controller.current?.abort();
             controller.current = new AbortController();
 
-            const bounds = map.getBounds().pad(0.2);
+            const bounds = currentVisibleBounds.pad(0.5);
             const params = new URLSearchParams({
                 west: String(bounds.getWest()),
                 south: String(bounds.getSouth()),
@@ -44,6 +51,7 @@ function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[]
                     headers: { Accept: 'application/json' },
                 });
                 if (response.ok) {
+                    loadedBounds.current = bounds;
                     onResults((await response.json()).results ?? [], {
                         west: bounds.getWest(),
                         south: bounds.getSouth(),
@@ -60,7 +68,7 @@ function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[]
     useMapEvents({ moveend: load });
 
     useEffect(() => {
-        load();
+        load(true);
         return () => {
             if (timeout.current !== null) window.clearTimeout(timeout.current);
             controller.current?.abort();
