@@ -101,7 +101,7 @@ function getInitialPosition(): [number, number, number] {
     return [52.3667136, 4.9808665, 8];
 }
 
-export default function Map() {
+export default function ParkingMap() {
     const { t } = useTranslation('frontend/map/main');
     const { t: tGlobal } = useTranslation('frontend/global');
     const initial = getInitialPosition();
@@ -133,7 +133,7 @@ export default function Map() {
         bounds: { west: number; south: number; east: number; north: number },
     ) {
         setViewportResults((current) => {
-            const next = new Map(current.map((result) => [result.key, result]));
+            const next = new globalThis.Map(current.map((result) => [result.key, result]));
 
             for (const result of incoming) next.set(result.key, result);
 
