@@ -27,7 +27,7 @@ function ViewportDiscovery({
     const timeout = useRef<number | null>(null);
     const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
 
-    function load(force = false) {
+    const load = useCallback((force = false) => {
         const visibleBounds = map.getBounds();
         if (!force && loadedBounds.current?.contains(visibleBounds)) return;
 
@@ -66,7 +66,7 @@ function ViewportDiscovery({
                 if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
             }
         }, 250);
-    }
+    }, [map, onResults]);
 
     useMapEvents({ moveend: load });
 
@@ -76,7 +76,7 @@ function ViewportDiscovery({
             if (timeout.current !== null) window.clearTimeout(timeout.current);
             controller.current?.abort();
         };
-    }, []);
+    }, [load]);
 
     return null;
 }
@@ -127,7 +127,7 @@ export default function ParkingMap() {
     const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<MarkerType>('community');
-    const [destination, setDestination] = useState<DestinationResult | null>(() => {
+    const [destination] = useState<DestinationResult | null>(() => {
         const params = new URLSearchParams(window.location.search);
         const latitude = Number(params.get('lat'));
         const longitude = Number(params.get('lng'));
