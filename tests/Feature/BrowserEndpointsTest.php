@@ -6,6 +6,7 @@ use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 test('browser endpoints no longer exist under the API namespace', function (string $path) {
     $this->getJson('/api/'.$path)->assertNotFound();
@@ -50,8 +51,6 @@ test('normal interactive parking reads exceed the former limits without throttli
     'community details' => ['/map/parking-spaces/00000000-0000-4000-8000-000000000000', 404],
     'municipal details' => ['/map/parking-municipal/00000000-0000-4000-8000-000000000000', 404],
     'offstreet details' => ['/map/parking-offstreet/00000000-0000-4000-8000-000000000000', 404],
-    'nearby' => ['/map/parking/nearby?latitude=52&longitude=5', 200],
-    'viewport' => ['/map/parking/viewport?west=4&south=52&east=5&north=53', 200],
 ]);
 
 test('destination lookups share a separate budget without blocking local parking reads', function () {
@@ -68,7 +67,9 @@ test('destination lookups share a separate budget without blocking local parking
     $this->getJson(route('destinations.resolve', ['q' => 'zz']))->assertStatus(429);
 
     $this->getJson(route('map.parking-spaces.show', $space->id))->assertOk();
-    $this->getJson(route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]))->assertOk();
+    $this->getJson(route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]))
+        ->assertOk()->assertHeader('X-RateLimit-Remaining', '999');
+    expect(RateLimiter::attempts(md5('parking-discoveryhour:ip:127.0.0.1')))->toBe(1);
     $this->getJson(route('map.parking.viewport', ['west' => 4, 'south' => 52, 'east' => 5, 'north' => 53]))->assertOk();
 
     $this->travel(61)->seconds();
@@ -100,37 +101,74 @@ test('obsolete parking search pages and endpoints are no longer exposed', functi
     $this->actingAs(User::factory()->create())->getJson($path)->assertNotFound();
 })->with(['/search?q=Museum', '/search/results?q=Museum']);
 
-test('guest discovery has a shared 300 request budget independent of destinations and other IPs', function () {
+/**
+ * Seed Laravel's named-middleware counters without issuing spatial queries.
+ * ThrottleRequests hashes the limiter name concatenated with each window key.
+ */
+function seedParkingDiscoveryAttempts(string $identity, int $minute, int $hour): void
+{
+    RateLimiter::increment(md5('parking-discoveryminute:'.$identity), 60, $minute);
+    RateLimiter::increment(md5('parking-discoveryhour:'.$identity), 3600, $hour);
+}
+
+test('interactive discovery exceeds 300 requests before enforcing the minute ceiling', function (string $path) {
     Cache::flush();
     $this->freezeTime();
+    seedParkingDiscoveryAttempts('ip:127.0.0.1', 300, 300);
+
+    $this->getJson($path)->assertOk()->assertHeader('X-RateLimit-Remaining', '699');
+
+    seedParkingDiscoveryAttempts('ip:127.0.0.1', 698, 698);
+    $this->getJson($path)->assertOk()->assertHeader('X-RateLimit-Remaining', '0');
+    $this->getJson($path)->assertStatus(429)->assertHeader('Retry-After', '60');
+    $this->getJson(route('destinations.suggestions', ['q' => 'zz']))
+        ->assertOk()->assertHeader('X-RateLimit-Remaining', '59');
+
+    $this->travel(61)->seconds();
+    $this->getJson($path)->assertOk()->assertHeader('X-RateLimit-Remaining', '999');
+})->with([
+    'viewport' => ['/map/parking/viewport?west=4&south=52&east=5&north=53'],
+    'nearby' => ['/map/parking/nearby?latitude=52&longitude=5'],
+]);
+
+test('the hourly discovery ceiling survives the minute reset and is shared by both endpoints', function () {
+    Cache::flush();
+    $this->freezeTime();
+    seedParkingDiscoveryAttempts('ip:127.0.0.1', 999, 9999);
     $viewport = route('map.parking.viewport', ['west' => 4, 'south' => 52, 'east' => 5, 'north' => 53]);
     $nearby = route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]);
 
-    for ($request = 0; $request < 150; $request++) {
-        $this->getJson($viewport)->assertOk();
-        $this->getJson($nearby)->assertOk();
-    }
-
-    $this->getJson($viewport)->assertStatus(429)->assertHeader('Retry-After', '60');
-    $this->getJson($nearby)->assertStatus(429)->assertHeader('Content-Type', 'application/json');
-    $this->getJson(route('destinations.suggestions', ['q' => 'zz']))->assertOk();
-    $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($viewport)->assertOk();
-    $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1']);
-
-    $this->travel(61)->seconds();
     $this->getJson($viewport)->assertOk();
+    $this->travel(61)->seconds();
+
+    $this->getJson($nearby)->assertStatus(429)->assertHeader('Retry-After', '3539');
+    $this->getJson($viewport)->assertStatus(429)->assertHeader('Content-Type', 'application/json');
+    $this->getJson(route('destinations.suggestions', ['q' => 'zz']))
+        ->assertOk()->assertHeader('X-RateLimit-Remaining', '59');
+
+    $this->travel(3540)->seconds();
+    $this->getJson($nearby)->assertOk();
 });
 
-test('signed in discovery budgets follow the account rather than its IP', function () {
+test('guest discovery limits are isolated by IP', function (int $minute, int $hour) {
     Cache::flush();
     $this->freezeTime();
-    $this->actingAs(User::factory()->create());
+    seedParkingDiscoveryAttempts('ip:127.0.0.1', $minute, $hour);
     $nearby = route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]);
 
-    for ($request = 0; $request < 300; $request++) {
-        $this->getJson($nearby)->assertOk();
-    }
+    $this->getJson($nearby)->assertStatus(429);
+    $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($nearby)->assertOk();
+})->with(['minute' => [1000, 0], 'hour' => [0, 10000]]);
 
+test('authenticated discovery limits follow the account rather than its IP', function (int $minute, int $hour) {
+    Cache::flush();
+    $this->freezeTime();
+    $user = User::factory()->create();
+    $this->actingAs($user);
+    seedParkingDiscoveryAttempts('user:'.$user->id, $minute, $hour);
+    $nearby = route('map.parking.nearby', ['latitude' => 52, 'longitude' => 5]);
+
+    $this->getJson($nearby)->assertStatus(429);
     $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($nearby)->assertStatus(429);
     $this->actingAs(User::factory()->create())->getJson($nearby)->assertOk();
-});
+})->with(['minute' => [1000, 0], 'hour' => [0, 10000]]);

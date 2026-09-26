@@ -34,8 +34,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('parking-discovery', fn (Request $request): Limit => Limit::perMinute(300)
-            ->by($request->user() ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip()));
+        RateLimiter::for('parking-discovery', function (Request $request): array {
+            $key = $request->user() ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip();
+
+            return [
+                Limit::perMinute(1000)->by('minute:'.$key),
+                Limit::perHour(10000)->by('hour:'.$key),
+            ];
+        });
 
         Model::automaticallyEagerLoadRelationships();
 
