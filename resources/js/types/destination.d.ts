@@ -1,4 +1,6 @@
 export type DestinationResult = {
+    parking_count?: number;
+    bounds?: { south: number; north: number; west: number; east: number };
     key: string;
     label: string;
     sub: string | null;

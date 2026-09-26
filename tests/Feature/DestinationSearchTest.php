@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\ParkingStatus;
+use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
 use Illuminate\Support\Facades\Cache;
@@ -28,8 +30,8 @@ test('destination suggestions normalize internal parking results', function () {
         ->assertJsonStructure(['results' => [['key', 'label', 'sub', 'type', 'latitude', 'longitude']]]);
 
     expect(collect($response->json('results'))->pluck('type')->sort()->values()->all())
-        ->toBe(['community', 'offstreet']);
-    expect(collect($response->json('results'))->firstWhere('type', 'community'))
+        ->toBe(['offstreet', 'street']);
+    expect(collect($response->json('results'))->firstWhere('type', 'street'))
         ->toMatchArray(['latitude' => 52.36, 'longitude' => 4.88]);
 });
 
@@ -118,3 +120,55 @@ test('invalid or excessive queries return validation errors', function (array $q
     [['q' => str_repeat('x', 201)], 'q'],
     [['q' => 'Canal', 'limit' => 'invalid'], 'limit'],
 ]);
+
+test('place suggestions remain visible when local parking fills the suggestion limit', function () {
+    config(['services.geoapify.key' => 'test-key']);
+    ParkingSpace::factory()->count(5)->create(['status' => ParkingStatus::APPROVED, 'city' => 'Amsterdam']);
+    Http::fake(['api.geoapify.com/*' => Http::response(['results' => [[
+        'place_id' => 'amsterdam', 'name' => 'Amsterdam', 'result_type' => 'city', 'lat' => 52.37, 'lon' => 4.9,
+    ]]])]);
+
+    $this->getJson('/destinations/suggestions?q=Amsterdam')->assertJsonPath('results.0.key', 'geoapify:amsterdam')->assertJsonCount(5, 'results');
+});
+
+test('submitting a city resolves the destination rather than an arbitrary parking record', function () {
+    Cache::flush();
+    RateLimiter::clear('nominatim-public');
+    config(['services.nominatim.enabled' => true]);
+    ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'city' => 'Amsterdam']);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([[
+        'place_id' => 123, 'name' => 'Amsterdam', 'type' => 'city', 'lat' => '52.37', 'lon' => '4.9',
+    ]])]);
+
+    $this->getJson('/destinations/resolve?q=Amsterdam')->assertJsonPath('result.key', 'nominatim:123');
+});
+
+test('street suggestions group before limiting and include every published matching location in their bounds', function () {
+    $place = Municipality::factory()->create(['name' => 'Amsterdam']);
+    ParkingMunicipal::factory()->for($place)->count(12)->create([
+        'street' => 'Sloterdijkerweg', 'visibility' => true, 'latitude' => 52.38, 'longitude' => 4.85,
+    ]);
+    ParkingMunicipal::factory()->for($place)->create([
+        'street' => 'Sloterdijkerweg', 'visibility' => true, 'latitude' => 52.39, 'longitude' => 4.86,
+    ]);
+    ParkingMunicipal::factory()->for($place)->create([
+        'street' => 'Sloterdijkerweg', 'visibility' => false, 'latitude' => 50, 'longitude' => 3,
+    ]);
+
+    $this->getJson('/destinations/suggestions?q=Sloterdijkerweg&limit=1')
+        ->assertJsonCount(1, 'results')
+        ->assertJsonPath('results.0.type', 'street')
+        ->assertJsonPath('results.0.parking_count', 13)
+        ->assertJsonPath('results.0.bounds', ['south' => 52.38, 'north' => 52.39, 'west' => 4.85, 'east' => 4.86]);
+});
+
+test('street groups keep different cities and individual facilities separate', function () {
+    foreach (['Amsterdam', 'Haarlem'] as $city) {
+        $place = Municipality::factory()->create(['name' => $city]);
+        ParkingMunicipal::factory()->for($place)->count(2)->create(['street' => 'Stationsweg', 'visibility' => true]);
+        ParkingOffstreet::factory()->for($place)->create(['name' => 'Stationsweg', 'visibility' => true]);
+    }
+
+    $response = $this->getJson('/destinations/suggestions?q=Stationsweg&limit=10')->assertJsonCount(4, 'results');
+    expect(collect($response->json('results'))->where('type', 'street')->pluck('parking_count')->all())->toBe([2, 2]);
+});

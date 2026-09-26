@@ -10,5 +10,17 @@
     "searching": "Searching…",
     "start_typing": "Start typing to search",
     "no_results": "No results",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "search_near": "Find parking near “{{term}}”",
+    "suggestions": "Suggestions and parking locations",
+    "unknown_address": "Parking location without a street name",
+    "no_destination": "No destination found. Try a street and city name.",
+    "types": {
+        "community": "Community contribution",
+        "municipal": "Municipal parking location",
+        "offstreet": "Garage or car park",
+        "destination": "Place or address"
+    },
+    "parking_count_one": "{{count}} parking location",
+    "parking_count_other": "{{count}} parking locations"
 }

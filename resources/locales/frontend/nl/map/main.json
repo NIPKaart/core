@@ -1,5 +1,27 @@
 {
     "head": {
         "title": "Kaart"
+    },
+    "results": {
+        "title": "Parkeerresultaten",
+        "map": "Parkeerkaart",
+        "loading": "Parkeerlocaties laden…",
+        "error": "Parkeerlocaties konden niet worden geladen. Probeer het opnieuw.",
+        "retry": "Opnieuw proberen",
+        "count_one": "{{count}} parkeerlocatie in dit gebied",
+        "count_other": "{{count}} parkeerlocaties in dit gebied",
+        "empty": "Geen parkeerlocaties gevonden in dit gebied. Zoek een andere bestemming of verplaats de kaart.",
+        "limit": "Er worden maximaal 500 locaties getoond. Zoek een specifiekere bestemming om het gebied te verkleinen.",
+        "unknown": "Verificatie en actuele beschikbaarheid van gehandicaptenparkeerplaatsen zijn onbekend in dit overzicht. Open een locatie voor brongegevens.",
+        "untitled": "Parkeerlocatie zonder adres",
+        "distance": "{{distance}} m van de bestemming",
+        "selected": "Geselecteerde locatie",
+        "expand": "Toon resultaten",
+        "collapse": "Meer kaart",
+        "sources": {
+            "community": "Bijdrage uit de community",
+            "municipal": "Gemeentelijke gegevens",
+            "offstreet": "Parkeervoorziening"
+        }
     }
 }

@@ -23,12 +23,21 @@ export type ParkingSpaceModalProps = {
     spaceId: string;
     open: boolean;
     onClose: () => void;
+    onCloseAutoFocus?: (event: Event) => void;
     latitude: number;
     longitude: number;
     confirmationStatusOptions: Record<string, string>;
 };
 
-export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, longitude, confirmationStatusOptions }: ParkingSpaceModalProps) {
+export default function ParkingSpaceModal({
+    spaceId,
+    open,
+    onClose,
+    onCloseAutoFocus,
+    latitude,
+    longitude,
+    confirmationStatusOptions,
+}: ParkingSpaceModalProps) {
     const { t } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
 
@@ -160,7 +169,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-                <DialogContent showClose={false} className="max-w-xl bg-white sm:rounded-xl dark:bg-zinc-950">
+                <DialogContent onCloseAutoFocus={onCloseAutoFocus} showClose={false} className="max-w-xl bg-white sm:rounded-xl dark:bg-zinc-950">
                     <DialogHeader>
                         <div className="flex w-full items-center justify-between gap-2">
                             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -215,8 +224,8 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
 
     // Mobile - Drawer variant
     return (
-        <Drawer open={open} onOpenChange={(value) => !value && onClose()} modal={false}>
-            <DrawerContent className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
+        <Drawer autoFocus open={open} onOpenChange={(value) => !value && onClose()}>
+            <DrawerContent onCloseAutoFocus={onCloseAutoFocus} className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
                 <DrawerHeader>
                     <div className="flex w-full items-center justify-between gap-2">
                         <DrawerTitle className="flex items-center gap-2 text-lg font-semibold">
