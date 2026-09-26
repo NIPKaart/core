@@ -71,7 +71,7 @@ function ViewportDiscovery({
         [map, onResults],
     );
 
-    useMapEvents({ moveend: load });
+    useMapEvents({ moveend: () => load() });
 
     useEffect(() => {
         load(true);
