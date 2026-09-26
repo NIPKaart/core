@@ -1,4 +1,3 @@
-import DestinationSearch from '@/components/map/destination-search';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
@@ -110,20 +109,16 @@ export default function Map() {
     const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<MarkerType>('community');
-    const [destination, setDestination] = useState<DestinationResult | null>(null);
-    const [nearbyResults, setNearbyResults] = useState<ParkingResult[]>([]);
+    const [destination, setDestination] = useState<DestinationResult | null>(() => {
+        const params = new URLSearchParams(window.location.search);
+        const latitude = Number(params.get('lat'));
+        const longitude = Number(params.get('lng'));
+        const label = params.get('destination');
+        return label && Number.isFinite(latitude) && Number.isFinite(longitude)
+            ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude }
+            : null;
+    });
 
-    async function selectDestination(next: DestinationResult) {
-        setDestination(next);
-        const params = new URLSearchParams({
-            latitude: String(next.latitude),
-            longitude: String(next.longitude),
-            radius: '1000',
-            limit: '100',
-        });
-        const response = await fetch(`/api/parking/nearby?${params}`, { headers: { Accept: 'application/json' } });
-        if (response.ok) setNearbyResults((await response.json()).results ?? []);
-    }
 
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
@@ -189,15 +184,8 @@ export default function Map() {
                     <LegendControl />
                     <LocateControl />
                     <ZoomControl />
-                    <DestinationSearch onSelect={selectDestination} />
                 </MapContainer>
             </div>
-
-            {destination && (
-                <div className="sr-only" aria-live="polite">
-                    {nearbyResults.length} parking options found near {destination.label}
-                </div>
-            )}
 
             {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                 <ParkingSpaceModal
