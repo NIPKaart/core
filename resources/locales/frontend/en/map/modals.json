@@ -6,7 +6,7 @@
         },
         "tabs": {
             "info": "Info",
-            "confirm": "Confirm",
+            "confirm": "Confirm or report",
             "description": "Description"
         },
         "table": {
@@ -98,5 +98,72 @@
             "navigate": "Navigate",
             "streetview": "Streetview"
         }
+    },
+    "detail": {
+        "loading": "Loading parking details…",
+        "error": "The parking details could not be loaded.",
+        "retry": "Try again",
+        "share": "Copy link to this location",
+        "shared": "Link copied",
+        "admin": "Open in admin",
+        "new_tab": "opens in a new tab",
+        "unknown": "Unknown",
+        "no_address": "Parking location without an address",
+        "distance": "{{distance}} from your destination (straight line)",
+        "check_on_site": "Always check the signs on location. Parking here is not guaranteed.",
+        "source_types": {
+            "community": "Community contribution",
+            "municipal": "Official municipal data",
+            "offstreet": "Parking facility"
+        },
+        "sections": {
+            "rules": "Rules and restrictions",
+            "layout": "Layout",
+            "availability": "Accessibility and availability",
+            "source": "Source and freshness",
+            "contribute": "Confirm or report a problem"
+        },
+        "navigation": {
+            "unavailable": "No valid coordinates are known for this location, so navigation is unavailable."
+        },
+        "rules": {
+            "local_rules": "Local parking rules",
+            "facility_info": "Rates and opening hours"
+        },
+        "availability": {
+            "general_short": "General spaces free (short-term)",
+            "general_long": "General spaces free (long-term)",
+            "free_of": "{{free}} of {{total}} free",
+            "live_unavailable": "Live data unavailable"
+        },
+        "source": {
+            "community": "Community contribution, approved for publication",
+            "municipal": "Municipal open data",
+            "never_confirmed": "Not confirmed yet",
+            "confirmations_one": "Confirmed {{count}} time by the community",
+            "confirmations_other": "Confirmed {{count}} times by the community",
+            "source_date": "Source date",
+            "municipality": "Municipality of {{name}}"
+        },
+        "contribute_signed_out": "Sign in to confirm this parking space or report that it has moved or is unavailable.",
+        "log_in": "Log in",
+        "badges": {
+            "confirmed_one": "{{count}}x confirmed",
+            "confirmed_other": "{{count}}x confirmed"
+        },
+        "copy_id": "Copy location ID",
+        "more_info": "More about {{label}}",
+        "descriptions": {
+            "community": "Parking space added by the community and approved for publication.",
+            "municipal": "Official municipal parking space, based on open data from the municipality.",
+            "garage": "Parking garage. Parking here usually involves costs.",
+            "parkandride": "P+R facility. Parking here usually involves costs."
+        },
+        "live": {
+            "label": "Live data",
+            "ok": "Live, may be delayed",
+            "updated": "Updated"
+        },
+        "id_ending": "ending in"
     }
 }

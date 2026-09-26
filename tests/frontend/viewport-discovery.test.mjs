@@ -96,3 +96,16 @@ test('paging requests the next records in the same area and exposes whether anot
     assert.deepEqual(view.results, [['page two']]);
     assert.deepEqual(more, [true]);
 });
+
+test('a selected destination is sent so results can report their distance to it', async () => {
+    const queries = [];
+    const fetch = async (url) => {
+        queries.push(new URL(url, 'https://example.test').searchParams);
+        return { ok: true, json: async () => ({ results: [] }) };
+    };
+    await mount(fetch, { origin: { latitude: 52.5, longitude: 4.25 } }).run();
+    await mount(fetch).run();
+    assert.equal(queries[0].get('origin_latitude'), '52.5');
+    assert.equal(queries[0].get('origin_longitude'), '4.25');
+    assert.equal(queries[1].has('origin_latitude'), false);
+});

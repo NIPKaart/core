@@ -6,7 +6,7 @@
         },
         "tabs": {
             "info": "Info",
-            "confirm": "Bevestigen",
+            "confirm": "Bevestigen of melden",
             "description": "Beschrijving"
         },
         "table": {
@@ -98,5 +98,72 @@
             "navigate": "Navigeren",
             "streetview": "Streetview"
         }
+    },
+    "detail": {
+        "loading": "Parkeerdetails laden…",
+        "error": "De parkeerdetails konden niet worden geladen.",
+        "retry": "Opnieuw proberen",
+        "share": "Link naar deze locatie kopiëren",
+        "shared": "Link gekopieerd",
+        "admin": "Openen in beheer",
+        "new_tab": "opent in een nieuw tabblad",
+        "unknown": "Onbekend",
+        "no_address": "Parkeerlocatie zonder adres",
+        "distance": "{{distance}} van je bestemming (hemelsbreed)",
+        "check_on_site": "Controleer altijd de borden ter plaatse. Parkeren hier is niet gegarandeerd.",
+        "source_types": {
+            "community": "Bijdrage van de community",
+            "municipal": "Officiële gemeentelijke gegevens",
+            "offstreet": "Parkeervoorziening"
+        },
+        "sections": {
+            "rules": "Regels en beperkingen",
+            "layout": "Indeling",
+            "availability": "Toegankelijkheid en beschikbaarheid",
+            "source": "Bron en actualiteit",
+            "contribute": "Bevestigen of een probleem melden"
+        },
+        "navigation": {
+            "unavailable": "Voor deze locatie zijn geen geldige coördinaten bekend, dus navigeren is niet mogelijk."
+        },
+        "rules": {
+            "local_rules": "Lokale parkeerregels",
+            "facility_info": "Tarieven en openingstijden"
+        },
+        "availability": {
+            "general_short": "Algemene vrije plaatsen (kortparkeren)",
+            "general_long": "Algemene vrije plaatsen (langparkeren)",
+            "free_of": "{{free}} van {{total}} vrij",
+            "live_unavailable": "Live gegevens niet beschikbaar"
+        },
+        "source": {
+            "community": "Bijdrage van de community, goedgekeurd voor publicatie",
+            "municipal": "Open data van de gemeente",
+            "never_confirmed": "Nog niet bevestigd",
+            "confirmations_one": "{{count}} keer bevestigd door de community",
+            "confirmations_other": "{{count}} keer bevestigd door de community",
+            "source_date": "Datum bij de bron",
+            "municipality": "Gemeente {{name}}"
+        },
+        "contribute_signed_out": "Log in om deze parkeerplaats te bevestigen of te melden dat deze is verplaatst of niet beschikbaar is.",
+        "log_in": "Inloggen",
+        "badges": {
+            "confirmed_one": "{{count}}x bevestigd",
+            "confirmed_other": "{{count}}x bevestigd"
+        },
+        "copy_id": "Locatie-ID kopiëren",
+        "more_info": "Meer over {{label}}",
+        "descriptions": {
+            "community": "Parkeerplaats toegevoegd door de community en goedgekeurd voor publicatie.",
+            "municipal": "Officiële gemeentelijke parkeerplaats, gebaseerd op open data van de gemeente.",
+            "garage": "Parkeergarage. Parkeren kost hier meestal geld.",
+            "parkandride": "P+R-terrein. Parkeren kost hier meestal geld."
+        },
+        "live": {
+            "label": "Live gegevens",
+            "ok": "Live, mogelijk vertraagd",
+            "updated": "Bijgewerkt"
+        },
+        "id_ending": "eindigend op"
     }
 }

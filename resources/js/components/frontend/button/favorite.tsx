@@ -4,6 +4,7 @@ import profile from '@/routes/profile';
 import { router } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type FavoriteType = 'parking_space' | 'parking_municipal' | 'parking_offstreet';
 
@@ -14,6 +15,7 @@ type FavoriteButtonProps = {
 };
 
 export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
+    const { t } = useTranslation('frontend/global');
     const { user } = useAuthorization();
     const [isFavorited, setIsFavorited] = useState(initial);
     const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
             size="icon"
             variant="ghost"
             onClick={toggleFavorite}
-            aria-label={isFavorited ? 'Remove favorite' : 'Add favorite'}
+            aria-label={t(isFavorited ? 'common.remove_favorite' : 'common.add_favorite')}
             disabled={loading}
             className={`cursor-pointer transition ${isFavorited ? 'text-red-500' : 'text-black hover:text-red-500'} `}
         >
