@@ -1,7 +1,6 @@
 {
     "title": "Zoeken",
     "description": "Zoek naar gemeenten, garages of community plekken.",
-    "tip": "Tip: gebruik Enter om te zoeken",
     "placeholder": "Zoek op stad, garage of plek…",
     "aria_input": "Zoekopdracht",
     "recent": "Recent",
