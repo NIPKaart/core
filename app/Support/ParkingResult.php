@@ -43,4 +43,14 @@ final readonly class ParkingResult implements JsonSerializable
             'distance_metres' => $this->distanceMetres,
         ];
     }
+
+    /**
+     * Positional form for bulk map payloads; the source and ID are recoverable from the key.
+     *
+     * @return array{0: string, 1: float, 2: float, 3: string}
+     */
+    public function toCompactArray(): array
+    {
+        return [$this->key, $this->latitude, $this->longitude, $this->title];
+    }
 }

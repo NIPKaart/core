@@ -27,12 +27,15 @@ export default function ViewportDiscovery({
     const timeout = useRef<number | null>(null);
     const loadedZoom = useRef<number | null>(null);
     const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
+    const loadedComplete = useRef(false);
 
     const load = useCallback(
         (force = false) => {
             controller.current?.abort();
             if (timeout.current !== null) window.clearTimeout(timeout.current);
-            if (!force && loadedZoom.current === map.getZoom() && loadedBounds.current?.contains(map.getBounds())) {
+            // A complete (uncapped) area stays valid at any zoom inside it; a capped area only at the same zoom
+            const coversView = loadedBounds.current?.contains(map.getBounds()) && (loadedComplete.current || loadedZoom.current === map.getZoom());
+            if (!force && coversView) {
                 onStatus('ready');
                 return;
             }
@@ -42,42 +45,46 @@ export default function ViewportDiscovery({
                 return;
             }
             onStatus('loading');
-            timeout.current = window.setTimeout(async () => {
-                const request = new AbortController();
-                controller.current = request;
-                const bounds = force && loadedBounds.current ? loadedBounds.current : map.getBounds().pad(0.5);
-                const zoom = map.getZoom();
-                try {
-                    const response = await fetch(
-                        viewport.url({
-                            query: {
-                                west: String(Math.max(-180, bounds.getWest())),
-                                south: String(Math.max(-90, bounds.getSouth())),
-                                east: String(Math.min(180, bounds.getEast())),
-                                north: String(Math.min(90, bounds.getNorth())),
-                                limit: '500',
-                                page: String(page),
-                                ...(origin ? { origin_latitude: String(origin.latitude), origin_longitude: String(origin.longitude) } : {}),
-                            },
-                        }),
-                        { signal: request.signal, headers: { Accept: 'application/json' } },
-                    );
-                    if (!response.ok) throw new Error('Discovery request failed');
-                    const data = await response.json();
-                    if (request.signal.aborted) return;
-                    loadedBounds.current = bounds;
-                    loadedZoom.current = zoom;
-                    onResults(data.results ?? []);
-                    onHasMore?.(data.has_more ?? false);
-                    onStatus('ready');
-                } catch {
-                    if (!request.signal.aborted) {
-                        onHasMore?.(false);
-                        onResults([]);
-                        onStatus('error');
+            timeout.current = window.setTimeout(
+                async () => {
+                    const request = new AbortController();
+                    controller.current = request;
+                    const bounds = force && loadedBounds.current ? loadedBounds.current : map.getBounds().pad(0.5);
+                    const zoom = map.getZoom();
+                    try {
+                        const response = await fetch(
+                            viewport.url({
+                                query: {
+                                    west: String(Math.max(-180, bounds.getWest())),
+                                    south: String(Math.max(-90, bounds.getSouth())),
+                                    east: String(Math.min(180, bounds.getEast())),
+                                    north: String(Math.min(90, bounds.getNorth())),
+                                    limit: '500',
+                                    page: String(page),
+                                    ...(origin ? { origin_latitude: String(origin.latitude), origin_longitude: String(origin.longitude) } : {}),
+                                },
+                            }),
+                            { signal: request.signal, headers: { Accept: 'application/json' } },
+                        );
+                        if (!response.ok) throw new Error('Discovery request failed');
+                        const data = await response.json();
+                        if (request.signal.aborted) return;
+                        loadedBounds.current = bounds;
+                        loadedZoom.current = zoom;
+                        loadedComplete.current = page === 1 && !data.has_more;
+                        onResults(data.results ?? []);
+                        onHasMore?.(data.has_more ?? false);
+                        onStatus('ready');
+                    } catch {
+                        if (!request.signal.aborted) {
+                            onHasMore?.(false);
+                            onResults([]);
+                            onStatus('error');
+                        }
                     }
-                }
-            }, 250);
+                },
+                force ? 0 : 150,
+            );
         },
         [map, onResults, onStatus, page, onPageChange, onHasMore, origin],
     );

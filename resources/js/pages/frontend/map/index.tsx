@@ -1,6 +1,6 @@
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
-import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
+import ParkingMapLayer from '@/components/map/parking-map-layer';
 import ParkingResults, { type DiscoveryStatus } from '@/components/map/parking-results';
 import ViewportDiscovery from '@/components/map/viewport-discovery';
 import ZoomControl from '@/components/map/zoom-control';
@@ -10,7 +10,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { CircleMarker, LayersControl, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingDetail from '@/components/map/parking-detail/parking-detail';
@@ -20,24 +20,24 @@ import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
 
+/** A click on the map itself (not on a marker or cluster, which stop the event) clears the selection. */
+function ClearSelectionOnMapClick({ onClear }: { onClear: () => void }) {
+    useMapEvents({ click: onClear });
+    return null;
+}
+
 function SelectedParking({ result }: { result: ParkingResult | null }) {
     const map = useMap();
     useEffect(() => {
         if (result)
             map.panInside([result.latitude, result.longitude], {
-                animate: false,
+                animate: true,
+                duration: 0.3,
                 paddingTopLeft: [40, 40],
                 paddingBottomRight: [40, window.matchMedia('(max-width: 767px)').matches ? map.getSize().y * 0.55 + 40 : 40],
             });
     }, [map, result]);
-    return result ? (
-        <CircleMarker
-            center={[result.latitude, result.longitude]}
-            radius={20}
-            pathOptions={{ color: '#1d4ed8', weight: 4, fill: false }}
-            interactive={false}
-        />
-    ) : null;
+    return null;
 }
 
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
@@ -176,23 +176,27 @@ export default function ParkingMap() {
                     <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                         <HashSync />
                         <DestinationFocus destination={destination} />
-                        <ViewportDiscovery
-                            origin={destination}
-                            onResults={setViewportResults}
-                            onStatus={setStatus}
-                            retry={retry}
-                            page={page}
-                            onPageChange={setPage}
-                            onHasMore={setHasMore}
-                        />
+                        {/* The result list keeps its own paged viewport query; map markers are clustered in the browser. */}
+                        {destination && (
+                            <ViewportDiscovery
+                                origin={destination}
+                                onResults={setViewportResults}
+                                onStatus={setStatus}
+                                retry={retry}
+                                page={page}
+                                onPageChange={setPage}
+                                onHasMore={setHasMore}
+                            />
+                        )}
                         <SelectedParking result={selectedResult} />
+                        <ClearSelectionOnMapClick onClear={() => setSelectedResult(null)} />
                         <LayersControl position="topright">
                             <BaseLayer checked name={tGlobal('layers.mapbox')}>
                                 <TileLayer
                                     attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
                                     url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                    tileSize={512}
-                                    zoomOffset={-1}
+                                    maxZoom={22}
+                                    keepBuffer={4}
                                 />
                             </BaseLayer>
 
@@ -202,15 +206,19 @@ export default function ParkingMap() {
                                     url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
                                     subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
                                     maxZoom={20}
+                                    keepBuffer={4}
                                 />
                             </BaseLayer>
                         </LayersControl>
 
-                        <ParkingMarkerLayer results={viewportResults} onSelect={selectParkingResult} />
+                        <ParkingMapLayer onSelect={selectParkingResult} selectedKey={selectedResult?.key ?? null} />
 
                         <LegendControl />
                         <LocateControl />
-                        <ZoomControl position={isDesktop ? 'bottomright' : 'topright'} />
+                        <ZoomControl
+                            position={isDesktop ? 'bottomright' : 'topright'}
+                            focus={selectedResult ? [selectedResult.latitude, selectedResult.longitude] : null}
+                        />
                     </MapContainer>
                 </section>
             </main>

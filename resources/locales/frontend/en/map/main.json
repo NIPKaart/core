@@ -29,5 +29,9 @@
         "page": "Page {{page}}",
         "page_count_one": "{{count}} parking location on this page",
         "page_count_other": "{{count}} parking locations on this page"
+    },
+    "map": {
+        "loading": "Loading parking locations…",
+        "error": "Some parking locations could not be loaded. Try again"
     }
 }

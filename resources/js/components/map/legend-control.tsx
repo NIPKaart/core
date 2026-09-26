@@ -16,6 +16,8 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
             options: { position },
             onAdd: () => {
                 const div = L.DomUtil.create('div', 'leaflet-legend');
+                // Clicks on the legend must not reach the map, where they would clear the selection.
+                L.DomEvent.disableClickPropagation(div);
 
                 // Add a class to collapse the legend on mobile
                 if (window.innerWidth <= 640) {

@@ -29,5 +29,9 @@
         "page": "Pagina {{page}}",
         "page_count_one": "{{count}} parkeerlocatie op deze pagina",
         "page_count_other": "{{count}} parkeerlocaties op deze pagina"
+    },
+    "map": {
+        "loading": "Parkeerlocaties laden…",
+        "error": "Niet alle parkeerlocaties konden worden geladen. Opnieuw proberen"
     }
 }

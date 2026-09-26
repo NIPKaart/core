@@ -10,10 +10,11 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/compo
 
 function mount(fetch, props = {}) {
     let timer, move, cleanup, effect;
+    const delays = [];
     let zoom = 10;
     const results = [], statuses = [];
     const bounds = { contains: () => true, pad() { return this; }, getWest: () => 4, getSouth: () => 52, getEast: () => 5, getNorth: () => 53 };
-    const context = { exports: {}, AbortController, URLSearchParams, fetch, window: { setTimeout: (callback) => { timer = callback; return 1; }, clearTimeout: () => { timer = null; } }, require: (name) => {
+    const context = { exports: {}, AbortController, URLSearchParams, fetch, window: { setTimeout: (callback, delay) => { timer = callback; delays.push(delay); return 1; }, clearTimeout: () => { timer = null; } }, require: (name) => {
         if (name === 'react') return { useRef: (current) => ({ current }), useCallback: (fn) => fn, useEffect: (fn) => { effect = fn; cleanup = fn(); } };
         if (name === 'react-leaflet') return { useMap: () => ({ getBounds: () => bounds, getZoom: () => zoom }), useMapEvents: ({ moveend }) => { move = moveend; } };
         if (name === '@/routes/map/parking') return { viewport: { url: ({ query }) => '/map/parking/viewport?' + new URLSearchParams(query) } };
@@ -21,12 +22,12 @@ function mount(fetch, props = {}) {
     } };
     vm.runInNewContext(source, context);
     context.exports.default({ onResults: (value) => results.push(value), onStatus: (value) => statuses.push(value), retry: 0, ...props });
-    return { results, statuses, run: () => timer?.(), move: () => move(), zoom: () => { zoom++; move(); }, retry: () => { cleanup(); cleanup = effect(); }, cleanup: () => cleanup() };
+    return { results, statuses, delays, run: () => timer?.(), move: () => move(), zoom: () => { zoom++; move(); }, retry: () => { cleanup(); cleanup = effect(); }, cleanup: () => cleanup() };
 }
 
 test('zooming reloads a capped area and replaces the previous result set', async () => {
     let calls = 0;
-    const view = mount(async () => ({ ok: true, json: async () => ({ results: [++calls] }) }));
+    const view = mount(async () => ({ ok: true, json: async () => ({ results: [++calls], has_more: true }) }));
     await view.run();
     view.move();
     await view.run();
@@ -35,6 +36,25 @@ test('zooming reloads a capped area and replaces the previous result set', async
     await view.run();
     assert.deepEqual(view.results, [[1], [2]]);
     assert.equal(view.statuses.at(-1), 'ready');
+});
+
+test('zooming inside a completely loaded area keeps the loaded locations without a request', async () => {
+    let calls = 0;
+    const view = mount(async () => ({ ok: true, json: async () => ({ results: [++calls], has_more: false }) }));
+    await view.run();
+    view.zoom();
+    await view.run();
+    assert.equal(calls, 1);
+    assert.deepEqual(view.results, [[1]]);
+    assert.equal(view.statuses.at(-1), 'ready');
+});
+
+test('the initial load starts immediately while map movement is debounced', async () => {
+    const view = mount(async () => ({ ok: true, json: async () => ({ results: [], has_more: true }) }));
+    await view.run();
+    view.zoom();
+    assert.equal(view.delays[0], 0);
+    assert.ok(view.delays[1] > 0);
 });
 
 for (const failure of ['http', 'network', 'json']) {
