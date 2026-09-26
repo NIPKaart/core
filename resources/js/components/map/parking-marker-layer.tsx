@@ -26,13 +26,15 @@ export default function ParkingMarkerLayer({ results, onSelect }: Props) {
         });
 
         cluster.current = group;
+        const markerCache = markers.current;
+        const resultCache = resultsByKey.current;
         map.addLayer(group);
 
         return () => {
             map.removeLayer(group);
             cluster.current = null;
-            markers.current.clear();
-            resultsByKey.current.clear();
+            markerCache.clear();
+            resultCache.clear();
         };
     }, [map]);
 
