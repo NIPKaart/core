@@ -1,7 +1,6 @@
 {
     "title": "Search",
     "description": "Search for municipalities, garages or community spaces.",
-    "tip": "Tip: press Enter to search",
     "placeholder": "Search for a city, garage or space…",
     "aria_input": "Search query",
     "recent": "Recent",
