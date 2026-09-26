@@ -3,7 +3,7 @@ status: accepted
 date: 2026-09-26
 ---
 
-# Build an Europe-ready, privacy-minimal core and require native value for mobile
+# Build a Europe-ready, privacy-minimal core and require native value for mobile
 
 NIPKaart is designed for European expansion while prioritizing excellent Dutch coverage first. Data structures must not assume Dutch-only identifiers or administrative conventions. A supported foreign dataset may be published before broad coverage exists in that country when its provenance and quality requirements are met.
 
