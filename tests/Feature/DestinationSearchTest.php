@@ -19,12 +19,15 @@ test('destination suggestions normalize internal parking results', function () {
         'longitude' => 4.87,
     ]);
 
-    $this->getJson('/api/destinations/suggestions?q=Museum')
+    $response = $this->getJson('/api/destinations/suggestions?q=Museum')
         ->assertOk()
         ->assertJsonCount(2, 'results')
-        ->assertJsonStructure(['results' => [['key', 'label', 'sub', 'type', 'latitude', 'longitude']]])
-        ->assertJsonPath('results.0.latitude', 52.36)
-        ->assertJsonPath('results.0.longitude', 4.88);
+        ->assertJsonStructure(['results' => [['key', 'label', 'sub', 'type', 'latitude', 'longitude']]]);
+
+    expect(collect($response->json('results'))->pluck('type')->sort()->values()->all())
+        ->toBe(['community', 'offstreet']);
+    expect(collect($response->json('results'))->firstWhere('type', 'community'))
+        ->toMatchArray(['latitude' => 52.36, 'longitude' => 4.88]);
 });
 
 test('destination suggestions exclude unpublished internal records', function () {
