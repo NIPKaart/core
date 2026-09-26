@@ -113,6 +113,52 @@ test('explicit resolution falls back to geoapify when public nominatim budget is
     Http::assertSent(fn ($request) => str_contains($request->url(), 'api.geoapify.com'));
 });
 
+test('explicit resolution falls back to geoapify when public nominatim fails', function () {
+    Cache::flush();
+    RateLimiter::clear('nominatim-public');
+    config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => true]);
+    Http::fake([
+        'nominatim.openstreetmap.org/*' => Http::response('Service unavailable', 503),
+        'api.geoapify.com/*' => Http::response(['results' => [[
+            'place_id' => 'fallback',
+            'name' => 'Fallback place',
+            'result_type' => 'amenity',
+            'lat' => 50.0,
+            'lon' => 5.0,
+        ]]]),
+    ]);
+
+    $this->getJson('/destinations/resolve?q=Fallback%20place')
+        ->assertOk()
+        ->assertJsonPath('result.key', 'geoapify:fallback');
+
+    Http::assertSentCount(2);
+});
+
+test('an empty nominatim answer is cached so the same query is not sent again', function () {
+    Cache::flush();
+    config(['services.geoapify.key' => null, 'services.nominatim.enabled' => true]);
+    Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
+
+    foreach (range(1, 2) as $attempt) {
+        RateLimiter::clear('nominatim-public');
+        $this->getJson('/destinations/resolve?q=Nowhere%20place')->assertOk()->assertJsonPath('result', null);
+    }
+
+    Http::assertSentCount(1);
+});
+
+test('autocomplete keeps internal suggestions when geoapify fails', function () {
+    Cache::flush();
+    config(['services.geoapify.key' => 'test-key']);
+    Http::fake(['api.geoapify.com/*' => Http::response('Server error', 500)]);
+    ParkingOffstreet::factory()->create(['name' => 'Museumplein garage', 'visibility' => true]);
+
+    $this->getJson('/destinations/suggestions?q=Museumplein')
+        ->assertOk()
+        ->assertJsonPath('results.0.label', 'Museumplein garage');
+});
+
 test('invalid or excessive queries return validation errors', function (array $query, string $field) {
     $this->getJson('/destinations/suggestions?'.http_build_query($query))->assertUnprocessable()->assertJsonValidationErrors($field);
 })->with([

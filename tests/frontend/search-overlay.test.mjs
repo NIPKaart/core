@@ -56,6 +56,8 @@ test('search presents readable streets, source context and an explicit destinati
     assert.match(html, /Aalbersestraat/);
     assert.match(html, /Municipal parking location/);
     assert.match(html, /Suggestions and parking locations/);
+    assert.match(html, /Place search powered by <a href="https:\/\/www.geoapify.com\/"/);
+    assert.match(html, /href="https:\/\/www.openstreetmap.org\/copyright"/);
 });
 
 test('submitting resolves the query even if there is only one parking suggestion', async () => {

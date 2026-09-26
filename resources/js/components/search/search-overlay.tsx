@@ -205,6 +205,19 @@ export default function SearchOverlay(): JSX.Element {
                 )}
                 {query.trim().length >= 2 && <h2 className="mt-2 text-sm font-semibold">{t('suggestions')}</h2>}
                 {Results}
+                {query.trim().length >= 2 && (
+                    <p className="text-[11px] text-muted-foreground/70">
+                        {t('attribution')}{' '}
+                        <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" className="underline">
+                            Geoapify
+                        </a>{' '}
+                        · ©{' '}
+                        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline">
+                            OpenStreetMap
+                        </a>{' '}
+                        {t('contributors')}
+                    </p>
+                )}
             </div>
         </div>
     );
