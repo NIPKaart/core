@@ -11,6 +11,8 @@ Inertia/Laravel web routes are the default for pages, forms and application acti
 
 The `/api` namespace is reserved for a deliberately designed external API. When that API is introduced, its first stable contract starts under `/api/v1`. A route does not become part of the public API merely because it returns JSON.
 
+Current exposure policy: [ADR 0011](0011-defer-external-api-and-bulk-data-access.md) records the decision not to offer an external API for now. Reserving the namespace is not a commitment to launch one.
+
 Collector delivery/import contracts are machine-to-machine integration boundaries and remain separate from both first-party web endpoints and the public read API.
 
 ## Consequences

@@ -49,7 +49,7 @@ The map is a means to answer these questions, not the product goal by itself.
 | Photos/evidence | Missing | — | Useful for community verification; privacy/moderation required |
 | Saved destinations/preferences | Missing | — | Later personalization; avoid sensitive profiling |
 | Public coverage/status | Missing | — | Useful for transparency and dataset acquisition |
-| Public API/data sharing | Partial/unclear | Existing API/Sanctum | Define only after internal read model is stable |
+| Public API/data sharing | Deliberately deferred | No external API offered; see [ADR 0011](../adr/0011-defer-external-api-and-bulk-data-access.md) | Reconsider for a concrete external consumer, then accept the full contract before exposure |
 
 ## Product streams
 
