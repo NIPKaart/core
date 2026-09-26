@@ -10,8 +10,11 @@ use App\Services\GeoapifyDestinationGeocoder;
 use App\Services\MunicipalDeliveryStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Opcodes\LogViewer\Facades\LogViewer;
 
@@ -41,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
             : null);
 
         ParkingSpace::observe(ParkingSpaceObserver::class);
+
+        RateLimiter::for('parking-discovery', fn (Request $request) => [
+            Limit::perMinute(300)->by($request->user()?->id ?: $request->ip()),
+        ]);
 
         LogViewer::auth(function ($request) {
             return $request->user() && ! $request->user()->suspended_at && $request->user()->hasRole(UserRole::ADMIN);
