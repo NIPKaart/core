@@ -37,18 +37,26 @@ final class ParkingDiscoveryController extends Controller
             'east' => ['required', 'numeric', 'between:-180,180'],
             'north' => ['required', 'numeric', 'between:-90,90'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:500'],
+            'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
         ]);
 
-        return response()->json([
-            'results' => $discovery->inViewport(
-                new GeoBounds(
-                    (float) $validated['west'],
-                    (float) $validated['south'],
-                    (float) $validated['east'],
-                    (float) $validated['north'],
-                ),
-                (int) ($validated['limit'] ?? 500),
+        $limit = (int) ($validated['limit'] ?? 500);
+        $page = (int) ($validated['page'] ?? 1);
+        $results = $discovery->inViewport(
+            new GeoBounds(
+                (float) $validated['west'],
+                (float) $validated['south'],
+                (float) $validated['east'],
+                (float) $validated['north'],
             ),
+            $limit + 1,
+            ($page - 1) * $limit,
+        );
+
+        return response()->json([
+            'results' => $results->take($limit)->values(),
+            'has_more' => $results->count() > $limit,
+            'page' => $page,
         ]);
     }
 }

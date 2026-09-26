@@ -1,12 +1,16 @@
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
+import ParkingResults, { type DiscoveryStatus } from '@/components/map/parking-results';
+import ViewportDiscovery from '@/components/map/viewport-discovery';
 import ZoomControl from '@/components/map/zoom-control';
-import { viewport } from '@/routes/map/parking';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { LayersControl, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { CircleMarker, LayersControl, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
@@ -18,77 +22,43 @@ import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
 
-function ViewportDiscovery({
-    onResults,
-}: {
-    onResults: (results: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) => void;
-}) {
+function SelectedParking({ result }: { result: ParkingResult | null }) {
     const map = useMap();
-    const controller = useRef<AbortController | null>(null);
-    const timeout = useRef<number | null>(null);
-    const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
-
-    const load = useCallback(
-        (force = false) => {
-            const visibleBounds = map.getBounds();
-            if (!force && loadedBounds.current?.contains(visibleBounds)) return;
-
-            if (timeout.current !== null) window.clearTimeout(timeout.current);
-            timeout.current = window.setTimeout(async () => {
-                const currentVisibleBounds = map.getBounds();
-                if (!force && loadedBounds.current?.contains(currentVisibleBounds)) return;
-
-                controller.current?.abort();
-                controller.current = new AbortController();
-
-                const bounds = currentVisibleBounds.pad(0.5);
-                const params = {
-                    west: String(bounds.getWest()),
-                    south: String(bounds.getSouth()),
-                    east: String(bounds.getEast()),
-                    north: String(bounds.getNorth()),
-                    limit: '500',
-                };
-
-                try {
-                    const response = await fetch(viewport.url({ query: params }), {
-                        signal: controller.current.signal,
-                        headers: { Accept: 'application/json' },
-                    });
-                    if (response.ok) {
-                        loadedBounds.current = bounds;
-                        onResults((await response.json()).results ?? [], {
-                            west: bounds.getWest(),
-                            south: bounds.getSouth(),
-                            east: bounds.getEast(),
-                            north: bounds.getNorth(),
-                        });
-                    }
-                } catch (error) {
-                    if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
-                }
-            }, 250);
-        },
-        [map, onResults],
-    );
-
-    useMapEvents({ moveend: () => load() });
-
     useEffect(() => {
-        load(true);
-        return () => {
-            if (timeout.current !== null) window.clearTimeout(timeout.current);
-            controller.current?.abort();
-        };
-    }, [load]);
-
-    return null;
+        if (result)
+            map.panInside([result.latitude, result.longitude], {
+                animate: false,
+                paddingTopLeft: [40, 40],
+                paddingBottomRight: [40, window.matchMedia('(max-width: 767px)').matches ? map.getSize().y * 0.55 + 40 : 40],
+            });
+    }, [map, result]);
+    return result ? (
+        <CircleMarker
+            center={[result.latitude, result.longitude]}
+            radius={20}
+            pathOptions={{ color: '#1d4ed8', weight: 4, fill: false }}
+            interactive={false}
+        />
+    ) : null;
 }
 
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
     const map = useMap();
     useEffect(() => {
-        if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
+        if (destination?.bounds) {
+            map.fitBounds(
+                [
+                    [destination.bounds.south, destination.bounds.west],
+                    [destination.bounds.north, destination.bounds.east],
+                ],
+                {
+                    maxZoom: 17,
+                    paddingTopLeft: [40, 40],
+                    paddingBottomRight: [40, map.getSize().y * 0.55 + 40],
+                    animate: false,
+                },
+            );
+        } else if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
     }, [destination, map]);
     return destination ? <Marker position={[destination.latitude, destination.longitude]} /> : null;
 }
@@ -136,41 +106,42 @@ export default function ParkingMap() {
         const latitude = Number(params.get('lat'));
         const longitude = Number(params.get('lng'));
         const label = params.get('destination');
+        const boundsValues = ['south', 'north', 'west', 'east'].map((key) => (params.has(key) ? Number(params.get(key)) : NaN));
+        const [south, north, west, east] = boundsValues;
+        const bounds =
+            boundsValues.every(Number.isFinite) && south >= -90 && north <= 90 && south <= north && west >= -180 && east <= 180 && west <= east
+                ? { south, north, west, east }
+                : undefined;
         return label && Number.isFinite(latitude) && Number.isFinite(longitude)
-            ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude }
+            ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude, bounds }
             : null;
     });
 
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
-    function mergeViewportResults(incoming: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) {
-        setViewportResults((current) => {
-            const next = new globalThis.Map(current.map((result) => [result.key, result]));
+    const [status, setStatus] = useState<DiscoveryStatus>('loading');
+    const [retry, setRetry] = useState(0);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
+    const [selectedResult, setSelectedResult] = useState<ParkingResult | null>(null);
+    const [expanded, setExpanded] = useState(true);
+    const isDesktop = useMediaQuery('(min-width: 768px)');
+    const returnFocus = useRef<HTMLElement | null>(null);
+    const resultsHeading = useRef<HTMLHeadingElement>(null);
 
-            for (const result of incoming) next.set(result.key, result);
-
-            for (const [key, result] of next) {
-                const insideLongitude =
-                    bounds.west <= bounds.east
-                        ? result.longitude >= bounds.west && result.longitude <= bounds.east
-                        : result.longitude >= bounds.west || result.longitude <= bounds.east;
-                const insideLatitude = result.latitude >= bounds.south && result.latitude <= bounds.north;
-                if (!insideLongitude || !insideLatitude) next.delete(key);
-            }
-
-            const merged = [...next.values()];
-            if (
-                merged.length === current.length &&
-                merged.every((result, index) => result.key === current[index]?.key && result === current[index])
-            ) {
-                return current;
-            }
-
-            return merged;
-        });
-    }
+    const restoreFocus = useCallback(
+        (event: Event) => {
+            event.preventDefault();
+            const resultButton = selectedResult ? document.getElementById(`parking-result-${selectedResult.key}`) : null;
+            const target = returnFocus.current?.isConnected ? returnFocus.current : (resultButton ?? resultsHeading.current);
+            target?.focus({ preventScroll: true });
+        },
+        [selectedResult],
+    );
 
     const selectParkingResult = useCallback((marker: ParkingResult) => {
+        returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        setSelectedResult(marker);
         setSelectedSpaceId(marker.id);
         setSelectedLat(marker.latitude);
         setSelectedLng(marker.longitude);
@@ -181,44 +152,86 @@ export default function ParkingMap() {
     return (
         <MapLayout>
             <Head title={t('head.title')} />
-            <div className="flex-1">
-                <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
-                    <HashSync />
-                    <DestinationFocus destination={destination} />
-                    <ViewportDiscovery onResults={mergeViewportResults} />
-                    <LayersControl position="topright">
-                        <BaseLayer checked name={tGlobal('layers.mapbox')}>
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                                url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                tileSize={512}
-                                zoomOffset={-1}
+            <main className="relative flex min-h-0 flex-1 flex-col">
+                {destination && (
+                    <Collapsible
+                        open={expanded}
+                        onOpenChange={setExpanded}
+                        className="absolute bottom-3 left-1/2 z-10 flex max-h-[55%] w-[min(24rem,calc(100%-1.5rem))] -translate-x-1/2 flex-col rounded-xl border bg-background shadow-lg data-[state=closed]:w-auto"
+                    >
+                        <div className="flex items-center justify-between gap-2 p-2">
+                            <h1 ref={resultsHeading} tabIndex={-1} className={expanded ? 'px-2 font-semibold' : 'sr-only'}>
+                                {t('results.title')}
+                            </h1>
+                            <CollapsibleTrigger asChild>
+                                <Button variant="outline" className={expanded ? 'min-h-11' : 'min-h-11 w-full'}>
+                                    {expanded ? t('results.collapse') : t('results.expand')}
+                                </Button>
+                            </CollapsibleTrigger>
+                        </div>
+                        {expanded && destination && <p className="px-4 pb-2 text-sm text-muted-foreground">{destination.label}</p>}
+                        <CollapsibleContent forceMount className="min-h-0 overflow-y-auto data-[state=closed]:hidden">
+                            <ParkingResults
+                                page={page}
+                                hasMore={hasMore}
+                                onPageChange={setPage}
+                                results={viewportResults}
+                                selectedKey={selectedResult?.key ?? null}
+                                status={status}
+                                onSelect={selectParkingResult}
+                                onRetry={() => setRetry((value) => value + 1)}
                             />
-                        </BaseLayer>
+                        </CollapsibleContent>
+                    </Collapsible>
+                )}
+                <section aria-label={t('results.map')} className="relative min-h-0 flex-1">
+                    <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                        <HashSync />
+                        <DestinationFocus destination={destination} />
+                        <ViewportDiscovery
+                            onResults={setViewportResults}
+                            onStatus={setStatus}
+                            retry={retry}
+                            page={page}
+                            onPageChange={setPage}
+                            onHasMore={setHasMore}
+                        />
+                        <SelectedParking result={selectedResult} />
+                        <LayersControl position="topright">
+                            <BaseLayer checked name={tGlobal('layers.mapbox')}>
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                                    tileSize={512}
+                                    zoomOffset={-1}
+                                />
+                            </BaseLayer>
 
-                        <BaseLayer name={tGlobal('layers.google')}>
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                                url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                                subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                                maxZoom={20}
-                            />
-                        </BaseLayer>
-                    </LayersControl>
+                            <BaseLayer name={tGlobal('layers.google')}>
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                    url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                                    maxZoom={20}
+                                />
+                            </BaseLayer>
+                        </LayersControl>
 
-                    <ParkingMarkerLayer results={viewportResults} onSelect={selectParkingResult} />
+                        <ParkingMarkerLayer results={viewportResults} onSelect={selectParkingResult} />
 
-                    <LegendControl />
-                    <LocateControl />
-                    <ZoomControl />
-                </MapContainer>
-            </div>
+                        <LegendControl />
+                        <LocateControl />
+                        <ZoomControl position={isDesktop ? 'bottomright' : 'topright'} />
+                    </MapContainer>
+                </section>
+            </main>
 
             {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                 <ParkingSpaceModal
                     spaceId={selectedSpaceId}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
+                    onCloseAutoFocus={restoreFocus}
                     latitude={selectedLat}
                     longitude={selectedLng}
                     confirmationStatusOptions={selectOptions.confirmationStatus}
@@ -230,6 +243,7 @@ export default function ParkingMap() {
                     spaceId={selectedSpaceId}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
+                    onCloseAutoFocus={restoreFocus}
                     latitude={selectedLat}
                     longitude={selectedLng}
                 />
@@ -240,6 +254,7 @@ export default function ParkingMap() {
                     spaceId={selectedSpaceId}
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
+                    onCloseAutoFocus={restoreFocus}
                     latitude={selectedLat}
                     longitude={selectedLng}
                 />

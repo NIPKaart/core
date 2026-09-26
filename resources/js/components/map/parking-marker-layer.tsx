@@ -66,7 +66,7 @@ export default function ParkingMarkerLayer({ results, onSelect }: Props) {
                 continue;
             }
 
-            const marker = L.marker([result.latitude, result.longitude], { icon: getInvalidParkingIcon() });
+            const marker = L.marker([result.latitude, result.longitude], { icon: getInvalidParkingIcon(), title: result.title, alt: result.title });
             marker.on('click', () => {
                 const current = resultsByKey.current.get(result.key);
                 if (current) onSelect(current);

@@ -21,15 +21,19 @@ final class ParkingDiscovery
         return $this->query(fn (Builder $query) => $query->withinRadius($origin, $metres)->withDistanceFrom($origin), $limit, true);
     }
 
-    public function inViewport(GeoBounds $bounds, int $limit = 100): Collection
+    public function inViewport(GeoBounds $bounds, int $limit = 100, int $offset = 0): Collection
     {
-        return $this->query(fn (Builder $query) => $query->inViewport($bounds), $limit, false);
+        return $this->query(fn (Builder $query) => $query->inViewport($bounds), $limit, false, $offset);
     }
 
-    private function query(callable $filter, int $limit, bool $withDistance): Collection
+    private function query(callable $filter, int $limit, bool $withDistance, int $offset = 0): Collection
     {
         if ($limit < 1 || $limit > 1000) {
             throw new InvalidArgumentException('Result limit must be between 1 and 1000.');
+        }
+
+        if ($offset < 0) {
+            throw new InvalidArgumentException('Result offset must not be negative.');
         }
 
         $union = null;
@@ -51,6 +55,6 @@ final class ParkingDiscovery
             $query->orderBy('distance_metres');
         }
 
-        return $query->orderBy('source')->orderBy('id')->limit($limit)->get()->map(ParkingResult::fromDatabaseRow(...));
+        return $query->orderBy('source')->orderBy('id')->offset($offset)->limit($limit)->get()->map(ParkingResult::fromDatabaseRow(...));
     }
 }

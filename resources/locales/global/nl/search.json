@@ -10,5 +10,17 @@
     "searching": "Zoeken…",
     "start_typing": "Begin met typen om te zoeken",
     "no_results": "Geen resultaten",
-    "error": "Er ging iets mis. Probeer het opnieuw."
+    "error": "Er ging iets mis. Probeer het opnieuw.",
+    "search_near": "Zoek parkeren rond “{{term}}”",
+    "suggestions": "Suggesties en parkeerlocaties",
+    "unknown_address": "Parkeerlocatie zonder straatnaam",
+    "no_destination": "Geen bestemming gevonden. Probeer een straatnaam met plaatsnaam.",
+    "types": {
+        "community": "Communitybijdrage",
+        "municipal": "Gemeentelijke parkeerlocatie",
+        "offstreet": "Garage of parkeerterrein",
+        "destination": "Plaats of adres"
+    },
+    "parking_count_one": "{{count}} parkeerlocatie",
+    "parking_count_other": "{{count}} parkeerlocaties"
 }

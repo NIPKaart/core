@@ -172,3 +172,17 @@ test('authenticated discovery limits follow the account rather than its IP', fun
     $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.2'])->getJson($nearby)->assertStatus(429);
     $this->actingAs(User::factory()->create())->getJson($nearby)->assertOk();
 })->with(['minute' => [1000, 0], 'hour' => [0, 10000]]);
+
+test('viewport pages expose every matching public result without moving the map', function () {
+    ParkingMunicipal::factory()->count(3)->sequence(['id' => 'a'], ['id' => 'b'], ['id' => 'c'])->create(['latitude' => 52, 'longitude' => 5, 'visibility' => true]);
+    ParkingMunicipal::factory()->create(['latitude' => 52, 'longitude' => 5, 'visibility' => false]);
+    ParkingOffstreet::factory()->create(['id' => 'a', 'latitude' => 52, 'longitude' => 5, 'visibility' => true]);
+    $query = ['west' => 4, 'south' => 51, 'east' => 6, 'north' => 53, 'limit' => 2];
+    $this->getJson(route('map.parking.viewport', $query))->assertOk()->assertJsonCount(2, 'results')->assertJsonPath('results.0.key', 'municipal:a')->assertJsonPath('results.1.key', 'municipal:b')->assertJsonPath('has_more', true);
+    $this->getJson(route('map.parking.viewport', [...$query, 'page' => 2]))->assertOk()->assertJsonCount(2, 'results')->assertJsonPath('results.0.key', 'municipal:c')->assertJsonPath('results.1.key', 'offstreet:a')->assertJsonPath('has_more', false);
+    $this->getJson(route('map.parking.viewport', [...$query, 'page' => 3]))->assertOk()->assertJsonCount(0, 'results')->assertJsonPath('has_more', false);
+});
+
+test('viewport rejects invalid page numbers', function ($page) {
+    $this->getJson(route('map.parking.viewport', ['west' => 4, 'south' => 51, 'east' => 6, 'north' => 53, 'page' => $page]))->assertUnprocessable()->assertJsonValidationErrors('page');
+})->with([0, -1, 1.5, 1000001]);

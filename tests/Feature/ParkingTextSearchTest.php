@@ -27,7 +27,7 @@ test('parking search includes all sources with labels and map coordinates', func
     expect($result['hits'][0]['href'])->toBe(route('location-map'));
     expect($result['hits'][1]['type'])->toBe('offstreet');
     expect($result['hits'][1]['href'])->toBe(route('garages'));
-    expect($result['hits'][2]['label'])->toBe('Canal municipal 2');
+    expect($result['hits'][2]['label'])->toBe('Canal municipal');
     expect($result['hits'][2]['sub'])->toBe('Amsterdam');
 });
 
@@ -125,4 +125,14 @@ test('a separator alone does not list every published record', function () {
 
     $result = app(ParkingTextSearch::class)->search(',', 10);
     expect($result)->toBe(['hits' => [], 'estimatedTotalHits' => 0]);
+});
+
+test('municipal capacity is never presented as a street address', function () {
+    $place = Municipality::factory()->create(['name' => 'Amsterdam']);
+    ParkingMunicipal::factory()->for($place)->create(['street' => null, 'number' => 1, 'visibility' => true]);
+
+    $result = app(ParkingTextSearch::class)->search('Amsterdam', 10);
+
+    expect($result['hits'][0]['label'])->toBe('Municipal spot');
+    expect($result['hits'][0]['sub'])->toBe('Amsterdam');
 });

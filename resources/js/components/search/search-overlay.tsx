@@ -1,13 +1,15 @@
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useRecentSearches } from '@/hooks/use-search-recent';
 import { cn } from '@/lib/utils';
+import { locationMap } from '@/routes';
 import { resolve as resolveDestination, suggestions } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
 import { Root as VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { ArrowRight, Search as SearchIcon, X } from 'lucide-react';
+import { ArrowRight, MapPin, Search as SearchIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { JSX } from 'react/jsx-runtime';
@@ -23,6 +25,8 @@ export default function SearchOverlay(): JSX.Element {
     const debounced = useDebouncedValue(query.trim(), 450);
     const [results, setResults] = useState<DestinationResult[]>([]);
     const [loading, setLoading] = useState(false);
+    const [resolving, setResolving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const controller = useRef<AbortController | null>(null);
 
     useEffect(() => {
@@ -31,57 +35,67 @@ export default function SearchOverlay(): JSX.Element {
 
     useEffect(() => {
         if (!open || debounced.length < 2) {
+            setLoading(false);
             setResults([]);
             return;
         }
 
         controller.current?.abort();
-        controller.current = new AbortController();
+        const request = new AbortController();
+        controller.current = request;
+        setError(null);
         setLoading(true);
         fetch(suggestions.url({ query: { q: debounced, limit: 10 } }), {
-            signal: controller.current.signal,
+            signal: request.signal,
             headers: { Accept: 'application/json' },
         })
             .then(async (response) => {
-                if (response.ok) setResults((await response.json()).results ?? []);
+                if (!response.ok) throw new Error('Search failed');
+                const data = await response.json();
+                if (!request.signal.aborted) setResults(data.results ?? []);
             })
-            .catch((error) => {
-                if (!(error instanceof DOMException && error.name === 'AbortError')) setResults([]);
+            .catch(() => {
+                if (!request.signal.aborted) {
+                    setResults([]);
+                    setError('error');
+                }
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                if (!request.signal.aborted) setLoading(false);
+            });
 
-        return () => controller.current?.abort();
+        return () => request.abort();
     }, [open, debounced]);
 
     function goToDestination(destination: DestinationResult) {
         addRecent(destination.label);
         closeSearch();
         setSearchQuery('');
-        const params = new URLSearchParams({
-            destination: destination.label,
-            lat: String(destination.latitude),
-            lng: String(destination.longitude),
+        window.location.href = locationMap.url({
+            query: {
+                destination: destination.type === 'street' && destination.sub ? `${destination.label}, ${destination.sub}` : destination.label,
+                lat: String(destination.latitude),
+                lng: String(destination.longitude),
+                ...(destination.bounds ? destination.bounds : {}),
+            },
         });
-        window.location.href = `/map?${params}`;
     }
 
     async function resolve() {
         const value = query.trim();
-        if (!value) return;
-        if (results.length === 1) {
-            goToDestination(results[0]);
-            return;
-        }
-
-        setLoading(true);
+        if (value.length < 2 || resolving) return;
+        setResolving(true);
+        setError(null);
         try {
             const response = await fetch(resolveDestination.url({ query: { q: value } }), { headers: { Accept: 'application/json' } });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.result) goToDestination(data.result);
-            }
+            if (!response.ok) throw new Error('Resolution failed');
+            const data = await response.json();
+            if (data.result) goToDestination(data.result);
+            else setError('no_destination');
+        } catch {
+            setError('error');
         } finally {
-            setLoading(false);
+            setResolving(false);
         }
     }
 
@@ -91,19 +105,27 @@ export default function SearchOverlay(): JSX.Element {
                 event.preventDefault();
                 void resolve();
             }}
-            className="relative flex h-12 items-center rounded-xl border bg-background px-3 sm:px-4"
+            className="flex flex-col gap-3"
         >
-            <SearchIcon className="mr-2 h-4 w-4 opacity-60" />
-            <input
-                ref={inputRef}
-                type="search"
-                inputMode="search"
-                placeholder={t('placeholder')}
-                value={query}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="w-full bg-transparent outline-none placeholder:text-muted-foreground/70"
-                aria-label={t('aria_input')}
-            />
+            <div className="flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 focus-within:ring-2 focus-within:ring-ring">
+                <SearchIcon aria-hidden="true" className="h-4 w-4 shrink-0 opacity-60" />
+                <input
+                    ref={inputRef}
+                    type="search"
+                    inputMode="search"
+                    placeholder={t('placeholder')}
+                    value={query}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="w-full bg-transparent outline-none placeholder:text-muted-foreground/70"
+                    aria-label={t('aria_input')}
+                />
+            </div>
+            {query.trim().length >= 2 && (
+                <Button type="submit" disabled={resolving} className="h-auto min-h-11 justify-between gap-3 px-4 py-3 text-left whitespace-normal">
+                    <span>{resolving ? t('searching') : t('search_near', { term: query.trim() })}</span>
+                    <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
+                </Button>
+            )}
         </form>
     );
 
@@ -137,9 +159,9 @@ export default function SearchOverlay(): JSX.Element {
             </div>
         ) : null;
 
-    const Results = query.trim().length > 0 && (
-        <ul className="overflow-hidden rounded-2xl border bg-background/70">
-            {loading && results.length === 0 ? (
+    const Results = query.trim().length >= 2 && (
+        <ul aria-label={t('suggestions')} className="max-h-[40dvh] overflow-y-auto rounded-xl border bg-background/70">
+            {loading || query.trim() !== debounced ? (
                 <li className="px-4 py-8 text-center text-sm text-muted-foreground">{t('searching')}</li>
             ) : results.length === 0 ? (
                 <li className="px-4 py-8 text-center text-sm text-muted-foreground">{t('no_results')}</li>
@@ -149,13 +171,21 @@ export default function SearchOverlay(): JSX.Element {
                         <button
                             type="button"
                             onClick={() => goToDestination(result)}
-                            className="group flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition hover:bg-muted/60"
+                            className="group flex min-h-14 w-full cursor-pointer items-center gap-3 px-4 py-3 text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                         >
+                            <MapPin aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium">{result.label}</div>
-                                {result.sub && <div className="truncate text-xs text-muted-foreground">{result.sub}</div>}
+                                <div className="text-sm font-medium">
+                                    {['Municipal spot', 'Community spot'].includes(result.label) ? t('unknown_address') : result.label}
+                                </div>
+                                {result.sub && <div className="text-xs text-muted-foreground">{result.sub}</div>}
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                    {result.type === 'street'
+                                        ? t('parking_count', { count: result.parking_count })
+                                        : t(`types.${['community', 'municipal', 'offstreet'].includes(result.type) ? result.type : 'destination'}`)}
+                                </div>
                             </div>
-                            <ArrowRight className="h-4 w-4 opacity-0 transition group-hover:opacity-60" />
+                            <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
                         </button>
                     </li>
                 ))
@@ -168,6 +198,12 @@ export default function SearchOverlay(): JSX.Element {
             <div className="flex flex-col gap-2 sm:gap-3">
                 {SearchInput}
                 {RecentChips}
+                {error && (
+                    <p role="alert" className="text-sm text-destructive">
+                        {t(error)}
+                    </p>
+                )}
+                {query.trim().length >= 2 && <h2 className="mt-2 text-sm font-semibold">{t('suggestions')}</h2>}
                 {Results}
             </div>
         </div>
@@ -176,6 +212,7 @@ export default function SearchOverlay(): JSX.Element {
     if (isMobile) {
         return (
             <Drawer
+                autoFocus
                 open={open}
                 onOpenChange={(nextOpen) => {
                     if (!nextOpen) {

@@ -14,7 +14,7 @@ final class ParkingTextSearch
     /**
      * @return array{hits: list<array{id: string, type: string, index: string, lat: float, lng: float, label: string, sub: ?string, score: float, href: string}>, estimatedTotalHits: int}
      */
-    public function search(string $text, int $limit): array
+    public function search(string $text, int $limit, bool $groupStreets = false): array
     {
         $text = trim(preg_replace('/\s+/u', ' ', $text));
         if ($text === '') {
@@ -38,7 +38,7 @@ final class ParkingTextSearch
             $query = $model::query()
                 ->leftJoin('municipalities as municipality', 'municipality.id', '=', $table.'.municipality_id')
                 ->leftJoin('provinces as province', 'province.id', '=', $table.'.province_id')
-                ->selectRaw("{$table}.id::text AS id, ?::text AS type, ?::text AS index, {$table}.latitude::double precision AS lat, {$table}.longitude::double precision AS lng", [$source, $table]);
+                ->selectRaw("{$table}.id::text AS id, {$table}.country_id AS country_id, ?::text AS type, ?::text AS index, {$table}.latitude::double precision AS lat, {$table}.longitude::double precision AS lng", [$source, $table]);
             $query->where($table.'.'.($source === 'community' ? 'status' : 'visibility'), $source === 'community' ? ParkingStatus::APPROVED : true);
             $placeColumn = $source === 'community' ? $table.'.city' : 'municipality.name';
             if ($place !== null && $place !== '') {
@@ -64,13 +64,14 @@ final class ParkingTextSearch
             $query->selectRaw("concat_ws(' ', ".implode(', ', $fields).') AS search_text');
             $label = match ($source) {
                 'community' => "COALESCE(NULLIF(trim({$table}.street), ''), NULLIF(trim({$table}.city), ''), 'Community spot')",
-                'municipal' => "COALESCE(NULLIF(trim(concat_ws(' ', {$table}.street, {$table}.number)), ''), 'Municipal spot')",
+                'municipal' => "COALESCE(NULLIF(trim({$table}.street), ''), 'Municipal spot')",
                 'offstreet' => "COALESCE(NULLIF(trim({$table}.name), ''), 'Garage / P+R')",
             };
             $sub = $source === 'community'
                 ? "COALESCE(NULLIF(trim({$table}.city), ''), NULLIF(trim({$table}.postcode), ''))"
                 : "COALESCE(NULLIF(trim(municipality.name), ''), NULLIF(trim(province.name), ''))";
             $query->selectRaw("{$label} AS label, {$sub} AS sub");
+            $query->selectRaw($source === 'offstreet' ? 'false AS has_street' : "NULLIF(trim({$table}.street), '') IS NOT NULL AS has_street");
             $branch = $query->toBase();
             $union = $union === null ? $branch : $union->unionAll($branch);
         }
@@ -84,9 +85,20 @@ final class ParkingTextSearch
                 }
             });
         }
-        $rows = $query->select(['id', 'type', 'index', 'lat', 'lng', 'label', 'sub'])
-            ->selectRaw('count(*) OVER () AS total')
-            ->selectRaw('CASE WHEN strpos(lower(search_text), lower(?)) > 0 THEN 1 ELSE 0 END + public.word_similarity(?, search_text) AS score', [$free, $free])
+        $score = 'CASE WHEN strpos(lower(search_text), lower(?)) > 0 THEN 1 ELSE 0 END + public.word_similarity(?, search_text)';
+        if ($groupStreets) {
+            $isStreet = "type IN ('community', 'municipal') AND has_street AND sub IS NOT NULL";
+            $group = "CASE WHEN {$isStreet} THEN concat_ws('|', 'street', country_id, lower(label), lower(sub)) ELSE type || ':' || id END";
+            $query->selectRaw("min(id) AS id, CASE WHEN bool_and({$isStreet}) THEN 'street' ELSE min(type) END AS type, min(index) AS index")
+                ->selectRaw('min(label) AS label, min(sub) AS sub, avg(lat) AS lat, avg(lng) AS lng, count(*) AS parking_count')
+                ->selectRaw('min(lat) AS south, max(lat) AS north, min(lng) AS west, max(lng) AS east')
+                ->selectRaw("max({$score}) AS score", [$free, $free])
+                ->groupByRaw($group);
+        } else {
+            $query->select(['id', 'type', 'index', 'lat', 'lng', 'label', 'sub'])
+                ->selectRaw("{$score} AS score", [$free, $free]);
+        }
+        $rows = $query->selectRaw('count(*) OVER () AS total')
             ->orderByDesc('score')->orderBy('label')->orderBy('type')->orderBy('id')
             ->limit(max(1, min(20, $limit)) * 2)->get();
 
