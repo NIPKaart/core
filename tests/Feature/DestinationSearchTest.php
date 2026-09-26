@@ -44,7 +44,6 @@ test('destination suggestions validate deliberate bounded queries', function () 
     $this->getJson('/api/destinations/suggestions?q=Amsterdam&limit=11')->assertUnprocessable()->assertJsonValidationErrors('limit');
 });
 
-
 test('autocomplete supplements internal results with geoapify when configured', function () {
     config(['services.geoapify.key' => 'test-key']);
     Http::fake([
