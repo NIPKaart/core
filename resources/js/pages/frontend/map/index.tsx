@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
 
-function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[]) => void }) {
+function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) => void }) {
     const map = useMap();
     const controller = useRef<AbortController | null>(null);
     const timeout = useRef<number | null>(null);
@@ -43,14 +43,21 @@ function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[]
                     signal: controller.current.signal,
                     headers: { Accept: 'application/json' },
                 });
-                if (response.ok) onResults((await response.json()).results ?? []);
+                if (response.ok) {
+                    onResults((await response.json()).results ?? [], {
+                        west: bounds.getWest(),
+                        south: bounds.getSouth(),
+                        east: bounds.getEast(),
+                        north: bounds.getNorth(),
+                    });
+                }
             } catch (error) {
                 if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
             }
         }, 250);
     }
 
-    useMapEvents({ moveend: load, zoomend: load });
+    useMapEvents({ moveend: load });
 
     useEffect(() => {
         load();
@@ -121,6 +128,36 @@ export default function Map() {
 
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
+    function mergeViewportResults(
+        incoming: ParkingResult[],
+        bounds: { west: number; south: number; east: number; north: number },
+    ) {
+        setViewportResults((current) => {
+            const next = new Map(current.map((result) => [result.key, result]));
+
+            for (const result of incoming) next.set(result.key, result);
+
+            for (const [key, result] of next) {
+                const insideLongitude =
+                    bounds.west <= bounds.east
+                        ? result.longitude >= bounds.west && result.longitude <= bounds.east
+                        : result.longitude >= bounds.west || result.longitude <= bounds.east;
+                const insideLatitude = result.latitude >= bounds.south && result.latitude <= bounds.north;
+                if (!insideLongitude || !insideLatitude) next.delete(key);
+            }
+
+            const merged = [...next.values()];
+            if (
+                merged.length === current.length &&
+                merged.every((result, index) => result.key === current[index]?.key && result === current[index])
+            ) {
+                return current;
+            }
+
+            return merged;
+        });
+    }
+
     const parkingMarkers = useMemo(
         () =>
             viewportResults.map((marker) => (
@@ -149,7 +186,7 @@ export default function Map() {
                 <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <HashSync />
                     <DestinationFocus destination={destination} />
-                    <ViewportDiscovery onResults={setViewportResults} />
+                    <ViewportDiscovery onResults={mergeViewportResults} />
                     <LayersControl position="topright">
                         <BaseLayer checked name={tGlobal('layers.mapbox')}>
                             <TileLayer
