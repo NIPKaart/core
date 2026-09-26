@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Contracts\DestinationGeocoder;
 use App\Enums\UserRole;
 use App\Models\ParkingSpace;
 use App\Observers\ParkingSpaceObserver;
+use App\Services\GeoapifyDestinationGeocoder;
 use App\Services\MunicipalDeliveryStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(DestinationGeocoder::class, GeoapifyDestinationGeocoder::class);
         $this->app->bind(MunicipalDeliveryStorage::class, fn () => new MunicipalDeliveryStorage(Storage::disk('municipal-deliveries')->getClient()));
     }
 
