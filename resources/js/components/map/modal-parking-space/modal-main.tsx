@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import app from '@/routes/app';
+import { show as parkingDetails } from '@/routes/map/parking-spaces';
 import { Link } from '@inertiajs/react';
 import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, MapPinned, Share2, X } from 'lucide-react';
 import * as React from 'react';
@@ -46,7 +47,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
         if (open && spaceId) {
             setLoading(true);
             setError(null);
-            fetch(`/api/parking-spaces/${spaceId}`)
+            fetch(parkingDetails.url(spaceId), { headers: { Accept: 'application/json' } })
                 .then((res) => {
                     if (!res.ok) throw new Error('Not found');
                     return res.json();
@@ -141,7 +142,7 @@ export default function ParkingSpaceModal({ spaceId, open, onClose, latitude, lo
                                 data={data}
                                 confirmationStatusOptions={confirmationStatusOptions}
                                 onConfirmed={() => {
-                                    fetch(`/api/parking-spaces/${spaceId}`)
+                                    fetch(parkingDetails.url(spaceId), { headers: { Accept: 'application/json' } })
                                         .then((res) => res.json())
                                         .then(setData);
                                 }}

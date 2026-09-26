@@ -4,6 +4,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useRecentSearches } from '@/hooks/use-search-recent';
 import { cn } from '@/lib/utils';
+import { resolve as resolveDestination, suggestions } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
 import { Root as VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { ArrowRight, Search as SearchIcon, X } from 'lucide-react';
@@ -37,7 +38,7 @@ export default function SearchOverlay(): JSX.Element {
         controller.current?.abort();
         controller.current = new AbortController();
         setLoading(true);
-        fetch(`/api/destinations/suggestions?q=${encodeURIComponent(debounced)}&limit=10`, {
+        fetch(suggestions.url({ query: { q: debounced, limit: 10 } }), {
             signal: controller.current.signal,
             headers: { Accept: 'application/json' },
         })
@@ -74,7 +75,7 @@ export default function SearchOverlay(): JSX.Element {
 
         setLoading(true);
         try {
-            const response = await fetch(`/api/destinations/resolve?q=${encodeURIComponent(value)}`, { headers: { Accept: 'application/json' } });
+            const response = await fetch(resolveDestination.url({ query: { q: value } }), { headers: { Accept: 'application/json' } });
             if (response.ok) {
                 const data = await response.json();
                 if (data.result) goToDestination(data.result);

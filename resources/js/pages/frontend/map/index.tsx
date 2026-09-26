@@ -2,6 +2,7 @@ import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
 import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
 import ZoomControl from '@/components/map/zoom-control';
+import { viewport } from '@/routes/map/parking';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
@@ -41,16 +42,16 @@ function ViewportDiscovery({
                 controller.current = new AbortController();
 
                 const bounds = currentVisibleBounds.pad(0.5);
-                const params = new URLSearchParams({
+                const params = {
                     west: String(bounds.getWest()),
                     south: String(bounds.getSouth()),
                     east: String(bounds.getEast()),
                     north: String(bounds.getNorth()),
                     limit: '500',
-                });
+                };
 
                 try {
-                    const response = await fetch(`/api/parking/viewport?${params}`, {
+                    const response = await fetch(viewport.url({ query: params }), {
                         signal: controller.current.signal,
                         headers: { Accept: 'application/json' },
                     });

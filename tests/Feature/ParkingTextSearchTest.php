@@ -5,23 +5,30 @@ use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
+use App\Services\ParkingTextSearch;
 use Illuminate\Support\Facades\Notification;
 
 test('blank search returns no parking records', function () {
-    $this->getJson('/api/search?q=')->assertExactJson(['hits' => [], 'estimatedTotalHits' => 0]);
+    $result = app(ParkingTextSearch::class)->search('', 10);
+    expect($result)->toBe(['hits' => [], 'estimatedTotalHits' => 0]);
 });
 
-test('guests search all sources with labels and map coordinates', function () {
+test('parking search includes all sources with labels and map coordinates', function () {
     $place = Municipality::factory()->create(['name' => 'Amsterdam']);
     ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'street' => 'Canal community', 'city' => 'Amsterdam', 'latitude' => 52.1, 'longitude' => 4.2]);
     ParkingOffstreet::factory()->for($place)->create(['name' => 'Canal garage', 'visibility' => true]);
     ParkingMunicipal::factory()->for($place)->create(['street' => 'Canal municipal', 'number' => 2, 'visibility' => true]);
 
-    $this->getJson('/api/search?q=Canal')->assertOk()->assertJsonPath('estimatedTotalHits', 3)
-        ->assertJsonPath('hits.0.type', 'community')->assertJsonPath('hits.0.lat', 52.1)->assertJsonPath('hits.0.lng', 4.2)
-        ->assertJsonPath('hits.0.href', route('location-map'))
-        ->assertJsonPath('hits.1.type', 'offstreet')->assertJsonPath('hits.1.href', route('garages'))
-        ->assertJsonPath('hits.2.label', 'Canal municipal 2')->assertJsonPath('hits.2.sub', 'Amsterdam');
+    $result = app(ParkingTextSearch::class)->search('Canal', 10);
+    expect($result['estimatedTotalHits'])->toBe(3);
+    expect($result['hits'][0]['type'])->toBe('community');
+    expect($result['hits'][0]['lat'])->toBe(52.1);
+    expect($result['hits'][0]['lng'])->toBe(4.2);
+    expect($result['hits'][0]['href'])->toBe(route('location-map'));
+    expect($result['hits'][1]['type'])->toBe('offstreet');
+    expect($result['hits'][1]['href'])->toBe(route('garages'));
+    expect($result['hits'][2]['label'])->toBe('Canal municipal 2');
+    expect($result['hits'][2]['sub'])->toBe('Amsterdam');
 });
 
 test('place and postcode filters preserve source specific search', function (string $postcode) {
@@ -31,17 +38,22 @@ test('place and postcode filters preserve source specific search', function (str
     ParkingMunicipal::factory()->for($place)->create(['street' => 'Canal', 'visibility' => true]);
     ParkingOffstreet::factory()->for($place)->create(['name' => 'Canal', 'visibility' => true]);
 
-    $this->getJson('/api/search?q='.urlencode('aMsTeRdAm, Canal '.$postcode))
-        ->assertJsonPath('estimatedTotalHits', 3);
-    $this->getJson('/api/search?q='.urlencode($postcode))->assertJsonCount(1, 'hits')->assertJsonPath('hits.0.id', $space->id);
+    $result = app(ParkingTextSearch::class)->search('aMsTeRdAm, Canal '.$postcode, 10);
+    expect($result['estimatedTotalHits'])->toBe(3);
+    $result = app(ParkingTextSearch::class)->search($postcode, 10);
+    expect($result['hits'])->toHaveCount(1);
+    expect($result['hits'][0]['id'])->toBe($space->id);
 })->with(['1234ab', '1234 AB']);
 
 test('search supports partial words and misspellings with exact matches first', function () {
     ParkingOffstreet::factory()->create(['name' => 'Keizersgracht', 'visibility' => true, 'id' => 'exact']);
     ParkingOffstreet::factory()->create(['name' => 'Keizergracht', 'visibility' => true, 'id' => 'typo']);
 
-    $this->getJson('/api/search?q=Keizersgracht')->assertJsonCount(2, 'hits')->assertJsonPath('hits.0.id', 'exact');
-    $this->getJson('/api/search?q=Keizers')->assertJsonPath('hits.0.id', 'exact');
+    $result = app(ParkingTextSearch::class)->search('Keizersgracht', 10);
+    expect($result['hits'])->toHaveCount(2);
+    expect($result['hits'][0]['id'])->toBe('exact');
+    $result = app(ParkingTextSearch::class)->search('Keizers', 10);
+    expect($result['hits'][0]['id'])->toBe('exact');
 });
 
 test('unpublished hidden and deleted records never appear', function () {
@@ -51,7 +63,8 @@ test('unpublished hidden and deleted records never appear', function () {
     ParkingMunicipal::factory()->create(['street' => 'Canal', 'visibility' => false]);
     ParkingOffstreet::factory()->create(['name' => 'Canal', 'visibility' => false]);
 
-    $this->getJson('/api/search?q=Canal')->assertExactJson(['hits' => [], 'estimatedTotalHits' => 0]);
+    $result = app(ParkingTextSearch::class)->search('Canal', 10);
+    expect($result)->toBe(['hits' => [], 'estimatedTotalHits' => 0]);
 });
 
 test('search sees record and related geography updates without synchronization', function () {
@@ -61,14 +74,17 @@ test('search sees record and related geography updates without synchronization',
     $space->save();
     $place->update(['name' => 'Aftertown']);
 
-    $this->getJson('/api/search?q=Aftertown,%20Replacement')->assertJsonPath('hits.0.id', $space->id);
-    $this->getJson('/api/search?q=Beforetown,%20Replacement')->assertJsonCount(0, 'hits');
+    $result = app(ParkingTextSearch::class)->search('Aftertown, Replacement', 10);
+    expect($result['hits'][0]['id'])->toBe($space->id);
+    $result = app(ParkingTextSearch::class)->search('Beforetown, Replacement', 10);
+    expect($result['hits'])->toHaveCount(0);
 });
 
 test('literal wildcard and SQL input cannot broaden the result set', function (string $text) {
     ParkingOffstreet::factory()->create(['name' => 'Canal', 'visibility' => true]);
 
-    $this->getJson('/api/search?q='.urlencode($text))->assertJsonCount(0, 'hits');
+    $result = app(ParkingTextSearch::class)->search($text, 10);
+    expect($result['hits'])->toHaveCount(0);
 })->with(['%', '_', "' OR 1=1 --", '\\']);
 
 test('limits and source identity are deterministic', function () {
@@ -77,35 +93,36 @@ test('limits and source identity are deterministic', function () {
     ParkingMunicipal::factory()->for($place)->create(['id' => 'shared', 'street' => 'Canal', 'number' => 2, 'visibility' => true]);
     ParkingOffstreet::factory()->for($place)->create(['id' => 'third', 'name' => 'Canal 2', 'visibility' => true]);
 
-    $this->getJson('/api/search?q=Canal&limit=1')->assertJsonCount(2, 'hits')->assertJsonPath('estimatedTotalHits', 3)
-        ->assertJsonPath('hits.0.type', 'municipal')->assertJsonPath('hits.1.type', 'offstreet');
-    $this->getJson('/api/search?q=Canal&limit=0')->assertJsonCount(2, 'hits');
+    $result = app(ParkingTextSearch::class)->search('Canal', 1);
+    expect($result['hits'])->toHaveCount(2);
+    expect($result['estimatedTotalHits'])->toBe(3);
+    expect($result['hits'][0]['type'])->toBe('municipal');
+    expect($result['hits'][1]['type'])->toBe('offstreet');
+    $result = app(ParkingTextSearch::class)->search('Canal', 0);
+    expect($result['hits'])->toHaveCount(2);
 });
-
-test('invalid or excessive queries return validation errors', function (array $query, string $field) {
-    $this->getJson('/api/search?'.http_build_query($query))->assertUnprocessable()->assertJsonValidationErrors($field);
-})->with([
-    [['q' => ['Canal']], 'q'],
-    [['q' => str_repeat('x', 201)], 'q'],
-    [['q' => 'Canal', 'limit' => 'invalid'], 'limit'],
-]);
 
 test('community descriptive fields remain searchable', function (string $field) {
     $space = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, $field => 'Distinctiveword']);
 
-    $this->getJson('/api/search?q=Distinctiveword')->assertJsonCount(1, 'hits')->assertJsonPath('hits.0.id', $space->id);
+    $result = app(ParkingTextSearch::class)->search('Distinctiveword', 10);
+    expect($result['hits'])->toHaveCount(1);
+    expect($result['hits'][0]['id'])->toBe($space->id);
 })->with(['street', 'city', 'suburb', 'neighbourhood', 'amenity', 'description']);
 
 test('imported URLs and province names remain searchable', function () {
     $space = ParkingOffstreet::factory()->create(['visibility' => true, 'url' => 'https://example.org/unique-facility']);
     $space->province->update(['name' => 'Distinctiveprovince']);
 
-    $this->getJson('/api/search?q=unique-facility')->assertJsonPath('hits.0.id', $space->id);
-    $this->getJson('/api/search?q=Distinctiveprovince')->assertJsonPath('hits.0.id', $space->id);
+    $result = app(ParkingTextSearch::class)->search('unique-facility', 10);
+    expect($result['hits'][0]['id'])->toBe($space->id);
+    $result = app(ParkingTextSearch::class)->search('Distinctiveprovince', 10);
+    expect($result['hits'][0]['id'])->toBe($space->id);
 });
 
 test('a separator alone does not list every published record', function () {
     ParkingOffstreet::factory()->create(['visibility' => true]);
 
-    $this->getJson('/api/search?q=,')->assertExactJson(['hits' => [], 'estimatedTotalHits' => 0]);
+    $result = app(ParkingTextSearch::class)->search(',', 10);
+    expect($result)->toBe(['hits' => [], 'estimatedTotalHits' => 0]);
 });

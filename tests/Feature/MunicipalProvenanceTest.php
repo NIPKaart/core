@@ -20,7 +20,7 @@ it('exposes only reviewed provenance and keeps an old source date distinct from 
     $source->update(['name' => 'UNREVIEWED NAME']);
     MunicipalImport::factory()->for($source)->create(['retrieved_at' => now()]);
 
-    $response = $this->getJson('/api/parking-municipal/'.$space->id)->assertOk();
+    $response = $this->getJson('/map/parking-municipal/'.$space->id)->assertOk();
 
     $response->assertJsonPath('provenance', [
         'name' => 'Amsterdam', 'attribution' => 'Gemeente Amsterdam — CC0',
@@ -35,11 +35,11 @@ it('does not invent provenance for legacy or unpublished records', function (?st
     $import = $state ? MunicipalImport::factory()->for($source)->create(['state' => $state]) : null;
     $space = ParkingMunicipal::factory()->create(['visibility' => true, 'dataset_source_id' => $source->id, 'published_import_id' => $import?->id]);
 
-    $this->getJson('/api/parking-municipal/'.$space->id)->assertOk()->assertJsonPath('provenance', [
+    $this->getJson('/map/parking-municipal/'.$space->id)->assertOk()->assertJsonPath('provenance', [
         'name' => null, 'attribution' => null, 'url' => null, 'terms_url' => null, 'fetched_at' => null, 'source_updated_at' => null,
     ]);
     $space->update(['visibility' => false]);
-    $this->getJson('/api/parking-municipal/'.$space->id)->assertNotFound();
+    $this->getJson('/map/parking-municipal/'.$space->id)->assertNotFound();
 })->with([null, 'pending', 'rejected']);
 
 it('does not expose credential-bearing or executable source links', function (string $url) {
@@ -47,7 +47,7 @@ it('does not expose credential-bearing or executable source links', function (st
     $import = MunicipalImport::factory()->for($source)->create(['state' => 'published']);
     $space = ParkingMunicipal::factory()->create(['visibility' => true, 'dataset_source_id' => $source->id, 'published_import_id' => $import->id]);
 
-    $this->getJson('/api/parking-municipal/'.$space->id)->assertJsonPath('provenance.url', null)->assertJsonPath('provenance.terms_url', null)->assertDontSee('SECRET');
+    $this->getJson('/map/parking-municipal/'.$space->id)->assertJsonPath('provenance.url', null)->assertJsonPath('provenance.terms_url', null)->assertDontSee('SECRET');
 })->with(['https://user:SECRET@example.com/data', 'https://example.com/data?token=SECRET', 'javascript:SECRET', 'https://example.com/data#SECRET']);
 
 it('marks never delivered sources overdue and recovers only when a recent valid import exists', function () {

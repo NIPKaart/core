@@ -1,20 +1,3 @@
 <?php
 
-use App\Http\Controllers\Api;
-use Illuminate\Support\Facades\Route;
-
-// API routes for parking space information
-Route::middleware(['throttle:30,1', 'web'])->group(function () {
-    Route::get('parking-spaces/{id}', [Api\SpacesInfoController::class, 'ParkingSpaceInfo']);
-    Route::get('parking-municipal/{id}', [Api\SpacesInfoController::class, 'ParkingMunicipalInfo']);
-    Route::get('parking-offstreet/{id}', [Api\SpacesInfoController::class, 'ParkingOffstreetInfo']);
-});
-
-// API route for search functionality
-Route::middleware(['throttle:60,1', 'web'])->group(function () {
-    Route::get('search', [Api\SearchController::class, 'search']);
-    Route::get('destinations/suggestions', [Api\DestinationSearchController::class, 'suggestions']);
-    Route::get('destinations/resolve', [Api\DestinationSearchController::class, 'resolve']);
-    Route::get('parking/nearby', [Api\ParkingDiscoveryController::class, 'nearby']);
-    Route::get('parking/viewport', [Api\ParkingDiscoveryController::class, 'viewport']);
-});
+// Reserved for a deliberately designed, versioned external API (ADR 0010).

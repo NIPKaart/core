@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
 test('API errors are JSON even when the client accepts HTML', function (string $path, int $status) {
+    Route::get('/api/test-missing-model', fn () => throw new ModelNotFoundException);
     Route::get('/api/test-auth', fn () => response()->json([]))->middleware('auth');
 
     $this->get($path, ['Accept' => 'text/html'])
@@ -13,7 +15,7 @@ test('API errors are JSON even when the client accepts HTML', function (string $
 })->with([
     'missing route' => ['/api/does-not-exist', 404],
     'unauthenticated' => ['/api/test-auth', 401],
-    'missing parking space' => ['/api/parking-spaces/00000000-0000-4000-8000-000000000000', 404],
+    'missing model' => ['/api/test-missing-model', 404],
 ]);
 
 test('API validation exceptions have JSON field errors without an Accept header', function () {

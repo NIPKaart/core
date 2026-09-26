@@ -16,7 +16,7 @@ test('guests can discover public parking near a destination', function () {
         'longitude' => 5.0,
     ]);
 
-    $this->getJson('/api/parking/nearby?latitude=52.36&longitude=4.88&radius=500')
+    $this->getJson('/map/parking/nearby?latitude=52.36&longitude=4.88&radius=500')
         ->assertOk()
         ->assertJsonCount(1, 'results')
         ->assertJsonPath('results.0.key', 'community:'.$near->id)
@@ -24,8 +24,8 @@ test('guests can discover public parking near a destination', function () {
 });
 
 test('nearby parking discovery validates coordinates radius and limit', function () {
-    $this->getJson('/api/parking/nearby?latitude=91&longitude=4.88')->assertUnprocessable()->assertJsonValidationErrors('latitude');
-    $this->getJson('/api/parking/nearby?latitude=52&longitude=181')->assertUnprocessable()->assertJsonValidationErrors('longitude');
-    $this->getJson('/api/parking/nearby?latitude=52&longitude=5&radius=20')->assertUnprocessable()->assertJsonValidationErrors('radius');
-    $this->getJson('/api/parking/nearby?latitude=52&longitude=5&limit=201')->assertUnprocessable()->assertJsonValidationErrors('limit');
+    $this->getJson('/map/parking/nearby?latitude=91&longitude=4.88')->assertUnprocessable()->assertJsonValidationErrors('latitude');
+    $this->getJson('/map/parking/nearby?latitude=52&longitude=181')->assertUnprocessable()->assertJsonValidationErrors('longitude');
+    $this->getJson('/map/parking/nearby?latitude=52&longitude=5&radius=20')->assertUnprocessable()->assertJsonValidationErrors('radius');
+    $this->getJson('/map/parking/nearby?latitude=52&longitude=5&limit=201')->assertUnprocessable()->assertJsonValidationErrors('limit');
 });

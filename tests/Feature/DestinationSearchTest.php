@@ -22,7 +22,7 @@ test('destination suggestions normalize internal parking results', function () {
         'longitude' => 4.87,
     ]);
 
-    $response = $this->getJson('/api/destinations/suggestions?q=Museum')
+    $response = $this->getJson('/destinations/suggestions?q=Museum')
         ->assertOk()
         ->assertJsonCount(2, 'results')
         ->assertJsonStructure(['results' => [['key', 'label', 'sub', 'type', 'latitude', 'longitude']]]);
@@ -36,12 +36,12 @@ test('destination suggestions normalize internal parking results', function () {
 test('destination suggestions exclude unpublished internal records', function () {
     ParkingSpace::factory()->create(['status' => ParkingStatus::PENDING, 'street' => 'Hidden destination']);
 
-    $this->getJson('/api/destinations/suggestions?q=Hidden')->assertExactJson(['results' => []]);
+    $this->getJson('/destinations/suggestions?q=Hidden')->assertExactJson(['results' => []]);
 });
 
 test('destination suggestions validate deliberate bounded queries', function () {
-    $this->getJson('/api/destinations/suggestions?q=a')->assertUnprocessable()->assertJsonValidationErrors('q');
-    $this->getJson('/api/destinations/suggestions?q=Amsterdam&limit=11')->assertUnprocessable()->assertJsonValidationErrors('limit');
+    $this->getJson('/destinations/suggestions?q=a')->assertUnprocessable()->assertJsonValidationErrors('q');
+    $this->getJson('/destinations/suggestions?q=Amsterdam&limit=11')->assertUnprocessable()->assertJsonValidationErrors('limit');
 });
 
 test('autocomplete supplements internal results with geoapify when configured', function () {
@@ -57,7 +57,7 @@ test('autocomplete supplements internal results with geoapify when configured', 
         ]]]),
     ]);
 
-    $this->getJson('/api/destinations/suggestions?q=Rijksmuseum')
+    $this->getJson('/destinations/suggestions?q=Rijksmuseum')
         ->assertOk()
         ->assertJsonPath('results.0.key', 'geoapify:museum')
         ->assertJsonPath('results.0.latitude', 52.359998);
@@ -81,7 +81,7 @@ test('explicit resolution prefers nominatim and avoids geoapify fallback when re
         'api.geoapify.com/*' => Http::response(['results' => []]),
     ]);
 
-    $this->getJson('/api/destinations/resolve?q=Rijksmuseum')
+    $this->getJson('/destinations/resolve?q=Rijksmuseum')
         ->assertOk()
         ->assertJsonPath('result.key', 'nominatim:123')
         ->assertJsonPath('result.type', 'museum');
@@ -104,9 +104,17 @@ test('explicit resolution falls back to geoapify when public nominatim budget is
         ]]]),
     ]);
 
-    $this->getJson('/api/destinations/resolve?q=Fallback%20place')
+    $this->getJson('/destinations/resolve?q=Fallback%20place')
         ->assertOk()
         ->assertJsonPath('result.key', 'geoapify:fallback');
 
     Http::assertSent(fn ($request) => str_contains($request->url(), 'api.geoapify.com'));
 });
+
+test('invalid or excessive queries return validation errors', function (array $query, string $field) {
+    $this->getJson('/destinations/suggestions?'.http_build_query($query))->assertUnprocessable()->assertJsonValidationErrors($field);
+})->with([
+    [['q' => ['Canal']], 'q'],
+    [['q' => str_repeat('x', 201)], 'q'],
+    [['q' => 'Canal', 'limit' => 'invalid'], 'limit'],
+]);

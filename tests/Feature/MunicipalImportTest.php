@@ -415,7 +415,7 @@ it('keeps the original geometry and requires explicit review before publishing i
     expect($geometry)->valid->toBeTrue()->contains_point->toBeTrue();
     expect($import->fresh())->state->toBe('published')->reviewed_by->toBe($user->id);
     $delta = 0.001;
-    $this->getJson('/api/parking/viewport?'.http_build_query([
+    $this->getJson('/map/parking/viewport?'.http_build_query([
         'west' => $space->longitude - $delta,
         'south' => $space->latitude - $delta,
         'east' => $space->longitude + $delta,
