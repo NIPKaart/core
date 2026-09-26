@@ -8,6 +8,7 @@ use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
 use App\Support\GeoBounds;
 use App\Support\GeoPoint;
+use App\Support\ParkingResult;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,6 @@ final class ParkingDiscovery
             $query->orderBy('distance_metres');
         }
 
-        return $query->orderBy('source')->orderBy('id')->limit($limit)->get();
+        return $query->orderBy('source')->orderBy('id')->limit($limit)->get()->map(ParkingResult::fromDatabaseRow(...));
     }
 }

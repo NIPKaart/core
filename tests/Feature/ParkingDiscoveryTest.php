@@ -7,6 +7,7 @@ use App\Models\ParkingSpace;
 use App\Services\ParkingDiscovery;
 use App\Support\GeoBounds;
 use App\Support\GeoPoint;
+use App\Support\ParkingResult;
 
 test('discovery includes only public records from all three sources', function (string $query) {
     $coordinates = ['latitude' => 52, 'longitude' => 5];
@@ -28,7 +29,7 @@ test('discovery includes only public records from all three sources', function (
     expect($results->pluck('key')->all())->toBe(['community:'.$community->id, 'municipal:shared', 'offstreet:shared']);
     expect($results->pluck('latitude')->all())->toBe([52.0, 52.0, 52.0]);
     expect($results->pluck('longitude')->all())->toBe([5.0, 5.0, 5.0]);
-    expect($results->pluck('distance_metres')->all())->toBe($query === 'radius' ? [0.0, 0.0, 0.0] : [null, null, null]);
+    expect($results->pluck('distanceMetres')->all())->toBe($query === 'radius' ? [0.0, 0.0, 0.0] : [null, null, null]);
 })->with(['radius', 'viewport']);
 
 test('discovery sorts by distance before source and ID and then applies its limit', function () {
@@ -50,3 +51,34 @@ test('discovery rejects limits outside its supported range', function (int $limi
         : $discovery->inViewport(new GeoBounds(4, 51, 6, 53), $limit)
     )->toThrow(InvalidArgumentException::class);
 })->with([0, 1001])->with(['radius', 'viewport']);
+
+test('discovery returns a shared typed result contract', function () {
+    $space = ParkingSpace::factory()->create([
+        'latitude' => 52,
+        'longitude' => 5,
+        'street' => 'Teststraat',
+        'status' => ParkingStatus::APPROVED,
+    ]);
+
+    $result = app(ParkingDiscovery::class)->withinRadius(new GeoPoint(52, 5), 200)->first();
+
+    expect($result)
+        ->toBeInstanceOf(ParkingResult::class)
+        ->key->toBe('community:'.$space->id)
+        ->id->toBe($space->id)
+        ->source->toBe('community')
+        ->title->toBe('Teststraat')
+        ->latitude->toBe(52.0)
+        ->longitude->toBe(5.0)
+        ->distanceMetres->toBe(0.0);
+
+    expect($result->jsonSerialize())->toBe([
+        'key' => 'community:'.$space->id,
+        'id' => $space->id,
+        'source' => 'community',
+        'latitude' => 52.0,
+        'longitude' => 5.0,
+        'title' => 'Teststraat',
+        'distance_metres' => 0.0,
+    ]);
+});
