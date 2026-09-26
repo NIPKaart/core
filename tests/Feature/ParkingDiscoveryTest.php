@@ -7,6 +7,7 @@ use App\Models\ParkingSpace;
 use App\Services\ParkingDiscovery;
 use App\Support\GeoBounds;
 use App\Support\GeoPoint;
+use App\Support\ParkingResult;
 
 test('discovery includes only public records from all three sources', function (string $query) {
     $coordinates = ['latitude' => 52, 'longitude' => 5];
@@ -50,3 +51,35 @@ test('discovery rejects limits outside its supported range', function (int $limi
         : $discovery->inViewport(new GeoBounds(4, 51, 6, 53), $limit)
     )->toThrow(InvalidArgumentException::class);
 })->with([0, 1001])->with(['radius', 'viewport']);
+
+
+test('discovery returns a shared typed result contract', function () {
+    $space = ParkingSpace::factory()->create([
+        'latitude' => 52,
+        'longitude' => 5,
+        'street' => 'Teststraat',
+        'status' => ParkingStatus::APPROVED,
+    ]);
+
+    $result = app(ParkingDiscovery::class)->withinRadius(new GeoPoint(52, 5), 200)->first();
+
+    expect($result)
+        ->toBeInstanceOf(ParkingResult::class)
+        ->key->toBe('community:'.$space->id)
+        ->id->toBe($space->id)
+        ->source->toBe('community')
+        ->title->toBe('Teststraat')
+        ->latitude->toBe(52.0)
+        ->longitude->toBe(5.0)
+        ->distanceMetres->toBe(0.0);
+
+    expect($result->jsonSerialize())->toBe([
+        'key' => 'community:'.$space->id,
+        'id' => $space->id,
+        'source' => 'community',
+        'latitude' => 52.0,
+        'longitude' => 5.0,
+        'title' => 'Teststraat',
+        'distance_metres' => 0.0,
+    ]);
+});
