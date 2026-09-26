@@ -70,7 +70,9 @@ export default function DestinationSearch({ onSelect }: Props) {
     return (
         <form onSubmit={submit} className="absolute top-4 left-1/2 z-[1000] w-[min(36rem,calc(100%-2rem))] -translate-x-1/2">
             <div className="rounded-lg border bg-background shadow-lg">
-                <label htmlFor="destination-search" className="sr-only">Where do you want to go?</label>
+                <label htmlFor="destination-search" className="sr-only">
+                    Where do you want to go?
+                </label>
                 <Input
                     id="destination-search"
                     value={query}
@@ -97,7 +99,11 @@ export default function DestinationSearch({ onSelect }: Props) {
                         ))}
                     </ul>
                 )}
-                {loading && <span className="sr-only" aria-live="polite">Searching destinations</span>}
+                {loading && (
+                    <span className="sr-only" aria-live="polite">
+                        Searching destinations
+                    </span>
+                )}
             </div>
         </form>
     );
