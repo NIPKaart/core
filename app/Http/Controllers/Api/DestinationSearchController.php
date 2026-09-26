@@ -17,7 +17,7 @@ final class DestinationSearchController extends Controller
         ]);
 
         return response()->json([
-            'results' => $search->search($validated['q'], (int) ($validated['limit'] ?? 5)),
+            'results' => $search->suggestions($validated['q'], (int) ($validated['limit'] ?? 5)),
         ]);
     }
 
