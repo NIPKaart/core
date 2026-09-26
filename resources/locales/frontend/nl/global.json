@@ -5,7 +5,9 @@
         "loading": "Laden...",
         "save": "Opslaan",
         "log_out": "Uitloggen",
-        "close": "Sluiten"
+        "close": "Sluiten",
+        "add_favorite": "Toevoegen aan favorieten",
+        "remove_favorite": "Verwijderen uit favorieten"
     },
     "layers": {
         "mapbox": "Mapbox Straten",

@@ -51,6 +51,8 @@ class SpacesInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
+            'latitude' => $location->latitude,
+            'longitude' => $location->longitude,
             'country' => $location->country->name ?? null,
             'province' => $location->province->name ?? null,
             'municipality' => $location->municipality->name ?? null,
@@ -61,6 +63,7 @@ class SpacesInfoController extends Controller
             'rule_url' => $rule ? $rule->url : null,
             'parking_time' => $location->parking_time,
             'created_at' => $location->created_at,
+            'updated_at' => $location->updated_at,
             'is_favorited' => $isFavorited,
             'confirmed_today' => $confirmedToday,
             'confirmations_count' => [
@@ -92,6 +95,8 @@ class SpacesInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
+            'latitude' => $location->latitude,
+            'longitude' => $location->longitude,
             'country' => $location->country->name ?? null,
             'province' => $location->province->name ?? null,
             'municipality' => $location->municipality->name ?? null,
@@ -117,6 +122,8 @@ class SpacesInfoController extends Controller
 
         return response()->json([
             'id' => $location->id,
+            'latitude' => $location->latitude,
+            'longitude' => $location->longitude,
             'name' => $location->name,
             'type' => $location->parking_type,
             'country' => $location->country->name ?? null,

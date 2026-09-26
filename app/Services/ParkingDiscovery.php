@@ -21,12 +21,19 @@ final class ParkingDiscovery
         return $this->query(fn (Builder $query) => $query->withinRadius($origin, $metres)->withDistanceFrom($origin), $limit, true);
     }
 
-    public function inViewport(GeoBounds $bounds, int $limit = 100, int $offset = 0): Collection
+    /** Distance is measured from $distanceFrom when given; ordering stays source-and-identifier based. */
+    public function inViewport(GeoBounds $bounds, int $limit = 100, int $offset = 0, ?GeoPoint $distanceFrom = null): Collection
     {
-        return $this->query(fn (Builder $query) => $query->inViewport($bounds), $limit, false, $offset);
+        return $this->query(
+            fn (Builder $query) => $distanceFrom ? $query->inViewport($bounds)->withDistanceFrom($distanceFrom) : $query->inViewport($bounds),
+            $limit,
+            $distanceFrom !== null,
+            $offset,
+            orderByDistance: false,
+        );
     }
 
-    private function query(callable $filter, int $limit, bool $withDistance, int $offset = 0): Collection
+    private function query(callable $filter, int $limit, bool $withDistance, int $offset = 0, bool $orderByDistance = true): Collection
     {
         if ($limit < 1 || $limit > 1000) {
             throw new InvalidArgumentException('Result limit must be between 1 and 1000.');
@@ -51,7 +58,7 @@ final class ParkingDiscovery
         }
 
         $query = DB::query()->fromSub($union, 'parking_options');
-        if ($withDistance) {
+        if ($withDistance && $orderByDistance) {
             $query->orderBy('distance_metres');
         }
 

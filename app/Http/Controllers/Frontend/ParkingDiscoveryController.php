@@ -38,6 +38,8 @@ final class ParkingDiscoveryController extends Controller
             'north' => ['required', 'numeric', 'between:-90,90'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:500'],
             'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
+            'origin_latitude' => ['required_with:origin_longitude', 'numeric', 'between:-90,90'],
+            'origin_longitude' => ['required_with:origin_latitude', 'numeric', 'between:-180,180'],
         ]);
 
         $limit = (int) ($validated['limit'] ?? 500);
@@ -51,6 +53,9 @@ final class ParkingDiscoveryController extends Controller
             ),
             $limit + 1,
             ($page - 1) * $limit,
+            isset($validated['origin_latitude'])
+                ? new GeoPoint((float) $validated['origin_latitude'], (float) $validated['origin_longitude'])
+                : null,
         );
 
         return response()->json([

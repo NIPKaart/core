@@ -2,7 +2,7 @@
 
 This document supports the product roadmap epic and deliberately does **not** propose merging `ParkingSpace`, `ParkingMunicipal` and `ParkingOffstreet` persistence models.
 
-Implementation status: `App\Services\ParkingDiscovery` already combines the three sources for bounded PostGIS radius/viewport queries, including source-qualified identity and publication filters. The frontend map still loads separate collections. Extend this service toward the richer contract below; see the [domain audit](../development/domain-model-audit.md) for current model boundaries and remaining integrity/provenance work.
+Implementation status: `App\Services\ParkingDiscovery` already combines the three sources for bounded PostGIS radius/viewport queries, including source-qualified identity and publication filters. Viewport results report their straight-line distance to a selected destination without changing their order. Opening any result shows one detail view (#1172) with the same section order for every source: navigation, rules, layout, accessibility/availability and source/freshness. It fetches the source-specific detail endpoint and shows missing fields as unknown. Navigation hands off coordinates, not the address, to Google Maps, Apple Maps, OpenStreetMap or a `geo:` app. Extend this service toward the richer contract below; see the [domain audit](../development/domain-model-audit.md) for current model boundaries and remaining integrity/provenance work.
 
 ## Problem
 

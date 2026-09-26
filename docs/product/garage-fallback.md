@@ -29,7 +29,7 @@ Examples of safe UI meaning:
 
 - “37 spaces available in garage” — only if general occupancy is live/current.
 - “Accessible parking spaces: 4” — only if accessible capacity is known.
-- “Accessible-space availability: unknown” — when only general occupancy is known.
+- No accessible-space row at all when the source provides neither accessible capacity nor availability. Most sources don't, so the detail view omits the row rather than repeating “unknown”; the general figure stays labelled “General spaces free”.
 
 Never turn “37 general spaces free” into “accessible parking available”.
 

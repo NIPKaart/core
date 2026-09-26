@@ -5,7 +5,9 @@
         "loading": "Loading...",
         "save": "Save",
         "log_out": "Log out",
-        "close": "Close"
+        "close": "Close",
+        "add_favorite": "Add to favorites",
+        "remove_favorite": "Remove from favorites"
     },
     "layers": {
         "mapbox": "Mapbox Streets",

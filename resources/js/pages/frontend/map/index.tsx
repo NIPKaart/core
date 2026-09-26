@@ -13,9 +13,7 @@ import type { LatLngTuple } from 'leaflet';
 import { CircleMarker, LayersControl, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
-import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
-import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/modal-main';
-import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
+import ParkingDetail from '@/components/map/parking-detail/parking-detail';
 import MapLayout from '@/layouts/map-layout';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -69,8 +67,6 @@ type PageProps = {
     };
 };
 
-type MarkerType = 'community' | 'municipal' | 'offstreet';
-
 function getInitialPosition(): [number, number, number] {
     if (window.location.hash) {
         const match = window.location.hash.match(/^#(\d+(\.\d+)?)\/(-?\d+(\.\d+)?)\/(-?\d+(\.\d+)?)/);
@@ -96,11 +92,7 @@ export default function ParkingMap() {
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     const { selectOptions } = usePage<PageProps>().props;
 
-    const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
-    const [selectedLat, setSelectedLat] = useState<number | null>(null);
-    const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedType, setSelectedType] = useState<MarkerType>('community');
     const [destination] = useState<DestinationResult | null>(() => {
         const params = new URLSearchParams(window.location.search);
         const latitude = Number(params.get('lat'));
@@ -142,10 +134,6 @@ export default function ParkingMap() {
     const selectParkingResult = useCallback((marker: ParkingResult) => {
         returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         setSelectedResult(marker);
-        setSelectedSpaceId(marker.id);
-        setSelectedLat(marker.latitude);
-        setSelectedLng(marker.longitude);
-        setSelectedType(marker.source);
         setModalOpen(true);
     }, []);
 
@@ -189,6 +177,7 @@ export default function ParkingMap() {
                         <HashSync />
                         <DestinationFocus destination={destination} />
                         <ViewportDiscovery
+                            origin={destination}
                             onResults={setViewportResults}
                             onStatus={setStatus}
                             retry={retry}
@@ -226,39 +215,13 @@ export default function ParkingMap() {
                 </section>
             </main>
 
-            {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                <ParkingSpaceModal
-                    spaceId={selectedSpaceId}
-                    open={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    onCloseAutoFocus={restoreFocus}
-                    latitude={selectedLat}
-                    longitude={selectedLng}
-                    confirmationStatusOptions={selectOptions.confirmationStatus}
-                />
-            )}
-
-            {selectedType === 'municipal' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                <ParkingMunicipalModal
-                    spaceId={selectedSpaceId}
-                    open={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    onCloseAutoFocus={restoreFocus}
-                    latitude={selectedLat}
-                    longitude={selectedLng}
-                />
-            )}
-
-            {selectedType === 'offstreet' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
-                <ParkingOffstreetModal
-                    spaceId={selectedSpaceId}
-                    open={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    onCloseAutoFocus={restoreFocus}
-                    latitude={selectedLat}
-                    longitude={selectedLng}
-                />
-            )}
+            <ParkingDetail
+                result={selectedResult}
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onCloseAutoFocus={restoreFocus}
+                confirmationStatusOptions={selectOptions.confirmationStatus}
+            />
         </MapLayout>
     );
 }

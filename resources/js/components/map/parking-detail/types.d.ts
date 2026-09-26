@@ -1,5 +1,7 @@
 export type ParkingSpaceDetail = {
     id: string;
+    latitude: number;
+    longitude: number;
     orientation: EnumOption | null;
     country: string | null;
     province: string | null;
@@ -10,6 +12,7 @@ export type ParkingSpaceDetail = {
     rule_url?: string | null;
     parking_time?: number | null;
     created_at: datetime;
+    updated_at: datetime;
     is_favorited?: boolean;
     confirmed_today?: boolean;
     confirmations_count?: {
@@ -28,6 +31,8 @@ export type MunicipalParkingDetail = {
         source_updated_at: string | null;
     };
     id: string;
+    latitude: number;
+    longitude: number;
     orientation: EnumOption | null;
     country: string | null;
     province: string | null;
@@ -40,6 +45,8 @@ export type MunicipalParkingDetail = {
 
 export type OffstreetParkingDetail = {
     id: string;
+    latitude: number;
+    longitude: number;
     name: string;
     type: 'garage' | 'parkandride';
     country: string | null;

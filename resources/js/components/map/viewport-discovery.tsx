@@ -5,6 +5,7 @@ import { useMap, useMapEvents } from 'react-leaflet';
 import type { DiscoveryStatus } from './parking-results';
 
 export default function ViewportDiscovery({
+    origin = null,
     onResults,
     onStatus,
     retry,
@@ -12,6 +13,8 @@ export default function ViewportDiscovery({
     onPageChange,
     onHasMore,
 }: {
+    /** Destination that result distances are measured from. */
+    origin?: { latitude: number; longitude: number } | null;
     onResults: (results: ParkingResult[]) => void;
     onStatus: (status: DiscoveryStatus) => void;
     retry: number;
@@ -54,6 +57,7 @@ export default function ViewportDiscovery({
                                 north: String(Math.min(90, bounds.getNorth())),
                                 limit: '500',
                                 page: String(page),
+                                ...(origin ? { origin_latitude: String(origin.latitude), origin_longitude: String(origin.longitude) } : {}),
                             },
                         }),
                         { signal: request.signal, headers: { Accept: 'application/json' } },
@@ -75,7 +79,7 @@ export default function ViewportDiscovery({
                 }
             }, 250);
         },
-        [map, onResults, onStatus, page, onPageChange, onHasMore],
+        [map, onResults, onStatus, page, onPageChange, onHasMore, origin],
     );
 
     useMapEvents({ moveend: () => load() });

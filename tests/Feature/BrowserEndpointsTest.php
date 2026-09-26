@@ -27,7 +27,8 @@ test('map details remain public and use the signed in session for favorites', fu
     ]);
 
     $this->getJson(route($route, $space->id))
-        ->assertOk()->assertJsonPath('id', $space->id)->assertJsonPath('is_favorited', false);
+        ->assertOk()->assertJsonPath('id', $space->id)->assertJsonPath('is_favorited', false)
+        ->assertJsonPath('latitude', $space->latitude)->assertJsonPath('longitude', $space->longitude);
 
     $this->getJson($legacyPath.$space->id)->assertNotFound();
 
@@ -186,3 +187,25 @@ test('viewport pages expose every matching public result without moving the map'
 test('viewport rejects invalid page numbers', function ($page) {
     $this->getJson(route('map.parking.viewport', ['west' => 4, 'south' => 51, 'east' => 6, 'north' => 53, 'page' => $page]))->assertUnprocessable()->assertJsonValidationErrors('page');
 })->with([0, -1, 1.5, 1000001]);
+
+test('viewport results report distance to the destination without reordering pages', function () {
+    ParkingMunicipal::factory()->create(['id' => 'a', 'latitude' => 52.01, 'longitude' => 5, 'visibility' => true]);
+    ParkingMunicipal::factory()->create(['id' => 'b', 'latitude' => 52, 'longitude' => 5, 'visibility' => true]);
+    $query = ['west' => 4, 'south' => 51, 'east' => 6, 'north' => 53];
+
+    $response = $this->getJson(route('map.parking.viewport', [...$query, 'origin_latitude' => 52, 'origin_longitude' => 5]))->assertOk()
+        ->assertJsonPath('results.0.key', 'municipal:a')->assertJsonPath('results.1.key', 'municipal:b');
+    expect($response->json('results.0.distance_metres'))->toEqualWithDelta(1113, 5)
+        ->and($response->json('results.1.distance_metres'))->toEqual(0);
+
+    $this->getJson(route('map.parking.viewport', $query))->assertOk()->assertJsonPath('results.0.distance_metres', null);
+});
+
+test('viewport distance needs a complete and valid destination', function (array $origin, string $error) {
+    $this->getJson(route('map.parking.viewport', ['west' => 4, 'south' => 51, 'east' => 6, 'north' => 53, ...$origin]))
+        ->assertUnprocessable()->assertJsonValidationErrors($error);
+})->with([
+    'latitude only' => [['origin_latitude' => 52], 'origin_longitude'],
+    'longitude only' => [['origin_longitude' => 5], 'origin_latitude'],
+    'out of range' => [['origin_latitude' => 91, 'origin_longitude' => 5], 'origin_latitude'],
+]);
