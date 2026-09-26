@@ -1,19 +1,18 @@
 import LegendControl from '@/components/map/legend-control';
+import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
 import LocateControl from '@/components/map/locate-control';
 import ZoomControl from '@/components/map/zoom-control';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { LayersControl, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-markercluster';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
 import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/modal-main';
 import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
 import MapLayout from '@/layouts/map-layout';
-import { getInvalidParkingIcon } from '@/lib/icon-factory';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
@@ -166,26 +165,14 @@ export default function ParkingMap() {
         });
     }
 
-    const parkingMarkers = useMemo(
-        () =>
-            viewportResults.map((marker) => (
-                <Marker
-                    key={marker.key}
-                    position={[marker.latitude, marker.longitude]}
-                    icon={getInvalidParkingIcon()}
-                    eventHandlers={{
-                        click: () => {
-                            setSelectedSpaceId(marker.id);
-                            setSelectedLat(marker.latitude);
-                            setSelectedLng(marker.longitude);
-                            setSelectedType(marker.source);
-                            setModalOpen(true);
-                        },
-                    }}
-                />
-            )),
-        [viewportResults],
-    );
+    const selectParkingResult = useCallback((marker: ParkingResult) => {
+        setSelectedSpaceId(marker.id);
+        setSelectedLat(marker.latitude);
+        setSelectedLng(marker.longitude);
+        setSelectedType(marker.source);
+        setModalOpen(true);
+    }, []);
+
 
     return (
         <MapLayout>
@@ -215,15 +202,7 @@ export default function ParkingMap() {
                         </BaseLayer>
                     </LayersControl>
 
-                    <MarkerClusterGroup
-                        key={'parking'}
-                        spiderfyOnMaxZoom={false}
-                        disableClusteringAtZoom={16}
-                        maxClusterRadius={80}
-                        removeOutsideVisibleBound={true}
-                    >
-                        {parkingMarkers}
-                    </MarkerClusterGroup>
+                    <ParkingMarkerLayer results={viewportResults} onSelect={selectParkingResult} />
 
                     <LegendControl />
                     <LocateControl />
