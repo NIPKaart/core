@@ -1,5 +1,7 @@
 # Provisional data delivery contract
 
+For ownership, authentication and classification of every collector/import flow, including the legacy offstreet gap and the separation from web/public APIs, see the [integration contract inventory](integration-contracts.md).
+
 Status: working agreement for [#1214](https://github.com/NIPKaart/core/issues/1214). One JSON file supports the initial manual import; the format is finalized only after the collector and core have been tested together. The schemas, validator, Opis dependency and fixture corpus from [PR #1222](https://github.com/NIPKaart/core/pull/1222) were replaced by a single working intake in #1215. Ten invalid Amsterdam polygons receive a geometry derivation in core that requires explicit review. The format is not yet an accepted production integration.
 
 ## From source to user
