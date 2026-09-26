@@ -1,24 +1,88 @@
-import DestinationSearch from '@/components/map/destination-search';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
+import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
 import ZoomControl from '@/components/map/zoom-control';
-import { ParkingMunicipal, ParkingOffstreet, ParkingSpace } from '@/types';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { LayersControl, MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-markercluster';
+import { LayersControl, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingMunicipalModal from '@/components/map/modal-parking-municipal/modal-main';
 import ParkingOffstreetModal from '@/components/map/modal-parking-offstreet/modal-main';
 import ParkingSpaceModal from '@/components/map/modal-parking-space/modal-main';
 import MapLayout from '@/layouts/map-layout';
-import { getGarageOccupancyStatus, getGarageStatusIcon, getInvalidParkingIcon } from '@/lib/icon-factory';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
+
+function ViewportDiscovery({
+    onResults,
+}: {
+    onResults: (results: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) => void;
+}) {
+    const map = useMap();
+    const controller = useRef<AbortController | null>(null);
+    const timeout = useRef<number | null>(null);
+    const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
+
+    const load = useCallback(
+        (force = false) => {
+            const visibleBounds = map.getBounds();
+            if (!force && loadedBounds.current?.contains(visibleBounds)) return;
+
+            if (timeout.current !== null) window.clearTimeout(timeout.current);
+            timeout.current = window.setTimeout(async () => {
+                const currentVisibleBounds = map.getBounds();
+                if (!force && loadedBounds.current?.contains(currentVisibleBounds)) return;
+
+                controller.current?.abort();
+                controller.current = new AbortController();
+
+                const bounds = currentVisibleBounds.pad(0.5);
+                const params = new URLSearchParams({
+                    west: String(bounds.getWest()),
+                    south: String(bounds.getSouth()),
+                    east: String(bounds.getEast()),
+                    north: String(bounds.getNorth()),
+                    limit: '500',
+                });
+
+                try {
+                    const response = await fetch(`/api/parking/viewport?${params}`, {
+                        signal: controller.current.signal,
+                        headers: { Accept: 'application/json' },
+                    });
+                    if (response.ok) {
+                        loadedBounds.current = bounds;
+                        onResults((await response.json()).results ?? [], {
+                            west: bounds.getWest(),
+                            south: bounds.getSouth(),
+                            east: bounds.getEast(),
+                            north: bounds.getNorth(),
+                        });
+                    }
+                } catch (error) {
+                    if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
+                }
+            }, 250);
+        },
+        [map, onResults],
+    );
+
+    useMapEvents({ moveend: () => load() });
+
+    useEffect(() => {
+        load(true);
+        return () => {
+            if (timeout.current !== null) window.clearTimeout(timeout.current);
+            controller.current?.abort();
+        };
+    }, [load]);
+
+    return null;
+}
 
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
     const map = useMap();
@@ -32,20 +96,9 @@ type PageProps = {
     selectOptions: {
         confirmationStatus: Record<string, string>;
     };
-    parkingSpaces: ParkingSpace[];
-    municipalSpaces: ParkingMunicipal[];
-    offstreetSpaces: ParkingOffstreet[];
 };
 
 type MarkerType = 'community' | 'municipal' | 'offstreet';
-
-type MapMarker = {
-    id: string;
-    type: MarkerType;
-    latitude: number;
-    longitude: number;
-    orientation?: string | null;
-};
 
 function getInitialPosition(): [number, number, number] {
     if (window.location.hash) {
@@ -62,7 +115,7 @@ function getInitialPosition(): [number, number, number] {
     return [52.3667136, 4.9808665, 8];
 }
 
-export default function Map() {
+export default function ParkingMap() {
     const { t } = useTranslation('frontend/map/main');
     const { t: tGlobal } = useTranslation('frontend/global');
     const initial = getInitialPosition();
@@ -70,92 +123,59 @@ export default function Map() {
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { parkingSpaces, municipalSpaces, offstreetSpaces, selectOptions } = usePage<PageProps>().props;
+    const { selectOptions } = usePage<PageProps>().props;
 
     const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
     const [selectedLat, setSelectedLat] = useState<number | null>(null);
     const [selectedLng, setSelectedLng] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<MarkerType>('community');
-    const [destination, setDestination] = useState<DestinationResult | null>(null);
-    const [nearbyResults, setNearbyResults] = useState<ParkingResult[]>([]);
+    const [destination] = useState<DestinationResult | null>(() => {
+        const params = new URLSearchParams(window.location.search);
+        const latitude = Number(params.get('lat'));
+        const longitude = Number(params.get('lng'));
+        const label = params.get('destination');
+        return label && Number.isFinite(latitude) && Number.isFinite(longitude)
+            ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude }
+            : null;
+    });
 
-    async function selectDestination(next: DestinationResult) {
-        setDestination(next);
-        const params = new URLSearchParams({
-            latitude: String(next.latitude),
-            longitude: String(next.longitude),
-            radius: '1000',
-            limit: '100',
+    const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
+
+    function mergeViewportResults(incoming: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) {
+        setViewportResults((current) => {
+            const next = new globalThis.Map(current.map((result) => [result.key, result]));
+
+            for (const result of incoming) next.set(result.key, result);
+
+            for (const [key, result] of next) {
+                const insideLongitude =
+                    bounds.west <= bounds.east
+                        ? result.longitude >= bounds.west && result.longitude <= bounds.east
+                        : result.longitude >= bounds.west || result.longitude <= bounds.east;
+                const insideLatitude = result.latitude >= bounds.south && result.latitude <= bounds.north;
+                if (!insideLongitude || !insideLatitude) next.delete(key);
+            }
+
+            const merged = [...next.values()];
+            if (
+                merged.length === current.length &&
+                merged.every((result, index) => result.key === current[index]?.key && result === current[index])
+            ) {
+                return current;
+            }
+
+            return merged;
         });
-        const response = await fetch(`/api/parking/nearby?${params}`, { headers: { Accept: 'application/json' } });
-        if (response.ok) setNearbyResults((await response.json()).results ?? []);
     }
 
-    // Create markers list for parking spaces
-    const parkingMarkersList: MapMarker[] = useMemo(
-        () => [
-            ...parkingSpaces.map((space) => ({
-                id: space.id,
-                type: 'community' as const,
-                latitude: space.latitude,
-                longitude: space.longitude,
-                orientation: space.orientation,
-            })),
-            ...municipalSpaces.map((space) => ({
-                id: space.id,
-                type: 'municipal' as const,
-                latitude: space.latitude,
-                longitude: space.longitude,
-                orientation: space.orientation ?? null,
-            })),
-        ],
-        [parkingSpaces, municipalSpaces],
-    );
-
-    // Create markers for parking spaces
-    const parkingMarkers = useMemo(
-        () =>
-            parkingMarkersList.map((marker) => (
-                <Marker
-                    key={`${marker.type}:${marker.id}`}
-                    position={[marker.latitude, marker.longitude]}
-                    icon={getInvalidParkingIcon()}
-                    eventHandlers={{
-                        click: () => {
-                            setSelectedSpaceId(marker.id);
-                            setSelectedLat(marker.latitude);
-                            setSelectedLng(marker.longitude);
-                            setSelectedType(marker.type);
-                            setModalOpen(true);
-                        },
-                    }}
-                />
-            )),
-        [parkingMarkersList],
-    );
-
-    // Create markers for offstreet parking spaces
-    const offstreetMarkers = useMemo(
-        () =>
-            offstreetSpaces.map((marker) => (
-                <Marker
-                    key={`offstreet:${marker.id}`}
-                    position={[marker.latitude, marker.longitude]}
-                    icon={getGarageStatusIcon(getGarageOccupancyStatus(marker))}
-                    eventHandlers={{
-                        click: () => {
-                            setSelectedSpaceId(marker.id);
-                            setSelectedLat(marker.latitude);
-                            setSelectedLng(marker.longitude);
-                            setSelectedType('offstreet');
-                            setModalOpen(true);
-                        },
-                    }}
-                />
-            )),
-        [offstreetSpaces],
-    );
+    const selectParkingResult = useCallback((marker: ParkingResult) => {
+        setSelectedSpaceId(marker.id);
+        setSelectedLat(marker.latitude);
+        setSelectedLng(marker.longitude);
+        setSelectedType(marker.source);
+        setModalOpen(true);
+    }, []);
 
     return (
         <MapLayout>
@@ -164,6 +184,7 @@ export default function Map() {
                 <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                     <HashSync />
                     <DestinationFocus destination={destination} />
+                    <ViewportDiscovery onResults={mergeViewportResults} />
                     <LayersControl position="topright">
                         <BaseLayer checked name={tGlobal('layers.mapbox')}>
                             <TileLayer
@@ -184,37 +205,13 @@ export default function Map() {
                         </BaseLayer>
                     </LayersControl>
 
-                    <MarkerClusterGroup
-                        key={'parking'}
-                        spiderfyOnMaxZoom={false}
-                        disableClusteringAtZoom={16}
-                        maxClusterRadius={80}
-                        removeOutsideVisibleBound={true}
-                    >
-                        {parkingMarkers}
-                    </MarkerClusterGroup>
-                    <MarkerClusterGroup
-                        key={'offstreet'}
-                        spiderfyOnMaxZoom={false}
-                        disableClusteringAtZoom={16}
-                        maxClusterRadius={80}
-                        removeOutsideVisibleBound={true}
-                    >
-                        {offstreetMarkers}
-                    </MarkerClusterGroup>
+                    <ParkingMarkerLayer results={viewportResults} onSelect={selectParkingResult} />
 
                     <LegendControl />
                     <LocateControl />
                     <ZoomControl />
-                    <DestinationSearch onSelect={selectDestination} />
                 </MapContainer>
             </div>
-
-            {destination && (
-                <div className="sr-only" aria-live="polite">
-                    {nearbyResults.length} parking options found near {destination.label}
-                </div>
-            )}
 
             {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                 <ParkingSpaceModal

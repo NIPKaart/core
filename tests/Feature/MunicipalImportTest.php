@@ -414,15 +414,21 @@ it('keeps the original geometry and requires explicit review before publishing i
     $geometry = DB::selectOne('SELECT ST_IsValid(ST_GeomFromGeoJSON(?)) AS valid, ST_Covers(ST_GeomFromGeoJSON(?), ST_SetSRID(ST_MakePoint(?, ?), 4326)) AS contains_point', [json_encode($space->geometry_derivation['geometry']), json_encode($space->geometry_derivation['geometry']), $space->longitude, $space->latitude]);
     expect($geometry)->valid->toBeTrue()->contains_point->toBeTrue();
     expect($import->fresh())->state->toBe('published')->reviewed_by->toBe($user->id);
-    $this->get('/map')->assertInertia(fn (Assert $page) => $page
-        ->component('frontend/map/index')
-        ->has('municipalSpaces', 1)
-        ->where('municipalSpaces.0.id', $space->id)
-        ->where('municipalSpaces.0.latitude', $space->latitude)
-        ->where('municipalSpaces.0.longitude', $space->longitude)
-        ->missing('municipalSpaces.0.geometry')
-        ->missing('municipalSpaces.0.geometry_derivation')
-        ->missing('municipalSpaces.0.source_record'));
+    $delta = 0.001;
+    $this->getJson('/api/parking/viewport?'.http_build_query([
+        'west' => $space->longitude - $delta,
+        'south' => $space->latitude - $delta,
+        'east' => $space->longitude + $delta,
+        'north' => $space->latitude + $delta,
+    ]))
+        ->assertOk()
+        ->assertJsonCount(1, 'results')
+        ->assertJsonPath('results.0.key', 'municipal:'.$space->id)
+        ->assertJsonPath('results.0.latitude', $space->latitude)
+        ->assertJsonPath('results.0.longitude', $space->longitude)
+        ->assertJsonMissingPath('results.0.geometry')
+        ->assertJsonMissingPath('results.0.geometry_derivation')
+        ->assertJsonMissingPath('results.0.source_record');
 });
 
 it('retains reviewed derivations on repeat and clears them when the source becomes valid', function () {
