@@ -27,46 +27,49 @@ function ViewportDiscovery({
     const timeout = useRef<number | null>(null);
     const loadedBounds = useRef<ReturnType<typeof map.getBounds> | null>(null);
 
-    const load = useCallback((force = false) => {
-        const visibleBounds = map.getBounds();
-        if (!force && loadedBounds.current?.contains(visibleBounds)) return;
+    const load = useCallback(
+        (force = false) => {
+            const visibleBounds = map.getBounds();
+            if (!force && loadedBounds.current?.contains(visibleBounds)) return;
 
-        if (timeout.current !== null) window.clearTimeout(timeout.current);
-        timeout.current = window.setTimeout(async () => {
-            const currentVisibleBounds = map.getBounds();
-            if (!force && loadedBounds.current?.contains(currentVisibleBounds)) return;
+            if (timeout.current !== null) window.clearTimeout(timeout.current);
+            timeout.current = window.setTimeout(async () => {
+                const currentVisibleBounds = map.getBounds();
+                if (!force && loadedBounds.current?.contains(currentVisibleBounds)) return;
 
-            controller.current?.abort();
-            controller.current = new AbortController();
+                controller.current?.abort();
+                controller.current = new AbortController();
 
-            const bounds = currentVisibleBounds.pad(0.5);
-            const params = new URLSearchParams({
-                west: String(bounds.getWest()),
-                south: String(bounds.getSouth()),
-                east: String(bounds.getEast()),
-                north: String(bounds.getNorth()),
-                limit: '500',
-            });
-
-            try {
-                const response = await fetch(`/api/parking/viewport?${params}`, {
-                    signal: controller.current.signal,
-                    headers: { Accept: 'application/json' },
+                const bounds = currentVisibleBounds.pad(0.5);
+                const params = new URLSearchParams({
+                    west: String(bounds.getWest()),
+                    south: String(bounds.getSouth()),
+                    east: String(bounds.getEast()),
+                    north: String(bounds.getNorth()),
+                    limit: '500',
                 });
-                if (response.ok) {
-                    loadedBounds.current = bounds;
-                    onResults((await response.json()).results ?? [], {
-                        west: bounds.getWest(),
-                        south: bounds.getSouth(),
-                        east: bounds.getEast(),
-                        north: bounds.getNorth(),
+
+                try {
+                    const response = await fetch(`/api/parking/viewport?${params}`, {
+                        signal: controller.current.signal,
+                        headers: { Accept: 'application/json' },
                     });
+                    if (response.ok) {
+                        loadedBounds.current = bounds;
+                        onResults((await response.json()).results ?? [], {
+                            west: bounds.getWest(),
+                            south: bounds.getSouth(),
+                            east: bounds.getEast(),
+                            north: bounds.getNorth(),
+                        });
+                    }
+                } catch (error) {
+                    if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
                 }
-            } catch (error) {
-                if (!(error instanceof DOMException && error.name === 'AbortError')) throw error;
-            }
-        }, 250);
-    }, [map, onResults]);
+            }, 250);
+        },
+        [map, onResults],
+    );
 
     useMapEvents({ moveend: load });
 
