@@ -29,7 +29,7 @@ test('discovery includes only public records from all three sources', function (
     expect($results->pluck('key')->all())->toBe(['community:'.$community->id, 'municipal:shared', 'offstreet:shared']);
     expect($results->pluck('latitude')->all())->toBe([52.0, 52.0, 52.0]);
     expect($results->pluck('longitude')->all())->toBe([5.0, 5.0, 5.0]);
-    expect($results->pluck('distance_metres')->all())->toBe($query === 'radius' ? [0.0, 0.0, 0.0] : [null, null, null]);
+    expect($results->pluck('distanceMetres')->all())->toBe($query === 'radius' ? [0.0, 0.0, 0.0] : [null, null, null]);
 })->with(['radius', 'viewport']);
 
 test('discovery sorts by distance before source and ID and then applies its limit', function () {
@@ -51,7 +51,6 @@ test('discovery rejects limits outside its supported range', function (int $limi
         : $discovery->inViewport(new GeoBounds(4, 51, 6, 53), $limit)
     )->toThrow(InvalidArgumentException::class);
 })->with([0, 1001])->with(['radius', 'viewport']);
-
 
 test('discovery returns a shared typed result contract', function () {
     $space = ParkingSpace::factory()->create([
