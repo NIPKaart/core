@@ -71,11 +71,9 @@ export default function Navbar() {
 
                     {/* Mobile actions (favorites, notifications, hamburger) */}
                     <div className="relative z-50 flex items-center gap-2 lg:hidden">
+                        <SearchButton variant="icon" tooltip={tSearch('title')} />
                         {auth.user && (
                             <div className="me-1 flex items-center gap-1">
-                                <div className="relative flex min-w-8 justify-center">
-                                    <SearchButton variant="icon" tooltip={tSearch('title')} />
-                                </div>
                                 <div className="relative flex min-w-8 justify-center">
                                     <FavoritesButton />
                                 </div>

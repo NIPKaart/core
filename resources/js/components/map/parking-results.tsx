@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 export type DiscoveryStatus = 'loading' | 'ready' | 'error';
 
 type Props = {
+    page?: number;
+    hasMore?: boolean;
+    onPageChange?: (page: number) => void;
     results: ParkingResult[];
     selectedKey: string | null;
     status: DiscoveryStatus;
@@ -12,7 +15,7 @@ type Props = {
     onRetry: () => void;
 };
 
-export default function ParkingResults({ results, selectedKey, status, onSelect, onRetry }: Props) {
+export default function ParkingResults({ results, selectedKey, status, onSelect, onRetry, page = 1, hasMore = false, onPageChange }: Props) {
     const { t } = useTranslation('frontend/map/main');
 
     return (
@@ -22,7 +25,7 @@ export default function ParkingResults({ results, selectedKey, status, onSelect,
                     ? t('results.loading')
                     : status === 'error'
                       ? t('results.error')
-                      : t('results.count', { count: results.length })}
+                      : t(hasMore || page > 1 ? 'results.page_count' : 'results.count', { count: results.length })}
             </p>
             {status === 'error' && (
                 <Button onClick={onRetry} className="min-h-11">
@@ -30,7 +33,24 @@ export default function ParkingResults({ results, selectedKey, status, onSelect,
                 </Button>
             )}
             {status === 'ready' && results.length === 0 && <p>{t('results.empty')}</p>}
-            {results.length >= 500 && <p className="text-sm">{t('results.limit')}</p>}
+            {onPageChange && (hasMore || page > 1) && (
+                <nav aria-label={t('results.pages')} className="flex items-center justify-between gap-2">
+                    <Button
+                        variant="outline"
+                        className="min-h-11"
+                        disabled={page === 1 || status === 'loading'}
+                        onClick={() => onPageChange(page - 1)}
+                    >
+                        {t('results.previous')}
+                    </Button>
+                    <span role="status" className="text-sm">
+                        {t('results.page', { page })}
+                    </span>
+                    <Button variant="outline" className="min-h-11" disabled={!hasMore || status === 'loading'} onClick={() => onPageChange(page + 1)}>
+                        {t('results.next')}
+                    </Button>
+                </nav>
+            )}
             {results.length > 0 && (
                 <>
                     <p className="text-xs text-muted-foreground">{t('results.unknown')}</p>

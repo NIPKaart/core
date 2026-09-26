@@ -212,6 +212,7 @@ export default function SearchOverlay(): JSX.Element {
     if (isMobile) {
         return (
             <Drawer
+                autoFocus
                 open={open}
                 onOpenChange={(nextOpen) => {
                     if (!nextOpen) {

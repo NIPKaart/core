@@ -22,6 +22,12 @@
             "community": "Bijdrage uit de community",
             "municipal": "Gemeentelijke gegevens",
             "offstreet": "Parkeervoorziening"
-        }
+        },
+        "pages": "Resultaatpagina’s",
+        "previous": "Vorige",
+        "next": "Volgende",
+        "page": "Pagina {{page}}",
+        "page_count_one": "{{count}} parkeerlocatie op deze pagina",
+        "page_count_other": "{{count}} parkeerlocaties op deze pagina"
     }
 }

@@ -121,6 +121,8 @@ export default function ParkingMap() {
 
     const [status, setStatus] = useState<DiscoveryStatus>('loading');
     const [retry, setRetry] = useState(0);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
     const [selectedResult, setSelectedResult] = useState<ParkingResult | null>(null);
     const [expanded, setExpanded] = useState(true);
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -170,6 +172,9 @@ export default function ParkingMap() {
                         {expanded && destination && <p className="px-4 pb-2 text-sm text-muted-foreground">{destination.label}</p>}
                         <CollapsibleContent forceMount className="min-h-0 overflow-y-auto data-[state=closed]:hidden">
                             <ParkingResults
+                                page={page}
+                                hasMore={hasMore}
+                                onPageChange={setPage}
                                 results={viewportResults}
                                 selectedKey={selectedResult?.key ?? null}
                                 status={status}
@@ -183,7 +188,14 @@ export default function ParkingMap() {
                     <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                         <HashSync />
                         <DestinationFocus destination={destination} />
-                        <ViewportDiscovery onResults={setViewportResults} onStatus={setStatus} retry={retry} />
+                        <ViewportDiscovery
+                            onResults={setViewportResults}
+                            onStatus={setStatus}
+                            retry={retry}
+                            page={page}
+                            onPageChange={setPage}
+                            onHasMore={setHasMore}
+                        />
                         <SelectedParking result={selectedResult} />
                         <LayersControl position="topright">
                             <BaseLayer checked name={tGlobal('layers.mapbox')}>

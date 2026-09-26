@@ -8,10 +8,16 @@ export default function ViewportDiscovery({
     onResults,
     onStatus,
     retry,
+    page = 1,
+    onPageChange,
+    onHasMore,
 }: {
     onResults: (results: ParkingResult[]) => void;
     onStatus: (status: DiscoveryStatus) => void;
     retry: number;
+    page?: number;
+    onPageChange?: (page: number) => void;
+    onHasMore?: (hasMore: boolean) => void;
 }) {
     const map = useMap();
     const controller = useRef<AbortController | null>(null);
@@ -27,11 +33,16 @@ export default function ViewportDiscovery({
                 onStatus('ready');
                 return;
             }
+            if (!force && page !== 1) {
+                loadedBounds.current = null;
+                onPageChange?.(1);
+                return;
+            }
             onStatus('loading');
             timeout.current = window.setTimeout(async () => {
                 const request = new AbortController();
                 controller.current = request;
-                const bounds = map.getBounds().pad(0.5);
+                const bounds = force && loadedBounds.current ? loadedBounds.current : map.getBounds().pad(0.5);
                 const zoom = map.getZoom();
                 try {
                     const response = await fetch(
@@ -42,6 +53,7 @@ export default function ViewportDiscovery({
                                 east: String(Math.min(180, bounds.getEast())),
                                 north: String(Math.min(90, bounds.getNorth())),
                                 limit: '500',
+                                page: String(page),
                             },
                         }),
                         { signal: request.signal, headers: { Accept: 'application/json' } },
@@ -52,17 +64,18 @@ export default function ViewportDiscovery({
                     loadedBounds.current = bounds;
                     loadedZoom.current = zoom;
                     onResults(data.results ?? []);
+                    onHasMore?.(data.has_more ?? false);
                     onStatus('ready');
                 } catch {
                     if (!request.signal.aborted) {
-                        loadedBounds.current = null;
+                        onHasMore?.(false);
                         onResults([]);
                         onStatus('error');
                     }
                 }
             }, 250);
         },
-        [map, onResults, onStatus],
+        [map, onResults, onStatus, page, onPageChange, onHasMore],
     );
 
     useMapEvents({ moveend: () => load() });

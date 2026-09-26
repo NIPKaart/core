@@ -22,6 +22,12 @@
             "community": "Community contribution",
             "municipal": "Municipal data",
             "offstreet": "Parking facility"
-        }
+        },
+        "pages": "Result pages",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {{page}}",
+        "page_count_one": "{{count}} parking location on this page",
+        "page_count_other": "{{count}} parking locations on this page"
     }
 }

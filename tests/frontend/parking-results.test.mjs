@@ -14,7 +14,7 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/compo
 }).outputText;
 const context = { exports: {}, require: (name) => {
     if (name === 'react-i18next') return { useTranslation: () => ({ t: (key, params = {}) => {
-        if (key === 'results.count') key += params.count === 1 ? '_one' : '_other';
+        if (key === 'results.count' || key === 'results.page_count') key += params.count === 1 ? '_one' : '_other';
         const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
         return Object.entries(params).reduce((text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)), value);
     } }) };
@@ -69,8 +69,14 @@ test('loading and failed requests are distinguished from an empty successful sea
     assert.equal(retries, 1);
 });
 
-test('the bounded query limit is explained without hiding any loaded results', () => {
+test('all loaded results remain reachable and paging appears only when needed', () => {
     const html = render({ results: Array.from({ length: 500 }, (_, index) => ({ ...result('municipal'), key: `municipal:${index}` })) });
-    assert.match(html, /Up to 500 locations are shown/);
+    assert.doesNotMatch(html, /Result pages/);
+    assert.match(render({ hasMore: true, onPageChange() {} }), /Result pages/);
+    const pages = [];
+    const controls = buttons(Results({ ...defaults, page: 2, hasMore: true, onPageChange: (page) => pages.push(page) }));
+    controls[0].props.onClick();
+    controls[1].props.onClick();
+    assert.deepEqual(pages, [1, 3]);
     assert.equal((html.match(/aria-haspopup="dialog"/g) ?? []).length, 500);
 });
