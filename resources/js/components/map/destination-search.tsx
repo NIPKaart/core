@@ -96,7 +96,11 @@ export default function DestinationSearch({ onSelect }: Props) {
                         </Button>
                     </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(event) => event.preventDefault()}>
+                <PopoverContent
+                    className="w-[--radix-popover-trigger-width] p-0"
+                    align="start"
+                    onOpenAutoFocus={(event) => event.preventDefault()}
+                >
                     <Command shouldFilter={false}>
                         <CommandList>
                             <CommandEmpty>{loading ? 'Searching destinations…' : 'No destinations found.'}</CommandEmpty>
@@ -105,7 +109,9 @@ export default function DestinationSearch({ onSelect }: Props) {
                                     <CommandItem key={result.key} value={result.key} onSelect={() => select(result)}>
                                         <span className="min-w-0">
                                             <span className="block font-medium">{result.label}</span>
-                                            {result.sub && <span className="block truncate text-sm text-muted-foreground">{result.sub}</span>}
+                                            {result.sub && (
+                                                <span className="block truncate text-sm text-muted-foreground">{result.sub}</span>
+                                            )}
                                         </span>
                                     </CommandItem>
                                 ))}
