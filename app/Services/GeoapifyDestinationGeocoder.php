@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Contracts\DestinationGeocoder;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 final class GeoapifyDestinationGeocoder implements DestinationGeocoder
 {
@@ -29,17 +32,23 @@ final class GeoapifyDestinationGeocoder implements DestinationGeocoder
         $limit = max(1, min(10, $limit));
         $cacheKey = 'destination:geoapify:'.sha1($endpoint.'|'.$query.'|'.$limit);
 
-        return Cache::remember($cacheKey, now()->addDay(), function () use ($endpoint, $query, $limit, $key): array {
-            $response = Http::timeout(3)->retry(1, 100)->get("https://api.geoapify.com/v1/geocode/{$endpoint}", [
-                'text' => $query,
-                'limit' => $limit,
-                'format' => 'json',
-                'apiKey' => $key,
-            ])->throw();
+        try {
+            return Cache::remember($cacheKey, now()->addDay(), function () use ($endpoint, $query, $limit, $key): array {
+                $response = Http::timeout(3)->retry(1, 100)->get("https://api.geoapify.com/v1/geocode/{$endpoint}", [
+                    'text' => $query,
+                    'limit' => $limit,
+                    'format' => 'json',
+                    'apiKey' => $key,
+                ])->throw();
 
-            return collect($response->json('results', []))->map(fn (array $item): ?array => $this->normalize($item))
-                ->filter()->values()->all();
-        });
+                return collect($response->json('results', []))->map(fn (array $item): ?array => $this->normalize($item))
+                    ->filter()->values()->all();
+            });
+        } catch (ConnectionException|RequestException $exception) {
+            Log::warning('Destination provider request failed.', ['provider' => 'geoapify', 'exception' => $exception::class]);
+
+            return [];
+        }
     }
 
     private function normalize(array $item): ?array

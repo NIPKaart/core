@@ -10,7 +10,7 @@
         "retry": "Try again",
         "count_one": "{{count}} parking location in this area",
         "count_other": "{{count}} parking locations in this area",
-        "empty": "No parking locations found in this area. Search for another destination or move the map.",
+        "empty": "NIPKaart has no known parking locations in this area. Our data is incomplete, so accessible parking may still exist here. Move the map or search for another destination.",
         "limit": "Up to 500 locations are shown. Search for a more specific destination to narrow the area.",
         "unknown": "Verification and current accessible-space availability are unknown in this overview. Open a location for source details.",
         "untitled": "Parking location without an address",

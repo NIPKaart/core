@@ -19,7 +19,7 @@ A native mobile application is not a goal by itself. Native development proceeds
 - Mobile discovery evaluates share-to-NIPKaart, widgets/shortcuts, native push, offline use, GPS-assisted contributions and CarPlay/Android Auto.
 - Offline support is not a web-v1 requirement.
 - Public bulk API/open-dataset licensing is a separate unresolved decision; open-source code does not by itself define redistribution rights for the aggregated data.
-- Geocoding/POI provider selection is also unresolved and requires research covering European quality, privacy, caching/licensing, cost and lock-in.
+- Geocoding/POI provider selection is decided in [ADR 0012](0012-destination-resolution-internal-first-with-controlled-external-geocoding.md).
 
 ## References
 

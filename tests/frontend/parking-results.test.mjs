@@ -59,11 +59,13 @@ test('unknown address has a readable fallback and known distance includes zero',
 
 test('loading and failed requests are distinguished from an empty successful search and failure can be retried', () => {
     assert.match(render({ status: 'loading' }), /role="status"[^>]*>Loading parking locations/);
-    assert.doesNotMatch(render({ status: 'loading' }), /No parking locations found/);
-    assert.match(render({}), /No parking locations found/);
+    assert.doesNotMatch(render({ status: 'loading' }), /no known parking locations/);
+    const empty = render({});
+    assert.match(empty, /no known parking locations/);
+    assert.match(empty, /may still exist here/);
     const failed = render({ status: 'error' });
     assert.match(failed, /could not be loaded/);
-    assert.doesNotMatch(failed, /No parking locations found/);
+    assert.doesNotMatch(failed, /no known parking locations/);
     let retries = 0;
     buttons(Results({ ...defaults, status: 'error', onRetry: () => retries++ }))[0].props.onClick();
     assert.equal(retries, 1);

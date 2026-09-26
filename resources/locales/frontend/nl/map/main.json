@@ -10,7 +10,7 @@
         "retry": "Opnieuw proberen",
         "count_one": "{{count}} parkeerlocatie in dit gebied",
         "count_other": "{{count}} parkeerlocaties in dit gebied",
-        "empty": "Geen parkeerlocaties gevonden in dit gebied. Zoek een andere bestemming of verplaats de kaart.",
+        "empty": "NIPKaart kent geen parkeerlocaties in dit gebied. Onze gegevens zijn niet volledig, dus er kan hier toch een gehandicaptenparkeerplaats zijn. Verplaats de kaart of zoek een andere bestemming.",
         "limit": "Er worden maximaal 500 locaties getoond. Zoek een specifiekere bestemming om het gebied te verkleinen.",
         "unknown": "Verificatie en actuele beschikbaarheid van gehandicaptenparkeerplaatsen zijn onbekend in dit overzicht. Open een locatie voor brongegevens.",
         "untitled": "Parkeerlocatie zonder adres",
