@@ -1,6 +1,6 @@
 import LegendControl from '@/components/map/legend-control';
-import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
 import LocateControl from '@/components/map/locate-control';
+import ParkingMarkerLayer from '@/components/map/parking-marker-layer';
 import ZoomControl from '@/components/map/zoom-control';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
@@ -17,7 +17,11 @@ import { useTranslation } from 'react-i18next';
 
 const { BaseLayer } = LayersControl;
 
-function ViewportDiscovery({ onResults }: { onResults: (results: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) => void }) {
+function ViewportDiscovery({
+    onResults,
+}: {
+    onResults: (results: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) => void;
+}) {
     const map = useMap();
     const controller = useRef<AbortController | null>(null);
     const timeout = useRef<number | null>(null);
@@ -135,10 +139,7 @@ export default function ParkingMap() {
 
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
-    function mergeViewportResults(
-        incoming: ParkingResult[],
-        bounds: { west: number; south: number; east: number; north: number },
-    ) {
+    function mergeViewportResults(incoming: ParkingResult[], bounds: { west: number; south: number; east: number; north: number }) {
         setViewportResults((current) => {
             const next = new globalThis.Map(current.map((result) => [result.key, result]));
 
@@ -172,7 +173,6 @@ export default function ParkingMap() {
         setSelectedType(marker.source);
         setModalOpen(true);
     }, []);
-
 
     return (
         <MapLayout>
