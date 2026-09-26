@@ -82,7 +82,12 @@ export default function Map() {
 
     async function selectDestination(next: DestinationResult) {
         setDestination(next);
-        const params = new URLSearchParams({ latitude: String(next.latitude), longitude: String(next.longitude), radius: '1000', limit: '100' });
+        const params = new URLSearchParams({
+            latitude: String(next.latitude),
+            longitude: String(next.longitude),
+            radius: '1000',
+            limit: '100',
+        });
         const response = await fetch(`/api/parking/nearby?${params}`, { headers: { Accept: 'application/json' } });
         if (response.ok) setNearbyResults((await response.json()).results ?? []);
     }
@@ -205,7 +210,11 @@ export default function Map() {
                 </MapContainer>
             </div>
 
-            {destination && <div className="sr-only" aria-live="polite">{nearbyResults.length} parking options found near {destination.label}</div>}
+            {destination && (
+                <div className="sr-only" aria-live="polite">
+                    {nearbyResults.length} parking options found near {destination.label}
+                </div>
+            )}
 
             {selectedType === 'community' && selectedSpaceId && selectedLat !== null && selectedLng !== null && (
                 <ParkingSpaceModal
