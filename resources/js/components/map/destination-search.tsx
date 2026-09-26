@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/input';
-import type { DestinationResult } from '@/types/search';
+import type { DestinationResult } from '@/types/destination';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
 type Props = {
