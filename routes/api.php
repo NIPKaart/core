@@ -10,11 +10,14 @@ Route::middleware(['throttle:30,1', 'web'])->group(function () {
     Route::get('parking-offstreet/{id}', [Api\SpacesInfoController::class, 'ParkingOffstreetInfo']);
 });
 
+Route::middleware(['throttle:parking-discovery', 'web'])->group(function () {
+    Route::get('parking/viewport', [Api\ParkingDiscoveryController::class, 'viewport']);
+});
+
 // API route for search functionality
 Route::middleware(['throttle:60,1', 'web'])->group(function () {
     Route::get('search', [Api\SearchController::class, 'search']);
     Route::get('destinations/suggestions', [Api\DestinationSearchController::class, 'suggestions']);
     Route::get('destinations/resolve', [Api\DestinationSearchController::class, 'resolve']);
     Route::get('parking/nearby', [Api\ParkingDiscoveryController::class, 'nearby']);
-    Route::get('parking/viewport', [Api\ParkingDiscoveryController::class, 'viewport']);
 });
