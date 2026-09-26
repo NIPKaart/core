@@ -119,7 +119,6 @@ export default function Map() {
             : null;
     });
 
-
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
     const parkingMarkers = useMemo(
