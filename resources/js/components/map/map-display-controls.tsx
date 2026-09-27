@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, Info, Layers, Map, MapPin, Satellite, X } from 'lucide-react';
+import { Check, Info, Layers, Map, Satellite, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -68,8 +68,12 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                     <span>{tGlobal('legend.facility')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <span className="destination-marker__badge shrink-0" aria-hidden>
-                                        <MapPin size={36} fill="#ff7900" stroke="#fff" strokeWidth={1.75} />
+                                    <span className="h-10 w-8 shrink-0" aria-hidden>
+                                        <img
+                                            src="/assets/images/boards/accessible-pin.png"
+                                            alt=""
+                                            className="destination-marker__image object-contain"
+                                        />
                                     </span>
                                     <span>{t('controls.destination')}</span>
                                 </li>

@@ -348,10 +348,12 @@
 }
 .destination-marker__badge {
     display: block;
-    width: 36px;
-    height: 36px;
-    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 24%));
+    width: 100%;
+    height: 100%;
 }
-.destination-marker__badge svg circle {
-    fill: #fff;
+.destination-marker__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: hue-rotate(165deg) brightness(1.7) drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
 }
