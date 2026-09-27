@@ -1,4 +1,4 @@
-import { getInvalidParkingIcon } from '@/lib/icon-factory';
+import { cancelMarkerDeselection, discoveryIcon, setMarkerSelected } from '@/lib/discovery-icons';
 import { AREA_ZOOM, expandPoint, type CompactPoint } from '@/lib/map-areas';
 import { TileCache, tileKey, tilesCovering, type GeoBox, type TileCoordinate } from '@/lib/map-tiles';
 import { area as areaRoute, areas as areasRoute } from '@/routes/map/parking';
@@ -10,14 +10,12 @@ import { useTranslation } from 'react-i18next';
 import { useMap, useMapEvents } from 'react-leaflet';
 
 type Props = {
+    results?: ParkingResult[] | null;
     onSelect: (result: ParkingResult) => void;
     selectedKey: string | null;
 };
 
 type Status = 'idle' | 'loading' | 'error';
-
-/** Matches the parking-marker-deselect animation in app.css. */
-const DESELECT_DURATION_MS = 200;
 
 /** Loaded areas kept on the map; the least recently viewed area beyond this is removed. */
 const MAX_LOADED_AREAS = 40;
@@ -37,22 +35,6 @@ async function loadArea({ x, y }: TileCoordinate): Promise<ParkingResult[]> {
     return data.points.map(expandPoint);
 }
 
-let sharedSelectedIcon: L.DivIcon | null = null;
-
-/**
- * A slightly larger parking sign with a pointer whose tip marks the exact location.
- * The white edge, blue ring and glow come from CSS.
- */
-function selectedIcon(): L.DivIcon {
-    sharedSelectedIcon ??= L.divIcon({
-        html: `<span class="parking-marker-selected__ripple"></span><span class="parking-marker-selected__body"><img src="${getInvalidParkingIcon().options.iconUrl}" alt="" /><span class="parking-marker-selected__pointer"></span></span>`,
-        className: 'parking-marker-selected',
-        iconSize: [32, 63],
-        iconAnchor: [16, 63],
-    });
-    return sharedSelectedIcon;
-}
-
 function boxOf(bounds: L.LatLngBounds, scale = 1): GeoBox {
     const centre = bounds.getCenter();
     const halfWidth = ((bounds.getEast() - bounds.getWest()) / 2) * scale;
@@ -64,7 +46,7 @@ function boxOf(bounds: L.LatLngBounds, scale = 1): GeoBox {
  * Renders public parking with Leaflet.markercluster. Records are loaded once per area and stay on the map,
  * so zooming never reloads data and markercluster keeps its animations and coverage outlines.
  */
-export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
+export default function ParkingMapLayer({ onSelect, selectedKey, results = null }: Props) {
     const map = useMap();
     const { t } = useTranslation('frontend/map/main');
     const [status, setStatus] = useState<Status>('idle');
@@ -84,7 +66,7 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
 
     useEffect(() => {
         const group = L.markerClusterGroup({
-            spiderfyOnMaxZoom: false,
+            spiderfyOnMaxZoom: true,
             disableClusteringAtZoom: 16,
             maxClusterRadius: 100,
             removeOutsideVisibleBounds: true,
@@ -95,6 +77,7 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
         const byKey = markersByKey.current;
         map.addLayer(group);
         return () => {
+            byKey.forEach(cancelMarkerDeselection);
             map.removeLayer(group);
             cluster.current = null;
             loaded.clear();
@@ -102,29 +85,18 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
         };
     }, [map]);
 
-    // The highlight belongs to the marker icon, so it disappears inside a cluster and returns with the marker.
-    // A deselected sign first shrinks back to the plain sign (CSS) before its icon is swapped, so there is no jump.
     useEffect(() => {
         const previousKey = selected.current;
         if (previousKey === selectedKey) return;
         selected.current = selectedKey;
-
-        const previous = previousKey ? markersByKey.current.get(previousKey) : undefined;
-        if (previous) {
-            const restore = () => {
-                if (selected.current !== previousKey) previous.setIcon(getInvalidParkingIcon()).setZIndexOffset(0);
-            };
-            const element = previous.getElement();
-            if (element && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                element.classList.add('parking-marker-deselecting');
-                window.setTimeout(restore, DESELECT_DURATION_MS);
-            } else {
-                restore();
-            }
+        if (previousKey) {
+            const previous = markersByKey.current.get(previousKey);
+            if (previous) setMarkerSelected(previous, previousKey.startsWith('offstreet:') ? 'offstreet' : 'community', false);
         }
-
-        const next = selectedKey ? markersByKey.current.get(selectedKey) : undefined;
-        next?.setIcon(selectedIcon()).setZIndexOffset(1000);
+        if (selectedKey) {
+            const next = markersByKey.current.get(selectedKey);
+            if (next) setMarkerSelected(next, selectedKey.startsWith('offstreet:') ? 'offstreet' : 'community', true);
+        }
     }, [selectedKey]);
 
     const addArea = useCallback((area: TileCoordinate, results: ParkingResult[]) => {
@@ -132,11 +104,10 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
         const key = tileKey(area);
         if (!group || areaMarkers.current.has(key)) return;
 
-        const icon = getInvalidParkingIcon();
         const markers = results.map((result) => {
             const isSelected = result.key === selected.current;
             const marker = L.marker([result.latitude, result.longitude], {
-                icon: isSelected ? selectedIcon() : icon,
+                icon: discoveryIcon(result.source, isSelected),
                 zIndexOffset: isSelected ? 1000 : 0,
                 title: result.title,
                 alt: result.title,
@@ -157,12 +128,25 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
             areaMarkers.current.delete(areaKey);
             const evicted = new Set(stale);
             for (const [markerKey, marker] of markersByKey.current) {
-                if (evicted.has(marker)) markersByKey.current.delete(markerKey);
+                if (evicted.has(marker)) {
+                    cancelMarkerDeselection(marker);
+                    markersByKey.current.delete(markerKey);
+                }
             }
         }
     }, []);
 
     const update = useCallback(() => {
+        if (results !== null) {
+            generation.current++;
+            cluster.current?.clearLayers();
+            areaMarkers.current.clear();
+            markersByKey.current.forEach(cancelMarkerDeselection);
+            markersByKey.current.clear();
+            addArea({ zoom: AREA_ZOOM, x: 0, y: 0 }, results);
+            setStatus('idle');
+            return;
+        }
         const current = ++generation.current;
         const view = tilesCovering(boxOf(map.getBounds(), 1.5), AREA_ZOOM);
         // Only announce loading when it is noticeable, so fast responses never flash a message.
@@ -193,16 +177,28 @@ export default function ParkingMapLayer({ onSelect, selectedKey }: Props) {
                 const missing = needed.filter((area) => !areaMarkers.current.has(tileKey(area)));
                 if (missing.length === 0) return finish(false);
 
-                const requests = missing.map((area) => cache.current.fetch(area).then((results) => addArea(area, results)));
+                const requests = missing.map((area) =>
+                    cache.current.fetch(area).then((points) => {
+                        if (current === generation.current) addArea(area, points);
+                    }),
+                );
                 Promise.allSettled(requests).then((outcomes) => finish(outcomes.some((outcome) => outcome.status === 'rejected')));
             },
             () => finish(true),
         );
-    }, [addArea, map]);
+    }, [addArea, map, results]);
 
-    useMapEvents({ moveend: update });
+    useMapEvents({
+        moveend: () => {
+            if (results === null) update();
+        },
+    });
     useEffect(() => {
+        const pending = generation;
         update();
+        return () => {
+            pending.current++;
+        };
     }, [update]);
 
     if (status === 'idle') return null;

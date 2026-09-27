@@ -5,21 +5,23 @@ import { useSyncLocale } from '@/hooks/use-sync-locale';
 
 interface MapLayoutProps {
     children: React.ReactNode;
+    showSearch?: boolean;
+    mapSearch?: boolean;
 }
 
-export default function MapLayout({ children }: MapLayoutProps) {
+export default function MapLayout({ children, showSearch = true, mapSearch = false }: MapLayoutProps) {
     useSyncLocale();
     useNotifications();
 
     return (
         <>
             <div className="flex h-[100dvh] flex-col">
-                <Navbar />
+                <Navbar showSearch={showSearch} mapSearch={mapSearch} />
                 {children}
             </div>
 
             {/* Overlay for search results */}
-            <SearchOverlay />
+            {!mapSearch && <SearchOverlay />}
         </>
     );
 }

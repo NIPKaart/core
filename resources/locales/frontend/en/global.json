@@ -20,6 +20,8 @@
         "almostFull": "Almost full",
         "full": "Full",
         "noData": "No data",
-        "disabledSpace": "Disabled parking space"
+        "disabledSpace": "Disabled parking space",
+        "accessibleSpace": "Accessible parking space",
+        "facility": "Garage / P+R · availability unknown"
     }
 }

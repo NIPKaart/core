@@ -142,105 +142,73 @@
     }
 }
 
-/*
- * Selected parking sign on the map: a white edge, blue ring and glow plus a pointer to the exact spot, so it
- * stands out by size and shape on street and satellite tiles. Selecting grows the plain sign into this state
- * with a small spring and one ripple over the ground; deselecting shrinks it back onto the plain sign before
- * the icon is swapped. Leaflet positions the icon element itself with a transform, so transforms live on its
- * children. The plain-sign pose (scale 25/32, sign bottom on the anchor) is shared by both animations.
- */
-.parking-marker-selected {
-    --plain-sign: translateY(8.6px) scale(0.78);
+/* Preserve the original spring, ripple and delayed deselection on the new pin artwork.
+ * Leaflet owns the outer transform; the body scales around the pin's geographic anchor. */
+.discovery-pin {
     background: transparent;
     border: none;
+    --pin-anchor: 83.333%;
+    --ripple-bottom: 12px;
 }
-
-.parking-marker-selected__body {
-    display: flex;
+.discovery-pin-garage {
+    --pin-anchor: 100%;
+    --ripple-bottom: 0px;
+}
+.discovery-pin .parking-marker-selected__body {
+    display: block;
+    width: 100%;
     height: 100%;
-    flex-direction: column;
-    align-items: center;
-    transform-origin: 50% 100%;
+    transform-origin: 50% var(--pin-anchor);
+}
+.discovery-pin img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
+}
+.discovery-pin-selected .parking-marker-selected__body {
+    transform: scale(1.2);
     animation: parking-marker-select 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.parking-marker-selected img {
-    display: block;
-    width: 32px;
-    height: 52px;
-    border-radius: 3px;
-    box-shadow:
-        0 0 0 2px #fff,
-        0 0 0 4px #1d4ed8,
-        0 0 14px 4px rgb(29 78 216 / 55%),
-        0 4px 8px rgb(0 0 0 / 35%);
-    transition: box-shadow 0.2s ease-out;
-    animation: parking-marker-select-glow 0.3s ease-out;
+.discovery-pin-selected img {
+    filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 4px #1d4ed8);
+    transition: filter 0.2s ease-out;
 }
-
-.parking-marker-selected__pointer {
-    margin-top: 2px;
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 9px solid #1d4ed8;
-    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 40%));
-    transition: opacity 0.2s ease-out;
-    animation: parking-marker-select-fade 0.3s ease-out;
-}
-
-/* Centred on the pointer tip, which is the bottom centre of the icon. */
 .parking-marker-selected__ripple {
     position: absolute;
-    bottom: -7px;
+    bottom: var(--ripple-bottom);
     left: 50%;
     width: 36px;
     height: 14px;
     margin-left: -18px;
+    margin-bottom: -7px;
     border: 3px solid #1d4ed8;
     border-radius: 50%;
     opacity: 0;
     pointer-events: none;
+}
+.discovery-pin-selected .parking-marker-selected__ripple {
     animation: parking-marker-select-ripple 0.8s ease-out 0.15s;
 }
-
 .parking-marker-deselecting .parking-marker-selected__body {
     animation: parking-marker-deselect 0.2s ease-in forwards;
 }
-
 .parking-marker-deselecting img {
-    box-shadow: none;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
 }
-
-.parking-marker-deselecting .parking-marker-selected__pointer {
-    opacity: 0;
+.parking-marker-deselecting .parking-marker-selected__ripple {
+    animation: none;
 }
-
 @keyframes parking-marker-select {
     from {
-        transform: var(--plain-sign);
+        transform: scale(1);
     }
 }
-
 @keyframes parking-marker-deselect {
     to {
-        transform: var(--plain-sign);
+        transform: scale(1);
     }
 }
-
-@keyframes parking-marker-select-glow {
-    from {
-        box-shadow: none;
-    }
-}
-
-@keyframes parking-marker-select-fade {
-    from {
-        opacity: 0;
-    }
-}
-
 @keyframes parking-marker-select-ripple {
     from {
         transform: scale(0.3);
@@ -251,13 +219,155 @@
         opacity: 0;
     }
 }
-
 @media (prefers-reduced-motion: reduce) {
-    .parking-marker-selected__body,
-    .parking-marker-selected img,
-    .parking-marker-selected__pointer,
-    .parking-marker-selected__ripple {
+    .discovery-pin .parking-marker-selected__body,
+    .discovery-pin img,
+    .discovery-pin .parking-marker-selected__ripple {
         animation: none;
         transition: none;
     }
+}
+
+/* Keep Leaflet's behavior, with the same surfaces and targets as the React controls. */
+.parking-discovery-map .leaflet-control-zoom,
+.parking-discovery-map .leaflet-control-locate {
+    padding: 2px;
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: 12px;
+    background: var(--background);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+    overflow: hidden;
+}
+.leaflet-control-zoom a:has(svg) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.parking-discovery-map .leaflet-control-zoom a,
+.parking-discovery-map .leaflet-control-locate a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--background);
+    color: var(--foreground);
+}
+.parking-discovery-map .leaflet-control-zoom a:hover,
+.parking-discovery-map .leaflet-control-locate a:hover {
+    background: var(--accent);
+}
+.parking-discovery-map .leaflet-control-zoom a:focus-visible,
+.parking-discovery-map .leaflet-control-locate a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -3px;
+}
+.parking-discovery-map .leaflet-control-zoom a.leaflet-disabled {
+    color: var(--muted-foreground);
+    opacity: 0.45;
+}
+.parking-discovery-map .leaflet-control-locate.active a {
+    color: var(--primary);
+    background: var(--accent);
+}
+.parking-discovery-map .leaflet-right .leaflet-control {
+    margin-right: 20px;
+}
+.parking-discovery-map .leaflet-bottom .leaflet-control {
+    margin-bottom: 10px;
+}
+.parking-discovery-map .leaflet-bottom .leaflet-control-attribution {
+    margin: 0;
+}
+.parking-discovery-map .leaflet-control-scale {
+    margin-left: 20px;
+    padding: 7px 10px 8px;
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: 10px;
+    background: var(--background);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+}
+.parking-discovery-map .leaflet-control-scale-line {
+    position: relative;
+    border: 0;
+    border-bottom: 2px solid currentColor;
+    padding: 0 0 5px;
+    background: transparent;
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    text-shadow: none;
+}
+.parking-discovery-map .leaflet-control-scale-line::before,
+.parking-discovery-map .leaflet-control-scale-line::after {
+    position: absolute;
+    bottom: 0;
+    height: 5px;
+    border-left: 2px solid currentColor;
+    content: '';
+}
+.parking-discovery-map .leaflet-control-scale-line::before {
+    left: 0;
+}
+.parking-discovery-map .leaflet-control-scale-line::after {
+    right: 0;
+}
+@media (width < 1024px) {
+    .parking-discovery-map .leaflet-right .leaflet-control {
+        margin-right: 12px;
+    }
+    .parking-discovery-map .leaflet-control-scale {
+        margin-left: 12px;
+    }
+    .map-discovery[data-search-open='true'] .leaflet-control-zoom,
+    .map-discovery[data-search-open='true'] .leaflet-control-locate {
+        visibility: hidden;
+    }
+}
+
+.discovery-locate-icon,
+.discovery-locate-loading {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.discovery-locate-loading {
+    opacity: 0.5;
+}
+
+.destination-marker {
+    background: transparent;
+    border: 0;
+}
+.destination-marker__badge {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.destination-marker__pin {
+    width: 100%;
+    height: 100%;
+    color: white;
+    fill: var(--color-orange-500);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 20%));
+}
+.destination-marker__pin circle {
+    fill: white;
+    stroke: white;
+}
+.destination-marker__area {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 2px dashed var(--color-orange-500);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(249 115 22 / 24%), rgb(249 115 22 / 6%));
 }

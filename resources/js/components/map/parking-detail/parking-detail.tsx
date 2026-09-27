@@ -23,6 +23,7 @@ import { formatDistance } from './utils';
 
 type Props = {
     result: ParkingResult | null;
+    approximateDestination?: boolean;
     open: boolean;
     onClose: () => void;
     onCloseAutoFocus?: (event: Event) => void;
@@ -44,7 +45,7 @@ const favoriteTypes = {
 const tabTriggerClass =
     'flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white';
 
-export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus, confirmationStatusOptions }: Props) {
+export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus, confirmationStatusOptions }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
     const { can, user } = useAuthorization();
@@ -100,7 +101,9 @@ export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus,
 
     const distance =
         result.distance_metres !== null && Number.isFinite(result.distance_metres)
-            ? t('detail.distance', { distance: formatDistance(result.distance_metres, i18n.language) })
+            ? t(approximateDestination ? 'detail.distance_search_point' : 'detail.distance', {
+                  distance: formatDistance(result.distance_metres, i18n.language),
+              })
             : null;
     const description = t(
         `detail.descriptions.${result.source === 'offstreet' ? (detail?.source === 'offstreet' && detail.detail.type === 'parkandride' ? 'parkandride' : 'garage') : result.source}`,
@@ -212,9 +215,17 @@ export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus,
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <Button size="icon" variant="ghost" className="size-11" aria-label={tGlobal('common.close')} onClick={onClose}>
-                <X className="h-5 w-5" aria-hidden />
-            </Button>
+            {isDesktop && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-11 rounded-full bg-muted text-muted-foreground"
+                    aria-label={tGlobal('common.close')}
+                    onClick={onClose}
+                >
+                    <X className="h-5 w-5" aria-hidden />
+                </Button>
+            )}
         </div>
     );
 
@@ -259,17 +270,24 @@ export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus,
 
     return (
         <Drawer autoFocus open={open} onOpenChange={(value) => !value && onClose()}>
-            <DrawerContent onCloseAutoFocus={onCloseAutoFocus} className="mx-auto max-w-xl bg-white dark:bg-zinc-950">
-                <DrawerHeader className="text-left">
+            <DrawerContent
+                onCloseAutoFocus={onCloseAutoFocus}
+                className="mx-auto max-w-xl overflow-hidden bg-white data-[vaul-drawer-direction=bottom]:max-h-[90dvh] dark:bg-zinc-950"
+            >
+                <DrawerHeader className="shrink-0 text-left">
                     <div className="flex items-start justify-between gap-2">
-                        <DrawerTitle>{heading}</DrawerTitle>
+                        <DrawerTitle className="min-w-0">{heading}</DrawerTitle>
                         {headerActions}
                     </div>
-                    <DrawerDescription className="text-center">{description}</DrawerDescription>
+                    <DrawerDescription className="text-left text-xs leading-relaxed">{description}</DrawerDescription>
                 </DrawerHeader>
                 {sharedStatus}
-                <div className="overflow-y-auto px-4">{body}</div>
-                {footer && <DrawerFooter className="flex flex-row justify-end gap-2">{footer}</DrawerFooter>}
+                <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">{body}</div>
+                {footer && (
+                    <DrawerFooter className="flex shrink-0 flex-row justify-end gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                        {footer}
+                    </DrawerFooter>
+                )}
             </DrawerContent>
         </Drawer>
     );

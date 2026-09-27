@@ -80,6 +80,7 @@ test('a street suggestion shows its location count and opens the full group exte
     assert.doesNotMatch(html, /Location 1|data-marker/);
     find(tree, (node) => node.type === 'button' && node.props.className?.includes('group flex')).props.onClick();
     assert.match(location.href, /destination=Sloterdijkerweg%2C\+Amsterdam/);
+    assert.match(location.href, /destination_type=street/);
     assert.match(location.href, /south=52.38/);
     assert.match(location.href, /east=4.86/);
 });

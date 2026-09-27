@@ -22,14 +22,26 @@ final class ParkingDiscoveryController extends Controller
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'radius' => ['sometimes', 'integer', 'min:50', 'max:10000'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:200'],
+            'page' => ['sometimes', 'integer', 'min:1', 'max:1000000'],
+            'source' => ['sometimes', 'required', 'in:all,community,municipal,offstreet'],
+            'sort' => ['sometimes', 'required', 'in:distance,balanced'],
         ]);
 
+        $limit = (int) ($validated['limit'] ?? 100);
+        $page = (int) ($validated['page'] ?? 1);
+        $results = $discovery->withinRadius(
+            new GeoPoint((float) $validated['latitude'], (float) $validated['longitude']),
+            (float) ($validated['radius'] ?? 1000),
+            $limit + 1,
+            ($page - 1) * $limit,
+            $validated['source'] ?? 'all',
+            $validated['sort'] ?? 'distance',
+        );
+
         return response()->json([
-            'results' => $discovery->withinRadius(
-                new GeoPoint((float) $validated['latitude'], (float) $validated['longitude']),
-                (float) ($validated['radius'] ?? 1000),
-                (int) ($validated['limit'] ?? 100),
-            ),
+            'results' => $results->take($limit)->values(),
+            'has_more' => $results->count() > $limit,
+            'page' => $page,
         ]);
     }
 

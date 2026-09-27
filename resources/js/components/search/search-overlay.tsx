@@ -74,6 +74,7 @@ export default function SearchOverlay(): JSX.Element {
         window.location.href = locationMap.url({
             query: {
                 destination: destination.type === 'street' && destination.sub ? `${destination.label}, ${destination.sub}` : destination.label,
+                destination_type: destination.type,
                 lat: String(destination.latitude),
                 lng: String(destination.longitude),
                 ...(destination.bounds ? destination.bounds : {}),

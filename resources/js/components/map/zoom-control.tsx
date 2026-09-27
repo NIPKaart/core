@@ -1,5 +1,8 @@
 import L from 'leaflet';
-import { useEffect, useRef } from 'react';
+import { Minus, Plus } from 'lucide-react';
+import { createElement, useEffect, useRef } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { useTranslation } from 'react-i18next';
 import { useMap } from 'react-leaflet';
 
 interface ZoomControlProps {
@@ -26,6 +29,7 @@ function zoomTowards(map: L.Map, focus: L.LatLngTuple | null, direction: 1 | -1,
 
 export default function ZoomControl({ position = 'bottomright', focus = null }: ZoomControlProps) {
     const map = useMap();
+    const { t } = useTranslation('frontend/map/main');
     const focusRef = useRef(focus);
 
     useEffect(() => {
@@ -37,13 +41,20 @@ export default function ZoomControl({ position = 'bottomright', focus = null }: 
             _zoomIn: (event: MouseEvent) => zoomTowards(map, focusRef.current, 1, event),
             _zoomOut: (event: MouseEvent) => zoomTowards(map, focusRef.current, -1, event),
         });
-        const zoomControl: L.Control.Zoom = new FocusZoom({ position });
+        const options: L.Control.ZoomOptions = {
+            position,
+            zoomInText: renderToStaticMarkup(createElement(Plus, { size: 20, 'aria-hidden': true })),
+            zoomOutText: renderToStaticMarkup(createElement(Minus, { size: 20, 'aria-hidden': true })),
+            zoomInTitle: t('controls.zoom_in'),
+            zoomOutTitle: t('controls.zoom_out'),
+        };
+        const zoomControl: L.Control.Zoom = new FocusZoom(options);
         map.addControl(zoomControl);
 
         return () => {
             map.removeControl(zoomControl);
         };
-    }, [map, position]);
+    }, [map, position, t]);
 
     return null;
 }

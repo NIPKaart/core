@@ -40,8 +40,8 @@ function Group({ id, title, rows }: { id: string; title: string; rows: Row[] }) 
             <dl className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {rows.map((row) => (
                     <div key={row.label} className="flex items-start justify-between gap-3 px-3 py-2">
-                        <dt className="shrink-0 text-muted-foreground">{row.label}</dt>
-                        <dd className="min-w-0 text-right">
+                        <dt className="max-w-[45%] min-w-0 text-muted-foreground">{row.label}</dt>
+                        <dd className="min-w-0 flex-1 text-right wrap-break-word">
                             <span className="inline-flex flex-wrap items-center justify-end gap-1.5 font-medium">
                                 {row.value}
                                 {row.help && <HelpPopover content={row.help} label={t('detail.more_info', { label: row.label })} />}
@@ -333,7 +333,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                 </div>
             )}
 
-            <p className="-mt-1 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground sm:whitespace-nowrap">
+            <p className="-mt-1 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
                 <Info className="h-3 w-3 shrink-0" aria-hidden />
                 {t('detail.check_on_site')}
             </p>
