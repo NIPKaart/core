@@ -1,19 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import {
-    Drawer,
-    DrawerClose,
-    DrawerContent,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
-} from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { defaultDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -146,19 +137,7 @@ export default function DiscoveryFilters({
             <DrawerTrigger asChild>{trigger}</DrawerTrigger>
             <DrawerContent className="mx-auto max-w-xl overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
                 <DrawerHeader className="shrink-0 text-left">
-                    <div className="flex items-center justify-between">
-                        <DrawerTitle>{t('filters.title')}</DrawerTitle>
-                        <DrawerClose asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-11 rounded-full bg-muted text-muted-foreground"
-                                aria-label={t('filters.close')}
-                            >
-                                <X className="size-4" aria-hidden />
-                            </Button>
-                        </DrawerClose>
-                    </div>
+                    <DrawerTitle>{t('filters.title')}</DrawerTitle>
                     <DrawerDescription>{t('filters.description')}</DrawerDescription>
                 </DrawerHeader>
                 <div className="min-h-0 overflow-y-auto overscroll-contain px-4">{form}</div>

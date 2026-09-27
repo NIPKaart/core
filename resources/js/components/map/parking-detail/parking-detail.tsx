@@ -212,15 +212,17 @@ export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus,
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
-            <Button
-                size="icon"
-                variant="ghost"
-                className="size-11 rounded-full bg-muted text-muted-foreground"
-                aria-label={tGlobal('common.close')}
-                onClick={onClose}
-            >
-                <X className="h-5 w-5" aria-hidden />
-            </Button>
+            {isDesktop && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-11 rounded-full bg-muted text-muted-foreground"
+                    aria-label={tGlobal('common.close')}
+                    onClick={onClose}
+                >
+                    <X className="h-5 w-5" aria-hidden />
+                </Button>
+            )}
         </div>
     );
 
