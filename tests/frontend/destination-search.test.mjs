@@ -20,7 +20,7 @@ function find(node, predicate) {
 function mount() {
     let index = 0, open = true, requested, focused = false;
     const state = [], selected = [];
-    const destination = { key: 'station', label: 'Amsterdam Centraal', latitude: 52.38, longitude: 4.9 };
+    let destination = { key: 'station', label: 'Amsterdam Centraal', latitude: 52.38, longitude: 4.9 };
     const context = { exports: {}, document: { getElementById: () => ({ focus: () => { focused = true; } }) }, require: name => {
         if (name === 'react') return { useEffect: () => {}, useRef: () => ({ current: null }), useState: initial => {
             const key = index++;
@@ -34,14 +34,14 @@ function mount() {
         if (name === '@/hooks/use-search-recent') return { useRecentSearches: () => ({ items: ['Amsterdam Centraal', 'Amsterdam'], add() {} }) };
         if (name === '@/hooks/use-destination-suggestions') return { useDestinationSuggestions: (query, active) => {
             requested = { query, active };
-            return { results: active ? [destination] : [], status: active ? 'ready' : 'idle' };
+            return { results: active && destination ? [destination] : [], status: active ? 'ready' : 'idle' };
         } };
         if (name === '@/routes/destinations') return {};
         if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
         return require(name);
     } };
     vm.runInNewContext(source, context);
-    return { selected, requested: () => requested, focused: () => focused, render: () => { index = 0; return context.exports.default({ destination, onSelect: next => selected.push(next) }); } };
+    return { selected, requested: () => requested, focused: () => focused, render: () => { index = 0; return context.exports.default({ destination, onClear: () => { destination = null; selected.push(null); }, onSelect: next => selected.push(next) }); } };
 }
 test('reopening the selected destination shows recent searches without requesting the same destination again', () => {
     const view = mount();
@@ -74,4 +74,13 @@ test('choosing the current destination from recent searches returns to the map w
     assert.equal(view.selected.length, 0);
     assert.equal(view.render().props.hidden, true);
     assert.equal(view.focused(), true);
+});
+
+test('clearing search removes the chosen destination as well as the input', () => {
+    const view = mount();
+    find(view.render(), node => node.type === 'Button' && node.props['aria-label'] === 'clear').props.onClick();
+    assert.deepEqual(view.selected, [null]);
+    assert.equal(find(view.render(), node => node.type === 'CommandInput').props.value, '');
+    find(view.render(), node => node.type === 'Command').props.onKeyDown({ key: 'Escape', preventDefault() {} });
+    assert.equal(find(view.render(), node => node.type === 'CommandInput').props.value, '');
 });

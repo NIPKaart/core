@@ -34,3 +34,8 @@ export function discoveryDestinationUrl(url: URL, destination: DestinationResult
 export function isApproximateDestination(destination: Pick<DestinationResult, 'type'>): boolean {
     return !['address', 'building', 'amenity', 'house', 'poi', 'community', 'municipal', 'offstreet'].includes(destination.type);
 }
+
+export function clearDiscoveryDestinationUrl(url: URL): string {
+    for (const key of ['destination', 'destination_type', 'lat', 'lng', 'south', 'north', 'west', 'east']) url.searchParams.delete(key);
+    return url.pathname + url.search + url.hash;
+}

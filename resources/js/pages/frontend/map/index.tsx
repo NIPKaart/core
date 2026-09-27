@@ -10,6 +10,7 @@ import { useSearchOpen } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
 import { destinationIcon } from '@/lib/destination-icon';
 import {
+    clearDiscoveryDestinationUrl,
     discoveryDestinationUrl,
     discoveryFilterUrl,
     isApproximateDestination,
@@ -202,6 +203,16 @@ export default function ParkingMap() {
                     <div className={`pointer-events-none w-full items-start gap-3 lg:flex lg:w-auto ${searchOpen ? 'flex' : 'hidden'}`}>
                         <DestinationSearch
                             destination={destination}
+                            onClear={() => {
+                                setDestination(null);
+                                setPage(1);
+                                setSelectedResult(null);
+                                setModalOpen(false);
+                                setViewportResults([]);
+                                setHasMore(false);
+                                setStatus('loading');
+                                window.history.replaceState(window.history.state, '', clearDiscoveryDestinationUrl(new URL(window.location.href)));
+                            }}
                             onSelect={(value) => {
                                 const next = { ...value, label: value.type === 'street' && value.sub ? `${value.label}, ${value.sub}` : value.label };
                                 window.history.replaceState(window.history.state, '', discoveryDestinationUrl(new URL(window.location.href), next));

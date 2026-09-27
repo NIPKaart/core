@@ -14,9 +14,11 @@ import { useTranslation } from 'react-i18next';
 export default function DestinationSearch({
     destination,
     onSelect,
+    onClear,
 }: {
     destination: DestinationResult | null;
     onSelect: (value: DestinationResult) => void;
+    onClear: () => void;
 }) {
     const { t } = useTranslation('global/search');
     const { t: tMap } = useTranslation('frontend/map/main');
@@ -174,8 +176,15 @@ export default function DestinationSearch({
                             size="icon"
                             className="absolute right-1 size-11"
                             aria-label={t('clear')}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+                            }}
                             onClick={() => {
+                                resolver.current?.abort();
                                 setQuery('');
+                                setError(null);
+                                setResolving(false);
+                                onClear();
                                 input.current?.focus();
                             }}
                         >

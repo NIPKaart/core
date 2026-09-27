@@ -56,3 +56,10 @@ test('streets, areas and legacy destinations remain approximate while specific d
         assert.equal(context.exports.isApproximateDestination(restored), type === 'street');
     }
 });
+
+test('clearing the destination removes all destination state while preserving filters and the current map view', () => {
+    const url = new URL('https://example.test/map?destination=Amstel&destination_type=street&lat=52&lng=5&south=51&north=53&west=4&east=6&source=municipal&radius=500&sort=distance#17/52/5');
+    const cleared = new URL(context.exports.clearDiscoveryDestinationUrl(url), url);
+    assert.equal(cleared.search, '?source=municipal&radius=500&sort=distance');
+    assert.equal(cleared.hash, '#17/52/5');
+});
