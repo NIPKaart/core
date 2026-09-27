@@ -32,7 +32,7 @@ export default function DiscoveryFilters({
             variant="outline"
             disabled={disabled}
             title={disabled ? t('toolbar.choose_destination') : undefined}
-            className="h-[50px] gap-2 rounded-xl bg-background shadow-sm"
+            className="h-[50px] gap-2 rounded-xl border-border/70 bg-background px-4 shadow-md"
         >
             <SlidersHorizontal className="size-4" aria-hidden />
             {t('filters.title')}

@@ -7,7 +7,7 @@ import { useSearchHotkey } from '@/hooks/use-search-hotkey';
 import { useRecentSearches } from '@/hooks/use-search-recent';
 import { resolve as resolveDestination } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
-import { ArrowLeft, MapPin, Search, X } from 'lucide-react';
+import { ArrowLeft, History, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,7 +26,8 @@ export default function DestinationSearch({
     const [error, setError] = useState<string | null>(null);
     const [resolving, setResolving] = useState(false);
     const [selectedSuggestion, setSelectedSuggestion] = useState('');
-    const { results, status } = useDestinationSuggestions(query, open);
+    const editing = query !== destination?.label;
+    const { results, status } = useDestinationSuggestions(query, open && editing);
     const { items: recent, add } = useRecentSearches();
     const input = useRef<HTMLInputElement>(null);
     const container = useRef<HTMLDivElement>(null);
@@ -40,8 +41,10 @@ export default function DestinationSearch({
     }, [results]);
 
     useEffect(() => {
-        if (open) input.current?.focus();
-        else setQuery(destination?.label ?? '');
+        if (open) {
+            input.current?.focus();
+            input.current?.select();
+        } else setQuery(destination?.label ?? '');
     }, [open, destination]);
 
     useEffect(() => {
@@ -59,6 +62,23 @@ export default function DestinationSearch({
         document.addEventListener('pointerdown', outside);
         return () => document.removeEventListener('pointerdown', outside);
     }, [open]);
+
+    useEffect(() => {
+        if (!open || desktop) return;
+        const viewport = window.visualViewport;
+        const resize = () => {
+            if (!container.current) return;
+            const bottom = viewport ? viewport.height + viewport.offsetTop : window.innerHeight;
+            container.current.style.setProperty('--search-height', `${Math.max(120, bottom - container.current.getBoundingClientRect().top - 12)}px`);
+        };
+        resize();
+        viewport?.addEventListener('resize', resize);
+        viewport?.addEventListener('scroll', resize);
+        return () => {
+            viewport?.removeEventListener('resize', resize);
+            viewport?.removeEventListener('scroll', resize);
+        };
+    }, [open, desktop]);
 
     function dismiss() {
         closeSearch();
@@ -99,13 +119,18 @@ export default function DestinationSearch({
     }
 
     return (
-        <div ref={container} id="map-destination-search" hidden={!desktop && !open} className="pointer-events-auto relative w-full lg:w-[440px]">
+        <div
+            ref={container}
+            id="map-destination-search"
+            hidden={!desktop && !open}
+            className="map-destination-search pointer-events-auto relative flex max-h-(--search-height) w-full flex-col bg-background p-3 shadow-lg lg:max-h-none lg:w-[440px] lg:bg-transparent lg:p-0 lg:shadow-none"
+        >
             <Command
                 shouldFilter={false}
                 value={selectedSuggestion}
                 onValueChange={setSelectedSuggestion}
                 label={t('aria_input')}
-                className="h-auto overflow-visible rounded-xl border shadow-md focus-within:ring-2 focus-within:ring-ring [&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:border-0"
+                className="h-auto min-h-0 overflow-visible rounded-none bg-transparent lg:rounded-xl lg:border lg:border-border/70 lg:bg-background lg:shadow-md lg:focus-within:border-ring [&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:border-0 [&_[data-slot=command-input-wrapper]>svg]:size-[18px]"
                 onKeyDown={(event) => {
                     if (event.key === 'Escape') {
                         event.preventDefault();
@@ -117,13 +142,13 @@ export default function DestinationSearch({
                     if (!event.currentTarget.contains(event.relatedTarget)) closeSearch();
                 }}
             >
-                <div className="relative flex items-center">
+                <div className="relative flex shrink-0 items-center rounded-xl bg-muted/60 focus-within:ring-2 focus-within:ring-ring/40 lg:bg-transparent lg:focus-within:ring-0">
                     {!desktop && (
                         <Button variant="ghost" size="icon" className="ml-1 size-11 shrink-0" aria-label={tMap('filters.close')} onClick={dismiss}>
                             <ArrowLeft className="size-4" aria-hidden />
                         </Button>
                     )}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 max-lg:[&_[data-slot=command-input-wrapper]]:pl-0 max-lg:[&_[data-slot=command-input-wrapper]>svg]:hidden">
                         <CommandInput
                             asChild
                             ref={input}
@@ -133,7 +158,14 @@ export default function DestinationSearch({
                             placeholder={tMap('toolbar.search')}
                             className="h-12 pr-11 text-base lg:text-sm"
                         >
-                            <input aria-label={t('aria_input')} aria-expanded={open} />
+                            <input
+                                aria-label={t('aria_input')}
+                                aria-expanded={open}
+                                enterKeyHint="search"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                spellCheck={false}
+                            />
                         </CommandInput>
                     </div>
                     {query && (
@@ -152,14 +184,17 @@ export default function DestinationSearch({
                     )}
                 </div>
                 {open && (
-                    <div className="absolute top-full right-0 left-0 mt-1 overflow-hidden rounded-xl border bg-popover shadow-md">
-                        <CommandList className="max-h-[min(50dvh,360px)]" label={t('suggestions')}>
+                    <div className="mt-2 flex min-h-0 flex-col overflow-hidden bg-popover lg:absolute lg:top-full lg:right-0 lg:left-0 lg:mt-2 lg:rounded-xl lg:border lg:shadow-lg">
+                        <CommandList
+                            className="max-h-[min(60dvh,420px)] min-h-0 overscroll-contain lg:max-h-[min(50dvh,360px)]"
+                            label={t('suggestions')}
+                        >
                             {(status === 'loading' || resolving || error || status === 'error') && (
                                 <p role="status" className="px-4 py-3 text-sm text-muted-foreground">
                                     {t(error ?? (status === 'error' ? 'error' : 'searching'))}
                                 </p>
                             )}
-                            {status === 'ready' && results.length === 0 && (
+                            {status === 'ready' && results.length === 0 && editing && (
                                 <p role="status" className="px-4 py-3 text-sm text-muted-foreground">
                                     {t('no_results')}
                                 </p>
@@ -171,29 +206,31 @@ export default function DestinationSearch({
                                         key={result.key}
                                         value={result.key}
                                         onSelect={() => choose(result)}
-                                        className="min-h-11 gap-3 px-3 py-2"
+                                        className="min-h-14 cursor-pointer gap-3 rounded-lg px-3 py-3"
                                     >
                                         <MapPin className="size-4" aria-hidden />
                                         <span className="min-w-0">
-                                            <span className="block truncate">{result.label}</span>
-                                            {result.sub && <span className="block truncate text-xs text-muted-foreground">{result.sub}</span>}
+                                            <span className="block leading-snug">{result.label}</span>
+                                            {result.sub && (
+                                                <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{result.sub}</span>
+                                            )}
                                         </span>
                                     </CommandItem>
                                 ))}
-                                {query.trim().length >= 2 && (
+                                {query.trim().length >= 2 && editing && (
                                     <CommandItem
                                         onMouseDown={(event) => event.preventDefault()}
                                         value="resolve-destination"
                                         disabled={resolving}
                                         onSelect={() => void resolve()}
-                                        className="min-h-11 gap-3 px-3 py-2"
+                                        className="min-h-14 cursor-pointer gap-3 rounded-lg px-3 py-3"
                                     >
                                         <Search className="size-4" aria-hidden />
                                         <span>{t('search_near', { term: query.trim() })}</span>
                                     </CommandItem>
                                 )}
                             </CommandGroup>
-                            {query.trim().length < 2 &&
+                            {(query.trim().length < 2 || !editing) &&
                                 (recent.length ? (
                                     <CommandGroup heading={t('recent')}>
                                         {recent.map((term) => (
@@ -201,10 +238,14 @@ export default function DestinationSearch({
                                                 onMouseDown={(event) => event.preventDefault()}
                                                 key={term}
                                                 value={term}
-                                                onSelect={() => setQuery(term)}
-                                                className="min-h-11 px-3"
+                                                onSelect={() => {
+                                                    if (term === destination?.label) dismiss();
+                                                    else setQuery(term);
+                                                }}
+                                                className="min-h-14 cursor-pointer gap-3 rounded-lg px-3"
                                             >
-                                                {term}
+                                                <History className="size-4" aria-hidden />
+                                                <span>{term}</span>
                                             </CommandItem>
                                         ))}
                                     </CommandGroup>
@@ -212,7 +253,7 @@ export default function DestinationSearch({
                                     <p className="px-4 py-3 text-sm text-muted-foreground">{t('start_typing')}</p>
                                 ))}
                         </CommandList>
-                        <p className="border-t px-3 py-2 text-[11px] text-muted-foreground">
+                        <p className="shrink-0 border-t px-3 pt-3 pb-1 text-[10px] leading-relaxed text-muted-foreground lg:py-2">
                             {t('attribution')}{' '}
                             <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer" className="underline">
                                 Geoapify

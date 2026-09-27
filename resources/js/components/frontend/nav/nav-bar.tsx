@@ -15,6 +15,7 @@ import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
 import { LayoutDashboard, LogOut, Menu, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { FavoritesButton } from './badge/favorites';
 import { UserNavMenu } from './badge/user';
@@ -98,7 +99,12 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                                 onClick={() => {
                                     setMobileMenuOpen(false);
                                     if (searchOpen) closeSearch();
-                                    else openSearch();
+                                    else {
+                                        flushSync(() => openSearch());
+                                        const input = document.querySelector<HTMLInputElement>('#map-destination-search input');
+                                        input?.focus();
+                                        input?.select();
+                                    }
                                 }}
                             >
                                 <Search className="size-5" aria-hidden />

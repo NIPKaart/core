@@ -228,16 +228,72 @@
     }
 }
 
+/* Keep Leaflet's behavior, with the same surfaces and targets as the React controls. */
+.parking-discovery-map .leaflet-control-zoom,
+.parking-discovery-map .leaflet-control-locate {
+    padding: 2px;
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: 12px;
+    background: var(--background);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+    overflow: hidden;
+}
+.leaflet-control-zoom a:has(svg) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .parking-discovery-map .leaflet-control-zoom a,
 .parking-discovery-map .leaflet-control-locate a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 44px;
     height: 44px;
-    line-height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--background);
+    color: var(--foreground);
 }
-
+.parking-discovery-map .leaflet-control-zoom a:hover,
+.parking-discovery-map .leaflet-control-locate a:hover {
+    background: var(--accent);
+}
+.parking-discovery-map .leaflet-control-zoom a:focus-visible,
+.parking-discovery-map .leaflet-control-locate a:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -3px;
+}
+.parking-discovery-map .leaflet-control-zoom a.leaflet-disabled {
+    color: var(--muted-foreground);
+    opacity: 0.45;
+}
+.parking-discovery-map .leaflet-control-locate.active a {
+    color: var(--primary);
+    background: var(--accent);
+}
+.parking-discovery-map .leaflet-right .leaflet-control {
+    margin-right: 20px;
+}
+.parking-discovery-map .leaflet-bottom .leaflet-control {
+    margin-bottom: 10px;
+}
+.parking-discovery-map .leaflet-bottom .leaflet-control-attribution {
+    margin: 0;
+}
+.parking-discovery-map .leaflet-control-scale {
+    margin-left: 20px;
+}
 @media (width < 1024px) {
-    .parking-discovery-map .leaflet-top.leaflet-right {
-        top: 64px;
+    .parking-discovery-map .leaflet-right .leaflet-control {
+        margin-right: 12px;
+    }
+    .parking-discovery-map .leaflet-control-scale {
+        margin-left: 12px;
+    }
+    .map-discovery[data-search-open='true'] .leaflet-control-zoom,
+    .map-discovery[data-search-open='true'] .leaflet-control-locate {
+        visibility: hidden;
     }
 }
 

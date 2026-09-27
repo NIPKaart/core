@@ -70,5 +70,14 @@
         "locate": "Toon mijn locatie",
         "show_results": "Bekijk resultaten",
         "no_results": "Geen locaties binnen deze filters"
+    },
+    "controls": {
+        "layers": "Kaartlagen",
+        "legend": "Legenda",
+        "streets": "Kaart",
+        "satellite": "Satelliet",
+        "clusters": "Het getal toont hoeveel locaties bij elkaar liggen.",
+        "zoom_in": "Inzoomen",
+        "zoom_out": "Uitzoomen"
     }
 }

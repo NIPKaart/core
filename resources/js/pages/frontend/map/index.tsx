@@ -1,7 +1,7 @@
 import DestinationSearch from '@/components/map/destination-search';
 import DiscoveryFilters from '@/components/map/discovery-filters';
-import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
+import MapDisplayControls, { type MapStyle } from '@/components/map/map-display-controls';
 import NearbyDiscovery from '@/components/map/nearby-discovery';
 import ParkingMapLayer from '@/components/map/parking-map-layer';
 import { type DiscoveryStatus } from '@/components/map/parking-results';
@@ -13,15 +13,13 @@ import { getOrangeMarkerIcon } from '@/lib/icon-factory';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingDetail from '@/components/map/parking-detail/parking-detail';
 import MapLayout from '@/layouts/map-layout';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-const { BaseLayer } = LayersControl;
 
 /** A click on the map itself (not on a marker or cluster, which stop the event) clears the selection. */
 function ClearSelectionOnMapClick({ onClear }: { onClear: () => void }) {
@@ -95,7 +93,6 @@ function getInitialPosition(): [number, number, number] {
 
 export default function ParkingMap() {
     const { t } = useTranslation('frontend/map/main');
-    const { t: tGlobal } = useTranslation('frontend/global');
     const initial = getInitialPosition();
     const position: LatLngTuple = [initial[0], initial[1]];
     const initialZoom = initial[2];
@@ -103,6 +100,7 @@ export default function ParkingMap() {
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     const { selectOptions } = usePage<PageProps>().props;
 
+    const [mapStyle, setMapStyle] = useState<MapStyle>('streets');
     const [modalOpen, setModalOpen] = useState(false);
     const searchOpen = useSearchOpen();
     const [destination, setDestination] = useState<DestinationResult | null>(() => {
@@ -175,11 +173,13 @@ export default function ParkingMap() {
     return (
         <MapLayout showSearch={false} mapSearch>
             <Head title={t('head.title')} />
-            <main className="relative flex min-h-0 flex-1 flex-col">
+            <main className="map-discovery relative flex min-h-0 flex-1 flex-col" data-search-open={searchOpen}>
                 <h1 className="sr-only" ref={resultsHeading} tabIndex={-1}>
                     {t('results.title')}
                 </h1>
-                <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-3 lg:inset-x-5 lg:top-5 lg:flex-nowrap">
+                <div
+                    className={`pointer-events-none absolute z-20 flex items-start justify-between gap-3 lg:inset-x-5 lg:top-5 ${searchOpen ? 'inset-x-0 top-0' : 'inset-x-3 top-3'}`}
+                >
                     <div className={`pointer-events-none w-full items-start gap-3 lg:flex lg:w-auto ${searchOpen ? 'flex' : 'hidden'}`}>
                         <DestinationSearch
                             destination={destination}
@@ -200,6 +200,9 @@ export default function ParkingMap() {
                     </div>
                     <div className={`pointer-events-auto lg:hidden ${searchOpen ? 'hidden' : ''}`}>
                         <DiscoveryFilters value={filters} onChange={changeFilters} disabled={!destination} />
+                    </div>
+                    <div className={`shrink-0 lg:block ${searchOpen ? 'hidden' : ''}`}>
+                        <MapDisplayControls value={mapStyle} onChange={setMapStyle} />
                     </div>
                 </div>
                 {!searchOpen && destination && (status !== 'ready' || hasMore || page > 1 || viewportResults.length === 0) && (
@@ -248,26 +251,24 @@ export default function ParkingMap() {
                             )}
                             <SelectedParking result={modalOpen ? selectedResult : null} />
                             <ClearSelectionOnMapClick onClear={() => setSelectedResult(null)} />
-                            <LayersControl position="topright">
-                                <BaseLayer checked name={tGlobal('layers.mapbox')}>
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                        maxZoom={22}
-                                        keepBuffer={4}
-                                    />
-                                </BaseLayer>
-
-                                <BaseLayer name={tGlobal('layers.google')}>
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                                        url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                                        subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                                        maxZoom={20}
-                                        keepBuffer={4}
-                                    />
-                                </BaseLayer>
-                            </LayersControl>
+                            {mapStyle === 'streets' ? (
+                                <TileLayer
+                                    key="streets"
+                                    attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                                    maxZoom={22}
+                                    keepBuffer={4}
+                                />
+                            ) : (
+                                <TileLayer
+                                    key="satellite"
+                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                    url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                                    maxZoom={20}
+                                    keepBuffer={4}
+                                />
+                            )}
 
                             <ParkingMapLayer
                                 results={destination ? viewportResults : null}
@@ -275,7 +276,6 @@ export default function ParkingMap() {
                                 selectedKey={selectedResult?.key ?? null}
                             />
 
-                            <LegendControl discovery />
                             <ScaleControl position="bottomleft" imperial={false} />
                             <ZoomControl position="bottomright" focus={selectedResult ? [selectedResult.latitude, selectedResult.longitude] : null} />
                             <LocateControl position="bottomright" />

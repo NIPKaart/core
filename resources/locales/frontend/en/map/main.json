@@ -70,5 +70,14 @@
         "locate": "Show my location",
         "show_results": "View results",
         "no_results": "No locations match these filters"
+    },
+    "controls": {
+        "layers": "Map layers",
+        "legend": "Legend",
+        "streets": "Map",
+        "satellite": "Satellite",
+        "clusters": "The number shows how many locations are grouped together.",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out"
     }
 }
