@@ -8,8 +8,8 @@ import { type DiscoveryStatus } from '@/components/map/parking-results';
 import ZoomControl from '@/components/map/zoom-control';
 import { useSearchOpen } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
+import { destinationIcon } from '@/lib/destination-icon';
 import { discoveryDestinationUrl, discoveryFilterUrl, readDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
-import { getOrangeMarkerIcon } from '@/lib/icon-factory';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
@@ -18,7 +18,7 @@ import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } f
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingDetail from '@/components/map/parking-detail/parking-detail';
 import MapLayout from '@/layouts/map-layout';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** A click on the map itself (not on a marker or cluster, which stop the event) clears the selection. */
@@ -43,6 +43,9 @@ function SelectedParking({ result }: { result: ParkingResult | null }) {
 
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
     const map = useMap();
+    const { t } = useTranslation('frontend/map/main');
+    const label = t('toolbar.destination', { name: destination?.label ?? '' });
+    const icon = useMemo(() => destinationIcon(label), [label]);
     const previous = useRef<DestinationResult | null>(destination);
     const initialized = useRef(false);
     useEffect(() => {
@@ -67,7 +70,16 @@ function DestinationFocus({ destination }: { destination: DestinationResult | nu
             );
         } else if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
     }, [destination, map]);
-    return destination ? <Marker position={[destination.latitude, destination.longitude]} icon={getOrangeMarkerIcon()} /> : null;
+    return destination ? (
+        <Marker
+            position={[destination.latitude, destination.longitude]}
+            icon={icon}
+            title={label}
+            keyboard={false}
+            interactive={false}
+            zIndexOffset={500}
+        />
+    ) : null;
 }
 
 type PageProps = {

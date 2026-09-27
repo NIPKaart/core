@@ -69,7 +69,8 @@
         "list": "Lijst",
         "locate": "Toon mijn locatie",
         "show_results": "Bekijk resultaten",
-        "no_results": "Geen locaties binnen deze filters"
+        "no_results": "Geen locaties binnen deze filters",
+        "destination": "Bestemming: {{name}}"
     },
     "controls": {
         "layers": "Kaartlagen",

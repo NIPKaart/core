@@ -69,7 +69,8 @@
         "list": "List",
         "locate": "Show my location",
         "show_results": "View results",
-        "no_results": "No locations match these filters"
+        "no_results": "No locations match these filters",
+        "destination": "Destination: {{name}}"
     },
     "controls": {
         "layers": "Map layers",
