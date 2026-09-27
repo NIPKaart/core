@@ -29,10 +29,10 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                     <PopoverContent
                         align="end"
                         sideOffset={8}
-                        className="max-h-(--radix-popover-content-available-height) w-80 max-w-[calc(100vw-24px)] overflow-y-auto rounded-xl p-3"
+                        className="max-h-(--radix-popover-content-available-height) w-72 max-w-[calc(100vw-24px)] overflow-y-auto rounded-xl p-3"
                         aria-label={t(`controls.${name}`)}
                     >
-                        <div className="mb-2 flex items-center justify-between pl-1">
+                        <div className="mb-1 flex items-center justify-between pl-1">
                             <h2 className="text-sm font-semibold">{t(`controls.${name}`)}</h2>
                             <Button variant="ghost" size="icon" className="size-11" aria-label={t('filters.close')} onClick={() => setPanel(null)}>
                                 <X className="size-4" aria-hidden />
@@ -58,17 +58,17 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                 ))}
                             </div>
                         ) : (
-                            <ul className="grid gap-4 px-1 pb-2 text-sm">
+                            <ul className="grid gap-2 px-1 pb-1 text-xs leading-relaxed">
                                 <li className="flex items-center gap-3">
-                                    <img src="/assets/images/boards/accessible-pin.png" alt="" className="h-10 w-8 shrink-0 object-contain" />
+                                    <img src="/assets/images/boards/accessible-pin.png" alt="" className="h-8 w-7 shrink-0 object-contain" />
                                     <span>{tGlobal('legend.accessibleSpace')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <img src="/assets/images/boards/e105-grey.png" alt="" className="size-8 shrink-0 object-contain" />
+                                    <img src="/assets/images/boards/e105-grey.png" alt="" className="size-7 shrink-0 object-contain" />
                                     <span>{tGlobal('legend.facility')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <span className="h-10 w-8 shrink-0" aria-hidden>
+                                    <span className="h-8 w-7 shrink-0" aria-hidden>
                                         <img
                                             src="/assets/images/boards/accessible-pin.png"
                                             alt=""
@@ -78,12 +78,12 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                     <span>{t('controls.destination')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#136aec]/15">
+                                    <span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#136aec]/15">
                                         <span className="size-[18px] rounded-full border-[3px] border-white bg-[#2a93ee]" />
                                     </span>
                                     <span>{t('controls.location')}</span>
                                 </li>
-                                <li className="grid gap-3 border-t pt-3">
+                                <li className="grid gap-2 border-t pt-2">
                                     <div aria-hidden className="flex gap-2">
                                         {(
                                             [

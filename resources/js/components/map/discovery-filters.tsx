@@ -1,6 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { defaultDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
@@ -44,8 +53,19 @@ export default function DiscoveryFilters({
             )}
         </Button>
     );
+    const actions = (
+        <div className="flex gap-3 pb-1">
+            <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => setDraft({ ...defaultDiscoveryFilters })}>
+                {t('filters.reset')}
+            </Button>
+            <Button type="submit" form={`${id}-form`} className="min-h-11 flex-1">
+                {t('filters.apply')}
+            </Button>
+        </div>
+    );
     const form = (
         <form
+            id={`${id}-form`}
             className="flex flex-col gap-5"
             onSubmit={(event) => {
                 event.preventDefault();
@@ -105,14 +125,7 @@ export default function DiscoveryFilters({
                 </Select>
                 <p className="text-xs leading-relaxed text-muted-foreground">{t(`filters.explanation.${draft.sort}`)}</p>
             </div>
-            <div className="flex gap-3 pb-1">
-                <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => setDraft({ ...defaultDiscoveryFilters })}>
-                    {t('filters.reset')}
-                </Button>
-                <Button type="submit" className="min-h-11 flex-1">
-                    {t('filters.apply')}
-                </Button>
-            </div>
+            {isDesktop && actions}
         </form>
     );
     if (isDesktop)
@@ -131,19 +144,25 @@ export default function DiscoveryFilters({
     return (
         <Drawer autoFocus open={open} onOpenChange={onOpenChange}>
             <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-            <DrawerContent className="mx-auto max-h-[90dvh] max-w-xl">
-                <DrawerHeader className="text-left">
+            <DrawerContent className="mx-auto max-w-xl overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
+                <DrawerHeader className="shrink-0 text-left">
                     <div className="flex items-center justify-between">
                         <DrawerTitle>{t('filters.title')}</DrawerTitle>
                         <DrawerClose asChild>
-                            <Button variant="ghost" size="icon" className="size-11" aria-label={t('filters.close')}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-11 rounded-full bg-muted text-muted-foreground"
+                                aria-label={t('filters.close')}
+                            >
                                 <X className="size-4" aria-hidden />
                             </Button>
                         </DrawerClose>
                     </div>
                     <DrawerDescription>{t('filters.description')}</DrawerDescription>
                 </DrawerHeader>
-                <div className="overflow-y-auto px-4 pb-4">{form}</div>
+                <div className="min-h-0 overflow-y-auto overscroll-contain px-4">{form}</div>
+                <DrawerFooter className="shrink-0 border-t pb-[calc(1rem+env(safe-area-inset-bottom))]">{actions}</DrawerFooter>
             </DrawerContent>
         </Drawer>
     );

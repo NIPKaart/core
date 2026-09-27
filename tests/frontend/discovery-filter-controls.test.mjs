@@ -55,7 +55,11 @@ for (const desktop of [false, true]) {
         assert.ok(select(tree, '500'));
         select(tree, 'distance').props.onValueChange('balanced');
         tree = app.render();
-        find(tree, node => node.type === 'form').props.onSubmit({ preventDefault() {} });
+        const apply = find(tree, node => node.type === 'Button' && node.props.children === 'filters.apply');
+        const form = find(tree, node => node.type === 'form' && node.props.id === apply.props.form);
+        assert.equal(apply.props.type, 'submit');
+        assert.ok(form, 'Apply remains associated with its form when placed in the drawer footer');
+        form.props.onSubmit({ preventDefault() {} });
         assert.deepEqual({ ...app.applied[0] }, { source: 'municipal', radius: 500, sort: 'balanced' });
         assert.equal(app.render().props.open, false);
     });
