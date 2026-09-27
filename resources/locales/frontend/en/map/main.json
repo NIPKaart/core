@@ -77,8 +77,10 @@
         "legend": "Legend",
         "streets": "Map",
         "satellite": "Satellite",
-        "clusters": "The number shows how many locations are grouped together.",
+        "clusters": "The number is the number of locations in the group. Green, yellow and orange indicate group size, not availability. Zoom in to explore locations.",
         "zoom_in": "Zoom in",
-        "zoom_out": "Zoom out"
+        "zoom_out": "Zoom out",
+        "destination": "Your chosen destination",
+        "location": "Your location. The circle indicates accuracy."
     }
 }

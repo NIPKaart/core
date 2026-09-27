@@ -77,8 +77,10 @@
         "legend": "Legenda",
         "streets": "Kaart",
         "satellite": "Satelliet",
-        "clusters": "Het getal toont hoeveel locaties bij elkaar liggen.",
+        "clusters": "Het getal is het aantal locaties in de groep. Groen, geel en oranje geven de groepsgrootte aan, niet de beschikbaarheid. Zoom in om locaties te bekijken.",
         "zoom_in": "Inzoomen",
-        "zoom_out": "Uitzoomen"
+        "zoom_out": "Uitzoomen",
+        "destination": "Je gekozen bestemming",
+        "location": "Je locatie. De cirkel geeft de nauwkeurigheid aan."
     }
 }

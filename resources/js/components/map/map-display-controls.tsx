@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, Info, Layers, Map, Satellite, X } from 'lucide-react';
+import { Check, Info, Layers, Map, MapPin, Satellite, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,7 +29,7 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                     <PopoverContent
                         align="end"
                         sideOffset={8}
-                        className="w-72 max-w-[calc(100vw-24px)] rounded-xl p-3"
+                        className="max-h-(--radix-popover-content-available-height) w-80 max-w-[calc(100vw-24px)] overflow-y-auto rounded-xl p-3"
                         aria-label={t(`controls.${name}`)}
                     >
                         <div className="mb-2 flex items-center justify-between pl-1">
@@ -68,12 +68,36 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                     <span>{tGlobal('legend.facility')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <span
-                                        aria-hidden
-                                        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-lime-200 text-xs font-semibold text-lime-950"
-                                    >
-                                        12
+                                    <span className="destination-marker__badge shrink-0" aria-hidden>
+                                        <MapPin size={36} fill="#ff7900" stroke="#fff" strokeWidth={1.75} />
                                     </span>
+                                    <span>{t('controls.destination')}</span>
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#136aec]/15">
+                                        <span className="size-[18px] rounded-full border-[3px] border-white bg-[#2a93ee]" />
+                                    </span>
+                                    <span>{t('controls.location')}</span>
+                                </li>
+                                <li className="grid gap-3 border-t pt-3">
+                                    <div aria-hidden className="flex gap-2">
+                                        {(
+                                            [
+                                                ['small', 5],
+                                                ['medium', 25],
+                                                ['large', 120],
+                                            ] as const
+                                        ).map(([size, count]) => (
+                                            <div
+                                                key={size}
+                                                className={`marker-cluster marker-cluster-${size} block size-10 shrink-0 text-neutral-900`}
+                                            >
+                                                <div>
+                                                    <span>{count}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                     <span>{t('controls.clusters')}</span>
                                 </li>
                             </ul>
