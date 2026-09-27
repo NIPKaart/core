@@ -1,18 +1,19 @@
 import L from 'leaflet';
+import { MapPin } from 'lucide-react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-export function destinationIcon(label: string): L.DivIcon {
+export function destinationIcon(label: string, approximate = false): L.DivIcon {
     return L.divIcon({
         className: 'destination-marker',
         html: renderToStaticMarkup(
             createElement(
                 'span',
-                { className: 'destination-marker__badge', role: 'img', 'aria-label': label },
-                createElement('img', { src: '/assets/images/boards/accessible-pin.png', alt: '', className: 'destination-marker__image' }),
+                { className: approximate ? 'destination-marker__area' : 'destination-marker__badge', role: 'img', 'aria-label': label },
+                approximate ? null : createElement(MapPin, { className: 'destination-marker__pin', 'aria-hidden': true }),
             ),
         ),
-        iconSize: [54, 72],
-        iconAnchor: [27, 60],
+        iconSize: approximate ? [64, 64] : [40, 48],
+        iconAnchor: approximate ? [32, 32] : [20, 44],
     });
 }

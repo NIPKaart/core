@@ -70,7 +70,8 @@
         "locate": "Show my location",
         "show_results": "View results",
         "no_results": "No locations match these filters",
-        "destination": "Destination: {{name}}"
+        "destination": "Destination: {{name}}",
+        "search_area": "Search area around {{name}} (approximate)"
     },
     "controls": {
         "layers": "Map layers",
@@ -81,6 +82,7 @@
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",
         "destination": "Your chosen destination",
+        "search_area": "Approximate search area",
         "location": "Your location. The circle indicates accuracy."
     }
 }

@@ -23,6 +23,7 @@ import { formatDistance } from './utils';
 
 type Props = {
     result: ParkingResult | null;
+    approximateDestination?: boolean;
     open: boolean;
     onClose: () => void;
     onCloseAutoFocus?: (event: Event) => void;
@@ -44,7 +45,7 @@ const favoriteTypes = {
 const tabTriggerClass =
     'flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white';
 
-export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus, confirmationStatusOptions }: Props) {
+export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus, confirmationStatusOptions }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
     const { can, user } = useAuthorization();
@@ -100,7 +101,9 @@ export default function ParkingDetail({ result, open, onClose, onCloseAutoFocus,
 
     const distance =
         result.distance_metres !== null && Number.isFinite(result.distance_metres)
-            ? t('detail.distance', { distance: formatDistance(result.distance_metres, i18n.language) })
+            ? t(approximateDestination ? 'detail.distance_search_point' : 'detail.distance', {
+                  distance: formatDistance(result.distance_metres, i18n.language),
+              })
             : null;
     const description = t(
         `detail.descriptions.${result.source === 'offstreet' ? (detail?.source === 'offstreet' && detail.detail.type === 'parkandride' ? 'parkandride' : 'garage') : result.source}`,

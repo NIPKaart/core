@@ -110,6 +110,7 @@
         "unknown": "Unknown",
         "no_address": "Parking location without an address",
         "distance": "{{distance}} from your destination (straight line)",
+        "distance_search_point": "{{distance}} from the search point (straight line)",
         "check_on_site": "Always check the signs on location. Parking here is not guaranteed.",
         "source_types": {
             "community": "Community contribution",

@@ -351,9 +351,23 @@
     width: 100%;
     height: 100%;
 }
-.destination-marker__image {
+.destination-marker__pin {
+    width: 100%;
+    height: 100%;
+    color: white;
+    fill: var(--color-orange-500);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 20%));
+}
+.destination-marker__pin circle {
+    fill: white;
+    stroke: white;
+}
+.destination-marker__area {
     display: block;
     width: 100%;
     height: 100%;
-    filter: hue-rotate(165deg) brightness(1.7) drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
+    border: 2px dashed var(--color-orange-500);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(249 115 22 / 24%), rgb(249 115 22 / 6%));
 }

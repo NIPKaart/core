@@ -40,3 +40,19 @@ test('choosing a new destination preserves filters and removes the previous map 
     assert.equal(next.searchParams.has('east'), false);
     assert.deepEqual({ ...readDiscoveryFilters(next.searchParams) }, { source: 'municipal', radius: 500, sort: 'distance' });
 });
+
+test('streets, areas and legacy destinations remain approximate while specific destinations retain their type in shared links', () => {
+    for (const type of ['street', 'city', 'district', 'residential', 'destination', 'unknown']) {
+        assert.equal(context.exports.isApproximateDestination({ type }), true);
+    }
+    for (const type of ['address', 'building', 'amenity', 'community', 'municipal', 'offstreet']) {
+        assert.equal(context.exports.isApproximateDestination({ type }), false);
+    }
+    for (const type of ['street', 'address']) {
+        const url = new URL('https://example.test/map');
+        const shared = new URL(context.exports.discoveryDestinationUrl(url, { label: 'Test', type, latitude: 52, longitude: 5 }), url);
+        const restored = { type: shared.searchParams.get('destination_type') ?? 'destination' };
+        assert.equal(restored.type, type);
+        assert.equal(context.exports.isApproximateDestination(restored), type === 'street');
+    }
+});

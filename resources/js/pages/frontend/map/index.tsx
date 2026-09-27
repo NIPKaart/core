@@ -9,7 +9,13 @@ import ZoomControl from '@/components/map/zoom-control';
 import { useSearchOpen } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
 import { destinationIcon } from '@/lib/destination-icon';
-import { discoveryDestinationUrl, discoveryFilterUrl, readDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
+import {
+    discoveryDestinationUrl,
+    discoveryFilterUrl,
+    isApproximateDestination,
+    readDiscoveryFilters,
+    type DiscoveryFilters as Filters,
+} from '@/lib/discovery-filters';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
@@ -44,8 +50,9 @@ function SelectedParking({ result }: { result: ParkingResult | null }) {
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
     const map = useMap();
     const { t } = useTranslation('frontend/map/main');
-    const label = t('toolbar.destination', { name: destination?.label ?? '' });
-    const icon = useMemo(() => destinationIcon(label), [label]);
+    const approximate = destination ? isApproximateDestination(destination) : true;
+    const label = t(approximate ? 'toolbar.search_area' : 'toolbar.destination', { name: destination?.label ?? '' });
+    const icon = useMemo(() => destinationIcon(label, approximate), [label, approximate]);
     const previous = useRef<DestinationResult | null>(destination);
     const initialized = useRef(false);
     useEffect(() => {
@@ -133,7 +140,7 @@ export default function ParkingMap() {
             Math.abs(latitude) <= 90 &&
             Number.isFinite(longitude) &&
             Math.abs(longitude) <= 180
-            ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude, bounds }
+            ? { key: 'url:destination', label, sub: null, type: params.get('destination_type') ?? 'destination', latitude, longitude, bounds }
             : null;
     });
 
@@ -298,6 +305,7 @@ export default function ParkingMap() {
 
             <ParkingDetail
                 result={selectedResult}
+                approximateDestination={destination ? isApproximateDestination(destination) : false}
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 onCloseAutoFocus={restoreFocus}

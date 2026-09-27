@@ -70,7 +70,8 @@
         "locate": "Toon mijn locatie",
         "show_results": "Bekijk resultaten",
         "no_results": "Geen locaties binnen deze filters",
-        "destination": "Bestemming: {{name}}"
+        "destination": "Bestemming: {{name}}",
+        "search_area": "Zoekgebied rond {{name}} (benaderd)"
     },
     "controls": {
         "layers": "Kaartlagen",
@@ -81,6 +82,7 @@
         "zoom_in": "Inzoomen",
         "zoom_out": "Uitzoomen",
         "destination": "Je gekozen bestemming",
+        "search_area": "Benaderd zoekgebied",
         "location": "Je locatie. De cirkel geeft de nauwkeurigheid aan."
     }
 }

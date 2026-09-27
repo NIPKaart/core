@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, Info, Layers, Map, Satellite, X } from 'lucide-react';
+import { Check, Info, Layers, Map, MapPin, Satellite, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -69,13 +69,15 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <span className="h-8 w-7 shrink-0" aria-hidden>
-                                        <img
-                                            src="/assets/images/boards/accessible-pin.png"
-                                            alt=""
-                                            className="destination-marker__image object-contain"
-                                        />
+                                        <MapPin className="destination-marker__pin" />
                                     </span>
                                     <span>{t('controls.destination')}</span>
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <span className="size-7 shrink-0" aria-hidden>
+                                        <span className="destination-marker__area" />
+                                    </span>
+                                    <span>{t('controls.search_area')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <span aria-hidden className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#136aec]/15">

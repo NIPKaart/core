@@ -110,6 +110,7 @@
         "unknown": "Onbekend",
         "no_address": "Parkeerlocatie zonder adres",
         "distance": "{{distance}} van je bestemming (hemelsbreed)",
+        "distance_search_point": "{{distance}} van het zoekpunt (hemelsbreed)",
         "check_on_site": "Controleer de borden. Parkeren is niet gegarandeerd.",
         "source_types": {
             "community": "Bijdrage van de community",

@@ -20,6 +20,7 @@ export function discoveryFilterUrl(url: URL, filters: DiscoveryFilters): string 
 
 export function discoveryDestinationUrl(url: URL, destination: DestinationResult): string {
     url.searchParams.set('destination', destination.label);
+    url.searchParams.set('destination_type', destination.type ?? 'destination');
     url.searchParams.set('lat', String(destination.latitude));
     url.searchParams.set('lng', String(destination.longitude));
     url.searchParams.delete('view');
@@ -28,4 +29,8 @@ export function discoveryDestinationUrl(url: URL, destination: DestinationResult
         if (destination.bounds) url.searchParams.set(key, String(destination.bounds[key]));
     }
     return url.pathname + url.search;
+}
+
+export function isApproximateDestination(destination: Pick<DestinationResult, 'type'>): boolean {
+    return !['address', 'building', 'amenity', 'house', 'poi', 'community', 'municipal', 'offstreet'].includes(destination.type);
 }
