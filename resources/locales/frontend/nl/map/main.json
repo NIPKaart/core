@@ -10,9 +10,9 @@
         "retry": "Opnieuw proberen",
         "count_one": "{{count}} parkeerlocatie in dit gebied",
         "count_other": "{{count}} parkeerlocaties in dit gebied",
-        "empty": "NIPKaart kent geen parkeerlocaties in dit gebied. Onze gegevens zijn niet volledig, dus er kan hier toch een gehandicaptenparkeerplaats zijn. Verplaats de kaart of zoek een andere bestemming.",
+        "empty": "Geen bekende locaties voor deze filters. Vergroot de zoekstraal of herstel de filters. Onze gegevens zijn niet volledig.",
         "limit": "Er worden maximaal 500 locaties getoond. Zoek een specifiekere bestemming om het gebied te verkleinen.",
-        "unknown": "Verificatie en actuele beschikbaarheid van gehandicaptenparkeerplaatsen zijn onbekend in dit overzicht. Open een locatie voor brongegevens.",
+        "unknown": "Actuele beschikbaarheid en verificatie zijn onbekend in dit overzicht. Bekijk de details per locatie.",
         "untitled": "Parkeerlocatie zonder adres",
         "distance": "{{distance}} m van de bestemming",
         "selected": "Geselecteerde locatie",
@@ -33,5 +33,42 @@
     "map": {
         "loading": "Parkeerlocaties laden…",
         "error": "Niet alle parkeerlocaties konden worden geladen. Opnieuw proberen"
+    },
+    "filters": {
+        "title": "Filters",
+        "source": "Bron / categorie",
+        "sources": {
+            "all": "Alle bronnen",
+            "community": "Straatplaatsen · community",
+            "municipal": "Straatplaatsen · gemeente",
+            "offstreet": "Garage / P+R"
+        },
+        "radius": "Zoekstraal",
+        "sort": "Volgorde",
+        "sorts": {
+            "balanced": "Categorie + afstand",
+            "distance": "Afstand"
+        },
+        "explanation": {
+            "balanced": "Straatplaatsen krijgen maximaal 250 m voorkeur boven garage/P+R. Afstanden zijn hemelsbreed.",
+            "distance": "Dichtstbij eerst. Bij gelijke afstand geldt een vaste volgorde per bron en identificatie."
+        },
+        "scope": "Hemelsbreed vanaf de bestemming. Kaart en lijst tonen dezelfde pagina. Versheid, beperkingen en beschikbaarheid zijn geen filters: ontbrekende gegevens blijven onbekend. Algemene garagebezetting zegt niets over vrije gehandicaptenplaatsen.",
+        "reset": "Herstellen",
+        "apply": "Toepassen",
+        "active": "Aangepaste filters actief",
+        "description": "Verfijn parkeerlocaties rond je bestemming.",
+        "close": "Sluiten"
+    },
+    "toolbar": {
+        "search": "Zoek een bestemming",
+        "change": "Wijzigen",
+        "choose_destination": "Kies eerst een bestemming om te filteren",
+        "view": "Weergave",
+        "map": "Kaart",
+        "list": "Lijst",
+        "locate": "Toon mijn locatie",
+        "show_results": "Bekijk resultaten",
+        "no_results": "Geen locaties binnen deze filters"
     }
 }

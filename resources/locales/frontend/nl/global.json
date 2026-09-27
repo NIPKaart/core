@@ -20,6 +20,8 @@
         "almostFull": "Bijna vol",
         "full": "Vol",
         "noData": "Geen data",
-        "disabledSpace": "Invalide parkeerplek"
+        "disabledSpace": "Invalide parkeerplek",
+        "accessibleSpace": "Gehandicaptenparkeerplaats",
+        "facility": "Garage / P+R · beschikbaarheid onbekend"
     }
 }

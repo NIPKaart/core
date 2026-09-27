@@ -18,6 +18,7 @@ const context = { exports: {}, require: (name) => {
         const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
         return Object.entries(params).reduce((text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)), value);
     } }) };
+    if (name === './parking-detail/parts') return { SourceIcon: () => null };
     if (name === '@/components/ui/button') return { Button: ({ variant: _variant, ...props }) => React.createElement('button', props) };
     return require(name);
 } };
@@ -59,13 +60,13 @@ test('unknown address has a readable fallback and known distance includes zero',
 
 test('loading and failed requests are distinguished from an empty successful search and failure can be retried', () => {
     assert.match(render({ status: 'loading' }), /role="status"[^>]*>Loading parking locations/);
-    assert.doesNotMatch(render({ status: 'loading' }), /no known parking locations/);
+    assert.doesNotMatch(render({ status: 'loading' }), /No known locations match these filters/);
     const empty = render({});
-    assert.match(empty, /no known parking locations/);
-    assert.match(empty, /may still exist here/);
+    assert.match(empty, /No known locations match these filters/);
+    assert.match(empty, /Our data is incomplete/);
     const failed = render({ status: 'error' });
     assert.match(failed, /could not be loaded/);
-    assert.doesNotMatch(failed, /no known parking locations/);
+    assert.doesNotMatch(failed, /No known locations match these filters/);
     let retries = 0;
     buttons(Results({ ...defaults, status: 'error', onRetry: () => retries++ }))[0].props.onClick();
     assert.equal(retries, 1);

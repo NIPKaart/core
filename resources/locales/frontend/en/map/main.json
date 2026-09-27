@@ -10,9 +10,9 @@
         "retry": "Try again",
         "count_one": "{{count}} parking location in this area",
         "count_other": "{{count}} parking locations in this area",
-        "empty": "NIPKaart has no known parking locations in this area. Our data is incomplete, so accessible parking may still exist here. Move the map or search for another destination.",
+        "empty": "No known locations match these filters. Increase the radius or reset filters. Our data is incomplete.",
         "limit": "Up to 500 locations are shown. Search for a more specific destination to narrow the area.",
-        "unknown": "Verification and current accessible-space availability are unknown in this overview. Open a location for source details.",
+        "unknown": "Verification and current accessible-space availability are unknown in this overview. Open a location for details.",
         "untitled": "Parking location without an address",
         "distance": "{{distance}} m from the destination",
         "selected": "Selected location",
@@ -33,5 +33,42 @@
     "map": {
         "loading": "Loading parking locations…",
         "error": "Some parking locations could not be loaded. Try again"
+    },
+    "filters": {
+        "title": "Filters",
+        "source": "Source / category",
+        "sources": {
+            "all": "All sources",
+            "community": "Street spaces · community",
+            "municipal": "Street spaces · municipality",
+            "offstreet": "Garage / P+R"
+        },
+        "radius": "Search radius",
+        "sort": "Order",
+        "sorts": {
+            "balanced": "Category + distance",
+            "distance": "Distance"
+        },
+        "explanation": {
+            "balanced": "Street spaces receive up to 250 m preference over garage/P+R. Distances are straight-line.",
+            "distance": "Nearest first. Equal distances use a stable source and identifier order."
+        },
+        "scope": "Straight-line distance from the destination. Map and list show the same page. Freshness, restrictions and availability are not filters: missing data stays unknown. General garage occupancy does not indicate free accessible spaces.",
+        "reset": "Reset",
+        "apply": "Apply",
+        "active": "Custom filters active",
+        "description": "Refine parking locations near your destination.",
+        "close": "Close"
+    },
+    "toolbar": {
+        "search": "Search for a destination",
+        "change": "Change",
+        "choose_destination": "Choose a destination before filtering",
+        "view": "View",
+        "map": "Map",
+        "list": "List",
+        "locate": "Show my location",
+        "show_results": "View results",
+        "no_results": "No locations match these filters"
     }
 }

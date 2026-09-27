@@ -1,16 +1,19 @@
+import DestinationSearch from '@/components/map/destination-search';
+import DiscoveryFilters from '@/components/map/discovery-filters';
 import LegendControl from '@/components/map/legend-control';
 import LocateControl from '@/components/map/locate-control';
+import NearbyDiscovery from '@/components/map/nearby-discovery';
 import ParkingMapLayer from '@/components/map/parking-map-layer';
-import ParkingResults, { type DiscoveryStatus } from '@/components/map/parking-results';
-import ViewportDiscovery from '@/components/map/viewport-discovery';
+import { type DiscoveryStatus } from '@/components/map/parking-results';
 import ZoomControl from '@/components/map/zoom-control';
+import { useSearchOpen } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { discoveryDestinationUrl, discoveryFilterUrl, readDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
+import { getOrangeMarkerIcon } from '@/lib/icon-factory';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { Head, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
-import { LayersControl, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { LayersControl, MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { HashSync } from '@/components/map/hash-sync';
 import ParkingDetail from '@/components/map/parking-detail/parking-detail';
@@ -33,7 +36,7 @@ function SelectedParking({ result }: { result: ParkingResult | null }) {
             map.panInside([result.latitude, result.longitude], {
                 animate: true,
                 duration: 0.3,
-                paddingTopLeft: [40, 40],
+                paddingTopLeft: [40, window.matchMedia('(max-width: 767px)').matches ? 160 : 100],
                 paddingBottomRight: [40, window.matchMedia('(max-width: 767px)').matches ? map.getSize().y * 0.55 + 40 : 40],
             });
     }, [map, result]);
@@ -42,7 +45,15 @@ function SelectedParking({ result }: { result: ParkingResult | null }) {
 
 function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
     const map = useMap();
+    const previous = useRef<DestinationResult | null>(destination);
+    const initialized = useRef(false);
     useEffect(() => {
+        const first = !initialized.current;
+        initialized.current = true;
+        const changed = previous.current !== destination;
+        previous.current = destination;
+        if (!first && !changed) return;
+        if (first && /^#\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?$/.test(window.location.hash)) return;
         if (destination?.bounds) {
             map.fitBounds(
                 [
@@ -51,14 +62,14 @@ function DestinationFocus({ destination }: { destination: DestinationResult | nu
                 ],
                 {
                     maxZoom: 17,
-                    paddingTopLeft: [40, 40],
-                    paddingBottomRight: [40, map.getSize().y * 0.55 + 40],
+                    paddingTopLeft: [40, window.matchMedia('(max-width: 767px)').matches ? 160 : 100],
+                    paddingBottomRight: [40, 40],
                     animate: false,
                 },
             );
         } else if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
     }, [destination, map]);
-    return destination ? <Marker position={[destination.latitude, destination.longitude]} /> : null;
+    return destination ? <Marker position={[destination.latitude, destination.longitude]} icon={getOrangeMarkerIcon()} /> : null;
 }
 
 type PageProps = {
@@ -93,7 +104,8 @@ export default function ParkingMap() {
     const { selectOptions } = usePage<PageProps>().props;
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [destination] = useState<DestinationResult | null>(() => {
+    const searchOpen = useSearchOpen();
+    const [destination, setDestination] = useState<DestinationResult | null>(() => {
         const params = new URLSearchParams(window.location.search);
         const latitude = Number(params.get('lat'));
         const longitude = Number(params.get('lng'));
@@ -104,10 +116,18 @@ export default function ParkingMap() {
             boundsValues.every(Number.isFinite) && south >= -90 && north <= 90 && south <= north && west >= -180 && east <= 180 && west <= east
                 ? { south, north, west, east }
                 : undefined;
-        return label && Number.isFinite(latitude) && Number.isFinite(longitude)
+        return label &&
+            params.has('lat') &&
+            params.has('lng') &&
+            Number.isFinite(latitude) &&
+            Math.abs(latitude) <= 90 &&
+            Number.isFinite(longitude) &&
+            Math.abs(longitude) <= 180
             ? { key: 'url:destination', label, sub: null, type: 'destination', latitude, longitude, bounds }
             : null;
     });
+
+    const [filters, setFilters] = useState(() => readDiscoveryFilters(new URLSearchParams(window.location.search)));
 
     const [viewportResults, setViewportResults] = useState<ParkingResult[]>([]);
 
@@ -116,10 +136,25 @@ export default function ParkingMap() {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [selectedResult, setSelectedResult] = useState<ParkingResult | null>(null);
-    const [expanded, setExpanded] = useState(true);
-    const isDesktop = useMediaQuery('(min-width: 768px)');
     const returnFocus = useRef<HTMLElement | null>(null);
     const resultsHeading = useRef<HTMLHeadingElement>(null);
+
+    const changeFilters = (value: Filters) => {
+        setFilters(value);
+        setPage(1);
+        setSelectedResult(null);
+        setModalOpen(false);
+        setViewportResults([]);
+        setStatus('loading');
+        window.history.replaceState(window.history.state, '', discoveryFilterUrl(new URL(window.location.href), value));
+    };
+
+    const changePage = (next: number) => {
+        setPage(next);
+        setSelectedResult(null);
+        setViewportResults([]);
+        setStatus('loading');
+    };
 
     const restoreFocus = useCallback(
         (event: Event) => {
@@ -138,89 +173,115 @@ export default function ParkingMap() {
     }, []);
 
     return (
-        <MapLayout>
+        <MapLayout showSearch={false} mapSearch>
             <Head title={t('head.title')} />
             <main className="relative flex min-h-0 flex-1 flex-col">
-                {destination && (
-                    <Collapsible
-                        open={expanded}
-                        onOpenChange={setExpanded}
-                        className="absolute bottom-3 left-1/2 z-10 flex max-h-[55%] w-[min(24rem,calc(100%-1.5rem))] -translate-x-1/2 flex-col rounded-xl border bg-background shadow-lg data-[state=closed]:w-auto"
-                    >
-                        <div className="flex items-center justify-between gap-2 p-2">
-                            <h1 ref={resultsHeading} tabIndex={-1} className={expanded ? 'px-2 font-semibold' : 'sr-only'}>
-                                {t('results.title')}
-                            </h1>
-                            <CollapsibleTrigger asChild>
-                                <Button variant="outline" className={expanded ? 'min-h-11' : 'min-h-11 w-full'}>
-                                    {expanded ? t('results.collapse') : t('results.expand')}
-                                </Button>
-                            </CollapsibleTrigger>
-                        </div>
-                        {expanded && destination && <p className="px-4 pb-2 text-sm text-muted-foreground">{destination.label}</p>}
-                        <CollapsibleContent forceMount className="min-h-0 overflow-y-auto data-[state=closed]:hidden">
-                            <ParkingResults
-                                page={page}
-                                hasMore={hasMore}
-                                onPageChange={setPage}
-                                results={viewportResults}
-                                selectedKey={selectedResult?.key ?? null}
-                                status={status}
-                                onSelect={selectParkingResult}
-                                onRetry={() => setRetry((value) => value + 1)}
-                            />
-                        </CollapsibleContent>
-                    </Collapsible>
-                )}
-                <section aria-label={t('results.map')} className="relative min-h-0 flex-1">
-                    <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
-                        <HashSync />
-                        <DestinationFocus destination={destination} />
-                        {/* The result list keeps its own paged viewport query; map markers are clustered in the browser. */}
-                        {destination && (
-                            <ViewportDiscovery
-                                origin={destination}
-                                onResults={setViewportResults}
-                                onStatus={setStatus}
-                                retry={retry}
-                                page={page}
-                                onPageChange={setPage}
-                                onHasMore={setHasMore}
-                            />
-                        )}
-                        <SelectedParking result={selectedResult} />
-                        <ClearSelectionOnMapClick onClear={() => setSelectedResult(null)} />
-                        <LayersControl position="topright">
-                            <BaseLayer checked name={tGlobal('layers.mapbox')}>
-                                <TileLayer
-                                    attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-                                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
-                                    maxZoom={22}
-                                    keepBuffer={4}
-                                />
-                            </BaseLayer>
-
-                            <BaseLayer name={tGlobal('layers.google')}>
-                                <TileLayer
-                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                                    url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                                    maxZoom={20}
-                                    keepBuffer={4}
-                                />
-                            </BaseLayer>
-                        </LayersControl>
-
-                        <ParkingMapLayer onSelect={selectParkingResult} selectedKey={selectedResult?.key ?? null} />
-
-                        <LegendControl />
-                        <LocateControl />
-                        <ZoomControl
-                            position={isDesktop ? 'bottomright' : 'topright'}
-                            focus={selectedResult ? [selectedResult.latitude, selectedResult.longitude] : null}
+                <h1 className="sr-only" ref={resultsHeading} tabIndex={-1}>
+                    {t('results.title')}
+                </h1>
+                <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-3 lg:inset-x-5 lg:top-5 lg:flex-nowrap">
+                    <div className={`pointer-events-none w-full items-start gap-3 lg:flex lg:w-auto ${searchOpen ? 'flex' : 'hidden'}`}>
+                        <DestinationSearch
+                            destination={destination}
+                            onSelect={(value) => {
+                                const next = { ...value, label: value.type === 'street' && value.sub ? `${value.label}, ${value.sub}` : value.label };
+                                window.history.replaceState(window.history.state, '', discoveryDestinationUrl(new URL(window.location.href), next));
+                                setDestination(next);
+                                setPage(1);
+                                setSelectedResult(null);
+                                setModalOpen(false);
+                                setViewportResults([]);
+                                setStatus('loading');
+                            }}
                         />
-                    </MapContainer>
-                </section>
+                        <div className="pointer-events-auto hidden lg:block">
+                            <DiscoveryFilters value={filters} onChange={changeFilters} disabled={!destination} />
+                        </div>
+                    </div>
+                    <div className={`pointer-events-auto lg:hidden ${searchOpen ? 'hidden' : ''}`}>
+                        <DiscoveryFilters value={filters} onChange={changeFilters} disabled={!destination} />
+                    </div>
+                </div>
+                {!searchOpen && destination && (status !== 'ready' || hasMore || page > 1 || viewportResults.length === 0) && (
+                    <div
+                        className="absolute top-16 right-20 left-3 z-20 flex max-w-3xl flex-wrap items-center justify-center gap-3 rounded-xl border bg-background px-3 py-2 text-sm shadow-sm lg:inset-x-5 lg:top-20"
+                        role="status"
+                    >
+                        {status === 'loading' ? (
+                            t('results.loading')
+                        ) : status === 'error' ? (
+                            <Button variant="ghost" onClick={() => setRetry((value) => value + 1)}>
+                                {t('results.retry')}
+                            </Button>
+                        ) : (
+                            <>
+                                <span>{t(viewportResults.length === 0 ? 'toolbar.no_results' : 'results.page', { page })}</span>
+                                {(page > 1 || hasMore) && (
+                                    <>
+                                        <Button variant="ghost" disabled={page === 1} onClick={() => changePage(page - 1)}>
+                                            {t('results.previous')}
+                                        </Button>
+                                        <Button variant="ghost" disabled={!hasMore} onClick={() => changePage(page + 1)}>
+                                            {t('results.next')}
+                                        </Button>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+                <div className="relative min-h-0 flex-1">
+                    <section aria-label={t('results.map')} className="parking-discovery-map absolute inset-0">
+                        <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                            <HashSync />
+                            <DestinationFocus destination={destination} />
+                            {destination && (
+                                <NearbyDiscovery
+                                    origin={destination}
+                                    filters={filters}
+                                    onResults={setViewportResults}
+                                    onStatus={setStatus}
+                                    retry={retry}
+                                    page={page}
+                                    onHasMore={setHasMore}
+                                />
+                            )}
+                            <SelectedParking result={modalOpen ? selectedResult : null} />
+                            <ClearSelectionOnMapClick onClear={() => setSelectedResult(null)} />
+                            <LayersControl position="topright">
+                                <BaseLayer checked name={tGlobal('layers.mapbox')}>
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
+                                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`}
+                                        maxZoom={22}
+                                        keepBuffer={4}
+                                    />
+                                </BaseLayer>
+
+                                <BaseLayer name={tGlobal('layers.google')}>
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                        url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
+                                        subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
+                                        maxZoom={20}
+                                        keepBuffer={4}
+                                    />
+                                </BaseLayer>
+                            </LayersControl>
+
+                            <ParkingMapLayer
+                                results={destination ? viewportResults : null}
+                                onSelect={selectParkingResult}
+                                selectedKey={selectedResult?.key ?? null}
+                            />
+
+                            <LegendControl discovery />
+                            <ScaleControl position="bottomleft" imperial={false} />
+                            <ZoomControl position="bottomright" focus={selectedResult ? [selectedResult.latitude, selectedResult.longitude] : null} />
+                            <LocateControl position="bottomright" />
+                        </MapContainer>
+                    </section>
+                </div>
             </main>
 
             <ParkingDetail

@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useMap } from 'react-leaflet';
 
 interface LegendControlProps {
+    discovery?: boolean;
     position?: 'topleft' | 'topright' | 'bottomleft' | 'bottomright';
 }
 
-export default function LegendControl({ position = 'bottomleft' }: LegendControlProps) {
+export default function LegendControl({ position = 'bottomleft', discovery = false }: LegendControlProps) {
     const map = useMap();
     const { t } = useTranslation('frontend/global');
 
@@ -20,7 +21,7 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
                 L.DomEvent.disableClickPropagation(div);
 
                 // Add a class to collapse the legend on mobile
-                if (window.innerWidth <= 640) {
+                if (discovery || window.innerWidth <= 640) {
                     div.classList.add('collapsed');
                 }
 
@@ -39,11 +40,15 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
                 };
 
                 const content = L.DomUtil.create('div', 'legend-content', div);
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>${t('legend.available')}</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>${t('legend.almostFull')}</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>${t('legend.full')}</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>${t('legend.noData')}</span><br>`;
-                content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>${t('legend.disabledSpace')}</span><br>`;
+                if (discovery) {
+                    content.innerHTML = `<i style="background-image: url(/assets/images/boards/accessible-pin.png)"></i><span>${t('legend.accessibleSpace')}</span><br><i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>${t('legend.facility')}</span>`;
+                } else {
+                    content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-green.png)"></i><span>${t('legend.available')}</span><br>`;
+                    content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-orange.png)"></i><span>${t('legend.almostFull')}</span><br>`;
+                    content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-red.png)"></i><span>${t('legend.full')}</span><br>`;
+                    content.innerHTML += `<i style="background-image: url(/assets/images/boards/e105-grey.png)"></i><span>${t('legend.noData')}</span><br>`;
+                    content.innerHTML += `<i style="background-image: url(/assets/images/boards/e6.jpg)"></i><span>${t('legend.disabledSpace')}</span><br>`;
+                }
 
                 return div;
             },
@@ -55,7 +60,7 @@ export default function LegendControl({ position = 'bottomleft' }: LegendControl
         return () => {
             map.removeControl(legend);
         };
-    }, [map, position, t]);
+    }, [map, position, t, discovery]);
 
     return null;
 }

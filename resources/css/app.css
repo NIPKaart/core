@@ -142,105 +142,73 @@
     }
 }
 
-/*
- * Selected parking sign on the map: a white edge, blue ring and glow plus a pointer to the exact spot, so it
- * stands out by size and shape on street and satellite tiles. Selecting grows the plain sign into this state
- * with a small spring and one ripple over the ground; deselecting shrinks it back onto the plain sign before
- * the icon is swapped. Leaflet positions the icon element itself with a transform, so transforms live on its
- * children. The plain-sign pose (scale 25/32, sign bottom on the anchor) is shared by both animations.
- */
-.parking-marker-selected {
-    --plain-sign: translateY(8.6px) scale(0.78);
+/* Preserve the original spring, ripple and delayed deselection on the new pin artwork.
+ * Leaflet owns the outer transform; the body scales around the pin's geographic anchor. */
+.discovery-pin {
     background: transparent;
     border: none;
+    --pin-anchor: 83.333%;
+    --ripple-bottom: 12px;
 }
-
-.parking-marker-selected__body {
-    display: flex;
+.discovery-pin-garage {
+    --pin-anchor: 100%;
+    --ripple-bottom: 0px;
+}
+.discovery-pin .parking-marker-selected__body {
+    display: block;
+    width: 100%;
     height: 100%;
-    flex-direction: column;
-    align-items: center;
-    transform-origin: 50% 100%;
+    transform-origin: 50% var(--pin-anchor);
+}
+.discovery-pin img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
+}
+.discovery-pin-selected .parking-marker-selected__body {
+    transform: scale(1.2);
     animation: parking-marker-select 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.parking-marker-selected img {
-    display: block;
-    width: 32px;
-    height: 52px;
-    border-radius: 3px;
-    box-shadow:
-        0 0 0 2px #fff,
-        0 0 0 4px #1d4ed8,
-        0 0 14px 4px rgb(29 78 216 / 55%),
-        0 4px 8px rgb(0 0 0 / 35%);
-    transition: box-shadow 0.2s ease-out;
-    animation: parking-marker-select-glow 0.3s ease-out;
+.discovery-pin-selected img {
+    filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 4px #1d4ed8);
+    transition: filter 0.2s ease-out;
 }
-
-.parking-marker-selected__pointer {
-    margin-top: 2px;
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 9px solid #1d4ed8;
-    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 40%));
-    transition: opacity 0.2s ease-out;
-    animation: parking-marker-select-fade 0.3s ease-out;
-}
-
-/* Centred on the pointer tip, which is the bottom centre of the icon. */
 .parking-marker-selected__ripple {
     position: absolute;
-    bottom: -7px;
+    bottom: var(--ripple-bottom);
     left: 50%;
     width: 36px;
     height: 14px;
     margin-left: -18px;
+    margin-bottom: -7px;
     border: 3px solid #1d4ed8;
     border-radius: 50%;
     opacity: 0;
     pointer-events: none;
+}
+.discovery-pin-selected .parking-marker-selected__ripple {
     animation: parking-marker-select-ripple 0.8s ease-out 0.15s;
 }
-
 .parking-marker-deselecting .parking-marker-selected__body {
     animation: parking-marker-deselect 0.2s ease-in forwards;
 }
-
 .parking-marker-deselecting img {
-    box-shadow: none;
+    filter: drop-shadow(0 2px 2px rgb(0 0 0 / 25%));
 }
-
-.parking-marker-deselecting .parking-marker-selected__pointer {
-    opacity: 0;
+.parking-marker-deselecting .parking-marker-selected__ripple {
+    animation: none;
 }
-
 @keyframes parking-marker-select {
     from {
-        transform: var(--plain-sign);
+        transform: scale(1);
     }
 }
-
 @keyframes parking-marker-deselect {
     to {
-        transform: var(--plain-sign);
+        transform: scale(1);
     }
 }
-
-@keyframes parking-marker-select-glow {
-    from {
-        box-shadow: none;
-    }
-}
-
-@keyframes parking-marker-select-fade {
-    from {
-        opacity: 0;
-    }
-}
-
 @keyframes parking-marker-select-ripple {
     from {
         transform: scale(0.3);
@@ -251,13 +219,36 @@
         opacity: 0;
     }
 }
-
 @media (prefers-reduced-motion: reduce) {
-    .parking-marker-selected__body,
-    .parking-marker-selected img,
-    .parking-marker-selected__pointer,
-    .parking-marker-selected__ripple {
+    .discovery-pin .parking-marker-selected__body,
+    .discovery-pin img,
+    .discovery-pin .parking-marker-selected__ripple {
         animation: none;
         transition: none;
     }
+}
+
+.parking-discovery-map .leaflet-control-zoom a,
+.parking-discovery-map .leaflet-control-locate a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+}
+
+@media (width < 1024px) {
+    .parking-discovery-map .leaflet-top.leaflet-right {
+        top: 64px;
+    }
+}
+
+.discovery-locate-icon,
+.discovery-locate-loading {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.discovery-locate-loading {
+    opacity: 0.5;
 }

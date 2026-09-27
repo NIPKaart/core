@@ -2,7 +2,9 @@ import { Icon } from '@/components/icon';
 import LanguageSwitcher from '@/components/language-switcher';
 import BellBadge from '@/components/notifications/badge-bell';
 import SearchButton from '@/components/search/search-button';
+import { closeSearch, openSearch, useSearchOpen } from '@/components/search/search-store';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { useIsActive } from '@/lib/is-active';
 import { cn } from '@/lib/utils';
@@ -11,7 +13,7 @@ import { add } from '@/routes/location-map';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, LogOut, Menu, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FavoritesButton } from './badge/favorites';
@@ -19,7 +21,8 @@ import { UserNavMenu } from './badge/user';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
-export default function Navbar() {
+export default function Navbar({ showSearch = true, mapSearch = false }: { showSearch?: boolean; mapSearch?: boolean }) {
+    const searchOpen = useSearchOpen();
     const { t } = useTranslation('frontend/navbar');
     const { t: tSearch } = useTranslation('global/search');
     const page = usePage<SharedData>();
@@ -71,7 +74,7 @@ export default function Navbar() {
 
                     {/* Mobile actions (favorites, notifications, hamburger) */}
                     <div className="relative z-50 flex items-center gap-2 lg:hidden">
-                        <SearchButton variant="icon" tooltip={tSearch('title')} />
+                        {showSearch && <SearchButton variant="icon" tooltip={tSearch('title')} />}
                         {auth.user && (
                             <div className="me-1 flex items-center gap-1">
                                 <div className="relative flex min-w-8 justify-center">
@@ -83,8 +86,30 @@ export default function Navbar() {
                             </div>
                         )}
 
+                        {mapSearch && (
+                            <Button
+                                id="map-search-toggle"
+                                variant="ghost"
+                                size="icon"
+                                className="size-11"
+                                aria-label={tSearch('title')}
+                                aria-expanded={searchOpen}
+                                aria-controls="map-destination-search"
+                                onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    if (searchOpen) closeSearch();
+                                    else openSearch();
+                                }}
+                            >
+                                <Search className="size-5" aria-hidden />
+                            </Button>
+                        )}
+
                         <button
-                            onClick={() => setMobileMenuOpen((prev) => !prev)}
+                            onClick={() => {
+                                if (mapSearch) closeSearch();
+                                setMobileMenuOpen((prev) => !prev);
+                            }}
                             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
                             aria-expanded={mobileMenuOpen}
                             aria-controls="mobile-nav"
@@ -152,7 +177,7 @@ export default function Navbar() {
                     {/* Desktop right side */}
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
-                            <SearchButton variant="icon" tooltip={tSearch('title')} />
+                            {showSearch && <SearchButton variant="icon" tooltip={tSearch('title')} />}
                             {auth.user && <FavoritesButton />}
                             {auth.user && <BellBadge />}
                             {!auth.user && <LanguageSwitcher />}

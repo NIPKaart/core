@@ -23,9 +23,9 @@ final class ParkingDiscovery
 
     public const int AREA_POINT_LIMIT = 100000;
 
-    public function withinRadius(GeoPoint $origin, float $metres, int $limit = 100): Collection
+    public function withinRadius(GeoPoint $origin, float $metres, int $limit = 100, int $offset = 0, string $source = 'all', string $sort = 'distance'): Collection
     {
-        return $this->query(fn (Builder $query) => $query->withinRadius($origin, $metres)->withDistanceFrom($origin), $limit, true);
+        return $this->query(fn (Builder $query) => $query->withinRadius($origin, $metres)->withDistanceFrom($origin), $limit, true, $offset, source: $source, sort: $sort);
     }
 
     /** Distance is measured from $distanceFrom when given; ordering stays source-and-identifier based. */
@@ -40,7 +40,7 @@ final class ParkingDiscovery
         );
     }
 
-    private function query(callable $filter, int $limit, bool $withDistance, int $offset = 0, bool $orderByDistance = true): Collection
+    private function query(callable $filter, int $limit, bool $withDistance, int $offset = 0, bool $orderByDistance = true, string $source = 'all', string $sort = 'distance'): Collection
     {
         if ($limit < 1 || $limit > 1000) {
             throw new InvalidArgumentException('Result limit must be between 1 and 1000.');
@@ -50,8 +50,18 @@ final class ParkingDiscovery
             throw new InvalidArgumentException('Result offset must not be negative.');
         }
 
+        if (! in_array($source, ['all', 'community', 'municipal', 'offstreet'], true) || ! in_array($sort, ['distance', 'balanced'], true)) {
+            throw new InvalidArgumentException('Unsupported discovery source or sort.');
+        }
+
         $query = $this->publicParking($filter, $withDistance);
+        if ($source !== 'all') {
+            $query->where('source', $source);
+        }
         if ($withDistance && $orderByDistance) {
+            if ($sort === 'balanced') {
+                $query->orderByRaw("distance_metres + CASE WHEN source = 'offstreet' THEN 250 ELSE 0 END");
+            }
             $query->orderBy('distance_metres');
         }
 
