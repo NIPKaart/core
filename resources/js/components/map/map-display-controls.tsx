@@ -83,27 +83,6 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                     </span>
                                     <span>{t('controls.location')}</span>
                                 </li>
-                                <li className="grid gap-2 border-t pt-2">
-                                    <div aria-hidden className="flex gap-2">
-                                        {(
-                                            [
-                                                ['small', 5],
-                                                ['medium', 25],
-                                                ['large', 120],
-                                            ] as const
-                                        ).map(([size, count]) => (
-                                            <div
-                                                key={size}
-                                                className={`marker-cluster marker-cluster-${size} block size-10 shrink-0 text-neutral-900`}
-                                            >
-                                                <div>
-                                                    <span>{count}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <span>{t('controls.clusters')}</span>
-                                </li>
                             </ul>
                         )}
                     </PopoverContent>
