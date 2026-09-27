@@ -16,5 +16,5 @@ test('the destination marker has an accessible name and safely renders destinati
     assert.doesNotMatch(icon.html, /<img|onerror="alert/);
     assert.match(icon.html, /<svg/);
     assert.equal(icon.iconAnchor[0], icon.iconSize[0] / 2);
-    assert.equal(icon.iconAnchor[1], icon.iconSize[1] / 2);
+    assert.ok(icon.iconAnchor[1] > icon.iconSize[1] * 0.9, 'the pin tip marks the coordinate');
 });
