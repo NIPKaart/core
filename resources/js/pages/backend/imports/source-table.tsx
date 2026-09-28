@@ -162,78 +162,78 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                         )}
                     </div>
                 }
-                search={
-                    <Form
-                        action={index.url()}
-                        method="get"
-                        options={{ preserveState: true, preserveScroll: true }}
-                        className="relative w-full sm:max-w-sm"
-                    >
-                        {filters.status !== 'all' && <input type="hidden" name="status" value={filters.status} />}
-                        {filters.type !== 'all' && <input type="hidden" name="type" value={filters.type} />}
-                        {filters.country && <input type="hidden" name="country" value={filters.country} />}
-                        <Input
-                            key={filters.search}
-                            className="w-full pl-9"
-                            name="search"
-                            defaultValue={filters.search}
-                            maxLength={200}
-                            placeholder={t('sources_table.search')}
-                            aria-label={t('sources_table.search')}
-                        />
-                        <button
-                            type="submit"
-                            className="absolute inset-y-0 left-0 flex w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-                            aria-label={t('search')}
+                toolbar={
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+                        <Form
+                            action={index.url()}
+                            method="get"
+                            options={{ preserveState: true, preserveScroll: true }}
+                            className="relative w-full lg:max-w-sm"
                         >
-                            <Search className="size-4" aria-hidden="true" />
-                        </button>
-                    </Form>
-                }
-                filters={
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                        <Select value={filters.type} onValueChange={(type) => visit({ type: type as SourceFilters['type'] })}>
-                            <SelectTrigger aria-label={t('sources_table.type')} className="w-full sm:w-40">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('sources_table.all_types')}</SelectItem>
-                                <SelectItem value="municipal">{t('sources_table.types.municipal')}</SelectItem>
-                                <SelectItem value="offstreet">{t('sources_table.types.offstreet')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {countries.length > 1 && (
-                            <Select
-                                value={filters.country ?? 'all'}
-                                onValueChange={(country) => visit({ country: country === 'all' ? null : country })}
+                            {filters.status !== 'all' && <input type="hidden" name="status" value={filters.status} />}
+                            {filters.type !== 'all' && <input type="hidden" name="type" value={filters.type} />}
+                            {filters.country && <input type="hidden" name="country" value={filters.country} />}
+                            <Input
+                                key={filters.search}
+                                className="w-full pl-9"
+                                name="search"
+                                defaultValue={filters.search}
+                                maxLength={200}
+                                placeholder={t('sources_table.search')}
+                                aria-label={t('sources_table.search')}
+                            />
+                            <button
+                                type="submit"
+                                className="absolute inset-y-0 left-0 flex w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                                aria-label={t('search')}
                             >
-                                <SelectTrigger aria-label={t('sources_table.country')} className="w-full sm:w-36">
+                                <Search className="size-4" aria-hidden="true" />
+                            </button>
+                        </Form>
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                            <Select value={filters.type} onValueChange={(type) => visit({ type: type as SourceFilters['type'] })}>
+                                <SelectTrigger aria-label={t('sources_table.type')} className="w-full sm:w-40">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">{t('sources_table.all_countries')}</SelectItem>
-                                    {countries.map((country) => (
-                                        <SelectItem key={country} value={country}>
-                                            {country}
+                                    <SelectItem value="all">{t('sources_table.all_types')}</SelectItem>
+                                    <SelectItem value="municipal">{t('sources_table.types.municipal')}</SelectItem>
+                                    <SelectItem value="offstreet">{t('sources_table.types.offstreet')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {countries.length > 1 && (
+                                <Select
+                                    value={filters.country ?? 'all'}
+                                    onValueChange={(country) => visit({ country: country === 'all' ? null : country })}
+                                >
+                                    <SelectTrigger aria-label={t('sources_table.country')} className="w-full sm:w-36">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('sources_table.all_countries')}</SelectItem>
+                                        {countries.map((country) => (
+                                            <SelectItem key={country} value={country}>
+                                                {country}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                            <Select value={filters.status} onValueChange={(status) => visit({ status: status as SourceFilters['status'] })}>
+                                <SelectTrigger aria-label={t('status')} className="w-full sm:w-52">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('sources_table.all_statuses')}</SelectItem>
+                                    <SelectItem value="attention">{t('sources_table.attention')}</SelectItem>
+                                    {SOURCE_STATUSES.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                            {t(`sources_table.statuses.${status}`)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                        )}
-                        <Select value={filters.status} onValueChange={(status) => visit({ status: status as SourceFilters['status'] })}>
-                            <SelectTrigger aria-label={t('status')} className="w-full sm:w-52">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('sources_table.all_statuses')}</SelectItem>
-                                <SelectItem value="attention">{t('sources_table.attention')}</SelectItem>
-                                {SOURCE_STATUSES.map((status) => (
-                                    <SelectItem key={status} value={status}>
-                                        {t(`sources_table.statuses.${status}`)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        </div>
                     </div>
                 }
             />
