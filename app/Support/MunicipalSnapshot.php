@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use stdClass;
 
+/**
+ * Validates `nipkaart-municipal-2` deliveries. Rules specific to one upstream source live in its collector (ADR 0013).
+ */
 final class MunicipalSnapshot
 {
-    public const string EINDHOVEN_DATASET = 'nl-eindhoven';
+    public const string FORMAT = 'nipkaart-municipal-2';
 
     public const int MAX_BYTES = SnapshotJson::MAX_BYTES;
 
@@ -20,11 +23,11 @@ final class MunicipalSnapshot
     {
         [$data, $object] = SnapshotJson::decode($json);
         Validator::make($data, [
-            'format' => ['required', 'in:nipkaart-municipal-pilot-1'],
+            'format' => ['required', 'in:'.self::FORMAT],
             'dataset' => ['required', 'string', 'max:255'],
             'delivery_id' => ['required', 'uuid'],
             'retrieved_at' => ['required', 'string', 'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/', 'date'],
-            'selection' => ['required', 'string'],
+            'selection' => ['required', 'string', 'max:255'],
             'records' => ['required', 'array', 'list', 'min:1', 'max:10000'],
         ])->validate();
         if (($data['complete'] ?? null) !== true || ! is_int($data['source_count'] ?? null) || $data['source_count'] !== count($data['records'])) {
@@ -33,6 +36,10 @@ final class MunicipalSnapshot
         if (CarbonImmutable::parse($data['retrieved_at'])->isFuture()) {
             $this->fail('retrieved_at', 'Het ophaaltijdstip ligt in de toekomst.');
         }
+        if (! ($object->source ?? null) instanceof stdClass) {
+            $this->fail('source', 'De levering moet een bronbeschrijving bevatten.');
+        }
+        $data['source'] = SourceDescription::validate($data['source']);
         foreach ($object->records as $index => $record) {
             if (! $record instanceof stdClass || ! ($record->geometry ?? null) instanceof stdClass || ! ($record->source_attributes ?? null) instanceof stdClass) {
                 $this->fail("records.$index", 'Een record, geometrie en bronattributen moeten objecten zijn.');
@@ -47,14 +54,8 @@ final class MunicipalSnapshot
      */
     public function validate(array $data, DatasetSource $source): array
     {
-        $isEindhoven = $source->code === self::EINDHOVEN_DATASET;
-        $selection = match ($source->code) {
-            'nl-amsterdam' => 'e6a-all',
-            self::EINDHOVEN_DATASET => 'gehandicapten-all',
-            default => null,
-        };
-        if ($selection === null || $source->target_type !== 'municipal' || $source->code !== $data['dataset'] || $source->selection !== $selection || $data['selection'] !== $selection) {
-            $this->fail('dataset', 'Dataset of selectie is niet toegelaten voor deze pilot.');
+        if ($source->target_type !== 'municipal' || $source->code !== $data['dataset'] || $source->selection !== $data['selection']) {
+            $this->fail('dataset', 'Dataset of selectie hoort niet bij deze bron.');
         }
         $seen = [];
         foreach ($data['records'] as $index => $record) {
@@ -63,22 +64,12 @@ final class MunicipalSnapshot
                 'external_id' => ['required', 'string', 'max:255'],
                 'number' => ['present', 'nullable', 'integer', 'min:0', 'max:2147483647'],
                 'street' => ['present', 'nullable', 'string', 'max:255'],
-                'access_category' => ['required', $isEindhoven ? 'in:unknown' : 'in:general'],
-                'source_updated_at' => ['present'],
-                ...($isEindhoven ? [
-                    'source_attributes' => ['required', 'array:objectid,type_en_merk'],
-                    'source_attributes.objectid' => ['required', 'integer', 'min:1'],
-                    'source_attributes.type_en_merk' => ['required', 'in:Parkeerplaats Gehandicapten'],
-                    'geometry.type' => ['required', 'in:Point'],
-                    'geometry.coordinates' => ['required', 'array', 'list', 'size:2'],
-                ] : [
-                    'source_attributes' => ['required', 'array:regimes,orientation,version_date'],
-                    'source_attributes.orientation' => ['present', 'nullable', 'string', 'max:255'],
-                    'source_attributes.version_date' => ['present', 'nullable', 'date_format:Y-m-d'],
-                    'source_attributes.regimes' => ['required', 'array', 'list', 'min:1', 'max:100'],
-                    'geometry.type' => ['required', 'in:Polygon'],
-                    'geometry.coordinates' => ['required', 'array', 'list', 'min:1', 'max:100'],
-                ]),
+                'access_category' => ['required', 'in:general,unknown'],
+                'orientation' => ['present', 'nullable', 'in:perpendicular,parallel,angle'],
+                'source_updated_at' => ['present', 'nullable', 'date_format:Y-m-d'],
+                'source_attributes' => ['present', 'array'],
+                'geometry.type' => ['required', 'in:Point,Polygon,MultiPolygon'],
+                'geometry.coordinates' => ['required', 'array', 'list'],
             ])->errors();
             if ($errors->isNotEmpty()) {
                 throw ValidationException::withMessages(collect($errors->messages())->mapWithKeys(fn ($messages, $field) => ["$prefix.$field" => $messages])->all());
@@ -87,41 +78,36 @@ final class MunicipalSnapshot
                 $this->fail("$prefix.external_id", 'Bron-ID is ongeldig of dubbel.');
             }
             $seen[$record['external_id']] = true;
-            if ($record['source_updated_at'] !== null) {
-                $this->fail("$prefix.source_updated_at", 'De bronwijzigingsdatum is onbekend voor deze bron; verwacht null.');
-            }
             if ($record['number'] !== null && ! is_int($record['number'])) {
                 $this->fail("$prefix.number", 'Verwacht een geheel aantal of null.');
             }
-            if ($isEindhoven) {
-                $objectId = $record['source_attributes']['objectid'];
-                if (! is_int($objectId) || (string) $objectId !== $record['external_id']) {
-                    $this->fail("$prefix.external_id", 'Bron-ID moet overeenkomen met het oorspronkelijke objectid.');
-                }
-                [$longitude, $latitude] = $record['geometry']['coordinates'];
-                if ((! is_int($longitude) && ! is_float($longitude)) || (! is_int($latitude) && ! is_float($latitude)) || ! is_finite($longitude) || ! is_finite($latitude) || abs($longitude) > 180 || abs($latitude) > 90) {
-                    $this->fail("$prefix.geometry", 'Ongeldige WGS84-coördinaten.');
-                }
-
-                continue;
+            // `nullable` treats an empty string as missing; unknown must be an explicit null.
+            if ($record['source_updated_at'] !== null && (! is_string($record['source_updated_at']) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/D', $record['source_updated_at']))) {
+                $this->fail("$prefix.source_updated_at", 'Verwacht een datum (JJJJ-MM-DD) of null.');
             }
-            foreach ($record['source_attributes']['regimes'] as $regime) {
-                if (! is_array($regime) || ($regime['eType'] ?? null) !== 'E6a' || ($regime['eTypeDescription'] ?? null) !== 'Gehandicaptenparkeerplaats algemeen' || ! in_array($regime['kenteken'] ?? null, [null, ''], true)) {
-                    $this->fail("$prefix.source_attributes.regimes", 'Onbekende of persoonsgebonden parkeerregeling; selectie opnieuw beoordelen.');
-                }
-            }
+            $polygons = match ($record['geometry']['type']) {
+                'Point' => [[[$record['geometry']['coordinates']]]],
+                'Polygon' => [$record['geometry']['coordinates']],
+                'MultiPolygon' => $record['geometry']['coordinates'],
+            };
             $positions = 0;
-            foreach ($record['geometry']['coordinates'] as $ring) {
-                if (! is_array($ring) || ! array_is_list($ring) || count($ring) < 4 || $ring[0] !== $ring[array_key_last($ring)]) {
-                    $this->fail("$prefix.geometry", 'Ongeldige of niet gesloten polygoonring.');
-                }
-                $positions += count($ring);
-                if ($positions > 10000) {
-                    $this->fail("$prefix.geometry", 'Te veel posities in de polygoon.');
-                }
-                foreach ($ring as $point) {
-                    if (! is_array($point) || ! array_is_list($point) || count($point) !== 2 || ! is_numeric($point[0]) || ! is_numeric($point[1]) || is_string($point[0]) || is_string($point[1]) || $point[0] < -180 || $point[0] > 180 || $point[1] < -90 || $point[1] > 90) {
-                        $this->fail("$prefix.geometry", 'Ongeldige WGS84-coördinaten.');
+            foreach ($polygons as $polygon) {
+                foreach (is_array($polygon) ? $polygon : [null] as $ring) {
+                    $closed = $record['geometry']['type'] === 'Point' || (is_array($ring) && array_is_list($ring) && count($ring) >= 4 && $ring[0] === $ring[array_key_last($ring)]);
+                    if (! is_array($ring) || ! array_is_list($ring) || ! $closed) {
+                        $this->fail("$prefix.geometry", 'Ongeldige of niet gesloten polygoonring.');
+                    }
+                    $positions += count($ring);
+                    if ($positions > 10000) {
+                        $this->fail("$prefix.geometry", 'Te veel posities in de geometrie.');
+                    }
+                    foreach ($ring as $point) {
+                        if (! is_array($point) || ! array_is_list($point) || count($point) !== 2
+                            || (! is_int($point[0]) && ! is_float($point[0])) || (! is_int($point[1]) && ! is_float($point[1]))
+                            || ! is_finite($point[0]) || ! is_finite($point[1])
+                            || $point[0] < -180 || $point[0] > 180 || $point[1] < -90 || $point[1] > 90) {
+                            $this->fail("$prefix.geometry", 'Ongeldige WGS84-coördinaten.');
+                        }
                     }
                 }
             }
@@ -138,19 +124,20 @@ final class MunicipalSnapshot
             ), points AS (
                 SELECT *, ST_PointOnSurface(usable) AS point FROM derived
             ) SELECT external_id, original_valid, reason,
-                ST_IsValid(usable) AND NOT ST_IsEmpty(usable) AND GeometryType(usable) IN ('POLYGON', 'MULTIPOLYGON', ?) AS usable,
+                ST_IsValid(usable) AND NOT ST_IsEmpty(usable) AND CASE WHEN GeometryType(shape) = 'POINT'
+                    THEN GeometryType(usable) = 'POINT' ELSE GeometryType(usable) IN ('POLYGON', 'MULTIPOLYGON') END AS usable,
                 ST_CoveredBy(ST_Envelope(shape), ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside,
                 ST_X(point) AS longitude, ST_Y(point) AS latitude,
                 CASE WHEN NOT original_valid THEN ST_AsGeoJSON(usable, 15, 0) END AS geometry,
                 PostGIS_Lib_Version() || ' / GEOS ' || PostGIS_GEOS_Version() AS engine
             FROM points
-            SQL, [json_encode($data['records'], JSON_THROW_ON_ERROR), $isEindhoven ? 'POINT' : 'POLYGON', $west, $south, $east, $north]);
+            SQL, [json_encode($data['records'], JSON_THROW_ON_ERROR), $west, $south, $east, $north]);
         $points = [];
         $derivations = [];
         $errors = [];
         foreach ($rows as $row) {
             if (! $row->usable || ! $row->inside) {
-                $errors["geometry.{$row->external_id}"] = "Bron-ID {$row->external_id}: ".(! $row->inside ? 'buiten het toegelaten gebied.' : "geen bruikbaar parkeervlak na afleiding: {$row->reason}");
+                $errors["geometry.{$row->external_id}"] = "Bron-ID {$row->external_id}: ".(! $row->inside ? 'buiten het toegelaten gebied.' : "geen bruikbare geometrie na afleiding: {$row->reason}");
 
                 continue;
             }
@@ -168,10 +155,7 @@ final class MunicipalSnapshot
             'source' => $record,
             'geometry_derivation' => $derivations[$record['external_id']],
             'values' => [
-                'street' => $record['street'], 'number' => $record['number'],
-                'orientation' => match ($record['source_attributes']['orientation'] ?? null) {
-                    'Haaks', 'Dwars' => 'perpendicular', 'Langs' => 'parallel', 'Schuin', 'Visgraat', 'Vissengraat' => 'angle', default => null,
-                },
+                'street' => $record['street'], 'number' => $record['number'], 'orientation' => $record['orientation'],
                 ...$points[$record['external_id']],
             ],
         ], $data['records']);

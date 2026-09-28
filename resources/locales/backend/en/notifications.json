@@ -43,7 +43,9 @@
         "community.*": "Community space",
         "system.*": "System",
         "default": "Notification",
-        "dataset.import_ready_for_review": "Delivery ready for review"
+        "dataset.import_ready_for_review": "Delivery ready for review",
+
+        "dataset.source_awaiting_approval": "Source awaiting approval"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
@@ -53,6 +55,8 @@
         "community.space_restored": "Community space restored: {{space_label}}",
         "system.announcement": "System announcement",
         "default": "Notification",
-        "dataset.import_ready_for_review": "Delivery ready for review: {{source_name}}"
+        "dataset.import_ready_for_review": "Delivery ready for review: {{source_name}}",
+
+        "dataset.source_awaiting_approval": "Source awaiting approval: {{source_name}}"
     }
 }

@@ -17,6 +17,7 @@ import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpRight, Database, ExternalLink, FileUp, MapPin, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import SourceApproval, { type SourceDescription } from './source-approval';
 
 export type Dataset = {
     id: number;
@@ -38,7 +39,12 @@ export type Import = {
 };
 
 type Source = Dataset & {
-    municipality_id: number;
+    municipality_id: number | null;
+    approval_state: 'pending' | 'approved' | 'rejected';
+    description: SourceDescription;
+    pending_description: SourceDescription | null;
+    registration_error: string | null;
+    review_reason: string | null;
     latest_import: Pick<Import, 'id' | 'state' | 'retrieved_at'> | null;
     latest_delivery: { state: string; error_code: string | null } | null;
     last_published_retrieved_at: string | null;
@@ -257,6 +263,11 @@ export default function Index({ datasets, imports, filters }: Props) {
                                                                     : 'no_deliveries',
                                                         )}
                                                     </Badge>
+                                                    {dataset.approval_state !== 'approved' && (
+                                                        <Badge variant={dataset.approval_state === 'rejected' ? 'outline' : 'destructive'}>
+                                                            {t(`approval.states.${dataset.approval_state}`)}
+                                                        </Badge>
+                                                    )}
                                                     {dataset.stale && <Badge variant="destructive">{t('source_stale')}</Badge>}
                                                     {dataset.delivery_status === 'unknown' && (
                                                         <Badge variant="outline">{t('freshness_unknown')}</Badge>
@@ -288,6 +299,7 @@ export default function Index({ datasets, imports, filters }: Props) {
                                                 </dd>
                                             </div>
                                         </dl>
+                                        {dataset.approval_state !== 'approved' && <SourceApproval source={dataset} />}
                                         {dataset.stale && <p className="text-sm text-muted-foreground">{t('overdue_note')}</p>}
                                         {(dataset.latest_delivery?.error_code || dataset.latest_delivery?.state === 'rejected') && (
                                             <p role="status" className="text-sm text-destructive">
@@ -306,12 +318,14 @@ export default function Index({ datasets, imports, filters }: Props) {
                                                     </Link>
                                                 </Button>
                                             )}
-                                            <Button variant="outline" asChild>
-                                                <Link href={parkingMunicipal.municipality(dataset.municipality_id)}>
-                                                    <MapPin aria-hidden="true" />
-                                                    {t('locations')}
-                                                </Link>
-                                            </Button>
+                                            {dataset.target_type === 'municipal' && dataset.municipality_id !== null && (
+                                                <Button variant="outline" asChild>
+                                                    <Link href={parkingMunicipal.municipality(dataset.municipality_id)}>
+                                                        <MapPin aria-hidden="true" />
+                                                        {t('locations')}
+                                                    </Link>
+                                                </Button>
+                                            )}
                                             <Button variant="ghost" asChild>
                                                 <Link href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>{t('history')}</Link>
                                             </Button>

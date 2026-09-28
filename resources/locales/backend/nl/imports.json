@@ -188,5 +188,37 @@
         "garage": "Garage",
         "park_and_ride": "P+R"
     },
-    "unknown_name": "Voorziening zonder naam"
+    "unknown_name": "Voorziening zonder naam",
+    "approval": {
+        "states": {
+            "pending": "Wacht op goedkeuring",
+            "rejected": "Bron afgewezen",
+            "approved": "Goedgekeurd"
+        },
+        "title": "Nieuwe bron wacht op goedkeuring",
+        "reapproval_title": "Gewijzigde bronbeschrijving wacht op goedkeuring",
+        "rejected_title": "Bron afgewezen",
+        "hint": "Controleer licentie, voorwaarden en gebied één keer. Na goedkeuring gaan leveringen van deze bron gewoon naar beoordeling.",
+        "rejected_hint": "Leveringen van deze bron worden genegeerd. Keur de bron goed om ze alsnog te verwerken.",
+        "changed_fields": "Gewijzigd sinds de laatste goedkeuring",
+        "no_licence": "Geen licentie opgegeven",
+        "fields": {
+            "name": "Naam",
+            "publisher": "Uitgever",
+            "source_url": "Bron",
+            "licence": "Licentie",
+            "terms_url": "Voorwaarden",
+            "attribution": "Toeschrijving",
+            "area": "Gebied",
+            "bounds": "Grenzen (W, Z, O, N)",
+            "interval": "Leveringsritme",
+            "links": "Links"
+        },
+        "hours_one": "Elk {{count}} uur",
+        "hours_other": "Elke {{count}} uur",
+        "reason": "Reden",
+        "reason_placeholder": "Optioneel: waarom je deze bron goedkeurt of afwijst",
+        "approve": "Bron goedkeuren",
+        "reject": "Bron afwijzen"
+    }
 }

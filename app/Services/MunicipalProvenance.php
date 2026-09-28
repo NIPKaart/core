@@ -10,8 +10,8 @@ class MunicipalProvenance
 {
     public function deliveryStatus(DatasetSource $source): string
     {
-        $hours = config('dataset-deliveries.sources.'.$source->code.'.max_age_hours');
-        if (! is_numeric($hours) || $hours <= 0) {
+        $hours = $this->lateAfterHours($source);
+        if ($hours === null) {
             return 'unknown';
         }
         $latest = $source->latestImport?->retrieved_at;
@@ -21,6 +21,14 @@ class MunicipalProvenance
         }
 
         return $latest ? 'current' : 'awaiting';
+    }
+
+    /** A delivery is late after a configured number of the source's expected intervals. */
+    public function lateAfterHours(DatasetSource $source): ?int
+    {
+        $intervals = config('dataset-deliveries.late_after_intervals');
+
+        return $source->expected_interval_hours > 0 && is_int($intervals) && $intervals > 0 ? $source->expected_interval_hours * $intervals : null;
     }
 
     /** @return array<string, mixed> */

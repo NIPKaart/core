@@ -7,7 +7,8 @@
         "community.space_restored": "Parking space restored",
         "system.announcement": "System announcement",
         "default": "Notification",
-        "dataset.import_ready_for_review": "Delivery ready for review"
+        "dataset.import_ready_for_review": "Delivery ready for review",
+        "dataset.source_awaiting_approval": "Source awaiting approval"
     },
     "actions": {
         "markRead": "Mark as read",

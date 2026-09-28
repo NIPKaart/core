@@ -17,9 +17,35 @@ class DatasetSource extends Model
 
     protected $dateFormat = 'Y-m-d H:i:s.u';
 
-    protected $fillable = ['code', 'name', 'selection', 'target_type', 'source_url', 'attribution', 'terms_url', 'municipality_id', 'bounds', 'publication_enabled'];
+    protected $fillable = ['code', 'name', 'selection', 'target_type', 'publisher', 'source_url', 'licence', 'attribution', 'terms_url', 'municipality_id', 'bounds', 'expected_interval_hours', 'description'];
 
-    protected $casts = ['terms_review' => 'array', 'bounds' => 'array', 'publication_enabled' => 'boolean', 'last_published_retrieved_at' => 'immutable_datetime'];
+    protected $casts = [
+        'bounds' => 'array', 'description' => 'array', 'pending_description' => 'array',
+        'expected_interval_hours' => 'integer', 'reviewed_at' => 'immutable_datetime', 'last_published_retrieved_at' => 'immutable_datetime',
+    ];
+
+    /** Deliveries of a source flow into review only after an administrator approved the source (ADR 0013). */
+    public function isApproved(): bool
+    {
+        return $this->approval_state === 'approved';
+    }
+
+    /**
+     * Source fields derived from a validated `source` block.
+     *
+     * @param  array<string, mixed>  $description
+     * @return array<string, mixed>
+     */
+    public static function attributesFromDescription(array $description): array
+    {
+        return [
+            'name' => $description['name'], 'publisher' => $description['publisher'],
+            'source_url' => $description['source_url'], 'licence' => $description['licence'],
+            'terms_url' => $description['terms_url'], 'attribution' => $description['attribution'],
+            'bounds' => $description['bounds'], 'expected_interval_hours' => $description['expected_interval_hours'],
+            'description' => $description,
+        ];
+    }
 
     public function municipality(): BelongsTo
     {
@@ -46,9 +72,14 @@ class DatasetSource extends Model
         return $this->hasMany(ParkingOffstreet::class);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * The approved source identity an import was staged against. The delivery interval may change without
+     * invalidating staged imports.
+     *
+     * @return array<string, mixed>
+     */
     public function configuration(): array
     {
-        return [...Arr::except($this->only($this->fillable), ['publication_enabled']), 'country_id' => $this->municipality->country_id, 'province_id' => $this->municipality->province_id];
+        return [...Arr::except($this->only($this->fillable), ['expected_interval_hours', 'description']), 'country_id' => $this->municipality?->country_id, 'province_id' => $this->municipality?->province_id];
     }
 }

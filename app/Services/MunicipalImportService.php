@@ -91,9 +91,6 @@ class MunicipalImportService implements DatasetImporter
         $rows = collect($rows)->sortByDesc(fn ($row) => $row['geometry_review_required'] ?? false)->values()->all();
         $derivations = count(array_filter($rows, fn ($row) => $row['geometry_review_required'] ?? false));
         $blockers = [];
-        if ($source->code === MunicipalSnapshot::EINDHOVEN_DATASET) {
-            $blockers[] = 'Eindhoven is alleen beschikbaar voor bronbeoordeling. Algemeen gebruik, stabiele bron-ID’s en actualiteit zijn nog niet bevestigd; publicatie is geblokkeerd.';
-        }
         if (MunicipalSnapshot::fingerprint($source->configuration()) !== MunicipalSnapshot::fingerprint(Arr::except($import->dataset_config, ['publication_enabled']))) {
             $blockers[] = 'De datasetconfiguratie is gewijzigd sinds ontvangst. Lever een nieuw bestand aan.';
         }

@@ -78,7 +78,7 @@ De NIPKaart-representatie gebruikt onderstaande mapping. `geometry` en de twee `
 
 Regimes zijn broninformatie die core moet tonen voordat deze records worden gepubliceerd. Het samengaan van een basisregime en tijdvenster wordt niet vertaald naar een belofte van onbeperkte toegang. Onbegrepen beperkingen blijven in review; een beheerder moet de betekenis kunnen onderbouwen of publicatie achterwege laten.
 
-De volledige levering volgt [het ene JSON-bestand](data-import-contract.md): `format=nipkaart-municipal-pilot-1`, bovengenoemde dataset/selectie, een werkelijke delivery-UUID en ophaaltijd, `complete=true`, een gecontroleerd `source_count` en alle records. Het voorbeeld hierboven is één record en mag nooit als volledige Amsterdamse levering worden aangeleverd. De toekomstige export mag 1.420 niet hardcoderen.
+De volledige levering volgt [het ene JSON-bestand](data-import-contract.md): `format=nipkaart-municipal-2`, bovengenoemde dataset/selectie, een werkelijke delivery-UUID en ophaaltijd, `complete=true`, een gecontroleerd `source_count` en alle records. Het voorbeeld hierboven is één record en mag nooit als volledige Amsterdamse levering worden aangeleverd. De toekomstige export mag 1.420 niet hardcoderen.
 
 ## Opgelost in de universele package
 

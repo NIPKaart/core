@@ -16,7 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->foreignId('country_id')->constrained('countries');
             $table->foreignId('province_id')->constrained('provinces');
+            $table->string('code_scheme')->nullable();
+            $table->string('code')->nullable();
             $table->timestamps();
+            $table->unique(['country_id', 'code_scheme', 'code']);
         });
     }
 

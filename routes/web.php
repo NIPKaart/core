@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             });
         });
 
+        Route::patch('imports/sources/{dataset_source}', [Admin\DatasetSourceController::class, 'update'])->name('imports.sources.update')->middleware('throttle:20,1');
         Route::resource('imports', Admin\DatasetImportController::class)->only(['index', 'store', 'show', 'update'])->parameters(['imports' => 'dataset_import'])->middleware('throttle:20,1');
 
         // ParkingMunicipal routes
