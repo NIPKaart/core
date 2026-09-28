@@ -1,7 +1,7 @@
 {
-    "title": "Municipal parking data",
-    "intro": "Manage sources, review changes and view parking locations on the map.",
-    "no_datasets": "No dataset is connected yet. Ask an administrator to register the Amsterdam dataset.",
+    "title": "Data sources",
+    "intro": "Approve sources, review deliveries and follow each source's status.",
+    "no_datasets": "Sources appear here automatically once a collector delivers data.",
     "source": "Municipal source",
     "terms": "Source terms",
     "upload": "New delivery",
@@ -223,5 +223,47 @@
     },
     "live": {
         "processing": "Deliveries are being processed. This page updates automatically."
+    },
+    "sources_table": {
+        "source": "Source",
+        "area": "Area",
+        "municipality": "Municipality",
+        "locations": "On the map",
+        "latest_delivery": "Latest delivery",
+        "details": "Open details",
+        "none": "None yet",
+        "summary": "Sources that need attention",
+        "search": "Search name, municipality or code…",
+        "type": "Type",
+        "all_types": "All types",
+        "country": "Country",
+        "all_countries": "All countries",
+        "all_statuses": "All statuses",
+        "attention": "Needs attention",
+        "processing": "Processing",
+        "new_tab": "opens in a new tab",
+        "empty": "No sources yet",
+        "no_matches": "No sources match these filters",
+        "no_matches_hint": "Change your search or clear the filters.",
+        "types": {
+            "municipal": "Municipal",
+            "offstreet": "Garage and P+R"
+        },
+        "chips": {
+            "awaiting_approval": "Awaiting approval",
+            "awaiting_review": "Awaiting review",
+            "overdue": "Delivery overdue",
+            "intake_problem": "Intake problems"
+        },
+        "statuses": {
+            "awaiting_approval": "Awaiting approval",
+            "reapproval": "Changed, re-approve",
+            "intake_problem": "Intake problem",
+            "overdue": "Delivery overdue",
+            "awaiting_review": "Awaiting review",
+            "awaiting_delivery": "Awaiting first delivery",
+            "published": "Published",
+            "rejected": "Rejected"
+        }
     }
 }

@@ -175,7 +175,7 @@ it('holds a delivery with a changed description for re-approval, but accepts a n
     expect($delivery->fresh()->state)->toBe('pending');
     Notification::assertSentTo($admin, SourceAwaitingApproval::class);
     $this->actingAs($admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.approval_state', 'pending')->where('datasets.0.pending_description.licence', 'CC-BY-4.0'));
+        ->where('sources.data.0.approval_state', 'pending')->where('sources.data.0.pending_description.licence', 'CC-BY-4.0'));
 
     Queue::fake([ProcessDatasetDelivery::class]);
     $this->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertRedirect();

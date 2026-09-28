@@ -1,7 +1,7 @@
 {
-    "title": "Gemeentelijke parkeerdata",
-    "intro": "Beheer bronnen, beoordeel wijzigingen en bekijk de parkeerlocaties op de kaart.",
-    "no_datasets": "Er is nog geen dataset aangesloten. Laat een beheerder de Amsterdam-dataset registreren.",
+    "title": "Databronnen",
+    "intro": "Keur bronnen goed, beoordeel leveringen en volg de status van elke bron.",
+    "no_datasets": "Bronnen verschijnen hier automatisch zodra een collector data levert.",
     "source": "Gemeentelijke bron",
     "terms": "Bronvoorwaarden",
     "upload": "Nieuwe levering",
@@ -223,5 +223,47 @@
     },
     "live": {
         "processing": "Leveringen worden verwerkt. Deze pagina werkt zichzelf bij."
+    },
+    "sources_table": {
+        "source": "Bron",
+        "area": "Gebied",
+        "municipality": "Gemeente",
+        "locations": "Op de kaart",
+        "latest_delivery": "Laatste levering",
+        "details": "Details openen",
+        "none": "Nog geen",
+        "summary": "Bronnen die aandacht nodig hebben",
+        "search": "Zoek op naam, gemeente of code…",
+        "type": "Type",
+        "all_types": "Alle types",
+        "country": "Land",
+        "all_countries": "Alle landen",
+        "all_statuses": "Alle statussen",
+        "attention": "Vraagt aandacht",
+        "processing": "Wordt verwerkt",
+        "new_tab": "opent in een nieuw tabblad",
+        "empty": "Nog geen bronnen",
+        "no_matches": "Geen bronnen gevonden met deze filters",
+        "no_matches_hint": "Pas je zoekopdracht aan of wis de filters.",
+        "types": {
+            "municipal": "Gemeentelijk",
+            "offstreet": "Garage en P+R"
+        },
+        "chips": {
+            "awaiting_approval": "Wacht op goedkeuring",
+            "awaiting_review": "Wacht op beoordeling",
+            "overdue": "Levering te laat",
+            "intake_problem": "Problemen bij intake"
+        },
+        "statuses": {
+            "awaiting_approval": "Wacht op goedkeuring",
+            "reapproval": "Gewijzigd, opnieuw goedkeuren",
+            "intake_problem": "Probleem bij intake",
+            "overdue": "Levering te laat",
+            "awaiting_review": "Wacht op beoordeling",
+            "awaiting_delivery": "Wacht op eerste levering",
+            "published": "Gepubliceerd",
+            "rejected": "Afgewezen"
+        }
     }
 }
