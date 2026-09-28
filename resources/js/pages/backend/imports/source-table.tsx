@@ -92,9 +92,12 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
         {
             id: 'locations',
             header: () => <span className="block text-right">{t('sources_table.locations')}</span>,
-            cell: ({ row: { original: source } }) => (
-                <span className="block text-right tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
-            ),
+            cell: ({ row: { original: source } }) =>
+                source.last_published_retrieved_at ? (
+                    <span className="block text-right tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
+                ) : (
+                    <span className="block text-right text-sm text-muted-foreground">{t('sources_table.not_published')}</span>
+                ),
         },
         {
             id: 'delivery',

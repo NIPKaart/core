@@ -70,7 +70,9 @@ export default function SourceSheet({ source, onClose }: Props) {
                                 <div>
                                     <dt className="text-xs text-muted-foreground">{t('on_map')}</dt>
                                     <dd className="mt-0.5 font-semibold tabular-nums">
-                                        {source.visible_locations_count.toLocaleString(i18n.language)}
+                                        {source.last_published_retrieved_at
+                                            ? source.visible_locations_count.toLocaleString(i18n.language)
+                                            : t('sources_table.not_published')}
                                     </dd>
                                 </div>
                                 <div>

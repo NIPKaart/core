@@ -264,6 +264,7 @@
             "awaiting_delivery": "Awaiting first delivery",
             "published": "Published",
             "rejected": "Rejected"
-        }
+        },
+        "not_published": "Not published yet"
     }
 }

@@ -1,5 +1,17 @@
 import { cn } from '@/lib/utils';
-import { CircleAlert, CircleCheck, CircleDashed, CircleX, Clock, FileSearch, Loader2, RefreshCw, Warehouse, type LucideIcon } from 'lucide-react';
+import {
+    CircleAlert,
+    CircleCheck,
+    CircleDashed,
+    CircleX,
+    Clock,
+    FileSearch,
+    Landmark,
+    Loader2,
+    RefreshCw,
+    Warehouse,
+    type LucideIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Import } from '.';
 import type { SourceDescription } from './source-approval';
@@ -76,7 +88,7 @@ export function SourceType({ type }: { type: SourceRow['target_type'] }) {
 
     return (
         <span className="inline-flex items-center gap-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-            {type === 'offstreet' && <Warehouse className="size-3" aria-hidden="true" />}
+            {type === 'offstreet' ? <Warehouse className="size-3" aria-hidden="true" /> : <Landmark className="size-3" aria-hidden="true" />}
             {t(`sources_table.types.${type}`)}
         </span>
     );

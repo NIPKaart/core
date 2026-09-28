@@ -264,6 +264,7 @@
             "awaiting_delivery": "Wacht op eerste levering",
             "published": "Gepubliceerd",
             "rejected": "Afgewezen"
-        }
+        },
+        "not_published": "Nog niet gepubliceerd"
     }
 }
