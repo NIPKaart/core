@@ -5,46 +5,54 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\StoreDatasetImportRequest;
 use App\Models\DatasetImport;
-use App\Models\DatasetSource;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetImports;
 use App\Services\MunicipalProvenance;
+use App\Services\SourceOverview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DatasetImportController extends Controller
 {
-    public function index(Request $request, MunicipalProvenance $provenance): Response
+    public function index(Request $request, SourceOverview $overview): Response
     {
         Gate::authorize('viewAny', DatasetImport::class);
 
-        $request->validate(['q' => ['nullable', 'string', 'max:200'], 'state' => ['nullable', 'in:all,pending,published,rejected,superseded'], 'dataset' => ['nullable', 'integer', 'exists:dataset_sources,id'], 'tab' => ['nullable', 'in:sources,deliveries']]);
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:200'], 'state' => ['nullable', 'in:all,pending,published,rejected,superseded'],
+            'dataset' => ['nullable', 'integer', 'exists:dataset_sources,id'], 'tab' => ['nullable', 'in:sources,deliveries'],
+            'search' => ['nullable', 'string', 'max:200'], 'status' => ['nullable', Rule::in(['all', 'attention', ...SourceOverview::STATUSES])],
+            'type' => ['nullable', 'in:all,municipal,offstreet'], 'country' => ['nullable', 'string', 'size:2'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
         $query = trim($request->string('q')->toString());
         $state = $request->string('state', 'all')->toString() ?: 'all';
+        $sourceFilters = [
+            'search' => trim($request->string('search')->toString()),
+            'status' => $request->string('status', 'all')->toString() ?: 'all',
+            'type' => $request->string('type', 'all')->toString() ?: 'all',
+            'country' => $request->filled('country') ? strtoupper($request->string('country')->toString()) : null,
+        ];
+        $rows = $overview->rows();
 
         return Inertia::render('backend/imports/index', [
-            'datasets' => DatasetSource::query()
-                ->with(['latestImport:dataset_imports.id,dataset_imports.dataset_source_id,retrieved_at,state', 'latestDelivery:dataset_deliveries.id,dataset_deliveries.dataset_source_id,state,error_code,created_at'])
-                ->withCount([
-                    'municipalSpaces as visible_municipal_count' => fn (Builder $builder) => $builder->where('visibility', true),
-                    'offstreetSpaces as visible_offstreet_count' => fn (Builder $builder) => $builder->where('visibility', true),
-                ])
-                ->orderBy('name')->get()->map(function (DatasetSource $source) use ($provenance): array {
-                    $latest = $source->latestImport;
-
-                    return [...Arr::except($source->toArray(), ['visible_municipal_count', 'visible_offstreet_count']),
-                        'visible_locations_count' => $source->target_type === 'offstreet' ? $source->visible_offstreet_count : $source->visible_municipal_count,
-                        'needs_review' => $latest?->state === 'pending' && (! $source->last_published_retrieved_at || $latest->retrieved_at->gt($source->last_published_retrieved_at)),
-                        'stale' => $provenance->deliveryStatus($source) === 'overdue',
-                        'delivery_status' => $provenance->deliveryStatus($source),
-                    ];
-                }),
-            'imports' => DatasetImport::with('datasetSource:id,name,last_published_retrieved_at')
+            'datasets' => $rows->map(fn (array $row) => Arr::only($row, ['id', 'name']))->values(),
+            'sources' => $this->paginateSources($request, $rows, $sourceFilters),
+            'summary' => [
+                ...collect(SourceOverview::STATUSES)->mapWithKeys(fn (string $status) => [$status => $rows->where('status', $status)->count()])->all(),
+                'total' => $rows->count(),
+                'processing' => $rows->contains('processing', true),
+            ],
+            'countries' => $rows->pluck('country')->filter()->unique()->sort()->values(),
+            'imports' => DatasetImport::with('datasetSource:id,name,target_type,last_published_retrieved_at')
                 ->when($request->filled('dataset'), fn (Builder $builder) => $builder->where('dataset_source_id', $request->integer('dataset')))
                 ->when(in_array($state, ['published', 'rejected']), fn (Builder $builder) => $builder->where('state', $state))
                 ->when(in_array($state, ['pending', 'superseded']), fn (Builder $builder) => $builder->where('state', 'pending')
@@ -58,8 +66,38 @@ class DatasetImportController extends Controller
                     }))
                 ->when($query !== '', fn (Builder $builder) => $builder->whereHas('datasetSource', fn (Builder $source) => $source->where('name', 'ilike', '%'.$query.'%')))
                 ->latest('id')->paginate(20)->withQueryString()->through(fn (DatasetImport $import) => [...$import->toArray(), 'superseded' => $import->isSuperseded()]),
-            'filters' => ['q' => $query, 'state' => $state, 'dataset' => $request->filled('dataset') ? $request->integer('dataset') : null, 'tab' => $request->string('tab', 'sources')->toString()],
+            'filters' => [
+                'q' => $query, 'state' => $state, 'dataset' => $request->filled('dataset') ? $request->integer('dataset') : null,
+                'tab' => $request->string('tab', 'sources')->toString(), ...$sourceFilters,
+            ],
         ]);
+    }
+
+    /**
+     * Filters and pages the overview; the default order puts sources that need an administrator first.
+     *
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  array{search: string, status: string, type: string, country: ?string}  $filters
+     */
+    private function paginateSources(Request $request, Collection $rows, array $filters): LengthAwarePaginator
+    {
+        $needle = mb_strtolower($filters['search']);
+        $filtered = $rows
+            ->when($needle !== '', fn (Collection $rows) => $rows->filter(fn (array $row) => str_contains(mb_strtolower(implode(' ', [
+                $row['name'], $row['code'], $row['municipality_name'], $row['municipality_code'], $row['publisher'],
+            ])), $needle)))
+            ->when($filters['status'] === 'attention', fn (Collection $rows) => $rows->whereIn('status', SourceOverview::ATTENTION))
+            ->when(! in_array($filters['status'], ['all', 'attention'], true), fn (Collection $rows) => $rows->where('status', $filters['status']))
+            ->when($filters['type'] !== 'all', fn (Collection $rows) => $rows->where('target_type', $filters['type']))
+            ->when($filters['country'] !== null, fn (Collection $rows) => $rows->where('country', $filters['country']))
+            ->sortBy([fn (array $a, array $b) => array_search($a['status'], SourceOverview::STATUSES) <=> array_search($b['status'], SourceOverview::STATUSES), ['name', 'asc']])
+            ->values();
+        $perPage = 25;
+        $page = max(1, min((int) $request->query('page', 1), (int) max(1, ceil($filtered->count() / $perPage))));
+
+        return (new LengthAwarePaginator($filtered->forPage($page, $perPage)->values(), $filtered->count(), $perPage, $page, [
+            'path' => $request->url(), 'pageName' => 'page',
+        ]))->withQueryString();
     }
 
     public function store(StoreDatasetImportRequest $request, DatasetDeliveryService $service): RedirectResponse

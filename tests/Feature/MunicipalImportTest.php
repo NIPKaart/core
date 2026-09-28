@@ -579,16 +579,16 @@ it('summarizes each municipal source and scopes its delivery history', function 
     DatasetImport::factory()->for($other)->create(['retrieved_at' => now()->subDays(3)]);
 
     $this->actingAs($user)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('filters.tab', 'sources')->has('datasets', 2)
-        ->where('datasets.0.latest_import.id', $latest->id)->where('datasets.0.needs_review', true)
-        ->where('datasets.0.visible_locations_count', 1)->where('datasets.0.stale', false)
-        ->where('datasets.0.latest_delivery.error_code', 'invalid_delivery')
-        ->where('datasets.1.stale', true));
+        ->where('filters.tab', 'sources')->has('sources.data', 2)
+        ->where('sources.data.0.latest_import.id', $latest->id)->where('sources.data.0.needs_review', true)
+        ->where('sources.data.0.visible_locations_count', 1)
+        ->where('sources.data.0.latest_delivery.error_code', 'invalid_delivery')->where('sources.data.0.status', 'intake_problem')
+        ->where('sources.data.1.status', 'overdue'));
     $this->get(route('app.imports.index', ['tab' => 'deliveries', 'dataset' => $source->id]))->assertInertia(fn (Assert $page) => $page
         ->where('filters.dataset', $source->id)->where('filters.tab', 'deliveries')
         ->has('imports.data', 3)->where('imports.data.0.id', $old->id));
     approveMunicipal($latest, $user);
-    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('datasets.0.needs_review', false));
+    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('sources.data.0.needs_review', false));
 });
 
 it('marks superseded pending deliveries as history without changing their stored decision', function () {

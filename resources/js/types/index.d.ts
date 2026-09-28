@@ -45,6 +45,9 @@ export interface SharedData {
         userParkingSpaces: {
             active: number;
         };
+        dataSources: {
+            attention: number;
+        };
     };
     [key: string]: unknown;
 }

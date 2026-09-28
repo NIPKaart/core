@@ -47,7 +47,14 @@ function mount(userId, configured = true) {
             },
         },
     };
-    const context = { exports: {}, require: (name) => modules[name] };
+    const window = { dispatchEvent: (event) => calls.push(['dispatch', event.type, event.detail]) };
+    class CustomEvent {
+        constructor(type, init) {
+            this.type = type;
+            this.detail = init.detail;
+        }
+    }
+    const context = { exports: {}, window, CustomEvent, require: (name) => modules[name] };
     vm.runInNewContext(source, context);
     context.exports.useNotifications();
     return { calls, cleanup, notify: () => receive({ id: 'notification' }) };
@@ -61,7 +68,7 @@ test('missing Reverb configuration does not subscribe', () => {
     assert.deepEqual(mount(7, false).calls, [['connect']]);
 });
 
-test('authenticated notifications refresh the shared props and release the same channel', () => {
+test('authenticated notifications refresh the shared props, reach the page and release the same channel', () => {
     const instance = mount(7);
     instance.notify();
     instance.cleanup();
@@ -69,6 +76,7 @@ test('authenticated notifications refresh the shared props and release the same 
         ['connect'],
         ['subscribe', 'App.Models.User.7'],
         ['reload', { only: ['notifications'] }],
+        ['dispatch', 'nipkaart:notification', { id: 'notification' }],
         ['stop', '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'],
         ['leave', 'App.Models.User.7'],
     ]);

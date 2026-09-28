@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\ParkingSpace;
 use App\Models\User;
+use App\Services\SourceOverview;
 use App\Support\AppVersion;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
@@ -91,6 +92,12 @@ class HandleInertiaRequests extends Middleware
                     ],
                     'userParkingSpaces' => [
                         'active' => ParkingSpace::where('user_id', auth()->id())->count(),
+                    ],
+                    // Same total as the attention chips on the data sources page; only admins manage sources.
+                    'dataSources' => [
+                        'attention' => auth()->user()?->hasRole('admin')
+                            ? app(SourceOverview::class)->rows()->whereIn('status', SourceOverview::ATTENTION)->count()
+                            : 0,
                     ],
                 ];
             },

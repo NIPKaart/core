@@ -57,6 +57,11 @@ class DatasetSource extends Model
         return $this->hasOne(DatasetImport::class)->ofMany(['retrieved_at' => 'max', 'id' => 'max']);
     }
 
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(DatasetDelivery::class);
+    }
+
     public function latestDelivery(): HasOne
     {
         return $this->hasOne(DatasetDelivery::class)->latestOfMany();
