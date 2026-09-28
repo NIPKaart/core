@@ -57,7 +57,7 @@ IMPORTS_R2_ACCESS_KEY_ID=CORE_ACCESS_KEY_ID
 IMPORTS_R2_SECRET_ACCESS_KEY=CORE_SECRET_ACCESS_KEY
 ```
 
-Amsterdam moet in core als bron geregistreerd zijn. Vernieuw na configuratiewijzigingen de configuratiecache en herstart de queue-worker. Met de Laravel-scheduler en queue-worker actief ontdekt core iedere vijf minuten nieuwe bestanden. Zie het [intakecontract](data-import-contract.md#core-bucket-intake-1216) voor de bestaande commando’s. Bij DDEV overschrijft de lokale RustFS-configuratie de R2-waarden; zie de [DDEV-aansluiting](data-import-contract.md#local-object-storage-with-ddev).
+Amsterdam moet in core als bron geregistreerd zijn. Vernieuw na configuratiewijzigingen de configuratiecache en herstart de queue-worker. Met de Laravel-scheduler en queue-worker actief ontdekt core iedere vijf minuten nieuwe bestanden. Zie het [intakecontract](data-import-contract.md#core-bucket-intake-1216) voor de bestaande commando’s. Voor lokaal ontwikkelen tegen R2, zie [lokaal ontwikkelen](data-import-contract.md#local-development-against-r2).
 
 ## Kort beheer
 

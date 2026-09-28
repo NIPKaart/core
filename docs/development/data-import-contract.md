@@ -116,27 +116,13 @@ Keep R2 retention longer than the agreed maximum core outage. Losing the pending
 
 Manual backend uploads validate the file and archive the original bytes in the same private bucket under the same dataset/UUID key, including `sha256` metadata and a conditional write. Identical existing objects are reused after reading and comparing their bytes; conflicting content is never overwritten. A storage failure rolls back the new database import and returns an upload error. If the object was stored but the request or database commit failed, retrying or automatic discovery can recover it using the same delivery identity. Publication still requires review. Core needs its own bucket-scoped write credentials for this path; the read-only access probes below describe the earlier intake-only setup.
 
-## Local object storage with DDEV
+## Local development against R2
 
-DDEV uses `Rapid-Development-Group/ddev-rustfs` v1.0.2, the same add-on as DDS, with its bundled RustFS `1.0.0-beta.12` image and persistent Docker volume. Install the host AWS CLI (`brew install awscli` on macOS). `ddev start` creates the private local `nipkaart-imports` bucket through `ddev aws` if absent and clears Laravel's configuration cache when dependencies are installed. Open the console with `ddev rustfs`; the local account is `rustfs` and its key is `rustfs123`. Do not use `ddev s3-init` for import buckets: that command enables public reads.
+DDEV has no local object storage. A local core reads the real `nipkaart-imports` bucket in R2 with its own token that may only list and read objects, so it sees exactly what the collectors deliver. Set `IMPORTS_R2_ENDPOINT` (`https://ACCOUNT_ID.eu.r2.cloudflarestorage.com`), `IMPORTS_R2_BUCKET` and that token's `IMPORTS_R2_ACCESS_KEY_ID`/`IMPORTS_R2_SECRET_ACCESS_KEY` in `.env`, then run `ddev exec php artisan config:clear`. Never use the write-enabled core token locally: a local core must not add objects under the delivery prefixes that a deployed core also discovers.
 
-| Connection | Address |
-| --- | --- |
-| Core inside DDEV | `http://rustfs:9000` |
-| S3 API from the host | `https://nipkaart-core.ddev.site:10101` |
-| Web console | `https://nipkaart-core.ddev.site:9090/rustfs/console/` |
+With the read-only token, manual backend uploads fail at the archive step and roll back; that is intended. Automatic discovery remains opt-in; to run one local scan use `ddev exec env DATASET_DELIVERIES_ENABLED=true php artisan nipkaart:discover-deliveries`. The queue worker also needs that flag enabled. Register the dataset first and retain the normal review/publication flow. Discovery only records receipts and imports in the local database; it never changes or deletes bucket objects.
 
-The DDEV Compose override supplies the `IMPORTS_R2_*` settings with local values, taking precedence over `.env` inside the web container. Leave those connection values empty when copying `.env.example` for DDEV. The disk uses the same S3 client for RustFS and R2. No cloud credentials are needed for local development. Automatic discovery remains opt-in; to run one local scan use `ddev exec env DATASET_DELIVERIES_ENABLED=true php artisan nipkaart:discover-deliveries`. The queue worker also needs that flag enabled. Register the dataset first and retain the normal review/publication flow.
-
-For a collector running on the host, use the host S3 endpoint, bucket `nipkaart-imports` and the same local credentials in its existing `R2_ENDPOINT`, `R2_BUCKET`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` variables. The collector requires HTTPS; let its SDK trust DDEV's local CA using `AWS_CA_BUNDLE` pointing to `rootCA.pem` under `mkcert -CAROOT`. Do not disable certificate verification. A collector in Docker needs the same reachable endpoint and CA mounted inside that container; `localhost` would refer to the collector itself.
-
-Run the explicit local storage test with:
-
-```sh
-ddev exec env DB_HOST=db RUN_RUSTFS_TESTS=1 php artisan test --compact tests/Feature/RustfsStorageTest.php
-```
-
-It checks conditional PUT replay, prefix listing, ETag conditions and SHA-256 validation through core's actual storage service, then deletes only its own uniquely named test object. It refuses non-local endpoint/bucket configuration. Ordinary CI skips this test and retains the existing isolated import tests. The add-on uses a pinned pre-1.0 RustFS image; local success does not replace the real R2 permission and recovery rehearsal.
+The automated tests do not use object storage; they fake the S3 client.
 
 ## Permanent collector deployment (#1217)
 
