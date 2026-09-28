@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
@@ -83,6 +84,27 @@ export default function ParkingDetail({ result, approximateDestination = false, 
 
         return () => request.abort();
     }, [open, source, id, reload]);
+
+    // New garage occupancy replaces the shown values without a loading state; the server decides what is current.
+    useEffect(() => {
+        if (!open || source !== 'offstreet' || !id) return;
+        const echo = getEcho();
+        if (!echo) return;
+        const channel = echo.channel('parking-offstreet');
+        const request = new AbortController();
+        channel.listen('.observations.applied', () => {
+            fetch(detailUrls.offstreet(id), { signal: request.signal, headers: { Accept: 'application/json' } })
+                .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Parking detail refresh failed'))))
+                .then((detail) => setData({ source: 'offstreet', detail } as ParkingDetailData))
+                .catch(() => {});
+        });
+
+        return () => {
+            request.abort();
+            channel.stopListening('.observations.applied');
+            echo.leave('parking-offstreet');
+        };
+    }, [open, source, id]);
 
     const share = useCallback(() => {
         if (!result) return;

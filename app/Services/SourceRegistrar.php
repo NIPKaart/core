@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Events\DatasetDataChanged;
 use App\Jobs\ProcessDatasetDelivery;
 use App\Models\Country;
 use App\Models\DatasetDelivery;
@@ -87,6 +88,7 @@ class SourceRegistrar
                 'approval_state' => 'approved', 'reviewed_by' => $actor->id, 'reviewed_at' => now(), 'review_reason' => $reason,
             ])->save();
         });
+        DatasetDataChanged::dispatch('sources', $source->target_type);
         $this->dispatchWaiting($source);
     }
 
@@ -94,6 +96,7 @@ class SourceRegistrar
     {
         Gate::forUser($actor)->authorize('approve', $source);
         $source->forceFill(['approval_state' => 'rejected', 'reviewed_by' => $actor->id, 'reviewed_at' => now(), 'review_reason' => $reason])->save();
+        DatasetDataChanged::dispatch('sources', $source->target_type);
     }
 
     /**
@@ -136,6 +139,7 @@ class SourceRegistrar
     private function notify(DatasetSource $source, bool $reapproval = false): void
     {
         Notification::send(User::role(UserRole::ADMIN)->get(), (new SourceAwaitingApproval($source->id, $source->name, $source->code, $reapproval))->afterCommit());
+        DatasetDataChanged::dispatch('sources', $source->target_type);
     }
 
     /** Deliveries received while the source waited are processed now. */

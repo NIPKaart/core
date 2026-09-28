@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\ApiState;
+use App\Events\DatasetDataChanged;
+use App\Events\OffstreetObservationsApplied;
 use App\Models\DatasetSource;
 use App\Models\ParkingOffstreet;
 use App\Services\DatasetDeliveryStorage;
@@ -11,6 +13,7 @@ use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 
 beforeEach(function () {
@@ -180,3 +183,15 @@ it('shows occupancy only for a current measurement and never reads closed as ful
     'no values' => [fn () => ['free_space' => null], 'unavailable', null, null],
     'never measured' => [fn () => ['observed_at' => null, 'api_state' => null], 'unknown', null, null],
 ]);
+
+it('tells open pages about applied observations, and stays quiet when nothing changed', function () {
+    Event::fake([DatasetDataChanged::class, OffstreetObservationsApplied::class]);
+
+    ingestObservations($this->bucket, [observationKey('20260928T100200Z')], observationDelivery([observation(['external_id' => 'UNKNOWN'])]));
+    Event::assertNotDispatched(OffstreetObservationsApplied::class);
+
+    ingestObservations($this->bucket, [observationKey('20260928T100400Z')], observationDelivery([observation()]));
+    Event::assertDispatched(OffstreetObservationsApplied::class);
+    Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->broadcastWith() === ['scope' => 'observations', 'target_type' => 'offstreet']
+        && $event->broadcastOn()[0]->name === 'private-datasets');
+});

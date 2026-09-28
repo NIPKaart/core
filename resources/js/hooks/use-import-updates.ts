@@ -1,3 +1,5 @@
+import { getEcho } from '@/echo';
+import { DATASET_EVENT } from '@/hooks/use-dataset-changes';
 import { NOTIFICATION_EVENT } from '@/hooks/use-notifications';
 import { router, usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
@@ -10,8 +12,8 @@ export function isImportNotification(detail: unknown): boolean {
 }
 
 /**
- * Keeps an import page current without a full refresh: reloads the given props when an import notification
- * arrives, and polls while `inProgress` (deliveries that are processed without sending a notification).
+ * Keeps an import page current without a full refresh: reloads the given props when data changes live
+ * (dataset changes and import notifications). Without a live connection it polls while `inProgress`.
  */
 export function useImportUpdates(only: string[], inProgress: boolean, intervalMs = 10000): void {
     const key = only.join(',');
@@ -23,13 +25,19 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
                 router.reload({ only: key.split(',') });
             }
         };
+        const reloadAll = () => router.reload({ only: key.split(',') });
         window.addEventListener(NOTIFICATION_EVENT, reload);
+        window.addEventListener(DATASET_EVENT, reloadAll);
 
-        return () => window.removeEventListener(NOTIFICATION_EVENT, reload);
+        return () => {
+            window.removeEventListener(NOTIFICATION_EVENT, reload);
+            window.removeEventListener(DATASET_EVENT, reloadAll);
+        };
     }, [key]);
 
     useEffect(() => {
-        if (inProgress) {
+        // Live changes cover processing; polling is the fallback when the live connection is not configured.
+        if (inProgress && !getEcho()) {
             start();
         } else {
             stop();
