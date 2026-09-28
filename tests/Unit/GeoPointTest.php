@@ -2,6 +2,8 @@
 
 use App\Support\GeoPoint;
 
+mutates(GeoPoint::class);
+
 test('coordinates reject values outside geographic ranges and non finite values', function (float $latitude, float $longitude) {
     expect(fn () => new GeoPoint($latitude, $longitude))->toThrow(InvalidArgumentException::class);
 })->with([
