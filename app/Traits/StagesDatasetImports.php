@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Enums\UserRole;
+use App\Events\DatasetDataChanged;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\User;
@@ -82,6 +83,7 @@ trait StagesDatasetImports
                 throw ValidationException::withMessages(['decision' => 'Ongeldige beslissing.']);
             }
             $import->forceFill(['state' => $decision === 'publish' ? 'published' : 'rejected', 'reviewed_by' => $actor->id, 'review_reason' => $reason, 'reviewed_at' => now()])->save();
+            DatasetDataChanged::dispatch('imports', $source->target_type);
         });
     }
 

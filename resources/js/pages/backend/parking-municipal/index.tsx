@@ -4,6 +4,7 @@ import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useDatasetChanges } from '@/hooks/use-dataset-changes';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
@@ -26,6 +27,12 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     const { t, tGlobal } = useResourceTranslation('backend/parking-municipal');
     const { can } = useAuthorization();
 
+    // A published delivery appears without a refresh.
+    useDatasetChanges((change) => {
+        if (change.target_type === 'municipal' && change.scope === 'imports') {
+            router.reload({ only: ['spaces', 'municipality'] });
+        }
+    });
     const [orientationFilter, setOrientationFilter] = useState<string[]>(filters.orientation ? [filters.orientation] : []);
     const [visibilityFilter, setVisibilityFilter] = useState<string[]>(filters.visibility ? [filters.visibility] : []);
 

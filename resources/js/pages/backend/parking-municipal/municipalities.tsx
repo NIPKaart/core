@@ -1,5 +1,6 @@
 import MunicipalNavigation from '@/components/municipal-navigation';
-import { Head, Link } from '@inertiajs/react';
+import { useDatasetChanges } from '@/hooks/use-dataset-changes';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowUpRight, Building2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +28,12 @@ type PageProps = {
 export default function MunicipalitiesPage({ municipalities }: PageProps) {
     const { t, i18n } = useTranslation('backend/parking-municipal');
     const [search, setSearch] = useState('');
+    // Counts and dates change when a delivery is published or a source is approved.
+    useDatasetChanges((change) => {
+        if (change.target_type === 'municipal' && ['imports', 'sources'].includes(change.scope)) {
+            router.reload({ only: ['municipalities'] });
+        }
+    });
 
     const filtered = useMemo(() => {
         if (!search.trim()) return municipalities;

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\DatasetDataChanged;
 use App\Jobs\ProcessDatasetDelivery;
 use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
@@ -43,6 +44,7 @@ class DatasetDeliveryService
             return;
         }
         $bucket = $this->storage->bucket();
+        $received = [];
         try {
             foreach (array_keys(DatasetDeliveryStorage::PREFIXES) as $type) {
                 foreach ($this->storage->datasets($type) as $code) {
@@ -56,6 +58,9 @@ class DatasetDeliveryService
                             ['bucket' => $bucket, 'object_key' => $object['key']],
                             ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
                         );
+                        if ($delivery->wasRecentlyCreated) {
+                            $received[$type] = true;
+                        }
                         if ($delivery->etag !== $object['etag']) {
                             $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
                         }
@@ -63,6 +68,9 @@ class DatasetDeliveryService
                 }
             }
         } finally {
+            foreach (array_keys($received) as $type) {
+                DatasetDataChanged::dispatch('deliveries', $type);
+            }
             DatasetDelivery::where('bucket', $bucket)->where('state', 'pending')
                 ->whereIn('dataset_source_id', DatasetSource::where('approval_state', 'approved')->select('id'))
                 ->chunkById(100, function ($deliveries) {
@@ -114,6 +122,7 @@ class DatasetDeliveryService
             } catch (ValidationException) {
                 $delivery->forceFill(['state' => 'rejected', 'error_code' => 'invalid_delivery'])->save();
             }
+            DatasetDataChanged::dispatch('deliveries', $source->target_type);
         });
     }
 

@@ -6,6 +6,7 @@ import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filte
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthorization } from '@/hooks/use-authorization';
+import { useDatasetChanges } from '@/hooks/use-dataset-changes';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import parkingOffstreet from '@/routes/app/parking-offstreet';
@@ -38,6 +39,13 @@ export default function Index({ spaces, filters, options }: PageProps) {
         setSelectedVisibility('');
         setRowSelection({});
     }, [countryFilter, provinceFilter, municipalityFilter, visibilityFilter, spaces.data]);
+
+    // New occupancy or a published catalog appears without a refresh; a selection for a bulk update is never reset.
+    useDatasetChanges((change) => {
+        if (change.target_type === 'offstreet' && ['observations', 'imports'].includes(change.scope) && Object.keys(rowSelection).length === 0) {
+            router.reload({ only: ['spaces', 'options'] });
+        }
+    });
 
     // Update filters based on selected options
     const countryOptions = options.countries.map((country) => ({ value: String(country.id), label: country.name }));

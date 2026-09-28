@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Events\DatasetDataChanged;
 use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
@@ -13,6 +14,7 @@ use Database\Factories\DatasetSourceFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -664,4 +666,14 @@ it('ignores reordered parking rules but still detects changed rules', function (
     $data['delivery_id'] = (string) Str::uuid();
     $data['records'][0]['source_attributes']['regimes'][0]['beginTijd'] = '15:00:00';
     expect($service->review(stageMunicipal($data, $user))['counts']['changed'])->toBe(1);
+});
+
+it('tells open pages about deliveries and decisions', function () {
+    Event::fake([DatasetDataChanged::class]);
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+
+    approveMunicipal(stageMunicipal(municipalDelivery(), $user), $user);
+
+    Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->scope === 'imports' && $event->targetType === 'municipal');
 });

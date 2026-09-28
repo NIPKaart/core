@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\DatasetDataChanged;
+use App\Events\OffstreetObservationsApplied;
 use App\Models\DatasetSource;
 use App\Models\ParkingOffstreet;
 use App\Support\OffstreetObservations;
@@ -90,6 +92,10 @@ class OffstreetObservationService
                 }
             }
             $source->forceFill(['last_observation_key' => $newest['key']])->save();
+            if ($applied > 0) {
+                DatasetDataChanged::dispatch('observations', 'offstreet');
+                OffstreetObservationsApplied::dispatch();
+            }
 
             // Unknown facilities wait for a catalog link; they are counted, never created.
             return ['applied' => $applied, 'unknown' => count($delivery['records']) - $spaces->count()];

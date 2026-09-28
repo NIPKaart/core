@@ -78,18 +78,23 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {toolbar === undefined ? (
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                    {search ?? (
-                        <Input
-                            placeholder={t('table.search_page')}
-                            aria-label={t('table.search_page')}
-                            value={globalFilter}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="w-full sm:max-w-sm"
-                        />
-                    )}
-                    <ColumnsSelector table={table} />
-                    {filters && <div className="col-span-2 min-w-0">{filters}</div>}
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="w-full min-w-0 sm:w-auto sm:max-w-sm sm:flex-1">
+                        {search ?? (
+                            <Input
+                                placeholder={t('table.search_page')}
+                                aria-label={t('table.search_page')}
+                                value={globalFilter}
+                                onChange={(e) => setGlobalFilter(e.target.value)}
+                                className="w-full"
+                            />
+                        )}
+                    </div>
+                    {/* Filters follow the search on the same line and wrap on narrow screens. */}
+                    {filters && <div className="min-w-0">{filters}</div>}
+                    <div className="ml-auto">
+                        <ColumnsSelector table={table} />
+                    </div>
                 </div>
             ) : (
                 toolbar

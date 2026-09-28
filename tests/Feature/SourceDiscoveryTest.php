@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Events\DatasetDataChanged;
 use App\Jobs\ProcessDatasetDelivery;
 use App\Models\Country;
 use App\Models\DatasetDelivery;
@@ -18,6 +19,7 @@ use Aws\S3\S3Client;
 use Database\Factories\DatasetSourceFactory;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -88,6 +90,7 @@ function objectFor(string $json, string $modified): array
 
 it('registers an unknown folder as a source awaiting approval, links the municipality and holds its deliveries', function () {
     Notification::fake();
+    Event::fake([DatasetDataChanged::class]);
     Queue::fake([ProcessDatasetDelivery::class]);
     $admin = discoveryAdmin();
     $amsterdam = amsterdamReference();
@@ -104,6 +107,8 @@ it('registers an unknown folder as a source awaiting approval, links the municip
     expect($amsterdam->fresh())->code_scheme->toBe('nl-cbs')->code->toBe('GM0363');
     expect(DatasetDelivery::where('dataset_source_id', $source->id)->count())->toBe(2);
     Queue::assertNothingPushed();
+    Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->scope === 'sources');
+    Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->scope === 'deliveries' && $event->targetType === 'municipal');
     Notification::assertSentTo($admin, SourceAwaitingApproval::class, function (SourceAwaitingApproval $notification) use ($admin, $source) {
         $data = $notification->toDatabase($admin)->data;
 

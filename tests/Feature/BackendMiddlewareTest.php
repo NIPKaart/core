@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\User;
 
 test('web requests still use the unencrypted locale cookie', function () {
@@ -45,4 +46,18 @@ test('broadcast authorization still protects private user channels', function ()
         'channel_name' => 'private-App.Models.User.'.($user->id + 1),
         'socket_id' => '123.456',
     ])->assertForbidden();
+});
+
+test('only users who may see imported data listen to live dataset changes', function () {
+    config()->set('broadcasting.default', 'reverb');
+    config()->set('broadcasting.connections.reverb.key', 'test-key');
+    config()->set('broadcasting.connections.reverb.secret', 'test-secret');
+    config()->set('broadcasting.connections.reverb.app_id', 'test-app');
+    require base_path('routes/channels.php');
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $request = ['channel_name' => 'private-datasets', 'socket_id' => '123.456'];
+
+    $this->actingAs($admin)->postJson('/broadcasting/auth', $request)->assertOk();
+    $this->actingAs(User::factory()->create())->postJson('/broadcasting/auth', $request)->assertForbidden();
 });
