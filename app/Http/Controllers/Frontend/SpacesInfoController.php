@@ -129,12 +129,7 @@ class SpacesInfoController extends Controller
             'country' => $location->country->name ?? null,
             'province' => $location->province->name ?? null,
             'municipality' => $location->municipality->name ?? null,
-            // Occupancy is only exposed for a current measurement; stale, failed or unknown measurements never are (#1221).
-            'availability' => $availability = $location->availability(),
-            'occupancy_status' => $availability === 'current' ? $location->occupancy_status : null,
-            'observed_at' => $location->observed_at,
-            'capacity' => $location->capacity,
-            'free_space' => $availability === 'current' ? $location->free_space : null,
+            ...$location->publicOccupancy(),
             'url' => $location->url ?? null,
             'prices' => $location->prices ?? null,
             'updated_at' => $location->updated_at,

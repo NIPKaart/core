@@ -1,0 +1,66 @@
+{
+    "meta": {
+        "title": "Garages and P+R",
+        "description": "Live overview of parking garages and P+R facilities per municipality, with general occupancy and the time of the last measurement."
+    },
+    "title": "Garages and P+R",
+    "intro": "The latest general occupancy of every garage and P+R, per municipality. Useful when no accessible street space is free.",
+    "empty": "No garages or P+R facilities are available yet.",
+    "locations_one": "{{count}} location",
+    "locations_other": "{{count}} locations",
+    "summary": {
+        "latest": "Live · last measurement {{time}}",
+        "states": "{{current}} live · {{closed}} closed · {{without}} without live data"
+    },
+    "types": {
+        "garage": "Parking garage",
+        "parkandride": "P+R"
+    },
+    "filter": {
+        "label": "Search by municipality or name",
+        "placeholder": "Municipality or garage name",
+        "type": "Type",
+        "types": {
+            "all": "All",
+            "garage": "Garages",
+            "parkandride": "P+R"
+        },
+        "count_one": "{{count}} of {{total}} location",
+        "count_other": "{{count}} of {{total}} locations",
+        "none": "No garages match your search."
+    },
+    "sort": {
+        "label": "Sort",
+        "name": "Name A–Z",
+        "free": "Most free"
+    },
+    "columns": {
+        "location": "Location",
+        "status": "Status",
+        "free": "Free",
+        "occupancy": "Occupancy",
+        "measured": "Measured",
+        "go_to": "Go to"
+    },
+    "status": {
+        "live": "Live",
+        "general": "General occupancy",
+        "free_of": "{{free}} of {{total}} free",
+        "free_of_short": "free of {{total}}",
+        "free": "{{free}} free",
+        "occupied": "{{percent}}% occupied",
+        "full": "Full",
+        "open": "Spaces available",
+        "closed": "Closed",
+        "stale": "No recent measurement",
+        "unavailable": "Live data unavailable",
+        "unknown": "No live data",
+        "measured": "Measured"
+    },
+    "actions": {
+        "map": "Show on map",
+        "map_label": "Show {{name}} on the map",
+        "navigate": "Navigate",
+        "navigate_label": "Navigate to {{name}} (opens in a new tab)"
+    }
+}
