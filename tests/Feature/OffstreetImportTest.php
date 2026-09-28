@@ -15,6 +15,7 @@ use App\Services\OffstreetImportService;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
+use Database\Factories\DatasetSourceFactory;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -47,7 +48,7 @@ function offstreetCatalog(array $overrides = [], ?array $records = null): array
     ];
 
     return array_replace([
-        'format' => 'nipkaart-offstreet-catalog-1', 'dataset' => 'nl-amsterdam-garages',
+        'format' => 'nipkaart-offstreet-catalog-2', 'dataset' => 'nl-amsterdam-garages', 'source' => DatasetSourceFactory::offstreetDescription(),
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z'),
         'selection' => 'car-garages-and-pr', 'complete' => true, 'source_count' => count($records), 'records' => $records,
     ], $overrides);
@@ -177,6 +178,12 @@ it('discovers catalogs under the offstreet prefix and stages them without publis
     $json = json_encode(offstreetCatalog(), JSON_THROW_ON_ERROR);
     $key = 'offstreet/nl-amsterdam-garages/'.json_decode($json, true)['delivery_id'].'.json';
 
+    $handler->append(new Result(['IsTruncated' => false]));
+    $handler->append(function ($command) {
+        expect($command['Prefix'])->toBe('offstreet/')->and($command['Delimiter'])->toBe('/');
+
+        return new Result(['CommonPrefixes' => [['Prefix' => 'offstreet/nl-amsterdam-garages/']], 'IsTruncated' => false]);
+    });
     $handler->append(function ($command) use ($key) {
         expect($command['Prefix'])->toBe('offstreet/nl-amsterdam-garages/');
 

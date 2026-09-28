@@ -9,6 +9,7 @@ use App\Models\ParkingMunicipal;
 use App\Models\User;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
+use Database\Factories\DatasetSourceFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -28,12 +29,12 @@ function importReviewer(): User
 function municipalDelivery(array $overrides = []): array
 {
     return array_replace([
-        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam',
+        'format' => 'nipkaart-municipal-2', 'dataset' => 'nl-amsterdam', 'source' => DatasetSourceFactory::municipalDescription(),
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z'),
         'selection' => 'e6a-all', 'complete' => true, 'source_count' => 1,
         'records' => [[
             'external_id' => '000123', 'geometry' => ['type' => 'Polygon', 'coordinates' => [[[4.9, 52.3], [4.91, 52.3], [4.91, 52.31], [4.9, 52.31], [4.9, 52.3]]]],
-            'number' => null, 'street' => 'Teststraat', 'access_category' => 'general',
+            'number' => null, 'street' => 'Teststraat', 'access_category' => 'general', 'orientation' => 'perpendicular',
             'source_attributes' => ['regimes' => [['eType' => 'E6a', 'eTypeDescription' => 'Gehandicaptenparkeerplaats algemeen', 'beginTijd' => '09:00:00', 'dagen' => ['ma']]], 'orientation' => 'Haaks', 'version_date' => '2026-09-01'],
             'source_updated_at' => null,
         ]],
@@ -138,7 +139,18 @@ it('rejects invalid source files without publishing', function (Closure $mutate)
         $d['records'][] = $d['records'][0];
         $d['source_count'] = 2;
     },
-    'personal' => fn (&$d) => $d['records'][0]['source_attributes']['regimes'][0]['kenteken'] = 'AA-01-BB',
+    'unknown orientation' => fn (&$d) => $d['records'][0]['orientation'] = 'Haaks',
+    'unknown access category' => fn (&$d) => $d['records'][0]['access_category'] = 'personal',
+    'missing source block' => function (&$d) {
+        unset($d['source']);
+    },
+    'changed source description' => fn (&$d) => $d['source']['licence'] = 'CC-BY-4.0',
+    'invalid licence' => fn (&$d) => $d['source']['licence'] = 'Open data, check the site',
+    'unknown code scheme' => fn (&$d) => $d['source']['area']['municipality']['scheme'] = 'de-ags',
+    'invalid municipality code' => fn (&$d) => $d['source']['area']['municipality']['code'] = '0363',
+    'subdivision of another country' => fn (&$d) => $d['source']['area']['subdivision'] = 'DE-BE',
+    'inverted bounds' => fn (&$d) => $d['source']['bounds'] = [5.15, 52.5, 4.65, 52.2],
+    'extra source field' => fn (&$d) => $d['source']['contact'] = 'data@example.test',
     'unclosed geometry' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0][4] = [4.8, 52.3],
     'outside area' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[10, 52], [11, 52], [11, 53], [10, 52]],
     'collapsed polygon' => fn (&$d) => $d['records'][0]['geometry']['coordinates'][0] = [[4.9, 52.3], [4.91, 52.3], [4.92, 52.3], [4.9, 52.3]],
@@ -271,7 +283,15 @@ it('blocks publication when the previous import values disappear after review', 
     expect($source->fresh()->last_published_retrieved_at->equalTo($publishedAt))->toBeTrue();
 });
 
-it('requires an explicit unknown source update date for the Amsterdam pilot', function (mixed $value) {
+it('keeps a missing or calendar source update date', function (?string $value) {
+    DatasetSource::factory()->create();
+    $data = municipalDelivery();
+    $data['records'][0]['source_updated_at'] = $value;
+
+    expect(stageMunicipal($data, importReviewer())->records[0]['source']['source_updated_at'])->toBe($value);
+})->with(['unknown' => [null], 'calendar date' => ['2026-01-01']]);
+
+it('accepts only a missing or calendar date as the source update date', function (mixed $value) {
     DatasetSource::factory()->create();
     $data = municipalDelivery();
     $data['records'][0]['source_updated_at'] = $value;
@@ -283,7 +303,7 @@ it('requires an explicit unknown source update date for the Amsterdam pilot', fu
     $this->assertDatabaseCount('dataset_imports', 0);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
 })->with([
-    'date with unverified meaning' => ['2026-01-01T00:00:00Z'],
+    'date with time' => ['2026-01-01T00:00:00Z'],
     'empty string' => [''],
     'empty array' => [[]],
     'boolean' => [false],
@@ -330,25 +350,6 @@ it('rolls back all records and import state on a database failure and permits re
     expect($import->fresh()->state)->toBe('published');
 });
 
-it('publishes an existing delivery after the legacy publication switch changes', function (bool $enabled) {
-    $source = DatasetSource::factory()->create(['publication_enabled' => false]);
-    $user = importReviewer();
-    $service = app(MunicipalImportService::class);
-    $import = stageMunicipal(municipalDelivery(), $user);
-    $import->update(['dataset_config' => [...$import->dataset_config, 'publication_enabled' => false]]);
-    $source->update(['publication_enabled' => $enabled]);
-
-    $review = $service->review($import->fresh());
-
-    expect($review['blockers'])->toBeEmpty();
-    $this->assertDatabaseCount('parking_municipal_spaces', 0);
-    $this->actingAs($user)->patch(route('app.imports.update', $import), [
-        'decision' => 'publish', 'reason' => 'Brongegevens gecontroleerd.', 'review_token' => $review['token'],
-    ])->assertSessionHasNoErrors()->assertRedirect();
-    expect($import->fresh()->state)->toBe('published');
-    $this->assertDatabaseCount('parking_municipal_spaces', 1);
-})->with([false, true]);
-
 it('still blocks publication when the source geography changes', function () {
     $source = DatasetSource::factory()->create();
     $user = importReviewer();
@@ -359,17 +360,6 @@ it('still blocks publication when the source geography changes', function () {
         ->toContain('De datasetconfiguratie is gewijzigd sinds ontvangst. Lever een nieuw bestand aan.');
     expect(fn () => approveMunicipal($import, $user))->toThrow(ValidationException::class);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
-});
-
-it('registers only the selected Amsterdam geography for manual review', function () {
-    $source = DatasetSource::factory()->make();
-    $municipality = $source->municipality;
-    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertSuccessful();
-    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertSuccessful();
-    $this->assertDatabaseCount('dataset_sources', 1);
-    expect(DatasetSource::firstOrFail()->publication_enabled)->toBeFalse();
-    $municipality->update(['name' => 'Other municipality']);
-    $this->artisan('nipkaart:register-dataset', ['dataset' => 'nl-amsterdam', 'municipality' => $municipality->id])->assertFailed();
 });
 
 it('refuses equally dated deliveries and retains subsecond ordering', function () {

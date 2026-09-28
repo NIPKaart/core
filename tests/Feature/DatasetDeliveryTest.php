@@ -14,6 +14,7 @@ use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use Database\Factories\DatasetSourceFactory;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
@@ -31,15 +32,26 @@ function bucketClient(): array
     return [$handler, $client];
 }
 
+/** Discovery first lists the dataset folders per type: municipal, then offstreet. */
+function bucketFolders(MockHandler $handler, string ...$codes): void
+{
+    $handler->append(new Result(['CommonPrefixes' => array_map(fn (string $code) => ['Prefix' => "municipal/$code/"], $codes), 'IsTruncated' => false]));
+}
+
+function bucketNoOffstreetFolders(MockHandler $handler): void
+{
+    $handler->append(new Result(['IsTruncated' => false]));
+}
+
 function bucketPayload(array $overrides = []): string
 {
     return json_encode(array_replace([
-        'format' => 'nipkaart-municipal-pilot-1', 'dataset' => 'nl-amsterdam',
+        'format' => 'nipkaart-municipal-2', 'dataset' => 'nl-amsterdam', 'source' => DatasetSourceFactory::municipalDescription(),
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z'),
         'selection' => 'e6a-all', 'complete' => true, 'source_count' => 1,
         'records' => [[
             'external_id' => '000123', 'geometry' => ['type' => 'Polygon', 'coordinates' => [[[4.9, 52.3], [4.91, 52.3], [4.91, 52.31], [4.9, 52.3]]]],
-            'number' => null, 'street' => null, 'access_category' => 'general',
+            'number' => null, 'street' => null, 'access_category' => 'general', 'orientation' => null,
             'source_attributes' => ['regimes' => [['eType' => 'E6a', 'eTypeDescription' => 'Gehandicaptenparkeerplaats algemeen']], 'orientation' => null, 'version_date' => null], 'source_updated_at' => null,
         ]],
     ], $overrides), JSON_THROW_ON_ERROR);
@@ -63,6 +75,7 @@ it('discovers every listing page and resumes registered but undispatched work', 
     $source = DatasetSource::factory()->create();
     $existing = DatasetDelivery::factory()->create(['dataset_source_id' => $source->id]);
     $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
+    bucketFolders($handler, $source->code, 'Bad_Folder');
     $handler->append(new Result(['Contents' => [
         ['Key' => $existing->object_key, 'ETag' => $existing->etag],
         ['Key' => 'municipal/'.$source->code.'/partial.tmp', 'ETag' => 'tmp'],
@@ -74,6 +87,7 @@ it('discovers every listing page and resumes registered but undispatched work', 
 
         return new Result(['Contents' => [['Key' => $key, 'ETag' => '"next"']], 'IsTruncated' => false]);
     });
+    bucketNoOffstreetFolders($handler);
     $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
     expect(DatasetDelivery::count())->toBe(2);
     Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === $existing->id);
@@ -84,7 +98,6 @@ it('intakes retained bytes without a user and never publishes automatically', fu
     [$handler] = bucketClient();
     $json = bucketPayload();
     $delivery = bucketReceipt($json);
-    DatasetSource::whereKey($delivery->dataset_source_id)->update(['publication_enabled' => false]);
     $handler->append(bucketObject($json));
     $job = new ProcessDatasetDelivery($delivery->id);
     $job->handle(app(DatasetDeliveryService::class));
@@ -157,13 +170,17 @@ it('resumes persisted discovery after a dispatch failure without inserting dupli
     $source = DatasetSource::factory()->create();
     $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
     $page = ['Contents' => [['Key' => $key, 'ETag' => '"etag"']], 'IsTruncated' => false];
+    bucketFolders($handler, $source->code);
     $handler->append(new Result($page));
+    bucketNoOffstreetFolders($handler);
     Queue::shouldReceive('connection')->andThrow(new RuntimeException('Queue unavailable'));
     expect(fn () => app(DatasetDeliveryService::class)->discover())->toThrow(RuntimeException::class);
     expect(DatasetDelivery::sole())->state->toBe('pending');
     $this->travel(6)->minutes();
     Queue::fake([ProcessDatasetDelivery::class]);
+    bucketFolders($handler, $source->code);
     $handler->append(new Result($page));
+    bucketNoOffstreetFolders($handler);
     app(DatasetDeliveryService::class)->discover();
     expect(DatasetDelivery::count())->toBe(1);
     Queue::assertPushed(ProcessDatasetDelivery::class, 1);
@@ -196,7 +213,9 @@ it('flags a changed immutable object rather than silently accepting new bytes', 
     [$handler] = bucketClient();
     Queue::fake([ProcessDatasetDelivery::class]);
     $delivery = DatasetDelivery::factory()->create();
+    bucketFolders($handler, 'nl-amsterdam');
     $handler->append(new Result(['Contents' => [['Key' => $delivery->object_key, 'ETag' => '"changed"']], 'IsTruncated' => false]));
+    bucketNoOffstreetFolders($handler);
     app(DatasetDeliveryService::class)->discover();
     expect($delivery->fresh())->state->toBe('rejected')->error_code->toBe('object_changed');
     Queue::assertNothingPushed();

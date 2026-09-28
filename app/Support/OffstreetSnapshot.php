@@ -9,12 +9,12 @@ use Illuminate\Validation\ValidationException;
 use stdClass;
 
 /**
- * Validates `nipkaart-offstreet-catalog-1` deliveries: facility identity and static metadata only.
+ * Validates `nipkaart-offstreet-catalog-2` deliveries: facility identity and static metadata only.
  * Live values (free spaces, feed state) arrive in a separate observation stream (#1221).
  */
 final class OffstreetSnapshot
 {
-    public const string FORMAT = 'nipkaart-offstreet-catalog-1';
+    public const string FORMAT = 'nipkaart-offstreet-catalog-2';
 
     private const array FIELDS = ['external_id', 'name', 'source_name', 'facility_type', 'geometry', 'short_capacity', 'long_capacity', 'accessible_capacity'];
 
@@ -38,6 +38,10 @@ final class OffstreetSnapshot
         if (CarbonImmutable::parse($data['retrieved_at'])->isFuture()) {
             $this->fail('retrieved_at', 'Het ophaaltijdstip ligt in de toekomst.');
         }
+        if (! ($object->source ?? null) instanceof stdClass) {
+            $this->fail('source', 'De levering moet een bronbeschrijving bevatten.');
+        }
+        $data['source'] = SourceDescription::validate($data['source']);
         foreach ($object->records as $index => $record) {
             if (! $record instanceof stdClass || ! ($record->geometry ?? null) instanceof stdClass) {
                 $this->fail("records.$index", 'Een record en zijn geometrie moeten objecten zijn.');

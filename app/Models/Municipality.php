@@ -17,6 +17,8 @@ class Municipality extends Model
         'name',
         'country_id',
         'province_id',
+        'code_scheme',
+        'code',
     ];
 
     public function country(): BelongsTo

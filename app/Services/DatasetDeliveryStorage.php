@@ -23,20 +23,20 @@ class DatasetDeliveryStorage
         return $bucket;
     }
 
-    /** Bucket folder per target type; collectors deliver catalogs under these prefixes. */
-    private const array PREFIXES = ['municipal' => 'municipal/', 'offstreet' => 'offstreet/'];
+    /** Bucket folder per target type; collectors deliver snapshots under these prefixes. */
+    public const array PREFIXES = ['municipal' => 'municipal/', 'offstreet' => 'offstreet/'];
 
-    /** Only configured datasets of a known target type may be read or archived. */
-    public function prefix(string $dataset): ?string
+    /** Dataset codes are lowercase folder names, such as `nl-amsterdam-garages`. */
+    public const string DATASET_PATTERN = '/^[a-z0-9][a-z0-9-]{1,62}$/D';
+
+    public function prefix(string $targetType, string $dataset): ?string
     {
-        $type = config('dataset-deliveries.sources.'.$dataset.'.registration.target_type');
-
-        return is_string($type) && isset(self::PREFIXES[$type]) ? self::PREFIXES[$type].$dataset.'/' : null;
+        return isset(self::PREFIXES[$targetType]) && preg_match(self::DATASET_PATTERN, $dataset) ? self::PREFIXES[$targetType].$dataset.'/' : null;
     }
 
-    public function deliveryId(string $key, string $dataset): ?string
+    public function deliveryId(string $key, string $targetType, string $dataset): ?string
     {
-        $folder = $this->prefix($dataset);
+        $folder = $this->prefix($targetType, $dataset);
         if ($folder === null) {
             return null;
         }
@@ -45,10 +45,33 @@ class DatasetDeliveryStorage
         return preg_match('/^'.$prefix.'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.json$/D', $key, $matches) ? $matches[1] : null;
     }
 
-    /** @return Generator<int, array{key: string, etag: string}> */
-    public function objects(string $dataset): Generator
+    /**
+     * Dataset folders present under a target type's prefix.
+     *
+     * @return list<string>
+     */
+    public function datasets(string $targetType): array
     {
-        $folder = $this->prefix($dataset);
+        $datasets = [];
+        $pages = $this->client->getPaginator('ListObjectsV2', [
+            'Bucket' => $this->bucket(), 'Prefix' => self::PREFIXES[$targetType], 'Delimiter' => '/',
+        ]);
+        foreach ($pages as $page) {
+            foreach ($page['CommonPrefixes'] ?? [] as $folder) {
+                $dataset = substr(rtrim($folder['Prefix'], '/'), strlen(self::PREFIXES[$targetType]));
+                if (preg_match(self::DATASET_PATTERN, $dataset)) {
+                    $datasets[] = $dataset;
+                }
+            }
+        }
+
+        return $datasets;
+    }
+
+    /** @return Generator<int, array{key: string, etag: string, modified: string}> */
+    public function objects(string $targetType, string $dataset): Generator
+    {
+        $folder = $this->prefix($targetType, $dataset);
         if ($folder === null) {
             return;
         }
@@ -57,17 +80,17 @@ class DatasetDeliveryStorage
         ]);
         foreach ($pages as $page) {
             foreach ($page['Contents'] ?? [] as $object) {
-                if ($this->deliveryId($object['Key'], $dataset) !== null) {
-                    yield ['key' => $object['Key'], 'etag' => $object['ETag']];
+                if ($this->deliveryId($object['Key'], $targetType, $dataset) !== null) {
+                    yield ['key' => $object['Key'], 'etag' => $object['ETag'], 'modified' => (string) ($object['LastModified'] ?? '')];
                 }
             }
         }
     }
 
-    public function archive(string $json, string $dataset, string $deliveryId): void
+    public function archive(string $json, string $targetType, string $dataset, string $deliveryId): void
     {
-        $key = $this->prefix($dataset).$deliveryId.'.json';
-        if ($this->deliveryId($key, $dataset) === null) {
+        $key = $this->prefix($targetType, $dataset).$deliveryId.'.json';
+        if ($this->deliveryId($key, $targetType, $dataset) === null) {
             throw ValidationException::withMessages(['file' => 'Deze bron is niet toegestaan voor bucketopslag.']);
         }
 

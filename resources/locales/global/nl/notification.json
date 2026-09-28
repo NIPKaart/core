@@ -7,7 +7,8 @@
         "community.space_restored": "Parkeerplek hersteld",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding",
-        "dataset.import_ready_for_review": "Levering klaar voor beoordeling"
+        "dataset.import_ready_for_review": "Levering klaar voor beoordeling",
+        "dataset.source_awaiting_approval": "Bron wacht op goedkeuring"
     },
     "actions": {
         "markRead": "Markeren als gelezen",

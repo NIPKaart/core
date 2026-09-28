@@ -10,6 +10,13 @@ use App\Models\User;
  */
 interface DatasetImporter
 {
+    /**
+     * Decodes and validates a delivery envelope, including its `source` block, without staging it.
+     *
+     * @return array<string, mixed>
+     */
+    public function decodeDelivery(string $json): array;
+
     public function intake(string $json, User $actor): DatasetImport;
 
     public function intakeFromStorage(string $json, string $dataset, string $deliveryId): DatasetImport;

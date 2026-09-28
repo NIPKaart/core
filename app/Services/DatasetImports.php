@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Contracts\DatasetImporter;
 use App\Models\DatasetSource;
+use App\Support\MunicipalSnapshot;
+use App\Support\OffstreetSnapshot;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -15,7 +17,7 @@ class DatasetImports
     private const array TARGETS = ['municipal' => MunicipalImportService::class, 'offstreet' => OffstreetImportService::class];
 
     /** @var array<string, string> */
-    private const array FORMATS = ['nipkaart-municipal-pilot-1' => 'municipal', 'nipkaart-offstreet-catalog-1' => 'offstreet'];
+    private const array FORMATS = [MunicipalSnapshot::FORMAT => 'municipal', OffstreetSnapshot::FORMAT => 'offstreet'];
 
     public function forSource(DatasetSource $source): DatasetImporter
     {

@@ -188,5 +188,37 @@
         "garage": "Garage",
         "park_and_ride": "P+R"
     },
-    "unknown_name": "Facility without a name"
+    "unknown_name": "Facility without a name",
+    "approval": {
+        "states": {
+            "pending": "Awaiting approval",
+            "rejected": "Source rejected",
+            "approved": "Approved"
+        },
+        "title": "New source awaiting approval",
+        "reapproval_title": "Changed source description awaiting approval",
+        "rejected_title": "Source rejected",
+        "hint": "Check the licence, terms and area once. After approval, deliveries of this source go to review as usual.",
+        "rejected_hint": "Deliveries of this source are ignored. Approve it to process them after all.",
+        "changed_fields": "Changed since the last approval",
+        "no_licence": "No licence stated",
+        "fields": {
+            "name": "Name",
+            "publisher": "Publisher",
+            "source_url": "Source",
+            "licence": "Licence",
+            "terms_url": "Terms",
+            "attribution": "Attribution",
+            "area": "Area",
+            "bounds": "Bounds (W, S, E, N)",
+            "interval": "Delivery interval",
+            "links": "Links"
+        },
+        "hours_one": "Every {{count}} hour",
+        "hours_other": "Every {{count}} hours",
+        "reason": "Reason",
+        "reason_placeholder": "Optional: why you approve or reject this source",
+        "approve": "Approve source",
+        "reject": "Reject source"
+    }
 }

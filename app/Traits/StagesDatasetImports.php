@@ -8,6 +8,7 @@ use App\Models\DatasetSource;
 use App\Models\User;
 use App\Notifications\DatasetImport\ReadyForReview;
 use App\Support\MunicipalSnapshot;
+use App\Support\SourceDescription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -32,6 +33,12 @@ trait StagesDatasetImports
     abstract public function review(DatasetImport $import, bool $lock = false): array;
 
     abstract protected function publish(DatasetImport $import, DatasetSource $source): void;
+
+    /** @return array<string, mixed> */
+    public function decodeDelivery(string $json): array
+    {
+        return $this->decodeSnapshot($json);
+    }
 
     public function intake(string $json, User $actor): DatasetImport
     {
@@ -82,8 +89,11 @@ trait StagesDatasetImports
     private function stage(string $json, ?User $actor, array $data): DatasetImport
     {
         $source = DatasetSource::where('code', $data['dataset'])->first();
-        if (! $source) {
-            throw ValidationException::withMessages(['dataset' => 'Deze dataset is niet geregistreerd.']);
+        if (! $source || ! $source->isApproved()) {
+            throw ValidationException::withMessages(['dataset' => 'Deze bron is nog niet ontdekt of goedgekeurd.']);
+        }
+        if (SourceDescription::approvalFingerprint($data['source']) !== SourceDescription::approvalFingerprint($source->description)) {
+            throw ValidationException::withMessages(['source' => 'De bronbeschrijving wijkt af van de goedgekeurde bron. Keur de bron eerst opnieuw goed.']);
         }
         $fingerprint = hash('sha256', $json);
         $existing = DatasetImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();

@@ -10,6 +10,7 @@ enum NotificationType: string
     case CommunitySpaceDeletedByUser = 'community.space_deleted_by_user';
     case CommunitySpaceRestored = 'community.space_restored';
     case DatasetImportReadyForReview = 'dataset.import_ready_for_review';
+    case DatasetSourceAwaitingApproval = 'dataset.source_awaiting_approval';
     case SystemAnnouncement = 'system.announcement';
 
     public function label(): string

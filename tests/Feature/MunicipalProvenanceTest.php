@@ -23,7 +23,7 @@ it('exposes only reviewed provenance and keeps an old source date distinct from 
     $response = $this->getJson('/map/parking-municipal/'.$space->id)->assertOk();
 
     $response->assertJsonPath('provenance', [
-        'name' => 'Amsterdam', 'attribution' => 'Gemeente Amsterdam — CC0',
+        'name' => $import->dataset_config['name'], 'attribution' => $import->dataset_config['attribution'],
         'url' => $import->dataset_config['source_url'], 'terms_url' => $import->dataset_config['terms_url'],
         'fetched_at' => '2026-09-23T23:00:00.000000Z', 'source_updated_at' => '2020-01-01T00:00:00Z',
     ])->assertDontSee('DO NOT EXPOSE')->assertDontSee('PRIVATE BUCKET')->assertDontSee('UNREVIEWED NAME');
@@ -76,7 +76,7 @@ it('distinguishes awaiting deliveries from unknown cadence', function () {
     $admin->assignRole(UserRole::ADMIN);
     $this->actingAs($admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
         ->where('datasets.0.delivery_status', 'awaiting')->where('datasets.0.stale', false));
-    config(['dataset-deliveries.sources' => []]);
+    config(['dataset-deliveries.late_after_intervals' => null]);
     $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
         ->where('datasets.0.delivery_status', 'unknown')->where('datasets.0.stale', false));
 });
