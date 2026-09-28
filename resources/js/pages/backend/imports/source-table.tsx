@@ -2,6 +2,7 @@ import { index } from '@/actions/App/Http/Controllers/Admin/DatasetImportControl
 import MunicipalDateTime from '@/components/municipal-date-time';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -96,7 +97,11 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                 source.last_published_retrieved_at ? (
                     <span className="block text-right tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
                 ) : (
-                    <span className="block text-right text-sm text-muted-foreground">{t('sources_table.not_published')}</span>
+                    <span className="flex justify-end">
+                        <Badge variant="outline" className="font-normal whitespace-nowrap text-muted-foreground">
+                            {t('sources_table.not_published')}
+                        </Badge>
+                    </span>
                 ),
         },
         {
