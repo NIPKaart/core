@@ -185,7 +185,7 @@ Leg voor iedere bron apart vast of ophalen, ruwe opslag, normalisatie, publieke 
 
 ### 9.1 Algemene bijdrageafspraken
 
-Uitwerking van 2026-09-24. Status: **voorstel ter vaststelling**, geen gepubliceerde gebruiksvoorwaarden en geen geïmplementeerde bewaartermijnen. De eigenaar heeft gevraagd de afspraken eerst uit te werken. De reikwijdte is alle communitybijdragen: nieuwe `ParkingSpace`-records, bevestigingen, betwistingen, meldingen en correcties op bestaande community-, gemeentelijke en offstreetrecords. [#1175](https://github.com/NIPKaart/core/issues/1175) beheert deze afspraken; [#1218](https://github.com/NIPKaart/core/issues/1218) past ze toe op correcties van geïmporteerde records.
+Uitwerking van 2026-09-24. Status: **voorstel ter vaststelling**, geen gepubliceerde gebruiksvoorwaarden en geen geïmplementeerde bewaartermijnen. De eigenaar heeft gevraagd de afspraken eerst uit te werken. De reikwijdte is alle communitybijdragen: nieuwe `ParkingSpace`-records, bevestigingen, betwistingen, meldingen en correcties op bestaande community-, gemeentelijke en offstreetrecords. [#1175](https://github.com/NIPKaart/core/issues/1175) beheert deze afspraken. Correcties op geïmporteerde records door bijdragers bestaan niet; [#1218](https://github.com/NIPKaart/core/issues/1218) liet die bewust buiten de scope.
 
 #### Gebruiksrecht en toegestane inhoud
 
@@ -229,7 +229,7 @@ Bij accountverwijdering worden persoonskoppelingen verwijderd en vrije tekst en 
 
 Leg de verantwoordelijke organisatie, het privacycontact, de doeleinden en grondslagen per verwerking vast, inclusief een belangenafweging waar die grondslag wordt gebruikt. Stel het gebruiksrecht, de bewaartermijnen, de behandeling van bestaande bijdragen en de voorwaardenacceptatie vast. Publiceer daarna passende bijdragevoorwaarden en privacyinformatie. Controleer met daadwerkelijke verwijder- en herstelproeven dat de applicatie, moderatiegeschiedenis en back-ups het gekozen beleid uitvoeren. Alleen een akkoordvakje of een configuratieschakelaar bewijst deze acceptatie niet.
 
-De toekomstige autorisatie, bewaartaken en privacyafhandeling worden onder #1175 uitgewerkt en voor de correctieflow in #1218 aantoonbaar toegepast. Er worden met dit voorstel geen bestaande bijdragen verwijderd, nieuwe rechten aangenomen of publieke functies geactiveerd.
+De toekomstige autorisatie, bewaartaken en privacyafhandeling worden onder #1175 uitgewerkt en aantoonbaar toegepast voordat een bijdragestroom publiek wordt. Er worden met dit voorstel geen bestaande bijdragen verwijderd, nieuwe rechten aangenomen of publieke functies geactiveerd.
 
 ## 10. Eerste resultaat en volgorde
 
