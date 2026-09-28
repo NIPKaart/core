@@ -44,8 +44,8 @@
         "system.*": "Systeem",
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling",
-
-        "dataset.source_awaiting_approval": "Bron wacht op goedkeuring"
+        "dataset.source_awaiting_approval": "Bron wacht op goedkeuring",
+        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring"
     },
     "titles": {
         "community.space_submitted": "Nieuwe community locatie: {{space_label}}",
@@ -56,7 +56,7 @@
         "system_announcement": "Systeem aankondiging",
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling: {{source_name}}",
-
-        "dataset.source_awaiting_approval": "Bron wacht op goedkeuring: {{source_name}}"
+        "dataset.source_awaiting_approval": "Bron wacht op goedkeuring: {{source_name}}",
+        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring: {{source_name}}"
     }
 }

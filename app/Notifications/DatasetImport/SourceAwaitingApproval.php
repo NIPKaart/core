@@ -14,7 +14,8 @@ class SourceAwaitingApproval extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public int $sourceId, public string $sourceName) {}
+    /** A changed description of an approved source is a separate notification, so administrators see why it is back. */
+    public function __construct(public int $sourceId, public string $sourceName, public string $sourceCode, public bool $reapproval = false) {}
 
     /** @return array<int, string> */
     public function via(object $notifiable): array
@@ -41,9 +42,10 @@ class SourceAwaitingApproval extends Notification implements ShouldQueue
     private function payload(): array
     {
         return [
-            'type' => NotificationType::DatasetSourceAwaitingApproval->value,
+            'type' => ($this->reapproval ? NotificationType::DatasetSourceAwaitingReapproval : NotificationType::DatasetSourceAwaitingApproval)->value,
             'params' => ['source_name' => $this->sourceName],
-            'url' => route('app.imports.index', ['tab' => 'sources', 'dataset' => $this->sourceId]),
+            // Opens the source's detail sheet; searching by code keeps it on the first page.
+            'url' => route('app.imports.index', ['search' => $this->sourceCode, 'source' => $this->sourceId]),
             'meta' => ['source_id' => $this->sourceId],
         ];
     }

@@ -3,7 +3,7 @@ import { NotificationItem } from '@/types';
 import { getNotificationLabel } from '@/utils/notifications';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
-import { BellRing, Check, ChevronRight, Inbox, MapPin, Pencil, RotateCcw } from 'lucide-react';
+import { BellRing, Check, ChevronRight, Database, FileSearch, Inbox, MapPin, Megaphone, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,7 +19,13 @@ const getStr = (v: unknown) => (typeof v === 'string' ? v : undefined);
 const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     'community.space_submitted': MapPin,
     'community.space_status_changed': Pencil,
+    'community.space_deleted': Trash2,
+    'community.space_deleted_by_user': Trash2,
     'community.space_restored': RotateCcw,
+    'dataset.source_awaiting_approval': Database,
+    'dataset.source_awaiting_reapproval': RefreshCw,
+    'dataset.import_ready_for_review': FileSearch,
+    'system.announcement': Megaphone,
     default: BellRing,
 };
 
@@ -104,7 +110,8 @@ function NotificationRow({
 
     const raw = (n.data ?? {}) as Record<string, unknown>;
     const url = getStr(raw.url);
-    const spaceLabel = getStr(n.data?.params?.space_label);
+    // What the notification is about: a data source or a community space.
+    const subject = getStr(n.data?.params?.source_name) ?? getStr(n.data?.params?.space_label);
 
     const unread = !n.read_at;
 
@@ -161,7 +168,7 @@ function NotificationRow({
                         </div>
                     )}
 
-                    {spaceLabel && <div className="truncate text-xs text-muted-foreground">{spaceLabel}</div>}
+                    {subject && <div className="line-clamp-2 text-xs leading-4 text-muted-foreground">{subject}</div>}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
                         {unread && (

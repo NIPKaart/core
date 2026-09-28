@@ -104,7 +104,13 @@ it('registers an unknown folder as a source awaiting approval, links the municip
     expect($amsterdam->fresh())->code_scheme->toBe('nl-cbs')->code->toBe('GM0363');
     expect(DatasetDelivery::where('dataset_source_id', $source->id)->count())->toBe(2);
     Queue::assertNothingPushed();
-    Notification::assertSentTo($admin, SourceAwaitingApproval::class);
+    Notification::assertSentTo($admin, SourceAwaitingApproval::class, function (SourceAwaitingApproval $notification) use ($admin, $source) {
+        $data = $notification->toDatabase($admin)->data;
+
+        // The link opens this source's detail sheet on the data sources page.
+        return $data['type'] === 'dataset.source_awaiting_approval' && $data['params']['source_name'] === $source->name
+            && $data['url'] === route('app.imports.index', ['search' => 'nl-amsterdam', 'source' => $source->id]);
+    });
 });
 
 it('keeps a source with unknown reference data waiting and refuses approval until it exists', function () {
@@ -173,8 +179,9 @@ it('holds a delivery with a changed description for re-approval, but accepts a n
 
     expect($source->fresh())->approval_state->toBe('pending')->licence->toBe('CC0-1.0')->pending_description->licence->toBe('CC-BY-4.0');
     expect($delivery->fresh()->state)->toBe('pending');
-    Notification::assertSentTo($admin, SourceAwaitingApproval::class);
-    $this->actingAs($admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
+    Notification::assertSentTo($admin, SourceAwaitingApproval::class, fn (SourceAwaitingApproval $notification) => $notification->toDatabase($admin)->data['type'] === 'dataset.source_awaiting_reapproval');
+    $this->actingAs($admin)->get(route('app.imports.index', ['source' => $source->id]))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.source', $source->id)
         ->where('sources.data.0.approval_state', 'pending')->where('sources.data.0.pending_description.licence', 'CC-BY-4.0'));
 
     Queue::fake([ProcessDatasetDelivery::class]);

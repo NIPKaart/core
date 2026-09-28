@@ -277,6 +277,7 @@ export type NotificationItem = {
         type: string;
         params: {
             space_label?: string;
+            source_name?: string;
         };
         url?: string;
         meta: {
