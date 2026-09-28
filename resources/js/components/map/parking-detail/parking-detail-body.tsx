@@ -93,7 +93,8 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
         .join(', ');
     const navigateUrl = navigationUrl(detail.latitude, detail.longitude);
     const streetView = streetViewUrl(detail.latitude, detail.longitude);
-    const liveOk = source === 'offstreet' && detail.api_state === 'ok';
+    const liveOk = source === 'offstreet' && detail.availability === 'current';
+    const liveState = source === 'offstreet' && detail.availability !== 'current' ? t(`detail.availability.${detail.availability}`) : null;
 
     const rules: Row[] =
         source === 'offstreet'
@@ -187,7 +188,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
               : [
                     {
                         label: t('detail.live.label'),
-                        value: liveOk ? t('detail.live.ok') : detail.api_state === 'error' ? t('detail.availability.live_unavailable') : unknown,
+                        value: liveOk ? t('detail.live.ok') : liveState,
                     },
                 ];
 
@@ -223,7 +224,12 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
     const occupancyRow = (label: string, free: number | null, total: number | null) => {
         const percent = occupancyPercent(free, total);
         const status = occupancyStatus(free, total);
-        const text = free !== null && total ? t('detail.availability.free_of', { free, total }) : unknown;
+        const text =
+            free !== null && total && free <= total
+                ? t('detail.availability.free_of', { free, total })
+                : free !== null
+                  ? t('detail.availability.free', { free })
+                  : unknown;
 
         return (
             <div className="flex flex-col gap-1">
@@ -264,22 +270,23 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                     </h3>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         {liveOk ? (
-                            <Chip tone="green">{t('offstreet.table.live')}</Chip>
+                            detail.occupancy_status === 'full' ? (
+                                <Chip tone="red">{t('detail.availability.full')}</Chip>
+                            ) : detail.occupancy_status === 'open' ? (
+                                <Chip tone="green">{t('detail.availability.open')}</Chip>
+                            ) : (
+                                <Chip tone="green">{t('offstreet.table.live')}</Chip>
+                            )
                         ) : (
-                            <Chip tone={detail.api_state === 'error' ? 'red' : 'zinc'}>{t('detail.availability.live_unavailable')}</Chip>
+                            <Chip tone={detail.availability === 'unavailable' ? 'red' : 'zinc'}>{liveState}</Chip>
                         )}
-                        <span className="text-xs text-muted-foreground">
-                            {t('detail.live.updated')} {date(detail.updated_at, true)}
-                        </span>
+                        {detail.observed_at && (
+                            <span className="text-xs text-muted-foreground">
+                                {t('detail.live.measured')} {date(detail.observed_at, true)}
+                            </span>
+                        )}
                     </div>
-                    {liveOk && (
-                        <>
-                            {occupancyRow(t('detail.availability.general_short'), detail.free_space_short, detail.short_capacity)}
-                            {detail.long_capacity
-                                ? occupancyRow(t('detail.availability.general_long'), detail.free_space_long, detail.long_capacity)
-                                : null}
-                        </>
-                    )}
+                    {liveOk && detail.free_space !== null && occupancyRow(t('detail.availability.general'), detail.free_space, detail.capacity)}
                 </section>
             )}
 

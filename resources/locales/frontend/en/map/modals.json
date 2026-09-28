@@ -132,10 +132,16 @@
             "facility_info": "Rates and opening hours"
         },
         "availability": {
-            "general_short": "General spaces free (short-term)",
-            "general_long": "General spaces free (long-term)",
             "free_of": "{{free}} of {{total}} free",
-            "live_unavailable": "Live data unavailable"
+            "live_unavailable": "Live data unavailable",
+            "stale": "No recent measurement",
+            "unavailable": "Live data unavailable",
+            "unknown": "No live data",
+            "free": "{{free}} free",
+            "general": "General spaces free",
+            "full": "Full",
+            "open": "Spaces available",
+            "closed": "Closed"
         },
         "source": {
             "community": "Community contribution, approved for publication",
@@ -163,7 +169,8 @@
         "live": {
             "label": "Live data",
             "ok": "Live, may be delayed",
-            "updated": "Updated"
+            "updated": "Updated",
+            "measured": "Measured"
         },
         "id_ending": "ending in"
     }

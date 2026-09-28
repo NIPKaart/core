@@ -89,13 +89,13 @@ const details = {
         ...place,
         name: 'Garage Centrum',
         type: 'garage',
-        free_space_short: 37,
-        short_capacity: 400,
-        free_space_long: null,
-        long_capacity: null,
+        free_space: 37,
+        capacity: 400,
         url: null,
         prices: null,
-        api_state: 'ok',
+        availability: 'current',
+        occupancy_status: 'counting',
+        observed_at: '2026-02-03T10:00:00Z',
         updated_at: '2026-02-03T10:00:00Z',
     },
 };
@@ -123,7 +123,10 @@ test('every source keeps the same group order but only shows the groups that app
         assert.match(text(html), /Always check the signs on location\. Parking here is not guaranteed\./);
     }
     assert.match(text(render('community')), /Source Community contribution/);
-    assert.match(text(render('municipal', { rule_url: 'https://example.test/rules' })), /Rules and restrictions Municipal regulations Local parking rules/);
+    assert.match(
+        text(render('municipal', { rule_url: 'https://example.test/rules' })),
+        /Rules and restrictions Municipal regulations Local parking rules/,
+    );
     assert.match(text(render('offstreet', { url: 'https://example.test/garage' })), /Rules and restrictions Rates and opening hours Website/);
 });
 
@@ -141,7 +144,10 @@ test('street parking omits fields its source never provides and marks missing kn
     assert.doesNotMatch(municipal, /This is when the data was fetched/);
     assert.match(municipal, /Leiden, Zuid-Holland, Netherlands/);
     assert.match(text(render('municipal', { municipality: null, province: null, country: ' ' })), /Parking location without an address/);
-    assert.match(text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })), /Source date Mar 4, 2026/);
+    assert.match(
+        text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })),
+        /Source date Mar 4, 2026/,
+    );
 
     const community = text(render('community'));
     assert.doesNotMatch(community, /Max\. parking time|Unlimited|availability/i);
@@ -152,14 +158,42 @@ test('street parking omits fields its source never provides and marks missing kn
 
 test('garage occupancy is labelled as general and accessible spaces are not claimed', () => {
     const live = text(render('offstreet'));
-    assert.match(live, /Live Updated/);
-    assert.match(live, /General spaces free \(short-term\) 37 of 400 free/);
-    assert.doesNotMatch(live, /Accessible parking spaces|Orientation|Layout/);
+    assert.match(live, /Live Measured/);
+    assert.match(live, /General spaces free 37 of 400 free/);
+    assert.doesNotMatch(live, /Accessible|long-term|Orientation|Layout/i);
     assert.match(live, /Live data Live, may be delayed/);
 
-    const failed = text(render('offstreet', { api_state: 'error', long_capacity: 100, free_space_long: 20 }));
-    assert.doesNotMatch(failed, /37 of 400|20 of 100|General spaces free/);
+    const failed = text(render('offstreet', { availability: 'unavailable' }));
+    assert.doesNotMatch(failed, /37 of 400|General spaces free/);
     assert.match(failed, /Live data unavailable/);
+});
+
+test('garage occupancy is only shown for a current measurement', () => {
+    const stale = text(render('offstreet', { availability: 'stale' }));
+    assert.doesNotMatch(stale, /37 of 400|General spaces free/);
+    assert.match(stale, /No recent measurement Measured/);
+
+    const unknown = text(render('offstreet', { availability: 'unknown', observed_at: null }));
+    assert.doesNotMatch(unknown, /37 of 400|Measured/);
+    assert.match(unknown, /Live data No live data/);
+});
+
+test('closed is not full and status-only sites show their status without counts', () => {
+    const closed = text(render('offstreet', { availability: 'closed', occupancy_status: null, free_space: null }));
+    assert.match(closed, /Closed/);
+    assert.doesNotMatch(closed, /Full|0 of 400/);
+
+    const full = text(render('offstreet', { occupancy_status: 'full', free_space: null }));
+    assert.match(full, /Full/);
+    assert.doesNotMatch(full, /General spaces free/);
+    assert.match(text(render('offstreet', { occupancy_status: 'open', free_space: null })), /Spaces available/);
+});
+
+test('more free spaces than capacity show the count without a misleading percentage', () => {
+    const html = render('offstreet', { free_space: 537, capacity: 410 });
+    assert.match(text(html), /General spaces free 537 free/);
+    assert.doesNotMatch(text(html), /537 of 410/);
+    assert.doesNotMatch(html, /role="progressbar"/);
 });
 
 test('navigation hands off the authoritative coordinates via Google Maps and Streetview', () => {

@@ -21,11 +21,9 @@ return new class extends Migration
             $table->foreignId('province_id')->constrained('provinces');
             $table->foreignId('municipality_id')->constrained('municipalities');
 
-            // Parking details
-            $table->integer('free_space_short');
-            $table->integer('free_space_long')->nullable();
-            $table->integer('short_capacity');
-            $table->integer('long_capacity')->nullable();
+            // Capacity and free spaces are the latest observation for visitors; unknown stays null (#1221).
+            $table->integer('capacity')->nullable();
+            $table->integer('free_space')->nullable();
             $table->enum('parking_type', ['garage', 'parkandride']);
             $table->json('prices')->nullable();
             $table->string('url')->nullable();
@@ -41,6 +39,9 @@ return new class extends Migration
             $table->spatialIndex([DB::raw('(location::geometry)')], 'parking_offstreet_spaces_viewport_gist');
 
             $table->enum('api_state', ApiState::all())->nullable();
+            $table->string('occupancy_status')->nullable();
+            $table->timestampTz('observed_at')->nullable();
+            $table->timestampTz('observation_fetched_at')->nullable();
             $table->boolean('visibility');
             $table->timestamps();
 

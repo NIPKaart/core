@@ -7,7 +7,6 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
     const both = Boolean(row.before && row.after);
     const sides = (['before', 'after'] as const).filter((side) => row[side]);
     const facility = (row.after ?? row.before)?.facility_type !== undefined;
-    const count = (value: number | null | undefined) => value ?? t('unknown');
     const facilityFields = [
         { key: 'name', label: t('fields.name'), value: (claim: Claim) => claim.name ?? t('unknown') },
         { key: 'source_name', label: t('fields.source_name'), value: (claim: Claim) => claim.source_name ?? t('unknown') },
@@ -16,9 +15,6 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
             label: t('fields.facility_type'),
             value: (claim: Claim) => (claim.facility_type ? t(`facility_types.${claim.facility_type}`) : t('unknown')),
         },
-        { key: 'short_capacity', label: t('fields.short_capacity'), value: (claim: Claim) => count(claim.short_capacity) },
-        { key: 'long_capacity', label: t('fields.long_capacity'), value: (claim: Claim) => count(claim.long_capacity) },
-        { key: 'accessible_capacity', label: t('fields.accessible_capacity'), value: (claim: Claim) => count(claim.accessible_capacity) },
     ];
     const spaceFields = [
         { key: 'street', label: t('fields.street'), value: (claim: Claim) => claim.street ?? t('unknown') },

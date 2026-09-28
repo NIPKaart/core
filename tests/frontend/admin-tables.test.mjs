@@ -71,13 +71,23 @@ test('pagination has a clear empty state and genuinely disabled unavailable navi
 test('offstreet unknown availability remains unknown and visibility uses its own permission', () => {
     const { getParkingOffstreetColumns } = load('pages/backend/parking-offstreet/columns.tsx');
     const columns = getParkingOffstreetColumns((permission) => permission === 'parking-offstreet.update', { t: (key) => key, tGlobal: (key) => key });
-    const row = { original: { id: 'garage', visibility: true, short_capacity: 100, free_space_short: null } };
-    for (const id of ['parking_status', 'short_parking']) {
-        assert.equal(render(columns.find((column) => column.id === id).cell, { row }), '<span class="text-muted-foreground">—</span>');
+    const cell = (id) => columns.find((column) => column.id === id).cell;
+    const row = { original: { id: 'garage', visibility: true, capacity: 100, free_space: null } };
+    for (const id of ['parking_status', 'occupancy']) {
+        assert.equal(render(cell(id), { row }), '<span class="text-muted-foreground">—</span>');
     }
     assert.match(render(columns.find((column) => column.accessorKey === 'visibility').cell, { row }), /type="checkbox"/);
-    const full = { original: { ...row.original, free_space_short: 0 } };
-    assert.match(render(columns.find((column) => column.id === 'parking_status').cell, { row: full }), /badges.full/);
+    const full = { original: { ...row.original, free_space: 0, availability: 'current', occupancy_status: 'counting' } };
+    assert.match(render(cell('parking_status'), { row: full }), /badges.full/);
+    const stale = { original: { ...full.original, availability: 'stale' } };
+    assert.equal(render(cell('parking_status'), { row: stale }), '<span class="text-muted-foreground">—</span>');
+    assert.match(render(cell('api_state'), { row: stale }), /badges.stale/);
+    const closed = { original: { ...full.original, availability: 'closed', occupancy_status: 'closed' } };
+    assert.match(render(cell('parking_status'), { row: closed }), /badges.closed/);
+    const inconsistent = { original: { ...full.original, free_space: 537, capacity: 410 } };
+    assert.match(render(cell('parking_status'), { row: inconsistent }), /badges.inconsistent/);
+    assert.doesNotMatch(render(cell('occupancy'), { row: inconsistent }), /role="progressbar"|%/);
+    assert.equal(columns.some((column) => column.id === 'long_parking'), false);
 });
 
 

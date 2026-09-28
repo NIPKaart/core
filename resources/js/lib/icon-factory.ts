@@ -1,4 +1,3 @@
-import { ParkingOffstreet } from '@/types';
 import L, { Icon } from 'leaflet';
 
 /**
@@ -154,23 +153,4 @@ export function getParkingStatusIcon(status: 'approved' | 'pending' | 'rejected'
         default:
             return getBlueMarkerIcon();
     }
-}
-
-/*
- * Get the occupancy status of a parking garage based on its details.
- * Returns 'green', 'orange', 'red', or 'grey'.
- */
-export function getGarageOccupancyStatus(space: ParkingOffstreet): 'green' | 'orange' | 'red' | 'grey' {
-    if (typeof space.api_state === 'string' && space.api_state !== 'ok') {
-        return 'grey';
-    }
-    if (typeof space.free_space_short !== 'number' || typeof space.short_capacity !== 'number' || space.short_capacity === 0) {
-        return 'grey';
-    }
-    const occupied = space.short_capacity - space.free_space_short;
-    const occupancy = occupied / space.short_capacity;
-
-    if (occupancy < 0.6) return 'green'; // less than 60% full
-    if (occupancy < 0.9) return 'orange'; // between 60% and 90% full
-    return 'red'; // 90% or more full
 }

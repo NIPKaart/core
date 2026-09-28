@@ -31,24 +31,22 @@ function offstreetReviewer(): User
     return $user;
 }
 
-/** Two facilities taken from a real Amsterdam catalog delivery; unknown capacity stays null. */
+/** Two facilities taken from a real Amsterdam catalog delivery; capacity and occupancy arrive as observations. */
 function offstreetCatalog(array $overrides = [], ?array $records = null): array
 {
     $records ??= [
         [
             'external_id' => '06757815-834C-0E44-42B0-AE4FC4AF9CEF', 'name' => 'Byzantium', 'source_name' => 'P-106_ Byzantium (opendata)',
             'facility_type' => 'garage', 'geometry' => ['type' => 'Point', 'coordinates' => [4.88001, 52.3619]],
-            'short_capacity' => 446, 'long_capacity' => null, 'accessible_capacity' => null,
         ],
         [
             'external_id' => 'P+R-ARENA', 'name' => 'P+R ArenA', 'source_name' => 'P+R ArenA',
             'facility_type' => 'park_and_ride', 'geometry' => ['type' => 'Point', 'coordinates' => [4.94105, 52.31409]],
-            'short_capacity' => null, 'long_capacity' => null, 'accessible_capacity' => null,
         ],
     ];
 
     return array_replace([
-        'format' => 'nipkaart-offstreet-catalog-2', 'dataset' => 'nl-amsterdam-garages', 'source' => DatasetSourceFactory::offstreetDescription(),
+        'format' => 'nipkaart-offstreet-catalog-3', 'dataset' => 'nl-amsterdam-garages', 'source' => DatasetSourceFactory::offstreetDescription(),
         'delivery_id' => (string) Str::uuid(), 'retrieved_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z'),
         'selection' => 'car-garages-and-pr', 'complete' => true, 'source_count' => count($records), 'records' => $records,
     ], $overrides);
@@ -80,30 +78,30 @@ it('stages an uploaded catalog through the shared import screens and publishes i
     $this->patch(route('app.imports.update', $import), ['decision' => 'publish', 'review_token' => $token])->assertRedirect();
 
     $garage = ParkingOffstreet::where('external_id', '06757815-834C-0E44-42B0-AE4FC4AF9CEF')->sole();
-    expect($garage)->name->toBe('Byzantium')->parking_type->toBe('garage')->short_capacity->toBe(446)
-        ->long_capacity->toBeNull()->accessible_capacity->toBeNull()->free_space_short->toBeNull()->api_state->toBeNull()
+    expect($garage)->name->toBe('Byzantium')->parking_type->toBe('garage')
+        ->capacity->toBeNull()->free_space->toBeNull()->occupancy_status->toBeNull()->api_state->toBeNull()
         ->municipality_id->toBe($source->municipality_id)->visibility->toBeTrue()->published_import_id->toBe($import->id);
     expect($garage->latitude)->toBe(52.3619)->and($garage->longitude)->toBe(4.88001);
-    expect(ParkingOffstreet::where('external_id', 'P+R-ARENA')->sole())->parking_type->toBe('parkandride')->short_capacity->toBeNull();
+    expect(ParkingOffstreet::where('external_id', 'P+R-ARENA')->sole())->parking_type->toBe('parkandride');
     expect($import->fresh())->state->toBe('published');
 });
 
-it('updates changed facilities on reimport while keeping identity, visibility, favorites, live values and missing facilities', function () {
+it('updates changed facilities on reimport while keeping identity, visibility, favorites, observed values and missing facilities', function () {
     DatasetSource::factory()->offstreet()->create();
     $user = offstreetReviewer();
     publishOffstreet(stageOffstreet(offstreetCatalog(), $user), $user);
     $garage = ParkingOffstreet::where('name', 'Byzantium')->sole();
-    $garage->forceFill(['visibility' => false, 'free_space_short' => 12, 'api_state' => ApiState::OK])->save();
+    $garage->forceFill(['visibility' => false, 'capacity' => 446, 'free_space' => 12, 'occupancy_status' => 'counting', 'api_state' => ApiState::OK])->save();
     $favorite = Favorite::create(['user_id' => $user->id, 'favoritable_type' => $garage->getMorphClass(), 'favoritable_id' => $garage->id]);
 
-    $renamed = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'name' => 'Byzantium garage', 'short_capacity' => 450]]);
+    $renamed = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'name' => 'Byzantium garage']]);
     $import = stageOffstreet($renamed, $user);
     $review = app(OffstreetImportService::class)->review($import);
     expect($review['counts'])->toMatchArray(['changed' => 1, 'missing' => 1, 'new' => 0, 'conflict' => 0]);
     publishOffstreet($import, $user);
 
-    expect($garage->fresh())->id->toBe($garage->id)->name->toBe('Byzantium garage')->short_capacity->toBe(450)
-        ->visibility->toBeFalse()->free_space_short->toBe(12)->api_state->toBe(ApiState::OK)->published_import_id->toBe($import->id);
+    expect($garage->fresh())->id->toBe($garage->id)->name->toBe('Byzantium garage')->capacity->toBe(446)->free_space->toBe(12)
+        ->occupancy_status->toBe('counting')->visibility->toBeFalse()->api_state->toBe(ApiState::OK)->published_import_id->toBe($import->id);
     expect($favorite->fresh())->not->toBeNull();
     expect(ParkingOffstreet::where('external_id', 'P+R-ARENA')->sole())->visibility->toBeTrue();
 });
@@ -114,11 +112,12 @@ it('keeps manual corrections and blocks publication when the source changes the 
     publishOffstreet(stageOffstreet(offstreetCatalog(), $user), $user);
     ParkingOffstreet::where('name', 'Byzantium')->update(['name' => 'Garage Byzantium']);
 
-    $unrelated = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'short_capacity' => 460], offstreetCatalog()['records'][1]]);
+    $moved = ['type' => 'Point', 'coordinates' => [4.88011, 52.3620]];
+    $unrelated = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'geometry' => $moved], offstreetCatalog()['records'][1]]);
     publishOffstreet(stageOffstreet($unrelated, $user), $user);
-    expect(ParkingOffstreet::where('external_id', '06757815-834C-0E44-42B0-AE4FC4AF9CEF')->sole())->name->toBe('Garage Byzantium')->short_capacity->toBe(460);
+    expect(ParkingOffstreet::where('external_id', '06757815-834C-0E44-42B0-AE4FC4AF9CEF')->sole())->name->toBe('Garage Byzantium')->latitude->toBe(52.362);
 
-    $conflicting = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'name' => 'Byzantium Leidseplein', 'short_capacity' => 460], offstreetCatalog()['records'][1]]);
+    $conflicting = offstreetCatalog(records: [[...offstreetCatalog()['records'][0], 'name' => 'Byzantium Leidseplein', 'geometry' => $moved], offstreetCatalog()['records'][1]]);
     $import = stageOffstreet($conflicting, $user);
     $review = app(OffstreetImportService::class)->review($import);
     expect($review['counts']['conflict'])->toBe(1)->and($review['blockers'])->not->toBeEmpty();
@@ -146,13 +145,11 @@ it('rejects catalogs that do not match the contract without staging anything', f
     'other selection' => [fn (&$data) => $data['selection'] = 'all-garages'],
     'incomplete' => [fn (&$data) => $data['complete'] = false],
     'count mismatch' => [fn (&$data) => $data['source_count'] = 3],
-    'extra live field' => [fn (&$data) => $data['records'][0]['free_space_short'] = 10],
+    'capacity is an observation' => [fn (&$data) => $data['records'][0]['capacity'] = 446],
     'missing field' => [function (&$data) {
-        unset($data['records'][0]['accessible_capacity']);
+        unset($data['records'][0]['source_name']);
     }],
     'unknown facility type' => [fn (&$data) => $data['records'][0]['facility_type'] = 'street'],
-    'negative capacity' => [fn (&$data) => $data['records'][0]['short_capacity'] = -1],
-    'boolean capacity' => [fn (&$data) => $data['records'][0]['long_capacity'] = true],
     'duplicate source id' => [fn (&$data) => $data['records'][1]['external_id'] = $data['records'][0]['external_id']],
     'blank name' => [fn (&$data) => $data['records'][0]['name'] = ' '],
     'polygon geometry' => [fn (&$data) => $data['records'][0]['geometry'] = ['type' => 'Polygon', 'coordinates' => [[[4.9, 52.3], [4.91, 52.3], [4.9, 52.3]]]]],

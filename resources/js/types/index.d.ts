@@ -198,14 +198,14 @@ export type ParkingMunicipal = {
 export type ParkingOffstreet = {
     id: string;
     name: string;
-    free_space_short: number | null;
-    free_space_long: number | null;
-    short_capacity: number | null;
-    long_capacity: number | null;
-    accessible_capacity: number | null;
+    free_space: number | null;
+    capacity: number | null;
     parking_type: 'garage' | 'parkandride';
     prices: json | null;
     api_state: string | null;
+    occupancy_status: 'counting' | 'open' | 'full' | 'closed' | 'malfunction' | null;
+    availability?: 'current' | 'closed' | 'stale' | 'unavailable' | 'unknown';
+    observed_at: string | null;
     visibility: boolean;
 
     country_id: number;

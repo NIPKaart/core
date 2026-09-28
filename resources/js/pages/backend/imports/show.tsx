@@ -30,13 +30,10 @@ export type Claim = {
     number?: number | null;
     geometry: Polygon | Point;
     source_attributes?: Record<string, unknown>;
-    /** Offstreet catalog fields (`nipkaart-offstreet-catalog-1`). */
+    /** Offstreet catalog fields (`nipkaart-offstreet-catalog-3`); capacity is an observation, not a catalog claim. */
     name?: string;
     source_name?: string;
     facility_type?: 'garage' | 'park_and_ride';
-    short_capacity?: number | null;
-    long_capacity?: number | null;
-    accessible_capacity?: number | null;
 };
 
 /** Offstreet facilities are named; municipal spaces are identified by their street. */
@@ -49,7 +46,7 @@ export function claimTitle(claim: Claim | null | undefined): string | null {
 }
 
 export function claimCapacity(claim: Claim | null | undefined): number | null {
-    return (isFacility(claim) ? claim?.short_capacity : claim?.number) ?? null;
+    return claim?.number ?? null;
 }
 type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 export type Row = {
@@ -98,12 +95,17 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                 </div>
             ),
         },
-        {
-            id: 'capacity',
-            accessorFn: (row) => claimCapacity(row.after ?? row.before),
-            header: t('capacity'),
-            cell: ({ getValue }) => getValue<number | null>() ?? t('unknown'),
-        },
+        // Facility capacity changes during the day and is an observation, so the catalog review has no capacity column.
+        ...(dataset.target_type === 'offstreet'
+            ? []
+            : ([
+                  {
+                      id: 'capacity',
+                      accessorFn: (row) => claimCapacity(row.after ?? row.before),
+                      header: t('capacity'),
+                      cell: ({ getValue }) => getValue<number | null>() ?? t('unknown'),
+                  },
+              ] satisfies ColumnDef<Row>[])),
         {
             accessorKey: 'status',
             header: t('status'),

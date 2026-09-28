@@ -53,9 +53,6 @@
         "name": "Naam",
         "source_name": "Bronnaam",
         "facility_type": "Type voorziening",
-        "short_capacity": "Capaciteit kortparkeren",
-        "long_capacity": "Capaciteit langparkeren",
-        "accessible_capacity": "Gehandicaptenplaatsen",
         "location": "Locatie"
     },
     "current_comparison": "Deze vergelijking gebruikt de huidige gegevens in NIPKaart. Na publicatie kunnen de aantallen en verschillen dus veranderen.",

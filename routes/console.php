@@ -26,4 +26,6 @@ if (config('backup.enabled')) {
 
 if (config('dataset-deliveries.enabled')) {
     Schedule::command('nipkaart:discover-deliveries')->everyFiveMinutes()->onOneServer()->withoutOverlapping(10);
+    // The collector delivers observations every two minutes; only the newest unprocessed one is applied.
+    Schedule::command('nipkaart:ingest-observations')->everyMinute()->onOneServer()->withoutOverlapping(5);
 }

@@ -52,13 +52,14 @@ export type OffstreetParkingDetail = {
     country: string | null;
     province: string | null;
     municipality: string | null;
-    free_space_short: number | null;
-    free_space_long: number | null;
-    short_capacity: number | null;
-    long_capacity: number | null;
+    availability: 'current' | 'closed' | 'stale' | 'unavailable' | 'unknown';
+    /** Operator status of a current measurement: a live count, or open/full for sites without counts. */
+    occupancy_status: 'counting' | 'open' | 'full' | null;
+    observed_at: datetime | null;
+    capacity: number | null;
+    free_space: number | null;
     url: string | null;
     prices: json | null;
-    api_state: string | null;
     updated_at: datetime;
     is_favorited?: boolean;
 };

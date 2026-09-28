@@ -30,6 +30,7 @@ return new class extends Migration
             $table->timestampTz('reviewed_at')->nullable();
             $table->text('review_reason')->nullable();
             $table->timestampTz('last_published_retrieved_at', 6)->nullable();
+            $table->string('last_observation_key')->nullable();
             $table->timestampsTz();
         });
         Schema::create('dataset_imports', function (Blueprint $table) {

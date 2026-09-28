@@ -35,7 +35,8 @@ class ParkingOffstreetController extends Controller
             $query->where('visibility', filter_var($request->input('visibility'), FILTER_VALIDATE_BOOLEAN));
         }
 
-        $spaces = $query->latest()->paginate(25)->withQueryString();
+        $spaces = $query->latest()->paginate(25)->withQueryString()
+            ->through(fn (ParkingOffstreet $space) => [...$space->toArray(), 'availability' => $space->availability()]);
 
         return inertia('backend/parking-offstreet/index', [
             'spaces' => $spaces,
