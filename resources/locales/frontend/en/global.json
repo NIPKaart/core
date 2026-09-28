@@ -22,6 +22,7 @@
         "noData": "No data",
         "disabledSpace": "Disabled parking space",
         "accessibleSpace": "Accessible parking space",
-        "facility": "Garage / P+R · availability unknown"
+        "facility": "Garage / P+R · no current data",
+        "facilityLive": "Garage / P+R · current free spaces"
     }
 }

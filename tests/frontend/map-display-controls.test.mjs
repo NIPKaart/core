@@ -23,6 +23,7 @@ test('map layers and legend are mutually exclusive and changing the layer closes
         if (name === 'react') return { useState: () => [panel, next => { panel = next; }] };
         if (name === 'react-i18next') return { useTranslation: () => ({ t: key => key }) };
         if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
+        if (name === '@/lib/discovery-icons') return { pinSvg: () => '<svg></svg>' };
         return require(name);
     } };
     vm.runInNewContext(source, context);

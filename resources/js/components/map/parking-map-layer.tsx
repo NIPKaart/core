@@ -1,4 +1,6 @@
+import { useGarageOccupancy } from '@/hooks/use-garage-occupancy';
 import { cancelMarkerDeselection, discoveryIcon, setMarkerSelected } from '@/lib/discovery-icons';
+import { garageBadge, type GarageBadge } from '@/lib/garage-occupancy';
 import { AREA_ZOOM, expandPoint, type CompactPoint } from '@/lib/map-areas';
 import { TileCache, tileKey, tilesCovering, type GeoBox, type TileCoordinate } from '@/lib/map-tiles';
 import { area as areaRoute, areas as areasRoute } from '@/routes/map/parking';
@@ -49,6 +51,7 @@ function boxOf(bounds: L.LatLngBounds, scale = 1): GeoBox {
 export default function ParkingMapLayer({ onSelect, selectedKey, results = null }: Props) {
     const map = useMap();
     const { t } = useTranslation('frontend/map/main');
+    const occupancy = useGarageOccupancy();
     const [status, setStatus] = useState<Status>('idle');
     const cache = useRef(new TileCache<ParkingResult[]>(loadArea, MAX_LOADED_AREAS));
     const areaIndex = useRef<Promise<Set<string>> | null>(null);
@@ -63,6 +66,28 @@ export default function ParkingMapLayer({ onSelect, selectedKey, results = null 
     useEffect(() => {
         onSelectRef.current = onSelect;
     }, [onSelect]);
+
+    const badgeFor = useRef<(key: string) => GarageBadge | null>(() => null);
+    badgeFor.current = (key: string) => {
+        if (!key.startsWith('offstreet:')) return null;
+        const labels = {
+            full: t('markers.full'),
+            closed: t('markers.closed'),
+            open: t('markers.open'),
+            free: (count: number, formatted: string) => t('markers.free', { count, formatted }),
+        };
+        return garageBadge(occupancy.get(key.slice('offstreet:'.length)), labels);
+    };
+
+    // New occupancy only swaps the icons of garages already on the map; clusters and other markers stay as they are.
+    useEffect(() => {
+        for (const [key, marker] of markersByKey.current) {
+            if (!key.startsWith('offstreet:')) continue;
+            const badge = badgeFor.current(key);
+            marker.setIcon(discoveryIcon('offstreet', key === selected.current, badge));
+            marker.getElement()?.setAttribute('title', [marker.options.alt, badge?.label].filter(Boolean).join(', '));
+        }
+    }, [occupancy]);
 
     useEffect(() => {
         const group = L.markerClusterGroup({
@@ -91,11 +116,12 @@ export default function ParkingMapLayer({ onSelect, selectedKey, results = null 
         selected.current = selectedKey;
         if (previousKey) {
             const previous = markersByKey.current.get(previousKey);
-            if (previous) setMarkerSelected(previous, previousKey.startsWith('offstreet:') ? 'offstreet' : 'community', false);
+            if (previous)
+                setMarkerSelected(previous, previousKey.startsWith('offstreet:') ? 'offstreet' : 'community', false, badgeFor.current(previousKey));
         }
         if (selectedKey) {
             const next = markersByKey.current.get(selectedKey);
-            if (next) setMarkerSelected(next, selectedKey.startsWith('offstreet:') ? 'offstreet' : 'community', true);
+            if (next) setMarkerSelected(next, selectedKey.startsWith('offstreet:') ? 'offstreet' : 'community', true, badgeFor.current(selectedKey));
         }
     }, [selectedKey]);
 
@@ -106,10 +132,11 @@ export default function ParkingMapLayer({ onSelect, selectedKey, results = null 
 
         const markers = results.map((result) => {
             const isSelected = result.key === selected.current;
+            const badge = badgeFor.current(result.key);
             const marker = L.marker([result.latitude, result.longitude], {
-                icon: discoveryIcon(result.source, isSelected),
+                icon: discoveryIcon(result.source, isSelected, badge),
                 zIndexOffset: isSelected ? 1000 : 0,
-                title: result.title,
+                title: [result.title, badge?.label].filter(Boolean).join(', '),
                 alt: result.title,
             });
             marker.on('click', () => onSelectRef.current(result));

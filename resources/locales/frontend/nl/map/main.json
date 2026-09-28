@@ -84,5 +84,12 @@
         "destination": "Je gekozen bestemming",
         "search_area": "Benaderd zoekgebied",
         "location": "Je locatie. De cirkel geeft de nauwkeurigheid aan."
+    },
+    "markers": {
+        "full": "Vol",
+        "closed": "Gesloten",
+        "open": "Plek vrij",
+        "free_one": "{{formatted}} algemene plek vrij",
+        "free_other": "{{formatted}} algemene plekken vrij"
     }
 }
