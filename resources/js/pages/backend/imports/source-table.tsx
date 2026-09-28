@@ -79,7 +79,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                         <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{source.municipality_code}</span>
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                        {source.country} · {source.subdivision}
+                        {source.subdivision_name ?? source.subdivision}, {source.country}
                     </span>
                 </div>
             ),

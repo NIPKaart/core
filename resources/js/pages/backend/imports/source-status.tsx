@@ -50,6 +50,7 @@ export type SourceRow = {
     status: SourceStatusKey;
     country: string | null;
     subdivision: string | null;
+    subdivision_name: string | null;
     municipality_name: string | null;
     municipality_code: string | null;
     visible_locations_count: number;

@@ -48,7 +48,7 @@ export default function SourceSheet({ source, onClose }: Props) {
                                 <div>
                                     <dt className="text-xs text-muted-foreground">{t('sources_table.area')}</dt>
                                     <dd className="mt-0.5">
-                                        {source.country} · {source.subdivision}
+                                        {source.subdivision_name ?? source.subdivision}, {source.country}
                                     </dd>
                                 </div>
                                 <div>

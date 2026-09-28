@@ -29,13 +29,13 @@ function overviewSources(): array
 
 it('puts sources that need an administrator first and counts every status', function () {
     $this->freezeTime();
-    overviewSources();
+    $sources = overviewSources();
 
     $this->actingAs($this->admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
         ->has('sources.data', 4)
         ->where('sources.data.0.name', 'C Garages')->where('sources.data.0.status', 'awaiting_approval')
         ->where('sources.data.1.name', 'Z New')
-        ->where('sources.data.2.status', 'published')->where('sources.data.2.country', 'NL')->where('sources.data.2.municipality_code', 'GM0363')
+        ->where('sources.data.2.status', 'published')->where('sources.data.2.country', 'NL')->where('sources.data.2.subdivision_name', $sources['published']->municipality->province->name)->where('sources.data.2.municipality_code', 'GM0363')
         ->where('sources.data.3.status', 'rejected')
         ->where('summary.awaiting_approval', 2)->where('summary.published', 1)->where('summary.rejected', 1)->where('summary.total', 4)
         ->where('summary.processing', false)->where('countries', ['NL']));

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DatasetSource;
+use App\Models\Province;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -26,6 +27,9 @@ class SourceOverview
     /** @return Collection<int, array<string, mixed>> */
     public function rows(): Collection
     {
+        // Pending sources have no municipality yet, so the province name comes from the subdivision code.
+        $provinces = Province::query()->pluck('name', 'geocode');
+
         return DatasetSource::query()
             ->with([
                 'municipality:id,name,code',
@@ -38,11 +42,14 @@ class SourceOverview
                 'deliveries as pending_deliveries_count' => fn (Builder $builder) => $builder->where('state', 'pending')->whereNull('error_code'),
             ])
             ->orderBy('name')->get()
-            ->map(fn (DatasetSource $source): array => $this->row($source));
+            ->map(fn (DatasetSource $source): array => $this->row($source, $provinces));
     }
 
-    /** @return array<string, mixed> */
-    private function row(DatasetSource $source): array
+    /**
+     * @param  Collection<string, string>  $provinces
+     * @return array<string, mixed>
+     */
+    private function row(DatasetSource $source, Collection $provinces): array
     {
         $latest = $source->latestImport;
         $deliveryStatus = $this->provenance->deliveryStatus($source);
@@ -64,6 +71,7 @@ class SourceOverview
             'status' => $status,
             'country' => $area['country'] ?? null,
             'subdivision' => $area['subdivision'] ?? null,
+            'subdivision_name' => $provinces->get($area['subdivision'] ?? ''),
             'municipality_name' => $source->municipality?->name ?? ($area['municipality']['name'] ?? null),
             'municipality_code' => $area['municipality']['code'] ?? null,
             'visible_locations_count' => $source->target_type === 'offstreet' ? $source->visible_offstreet_count : $source->visible_municipal_count,
