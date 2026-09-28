@@ -76,14 +76,12 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             id: 'api_state',
             header: t('table.api'),
             cell: ({ row }) => {
-                const state = row.original.api_state;
-                if (state === 'ok') {
-                    return <Badge variant="default">{t('badges.ok')}</Badge>;
+                const availability = row.original.availability ?? 'unknown';
+                if (availability === 'current') {
+                    return <Badge variant="default">{t('badges.current')}</Badge>;
                 }
-                if (state === 'error') {
-                    return <Badge variant="destructive">{t('badges.error')}</Badge>;
-                }
-                return <span className="text-muted-foreground">—</span>;
+
+                return <Badge variant={availability === 'unavailable' ? 'destructive' : 'outline'}>{t(`badges.${availability}`)}</Badge>;
             },
         },
         {
@@ -91,8 +89,10 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             header: t('table.status'),
             enableHiding: false,
             cell: ({ row }) => {
-                const { free_space_short, short_capacity } = row.original;
-                if (!short_capacity || free_space_short == null) return <span className="text-muted-foreground">—</span>;
+                const { free_space_short, short_capacity, availability } = row.original;
+                // Full or free is only claimed for a current measurement (#1221).
+                if (availability !== 'current' || !short_capacity || free_space_short == null)
+                    return <span className="text-muted-foreground">—</span>;
                 const pct = Math.round(((free_space_short ?? 0) / short_capacity) * 100);
 
                 if (pct <= 5) {

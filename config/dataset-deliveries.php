@@ -5,4 +5,6 @@ return [
     // Sources are discovered from the import bucket and approved by an administrator (ADR 0013).
     // A delivery counts as late when it is older than this many expected intervals.
     'late_after_intervals' => 2,
+    // Live garage observations older than this are shown as stale, never as current availability (#1221).
+    'observation_stale_after_minutes' => 10,
 ];

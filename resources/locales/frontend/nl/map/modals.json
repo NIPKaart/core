@@ -135,7 +135,12 @@
             "general_short": "Algemene vrije plaatsen (kortparkeren)",
             "general_long": "Algemene vrije plaatsen (langparkeren)",
             "free_of": "{{free}} van {{total}} vrij",
-            "live_unavailable": "Live gegevens niet beschikbaar"
+            "live_unavailable": "Live gegevens niet beschikbaar",
+            "stale": "Geen recente meting",
+            "unavailable": "Live gegevens niet beschikbaar",
+            "unknown": "Geen live gegevens",
+            "accessible": "Gehandicaptenplaatsen vrij",
+            "free": "{{free}} vrij"
         },
         "source": {
             "community": "Bijdrage van de community, goedgekeurd voor publicatie",
@@ -163,7 +168,8 @@
         "live": {
             "label": "Live gegevens",
             "ok": "Live, mogelijk vertraagd",
-            "updated": "Bijgewerkt"
+            "updated": "Bijgewerkt",
+            "measured": "Gemeten"
         },
         "id_ending": "eindigend op"
     }

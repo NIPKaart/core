@@ -95,7 +95,10 @@ const details = {
         long_capacity: null,
         url: null,
         prices: null,
-        api_state: 'ok',
+        availability: 'current',
+        observed_at: '2026-02-03T10:00:00Z',
+        free_space_accessible: null,
+        accessible_capacity: null,
         updated_at: '2026-02-03T10:00:00Z',
     },
 };
@@ -123,7 +126,10 @@ test('every source keeps the same group order but only shows the groups that app
         assert.match(text(html), /Always check the signs on location\. Parking here is not guaranteed\./);
     }
     assert.match(text(render('community')), /Source Community contribution/);
-    assert.match(text(render('municipal', { rule_url: 'https://example.test/rules' })), /Rules and restrictions Municipal regulations Local parking rules/);
+    assert.match(
+        text(render('municipal', { rule_url: 'https://example.test/rules' })),
+        /Rules and restrictions Municipal regulations Local parking rules/,
+    );
     assert.match(text(render('offstreet', { url: 'https://example.test/garage' })), /Rules and restrictions Rates and opening hours Website/);
 });
 
@@ -141,7 +147,10 @@ test('street parking omits fields its source never provides and marks missing kn
     assert.doesNotMatch(municipal, /This is when the data was fetched/);
     assert.match(municipal, /Leiden, Zuid-Holland, Netherlands/);
     assert.match(text(render('municipal', { municipality: null, province: null, country: ' ' })), /Parking location without an address/);
-    assert.match(text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })), /Source date Mar 4, 2026/);
+    assert.match(
+        text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })),
+        /Source date Mar 4, 2026/,
+    );
 
     const community = text(render('community'));
     assert.doesNotMatch(community, /Max\. parking time|Unlimited|availability/i);
@@ -152,14 +161,30 @@ test('street parking omits fields its source never provides and marks missing kn
 
 test('garage occupancy is labelled as general and accessible spaces are not claimed', () => {
     const live = text(render('offstreet'));
-    assert.match(live, /Live Updated/);
+    assert.match(live, /Live Measured/);
     assert.match(live, /General spaces free \(short-term\) 37 of 400 free/);
     assert.doesNotMatch(live, /Accessible parking spaces|Orientation|Layout/);
     assert.match(live, /Live data Live, may be delayed/);
 
-    const failed = text(render('offstreet', { api_state: 'error', long_capacity: 100, free_space_long: 20 }));
+    const failed = text(render('offstreet', { availability: 'unavailable', long_capacity: 100, free_space_long: 20 }));
     assert.doesNotMatch(failed, /37 of 400|20 of 100|General spaces free/);
     assert.match(failed, /Live data unavailable/);
+});
+
+test('garage occupancy is only shown for a current measurement', () => {
+    const stale = text(render('offstreet', { availability: 'stale' }));
+    assert.doesNotMatch(stale, /37 of 400|General spaces free/);
+    assert.match(stale, /No recent measurement Measured/);
+
+    const unknown = text(render('offstreet', { availability: 'unknown', observed_at: null }));
+    assert.doesNotMatch(unknown, /37 of 400|Measured/);
+    assert.match(unknown, /Live data No live data/);
+});
+
+test('accessible free spaces appear only when the source reports them', () => {
+    const reported = text(render('offstreet', { free_space_accessible: 2, accessible_capacity: null }));
+    assert.match(reported, /Accessible spaces free 2 free/);
+    assert.doesNotMatch(text(render('offstreet')), /Accessible spaces free/);
 });
 
 test('navigation hands off the authoritative coordinates via Google Maps and Streetview', () => {

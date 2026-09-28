@@ -50,6 +50,9 @@ class ParkingOffstreet extends Model
         'longitude' => 'float',
         'free_space_short' => 'integer',
         'free_space_long' => 'integer',
+        'free_space_accessible' => 'integer',
+        'observed_at' => 'immutable_datetime',
+        'observation_fetched_at' => 'immutable_datetime',
         'short_capacity' => 'integer',
         'long_capacity' => 'integer',
         'accessible_capacity' => 'integer',
@@ -58,6 +61,25 @@ class ParkingOffstreet extends Model
         'last_checked_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Whether the stored free spaces may be shown as current availability (#1221).
+     * `current` needs a known, recent measurement with source state `ok`; anything else is stale, unavailable or unknown.
+     */
+    public function availability(): string
+    {
+        if ($this->observed_at === null) {
+            return $this->api_state === ApiState::ERROR ? 'unavailable' : 'unknown';
+        }
+        if ($this->api_state !== ApiState::OK) {
+            return 'unavailable';
+        }
+        if ($this->observed_at->lt(now()->subMinutes(config('dataset-deliveries.observation_stale_after_minutes')))) {
+            return 'stale';
+        }
+
+        return $this->free_space_short === null && $this->free_space_long === null ? 'unavailable' : 'current';
+    }
 
     public function datasetSource(): BelongsTo
     {

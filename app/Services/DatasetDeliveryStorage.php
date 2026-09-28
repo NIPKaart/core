@@ -87,6 +87,33 @@ class DatasetDeliveryStorage
         }
     }
 
+    /** Live observations have their own stream next to the catalog, named `<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` so keys sort by fetch time. */
+    public const string OBSERVATIONS_PREFIX = 'offstreet-observations/';
+
+    /**
+     * Observation objects after `$after`, oldest first; listing resumes from the last processed key instead of the whole stream.
+     *
+     * @return Generator<int, array{key: string, etag: string}>
+     */
+    public function observations(string $dataset, ?string $after): Generator
+    {
+        if (! preg_match(self::DATASET_PATTERN, $dataset)) {
+            return;
+        }
+        $folder = self::OBSERVATIONS_PREFIX.$dataset.'/';
+        $pages = $this->client->getPaginator('ListObjectsV2', array_filter([
+            'Bucket' => $this->bucket(), 'Prefix' => $folder, 'StartAfter' => $after,
+        ]));
+        $pattern = '/^'.preg_quote($folder, '/').'\d{8}T\d{6}Z-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json$/D';
+        foreach ($pages as $page) {
+            foreach ($page['Contents'] ?? [] as $object) {
+                if (preg_match($pattern, $object['Key'])) {
+                    yield ['key' => $object['Key'], 'etag' => $object['ETag']];
+                }
+            }
+        }
+    }
+
     public function archive(string $json, string $targetType, string $dataset, string $deliveryId): void
     {
         $key = $this->prefix($targetType, $dataset).$deliveryId.'.json';

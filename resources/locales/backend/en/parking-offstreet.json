@@ -16,7 +16,7 @@
     },
     "table": {
         "name": "Name",
-        "api": "API",
+        "api": "Live data",
         "status": "Status",
         "short_parking": "Short-term parking",
         "long_parking": "Long-term Parking",
@@ -31,7 +31,11 @@
         "error": "Error",
         "full": "Full!",
         "almost_full": "Almost full",
-        "plenty": "Plenty of space"
+        "plenty": "Plenty of space",
+        "current": "Current",
+        "stale": "Stale",
+        "unavailable": "Unavailable",
+        "unknown": "No live data"
     },
     "bulk": {
         "selected": "{{count}} selected",

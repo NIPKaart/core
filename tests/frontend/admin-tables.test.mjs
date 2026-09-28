@@ -76,8 +76,12 @@ test('offstreet unknown availability remains unknown and visibility uses its own
         assert.equal(render(columns.find((column) => column.id === id).cell, { row }), '<span class="text-muted-foreground">—</span>');
     }
     assert.match(render(columns.find((column) => column.accessorKey === 'visibility').cell, { row }), /type="checkbox"/);
-    const full = { original: { ...row.original, free_space_short: 0 } };
-    assert.match(render(columns.find((column) => column.id === 'parking_status').cell, { row: full }), /badges.full/);
+    const status = columns.find((column) => column.id === 'parking_status').cell;
+    const full = { original: { ...row.original, free_space_short: 0, availability: 'current' } };
+    assert.match(render(status, { row: full }), /badges.full/);
+    const stale = { original: { ...full.original, availability: 'stale' } };
+    assert.equal(render(status, { row: stale }), '<span class="text-muted-foreground">—</span>');
+    assert.match(render(columns.find((column) => column.id === 'api_state').cell, { row: stale }), /badges.stale/);
 });
 
 

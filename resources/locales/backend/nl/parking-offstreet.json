@@ -16,7 +16,7 @@
     },
     "table": {
         "name": "Naam",
-        "api": "API",
+        "api": "Live gegevens",
         "status": "Status",
         "short_parking": "Kort parkeren",
         "long_parking": "Lang parkeren",
@@ -31,7 +31,11 @@
         "error": "Fout",
         "full": "Vol!",
         "almost_full": "Bijna vol",
-        "plenty": "Ruimte genoeg"
+        "plenty": "Ruimte genoeg",
+        "current": "Actueel",
+        "stale": "Verouderd",
+        "unavailable": "Niet beschikbaar",
+        "unknown": "Geen live gegevens"
     },
     "bulk": {
         "selected": "{{count}} geselecteerd",
