@@ -52,7 +52,7 @@ class DatasetImportController extends Controller
                 'processing' => $rows->contains('processing', true),
             ],
             'countries' => $rows->pluck('country')->filter()->unique()->sort()->values(),
-            'imports' => DatasetImport::with('datasetSource:id,name,last_published_retrieved_at')
+            'imports' => DatasetImport::with('datasetSource:id,name,target_type,last_published_retrieved_at')
                 ->when($request->filled('dataset'), fn (Builder $builder) => $builder->where('dataset_source_id', $request->integer('dataset')))
                 ->when(in_array($state, ['published', 'rejected']), fn (Builder $builder) => $builder->where('state', $state))
                 ->when(in_array($state, ['pending', 'superseded']), fn (Builder $builder) => $builder->where('state', 'pending')

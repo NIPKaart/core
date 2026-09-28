@@ -17,7 +17,7 @@ import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { FileUp, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SourceRow } from './source-status';
+import { SourceType, type SourceRow } from './source-status';
 import SourceTable, { type SourceFilters, type SourceSummary } from './source-table';
 
 export type Dataset = {
@@ -64,7 +64,11 @@ export default function Index({ datasets, sources, summary, countries, imports, 
                     >
                         {item.dataset_source?.name}
                     </Link>
-                    <span className="mt-1 block text-xs text-muted-foreground">{t('delivery_number', { number: item.id })}</span>
+                    {item.dataset_source && (
+                        <span className="mt-1 block">
+                            <SourceType type={item.dataset_source.target_type} />
+                        </span>
+                    )}
                 </div>
             ),
         },

@@ -25,7 +25,9 @@ export function AppSidebar() {
     const { t } = useTranslation('backend/sidebar');
 
     // Sidebar badge counts
-    const { trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
+    const userCount = props.counts.users;
+    const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
+    const { attention: dataSourcesAttention } = props.counts.dataSources;
     const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
@@ -73,6 +75,7 @@ export function AppSidebar() {
                 title: t('community_spaces'),
                 href: parkingSpaces.index(),
                 icon: icons.MapPin,
+                badge: activeParkingSpaces,
             },
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),
@@ -86,6 +89,7 @@ export function AppSidebar() {
                     (path) => url.split('?')[0] === path || url.startsWith(`${path}/`),
                 ),
                 icon: icons.Building,
+                badge: (hasRole('admin') && dataSourcesAttention) || undefined,
             },
             can('parking-rule.view_any') && {
                 title: t('rules'),
@@ -108,6 +112,7 @@ export function AppSidebar() {
                 title: t('users'),
                 href: users.index(),
                 icon: icons.Users,
+                badge: userCount,
             },
             can('role.view_any') && {
                 title: t('roles'),

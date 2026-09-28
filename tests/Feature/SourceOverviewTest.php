@@ -82,3 +82,20 @@ it('pages the overview and clamps pages past the end', function () {
 it('rejects unknown overview filters', function (array $query) {
     $this->actingAs($this->admin)->get(route('app.imports.index', $query))->assertSessionHasErrors(array_keys($query));
 })->with([[['status' => 'lost']], [['type' => 'bike']], [['country' => 'NLD']]]);
+
+it('shares the attention count for the sidebar with admins only', function () {
+    overviewSources();
+    $this->actingAs($this->admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('counts.dataSources.attention', 2));
+
+    $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('counts.dataSources.attention', 0));
+});
+
+it('labels each delivery in the history with its source type', function () {
+    $source = DatasetSource::factory()->offstreet()->create();
+    DatasetImport::factory()->for($source)->create();
+
+    $this->actingAs($this->admin)->get(route('app.imports.index', ['tab' => 'deliveries']))->assertInertia(fn (Assert $page) => $page
+        ->where('imports.data.0.dataset_source.target_type', 'offstreet'));
+});
