@@ -7,7 +7,7 @@
         "community.space_restored": "Parkeerplek hersteld",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding",
-        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling"
+        "dataset.import_ready_for_review": "Levering klaar voor beoordeling"
     },
     "actions": {
         "markRead": "Markeren als gelezen",

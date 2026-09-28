@@ -1,4 +1,4 @@
-import { index, show, store } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index, show, store } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
 import MunicipalDateTime from '@/components/municipal-date-time';
 import MunicipalNavigation from '@/components/municipal-navigation';
@@ -43,7 +43,7 @@ type Source = Dataset & {
 type Props = { datasets: Source[]; imports: PaginatedResponse<Import>; filters: { q: string; state: string; dataset: number | null; tab: string } };
 
 export default function Index({ datasets, imports, filters }: Props) {
-    const { t, i18n } = useTranslation('backend/municipal-imports');
+    const { t, i18n } = useTranslation('backend/imports');
     const columns: ColumnDef<Import>[] = [
         {
             id: 'delivery',

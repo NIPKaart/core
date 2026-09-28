@@ -28,12 +28,12 @@ class DatasetSource extends Model
 
     public function latestImport(): HasOne
     {
-        return $this->hasOne(MunicipalImport::class)->ofMany(['retrieved_at' => 'max', 'id' => 'max']);
+        return $this->hasOne(DatasetImport::class)->ofMany(['retrieved_at' => 'max', 'id' => 'max']);
     }
 
     public function latestDelivery(): HasOne
     {
-        return $this->hasOne(MunicipalDelivery::class)->latestOfMany();
+        return $this->hasOne(DatasetDelivery::class)->latestOfMany();
     }
 
     public function municipalSpaces(): HasMany

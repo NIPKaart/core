@@ -2,21 +2,21 @@
 
 namespace App\Services;
 
-use App\Jobs\ProcessMunicipalDelivery;
+use App\Jobs\ProcessDatasetDelivery;
+use App\Models\DatasetDelivery;
+use App\Models\DatasetImport;
 use App\Models\DatasetSource;
-use App\Models\MunicipalDelivery;
-use App\Models\MunicipalImport;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-class MunicipalDeliveryService
+class DatasetDeliveryService
 {
-    public function __construct(private MunicipalDeliveryStorage $storage, private MunicipalImportService $imports) {}
+    public function __construct(private DatasetDeliveryStorage $storage, private MunicipalImportService $imports) {}
 
-    public function upload(string $json, User $actor): MunicipalImport
+    public function upload(string $json, User $actor): DatasetImport
     {
-        return DB::transaction(function () use ($json, $actor): MunicipalImport {
+        return DB::transaction(function () use ($json, $actor): DatasetImport {
             $import = $this->imports->intake($json, $actor);
             $this->storage->archive($json, $import->datasetSource->code, $import->delivery_id);
 
@@ -26,18 +26,18 @@ class MunicipalDeliveryService
 
     public function discover(): void
     {
-        if (! config('municipal-deliveries.enabled')) {
+        if (! config('dataset-deliveries.enabled')) {
             return;
         }
         $bucket = $this->storage->bucket();
         try {
-            foreach (array_keys(config('municipal-deliveries.sources')) as $code) {
+            foreach (array_keys(config('dataset-deliveries.sources')) as $code) {
                 $source = DatasetSource::where('code', $code)->where('target_type', 'municipal')->first();
                 if (! $source) {
                     continue;
                 }
                 foreach ($this->storage->objects($code) as $object) {
-                    $delivery = MunicipalDelivery::firstOrCreate(
+                    $delivery = DatasetDelivery::firstOrCreate(
                         ['bucket' => $bucket, 'object_key' => $object['key']],
                         ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
                     );
@@ -47,9 +47,9 @@ class MunicipalDeliveryService
                 }
             }
         } finally {
-            MunicipalDelivery::where('bucket', $bucket)->where('state', 'pending')->chunkById(100, function ($deliveries) {
+            DatasetDelivery::where('bucket', $bucket)->where('state', 'pending')->chunkById(100, function ($deliveries) {
                 foreach ($deliveries as $delivery) {
-                    ProcessMunicipalDelivery::dispatch($delivery->id)->afterCommit();
+                    ProcessDatasetDelivery::dispatch($delivery->id)->afterCommit();
                 }
             });
         }
@@ -57,11 +57,11 @@ class MunicipalDeliveryService
 
     public function process(int $id): void
     {
-        if (! config('municipal-deliveries.enabled')) {
+        if (! config('dataset-deliveries.enabled')) {
             return;
         }
         DB::transaction(function () use ($id) {
-            $delivery = MunicipalDelivery::whereKey($id)->lockForUpdate()->firstOrFail();
+            $delivery = DatasetDelivery::whereKey($id)->lockForUpdate()->firstOrFail();
             if ($delivery->state !== 'pending') {
                 return;
             }
@@ -77,9 +77,9 @@ class MunicipalDeliveryService
                 $delivery->received_at = now();
                 $import = $this->imports->intakeFromStorage($json, $source->code, $deliveryId);
                 $delivery->forceFill([
-                    'municipal_import_id' => $import->id, 'state' => 'validated',
+                    'dataset_import_id' => $import->id, 'state' => 'validated',
                     'validated_at' => now(), 'error_code' => null,
-                    'late_on_receipt' => $import->retrieved_at->lt(now()->subHours(config('municipal-deliveries.sources.'.$source->code.'.max_age_hours'))),
+                    'late_on_receipt' => $import->retrieved_at->lt(now()->subHours(config('dataset-deliveries.sources.'.$source->code.'.max_age_hours'))),
                 ])->save();
             } catch (ValidationException) {
                 $delivery->forceFill(['state' => 'rejected', 'error_code' => 'invalid_delivery'])->save();

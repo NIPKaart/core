@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\DatasetDelivery;
 use App\Models\DatasetSource;
-use App\Models\MunicipalDelivery;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<MunicipalDelivery> */
-class MunicipalDeliveryFactory extends Factory
+/** @extends Factory<DatasetDelivery> */
+class DatasetDeliveryFactory extends Factory
 {
     public function definition(): array
     {

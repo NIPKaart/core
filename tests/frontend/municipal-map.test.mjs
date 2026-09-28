@@ -8,8 +8,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-const translations = JSON.parse(readFileSync(new URL('../../resources/locales/backend/en/municipal-imports.json', import.meta.url), 'utf8'));
-const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages/backend/municipal-imports/show.tsx', import.meta.url), 'utf8'), {
+const translations = JSON.parse(readFileSync(new URL('../../resources/locales/backend/en/imports.json', import.meta.url), 'utf8'));
+const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages/backend/imports/show.tsx', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 const wrapper = ({ children }) => React.createElement('div', null, children);

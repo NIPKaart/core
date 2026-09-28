@@ -6,8 +6,8 @@ use App\Contracts\DestinationGeocoder;
 use App\Enums\UserRole;
 use App\Models\ParkingSpace;
 use App\Observers\ParkingSpaceObserver;
+use App\Services\DatasetDeliveryStorage;
 use App\Services\GeoapifyDestinationGeocoder;
-use App\Services\MunicipalDeliveryStorage;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DestinationGeocoder::class, GeoapifyDestinationGeocoder::class);
-        $this->app->bind(MunicipalDeliveryStorage::class, fn () => new MunicipalDeliveryStorage(Storage::disk('municipal-deliveries')->getClient()));
+        $this->app->bind(DatasetDeliveryStorage::class, fn () => new DatasetDeliveryStorage(Storage::disk('dataset-deliveries')->getClient()));
     }
 
     /**

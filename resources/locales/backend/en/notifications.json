@@ -43,7 +43,7 @@
         "community.*": "Community space",
         "system.*": "System",
         "default": "Notification",
-        "municipal.import_ready_for_review": "Municipal delivery ready for review"
+        "dataset.import_ready_for_review": "Delivery ready for review"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
@@ -53,6 +53,6 @@
         "community.space_restored": "Community space restored: {{space_label}}",
         "system.announcement": "System announcement",
         "default": "Notification",
-        "municipal.import_ready_for_review": "Municipal delivery ready for review: {{source_name}}"
+        "dataset.import_ready_for_review": "Delivery ready for review: {{source_name}}"
     }
 }

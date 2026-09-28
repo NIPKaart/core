@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Database\Factories\MunicipalDeliveryFactory;
+use Database\Factories\DatasetDeliveryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MunicipalDelivery extends Model
+class DatasetDelivery extends Model
 {
-    /** @use HasFactory<MunicipalDeliveryFactory> */
+    /** @use HasFactory<DatasetDeliveryFactory> */
     use HasFactory;
 
     protected $fillable = ['dataset_source_id', 'bucket', 'object_key', 'etag'];

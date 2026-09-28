@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('municipal_deliveries', function (Blueprint $table) {
+        Schema::create('dataset_deliveries', function (Blueprint $table) {
             $table->id();
             $table->foreignId('dataset_source_id')->constrained()->restrictOnDelete();
             $table->string('bucket');
             $table->string('object_key');
             $table->string('etag');
             $table->string('state')->default('pending');
-            $table->foreignId('municipal_import_id')->nullable()->constrained()->restrictOnDelete();
+            $table->foreignId('dataset_import_id')->nullable()->constrained()->restrictOnDelete();
             $table->timestampTz('received_at')->nullable();
             $table->timestampTz('validated_at')->nullable();
             $table->boolean('late_on_receipt')->default(false);
@@ -28,6 +28,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('municipal_deliveries');
+        Schema::dropIfExists('dataset_deliveries');
     }
 };

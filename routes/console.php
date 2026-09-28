@@ -24,6 +24,6 @@ if (config('backup.enabled')) {
     }
 }
 
-if (config('municipal-deliveries.enabled')) {
-    Schedule::command('nipkaart:discover-municipal-deliveries')->everyFiveMinutes()->onOneServer()->withoutOverlapping(10);
+if (config('dataset-deliveries.enabled')) {
+    Schedule::command('nipkaart:discover-deliveries')->everyFiveMinutes()->onOneServer()->withoutOverlapping(10);
 }

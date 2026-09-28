@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\DatasetImport;
 use App\Models\DatasetSource;
-use App\Models\MunicipalImport;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<MunicipalImport> */
-class MunicipalImportFactory extends Factory
+/** @extends Factory<DatasetImport> */
+class DatasetImportFactory extends Factory
 {
     public function definition(): array
     {

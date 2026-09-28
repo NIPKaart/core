@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\MunicipalImport;
+namespace App\Notifications\DatasetImport;
 
 use App\Enums\NotificationType;
 use App\Enums\UserRole;
@@ -41,9 +41,9 @@ class ReadyForReview extends Notification implements ShouldQueue
     private function payload(): array
     {
         return [
-            'type' => NotificationType::MunicipalImportReadyForReview->value,
+            'type' => NotificationType::DatasetImportReadyForReview->value,
             'params' => ['source_name' => $this->sourceName],
-            'url' => route('app.municipal-imports.show', $this->importId),
+            'url' => route('app.imports.show', $this->importId),
             'meta' => ['import_id' => $this->importId],
         ];
     }

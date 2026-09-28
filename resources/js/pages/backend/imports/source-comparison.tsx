@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Claim, Row } from './show';
 
 export default function SourceComparison({ row, onShowMap }: { row: Row; onShowMap: () => void }) {
-    const { t } = useTranslation('backend/municipal-imports');
+    const { t } = useTranslation('backend/imports');
     const both = Boolean(row.before && row.after);
     const sides = (['before', 'after'] as const).filter((side) => row[side]);
     const fields = [
@@ -86,7 +86,7 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
 }
 
 export function MissingSourceNotice({ row }: { row: Row }) {
-    const { t } = useTranslation('backend/municipal-imports');
+    const { t } = useTranslation('backend/imports');
     if (row.status !== 'missing') return null;
 
     const visibility = row.current?.visibility;

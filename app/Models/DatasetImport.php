@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Database\Factories\MunicipalImportFactory;
+use Database\Factories\DatasetImportFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class MunicipalImport extends Model
+class DatasetImport extends Model
 {
-    /** @use HasFactory<MunicipalImportFactory> */
+    /** @use HasFactory<DatasetImportFactory> */
     use HasFactory;
 
     protected $dateFormat = 'Y-m-d H:i:s.u';
@@ -35,6 +35,6 @@ class MunicipalImport extends Model
 
     public function delivery(): HasOne
     {
-        return $this->hasOne(MunicipalDelivery::class)->ofMany('id', 'min');
+        return $this->hasOne(DatasetDelivery::class)->ofMany('id', 'min');
     }
 }

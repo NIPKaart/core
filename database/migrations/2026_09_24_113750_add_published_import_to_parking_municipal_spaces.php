@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('parking_municipal_spaces', function (Blueprint $table) {
-            $table->foreignId('published_import_id')->nullable()->constrained('municipal_imports')->restrictOnDelete();
+            $table->foreignId('published_import_id')->nullable()->constrained('dataset_imports')->restrictOnDelete();
         });
     }
 

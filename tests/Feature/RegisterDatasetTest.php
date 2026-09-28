@@ -14,7 +14,7 @@ it('refuses unknown datasets without registering a source', function () {
 
 it('registers an additional configured dataset without a city specific command', function () {
     $municipality = DatasetSource::factory()->make()->municipality;
-    config(['municipal-deliveries.sources.nl-extra' => [
+    config(['dataset-deliveries.sources.nl-extra' => [
         'municipality' => ['name' => $municipality->name, 'country' => 'NL', 'province' => 'NL-NH'],
         'registration' => [
             'name' => 'Additional source', 'selection' => 'all', 'target_type' => 'municipal',

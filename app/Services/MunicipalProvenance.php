@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\DatasetImport;
 use App\Models\DatasetSource;
-use App\Models\MunicipalImport;
 use App\Models\ParkingMunicipal;
 
 class MunicipalProvenance
 {
     public function deliveryStatus(DatasetSource $source): string
     {
-        $hours = config('municipal-deliveries.sources.'.$source->code.'.max_age_hours');
+        $hours = config('dataset-deliveries.sources.'.$source->code.'.max_age_hours');
         if (! is_numeric($hours) || $hours <= 0) {
             return 'unknown';
         }
@@ -43,7 +43,7 @@ class MunicipalProvenance
     }
 
     /** @return array<string, mixed> */
-    public function importTimes(MunicipalImport $import): array
+    public function importTimes(DatasetImport $import): array
     {
         $delivery = $import->delivery;
 
