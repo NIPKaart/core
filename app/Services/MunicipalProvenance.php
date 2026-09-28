@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
 
 class MunicipalProvenance
 {
@@ -31,8 +32,12 @@ class MunicipalProvenance
         return $source->expected_interval_hours > 0 && is_int($intervals) && $intervals > 0 ? $source->expected_interval_hours * $intervals : null;
     }
 
-    /** @return array<string, mixed> */
-    public function publicDetails(ParkingMunicipal $space): array
+    /**
+     * Source, attribution and terms of the published import behind a municipal space or offstreet facility.
+     *
+     * @return array<string, mixed>
+     */
+    public function publicDetails(ParkingMunicipal|ParkingOffstreet $space): array
     {
         $import = $space->publishedImport;
         if ($import?->state !== 'published' || $import->dataset_source_id !== $space->dataset_source_id) {

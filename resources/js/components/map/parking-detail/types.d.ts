@@ -61,6 +61,7 @@ export type OffstreetParkingDetail = {
     url: string | null;
     prices: json | null;
     updated_at: datetime;
+    provenance: { name: string | null; attribution: string | null; url: string | null; terms_url: string | null };
     is_favorited?: boolean;
 };
 

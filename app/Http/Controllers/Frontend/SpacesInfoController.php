@@ -9,6 +9,7 @@ use App\Models\ParkingOffstreet;
 use App\Models\ParkingRule;
 use App\Models\ParkingSpace;
 use App\Services\MunicipalProvenance;
+use Illuminate\Support\Arr;
 
 class SpacesInfoController extends Controller
 {
@@ -109,9 +110,9 @@ class SpacesInfoController extends Controller
         ]);
     }
 
-    public function ParkingOffstreetInfo(string $id)
+    public function ParkingOffstreetInfo(string $id, MunicipalProvenance $provenance)
     {
-        $location = ParkingOffstreet::with(['country', 'province', 'municipality'])
+        $location = ParkingOffstreet::with(['country', 'province', 'municipality', 'publishedImport:id,dataset_source_id,state,retrieved_at,dataset_config'])
             ->where('id', $id)
             ->where('visibility', true)
             ->firstOrFail();
@@ -138,6 +139,8 @@ class SpacesInfoController extends Controller
             'url' => $location->url ?? null,
             'prices' => $location->prices ?? null,
             'updated_at' => $location->updated_at,
+            // Who publishes the facility data; the live measurement time is `observed_at`.
+            'provenance' => Arr::only($provenance->publicDetails($location), ['name', 'attribution', 'url', 'terms_url']),
             'is_favorited' => $isFavorited,
         ]);
     }

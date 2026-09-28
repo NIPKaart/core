@@ -76,12 +76,17 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
     const { source, detail } = data;
 
     const unknown = <span className="font-normal text-muted-foreground italic">{t('detail.unknown')}</span>;
+    // European day-month order and a 24-hour clock, also in English.
+    const locale = i18n.language.startsWith('en') ? 'en-GB' : i18n.language;
     const date = (value: string | null | undefined, withTime = false) =>
         value ? (
             <time dateTime={value}>
-                {withTime
-                    ? new Date(value).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
-                    : new Date(value).toLocaleDateString(i18n.language, { dateStyle: 'medium' })}
+                {new Date(value).toLocaleString(locale, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    ...(withTime ? { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' } : {}),
+                })}
             </time>
         ) : (
             unknown
@@ -139,11 +144,23 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
               ];
 
     const municipalSourceName =
-        source === 'municipal'
+        source !== 'community'
             ? detail.municipality?.trim()
                 ? t('detail.source.municipality', { name: detail.municipality.trim() })
                 : (detail.provenance.name ?? t('detail.source.municipal'))
             : null;
+    const sourceRow = (provenance: { name: string | null; attribution: string | null; url: string | null; terms_url: string | null }): Row => ({
+        label: t('municipal.table.source'),
+        value: provenance.url ? <ExternalLink href={provenance.url}>{municipalSourceName}</ExternalLink> : municipalSourceName,
+        help:
+            provenance.name || provenance.attribution || provenance.terms_url ? (
+                <span className="flex flex-col gap-1">
+                    {provenance.name && <span className="font-medium text-foreground">{provenance.name}</span>}
+                    {provenance.attribution && <span>{provenance.attribution}</span>}
+                    {provenance.terms_url && <ExternalLink href={provenance.terms_url}>{t('municipal.table.terms')}</ExternalLink>}
+                </span>
+            ) : undefined,
+    });
 
     const provenance: Row[] =
         source === 'community'
@@ -158,24 +175,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
               ]
             : source === 'municipal'
               ? [
-                    {
-                        label: t('municipal.table.source'),
-                        value: detail.provenance.url ? (
-                            <ExternalLink href={detail.provenance.url}>{municipalSourceName}</ExternalLink>
-                        ) : (
-                            municipalSourceName
-                        ),
-                        help:
-                            detail.provenance.name || detail.provenance.attribution || detail.provenance.terms_url ? (
-                                <span className="flex flex-col gap-1">
-                                    {detail.provenance.name && <span className="font-medium text-foreground">{detail.provenance.name}</span>}
-                                    {detail.provenance.attribution && <span>{detail.provenance.attribution}</span>}
-                                    {detail.provenance.terms_url && (
-                                        <ExternalLink href={detail.provenance.terms_url}>{t('municipal.table.terms')}</ExternalLink>
-                                    )}
-                                </span>
-                            ) : undefined,
-                    },
+                    sourceRow(detail.provenance),
                     {
                         label: t('municipal.table.fetched_at'),
                         value: date(detail.provenance.fetched_at),
@@ -185,12 +185,8 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                         ? [{ label: t('detail.source.source_date'), value: date(detail.provenance.source_updated_at) }]
                         : []),
                 ]
-              : [
-                    {
-                        label: t('detail.live.label'),
-                        value: liveOk ? t('detail.live.ok') : liveState,
-                    },
-                ];
+              : // Live state and measurement time are shown in the availability box; this names who publishes the data.
+                [sourceRow(detail.provenance)];
 
     if (isLoggedIn) {
         provenance.push({

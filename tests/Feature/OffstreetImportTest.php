@@ -210,3 +210,15 @@ it('lists the catalog dataset with its visible facility count', function () {
     $this->actingAs($user)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
         ->where('sources.data.0.target_type', 'offstreet')->where('sources.data.0.visible_locations_count', 1));
 });
+
+it('names the source of a published facility in its public detail', function () {
+    DatasetSource::factory()->offstreet()->create();
+    $user = offstreetReviewer();
+    publishOffstreet(stageOffstreet(offstreetCatalog(), $user), $user);
+    $garage = ParkingOffstreet::where('external_id', '06757815-834C-0E44-42B0-AE4FC4AF9CEF')->sole();
+
+    $this->getJson(route('map.parking-offstreet.show', $garage->id))->assertOk()
+        ->assertJsonPath('provenance.name', 'Amsterdam parkeergarages en P+R')
+        ->assertJsonPath('provenance.url', 'https://p-info.vorin-amsterdam.nl/v1/ParkingLocation.json')
+        ->assertJsonMissingPath('provenance.fetched_at');
+});
