@@ -15,7 +15,7 @@ class RegisterDataset extends Command
     public function handle(): int
     {
         $code = $this->argument('dataset');
-        $definition = config('municipal-deliveries.sources', [])[$code] ?? null;
+        $definition = config('dataset-deliveries.sources', [])[$code] ?? null;
         if (! isset($definition['registration'], $definition['municipality'])) {
             $this->error('Unknown dataset: '.$code);
 

@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Enums\UserRole;
+use App\Models\DatasetImport;
 use App\Models\DatasetSource;
-use App\Models\MunicipalImport;
 use App\Models\ParkingMunicipal;
 use App\Models\User;
-use App\Notifications\MunicipalImport\ReadyForReview;
+use App\Notifications\DatasetImport\ReadyForReview;
 use App\Support\MunicipalSnapshot;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +20,14 @@ class MunicipalImportService
 {
     public function __construct(private MunicipalSnapshot $snapshot) {}
 
-    public function intake(string $json, User $actor): MunicipalImport
+    public function intake(string $json, User $actor): DatasetImport
     {
-        Gate::forUser($actor)->authorize('create', MunicipalImport::class);
+        Gate::forUser($actor)->authorize('create', DatasetImport::class);
 
         return $this->stage($json, $actor, $this->snapshot->decode($json));
     }
 
-    public function intakeFromStorage(string $json, string $dataset, string $deliveryId): MunicipalImport
+    public function intakeFromStorage(string $json, string $dataset, string $deliveryId): DatasetImport
     {
         $data = $this->snapshot->decode($json);
         if ($data['dataset'] !== $dataset || $data['delivery_id'] !== $deliveryId) {
@@ -38,14 +38,14 @@ class MunicipalImportService
     }
 
     /** @param array<string, mixed> $data */
-    private function stage(string $json, ?User $actor, array $data): MunicipalImport
+    private function stage(string $json, ?User $actor, array $data): DatasetImport
     {
         $source = DatasetSource::where('code', $data['dataset'])->first();
         if (! $source) {
             throw ValidationException::withMessages(['dataset' => 'Deze dataset is niet geregistreerd.']);
         }
         $fingerprint = hash('sha256', $json);
-        $existing = MunicipalImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();
+        $existing = DatasetImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();
         if ($existing) {
             return $this->existingDelivery($existing, $fingerprint);
         }
@@ -54,7 +54,7 @@ class MunicipalImportService
 
         return DB::transaction(function () use ($source, $configuration, $records, $data, $fingerprint, $actor) {
             $source = DatasetSource::whereKey($source->id)->lockForUpdate()->firstOrFail();
-            $existing = MunicipalImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();
+            $existing = DatasetImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();
             if ($existing) {
                 return $this->existingDelivery($existing, $fingerprint);
             }
@@ -62,7 +62,7 @@ class MunicipalImportService
                 throw ValidationException::withMessages(['dataset' => 'De datasetconfiguratie is gewijzigd. Lees het bestand opnieuw in.']);
             }
 
-            $import = MunicipalImport::create([
+            $import = DatasetImport::create([
                 'dataset_source_id' => $source->id, 'delivery_id' => $data['delivery_id'],
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
                 'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor?->id,
@@ -74,7 +74,7 @@ class MunicipalImportService
         });
     }
 
-    private function existingDelivery(MunicipalImport $import, string $fingerprint): MunicipalImport
+    private function existingDelivery(DatasetImport $import, string $fingerprint): DatasetImport
     {
         if ($import->fingerprint !== $fingerprint) {
             throw ValidationException::withMessages(['delivery_id' => 'Deze leverings-ID is al gebruikt voor andere inhoud.']);
@@ -84,7 +84,7 @@ class MunicipalImportService
     }
 
     /** @return array<string, mixed> */
-    public function review(MunicipalImport $import, bool $lock = false): array
+    public function review(DatasetImport $import, bool $lock = false): array
     {
         $source = $import->datasetSource;
         $query = ParkingMunicipal::where('dataset_source_id', $source->id)->orderBy('id');
@@ -158,12 +158,12 @@ class MunicipalImportService
         return ['rows' => $rows, 'counts' => $counts, 'derivations' => $derivations, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows])];
     }
 
-    public function decide(MunicipalImport $import, User $actor, string $decision, ?string $reason, string $reviewToken, bool $geometryReviewed = false): void
+    public function decide(DatasetImport $import, User $actor, string $decision, ?string $reason, string $reviewToken, bool $geometryReviewed = false): void
     {
         Gate::forUser($actor)->authorize('update', $import);
         DB::transaction(function () use ($import, $actor, $decision, $reason, $reviewToken, $geometryReviewed) {
             $source = DatasetSource::whereKey($import->dataset_source_id)->lockForUpdate()->firstOrFail();
-            $import = MunicipalImport::whereKey($import->id)->lockForUpdate()->firstOrFail();
+            $import = DatasetImport::whereKey($import->id)->lockForUpdate()->firstOrFail();
             $import->setRelation('datasetSource', $source);
             if ($import->state !== 'pending') {
                 throw ValidationException::withMessages(['decision' => 'Deze levering is al beoordeeld.']);
@@ -186,7 +186,7 @@ class MunicipalImportService
         });
     }
 
-    private function publish(MunicipalImport $import, DatasetSource $source): void
+    private function publish(DatasetImport $import, DatasetSource $source): void
     {
         $municipality = $source->municipality;
         $existing = ParkingMunicipal::where('dataset_source_id', $source->id)->get()->keyBy('external_id');

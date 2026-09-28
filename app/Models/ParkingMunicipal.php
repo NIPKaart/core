@@ -59,7 +59,7 @@ class ParkingMunicipal extends Model
 
     public function publishedImport(): BelongsTo
     {
-        return $this->belongsTo(MunicipalImport::class, 'published_import_id');
+        return $this->belongsTo(DatasetImport::class, 'published_import_id');
     }
 
     public function country(): BelongsTo

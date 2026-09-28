@@ -2,14 +2,14 @@
 
 namespace App\Http\Requests\App;
 
-use App\Models\MunicipalImport;
+use App\Models\DatasetImport;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreMunicipalImportRequest extends FormRequest
+class StoreDatasetImportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', MunicipalImport::class);
+        return $this->user()->can('create', DatasetImport::class);
     }
 
     /** @return array<string, list<string>> */

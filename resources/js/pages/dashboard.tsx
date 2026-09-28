@@ -1,4 +1,4 @@
-import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import { useAuthorization } from '@/hooks/use-authorization';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard, locationMap } from '@/routes';

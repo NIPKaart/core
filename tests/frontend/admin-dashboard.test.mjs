@@ -24,7 +24,7 @@ function render(permissions = [], admin = false) {
             if (name === '@/routes') return { dashboard: route('dashboard'), locationMap: route('map') };
             if (name === '@/routes/profile') return { default: { parkingSpaces: { index: route('my-locations') }, favorites: { index: route('favorites') } } };
             if (name.startsWith('@/routes/app/')) return { default: { index: route(name.split('/').at(-1)) } };
-            if (name.startsWith('@/actions/')) return { index: route('municipal-imports') };
+            if (name.startsWith('@/actions/')) return { index: route('imports') };
             return require(name);
         },
     };
@@ -36,15 +36,15 @@ test('dashboard keeps personal destinations and hides management without permiss
     const html = render();
     assert.match(html, /href="\/my-locations"/);
     assert.match(html, /href="\/favorites"/);
-    assert.doesNotMatch(html, /href="\/(users|roles|parking-spaces|municipal-imports|parking-municipal)"/);
+    assert.doesNotMatch(html, /href="\/(users|roles|parking-spaces|imports|parking-municipal)"/);
 });
 
 test('municipal staff get locations while administrators get the review entry point', () => {
     const staff = render(['parking-municipal.view_any']);
     assert.match(staff, /href="\/parking-municipal"/);
-    assert.doesNotMatch(staff, /href="\/municipal-imports"/);
+    assert.doesNotMatch(staff, /href="\/imports"/);
     const admin = render(['user.view_any'], true);
-    assert.match(admin, /href="\/municipal-imports"/);
+    assert.match(admin, /href="\/imports"/);
     assert.match(admin, /href="\/users"/);
     assert.doesNotMatch(admin, /href="\/roles"/);
 });

@@ -1,4 +1,4 @@
-import { index } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { cn } from '@/lib/utils';
 import parkingMunicipal from '@/routes/app/parking-municipal';
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function MunicipalNavigation({ active }: { active: 'sources' | 'locations' | 'deliveries' }) {
     const { hasRole, can } = useAuthorization();
-    const { t } = useTranslation('backend/municipal-imports');
+    const { t } = useTranslation('backend/imports');
     const items = [
         ...(hasRole('admin') ? [{ key: 'sources', title: t('navigation.sources'), icon: Database, href: index() }] : []),
         ...(can('parking-municipal.view_any')

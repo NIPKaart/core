@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestampTz('last_published_retrieved_at', 6)->nullable();
             $table->timestampsTz();
         });
-        Schema::create('municipal_imports', function (Blueprint $table) {
+        Schema::create('dataset_imports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('dataset_source_id')->constrained()->restrictOnDelete();
             $table->uuid('delivery_id');
@@ -60,7 +60,7 @@ return new class extends Migration
             $table->dropConstrainedForeignId('dataset_source_id');
             $table->dropColumn(['external_id', 'source_record', 'geometry_derivation', 'last_imported_values', 'last_checked_at']);
         });
-        Schema::dropIfExists('municipal_imports');
+        Schema::dropIfExists('dataset_imports');
         Schema::dropIfExists('dataset_sources');
         // Nullable capacity remains: restoring NOT NULL would lose unknown values.
     }

@@ -87,7 +87,7 @@ test('exhausting destination lookups does not consume other account request budg
     }
 
     $this->getJson(route('destinations.resolve', ['q' => 'zz']))->assertStatus(429);
-    $this->getJson(route('app.municipal-imports.index'))->assertForbidden();
+    $this->getJson(route('app.imports.index'))->assertForbidden();
 
     $this->actingAs(User::factory()->create());
     $this->getJson(route('destinations.suggestions', ['q' => 'zz']))->assertOk();

@@ -43,18 +43,18 @@ De collector ondersteunt nu **Amsterdam**. Hij draait direct bij starten en wach
 docker compose logs --tail 100 -f collector
 ```
 
-`Delivered` bevestigt de upload. Met Ctrl-C verlaat je de logs; de container blijft draaien. Controleer daarna of dezelfde levering in core bij de gemeentelijke imports verschijnt. Publicatie blijft handmatig.
+`Delivered` bevestigt de upload. Met Ctrl-C verlaat je de logs; de container blijft draaien. Controleer daarna of dezelfde levering in core onder Imports verschijnt. Publicatie blijft handmatig.
 
 ## Aansluiting op core
 
 Configureer in de **core-omgeving** dezelfde bucket en hetzelfde EU-endpoint, met aparte core-credentials met **Object Read & Write**, beperkt tot `nipkaart-imports`. Core heeft schrijfrechten nodig om handmatige backenduploads te bewaren; gebruik niet het collectortoken:
 
 ```dotenv
-MUNICIPAL_DELIVERIES_ENABLED=true
-MUNICIPAL_R2_ENDPOINT=https://ACCOUNT_ID.eu.r2.cloudflarestorage.com
-MUNICIPAL_R2_BUCKET=nipkaart-imports
-MUNICIPAL_R2_ACCESS_KEY_ID=CORE_ACCESS_KEY_ID
-MUNICIPAL_R2_SECRET_ACCESS_KEY=CORE_SECRET_ACCESS_KEY
+DATASET_DELIVERIES_ENABLED=true
+IMPORTS_R2_ENDPOINT=https://ACCOUNT_ID.eu.r2.cloudflarestorage.com
+IMPORTS_R2_BUCKET=nipkaart-imports
+IMPORTS_R2_ACCESS_KEY_ID=CORE_ACCESS_KEY_ID
+IMPORTS_R2_SECRET_ACCESS_KEY=CORE_SECRET_ACCESS_KEY
 ```
 
 Amsterdam moet in core als bron geregistreerd zijn. Vernieuw na configuratiewijzigingen de configuratiecache en herstart de queue-worker. Met de Laravel-scheduler en queue-worker actief ontdekt core iedere vijf minuten nieuwe bestanden. Zie het [intakecontract](data-import-contract.md#core-bucket-intake-1216) voor de bestaande commando’s. Bij DDEV overschrijft de lokale RustFS-configuratie de R2-waarden; zie de [DDEV-aansluiting](data-import-contract.md#local-object-storage-with-ddev).

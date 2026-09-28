@@ -9,7 +9,7 @@ services:
         Private import bucket: nipkaart-imports (created on start)
   web:
     environment:
-      MUNICIPAL_R2_ENDPOINT: http://rustfs:9000
-      MUNICIPAL_R2_BUCKET: nipkaart-imports
-      MUNICIPAL_R2_ACCESS_KEY_ID: rustfs
-      MUNICIPAL_R2_SECRET_ACCESS_KEY: rustfs123
+      IMPORTS_R2_ENDPOINT: http://rustfs:9000
+      IMPORTS_R2_BUCKET: nipkaart-imports
+      IMPORTS_R2_ACCESS_KEY_ID: rustfs
+      IMPORTS_R2_SECRET_ACCESS_KEY: rustfs123

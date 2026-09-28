@@ -1,4 +1,4 @@
-import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';

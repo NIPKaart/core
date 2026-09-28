@@ -9,13 +9,13 @@ use Generator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-class MunicipalDeliveryStorage
+class DatasetDeliveryStorage
 {
     public function __construct(private S3ClientInterface $client) {}
 
     public function bucket(): string
     {
-        $bucket = config('filesystems.disks.municipal-deliveries.bucket');
+        $bucket = config('filesystems.disks.dataset-deliveries.bucket');
         if (! is_string($bucket) || $bucket === '') {
             throw ValidationException::withMessages(['storage' => 'Municipal delivery bucket is not configured.']);
         }
@@ -25,7 +25,7 @@ class MunicipalDeliveryStorage
 
     public function deliveryId(string $key, string $dataset): ?string
     {
-        if (! array_key_exists($dataset, config('municipal-deliveries.sources', []))) {
+        if (! array_key_exists($dataset, config('dataset-deliveries.sources', []))) {
             return null;
         }
         $prefix = preg_quote('municipal/'.$dataset.'/', '/');

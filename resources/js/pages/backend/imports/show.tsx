@@ -1,4 +1,4 @@
-import { index, show, update } from '@/actions/App/Http/Controllers/Admin/MunicipalImportController';
+import { index, show, update } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import MunicipalDateTime from '@/components/municipal-date-time';
@@ -58,7 +58,7 @@ type Props = {
 };
 
 export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, filters, times }: Props) {
-    const { t, i18n } = useTranslation('backend/municipal-imports');
+    const { t, i18n } = useTranslation('backend/imports');
     const [showComparisonMap, setShowComparisonMap] = useState(false);
     const [geometryReviewedForToken, setGeometryReviewedForToken] = useState<string | null>(null);
     const [selectedRecord, setSelectedRecord] = useState<Row | null>(null);
@@ -477,7 +477,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
 }
 
 function RecordDetails({ row }: { row: Row }) {
-    const { t } = useTranslation('backend/municipal-imports');
+    const { t } = useTranslation('backend/imports');
     const [showOriginal, setShowOriginal] = useState(true);
     const [showDerived, setShowDerived] = useState(true);
     const mapSource = row.after ?? row.before;
@@ -620,7 +620,7 @@ function RecordDetails({ row }: { row: Row }) {
 }
 
 export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Row) => void }) {
-    const { t } = useTranslation('backend/municipal-imports');
+    const { t } = useTranslation('backend/imports');
     const changes = useMemo(() => rows.filter((row) => (row.after ?? row.before)?.geometry), [rows]);
     if (changes.length === 0) {
         return (

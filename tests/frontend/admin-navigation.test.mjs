@@ -28,6 +28,6 @@ test('the more specific trash destination wins over its parent list', () => {
 });
 
 test('explicit navigation state supports shared sections and deliberate exclusions', () => {
-    assert.equal(isNavigationItemActive({ href: '/app/municipal-imports', isActive: true }, '/app/parking-municipal'), true);
+    assert.equal(isNavigationItemActive({ href: '/app/imports', isActive: true }, '/app/parking-municipal'), true);
     assert.equal(isNavigationItemActive({ href: '/app/users', isActive: false }, '/app/users/1'), false);
 });

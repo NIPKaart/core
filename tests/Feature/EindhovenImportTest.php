@@ -2,12 +2,12 @@
 
 use App\Enums\UserRole;
 use App\Models\Country;
+use App\Models\DatasetImport;
 use App\Models\DatasetSource;
-use App\Models\MunicipalImport;
 use App\Models\Municipality;
 use App\Models\Province;
 use App\Models\User;
-use App\Services\MunicipalDeliveryStorage;
+use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
 use App\Support\MunicipalSnapshot;
 use Illuminate\Http\UploadedFile;
@@ -46,24 +46,24 @@ it('archives Eindhoven points for review while refusing publication even by an a
     $user = User::factory()->create();
     $user->assignRole(UserRole::ADMIN);
     $data = eindhovenDelivery();
-    $this->mock(MunicipalDeliveryStorage::class)->shouldReceive('archive')->once()
+    $this->mock(DatasetDeliveryStorage::class)->shouldReceive('archive')->once()
         ->with(json_encode($data), MunicipalSnapshot::EINDHOVEN_DATASET, $data['delivery_id']);
 
-    $this->actingAs($user)->post(route('app.municipal-imports.store'), [
+    $this->actingAs($user)->post(route('app.imports.store'), [
         'file' => UploadedFile::fake()->createWithContent('eindhoven.json', json_encode($data)),
     ])->assertSessionHasNoErrors()->assertRedirect();
 
-    $import = MunicipalImport::firstOrFail();
+    $import = DatasetImport::firstOrFail();
     expect($import->records[0]['source'])->toEqual($data['records'][0]);
     expect($import->records[0]['values'])->toEqual([
         'street' => 'Venbergsemolen', 'number' => null, 'orientation' => null,
         'longitude' => 5.4816831, 'latitude' => 51.4493127,
     ]);
     expect($import->records[0]['geometry_derivation'])->toBeNull();
-    $this->get(route('app.municipal-imports.show', $import))->assertInertia(fn (Assert $page) => $page
-        ->component('backend/municipal-imports/show')->has('review.blockers', 1)->where('review.counts.new', 1));
+    $this->get(route('app.imports.show', $import))->assertInertia(fn (Assert $page) => $page
+        ->component('backend/imports/show')->has('review.blockers', 1)->where('review.counts.new', 1));
     $review = app(MunicipalImportService::class)->review($import);
-    $this->patch(route('app.municipal-imports.update', $import), [
+    $this->patch(route('app.imports.update', $import), [
         'decision' => 'publish', 'review_token' => $review['token'],
     ])->assertSessionHasErrors('decision');
     expect($import->fresh()->state)->toBe('pending');
@@ -77,7 +77,7 @@ it('accepts the same Eindhoven storage delivery only once and allows rejection',
     $json = json_encode($data, JSON_THROW_ON_ERROR);
     $import = $service->intakeFromStorage($json, $data['dataset'], $data['delivery_id']);
     expect($service->intakeFromStorage($json, $data['dataset'], $data['delivery_id'])->id)->toBe($import->id);
-    $this->assertDatabaseCount('municipal_imports', 1);
+    $this->assertDatabaseCount('dataset_imports', 1);
     $user = User::factory()->create();
     $user->assignRole(UserRole::ADMIN);
 
@@ -96,7 +96,7 @@ it('rejects invalid Eindhoven claims without staging or publishing', function (C
         json_encode($data, JSON_THROW_ON_ERROR), $data['dataset'], $data['delivery_id'],
     ))->toThrow(ValidationException::class);
 
-    $this->assertDatabaseCount('municipal_imports', 0);
+    $this->assertDatabaseCount('dataset_imports', 0);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
 })->with([
     'unverified general access' => fn (&$data) => $data['records'][0]['access_category'] = 'general',

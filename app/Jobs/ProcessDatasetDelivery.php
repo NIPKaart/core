@@ -2,12 +2,12 @@
 
 namespace App\Jobs;
 
-use App\Services\MunicipalDeliveryService;
+use App\Services\DatasetDeliveryService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
-class ProcessMunicipalDelivery implements ShouldBeUnique, ShouldQueue
+class ProcessDatasetDelivery implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
@@ -26,7 +26,7 @@ class ProcessMunicipalDelivery implements ShouldBeUnique, ShouldQueue
         return (string) $this->deliveryId;
     }
 
-    public function handle(MunicipalDeliveryService $service): void
+    public function handle(DatasetDeliveryService $service): void
     {
         $service->process($this->deliveryId);
     }

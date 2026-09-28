@@ -43,7 +43,7 @@
         "community.*": "Community locatie",
         "system.*": "Systeem",
         "default": "Melding",
-        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling"
+        "dataset.import_ready_for_review": "Levering klaar voor beoordeling"
     },
     "titles": {
         "community.space_submitted": "Nieuwe community locatie: {{space_label}}",
@@ -53,6 +53,6 @@
         "community.space_restored": "Community locatie hersteld: {{space_label}}",
         "system_announcement": "Systeem aankondiging",
         "default": "Melding",
-        "municipal.import_ready_for_review": "Gemeentelijke levering klaar voor beoordeling: {{source_name}}"
+        "dataset.import_ready_for_review": "Levering klaar voor beoordeling: {{source_name}}"
     }
 }

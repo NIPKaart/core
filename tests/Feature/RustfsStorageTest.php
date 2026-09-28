@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\MunicipalDeliveryStorage;
+use App\Services\DatasetDeliveryStorage;
 use Aws\S3\Exception\S3Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 it('round trips immutable deliveries through the local S3 service', function () {
-    expect(config('filesystems.disks.municipal-deliveries.endpoint'))->toBe('http://rustfs:9000');
-    expect(config('filesystems.disks.municipal-deliveries.bucket'))->toBe('nipkaart-imports');
+    expect(config('filesystems.disks.dataset-deliveries.endpoint'))->toBe('http://rustfs:9000');
+    expect(config('filesystems.disks.dataset-deliveries.bucket'))->toBe('nipkaart-imports');
 
-    $client = Storage::disk('municipal-deliveries')->getClient();
-    $storage = app(MunicipalDeliveryStorage::class);
+    $client = Storage::disk('dataset-deliveries')->getClient();
+    $storage = app(DatasetDeliveryStorage::class);
     $dataset = 'nl-amsterdam';
     $key = 'municipal/'.$dataset.'/'.Str::uuid().'.json';
     $json = '{"probe":"local-storage"}';
