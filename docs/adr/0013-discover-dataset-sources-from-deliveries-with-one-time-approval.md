@@ -43,7 +43,7 @@ The formats that carry this block get a new version: `nipkaart-municipal-2` and 
 ### Discovery and approval in core
 
 1. The scheduled discovery lists dataset folders under each known type prefix (`municipal/`, `offstreet/`) instead of reading a fixed list from configuration.
-2. For an unknown folder, core validates the newest delivery and creates a dataset source in state **awaiting approval**, with publication disabled. The municipality is found by country, scheme and code, or created from the `area` block when it does not exist yet. Countries and subdivisions are reference data: an unknown country or subdivision keeps the source waiting and shows why.
+2. For an unknown folder, core validates the newest delivery and creates a dataset source in state **awaiting approval**. An existing municipality is linked by country, scheme and code (or once by name, which then records the code). A missing municipality is created from the `area` block only when an administrator approves the source, so a rejected source leaves no reference data behind. Countries and subdivisions are reference data: an unknown country or subdivision keeps the source waiting and shows why.
 3. Administrators get a notification. The approval screen shows the source description, the licence and terms link, the area and bounds, and a record count from the delivery.
 4. Approval makes the source's deliveries flow into the existing staging, review and publication. Rejection keeps the source and its receipts for traceability and ignores its deliveries until someone reverses the decision.
 5. A later delivery whose source block differs from the approved one (for example a changed licence, publisher or area) is held for re-approval of the source before it can be reviewed.
