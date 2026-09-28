@@ -116,6 +116,8 @@ Keep R2 retention longer than the agreed maximum core outage. Losing the pending
 
 Manual backend uploads validate the file and archive the original bytes in the same private bucket under the same dataset/UUID key, including `sha256` metadata and a conditional write. Identical existing objects are reused after reading and comparing their bytes; conflicting content is never overwritten. A storage failure rolls back the new database import and returns an upload error. If the object was stored but the request or database commit failed, retrying or automatic discovery can recover it using the same delivery identity. Publication still requires review. Core needs its own bucket-scoped write credentials for this path; the read-only access probes below describe the earlier intake-only setup.
 
+> Proposed in [ADR 0013](../adr/0013-discover-dataset-sources-from-deliveries-with-one-time-approval.md) and tracked in [#1287](https://github.com/NIPKaart/core/issues/1287): sources describe themselves in every delivery and core discovers them, replacing the configured source list and `nipkaart:register-dataset` described below.
+
 ## Offstreet catalog intake (#1250)
 
 Offstreet catalogs use the same delivery and review chain as municipal data: bucket discovery, receipts, staging, the review screen under `/app/imports` and explicit publication. Datasets are configured in `config/dataset-deliveries.php` with `target_type` `offstreet`; the bucket folder follows the type (`offstreet/<dataset>/`). Register the Amsterdam catalog with `php artisan nipkaart:register-dataset nl-amsterdam-garages <Amsterdam municipality ID>`.
