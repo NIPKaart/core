@@ -31,7 +31,7 @@ class DatasetImportController extends Controller
             'dataset' => ['nullable', 'integer', 'exists:dataset_sources,id'], 'tab' => ['nullable', 'in:sources,deliveries'],
             'search' => ['nullable', 'string', 'max:200'], 'status' => ['nullable', Rule::in(['all', 'attention', ...SourceOverview::STATUSES])],
             'type' => ['nullable', 'in:all,municipal,offstreet'], 'country' => ['nullable', 'string', 'size:2'],
-            'page' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1'], 'source' => ['nullable', 'integer'],
         ]);
         $query = trim($request->string('q')->toString());
         $state = $request->string('state', 'all')->toString() ?: 'all';
@@ -69,6 +69,8 @@ class DatasetImportController extends Controller
             'filters' => [
                 'q' => $query, 'state' => $state, 'dataset' => $request->filled('dataset') ? $request->integer('dataset') : null,
                 'tab' => $request->string('tab', 'sources')->toString(), ...$sourceFilters,
+                // A notification link opens this source's detail sheet.
+                'source' => $request->filled('source') ? $request->integer('source') : null,
             ],
         ]);
     }

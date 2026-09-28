@@ -60,7 +60,7 @@ class SourceRegistrar
                 return;
             }
             $source->forceFill(['approval_state' => 'pending', 'pending_description' => $description])->save();
-            $this->notify($source);
+            $this->notify($source, reapproval: true);
         });
     }
 
@@ -133,9 +133,9 @@ class SourceRegistrar
         return $province ? ['country_id' => $country->id, 'province_id' => $province->id] : null;
     }
 
-    private function notify(DatasetSource $source): void
+    private function notify(DatasetSource $source, bool $reapproval = false): void
     {
-        Notification::send(User::role(UserRole::ADMIN)->get(), (new SourceAwaitingApproval($source->id, $source->name))->afterCommit());
+        Notification::send(User::role(UserRole::ADMIN)->get(), (new SourceAwaitingApproval($source->id, $source->name, $source->code, $reapproval))->afterCommit());
     }
 
     /** Deliveries received while the source waited are processed now. */

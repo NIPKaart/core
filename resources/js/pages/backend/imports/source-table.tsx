@@ -21,6 +21,8 @@ export type SourceFilters = {
     status: 'all' | 'attention' | SourceStatusKey;
     type: 'all' | 'municipal' | 'offstreet';
     country: string | null;
+    /** Opens this source's detail sheet, for links from notifications. */
+    source?: number | null;
 };
 export type SourceSummary = Record<SourceStatusKey, number> & { total: number; processing: boolean };
 
@@ -36,7 +38,7 @@ const chips: { status: SourceFilters['status']; counts: SourceStatusKey[] }[] = 
 
 export default function SourceTable({ sources, summary, countries, filters }: Props) {
     const { t, i18n } = useTranslation('backend/imports');
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [selectedId, setSelectedId] = useState<number | null>(filters.source ?? null);
     const selected = sources.data.find((source) => source.id === selectedId) ?? null;
     const filtered = filters.search !== '' || filters.status !== 'all' || filters.type !== 'all' || filters.country !== null;
     const visit = (changes: Partial<SourceFilters>) =>
@@ -44,7 +46,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
             index.url(),
             Object.fromEntries(
                 Object.entries({ ...filters, ...changes }).filter(
-                    ([key, value]) => value !== null && value !== '' && !(key !== 'search' && value === 'all'),
+                    ([key, value]) => key !== 'source' && value !== null && value !== '' && !(key !== 'search' && value === 'all'),
                 ),
             ),
             { preserveState: true, preserveScroll: true },

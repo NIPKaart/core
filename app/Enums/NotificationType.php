@@ -11,6 +11,7 @@ enum NotificationType: string
     case CommunitySpaceRestored = 'community.space_restored';
     case DatasetImportReadyForReview = 'dataset.import_ready_for_review';
     case DatasetSourceAwaitingApproval = 'dataset.source_awaiting_approval';
+    case DatasetSourceAwaitingReapproval = 'dataset.source_awaiting_reapproval';
     case SystemAnnouncement = 'system.announcement';
 
     public function label(): string

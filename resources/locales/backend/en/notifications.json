@@ -44,8 +44,8 @@
         "system.*": "System",
         "default": "Notification",
         "dataset.import_ready_for_review": "Delivery ready for review",
-
-        "dataset.source_awaiting_approval": "Source awaiting approval"
+        "dataset.source_awaiting_approval": "Source awaiting approval",
+        "dataset.source_awaiting_reapproval": "Changed source awaiting approval"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
@@ -56,7 +56,7 @@
         "system.announcement": "System announcement",
         "default": "Notification",
         "dataset.import_ready_for_review": "Delivery ready for review: {{source_name}}",
-
-        "dataset.source_awaiting_approval": "Source awaiting approval: {{source_name}}"
+        "dataset.source_awaiting_approval": "Source awaiting approval: {{source_name}}",
+        "dataset.source_awaiting_reapproval": "Changed source awaiting approval: {{source_name}}"
     }
 }
