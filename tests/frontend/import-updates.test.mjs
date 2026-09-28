@@ -56,9 +56,10 @@ test('import notifications reload the page data; other notifications leave it al
     assert.equal(page.exports.isImportNotification({ type: 42 }), false);
 });
 
-test('live dataset changes reload the page data instantly', () => {
+test('live dataset changes reload the page data instantly, except live occupancy', () => {
     const page = mount(false, true);
     page.change('deliveries');
+    page.change('imports');
     page.change('observations');
 
     assert.equal(page.reloads.length, 2);

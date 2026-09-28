@@ -1,5 +1,5 @@
 import { getEcho } from '@/echo';
-import { DATASET_EVENT } from '@/hooks/use-dataset-changes';
+import { DATASET_EVENT, type DatasetChange } from '@/hooks/use-dataset-changes';
 import { NOTIFICATION_EVENT } from '@/hooks/use-notifications';
 import { router, usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
@@ -25,7 +25,12 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
                 router.reload({ only: key.split(',') });
             }
         };
-        const reloadAll = () => router.reload({ only: key.split(',') });
+        // Live occupancy arrives every few minutes and is not shown on import pages.
+        const reloadAll = (event: Event) => {
+            if ((event as CustomEvent<DatasetChange>).detail?.scope !== 'observations') {
+                router.reload({ only: key.split(',') });
+            }
+        };
         window.addEventListener(NOTIFICATION_EVENT, reload);
         window.addEventListener(DATASET_EVENT, reloadAll);
 

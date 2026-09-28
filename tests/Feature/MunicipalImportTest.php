@@ -111,6 +111,21 @@ it('requires administrator authorization for every intake and review action', fu
     $this->patch(route('app.imports.update', $import))->assertForbidden();
 })->with([UserRole::USER, UserRole::MODERATOR]);
 
+it('throttles import changes but not viewing the import pages', function () {
+    $user = importReviewer();
+    $import = DatasetImport::factory()->create();
+
+    foreach (range(1, 21) as $attempt) {
+        $this->actingAs($user)->get(route('app.imports.index'))->assertOk();
+    }
+    $this->actingAs($user)->get(route('app.imports.show', $import))->assertOk();
+
+    foreach (range(1, 20) as $attempt) {
+        $this->actingAs($user)->patch(route('app.imports.update', $import), ['decision' => 'unknown']);
+    }
+    $this->actingAs($user)->patch(route('app.imports.update', $import), ['decision' => 'unknown'])->assertTooManyRequests();
+});
+
 it('redirects guests and reports invalid files without staging records', function () {
     $this->get(route('app.imports.index'))->assertRedirect(route('login'));
     $this->actingAs(importReviewer())->post(route('app.imports.store'), ['file' => UploadedFile::fake()->createWithContent('bad.json', '{invalid')])->assertSessionHasErrors('file');
