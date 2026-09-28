@@ -109,7 +109,8 @@ test('every source keeps the same group order but only shows the groups that app
     const expected = {
         community: ['Layout', 'Source and freshness'],
         municipal: ['Layout', 'Source and freshness'],
-        offstreet: ['Accessibility and availability', 'Source and freshness'],
+        // Garages show their live state in the availability box; signed-out visitors see no source table.
+        offstreet: ['Accessibility and availability'],
     };
     for (const source of Object.keys(expected)) {
         const html = render(source);
@@ -146,7 +147,7 @@ test('street parking omits fields its source never provides and marks missing kn
     assert.match(text(render('municipal', { municipality: null, province: null, country: ' ' })), /Parking location without an address/);
     assert.match(
         text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })),
-        /Source date Mar 4, 2026/,
+        /Source date 4 Mar 2026/,
     );
 
     const community = text(render('community'));
@@ -161,7 +162,12 @@ test('garage occupancy is labelled as general and accessible spaces are not clai
     assert.match(live, /Live Measured/);
     assert.match(live, /General spaces free 37 of 400 free/);
     assert.doesNotMatch(live, /Accessible|long-term|Orientation|Layout/i);
-    assert.match(live, /Live data Live, may be delayed/);
+    assert.doesNotMatch(live, /Source and freshness|Live data|may be delayed/);
+    assert.match(live, /Navigate/);
+    assert.doesNotMatch(live, /Streetview/);
+    // European day-month order with a 24-hour clock, also in English.
+    assert.match(live, /Measured \d{1,2} Feb 2026, \d{2}:00/);
+    assert.doesNotMatch(live, /AM|PM/);
 
     const failed = text(render('offstreet', { availability: 'unavailable' }));
     assert.doesNotMatch(failed, /37 of 400|General spaces free/);
@@ -175,7 +181,7 @@ test('garage occupancy is only shown for a current measurement', () => {
 
     const unknown = text(render('offstreet', { availability: 'unknown', observed_at: null }));
     assert.doesNotMatch(unknown, /37 of 400|Measured/);
-    assert.match(unknown, /Live data No live data/);
+    assert.match(unknown, /No live data/);
 });
 
 test('closed is not full and status-only sites show their status without counts', () => {
