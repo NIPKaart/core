@@ -220,5 +220,8 @@
         "reason_placeholder": "Optioneel: waarom je deze bron goedkeurt of afwijst",
         "approve": "Bron goedkeuren",
         "reject": "Bron afwijzen"
+    },
+    "live": {
+        "processing": "Leveringen worden verwerkt. Deze pagina werkt zichzelf bij."
     }
 }
