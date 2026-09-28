@@ -23,6 +23,7 @@
         "disabledSpace": "Disabled parking space",
         "accessibleSpace": "Accessible parking space",
         "facility": "Garage / P+R · no current data",
-        "facilityLive": "Garage / P+R · current free spaces"
+        "facilityLive": "Garage / P+R · current free spaces",
+        "facilityUnavailable": "Garage / P+R · live data temporarily unavailable"
     }
 }

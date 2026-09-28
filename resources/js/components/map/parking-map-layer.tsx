@@ -73,7 +73,7 @@ export default function ParkingMapLayer({ onSelect, selectedKey, results = null 
         const labels = {
             full: t('markers.full'),
             closed: t('markers.closed'),
-            open: t('markers.open'),
+            unavailable: t('markers.unavailable'),
             free: (count: number, formatted: string) => t('markers.free', { count, formatted }),
         };
         return garageBadge(occupancy.get(key.slice('offstreet:'.length)), labels);

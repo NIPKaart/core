@@ -105,7 +105,8 @@ final class ParkingDiscoveryController extends Controller
     }
 
     /**
-     * Current occupancy of every visible garage as [status, free, capacity], keyed by ID, for the markers' badges.
+     * Current occupancy of every visible garage as [status, free, capacity], keyed by ID, for the markers' badges;
+     * `unavailable` marks a garage whose live data is temporarily missing. Garages never measured are left out.
      * Kept out of the cached area payloads because it changes every few minutes; the same freshness rules as the
      * detail decide what counts as current, so marker and detail never disagree (#1221).
      */
@@ -116,6 +117,8 @@ final class ParkingDiscoveryController extends Controller
             ->mapWithKeys(fn (ParkingOffstreet $garage): array => match ($garage->availability()) {
                 'closed' => [$garage->id => ['closed', null, null]],
                 'current' => [$garage->id => [$garage->occupancy_status ?? 'counting', $garage->free_space, $garage->capacity]],
+                // Measured before, but not current now: the marker shows that live data is temporarily missing.
+                'stale', 'unavailable' => [$garage->id => ['unavailable', null, null]],
                 default => [],
             });
 

@@ -88,8 +88,8 @@
     "markers": {
         "full": "Full",
         "closed": "Closed",
-        "open": "Available",
         "free_one": "{{formatted}} general space free",
-        "free_other": "{{formatted}} general spaces free"
+        "free_other": "{{formatted}} general spaces free",
+        "unavailable": "Live data temporarily unavailable"
     }
 }

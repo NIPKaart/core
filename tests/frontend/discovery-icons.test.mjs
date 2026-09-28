@@ -39,6 +39,14 @@ test('a garage badge shows the free count in its tone and is escaped', () => {
     assert.match(discoveryIcon('offstreet', false, { text: 'Closed', tone: 'grey', label: 'Closed' }).html, /fill="#6b7280" stroke/);
 });
 
+test('a garage with temporarily missing live data shows a warning dot instead of a count', () => {
+    const icon = discoveryIcon('offstreet', false, { text: '', tone: 'grey', label: 'No live data', unavailable: true });
+    assert.match(icon.html, /fill="#d97706"/);
+    assert.match(icon.html, /fill="#27313a"/);
+    assert.doesNotMatch(icon.html, /font-weight="800"/);
+    assert.notEqual(icon, discoveryIcon('offstreet'));
+});
+
 function marker() {
     return {
         icon: null, z: 0, classes: new Set(),

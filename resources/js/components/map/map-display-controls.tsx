@@ -69,6 +69,10 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                                     <span>{tGlobal('legend.facilityLive')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
+                                    <LegendPin markup={pinSvg(true, { text: '', tone: 'grey', label: '', unavailable: true })} />
+                                    <span>{tGlobal('legend.facilityUnavailable')}</span>
+                                </li>
+                                <li className="flex items-center gap-3">
                                     <LegendPin markup={pinSvg(true, null)} />
                                     <span>{tGlobal('legend.facility')}</span>
                                 </li>

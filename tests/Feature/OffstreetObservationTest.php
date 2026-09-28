@@ -196,19 +196,22 @@ it('tells open pages about applied observations, and stays quiet when nothing ch
         && $event->broadcastOn()[0]->name === 'private-datasets');
 });
 
-it('lists only current and closed garages for the map badges, with the detail rules', function () {
+it('lists current, closed and temporarily unavailable garages for the map, with the detail rules', function () {
     $current = fn (array $state = []) => ParkingOffstreet::factory()->create([
         'dataset_source_id' => $this->source->id, 'visibility' => true, 'api_state' => ApiState::OK, 'occupancy_status' => 'counting',
         'capacity' => 400, 'free_space' => 37, 'observed_at' => now()->subMinute(), ...$state,
     ]);
     $counting = $current();
     $closed = $current(['occupancy_status' => 'closed', 'free_space' => 0]);
-    $current(['observed_at' => now()->subMinutes(11)]);
+    $stale = $current(['observed_at' => now()->subMinutes(11)]);
+    $failing = $current(['api_state' => ApiState::ERROR]);
     $current(['visibility' => false]);
-    $current(['api_state' => ApiState::ERROR]);
+    $current(['observed_at' => null, 'api_state' => null]);
 
-    $this->getJson(route('map.parking.garage-occupancy'))->assertOk()
-        ->assertExactJson(['garages' => [$counting->id => ['counting', 37, 400], $closed->id => ['closed', null, null]]]);
+    $this->getJson(route('map.parking.garage-occupancy'))->assertOk()->assertExactJson(['garages' => [
+        $counting->id => ['counting', 37, 400], $closed->id => ['closed', null, null],
+        $stale->id => ['unavailable', null, null], $failing->id => ['unavailable', null, null],
+    ]]);
 });
 
 it('returns an empty object when no garage has a current measurement', function () {

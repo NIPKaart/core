@@ -15,9 +15,14 @@ const WHEELCHAIR =
 const LETTER_P = '<text x="18" y="24.5" text-anchor="middle" font-family="inherit" font-weight="700" font-size="17" fill="#fff">P</text>';
 
 export function pinSvg(garage: boolean, badge: GarageBadge | null): string {
-    const fill = !garage ? '#1d4ed8' : badge?.tone === 'grey' ? '#6b7280' : '#27313a';
+    // Only a closed garage turns grey; missing live data keeps the dark pin with a warning dot.
+    const fill = !garage ? '#1d4ed8' : badge?.tone === 'grey' && !badge.unavailable ? '#6b7280' : '#27313a';
     let label = '';
-    if (badge) {
+    if (badge?.unavailable) {
+        // Live data temporarily missing: a warning dot where the badge would be, never a count.
+        label =
+            '<g transform="translate(24 -4)"><circle cx="11" cy="11" r="11" fill="#d97706" stroke="#fff" stroke-width="2"/><rect x="9.6" y="4.5" width="2.8" height="8.5" rx="1.4" fill="#fff"/><circle cx="11" cy="16.6" r="1.7" fill="#fff"/></g>';
+    } else if (badge) {
         // Bold and at least 14px: the free count is the main information on a garage marker.
         const size = /^[\d.,\s]+$/.test(badge.text) ? 14 : 12.5;
         const width = Math.round(badge.text.length * size * 0.62 + 16);
@@ -30,7 +35,7 @@ export function pinSvg(garage: boolean, badge: GarageBadge | null): string {
 /** Street places share one pin; garages add their current occupancy badge, never an accessible-space claim. */
 export function discoveryIcon(source: ParkingResult['source'], selected = false, badge: GarageBadge | null = null): L.DivIcon {
     const garage = source === 'offstreet';
-    const key = `${garage ? `garage:${badge?.tone ?? ''}:${badge?.text ?? ''}` : 'street'}:${selected}`;
+    const key = `${garage ? `garage:${badge?.unavailable ? 'unavailable' : `${badge?.tone ?? ''}:${badge?.text ?? ''}`}` : 'street'}:${selected}`;
     let icon = icons.get(key);
     if (!icon) {
         icon = L.divIcon({
