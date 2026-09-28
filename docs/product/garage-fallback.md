@@ -9,7 +9,7 @@ Garages/P+R are alternatives when:
 - nearby on-street results are absent/insufficient;
 - the user broadens the search to alternatives.
 
-A separate garage overview may still be useful, but it should not be the only way to discover offstreet options.
+The public `/garages` page lists every visible garage/P+R per municipality with its general occupancy, measurement time, a map link and navigation. It applies the detail's freshness rules, reloads when observations are applied or every two minutes. It complements destination discovery; it is not the only way to find offstreet options.
 
 ## Occupancy semantics
 

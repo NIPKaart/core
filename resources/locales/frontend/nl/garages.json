@@ -1,0 +1,66 @@
+{
+    "meta": {
+        "title": "Garages en P+R",
+        "description": "Live overzicht van parkeergarages en P+R-terreinen per gemeente, met de algemene bezetting en het tijdstip van de laatste meting."
+    },
+    "title": "Garages en P+R",
+    "intro": "De laatste algemene bezetting van elke garage en P+R, per gemeente. Handig als er geen gehandicaptenparkeerplaats op straat vrij is.",
+    "empty": "Er zijn nog geen garages of P+R-terreinen beschikbaar.",
+    "locations_one": "{{count}} locatie",
+    "locations_other": "{{count}} locaties",
+    "summary": {
+        "latest": "Live · laatste meting {{time}}",
+        "states": "{{current}} live · {{closed}} gesloten · {{without}} zonder live gegevens"
+    },
+    "types": {
+        "garage": "Parkeergarage",
+        "parkandride": "P+R"
+    },
+    "filter": {
+        "label": "Zoek op gemeente of naam",
+        "placeholder": "Gemeente of garagenaam",
+        "type": "Type",
+        "types": {
+            "all": "Alle",
+            "garage": "Garages",
+            "parkandride": "P+R"
+        },
+        "count_one": "{{count}} van {{total}} locatie",
+        "count_other": "{{count}} van {{total}} locaties",
+        "none": "Geen garages gevonden voor je zoekopdracht."
+    },
+    "sort": {
+        "label": "Sorteer",
+        "name": "Naam A–Z",
+        "free": "Meeste vrij"
+    },
+    "columns": {
+        "location": "Locatie",
+        "status": "Status",
+        "free": "Vrij",
+        "occupancy": "Bezetting",
+        "measured": "Gemeten",
+        "go_to": "Ga naar"
+    },
+    "status": {
+        "live": "Live",
+        "general": "Algemene bezetting",
+        "free_of": "{{free}} van {{total}} vrij",
+        "free_of_short": "vrij van {{total}}",
+        "free": "{{free}} vrij",
+        "occupied": "{{percent}}% bezet",
+        "full": "Vol",
+        "open": "Plaatsen beschikbaar",
+        "closed": "Gesloten",
+        "stale": "Geen recente meting",
+        "unavailable": "Live gegevens niet beschikbaar",
+        "unknown": "Geen live gegevens",
+        "measured": "Gemeten"
+    },
+    "actions": {
+        "map": "Toon op kaart",
+        "map_label": "Toon {{name}} op de kaart",
+        "navigate": "Navigeer",
+        "navigate_label": "Navigeer naar {{name}} (opent in een nieuw tabblad)"
+    }
+}

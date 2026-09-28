@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ApiState;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
+use Carbon\CarbonImmutable;
 use Database\Factories\ParkingOffstreetFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -78,6 +79,25 @@ class ParkingOffstreet extends Model
         }
 
         return $this->free_space === null && ! in_array($this->occupancy_status, ['open', 'full'], true) ? 'unavailable' : 'current';
+    }
+
+    /**
+     * Occupancy as the public may see it: counts and operator status only for a current measurement, so stale,
+     * failed or unknown measurements are never shown as live (#1221). General free spaces are not accessible spaces.
+     *
+     * @return array{availability: string, occupancy_status: ?string, observed_at: ?CarbonImmutable, capacity: ?int, free_space: ?int}
+     */
+    public function publicOccupancy(): array
+    {
+        $availability = $this->availability();
+
+        return [
+            'availability' => $availability,
+            'occupancy_status' => $availability === 'current' ? $this->occupancy_status : null,
+            'observed_at' => $this->observed_at,
+            'capacity' => $this->capacity,
+            'free_space' => $availability === 'current' ? $this->free_space : null,
+        ];
     }
 
     public function datasetSource(): BelongsTo
