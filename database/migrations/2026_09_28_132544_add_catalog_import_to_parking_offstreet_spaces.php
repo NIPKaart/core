@@ -7,14 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Catalog deliveries identify facilities by source and keep unknown capacity and live values unknown.
+     * Catalog deliveries identify facilities by source; capacity and occupancy arrive as observations (#1221).
      */
     public function up(): void
     {
         Schema::table('parking_offstreet_spaces', function (Blueprint $table) {
-            $table->integer('short_capacity')->nullable()->change();
-            $table->integer('free_space_short')->nullable()->change();
-            $table->integer('accessible_capacity')->nullable();
             $table->foreignId('dataset_source_id')->nullable()->constrained()->restrictOnDelete();
             $table->string('external_id')->nullable();
             $table->jsonb('source_record')->nullable();
@@ -31,8 +28,7 @@ return new class extends Migration
             $table->dropUnique(['dataset_source_id', 'external_id']);
             $table->dropConstrainedForeignId('published_import_id');
             $table->dropConstrainedForeignId('dataset_source_id');
-            $table->dropColumn(['accessible_capacity', 'external_id', 'source_record', 'last_imported_values', 'last_checked_at']);
+            $table->dropColumn(['external_id', 'source_record', 'last_imported_values', 'last_checked_at']);
         });
-        // Nullable capacity remains: restoring NOT NULL would lose unknown values.
     }
 };
