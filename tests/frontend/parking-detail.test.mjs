@@ -96,7 +96,6 @@ const details = {
         availability: 'current',
         occupancy_status: 'counting',
         observed_at: '2026-02-03T10:00:00Z',
-        provenance: { name: 'Amsterdam parkeergarages en P+R', attribution: 'Gemeente Amsterdam', url: 'https://example.test/garages', terms_url: null },
         updated_at: '2026-02-03T10:00:00Z',
     },
 };
@@ -110,7 +109,8 @@ test('every source keeps the same group order but only shows the groups that app
     const expected = {
         community: ['Layout', 'Source and freshness'],
         municipal: ['Layout', 'Source and freshness'],
-        offstreet: ['Accessibility and availability', 'Source and freshness'],
+        // Garages show their live state in the availability box; signed-out visitors see no source table.
+        offstreet: ['Accessibility and availability'],
     };
     for (const source of Object.keys(expected)) {
         const html = render(source);
@@ -162,8 +162,7 @@ test('garage occupancy is labelled as general and accessible spaces are not clai
     assert.match(live, /Live Measured/);
     assert.match(live, /General spaces free 37 of 400 free/);
     assert.doesNotMatch(live, /Accessible|long-term|Orientation|Layout/i);
-    assert.match(live, /Source Municipality of Leiden/);
-    assert.doesNotMatch(live, /Live data|may be delayed/);
+    assert.doesNotMatch(live, /Source and freshness|Live data|may be delayed/);
     // European day-month order with a 24-hour clock, also in English.
     assert.match(live, /Measured \d{1,2} Feb 2026, \d{2}:00/);
     assert.doesNotMatch(live, /AM|PM/);

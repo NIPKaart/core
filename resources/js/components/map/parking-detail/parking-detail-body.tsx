@@ -144,7 +144,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
               ];
 
     const municipalSourceName =
-        source !== 'community'
+        source === 'municipal'
             ? detail.municipality?.trim()
                 ? t('detail.source.municipality', { name: detail.municipality.trim() })
                 : (detail.provenance.name ?? t('detail.source.municipal'))
@@ -185,8 +185,8 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                         ? [{ label: t('detail.source.source_date'), value: date(detail.provenance.source_updated_at) }]
                         : []),
                 ]
-              : // Live state and measurement time are shown in the availability box; this names who publishes the data.
-                [sourceRow(detail.provenance)];
+              : // Live state and measurement time are already shown in the availability box.
+                [];
 
     if (isLoggedIn) {
         provenance.push({
