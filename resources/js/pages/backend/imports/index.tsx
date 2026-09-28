@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useImportUpdates } from '@/hooks/use-import-updates';
 import AppLayout from '@/layouts/app-layout';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { PaginatedResponse } from '@/types';
@@ -57,6 +58,10 @@ type Props = { datasets: Source[]; imports: PaginatedResponse<Import>; filters: 
 
 export default function Index({ datasets, imports, filters }: Props) {
     const { t, i18n } = useTranslation('backend/imports');
+    const processing = datasets.some(
+        (dataset) => dataset.approval_state === 'approved' && dataset.latest_delivery?.state === 'pending' && !dataset.latest_delivery.error_code,
+    );
+    useImportUpdates(['datasets', 'imports'], processing);
     const columns: ColumnDef<Import>[] = [
         {
             id: 'delivery',
@@ -97,6 +102,9 @@ export default function Index({ datasets, imports, filters }: Props) {
                     <div className="space-y-2">
                         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
                         <p className="text-sm text-muted-foreground">{t('intro')}</p>
+                        <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
+                            {processing ? t('live.processing') : ''}
+                        </p>
                     </div>
                     <Dialog>
                         <DialogTrigger asChild>
