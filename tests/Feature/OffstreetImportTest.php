@@ -211,5 +211,5 @@ it('lists the catalog dataset with its visible facility count', function () {
     ParkingOffstreet::where('name', 'Byzantium')->update(['visibility' => false]);
 
     $this->actingAs($user)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.target_type', 'offstreet')->where('datasets.0.visible_locations_count', 1));
+        ->where('sources.data.0.target_type', 'offstreet')->where('sources.data.0.visible_locations_count', 1));
 });

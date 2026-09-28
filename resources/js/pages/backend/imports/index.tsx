@@ -12,13 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useImportUpdates } from '@/hooks/use-import-updates';
 import AppLayout from '@/layouts/app-layout';
-import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { PaginatedResponse } from '@/types';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpRight, Database, ExternalLink, FileUp, MapPin, Search } from 'lucide-react';
+import { FileUp, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import SourceApproval, { type SourceDescription } from './source-approval';
+import { SourceType, type SourceRow } from './source-status';
+import SourceTable, { type SourceFilters, type SourceSummary } from './source-table';
 
 export type Dataset = {
     id: number;
@@ -39,29 +39,18 @@ export type Import = {
     dataset_source?: Dataset;
 };
 
-type Source = Dataset & {
-    municipality_id: number | null;
-    approval_state: 'pending' | 'approved' | 'rejected';
-    description: SourceDescription;
-    pending_description: SourceDescription | null;
-    registration_error: string | null;
-    review_reason: string | null;
-    latest_import: Pick<Import, 'id' | 'state' | 'retrieved_at'> | null;
-    latest_delivery: { state: string; error_code: string | null } | null;
-    last_published_retrieved_at: string | null;
-    visible_locations_count: number;
-    needs_review: boolean;
-    stale: boolean;
-    delivery_status: 'current' | 'awaiting' | 'overdue' | 'unknown';
+type Props = {
+    datasets: Pick<Dataset, 'id' | 'name'>[];
+    sources: PaginatedResponse<SourceRow>;
+    summary: SourceSummary;
+    countries: string[];
+    imports: PaginatedResponse<Import>;
+    filters: SourceFilters & { q: string; state: string; dataset: number | null; tab: string };
 };
-type Props = { datasets: Source[]; imports: PaginatedResponse<Import>; filters: { q: string; state: string; dataset: number | null; tab: string } };
 
-export default function Index({ datasets, imports, filters }: Props) {
-    const { t, i18n } = useTranslation('backend/imports');
-    const processing = datasets.some(
-        (dataset) => dataset.approval_state === 'approved' && dataset.latest_delivery?.state === 'pending' && !dataset.latest_delivery.error_code,
-    );
-    useImportUpdates(['datasets', 'imports'], processing);
+export default function Index({ datasets, sources, summary, countries, imports, filters }: Props) {
+    const { t } = useTranslation('backend/imports');
+    useImportUpdates(['sources', 'summary', 'countries', 'imports'], summary.processing);
     const columns: ColumnDef<Import>[] = [
         {
             id: 'delivery',
@@ -75,7 +64,11 @@ export default function Index({ datasets, imports, filters }: Props) {
                     >
                         {item.dataset_source?.name}
                     </Link>
-                    <span className="mt-1 block text-xs text-muted-foreground">{t('delivery_number', { number: item.id })}</span>
+                    {item.dataset_source && (
+                        <span className="mt-1 block">
+                            <SourceType type={item.dataset_source.target_type} />
+                        </span>
+                    )}
                 </div>
             ),
         },
@@ -103,7 +96,7 @@ export default function Index({ datasets, imports, filters }: Props) {
                         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
                         <p className="text-sm text-muted-foreground">{t('intro')}</p>
                         <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-                            {processing ? t('live.processing') : ''}
+                            {summary.processing ? t('live.processing') : ''}
                         </p>
                     </div>
                     <Dialog>
@@ -236,141 +229,7 @@ export default function Index({ datasets, imports, filters }: Props) {
                         {imports.total > 0 && <DataTablePagination pagination={imports} />}
                     </div>
                 ) : (
-                    <div>
-                        {datasets.length === 0 && (
-                            <p className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">{t('no_datasets')}</p>
-                        )}
-                        <div className="space-y-4">
-                            {datasets.map((dataset) => (
-                                <section key={dataset.id} className="overflow-hidden rounded-xl border bg-card shadow-xs">
-                                    <div className="flex flex-col gap-6 p-5 sm:p-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="hidden size-11 shrink-0 items-center justify-center rounded-xl border bg-muted/40 sm:flex">
-                                                <Database className="size-5 text-muted-foreground" aria-hidden="true" />
-                                            </div>
-                                            <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                                                <h2 className="max-w-2xl text-base leading-relaxed font-semibold">{dataset.name}</h2>
-                                                <div className="flex shrink-0 flex-wrap gap-2">
-                                                    <Badge
-                                                        variant={dataset.needs_review ? 'secondary' : 'outline'}
-                                                        className={
-                                                            dataset.last_published_retrieved_at &&
-                                                            !dataset.needs_review &&
-                                                            dataset.latest_import?.state !== 'rejected'
-                                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                                                : undefined
-                                                        }
-                                                    >
-                                                        {t(
-                                                            dataset.needs_review
-                                                                ? 'states.pending'
-                                                                : dataset.latest_import?.state === 'rejected'
-                                                                  ? 'states.rejected'
-                                                                  : dataset.last_published_retrieved_at
-                                                                    ? 'states.published'
-                                                                    : 'no_deliveries',
-                                                        )}
-                                                    </Badge>
-                                                    {dataset.approval_state !== 'approved' && (
-                                                        <Badge variant={dataset.approval_state === 'rejected' ? 'outline' : 'destructive'}>
-                                                            {t(`approval.states.${dataset.approval_state}`)}
-                                                        </Badge>
-                                                    )}
-                                                    {dataset.stale && <Badge variant="destructive">{t('source_stale')}</Badge>}
-                                                    {dataset.delivery_status === 'unknown' && (
-                                                        <Badge variant="outline">{t('freshness_unknown')}</Badge>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <dl className="grid gap-5 rounded-lg bg-muted/30 p-4 sm:grid-cols-3 sm:gap-6">
-                                            <div>
-                                                <dt className="text-xs font-medium text-muted-foreground">{t('on_map')}</dt>
-                                                <dd className="mt-2 text-2xl font-semibold tabular-nums">
-                                                    {dataset.visible_locations_count.toLocaleString(i18n.language)}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-xs font-medium text-muted-foreground">{t('last_retrieved')}</dt>
-                                                <dd className="mt-2 text-sm font-medium">
-                                                    {dataset.latest_import ? <MunicipalDateTime value={dataset.latest_import.retrieved_at} /> : '—'}
-                                                </dd>
-                                            </div>
-                                            <div>
-                                                <dt className="text-xs font-medium text-muted-foreground">{t('published_source_date')}</dt>
-                                                <dd className="mt-2 text-sm font-medium">
-                                                    {dataset.last_published_retrieved_at ? (
-                                                        <MunicipalDateTime value={dataset.last_published_retrieved_at} />
-                                                    ) : (
-                                                        '—'
-                                                    )}
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                        {dataset.approval_state !== 'approved' && <SourceApproval source={dataset} />}
-                                        {dataset.stale && <p className="text-sm text-muted-foreground">{t('overdue_note')}</p>}
-                                        {(dataset.latest_delivery?.error_code || dataset.latest_delivery?.state === 'rejected') && (
-                                            <p role="status" className="text-sm text-destructive">
-                                                {t('intake_problem')}
-                                            </p>
-                                        )}
-                                        {dataset.latest_delivery?.state === 'pending' && !dataset.latest_delivery.error_code && (
-                                            <p className="text-sm text-muted-foreground">{t('intake_pending')}</p>
-                                        )}
-                                        <div className="flex flex-wrap gap-2">
-                                            {dataset.needs_review && dataset.latest_import && (
-                                                <Button asChild>
-                                                    <Link href={show(dataset.latest_import.id)}>
-                                                        {t('review_changes')}
-                                                        <ArrowUpRight aria-hidden="true" />
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                            {dataset.target_type === 'municipal' && dataset.municipality_id !== null && (
-                                                <Button variant="outline" asChild>
-                                                    <Link href={parkingMunicipal.municipality(dataset.municipality_id)}>
-                                                        <MapPin aria-hidden="true" />
-                                                        {t('locations')}
-                                                    </Link>
-                                                </Button>
-                                            )}
-                                            <Button variant="ghost" asChild>
-                                                <Link href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>{t('history')}</Link>
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <details className="border-t px-5 py-4 text-sm sm:px-6">
-                                        <summary className="w-fit cursor-pointer text-muted-foreground hover:text-foreground">
-                                            {t('source_information')}
-                                        </summary>
-                                        <div className="mt-4 space-y-3">
-                                            <p className="text-muted-foreground">{dataset.attribution}</p>
-                                            <div className="flex flex-wrap gap-4">
-                                                <a
-                                                    className="inline-flex items-center gap-1 underline underline-offset-4"
-                                                    href={dataset.source_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    {t('source')}
-                                                    <ExternalLink className="size-3" aria-hidden="true" />
-                                                </a>
-                                                <a
-                                                    className="inline-flex items-center gap-1 underline underline-offset-4"
-                                                    href={dataset.terms_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    {t('terms')}
-                                                    <ExternalLink className="size-3" aria-hidden="true" />
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </details>
-                                </section>
-                            ))}
-                        </div>
-                    </div>
+                    <SourceTable sources={sources} summary={summary} countries={countries} filters={filters} />
                 )}
             </div>
         </AppLayout>

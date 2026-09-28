@@ -56,18 +56,18 @@ it('marks never delivered sources overdue and recovers only when a recent valid 
     $admin = User::factory()->create();
     $admin->assignRole(UserRole::ADMIN);
     $this->actingAs($admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.delivery_status', 'overdue')->where('datasets.0.stale', true));
+        ->where('sources.data.0.delivery_status', 'overdue')->where('sources.data.0.delivery_status', 'overdue'));
 
     DatasetDelivery::factory()->create(['dataset_source_id' => $source->id, 'state' => 'rejected', 'received_at' => now()]);
-    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('datasets.0.stale', true));
+    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('sources.data.0.delivery_status', 'overdue'));
 
     DatasetImport::factory()->for($source)->create(['retrieved_at' => now()->subHours(49)]);
-    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('datasets.0.stale', true));
+    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('sources.data.0.delivery_status', 'overdue'));
     DatasetImport::factory()->for($source)->create(['retrieved_at' => now()]);
     $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.delivery_status', 'current')->where('datasets.0.stale', false));
+        ->where('sources.data.0.delivery_status', 'current'));
     $this->travel(49)->hours();
-    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('datasets.0.stale', true));
+    $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page->where('sources.data.0.delivery_status', 'overdue'));
 });
 
 it('distinguishes awaiting deliveries from unknown cadence', function () {
@@ -75,10 +75,10 @@ it('distinguishes awaiting deliveries from unknown cadence', function () {
     $admin = User::factory()->create();
     $admin->assignRole(UserRole::ADMIN);
     $this->actingAs($admin)->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.delivery_status', 'awaiting')->where('datasets.0.stale', false));
+        ->where('sources.data.0.delivery_status', 'awaiting'));
     config(['dataset-deliveries.late_after_intervals' => null]);
     $this->get(route('app.imports.index'))->assertInertia(fn (Assert $page) => $page
-        ->where('datasets.0.delivery_status', 'unknown')->where('datasets.0.stale', false));
+        ->where('sources.data.0.delivery_status', 'unknown'));
 });
 
 it('shows separate fetch receipt validation staging and publication times only to import reviewers', function () {

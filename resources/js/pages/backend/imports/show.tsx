@@ -137,23 +137,20 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
         <AppLayout
             breadcrumbs={[
                 { title: t('title'), href: index() },
-                { title: `${municipalityName} · ${t('delivery_number', { number: delivery.id })}`, href: show(delivery.id) },
+                { title: `${municipalityName} · ${t('review')}`, href: show(delivery.id) },
             ]}
         >
-            <Head title={`${t('review')} #${delivery.id}`} />
+            <Head title={`${t('review')} · ${dataset.name}`} />
             <div className="flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-6">
                 <header className="space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0 flex-1 basis-64 space-y-2">
                             <div className="flex flex-wrap items-center gap-3">
-                                <h1 className="text-2xl font-semibold tracking-tight">
-                                    {municipalityName} · {t('delivery_number', { number: delivery.id })}
-                                </h1>
+                                <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
                                 <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
                                     {t(`states.${delivery.superseded ? 'superseded' : delivery.state}`)}
                                 </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">{dataset.name}</p>
                             <p className="text-sm text-muted-foreground">
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
