@@ -80,9 +80,9 @@ class OffstreetObservationService
                 if ($space && $this->isNewer($record, $delivery['fetched_at'], $space)) {
                     $space->forceFill([
                         'api_state' => $record['source_state'],
-                        'free_space_short' => $record['short_available'],
-                        'free_space_long' => $record['long_available'],
-                        'free_space_accessible' => $record['accessible_available'],
+                        'occupancy_status' => $record['status'],
+                        'capacity' => $record['capacity'],
+                        'free_space' => $record['available'],
                         'observed_at' => $record['observed_at'],
                         'observation_fetched_at' => $delivery['fetched_at'],
                     ])->save();

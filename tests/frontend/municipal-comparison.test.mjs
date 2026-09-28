@@ -55,13 +55,10 @@ test('missing source context states actual visibility without suggesting deletio
     assert.doesNotMatch(renderNotice('missing', undefined), /remains visible|remains hidden/);
 });
 
-test('offstreet facilities compare catalog fields and keep unknown capacity unknown', () => {
-    const garage = { name: 'Byzantium', source_name: 'P-106_ Byzantium (opendata)', facility_type: 'garage', short_capacity: 446, long_capacity: null, accessible_capacity: null, geometry: { type: 'Point', coordinates: [4.88, 52.36] } };
-    const html = render(garage, { ...garage, short_capacity: 450 }, ['short_capacity']);
-    assert.match(html, /Short-term capacity/);
-    assert.match(html, /446/);
-    assert.match(html, /<span class="[^"]*font-semibold[^"]*">450<\/span>/);
-    assert.match(html, /Accessible spaces/);
-    assert.match(html, /Unknown/);
-    assert.doesNotMatch(html, /Street|Restrictions|regimes/i);
+test('offstreet facilities compare only what defines a facility', () => {
+    const garage = { name: 'Byzantium', source_name: 'P-106_ Byzantium (opendata)', facility_type: 'garage', geometry: { type: 'Point', coordinates: [4.88, 52.36] } };
+    const html = render(garage, { ...garage, name: 'Byzantium garage' }, ['name']);
+    assert.match(html, /<span class="[^"]*font-semibold[^"]*">Byzantium garage<\/span>/);
+    assert.match(html, /Facility type/);
+    assert.doesNotMatch(html, /capacity|Accessible|Street|Restrictions|regimes/i);
 });

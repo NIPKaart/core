@@ -21,8 +21,8 @@ beforeEach(function () {
     app()->instance(DatasetDeliveryStorage::class, new DatasetDeliveryStorage($client));
     $this->source = DatasetSource::factory()->offstreet()->create();
     $this->garage = ParkingOffstreet::factory()->create([
-        'dataset_source_id' => $this->source->id, 'external_id' => 'G1', 'visibility' => true, 'short_capacity' => 400, 'long_capacity' => 100,
-        'api_state' => null, 'free_space_short' => null, 'free_space_long' => null,
+        'dataset_source_id' => $this->source->id, 'external_id' => 'G1', 'visibility' => true,
+        'api_state' => null, 'occupancy_status' => null, 'capacity' => null, 'free_space' => null,
     ]);
 });
 
@@ -31,14 +31,14 @@ function observation(array $overrides = []): array
 {
     return [
         'external_id' => 'G1', 'observed_at' => now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z'), 'source_state' => 'ok',
-        'short_available' => 37, 'long_available' => 20, 'accessible_available' => null, ...$overrides,
+        'status' => 'counting', 'capacity' => 400, 'available' => 37, ...$overrides,
     ];
 }
 
 function observationDelivery(array $records, array $overrides = []): string
 {
     return json_encode([
-        'format' => 'nipkaart-offstreet-observations-1', 'dataset' => 'nl-amsterdam-garages', 'selection' => 'car-garages-and-pr',
+        'format' => 'nipkaart-offstreet-observations-2', 'dataset' => 'nl-amsterdam-garages', 'selection' => 'car-garages-and-pr',
         'delivery_id' => (string) Str::uuid(), 'fetched_at' => now()->utc()->format('Y-m-d\TH:i:s\Z'),
         'source_count' => count($records), 'records' => $records, ...$overrides,
     ], JSON_THROW_ON_ERROR);
@@ -60,15 +60,15 @@ function ingestObservations(MockHandler $bucket, array $keys, ?string $json = nu
     return app(OffstreetObservationService::class)->ingest();
 }
 
-it('applies only the newest delivery, keeps accessible values separate and waits for unknown facilities', function () {
+it('applies only the newest delivery with its own capacity and waits for unknown facilities', function () {
     $key = observationKey('20260928T100200Z');
-    $json = observationDelivery([observation(['accessible_available' => 2]), observation(['external_id' => 'UNKNOWN'])]);
+    $json = observationDelivery([observation(['capacity' => 1087, 'available' => 1084]), observation(['external_id' => 'UNKNOWN'])]);
 
     $result = ingestObservations($this->bucket, [observationKey('20260928T100000Z'), $key], $json);
 
     expect($result)->toBe(['nl-amsterdam-garages' => ['applied' => 1, 'unknown' => 1]]);
-    expect($this->garage->fresh())->api_state->toBe(ApiState::OK)->free_space_short->toBe(37)->free_space_long->toBe(20)
-        ->free_space_accessible->toBe(2)->observed_at->toEqual(now()->subMinute()->startOfSecond());
+    expect($this->garage->fresh())->api_state->toBe(ApiState::OK)->occupancy_status->toBe('counting')->capacity->toBe(1087)->free_space->toBe(1084)
+        ->observed_at->toEqual(now()->subMinute()->startOfSecond());
     expect($this->source->fresh()->last_observation_key)->toBe($key);
     expect(ParkingOffstreet::count())->toBe(1);
 });
@@ -86,11 +86,11 @@ it('resumes after the last processed key so a delivery is never applied twice', 
 });
 
 it('never lets an older, equal or undated measurement replace a newer one', function (array $record, int $expected) {
-    $this->garage->forceFill(['api_state' => ApiState::OK, 'free_space_short' => 50, 'observed_at' => now()->subMinutes(2), 'observation_fetched_at' => now()->subMinutes(2)])->save();
+    $this->garage->forceFill(['api_state' => ApiState::OK, 'free_space' => 50, 'observed_at' => now()->subMinutes(2), 'observation_fetched_at' => now()->subMinutes(2)])->save();
 
     ingestObservations($this->bucket, [observationKey('20260928T100200Z')], observationDelivery([observation($record)]));
 
-    expect($this->garage->fresh()->free_space_short)->toBe($expected);
+    expect($this->garage->fresh()->free_space)->toBe($expected);
 })->with([
     'older' => [['observed_at' => now()->subMinutes(3)->utc()->format('Y-m-d\TH:i:s\Z')], 50],
     'equal time' => [['observed_at' => now()->subMinutes(2)->utc()->format('Y-m-d\TH:i:s\Z')], 50],
@@ -99,12 +99,12 @@ it('never lets an older, equal or undated measurement replace a newer one', func
 ]);
 
 it('keeps unknown distinct from zero and never deletes facilities that are missing from a delivery', function () {
-    ParkingOffstreet::factory()->create(['dataset_source_id' => $this->source->id, 'external_id' => 'G2', 'free_space_short' => 5]);
+    ParkingOffstreet::factory()->create(['dataset_source_id' => $this->source->id, 'external_id' => 'G2', 'free_space' => 5]);
 
-    ingestObservations($this->bucket, [observationKey('20260928T100200Z')], observationDelivery([observation(['short_available' => 0, 'long_available' => null])]));
+    ingestObservations($this->bucket, [observationKey('20260928T100200Z')], observationDelivery([observation(['available' => 0, 'capacity' => null])]));
 
-    expect($this->garage->fresh())->free_space_short->toBe(0)->free_space_long->toBeNull();
-    expect(ParkingOffstreet::where('external_id', 'G2')->sole()->free_space_short)->toBe(5);
+    expect($this->garage->fresh())->free_space->toBe(0)->capacity->toBeNull();
+    expect(ParkingOffstreet::where('external_id', 'G2')->sole()->free_space)->toBe(5);
 });
 
 it('logs and passes an invalid delivery without changing facilities', function (Closure $change) {
@@ -114,7 +114,7 @@ it('logs and passes an invalid delivery without changing facilities', function (
     $key = observationKey('20260928T100200Z');
 
     expect(ingestObservations($this->bucket, [$key], observationDelivery($records, $envelope)))->toBe(['nl-amsterdam-garages' => null]);
-    expect($this->garage->fresh()->free_space_short)->toBeNull();
+    expect($this->garage->fresh()->free_space)->toBeNull();
     expect($this->source->fresh()->last_observation_key)->toBe($key);
 })->with([
     'other dataset' => [function (&$records, &$envelope) {
@@ -129,11 +129,17 @@ it('logs and passes an invalid delivery without changing facilities', function (
     'unknown state' => [function (&$records) {
         $records[0]['source_state'] = 'full';
     }],
+    'raw operator status' => [function (&$records) {
+        $records[0]['status'] = 'GESLOTEN';
+    }],
     'negative count' => [function (&$records) {
-        $records[0]['short_available'] = -1;
+        $records[0]['available'] = -1;
     }],
     'missing field' => [function (&$records) {
-        unset($records[0]['accessible_available']);
+        unset($records[0]['capacity']);
+    }],
+    'long-stay field' => [function (&$records) {
+        $records[0]['long_available'] = 12;
     }],
     'duplicate id' => [function (&$records, &$envelope) {
         $records[] = observation();
@@ -154,17 +160,23 @@ it('ignores observations of sources that are not approved', function () {
     expect(app(OffstreetObservationService::class)->ingest())->toBe([]);
 });
 
-it('shows free spaces only for a current measurement with source state ok', function (Closure $state, string $availability, ?int $free) {
+it('shows occupancy only for a current measurement and never reads closed as full', function (Closure $state, string $availability, ?int $free, ?string $status) {
     $this->garage->forceFill([
-        'api_state' => ApiState::OK, 'free_space_short' => 37, 'observed_at' => now()->subMinute(), 'observation_fetched_at' => now(), ...$state(),
+        'api_state' => ApiState::OK, 'occupancy_status' => 'counting', 'capacity' => 400, 'free_space' => 37,
+        'observed_at' => now()->subMinute(), 'observation_fetched_at' => now(), ...$state(),
     ])->save();
 
     $this->getJson(route('map.parking-offstreet.show', $this->garage->id))->assertOk()
-        ->assertJsonPath('availability', $availability)->assertJsonPath('free_space_short', $free);
+        ->assertJsonPath('availability', $availability)->assertJsonPath('free_space', $free)->assertJsonPath('occupancy_status', $status)
+        ->assertJsonPath('capacity', 400)->assertJsonMissingPath('free_space_long')->assertJsonMissingPath('accessible_capacity');
 })->with([
-    'current' => [fn () => [], 'current', 37],
-    'stale after the threshold' => [fn () => ['observed_at' => now()->subMinutes(11)], 'stale', null],
-    'source error' => [fn () => ['api_state' => ApiState::ERROR], 'unavailable', null],
-    'no values' => [fn () => ['free_space_short' => null], 'unavailable', null],
-    'never measured' => [fn () => ['observed_at' => null, 'api_state' => null], 'unknown', null],
+    'current count' => [fn () => [], 'current', 37, 'counting'],
+    'more free than capacity is still shown raw' => [fn () => ['free_space' => 537], 'current', 537, 'counting'],
+    'status-only full' => [fn () => ['occupancy_status' => 'full', 'free_space' => null], 'current', null, 'full'],
+    'closed with zero free' => [fn () => ['occupancy_status' => 'closed', 'free_space' => 0], 'closed', null, null],
+    'malfunction' => [fn () => ['occupancy_status' => 'malfunction'], 'unavailable', null, null],
+    'stale after the threshold' => [fn () => ['observed_at' => now()->subMinutes(11)], 'stale', null, null],
+    'source error' => [fn () => ['api_state' => ApiState::ERROR], 'unavailable', null, null],
+    'no values' => [fn () => ['free_space' => null], 'unavailable', null, null],
+    'never measured' => [fn () => ['observed_at' => null, 'api_state' => null], 'unknown', null, null],
 ]);

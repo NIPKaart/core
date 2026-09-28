@@ -16,7 +16,7 @@ export function getOrientationIllustration(orientation: EnumOption | null | unde
 
 /** Occupancy status used to color the general-availability progress bar; never the only signal (text stays next to it). */
 export function occupancyStatus(free: number | null | undefined, total: number | null | undefined): 'green' | 'orange' | 'red' | null {
-    if (typeof free !== 'number' || typeof total !== 'number' || total <= 0) {
+    if (typeof free !== 'number' || typeof total !== 'number' || total <= 0 || free > total) {
         return null;
     }
     const occupied = 1 - free / total;
@@ -26,7 +26,8 @@ export function occupancyStatus(free: number | null | undefined, total: number |
 }
 
 export function occupancyPercent(free: number | null | undefined, total: number | null | undefined): number | null {
-    if (typeof free !== 'number' || typeof total !== 'number' || total <= 0) {
+    // Sources can report more free spaces than capacity; no percentage is better than a wrong one.
+    if (typeof free !== 'number' || typeof total !== 'number' || total <= 0 || free > total) {
         return null;
     }
     return Math.round((1 - free / total) * 100);

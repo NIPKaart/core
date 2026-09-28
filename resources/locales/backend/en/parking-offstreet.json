@@ -18,13 +18,13 @@
         "name": "Name",
         "api": "Live data",
         "status": "Status",
-        "short_parking": "Short-term parking",
-        "long_parking": "Long-term Parking",
-        "last_updated": "Last Updated",
         "visible": "Visible",
-        "short_parking_available": "{{pct}}% available (short)",
-        "long_parking_available": "{{pct}}% available (long)",
-        "of": "of"
+        "of": "of",
+        "occupancy": "Occupancy",
+        "free": "free",
+        "capacity": "capacity {{capacity}}",
+        "available": "{{pct}}% available",
+        "observed_at": "Last measured"
     },
     "badges": {
         "ok": "OK",
@@ -35,7 +35,10 @@
         "current": "Current",
         "stale": "Stale",
         "unavailable": "Unavailable",
-        "unknown": "No live data"
+        "unknown": "No live data",
+        "closed": "Closed",
+        "open": "Spaces available",
+        "inconsistent": "Inconsistent"
     },
     "bulk": {
         "selected": "{{count}} selected",

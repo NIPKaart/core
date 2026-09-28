@@ -18,13 +18,13 @@
         "name": "Naam",
         "api": "Live gegevens",
         "status": "Status",
-        "short_parking": "Kort parkeren",
-        "long_parking": "Lang parkeren",
-        "last_updated": "Laatst bijgewerkt",
         "visible": "Zichtbaar",
-        "short_parking_available": "{{pct}}% beschikbaar (kort)",
-        "long_parking_available": "{{pct}}% beschikbaar (lang)",
-        "of": "van"
+        "of": "van",
+        "occupancy": "Bezetting",
+        "free": "vrij",
+        "capacity": "capaciteit {{capacity}}",
+        "available": "{{pct}}% beschikbaar",
+        "observed_at": "Laatst gemeten"
     },
     "badges": {
         "ok": "OK",
@@ -35,7 +35,10 @@
         "current": "Actueel",
         "stale": "Verouderd",
         "unavailable": "Niet beschikbaar",
-        "unknown": "Geen live gegevens"
+        "unknown": "Geen live gegevens",
+        "closed": "Gesloten",
+        "open": "Plaatsen beschikbaar",
+        "inconsistent": "Inconsistent"
     },
     "bulk": {
         "selected": "{{count}} geselecteerd",

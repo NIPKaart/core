@@ -132,15 +132,16 @@
             "facility_info": "Tarieven en openingstijden"
         },
         "availability": {
-            "general_short": "Algemene vrije plaatsen (kortparkeren)",
-            "general_long": "Algemene vrije plaatsen (langparkeren)",
             "free_of": "{{free}} van {{total}} vrij",
             "live_unavailable": "Live gegevens niet beschikbaar",
             "stale": "Geen recente meting",
             "unavailable": "Live gegevens niet beschikbaar",
             "unknown": "Geen live gegevens",
-            "accessible": "Gehandicaptenplaatsen vrij",
-            "free": "{{free}} vrij"
+            "free": "{{free}} vrij",
+            "general": "Algemene vrije plaatsen",
+            "full": "Vol",
+            "open": "Plaatsen beschikbaar",
+            "closed": "Gesloten"
         },
         "source": {
             "community": "Bijdrage van de community, goedgekeurd voor publicatie",

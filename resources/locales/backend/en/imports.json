@@ -53,9 +53,6 @@
         "name": "Name",
         "source_name": "Source name",
         "facility_type": "Facility type",
-        "short_capacity": "Short-term capacity",
-        "long_capacity": "Long-term capacity",
-        "accessible_capacity": "Accessible spaces",
         "location": "Location"
     },
     "current_comparison": "This comparison uses the current NIPKaart data. Counts and differences can therefore change after publication.",

@@ -134,7 +134,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
                 )}
 
                 <DataTable
-                    initialState={{ columnVisibility: { long_parking: false, api_state: false } }}
+                    initialState={{ columnVisibility: { api_state: false } }}
                     columns={columns}
                     data={spaces.data}
                     rowSelection={rowSelection}

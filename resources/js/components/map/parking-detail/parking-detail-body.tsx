@@ -225,7 +225,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
         const percent = occupancyPercent(free, total);
         const status = occupancyStatus(free, total);
         const text =
-            free !== null && total
+            free !== null && total && free <= total
                 ? t('detail.availability.free_of', { free, total })
                 : free !== null
                   ? t('detail.availability.free', { free })
@@ -270,7 +270,13 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                     </h3>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         {liveOk ? (
-                            <Chip tone="green">{t('offstreet.table.live')}</Chip>
+                            detail.occupancy_status === 'full' ? (
+                                <Chip tone="red">{t('detail.availability.full')}</Chip>
+                            ) : detail.occupancy_status === 'open' ? (
+                                <Chip tone="green">{t('detail.availability.open')}</Chip>
+                            ) : (
+                                <Chip tone="green">{t('offstreet.table.live')}</Chip>
+                            )
                         ) : (
                             <Chip tone={detail.availability === 'unavailable' ? 'red' : 'zinc'}>{liveState}</Chip>
                         )}
@@ -280,16 +286,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                             </span>
                         )}
                     </div>
-                    {liveOk && (
-                        <>
-                            {occupancyRow(t('detail.availability.general_short'), detail.free_space_short, detail.short_capacity)}
-                            {detail.long_capacity
-                                ? occupancyRow(t('detail.availability.general_long'), detail.free_space_long, detail.long_capacity)
-                                : null}
-                            {detail.free_space_accessible !== null &&
-                                occupancyRow(t('detail.availability.accessible'), detail.free_space_accessible, detail.accessible_capacity)}
-                        </>
-                    )}
+                    {liveOk && detail.free_space !== null && occupancyRow(t('detail.availability.general'), detail.free_space, detail.capacity)}
                 </section>
             )}
 

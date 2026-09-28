@@ -20,7 +20,7 @@ class OffstreetImportService implements DatasetImporter
     use StagesDatasetImports;
 
     /** Fields a catalog may set; manual changes to any of them are protected like municipal corrections. */
-    private const array VALUES = ['name', 'parking_type', 'latitude', 'longitude', 'short_capacity', 'long_capacity', 'accessible_capacity'];
+    private const array VALUES = ['name', 'parking_type', 'latitude', 'longitude'];
 
     public function __construct(private OffstreetSnapshot $snapshot) {}
 
@@ -124,9 +124,7 @@ class OffstreetImportService implements DatasetImporter
                 'id' => $id, 'dataset_source_id' => $source->id, 'external_id' => $externalId,
                 'country_id' => $municipality->country_id, 'province_id' => $municipality->province_id, 'municipality_id' => $municipality->id,
                 ...$values, 'visibility' => $space?->visibility ?? true,
-                // Live occupancy belongs to the observation stream; a catalog never sets or clears it.
-                'free_space_short' => $space?->free_space_short, 'free_space_long' => $space?->free_space_long,
-                'api_state' => $space?->getRawOriginal('api_state'),
+                // Capacity and occupancy belong to the observation stream; the upsert never touches those columns.
                 'source_record' => json_encode($record['source'], JSON_THROW_ON_ERROR),
                 'last_imported_values' => json_encode($record['values'], JSON_THROW_ON_ERROR),
                 'last_checked_at' => now(), 'created_at' => $space?->created_at ?? now(), 'updated_at' => now(),

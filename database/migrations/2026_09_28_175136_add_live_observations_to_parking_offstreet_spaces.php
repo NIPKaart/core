@@ -7,12 +7,19 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Live observations keep only the latest measurement per facility; accessible free spaces are stored separately and never derived.
+     * Capacity, free spaces and the operator status are observations: they change during the day and are stored as the
+     * latest measurement per facility. Long-stay values (season tickets) and accessible
+     * counts are dropped: the first say nothing to visitors, the second are almost never published.
      */
     public function up(): void
     {
         Schema::table('parking_offstreet_spaces', function (Blueprint $table) {
-            $table->integer('free_space_accessible')->nullable();
+            $table->renameColumn('short_capacity', 'capacity');
+            $table->renameColumn('free_space_short', 'free_space');
+            $table->dropColumn(['long_capacity', 'free_space_long', 'accessible_capacity']);
+        });
+        Schema::table('parking_offstreet_spaces', function (Blueprint $table) {
+            $table->string('occupancy_status')->nullable();
             $table->timestampTz('observed_at')->nullable();
             $table->timestampTz('observation_fetched_at')->nullable();
         });
@@ -27,7 +34,12 @@ return new class extends Migration
             $table->dropColumn('last_observation_key');
         });
         Schema::table('parking_offstreet_spaces', function (Blueprint $table) {
-            $table->dropColumn(['free_space_accessible', 'observed_at', 'observation_fetched_at']);
+            $table->dropColumn(['occupancy_status', 'observed_at', 'observation_fetched_at']);
+            $table->renameColumn('capacity', 'short_capacity');
+            $table->renameColumn('free_space', 'free_space_short');
+            $table->integer('long_capacity')->nullable();
+            $table->integer('free_space_long')->nullable();
+            $table->integer('accessible_capacity')->nullable();
         });
     }
 };

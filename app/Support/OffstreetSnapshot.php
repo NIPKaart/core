@@ -9,16 +9,14 @@ use Illuminate\Validation\ValidationException;
 use stdClass;
 
 /**
- * Validates `nipkaart-offstreet-catalog-2` deliveries: facility identity and static metadata only.
- * Live values (free spaces, feed state) arrive in a separate observation stream (#1221).
+ * Validates `nipkaart-offstreet-catalog-3` deliveries: what defines a facility (identity, name, type and location).
+ * Capacity, free spaces and the operator status change during the day and arrive in the observation stream (#1221).
  */
 final class OffstreetSnapshot
 {
-    public const string FORMAT = 'nipkaart-offstreet-catalog-2';
+    public const string FORMAT = 'nipkaart-offstreet-catalog-3';
 
-    private const array FIELDS = ['external_id', 'name', 'source_name', 'facility_type', 'geometry', 'short_capacity', 'long_capacity', 'accessible_capacity'];
-
-    private const array COUNTS = ['short_capacity', 'long_capacity', 'accessible_capacity'];
+    private const array FIELDS = ['external_id', 'name', 'source_name', 'facility_type', 'geometry'];
 
     /** @return array<string, mixed> */
     public function decode(string $json): array
@@ -81,11 +79,6 @@ final class OffstreetSnapshot
             if (! in_array($record['facility_type'], ['garage', 'park_and_ride'], true)) {
                 $this->fail("$prefix.facility_type", 'Onbekend type parkeervoorziening.');
             }
-            foreach (self::COUNTS as $field) {
-                if ($record[$field] !== null && (! is_int($record[$field]) || $record[$field] < 0 || $record[$field] > 2147483647)) {
-                    $this->fail("$prefix.$field", 'Verwacht een geheel aantal of null; onbekend blijft null.');
-                }
-            }
             $geometry = $record['geometry'];
             $coordinates = $geometry['coordinates'] ?? null;
             if (array_keys($geometry) !== ['type', 'coordinates'] && array_keys($geometry) !== ['coordinates', 'type']
@@ -106,8 +99,6 @@ final class OffstreetSnapshot
                     'name' => $record['name'],
                     'parking_type' => $record['facility_type'] === 'park_and_ride' ? 'parkandride' : 'garage',
                     'latitude' => round((float) $latitude, 7), 'longitude' => round((float) $longitude, 7),
-                    'short_capacity' => $record['short_capacity'], 'long_capacity' => $record['long_capacity'],
-                    'accessible_capacity' => $record['accessible_capacity'],
                 ],
             ];
         }

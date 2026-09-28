@@ -7,16 +7,19 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Validates `nipkaart-offstreet-observations-1` deliveries: live source values per facility, passed on unchanged by the collector.
- * Core decides freshness; `null` stays unknown and general free spaces never imply accessible ones (#1221).
+ * Validates `nipkaart-offstreet-observations-2` deliveries: what the operator reports per facility at a moment, passed on unchanged.
+ * Core decides freshness; `null` stays unknown. General free spaces never imply free accessible bays (#1221).
  */
 final class OffstreetObservations
 {
-    public const string FORMAT = 'nipkaart-offstreet-observations-1';
+    public const string FORMAT = 'nipkaart-offstreet-observations-2';
 
-    private const array FIELDS = ['external_id', 'observed_at', 'source_state', 'short_available', 'long_available', 'accessible_available'];
+    private const array FIELDS = ['external_id', 'observed_at', 'source_state', 'status', 'capacity', 'available'];
 
-    private const array COUNTS = ['short_available', 'long_available', 'accessible_available'];
+    /** Operator status next to the count: status-only sites report open or full, and a closed site also reports zero free. */
+    public const array STATUSES = ['counting', 'open', 'full', 'closed', 'malfunction'];
+
+    private const array COUNTS = ['capacity', 'available'];
 
     private const string TIMESTAMP = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/';
 
@@ -24,7 +27,7 @@ final class OffstreetObservations
     private const int CLOCK_SKEW_MINUTES = 5;
 
     /**
-     * @return array{dataset: string, selection: string, delivery_id: string, fetched_at: CarbonImmutable, records: list<array{external_id: string, observed_at: ?CarbonImmutable, source_state: string, short_available: ?int, long_available: ?int, accessible_available: ?int}>}
+     * @return array{dataset: string, selection: string, delivery_id: string, fetched_at: CarbonImmutable, records: list<array{external_id: string, observed_at: ?CarbonImmutable, source_state: ?string, status: ?string, capacity: ?int, available: ?int}>}
      */
     public function decode(string $json): array
     {
@@ -65,8 +68,11 @@ final class OffstreetObservations
             if ($observedAt?->isAfter($fetchedAt->addMinutes(self::CLOCK_SKEW_MINUTES))) {
                 $this->fail("$prefix.observed_at", 'De meettijd ligt na het ophaaltijdstip.');
             }
-            if (! in_array($record['source_state'], ['ok', 'error'], true)) {
+            if (! in_array($record['source_state'], ['ok', 'error', null], true)) {
                 $this->fail("$prefix.source_state", 'Onbekende bronstatus.');
+            }
+            if ($record['status'] !== null && ! in_array($record['status'], self::STATUSES, true)) {
+                $this->fail("$prefix.status", 'Onbekende exploitantstatus.');
             }
             foreach (self::COUNTS as $field) {
                 if ($record[$field] !== null && (! is_int($record[$field]) || $record[$field] < 0 || $record[$field] > 2147483647)) {

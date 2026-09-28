@@ -124,15 +124,34 @@ Manual backend uploads validate the file and archive the original bytes in the s
 
 Offstreet catalogs use the same delivery and review chain as municipal data: bucket discovery, source approval, receipts, staging, the review screen under `/app/imports` and explicit publication. The bucket folder determines the type (`offstreet/<dataset>/`).
 
-A catalog (`nipkaart-offstreet-catalog-2`, produced by offstreet-parking) carries the same `source` block and holds facility identity and static metadata only: `external_id`, `name`, `source_name`, `facility_type` (`garage` or `park_and_ride`), a WGS84 `Point` inside the dataset bounds and `short_capacity`, `long_capacity` and `accessible_capacity`, where `null` means unknown. Core rejects the whole delivery for extra or missing fields, other geometries, invalid counts or duplicate IDs. Publication writes name, facility type, location and capacities to `ParkingOffstreet`, keyed by dataset and `external_id`; it never sets or clears free spaces or feed state, which belong to the observation stream (#1221). As for municipal records, a manually corrected field is kept, and a delivery that changes that field differently blocks publication. Facilities missing from a delivery keep their visibility; publication links every delivered facility to its import (`published_import_id`).
+A catalog (`nipkaart-offstreet-catalog-3`, produced by offstreet-parking) carries the same `source` block and holds only what defines a facility: `external_id`, `name`, `source_name`, `facility_type` (`garage` or `park_and_ride`) and a WGS84 `Point` inside the dataset bounds. Capacity is not a catalog claim: operators change it during the day (P4 Villa Arena went from 1046 to 1087 spaces within hours on 2026-09-28), so it arrives with the observations. Core rejects the whole delivery for extra or missing fields, other geometries or duplicate IDs. Publication writes name, facility type and location to `ParkingOffstreet`, keyed by dataset and `external_id`; it never touches capacity, free spaces or statuses. As for municipal records, a manually corrected field is kept, and a delivery that changes that field differently blocks publication. Facilities missing from a delivery keep their visibility; publication links every delivered facility to its import (`published_import_id`).
 
 ## Offstreet observations (#1221)
 
-Live occupancy is a separate stream from the catalog and needs no review. The collector uploads `nipkaart-offstreet-observations-1` to `offstreet-observations/<dataset>/<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` every two minutes; the time prefix makes keys sort by fetch time. The envelope holds `format`, `dataset`, `selection`, `delivery_id`, `fetched_at`, `source_count` and `records`. Each record has exactly `external_id`, `observed_at` (the source's measurement time or `null`), `source_state` (`ok` or `error`) and `short_available`, `long_available` and `accessible_available`, where `null` means unknown. Core rejects the whole delivery for extra or missing fields, duplicate IDs, a count mismatch, unknown states, negative counts, or times more than five minutes ahead of the fetch.
+Live occupancy is a separate stream from the catalog and needs no review. The collector uploads `nipkaart-offstreet-observations-2` to `offstreet-observations/<dataset>/<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` every two minutes; the time prefix makes keys sort by fetch time. The envelope holds `format`, `dataset`, `selection`, `delivery_id`, `fetched_at`, `source_count` and `records`. Each record has exactly:
 
-`nipkaart:ingest-observations` runs every minute for approved offstreet sources whose `dataset` and `selection` match the catalog. It lists only keys after `dataset_sources.last_observation_key` and reads only the newest one, so an outage never replays old measurements. A transient storage failure keeps the position; an invalid delivery is logged and passed. Per facility, keyed by dataset and `external_id`, core keeps only the latest measurement (ADR 0007): a record replaces the stored values only when its `observed_at` is later; equal times keep the stored values, and a record without a source time never replaces one with a known time. Observations never create, hide or delete facilities; unknown IDs wait for the catalog.
+| Field | Meaning |
+| --- | --- |
+| `external_id` | Source ID; joins the observation to the catalog facility. |
+| `observed_at` | The source's measurement time, or `null`. Not the fetch time. |
+| `source_state` | Feed state: `ok`, `error` or `null`. |
+| `status` | Operator status: `counting` (live count), `open` or `full` (sites without counts), `closed`, `malfunction`, or `null`. A closed site also reports `0` free, so `0` alone never means full. |
+| `capacity` | Capacity at the moment of measurement, or `null`. |
+| `available` | General free spaces, or `null`. `null` means unknown and `0` means zero. |
 
-Freshness is computed on read. A facility is `current` when the source state is `ok`, a free-space value is known and `observed_at` is less than `dataset-deliveries.observation_stale_after_minutes` (10) old; otherwise it is `stale`, `unavailable` (source error or no values) or `unknown` (never measured or no source time). Only `current` free spaces leave the server. Accessible free spaces are stored separately in `free_space_accessible` and never derived from general occupancy.
+Only general spaces for visitors are delivered. Long-stay counts (season tickets) and accessible counts are not part of the contract; general free spaces never imply free accessible bays. Core rejects the whole delivery for extra or missing fields, duplicate IDs, a count mismatch, unknown states or statuses, negative counts, or times more than five minutes ahead of the fetch.
+
+`nipkaart:ingest-observations` runs every minute for approved offstreet sources whose `dataset` and `selection` match the catalog. It lists only keys after `dataset_sources.last_observation_key` and reads only the newest one, so an outage never replays old measurements. A transient storage failure keeps the position; an invalid delivery is logged and passed. Per facility, keyed by dataset and `external_id`, core keeps only the latest measurement (ADR 0007) in `capacity`, `free_space`, `occupancy_status` and `api_state`: a record replaces the stored values only when its `observed_at` is later; equal times keep the stored values, and a record without a source time never replaces one with a known time. Observations never create, hide or delete facilities; unknown IDs wait for the catalog.
+
+Freshness is computed on read by `ParkingOffstreet::availability()`:
+
+- `current`: feed state `ok`, `observed_at` less than `dataset-deliveries.observation_stale_after_minutes` (10) old, and a free-space count or an `open`/`full` status;
+- `closed`: a current measurement with status `closed`;
+- `stale`: the last measurement is older than the threshold;
+- `unavailable`: feed error, `malfunction`, or no usable values;
+- `unknown`: never measured, or no source time.
+
+Only `current` occupancy leaves the server. Sources can report more free spaces than capacity (Nieuwendijk reported 537 free for 410 spaces); the interface then shows the count without a percentage, and the admin marks it inconsistent.
 
 ## Local development against R2
 

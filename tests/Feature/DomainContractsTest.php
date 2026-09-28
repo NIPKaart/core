@@ -161,13 +161,13 @@ test('factories and inverse relationships preserve the geographic hierarchy and 
 });
 
 test('casts preserve JSON enum and nullable quantity contracts', function () {
-    $garage = ParkingOffstreet::factory()->create(['api_state' => ApiState::OK, 'free_space_long' => null, 'long_capacity' => null, 'visibility' => true]);
+    $garage = ParkingOffstreet::factory()->create(['api_state' => ApiState::OK, 'free_space' => null, 'capacity' => null, 'visibility' => true]);
     $space = ParkingSpace::factory()->create(['parking_disc' => true, 'window_times' => false, 'parking_time' => null]);
     $municipal = ParkingMunicipal::factory()->create(['number' => 2, 'orientation' => null]);
     $rule = ParkingRule::factory()->nationwide()->create();
     expect($garage->fresh()->api_state)->toBe(ApiState::OK)
         ->and($garage->fresh()->toArray()['api_state'])->toBe('ok')
-        ->and($garage->fresh()->toArray()['free_space_long'])->toBeNull()
+        ->and($garage->fresh()->toArray()['free_space'])->toBeNull()
         ->and($space->fresh()->parking_disc)->toBeTrue()
         ->and($space->fresh()->window_times)->toBeFalse()
         ->and($space->fresh()->parking_time)->toBeNull()

@@ -48,14 +48,10 @@ class ParkingOffstreet extends Model
         'visibility' => 'boolean',
         'latitude' => 'float',
         'longitude' => 'float',
-        'free_space_short' => 'integer',
-        'free_space_long' => 'integer',
-        'free_space_accessible' => 'integer',
+        'free_space' => 'integer',
         'observed_at' => 'immutable_datetime',
         'observation_fetched_at' => 'immutable_datetime',
-        'short_capacity' => 'integer',
-        'long_capacity' => 'integer',
-        'accessible_capacity' => 'integer',
+        'capacity' => 'integer',
         'source_record' => 'array',
         'last_imported_values' => 'array',
         'last_checked_at' => 'immutable_datetime',
@@ -63,22 +59,25 @@ class ParkingOffstreet extends Model
     ];
 
     /**
-     * Whether the stored free spaces may be shown as current availability (#1221).
-     * `current` needs a known, recent measurement with source state `ok`; anything else is stale, unavailable or unknown.
+     * Whether the latest measurement may be shown as current (#1221). `current` needs a recent measurement with feed state
+     * `ok` and either a count or an open/full status; `closed` is its own state, because a closed site also reports zero free.
      */
     public function availability(): string
     {
         if ($this->observed_at === null) {
             return $this->api_state === ApiState::ERROR ? 'unavailable' : 'unknown';
         }
-        if ($this->api_state !== ApiState::OK) {
+        if ($this->api_state !== ApiState::OK || $this->occupancy_status === 'malfunction') {
             return 'unavailable';
         }
         if ($this->observed_at->lt(now()->subMinutes(config('dataset-deliveries.observation_stale_after_minutes')))) {
             return 'stale';
         }
+        if ($this->occupancy_status === 'closed') {
+            return 'closed';
+        }
 
-        return $this->free_space_short === null && $this->free_space_long === null ? 'unavailable' : 'current';
+        return $this->free_space === null && ! in_array($this->occupancy_status, ['open', 'full'], true) ? 'unavailable' : 'current';
     }
 
     public function datasetSource(): BelongsTo

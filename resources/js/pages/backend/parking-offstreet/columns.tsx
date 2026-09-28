@@ -89,11 +89,23 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             header: t('table.status'),
             enableHiding: false,
             cell: ({ row }) => {
-                const { free_space_short, short_capacity, availability } = row.original;
+                const { free_space, capacity, availability, occupancy_status } = row.original;
+                if (availability === 'closed') {
+                    return <Badge variant="outline">{t('badges.closed')}</Badge>;
+                }
                 // Full or free is only claimed for a current measurement (#1221).
-                if (availability !== 'current' || !short_capacity || free_space_short == null)
-                    return <span className="text-muted-foreground">—</span>;
-                const pct = Math.round(((free_space_short ?? 0) / short_capacity) * 100);
+                if (availability !== 'current') return <span className="text-muted-foreground">—</span>;
+                if (occupancy_status === 'full') {
+                    return <Badge variant="destructive">{t('badges.full')}</Badge>;
+                }
+                if (occupancy_status === 'open') {
+                    return <Badge variant="outline">{t('badges.open')}</Badge>;
+                }
+                if (!capacity || free_space == null) return <span className="text-muted-foreground">—</span>;
+                if (free_space > capacity) {
+                    return <Badge variant="outline">{t('badges.inconsistent')}</Badge>;
+                }
+                const pct = Math.round((free_space / capacity) * 100);
 
                 if (pct <= 5) {
                     return <Badge variant="destructive">{t('badges.full')}</Badge>;
@@ -113,57 +125,39 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
             },
         },
         {
-            id: 'short_parking',
-            header: t('table.short_parking'),
+            id: 'occupancy',
+            header: t('table.occupancy'),
             cell: ({ row }) => {
-                const { free_space_short, short_capacity } = row.original;
-                if (!short_capacity || free_space_short == null) return <span className="text-muted-foreground">—</span>;
-                const pct = Math.round((free_space_short / short_capacity) * 100);
-                const label = t('table.short_parking_available', {
-                    pct,
-                });
+                const { free_space, capacity } = row.original;
+                if (free_space == null) return <span className="text-muted-foreground">—</span>;
+                // A source can report more free spaces than capacity; show the raw values without a misleading bar.
+                if (!capacity || free_space > capacity) {
+                    return (
+                        <span className="text-xs">
+                            <strong>{free_space}</strong> {t('table.free')}
+                            {capacity ? ` (${t('table.capacity', { capacity })})` : ''}
+                        </span>
+                    );
+                }
+                const pct = Math.round((free_space / capacity) * 100);
 
                 return (
                     <div className="flex min-w-[120px] flex-col gap-1">
                         <div className="flex justify-between text-xs">
                             <span>
-                                <strong>{free_space_short}</strong> {t('table.of')} {short_capacity}
+                                <strong>{free_space}</strong> {t('table.of')} {capacity}
                             </span>
                             <span className="text-muted-foreground">{pct}%</span>
                         </div>
-                        <ParkingProgressBar value={pct} label={label} />
+                        <ParkingProgressBar value={pct} label={t('table.available', { pct })} />
                     </div>
                 );
             },
         },
         {
-            id: 'long_parking',
-            header: t('table.long_parking'),
-            cell: ({ row }) => {
-                const { free_space_long, long_capacity } = row.original;
-                if (!long_capacity || free_space_long == null) return <span className="text-muted-foreground">—</span>;
-                const pct = long_capacity ? Math.round(((free_space_long ?? 0) / long_capacity) * 100) : 0;
-                const label = t('table.long_parking_available', {
-                    pct,
-                });
-
-                return (
-                    <div className="flex min-w-[120px] flex-col gap-1">
-                        <div className="flex justify-between text-xs">
-                            <span>
-                                <strong>{free_space_long}</strong> {t('table.of')} {long_capacity}
-                            </span>
-                            <span className="text-muted-foreground">{pct}%</span>
-                        </div>
-                        <ParkingProgressBar value={pct} label={label} />
-                    </div>
-                );
-            },
-        },
-        {
-            accessorKey: 'updated_at',
-            header: t('table.last_updated'),
-            cell: ({ row }) => new Date(row.original.updated_at).toLocaleDateString(),
+            accessorKey: 'observed_at',
+            header: t('table.observed_at'),
+            cell: ({ row }) => (row.original.observed_at ? new Date(row.original.observed_at).toLocaleString() : '—'),
         },
         {
             accessorKey: 'visibility',
