@@ -51,7 +51,8 @@ jobs:
         with:
           php-version: '8.4'
           tools: composer:v2
-          coverage: xdebug
+          coverage: pcov
+          ini-values: pcov.directory=${{ github.workspace }}, pcov.exclude="~/(vendor|node_modules)/~"
           extensions: pdo_pgsql
 
       - name: Setup Node
