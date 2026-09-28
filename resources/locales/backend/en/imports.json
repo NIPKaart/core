@@ -220,5 +220,8 @@
         "reason_placeholder": "Optional: why you approve or reject this source",
         "approve": "Approve source",
         "reject": "Reject source"
+    },
+    "live": {
+        "processing": "Deliveries are being processed. This page updates automatically."
     }
 }

@@ -2,6 +2,9 @@ import { getEcho } from '@/echo';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
+/** Browser event re-dispatching every live notification to the page. */
+export const NOTIFICATION_EVENT = 'nipkaart:notification';
+
 type PageProps = {
     notifications?: { unread: number; recent: unknown[] };
     auth?: { user?: { id: number } | null };
@@ -23,6 +26,8 @@ export function useNotifications(onNew?: (payload: unknown) => void) {
         const handler = (notification: unknown) => {
             onNew?.(notification);
             router.reload({ only: ['notifications'] });
+            // Pages can refresh their own data for relevant notifications without a second Echo listener.
+            window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT, { detail: notification }));
         };
 
         channel.notification(handler);
