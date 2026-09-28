@@ -15,6 +15,8 @@ use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use Database\Factories\DatasetSourceFactory;
+use GuzzleHttp\Promise\Create;
+use GuzzleHttp\Psr7\NoSeekStream;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
@@ -387,4 +389,23 @@ it('does not notify reviewers when delivery validation fails', function () {
 
     expect($delivery->fresh()->state)->toBe('rejected');
     Notification::assertNothingSent();
+});
+
+it('reads a delivery uploaded with a flexible checksum as a non-seekable stream', function () {
+    config(['filesystems.disks.dataset-deliveries.bucket' => 'municipal-test']);
+    $json = bucketPayload();
+    $disk = config('filesystems.disks.dataset-deliveries');
+    $client = new S3Client([
+        'version' => 'latest', 'region' => 'auto', 'credentials' => ['key' => 'test', 'secret' => 'test'], 'retries' => 0,
+        'response_checksum_validation' => $disk['response_checksum_validation'],
+        'request_checksum_calculation' => $disk['request_checksum_calculation'],
+        'http_handler' => fn () => Create::promiseFor(new Response(200, [
+            'Content-Length' => (string) strlen($json), 'ETag' => '"etag"',
+            'x-amz-meta-sha256' => hash('sha256', $json),
+            // Set by collectors that upload with ChecksumSHA256; validating it would rewind the stream.
+            'x-amz-checksum-sha256' => base64_encode(hash('sha256', $json, true)),
+        ], new NoSeekStream(Utils::streamFor($json)))),
+    ]);
+
+    expect((new DatasetDeliveryStorage($client))->read('municipal/nl-amsterdam/'.Str::uuid().'.json', '"etag"'))->toBe($json);
 });

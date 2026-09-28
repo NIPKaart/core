@@ -36,6 +36,8 @@ return [
             'region' => 'auto',
             'bucket' => env('IMPORTS_R2_BUCKET'),
             'endpoint' => env('IMPORTS_R2_ENDPOINT'),
+            'response_checksum_validation' => 'when_required',
+            'request_checksum_calculation' => 'when_required',
             'use_path_style_endpoint' => true,
             'throw' => true,
             'http' => ['connect_timeout' => 5, 'timeout' => 20],
