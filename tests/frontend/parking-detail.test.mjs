@@ -163,6 +163,8 @@ test('garage occupancy is labelled as general and accessible spaces are not clai
     assert.match(live, /General spaces free 37 of 400 free/);
     assert.doesNotMatch(live, /Accessible|long-term|Orientation|Layout/i);
     assert.doesNotMatch(live, /Source and freshness|Live data|may be delayed/);
+    assert.match(live, /Navigate/);
+    assert.doesNotMatch(live, /Streetview/);
     // European day-month order with a 24-hour clock, also in English.
     assert.match(live, /Measured \d{1,2} Feb 2026, \d{2}:00/);
     assert.doesNotMatch(live, /AM|PM/);

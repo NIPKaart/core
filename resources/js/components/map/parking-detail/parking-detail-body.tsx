@@ -97,7 +97,8 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
         .filter(Boolean)
         .join(', ');
     const navigateUrl = navigationUrl(detail.latitude, detail.longitude);
-    const streetView = streetViewUrl(detail.latitude, detail.longitude);
+    // A garage entrance is not visible from the street view position, so garages only offer navigation.
+    const streetView = source === 'offstreet' ? null : streetViewUrl(detail.latitude, detail.longitude);
     const liveOk = source === 'offstreet' && detail.availability === 'current';
     const liveState = source === 'offstreet' && detail.availability !== 'current' ? t(`detail.availability.${detail.availability}`) : null;
 
