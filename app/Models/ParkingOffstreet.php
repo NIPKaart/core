@@ -26,6 +26,9 @@ class ParkingOffstreet extends Model
     /**
      * The attributes that are mass assignable.
      */
+    /** Source provenance stays out of public JSON; detail endpoints choose what to expose. */
+    protected $hidden = ['source_record', 'last_imported_values', 'published_import_id', 'publishedImport'];
+
     protected $fillable = [
         'country_id',
         'province_id',
@@ -49,8 +52,22 @@ class ParkingOffstreet extends Model
         'free_space_long' => 'integer',
         'short_capacity' => 'integer',
         'long_capacity' => 'integer',
+        'accessible_capacity' => 'integer',
+        'source_record' => 'array',
+        'last_imported_values' => 'array',
+        'last_checked_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function datasetSource(): BelongsTo
+    {
+        return $this->belongsTo(DatasetSource::class);
+    }
+
+    public function publishedImport(): BelongsTo
+    {
+        return $this->belongsTo(DatasetImport::class, 'published_import_id');
+    }
 
     /**
      * Get the country that owns the parking offstreet.

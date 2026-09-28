@@ -12,12 +12,12 @@ use Illuminate\Validation\ValidationException;
 
 class DatasetDeliveryService
 {
-    public function __construct(private DatasetDeliveryStorage $storage, private MunicipalImportService $imports) {}
+    public function __construct(private DatasetDeliveryStorage $storage, private DatasetImports $imports) {}
 
     public function upload(string $json, User $actor): DatasetImport
     {
         return DB::transaction(function () use ($json, $actor): DatasetImport {
-            $import = $this->imports->intake($json, $actor);
+            $import = $this->imports->forUpload($json)->intake($json, $actor);
             $this->storage->archive($json, $import->datasetSource->code, $import->delivery_id);
 
             return $import;
@@ -32,7 +32,7 @@ class DatasetDeliveryService
         $bucket = $this->storage->bucket();
         try {
             foreach (array_keys(config('dataset-deliveries.sources')) as $code) {
-                $source = DatasetSource::where('code', $code)->where('target_type', 'municipal')->first();
+                $source = DatasetSource::where('code', $code)->first();
                 if (! $source) {
                     continue;
                 }
@@ -75,7 +75,7 @@ class DatasetDeliveryService
             try {
                 $json = $this->storage->read($delivery->object_key, $delivery->etag);
                 $delivery->received_at = now();
-                $import = $this->imports->intakeFromStorage($json, $source->code, $deliveryId);
+                $import = $this->imports->forSource($source)->intakeFromStorage($json, $source->code, $deliveryId);
                 $delivery->forceFill([
                     'dataset_import_id' => $import->id, 'state' => 'validated',
                     'validated_at' => now(), 'error_code' => null,

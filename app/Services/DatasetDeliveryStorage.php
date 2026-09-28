@@ -23,12 +23,24 @@ class DatasetDeliveryStorage
         return $bucket;
     }
 
+    /** Bucket folder per target type; collectors deliver catalogs under these prefixes. */
+    private const array PREFIXES = ['municipal' => 'municipal/', 'offstreet' => 'offstreet/'];
+
+    /** Only configured datasets of a known target type may be read or archived. */
+    public function prefix(string $dataset): ?string
+    {
+        $type = config('dataset-deliveries.sources.'.$dataset.'.registration.target_type');
+
+        return is_string($type) && isset(self::PREFIXES[$type]) ? self::PREFIXES[$type].$dataset.'/' : null;
+    }
+
     public function deliveryId(string $key, string $dataset): ?string
     {
-        if (! array_key_exists($dataset, config('dataset-deliveries.sources', []))) {
+        $folder = $this->prefix($dataset);
+        if ($folder === null) {
             return null;
         }
-        $prefix = preg_quote('municipal/'.$dataset.'/', '/');
+        $prefix = preg_quote($folder, '/');
 
         return preg_match('/^'.$prefix.'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.json$/D', $key, $matches) ? $matches[1] : null;
     }
@@ -36,8 +48,12 @@ class DatasetDeliveryStorage
     /** @return Generator<int, array{key: string, etag: string}> */
     public function objects(string $dataset): Generator
     {
+        $folder = $this->prefix($dataset);
+        if ($folder === null) {
+            return;
+        }
         $pages = $this->client->getPaginator('ListObjectsV2', [
-            'Bucket' => $this->bucket(), 'Prefix' => 'municipal/'.$dataset.'/',
+            'Bucket' => $this->bucket(), 'Prefix' => $folder,
         ]);
         foreach ($pages as $page) {
             foreach ($page['Contents'] ?? [] as $object) {
@@ -50,7 +66,7 @@ class DatasetDeliveryStorage
 
     public function archive(string $json, string $dataset, string $deliveryId): void
     {
-        $key = 'municipal/'.$dataset.'/'.$deliveryId.'.json';
+        $key = $this->prefix($dataset).$deliveryId.'.json';
         if ($this->deliveryId($key, $dataset) === null) {
             throw ValidationException::withMessages(['file' => 'Deze bron is niet toegestaan voor bucketopslag.']);
         }

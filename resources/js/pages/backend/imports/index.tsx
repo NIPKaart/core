@@ -18,7 +18,14 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpRight, Database, ExternalLink, FileUp, MapPin, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export type Dataset = { id: number; name: string; attribution: string; terms_url: string; source_url: string };
+export type Dataset = {
+    id: number;
+    name: string;
+    attribution: string;
+    terms_url: string;
+    source_url: string;
+    target_type: 'municipal' | 'offstreet';
+};
 export type Import = {
     id: number;
     state: string;

@@ -23,4 +23,16 @@ class DatasetSourceFactory extends Factory
             'bounds' => [4.65, 52.2, 5.15, 52.5], 'publication_enabled' => true,
         ];
     }
+
+    /** The Amsterdam garage and P+R catalog delivered by the offstreet collector. */
+    public function offstreet(): static
+    {
+        return $this->state([
+            'code' => 'nl-amsterdam-garages', 'name' => 'Amsterdam parkeergarages en P+R',
+            'selection' => 'car-garages-and-pr', 'target_type' => 'offstreet',
+            'source_url' => 'https://p-info.vorin-amsterdam.nl/v1/ParkingLocation.json',
+            'attribution' => 'Gemeente Amsterdam; Actuele beschikbaarheid Parkeergarages; CC-BY 4.0.',
+            'terms_url' => 'https://data.overheid.nl/dataset/9orkef6t-au29g',
+        ]);
+    }
 }

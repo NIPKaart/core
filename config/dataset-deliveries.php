@@ -15,6 +15,18 @@ return [
                 'bounds' => [4.65, 52.2, 5.15, 52.5],
             ],
         ],
+        'nl-amsterdam-garages' => [
+            'max_age_hours' => 48,
+            'municipality' => ['name' => 'Amsterdam', 'country' => 'NL', 'province' => 'NL-NH'],
+            'registration' => [
+                'name' => 'Amsterdam parkeergarages en P+R',
+                'selection' => 'car-garages-and-pr', 'target_type' => 'offstreet',
+                'source_url' => 'https://p-info.vorin-amsterdam.nl/v1/ParkingLocation.json',
+                'attribution' => 'Gemeente Amsterdam; Actuele beschikbaarheid Parkeergarages; CC-BY 4.0.',
+                'terms_url' => 'https://data.overheid.nl/dataset/9orkef6t-au29g',
+                'bounds' => [4.65, 52.2, 5.15, 52.5],
+            ],
+        ],
         'nl-eindhoven' => [
             'max_age_hours' => 48,
             'municipality' => ['name' => 'Eindhoven', 'country' => 'NL', 'province' => 'NL-NB'],
