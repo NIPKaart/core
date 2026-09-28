@@ -80,7 +80,7 @@ Reports should feed moderation/correction, not instantly mutate trusted source d
 
 The [proposed contribution terms and retention policy](data-foundation.md#91-algemene-bijdrageafspraken) apply across new community places, confirmations, disputes, reports and corrections. They remain a proposal until explicitly adopted and implemented. Public provenance does not expose contributor identity or private moderation evidence.
 
-[Core #1218](https://github.com/NIPKaart/core/issues/1218) covers corrections to both `ParkingMunicipal` and the relatively static facility information in `ParkingOffstreet`. The existing source records keep their identities; a correction never creates a duplicate `ParkingSpace`. Live occupancy is a separate observation stream, not a manually editable field override. See the [two acceptance checkpoints](../development/data-foundation-delivery.md#correcties-op-geïmporteerde-records-1218) for municipal-first verification and later offstreet integration.
+[Core #1218](https://github.com/NIPKaart/core/issues/1218) settled corrections to imported `ParkingMunicipal` and `ParkingOffstreet` records: sources stay authoritative, reimports keep identities, favorites and management visibility, and a locally differing field blocks publication rather than being silently overwritten. There is no field-override or contributor proposal flow for imported records; offstreet names, types and locations are fixed in the collector or at the source. Live occupancy is a separate observation stream, never a manual override. See the [decision](../development/data-foundation-delivery.md#correcties-op-geïmporteerde-records-1218).
 
 
 ## Coverage transparency
