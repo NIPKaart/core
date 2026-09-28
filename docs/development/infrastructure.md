@@ -45,7 +45,7 @@ Boost removes the generated Scout skills and its selection after package removal
 
 ## Live notifications and occupancy
 
-Set `BROADCAST_CONNECTION=reverb` and matching nonempty `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`. Supervise a queue worker and `php artisan reverb:start`. Backend `REVERB_HOST/PORT/SCHEME` identify the publishing endpoint; `VITE_REVERB_HOST/PORT/SCHEME` identify the browser-reachable endpoint. Rebuild assets after Vite changes. DDEV exposes Reverb on port 8080.
+Set `BROADCAST_CONNECTION=reverb` and matching nonempty `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`. Supervise a queue worker and `php artisan reverb:start`. Backend `REVERB_HOST/PORT/SCHEME` identify the publishing endpoint; `VITE_REVERB_HOST/PORT/SCHEME` identify the browser-reachable endpoint. Rebuild assets after Vite changes. DDEV exposes Reverb on port 8080 (8443 over HTTPS) and starts three background processes from `.ddev/config.yaml`: `reverb:start`, `queue:listen` and `schedule:work`. They restart with `ddev start`/`ddev restart`; check them with `ddev logs`. Do not also run `composer dev` inside DDEV, or jobs are processed by two workers.
 
 Echo connects lazily for an authenticated layout with a configured public key. It subscribes to private `App.Models.User.{id}`, reloads only shared notification props, and releases the matching channel on cleanup. Both responsive bells consume the refreshed props. Existing private-channel tests reject another user's channel; frontend tests cover guest/config guards, notification reload and cleanup.
 

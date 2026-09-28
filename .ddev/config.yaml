@@ -24,6 +24,18 @@ web_extra_exposed_ports:
     container_port: 8080
     http_port: 8080
     https_port: 8443
+# Background processes for local broadcasting, queued jobs and scheduled delivery discovery.
+# They restart with `ddev start`/`ddev restart`; inspect them with `ddev logs`.
+web_extra_daemons:
+  - name: reverb
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    directory: /var/www/html
+  - name: queue
+    command: php artisan queue:listen --tries=1
+    directory: /var/www/html
+  - name: scheduler
+    command: php artisan schedule:work
+    directory: /var/www/html
 
 # Key features of DDEV's config.yaml:
 
