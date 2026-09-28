@@ -52,9 +52,9 @@ export type OffstreetParkingDetail = {
     country: string | null;
     province: string | null;
     municipality: string | null;
-    free_space_short: number;
+    free_space_short: number | null;
     free_space_long: number | null;
-    short_capacity: number;
+    short_capacity: number | null;
     long_capacity: number | null;
     url: string | null;
     prices: json | null;

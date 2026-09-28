@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { MultiPolygon, Polygon } from 'geojson';
+import type { MultiPolygon, Point, Polygon } from 'geojson';
 import { geoJSON, latLngBounds } from 'leaflet';
 import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Search, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -26,11 +26,31 @@ import SourceComparison, { MissingSourceNotice } from './source-comparison';
 export type Claim = {
     source_updated_at?: string | null;
     external_id: string;
-    street: string | null;
-    number: number | null;
-    geometry: Polygon;
-    source_attributes: Record<string, unknown>;
+    street?: string | null;
+    number?: number | null;
+    geometry: Polygon | Point;
+    source_attributes?: Record<string, unknown>;
+    /** Offstreet catalog fields (`nipkaart-offstreet-catalog-1`). */
+    name?: string;
+    source_name?: string;
+    facility_type?: 'garage' | 'park_and_ride';
+    short_capacity?: number | null;
+    long_capacity?: number | null;
+    accessible_capacity?: number | null;
 };
+
+/** Offstreet facilities are named; municipal spaces are identified by their street. */
+export function isFacility(claim: Claim | null | undefined): boolean {
+    return claim?.facility_type !== undefined;
+}
+
+export function claimTitle(claim: Claim | null | undefined): string | null {
+    return (isFacility(claim) ? claim?.name : claim?.street) ?? null;
+}
+
+export function claimCapacity(claim: Claim | null | undefined): number | null {
+    return (isFacility(claim) ? claim?.short_capacity : claim?.number) ?? null;
+}
 type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 export type Row = {
     external_id: string;
@@ -64,20 +84,23 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
     const [selectedRecord, setSelectedRecord] = useState<Row | null>(null);
     const selectedIndex = review.rows.findIndex((row) => row.external_id === selectedRecord?.external_id);
     const recordTrigger = useRef<HTMLElement | null>(null);
+    const facilities = dataset.target_type === 'offstreet';
     const columns: ColumnDef<Row>[] = [
         {
             id: 'street',
-            header: t('fields.street'),
+            header: t(facilities ? 'fields.name' : 'fields.street'),
             cell: ({ row: { original: row } }) => (
                 <div className="min-w-40 py-1">
-                    <span className="font-medium">{row.after?.street ?? row.before?.street ?? t('unknown_street')}</span>
+                    <span className="font-medium">
+                        {claimTitle(row.after) ?? claimTitle(row.before) ?? t(facilities ? 'unknown_name' : 'unknown_street')}
+                    </span>
                     <span className="mt-1 block text-xs text-muted-foreground">{row.external_id}</span>
                 </div>
             ),
         },
         {
             id: 'capacity',
-            accessorFn: (row) => (row.after ?? row.before)?.number,
+            accessorFn: (row) => claimCapacity(row.after ?? row.before),
             header: t('capacity'),
             cell: ({ getValue }) => getValue<number | null>() ?? t('unknown'),
         },
@@ -345,9 +368,11 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                     <SelectContent>
                                         <SelectItem value="changes">{t('changes_only')}</SelectItem>
                                         <SelectItem value="all">{t('all_records')}</SelectItem>
-                                        <SelectItem value="geometry">
-                                            {t('geometry_review')} ({review.derivations})
-                                        </SelectItem>
+                                        {!facilities && (
+                                            <SelectItem value="geometry">
+                                                {t('geometry_review')} ({review.derivations})
+                                            </SelectItem>
+                                        )}
                                         {Object.entries(review.counts).map(([status, count]) => (
                                             <SelectItem key={status} value={status}>
                                                 {t(`counts.${status}`)} ({count})
@@ -355,11 +380,17 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <Button variant="outline" aria-expanded={showComparisonMap} onClick={() => setShowComparisonMap(!showComparisonMap)}>
-                                    {t(showComparisonMap ? 'hide_map' : 'compare_on_map')}
-                                </Button>
+                                {!facilities && (
+                                    <Button
+                                        variant="outline"
+                                        aria-expanded={showComparisonMap}
+                                        onClick={() => setShowComparisonMap(!showComparisonMap)}
+                                    >
+                                        {t(showComparisonMap ? 'hide_map' : 'compare_on_map')}
+                                    </Button>
+                                )}
                             </div>
-                            {showComparisonMap && <ChangesMap rows={review.rows} onSelect={setSelectedRecord} />}
+                            {showComparisonMap && !facilities && <ChangesMap rows={review.rows} onSelect={setSelectedRecord} />}
                             <DataTable
                                 key={`${delivery.id}-${page}`}
                                 columns={
@@ -490,7 +521,9 @@ function RecordDetails({ row }: { row: Row }) {
     return (
         <div className="space-y-5">
             <DialogHeader className="pr-7 text-left">
-                <DialogTitle>{row.after?.street ?? row.before?.street ?? t('unknown_street')}</DialogTitle>
+                <DialogTitle>
+                    {claimTitle(row.after) ?? claimTitle(row.before) ?? t(isFacility(mapSource) ? 'unknown_name' : 'unknown_street')}
+                </DialogTitle>
                 <DialogDescription className="break-all">
                     {row.external_id} · {t(`counts.${row.status}`)}
                 </DialogDescription>
@@ -532,7 +565,9 @@ function RecordDetails({ row }: { row: Row }) {
                                 {showDerived && row.geometry_derivation && (
                                     <GeoJSON data={row.geometry_derivation.geometry} style={{ color: '#38bdf8' }} />
                                 )}
-                                {showOriginal && <GeoJSON data={mapSource.geometry} style={{ color: '#f97316', dashArray: '8 6', fill: false }} />}
+                                {showOriginal && mapSource.geometry.type !== 'Point' && (
+                                    <GeoJSON data={mapSource.geometry} style={{ color: '#f97316', dashArray: '8 6', fill: false }} />
+                                )}
                             </LocationMarkerCard>
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-xs leading-relaxed text-muted-foreground">{t('map_note')}</p>

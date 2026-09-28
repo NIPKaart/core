@@ -195,10 +195,11 @@ export type ParkingMunicipal = {
 export type ParkingOffstreet = {
     id: string;
     name: string;
-    free_space_short: number;
+    free_space_short: number | null;
     free_space_long: number | null;
-    short_capacity: number;
+    short_capacity: number | null;
     long_capacity: number | null;
+    accessible_capacity: number | null;
     parking_type: 'garage' | 'parkandride';
     prices: json | null;
     api_state: string | null;

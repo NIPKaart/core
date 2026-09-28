@@ -7,11 +7,12 @@ use App\Http\Requests\App\StoreDatasetImportRequest;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Services\DatasetDeliveryService;
-use App\Services\MunicipalImportService;
+use App\Services\DatasetImports;
 use App\Services\MunicipalProvenance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,13 +28,17 @@ class DatasetImportController extends Controller
         $state = $request->string('state', 'all')->toString() ?: 'all';
 
         return Inertia::render('backend/imports/index', [
-            'datasets' => DatasetSource::where('target_type', 'municipal')
+            'datasets' => DatasetSource::query()
                 ->with(['latestImport:dataset_imports.id,dataset_imports.dataset_source_id,retrieved_at,state', 'latestDelivery:dataset_deliveries.id,dataset_deliveries.dataset_source_id,state,error_code,created_at'])
-                ->withCount(['municipalSpaces as visible_locations_count' => fn (Builder $builder) => $builder->where('visibility', true)])
+                ->withCount([
+                    'municipalSpaces as visible_municipal_count' => fn (Builder $builder) => $builder->where('visibility', true),
+                    'offstreetSpaces as visible_offstreet_count' => fn (Builder $builder) => $builder->where('visibility', true),
+                ])
                 ->orderBy('name')->get()->map(function (DatasetSource $source) use ($provenance): array {
                     $latest = $source->latestImport;
 
-                    return [...$source->toArray(),
+                    return [...Arr::except($source->toArray(), ['visible_municipal_count', 'visible_offstreet_count']),
+                        'visible_locations_count' => $source->target_type === 'offstreet' ? $source->visible_offstreet_count : $source->visible_municipal_count,
                         'needs_review' => $latest?->state === 'pending' && (! $source->last_published_retrieved_at || $latest->retrieved_at->gt($source->last_published_retrieved_at)),
                         'stale' => $provenance->deliveryStatus($source) === 'overdue',
                         'delivery_status' => $provenance->deliveryStatus($source),
@@ -64,10 +69,10 @@ class DatasetImportController extends Controller
         return to_route('app.imports.show', $import);
     }
 
-    public function show(Request $request, DatasetImport $datasetImport, MunicipalImportService $service, MunicipalProvenance $provenance): Response
+    public function show(Request $request, DatasetImport $datasetImport, DatasetImports $imports, MunicipalProvenance $provenance): Response
     {
         Gate::authorize('view', $datasetImport);
-        $review = $service->review($datasetImport);
+        $review = $imports->forSource($datasetImport->datasetSource)->review($datasetImport);
         $request->validate([
             'q' => ['nullable', 'string', 'max:200'],
             'filter' => ['nullable', 'in:all,changes,geometry,new,changed,unchanged,missing,conflict'],
@@ -82,7 +87,7 @@ class DatasetImportController extends Controller
                 'geometry' => $row['geometry_review_required'] ?? false,
                 default => $row['status'] === $filter,
             };
-            $searchable = implode(' ', [$row['external_id'], $row['after']['street'] ?? '', $row['before']['street'] ?? '']);
+            $searchable = implode(' ', [$row['external_id'], $row['after']['street'] ?? $row['after']['name'] ?? '', $row['before']['street'] ?? $row['before']['name'] ?? '']);
 
             return $matchesFilter && ($query === '' || mb_stripos($searchable, $query) !== false);
         }));
@@ -100,7 +105,7 @@ class DatasetImportController extends Controller
         ]);
     }
 
-    public function update(Request $request, DatasetImport $datasetImport, MunicipalImportService $service): RedirectResponse
+    public function update(Request $request, DatasetImport $datasetImport, DatasetImports $imports): RedirectResponse
     {
         Gate::authorize('update', $datasetImport);
         $data = $request->validate([
@@ -108,7 +113,7 @@ class DatasetImportController extends Controller
             'review_token' => ['required', 'string', 'size:64'],
             'geometry_reviewed' => ['sometimes', 'boolean'],
         ]);
-        $service->decide($datasetImport, $request->user(), $data['decision'], $data['reason'] ?? null, $data['review_token'], (bool) ($data['geometry_reviewed'] ?? false));
+        $imports->forSource($datasetImport->datasetSource)->decide($datasetImport, $request->user(), $data['decision'], $data['reason'] ?? null, $data['review_token'], (bool) ($data['geometry_reviewed'] ?? false));
 
         return to_route('app.imports.show', $datasetImport);
     }

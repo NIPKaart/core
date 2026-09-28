@@ -41,6 +41,11 @@ class DatasetSource extends Model
         return $this->hasMany(ParkingMunicipal::class);
     }
 
+    public function offstreetSpaces(): HasMany
+    {
+        return $this->hasMany(ParkingOffstreet::class);
+    }
+
     /** @return array<string, mixed> */
     public function configuration(): array
     {

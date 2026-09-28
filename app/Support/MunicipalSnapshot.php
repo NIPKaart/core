@@ -7,31 +7,18 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use JsonException;
 use stdClass;
 
 final class MunicipalSnapshot
 {
     public const string EINDHOVEN_DATASET = 'nl-eindhoven';
 
-    public const int MAX_BYTES = 33554432;
+    public const int MAX_BYTES = SnapshotJson::MAX_BYTES;
 
     /** @return array<string, mixed> */
     public function decode(string $json): array
     {
-        if (strlen($json) > self::MAX_BYTES) {
-            $this->fail('file', 'Het bestand is groter dan 32 MiB.');
-        }
-        try {
-            $object = json_decode($json, false, 32, JSON_THROW_ON_ERROR);
-            if (! $object instanceof stdClass) {
-                $this->fail('file', 'Verwacht één JSON-object.');
-            }
-            $this->rejectDuplicateKeys($json);
-            $data = json_decode($json, true, 32, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            $this->fail('file', 'Ongeldige JSON of te diep geneste gegevens.');
-        }
+        [$data, $object] = SnapshotJson::decode($json);
         Validator::make($data, [
             'format' => ['required', 'in:nipkaart-municipal-pilot-1'],
             'dataset' => ['required', 'string', 'max:255'],
@@ -205,35 +192,6 @@ final class MunicipalSnapshot
         };
 
         return hash('sha256', json_encode($normalize($value), JSON_THROW_ON_ERROR));
-    }
-
-    /** JSON decoding is already complete; this pass rejects duplicate object keys. */
-    private function rejectDuplicateKeys(string $json): void
-    {
-        preg_match_all('/"(?:[^"\\\\]|\\\\.)*"|[{}\[\]:,]/s', $json, $matches);
-        $stack = [];
-        foreach ($matches[0] as $token) {
-            if ($token === '{' || $token === '[') {
-                $stack[] = ['object' => $token === '{', 'key' => $token === '{', 'seen' => []];
-            } elseif ($token === '}' || $token === ']') {
-                array_pop($stack);
-            } elseif ($stack !== []) {
-                $i = array_key_last($stack);
-                if ($stack[$i]['object']) {
-                    if ($token === ',') {
-                        $stack[$i]['key'] = true;
-                    } elseif ($token === ':') {
-                        $stack[$i]['key'] = false;
-                    } elseif ($token[0] === '"' && $stack[$i]['key']) {
-                        $key = json_decode($token, true, 32, JSON_THROW_ON_ERROR);
-                        if (isset($stack[$i]['seen'][$key])) {
-                            $this->fail('file', 'Dubbele JSON-sleutel: '.$key);
-                        }
-                        $stack[$i]['seen'][$key] = true;
-                    }
-                }
-            }
-        }
     }
 
     private function fail(string $field, string $message): never

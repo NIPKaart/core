@@ -6,17 +6,34 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
     const { t } = useTranslation('backend/imports');
     const both = Boolean(row.before && row.after);
     const sides = (['before', 'after'] as const).filter((side) => row[side]);
-    const fields = [
+    const facility = (row.after ?? row.before)?.facility_type !== undefined;
+    const count = (value: number | null | undefined) => value ?? t('unknown');
+    const facilityFields = [
+        { key: 'name', label: t('fields.name'), value: (claim: Claim) => claim.name ?? t('unknown') },
+        { key: 'source_name', label: t('fields.source_name'), value: (claim: Claim) => claim.source_name ?? t('unknown') },
+        {
+            key: 'facility_type',
+            label: t('fields.facility_type'),
+            value: (claim: Claim) => (claim.facility_type ? t(`facility_types.${claim.facility_type}`) : t('unknown')),
+        },
+        { key: 'short_capacity', label: t('fields.short_capacity'), value: (claim: Claim) => count(claim.short_capacity) },
+        { key: 'long_capacity', label: t('fields.long_capacity'), value: (claim: Claim) => count(claim.long_capacity) },
+        { key: 'accessible_capacity', label: t('fields.accessible_capacity'), value: (claim: Claim) => count(claim.accessible_capacity) },
+    ];
+    const spaceFields = [
         { key: 'street', label: t('fields.street'), value: (claim: Claim) => claim.street ?? t('unknown') },
         { key: 'number', label: t('capacity'), value: (claim: Claim) => claim.number ?? t('unknown') },
         {
             key: 'source_attributes',
             label: t('comparison_orientation'),
-            value: (claim: Claim) => String(claim.source_attributes.orientation ?? t('unknown')),
+            value: (claim: Claim) => String(claim.source_attributes?.orientation ?? t('unknown')),
         },
+    ];
+    const fields = [
+        ...(facility ? facilityFields : spaceFields),
         {
             key: 'geometry',
-            label: t('fields.geometry'),
+            label: t(facility ? 'fields.location' : 'fields.geometry'),
             value: () => (
                 <Button variant="link" className="h-auto p-0 text-left text-sm whitespace-normal" onClick={onShowMap}>
                     {t('comparison_geometry')}
@@ -55,32 +72,36 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
                     </div>
                 ))}
             </div>
-            <details className="rounded-lg border p-4">
-                <summary className="cursor-pointer font-medium">{t('comparison_rules')}</summary>
-                <div className={`mt-3 grid gap-4 ${both ? 'sm:grid-cols-2' : ''}`}>
-                    {sides.map((side) => (
-                        <div key={side} className="min-w-0">
-                            {both && <h4 className="mb-2 text-xs text-muted-foreground">{t(side)}</h4>}
-                            {Array.isArray(row[side]!.source_attributes.regimes) ? (
-                                row[side]!.source_attributes.regimes.map((regime: Record<string, unknown>, index: number) => (
-                                    <dl key={index} className="space-y-2 border-b py-3 first:pt-0 last:border-0 last:pb-0">
-                                        {Object.entries(regime)
-                                            .filter(([, value]) => value !== null && value !== '')
-                                            .map(([key, value]) => (
-                                                <div key={key} className="grid grid-cols-2 gap-3">
-                                                    <dt className="text-muted-foreground">{t(`rule_fields.${key}`, { defaultValue: key })}</dt>
-                                                    <dd className="min-w-0 break-words">{Array.isArray(value) ? value.join(', ') : String(value)}</dd>
-                                                </div>
-                                            ))}
-                                    </dl>
-                                ))
-                            ) : (
-                                <p>{t('unknown')}</p>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </details>
+            {!facility && (
+                <details className="rounded-lg border p-4">
+                    <summary className="cursor-pointer font-medium">{t('comparison_rules')}</summary>
+                    <div className={`mt-3 grid gap-4 ${both ? 'sm:grid-cols-2' : ''}`}>
+                        {sides.map((side) => (
+                            <div key={side} className="min-w-0">
+                                {both && <h4 className="mb-2 text-xs text-muted-foreground">{t(side)}</h4>}
+                                {Array.isArray(row[side]!.source_attributes?.regimes) ? (
+                                    row[side]!.source_attributes.regimes.map((regime: Record<string, unknown>, index: number) => (
+                                        <dl key={index} className="space-y-2 border-b py-3 first:pt-0 last:border-0 last:pb-0">
+                                            {Object.entries(regime)
+                                                .filter(([, value]) => value !== null && value !== '')
+                                                .map(([key, value]) => (
+                                                    <div key={key} className="grid grid-cols-2 gap-3">
+                                                        <dt className="text-muted-foreground">{t(`rule_fields.${key}`, { defaultValue: key })}</dt>
+                                                        <dd className="min-w-0 break-words">
+                                                            {Array.isArray(value) ? value.join(', ') : String(value)}
+                                                        </dd>
+                                                    </div>
+                                                ))}
+                                        </dl>
+                                    ))
+                                ) : (
+                                    <p>{t('unknown')}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </details>
+            )}
         </div>
     );
 }
