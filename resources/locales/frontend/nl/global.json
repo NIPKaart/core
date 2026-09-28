@@ -22,6 +22,8 @@
         "noData": "Geen data",
         "disabledSpace": "Invalide parkeerplek",
         "accessibleSpace": "Gehandicaptenparkeerplaats",
-        "facility": "Garage / P+R · beschikbaarheid onbekend"
+        "facility": "Garage / P+R · geen actuele gegevens",
+        "facilityLive": "Garage / P+R · actueel aantal vrij",
+        "facilityUnavailable": "Garage / P+R · live gegevens tijdelijk niet beschikbaar"
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\ParkingOffstreet;
 use App\Services\ParkingDiscovery;
 use App\Support\GeoBounds;
 use App\Support\GeoPoint;
@@ -101,6 +102,27 @@ final class ParkingDiscoveryController extends Controller
 
             return [...$result, 'points' => array_map(fn (ParkingResult $point): array => $point->toCompactArray(), $result['points'])];
         });
+    }
+
+    /**
+     * Current occupancy of every visible garage as [status, free, capacity], keyed by ID, for the markers' badges;
+     * `unavailable` marks a garage whose live data is temporarily missing. Garages never measured are left out.
+     * Kept out of the cached area payloads because it changes every few minutes; the same freshness rules as the
+     * detail decide what counts as current, so marker and detail never disagree (#1221).
+     */
+    public function garageOccupancy(): JsonResponse
+    {
+        $garages = ParkingOffstreet::query()->where('visibility', true)->whereNotNull('observed_at')
+            ->get(['id', 'api_state', 'occupancy_status', 'capacity', 'free_space', 'observed_at'])
+            ->mapWithKeys(fn (ParkingOffstreet $garage): array => match ($garage->availability()) {
+                'closed' => [$garage->id => ['closed', null, null]],
+                'current' => [$garage->id => [$garage->occupancy_status ?? 'counting', $garage->free_space, $garage->capacity]],
+                // Measured before, but not current now: the marker shows that live data is temporarily missing.
+                'stale', 'unavailable' => [$garage->id => ['unavailable', null, null]],
+                default => [],
+            });
+
+        return response()->json(['garages' => (object) $garages->all()]);
     }
 
     private function tile(int $zoom, int $x, int $y): MapTile

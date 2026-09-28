@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { pinSvg } from '@/lib/discovery-icons';
 import { Check, Info, Layers, Map, MapPin, Satellite, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,11 +61,19 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                         ) : (
                             <ul className="grid gap-2 px-1 pb-1 text-xs leading-relaxed">
                                 <li className="flex items-center gap-3">
-                                    <img src="/assets/images/boards/accessible-pin.png" alt="" className="h-8 w-7 shrink-0 object-contain" />
+                                    <LegendPin markup={pinSvg(false, null)} />
                                     <span>{tGlobal('legend.accessibleSpace')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
-                                    <img src="/assets/images/boards/e105-grey.png" alt="" className="size-7 shrink-0 object-contain" />
+                                    <LegendPin markup={pinSvg(true, { text: '12', tone: 'green', label: '' })} />
+                                    <span>{tGlobal('legend.facilityLive')}</span>
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <LegendPin markup={pinSvg(true, { text: '', tone: 'grey', label: '', unavailable: true })} />
+                                    <span>{tGlobal('legend.facilityUnavailable')}</span>
+                                </li>
+                                <li className="flex items-center gap-3">
+                                    <LegendPin markup={pinSvg(true, null)} />
                                     <span>{tGlobal('legend.facility')}</span>
                                 </li>
                                 <li className="flex items-center gap-3">
@@ -91,5 +100,16 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
                 </Popover>
             ))}
         </div>
+    );
+}
+
+/** Static marker artwork from the map itself, so the legend always matches the pins. */
+function LegendPin({ markup }: { markup: string }) {
+    return (
+        <span
+            className="discovery-pin block h-8 w-11 shrink-0 [&_svg]:h-8 [&_svg]:w-6 [&_svg]:overflow-visible"
+            aria-hidden
+            dangerouslySetInnerHTML={{ __html: markup }}
+        />
     );
 }

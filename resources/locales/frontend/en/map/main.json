@@ -84,5 +84,12 @@
         "destination": "Your chosen destination",
         "search_area": "Approximate search area",
         "location": "Your location. The circle indicates accuracy."
+    },
+    "markers": {
+        "full": "Full",
+        "closed": "Closed",
+        "free_one": "{{formatted}} general space free",
+        "free_other": "{{formatted}} general spaces free",
+        "unavailable": "Live data temporarily unavailable"
     }
 }

@@ -22,6 +22,7 @@ Route::prefix('map')->as('map.')->group(function () {
 Route::prefix('map/parking')->as('map.parking.')->middleware('throttle:parking-discovery')->group(function () {
     Route::get('nearby', [Frontend\ParkingDiscoveryController::class, 'nearby'])->name('nearby');
     Route::get('viewport', [Frontend\ParkingDiscoveryController::class, 'viewport'])->name('viewport');
+    Route::get('garage-occupancy', [Frontend\ParkingDiscoveryController::class, 'garageOccupancy'])->name('garage-occupancy');
 });
 
 // Map records are loaded once per area and clustered in the browser, so responses are browser-cacheable.
