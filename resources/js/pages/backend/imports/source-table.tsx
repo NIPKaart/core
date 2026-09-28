@@ -92,12 +92,12 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
         },
         {
             id: 'locations',
-            header: () => <span className="block text-right">{t('sources_table.locations')}</span>,
+            header: t('sources_table.locations'),
             cell: ({ row: { original: source } }) =>
                 source.last_published_retrieved_at ? (
-                    <span className="block text-right tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
+                    <span className="tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
                 ) : (
-                    <span className="flex justify-end">
+                    <span className="flex">
                         <Badge variant="outline" className="font-normal whitespace-nowrap text-muted-foreground">
                             {t('sources_table.not_published')}
                         </Badge>
