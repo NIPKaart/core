@@ -39,6 +39,20 @@
             "fri": "Fri",
             "sat": "Sat",
             "sun": "Sun"
+        },
+        "report": {
+            "question": "Is the place gone?",
+            "open": "Report it",
+            "sign_in": "Log in to report",
+            "title": "Report that the place is no longer there",
+            "explanation": "A moderator will look at your report. Until then the place stays on the map.",
+            "note": "What did you see?",
+            "optional": "(optional)",
+            "placeholder": "For example: sign removed, bay painted over",
+            "cancel": "Cancel",
+            "submit": "Report",
+            "sending": "Reporting…",
+            "reported": "Reported as gone. A moderator will look at it."
         }
     },
     "municipal": {

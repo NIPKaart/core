@@ -241,11 +241,7 @@ test('community and municipal places show the same existence evidence, garages n
     for (const source of ['community', 'municipal']) {
         const confirmed = text(render(source, { confirmations_count: { confirmed: 3 }, last_confirmed_at: '2026-03-04T09:00:00Z' }));
         assert.match(confirmed, /Confirmed 3× .*Present, last 4 Mar/, source);
-        assert.match(
-            confirmed,
-            /A confirmation tells others that this parking place is really here\./,
-            source,
-        );
+        assert.match(confirmed, /A confirmation tells others that this parking place is really here\./, source);
         assert.doesNotMatch(confirmed, /reliab|trust|score/i, source);
     }
     assert.doesNotMatch(text(render('offstreet')), /confirmed/i);
@@ -331,4 +327,46 @@ test('the existence confirmation offers the action that fits the visitor', () =>
     assert.match(html({ signedIn: false }), /<a href="\/login"[^>]*aria-label="Log in to confirm that this parking place is here"/);
     assert.match(card({ confirmedToday: true }), /Confirmed today/);
     assert.doesNotMatch(html({ confirmedToday: true }), /<form|<button/);
+});
+
+test('reporting a gone place fits the visitor and never suggests the place is removed straight away', () => {
+    const source = ts.transpileModule(
+        readFileSync(new URL('../../resources/js/pages/frontend/form/form-report-location.tsx', import.meta.url), 'utf8'),
+        {
+            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+        },
+    ).outputText;
+    const context = {
+        exports: {},
+        require: (name) => {
+            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
+            if (name === '@/routes') return { login: () => '/login' };
+            if (name === '@/routes/map/places') return { report: ({ source, id }) => `/map/places/${source}/${id}/report` };
+            if (name === '@/components/ui/button') return { Button: ({ children, ...props }) => React.createElement('button', props, children) };
+            if (name === '@/components/ui/textarea') return { Textarea: (props) => React.createElement('textarea', props) };
+            if (name === '@inertiajs/react') {
+                return {
+                    Form: ({ children, action }) => React.createElement('form', { action }, children({ errors: {}, processing: false })),
+                    Link: ({ children, ...props }) => React.createElement('a', props, children),
+                };
+            }
+            return require(name);
+        },
+    };
+    vm.runInNewContext(source, context);
+    const html = (props) =>
+        renderToStaticMarkup(
+            React.createElement(context.exports.ParkingReportForm, { source: 'community', id: 'abc', signedIn: true, reported: false, ...props }),
+        );
+
+    assert.match(text(html()), /Is the place gone\? Report it/);
+    assert.doesNotMatch(html(), /<form/);
+    assert.match(html({ signedIn: false }), /<a href="\/login"[^>]*>Log in to report<\/a>/);
+    assert.match(text(html({ reported: true })), /Reported as gone\. A moderator will look at it\./);
+    assert.doesNotMatch(html({ reported: true }), /<button|<a /);
+
+    const actions = React.createElement('p', null, 'report-form');
+    assert.match(render('community', {}, { reportActions: actions }), /report-form/);
+    assert.match(render('municipal', {}, { reportActions: actions }), /report-form/);
+    assert.doesNotMatch(render('offstreet', {}, { reportActions: actions }), /report-form/);
 });

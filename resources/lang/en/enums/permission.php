@@ -110,6 +110,19 @@ return [
             ],
         ],
     ],
+    'parking-place-report' => [
+        'label' => 'Reports',
+        'actions' => [
+            'view_any' => [
+                'label' => 'View reports',
+                'description' => 'Grants access to places reported as no longer existing.',
+            ],
+            'resolve' => [
+                'label' => 'Handle reports',
+                'description' => 'Allows keeping a reported place, or deleting a community place and hiding a municipal one.',
+            ],
+        ],
+    ],
     'parking-municipal' => [
         'label' => 'Municipal parking',
         'actions' => [

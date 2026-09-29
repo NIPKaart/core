@@ -9,6 +9,7 @@ use App\Enums\UnderSign;
 use App\Traits\Confirmable;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
+use App\Traits\Reportable;
 use Database\Factories\ParkingSpaceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\DB;
 class ParkingSpace extends Model
 {
     /** @use HasFactory<ParkingSpaceFactory> */
-    use Confirmable, Favoritable, HasFactory, HasParkingLocation, SoftDeletes;
+    use Confirmable, Favoritable, HasFactory, HasParkingLocation, Reportable, SoftDeletes;
 
     protected $table = 'parking_spaces';
 

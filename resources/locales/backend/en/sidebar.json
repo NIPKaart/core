@@ -22,5 +22,6 @@
     "logout": "Log out",
     "municipal_data": "Data sources",
     "search": "Search",
-    "search_placeholder": "Search parking locations…"
+    "search_placeholder": "Search parking locations…",
+    "reports": "Reports"
 }

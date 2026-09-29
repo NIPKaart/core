@@ -17,6 +17,8 @@ type Props = {
     isLoggedIn: boolean;
     /** Existence confirmation control beside the confirmation evidence; only for community and municipal places. */
     confirmActions?: ReactNode;
+    /** Report control shown below the confirmation evidence; only for community and municipal places. */
+    reportActions?: ReactNode;
 };
 
 /** `note` stays visible (warnings/semantics); `help` is optional background behind a help button. */
@@ -71,7 +73,7 @@ function ExternalLink({ href, children, className = '' }: { href: string; childr
     );
 }
 
-export default function ParkingDetailBody({ data, isLoggedIn, confirmActions }: Props) {
+export default function ParkingDetailBody({ data, isLoggedIn, confirmActions, reportActions }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { source, detail } = data;
 
@@ -362,40 +364,43 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions }: 
             )}
 
             {source !== 'offstreet' && (
-                <section
-                    aria-labelledby="parking-detail-confirmations"
-                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2"
-                >
-                    <h3 id="parking-detail-confirmations" className="sr-only">
-                        {t('detail.confirmations.title')}
-                    </h3>
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5 text-sm">
-                        <Users className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                        <p className="flex min-w-0 flex-1 flex-col leading-tight">
-                            <span className="font-medium">
-                                {detail.confirmations_count?.confirmed
-                                    ? t('detail.confirmations.count', { count: detail.confirmations_count.confirmed })
-                                    : t('detail.confirmations.none')}{' '}
-                                <span className="inline-block align-[-3px]">
-                                    <HelpPopover
-                                        content={t('detail.confirmations.help')}
-                                        label={t('detail.more_info', { label: t('detail.confirmations.title') })}
-                                    />
+                <div className="flex flex-col gap-1.5">
+                    <section
+                        aria-labelledby="parking-detail-confirmations"
+                        className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2"
+                    >
+                        <h3 id="parking-detail-confirmations" className="sr-only">
+                            {t('detail.confirmations.title')}
+                        </h3>
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5 text-sm">
+                            <Users className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                            <p className="flex min-w-0 flex-1 flex-col leading-tight">
+                                <span className="font-medium">
+                                    {detail.confirmations_count?.confirmed
+                                        ? t('detail.confirmations.count', { count: detail.confirmations_count.confirmed })
+                                        : t('detail.confirmations.none')}{' '}
+                                    <span className="inline-block align-[-3px]">
+                                        <HelpPopover
+                                            content={t('detail.confirmations.help')}
+                                            label={t('detail.more_info', { label: t('detail.confirmations.title') })}
+                                        />
+                                    </span>
                                 </span>
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {detail.last_confirmed_at ? (
-                                    <>
-                                        {t('detail.confirmations.last')} {shortDate(detail.last_confirmed_at)}
-                                    </>
-                                ) : (
-                                    t('detail.confirmations.prompt')
-                                )}
-                            </span>
-                        </p>
-                    </div>
-                    {confirmActions}
-                </section>
+                                <span className="text-xs text-muted-foreground">
+                                    {detail.last_confirmed_at ? (
+                                        <>
+                                            {t('detail.confirmations.last')} {shortDate(detail.last_confirmed_at)}
+                                        </>
+                                    ) : (
+                                        t('detail.confirmations.prompt')
+                                    )}
+                                </span>
+                            </p>
+                        </div>
+                        {confirmActions}
+                    </section>
+                    {reportActions}
+                </div>
             )}
 
             {groups.length > 0 && (

@@ -8,6 +8,7 @@ import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
+import { ParkingReportForm } from '@/pages/frontend/form/form-report-location';
 import app from '@/routes/app';
 import { show as municipalDetails } from '@/routes/map/parking-municipal';
 import { show as offstreetDetails } from '@/routes/map/parking-offstreet';
@@ -163,7 +164,28 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         />
     );
 
-    const infoContent = detail && <ParkingDetailBody data={detail} isLoggedIn={!!user} confirmActions={confirmActions || undefined} />;
+    const reportActions = confirmable && (
+        <ParkingReportForm
+            key={`${confirmable.source}:${confirmable.detail.id}`}
+            source={confirmable.source}
+            id={confirmable.detail.id}
+            signedIn={!!user}
+            reported={!!confirmable.detail.reported_by_you}
+            onReported={() => {
+                silentReload.current = true;
+                setReload((value) => value + 1);
+            }}
+        />
+    );
+
+    const infoContent = detail && (
+        <ParkingDetailBody
+            data={detail}
+            isLoggedIn={!!user}
+            confirmActions={confirmActions || undefined}
+            reportActions={reportActions || undefined}
+        />
+    );
 
     const descriptionContent = community?.detail.description && (
         <CommunityDescriptionCard title={t('community.tabs.description')} description={community.detail.description} />

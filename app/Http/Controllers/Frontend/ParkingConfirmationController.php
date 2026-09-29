@@ -3,15 +3,11 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Enums\ParkingConfirmationStatus;
-use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
-use App\Models\ParkingMunicipal;
-use App\Models\ParkingSpace;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\ParkingPlaces;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -22,13 +18,13 @@ use Inertia\Inertia;
  */
 class ParkingConfirmationController extends Controller
 {
-    public function store(Request $request, string $source, string $id): RedirectResponse
+    public function store(Request $request, ParkingPlaces $places, string $source, string $id): RedirectResponse
     {
         $user = $request->user();
 
-        DB::transaction(function () use ($source, $id, $user) {
+        DB::transaction(function () use ($places, $source, $id, $user) {
             // Locking the place serializes submissions before checking the once-per-day rule.
-            $place = $this->publishedPlace($source, $id)->lockForUpdate()->firstOrFail();
+            $place = $places->published($source, $id)->lockForUpdate()->firstOrFail();
 
             if ($place->isConfirmedTodayBy($user)) {
                 throw ValidationException::withMessages([
@@ -46,18 +42,5 @@ class ParkingConfirmationController extends Controller
         Inertia::flash('success', __('parking_spaces.confirm.recorded'));
 
         return back();
-    }
-
-    /**
-     * Only places the public map shows can be confirmed.
-     *
-     * @return Builder<ParkingSpace>|Builder<ParkingMunicipal>
-     */
-    private function publishedPlace(string $source, string $id): Builder
-    {
-        return match ($source) {
-            'community' => ParkingSpace::whereKey(Str::isUuid($id) ? $id : abort(404))->where('status', ParkingStatus::APPROVED),
-            'municipal' => ParkingMunicipal::whereKey($id)->where('visibility', true),
-        };
     }
 }

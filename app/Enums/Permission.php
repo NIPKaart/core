@@ -32,6 +32,9 @@ enum Permission: string
     case PARKING_SPACE_CONFIRMATION_VIEW_ANY = 'parking-space-confirmation.view_any';
     case PARKING_SPACE_CONFIRMATION_DELETE = 'parking-space-confirmation.delete';
 
+    case PARKING_PLACE_REPORT_VIEW_ANY = 'parking-place-report.view_any';
+    case PARKING_PLACE_REPORT_RESOLVE = 'parking-place-report.resolve';
+
     case PARKING_MUNICIPAL_VIEW = 'parking-municipal.view';
     case PARKING_MUNICIPAL_VIEW_ANY = 'parking-municipal.view_any';
     case PARKING_MUNICIPAL_CREATE = 'parking-municipal.create';

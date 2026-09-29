@@ -39,6 +39,20 @@
             "fri": "vr",
             "sat": "za",
             "sun": "zo"
+        },
+        "report": {
+            "question": "Is de plek weg?",
+            "open": "Meld het",
+            "sign_in": "Log in om te melden",
+            "title": "Melden dat de plek er niet meer is",
+            "explanation": "Een moderator bekijkt je melding. Tot die tijd blijft de plek op de kaart.",
+            "note": "Wat zag je?",
+            "optional": "(optioneel)",
+            "placeholder": "Bijvoorbeeld: bord weggehaald, vak overgeschilderd",
+            "cancel": "Annuleren",
+            "submit": "Melden",
+            "sending": "Melden…",
+            "reported": "Gemeld dat de plek weg is. Een moderator kijkt ernaar."
         }
     },
     "municipal": {

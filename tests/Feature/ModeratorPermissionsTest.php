@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\DatasetImport;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
+use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceReview;
 use App\Models\Role;
@@ -48,6 +49,8 @@ test('moderation abilities are granted per role', function (string $ability, Clo
     'review community parking' => ['update', fn () => ParkingSpace::factory()->create(), true, true, false],
     'delete community parking' => ['delete', fn () => ParkingSpace::factory()->create(), true, false, false],
     'remove confirmations' => ['parking-space-confirmation.delete', fn () => [], true, true, false],
+    'view reports' => ['viewAny', fn () => ParkingPlaceReport::class, true, true, false],
+    'handle reports' => ['resolve', fn () => ParkingPlaceReport::class, true, true, false],
     'hide municipal parking' => ['toggleVisibility', fn () => ParkingMunicipal::factory()->create(), true, true, false],
     'change offstreet parking' => ['update', fn () => ParkingOffstreet::factory()->create(), true, false, false],
     'view users' => ['viewAny', fn () => User::class, true, false, false],

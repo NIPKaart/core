@@ -3,6 +3,7 @@
 use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Models\Favorite;
+use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceReview;
@@ -16,6 +17,7 @@ function communityRequest(string $action, ParkingSpace $space): array
         'open add form' => ['get', route('location-map.add'), []],
         'submit a place' => ['post', route('location-map.store'), []],
         'confirm a place' => ['post', route('map.places.confirm', ['source' => 'community', 'id' => $space->id]), []],
+        'report a place' => ['post', route('map.places.report', ['source' => 'community', 'id' => $space->id]), []],
     };
 }
 
@@ -24,14 +26,14 @@ describe('community eligibility', function () {
         [$method, $uri, $data] = communityRequest($action, ParkingSpace::factory()->create());
 
         $this->{$method}($uri, $data)->assertRedirect(route('login'));
-    })->with(['open add form', 'submit a place', 'confirm a place']);
+    })->with(['open add form', 'submit a place', 'confirm a place', 'report a place']);
 
     test('unverified accounts are sent to verify their email first', function (string $action) {
         [$method, $uri, $data] = communityRequest($action, ParkingSpace::factory()->create());
 
         $this->actingAs(User::factory()->unverified()->create())->{$method}($uri, $data)
             ->assertRedirect(route('verification.notice'));
-    })->with(['open add form', 'submit a place', 'confirm a place']);
+    })->with(['open add form', 'submit a place', 'confirm a place', 'report a place']);
 
     test('suspended accounts are signed out instead of contributing', function (string $action) {
         $space = ParkingSpace::factory()->create();
@@ -41,8 +43,9 @@ describe('community eligibility', function () {
             ->assertRedirect(route('login'));
 
         $this->assertGuest();
-        expect(ParkingSpaceConfirmation::count())->toBe(0);
-    })->with(['open add form', 'submit a place', 'confirm a place']);
+        expect(ParkingSpaceConfirmation::count())->toBe(0)
+            ->and(ParkingPlaceReport::count())->toBe(0);
+    })->with(['open add form', 'submit a place', 'confirm a place', 'report a place']);
 
     test('verified active accounts may contribute', function () {
         $user = User::factory()->create();

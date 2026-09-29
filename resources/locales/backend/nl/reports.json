@@ -1,0 +1,54 @@
+{
+    "title": "Meldingen",
+    "description": "Plekken die gebruikers als verdwenen hebben gemeld. Een melding haalt nooit zelf een plek van de kaart: jij beslist. Twijfel je, laat de plek dan staan.",
+    "empty": {
+        "title": "Geen open meldingen",
+        "description": "Als gebruikers melden dat een plek weg is, zie je die hier."
+    },
+    "sources": {
+        "community": "Community",
+        "municipal": "Gemeentelijke data"
+    },
+    "not_public": "Niet openbaar",
+    "no_address": "Plek zonder adres",
+    "signals": {
+        "reports": "Meldingen",
+        "report_count_one": "{{count}} melding",
+        "report_count_other": "{{count}} meldingen",
+        "first_reported": "eerste {{ago}}",
+        "confirmations_since": "Bevestigd sinds eerste melding",
+        "confirmation_count_one": "{{count}}×",
+        "confirmation_count_other": "{{count}}×",
+        "last_confirmed": "laatst {{ago}}",
+        "never_confirmed": "nooit bevestigd"
+    },
+    "notes": {
+        "title": "Wat melders zagen",
+        "none": "Geen toelichting",
+        "unknown_reporter": "Onbekende gebruiker"
+    },
+    "actions": {
+        "map": "Bekijk op kaart",
+        "details": "Details",
+        "keep": "Laten staan",
+        "remove": {
+            "community": "Verwijderen",
+            "municipal": "Verbergen"
+        }
+    },
+    "remove": {
+        "reason": "Reden",
+        "note": "Toelichting",
+        "optional": "(optioneel)",
+        "community": {
+            "title": "Deze communityplek verwijderen?",
+            "description": "De plek wordt verwijderd, samen met de bevestigingen, meldingen en favorieten. Dit kan niet ongedaan worden; je besluit en de reden blijven bewaard.",
+            "confirm": "Plek verwijderen"
+        },
+        "municipal": {
+            "title": "Deze gemeentelijke plek verbergen?",
+            "description": "De plek verdwijnt van de kaart en blijft ook na volgende imports verborgen. Je kunt hem weer tonen via gemeentelijke data.",
+            "confirm": "Plek verbergen"
+        }
+    }
+}

@@ -14,6 +14,17 @@ The limit of one confirmation per user/place/calendar day in the configured appl
 
 Existing database retention remains: soft deletion retains confirmations and favorites; permanent community deletion cascades confirmations; deleting a user nulls community ownership and cascades that user's confirmations/favorites. No purge scheduler or new retention period is introduced. #1175/#276 still own durable moderation history, report/correction semantics and any change to evidence retention or anonymization.
 
+## Reports of disappeared places
+
+Reports (#1313) follow the same place identity as confirmations: `POST map/places/{source}/{id}/report` accepts a published community or municipal place and an optional note of at most 500 characters. A report never hides or deletes anything. A user has one open report per place (enforced by partial unique indexes), and may report again once a moderator has decided. Public detail JSON exposes only the viewer's own `reported_by_you`; report counts stay internal.
+
+Moderators (`parking-place-report.view_any` and `.resolve`) work from the queue at `app/reports`. Each reported place appears once, with its open reports and notes, and the existence confirmations given since the first open report. They either keep the place, also when existence stays uncertain, which closes its reports, or remove it with a required `RemovalReason`:
+
+- a community place is deleted permanently, together with its confirmations, reviews, reports and favorites;
+- a municipal place is hidden through `visibility`, which later imports preserve; its confirmations, favorites and resolved reports remain.
+
+Every removal writes a `ParkingPlaceRemoval` with source, identity, label, action, reason, note, open report count and moderator. There is no report threshold and no resurrection state: re-adding a place later is a new contribution. After deploying, run `php artisan db:seed --class=PermissionsTableSeeder --force` so moderators receive the new permissions.
+
 ## Favorites contract
 
 Both the profile list and map dialog now consume:
