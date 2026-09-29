@@ -166,7 +166,7 @@
             "last": "Aanwezig, laatst",
             "none": "Nog niet bevestigd",
             "prompt": "Is deze plek er nog?",
-            "help": "Een bevestiging betekent alleen dat deze gehandicaptenparkeerplaats hier bestaat. Het zegt niets over het onderbord, de parkeerduur of andere gegevens. Je kunt elke plek één keer per dag bevestigen."
+            "help": "Met een bevestiging laat je weten dat deze parkeerplaats er echt is. Of het onderbord en de parkeerduur kloppen, zegt het niet. Je kunt elke dag één keer bevestigen."
         }
     }
 }

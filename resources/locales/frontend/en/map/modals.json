@@ -166,7 +166,7 @@
             "last": "Present, last",
             "none": "Not confirmed yet",
             "prompt": "Is this place still here?",
-            "help": "A confirmation only means that this disabled parking place exists here. It says nothing about the under-sign, parking time or other details. You can confirm each place once per day."
+            "help": "A confirmation tells others that this parking place is really here. It doesn't say whether the under-sign or parking time is right. You can confirm once a day."
         }
     }
 }
