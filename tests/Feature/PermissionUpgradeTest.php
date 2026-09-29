@@ -24,7 +24,7 @@ test('role and direct permission revocation take effect at the policy boundary',
 
     $role->givePermissionTo('role.view_any');
     $this->actingAs($user->fresh())->get(route('app.roles.index'))->assertOk();
-    $this->get(route('app.roles.create'))->assertForbidden();
+    $this->get(route('app.users.index'))->assertForbidden();
 
     $role->revokePermissionTo('role.view_any');
     $this->actingAs($user->fresh())->get(route('app.roles.index'))->assertForbidden();

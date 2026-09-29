@@ -91,7 +91,7 @@ test('resource policies enforce permissions on direct requests', function () {
     $this->actingAs($user)->get(route('app.roles.index'))->assertForbidden();
     $user->givePermissionTo('role.view_any');
     $this->get(route('app.roles.index'))->assertOk();
-    $this->get(route('app.roles.create'))->assertForbidden();
+    $this->get(route('app.users.index'))->assertForbidden();
 });
 
 test('settings share a user budget without blocking verification or other users', function () {

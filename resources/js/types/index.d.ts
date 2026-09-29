@@ -106,6 +106,7 @@ export interface User {
     avatar?: string;
     email_verified_at: string | null;
     suspended_at: string | null;
+    last_login_at: string | null;
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
@@ -143,6 +144,7 @@ export interface ParkingSpace {
     id: string;
     user_id: number | null;
     user?: User;
+    latest_review?: ParkingSpaceReview | null;
 
     status: ParkingStatus;
     ip_address: string | null;
@@ -288,3 +290,13 @@ export type NotificationItem = {
     read_at: string | null;
     created_at: string;
 };
+
+export interface ParkingSpaceReview {
+    id: number;
+    parking_space_id: string;
+    reviewed_by: number | null;
+    from_status: ParkingStatus | null;
+    to_status: ParkingStatus;
+    reviewed_at: string;
+    reviewer?: Pick<User, 'id' | 'name'> | null;
+}

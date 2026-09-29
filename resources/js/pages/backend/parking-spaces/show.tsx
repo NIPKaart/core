@@ -14,7 +14,7 @@ import { BreadcrumbItem, ParkingSpace, ParkingSpaceConfirmation } from '@/types'
 import { Head, Link } from '@inertiajs/react';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, Server, Tag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, Server, ShieldCheck, Tag, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 type PageProps = {
@@ -82,6 +82,16 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
             icon: <Compass className="h-4 w-4 text-muted-foreground" />,
             label: t('show.cards.details.fields.amenity'),
             value: parkingSpace.amenity,
+        },
+        {
+            icon: <ShieldCheck className="h-4 w-4 text-muted-foreground" />,
+            label: t('show.cards.details.fields.reviewed'),
+            value: parkingSpace.latest_review
+                ? t('show.cards.details.fields.reviewed_value', {
+                      name: parkingSpace.latest_review.reviewer?.name ?? t('show.cards.details.fields.reviewer_removed'),
+                      date: new Date(parkingSpace.latest_review.reviewed_at).toLocaleString(),
+                  })
+                : null,
         },
         {
             icon: <Compass className="h-4 w-4 rotate-90 text-muted-foreground" />,

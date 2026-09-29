@@ -79,7 +79,7 @@ class ParkingSpaceController extends Controller
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
+        $parkingSpace = ParkingSpace::with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
 
         // Get the 10 nearest parking spaces
         $limit = 10;
@@ -165,7 +165,7 @@ class ParkingSpaceController extends Controller
         ];
         unset($data['parking_hours'], $data['parking_minutes']);
 
-        $parkingSpace->update($data);
+        $parkingSpace->fill($data)->saveReviewedBy($request->user());
 
         Inertia::flash('success', __('parking_spaces.flash.updated'));
 
@@ -198,7 +198,7 @@ class ParkingSpaceController extends Controller
         ]);
 
         ParkingSpace::whereIn('id', $request->input('ids'))
-            ->eachById(fn (ParkingSpace $space) => $space->update(['status' => $request->input('status')]));
+            ->eachById(fn (ParkingSpace $space) => $space->fill(['status' => $request->input('status')])->saveReviewedBy($request->user()));
 
         return back();
     }

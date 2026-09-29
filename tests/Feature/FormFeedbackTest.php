@@ -3,12 +3,10 @@
 use App\Enums\ParkingOrientation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\ParkingSpace;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Permission;
 
 // Exercise the actual web middleware and Inertia protocol, including partial reloads.
 beforeEach(function () {
@@ -39,25 +37,6 @@ test('flash feedback is delivered once outside page props even on a partial relo
     $this->post('/_test/feedback')->assertRedirect();
     $this->get('/_test/feedback', $headers)->assertJsonPath("flash.$level", 'Feedback message');
 })->with(['success', 'error', 'warning', 'info']);
-
-test('role form validation remains authoritative and success uses native flash', function () {
-    $operator = User::factory()->create();
-    $operator->givePermissionTo('role.create');
-    $this->actingAs($operator)->from('/_test/feedback')
-        ->post(route('app.roles.store'), ['name' => '', 'permissions' => []])
-        ->assertSessionHasErrors('name');
-    $this->get('/_test/feedback', ['X-Inertia' => 'true'])
-        ->assertJsonStructure(['props' => ['errors' => ['name']]])
-        ->assertJsonMissingPath('flash');
-
-    $this->post(route('app.roles.store'), ['name' => 'feedback-editor', 'permissions' => [Permission::where('name', 'role.view')->sole()->id]])
-        ->assertSessionHasNoErrors()->assertRedirect(route('app.roles.index'));
-    $this->get('/_test/feedback', ['X-Inertia' => 'true'])
-        ->assertJsonPath('flash.success', 'Role created successfully.')
-        ->assertJsonPath('props.errors', [])
-        ->assertJsonMissingPath('props.flash');
-    expect(Role::where('name', 'feedback-editor')->exists())->toBeTrue();
-});
 
 test('parking editor can correct server errors and the server derives parking duration', function () {
     $space = ParkingSpace::factory()->create();

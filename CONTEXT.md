@@ -10,6 +10,8 @@ _Avoid_: ParkingSpot, UserParkingSpot, UserparkingSpot
 **ParkingSpaceConfirmation**: A person's dated confirmation or dispute about a community parking space, optionally accompanied by a comment.
 _Avoid_: ParkingSpotConfirmation
 
+**ParkingSpaceReview**: A moderator's attributable change of a community parking space's review status (pending, approved or rejected), kept as history. It is the community-space form of a PublicationDecision.
+
 **ParkingMunicipal**: A municipal/open-data parking record. Its source and meaning remain distinct from a community contribution.
 
 **ParkingOffstreet**: A garage or park-and-ride facility with facility information and potentially live general occupancy. General occupancy does not establish accessible-space availability.

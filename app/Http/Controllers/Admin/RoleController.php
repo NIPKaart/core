@@ -2,111 +2,102 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Permission;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\App\StoreRoleRequest;
-use App\Http\Requests\App\UpdateRoleRequest;
 use App\Models\Role;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Permission;
+use Inertia\Response;
+use Spatie\Permission\Models\Permission as PermissionModel;
 
 class RoleController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Show the code-owned roles, their stored permissions and any drift between code and database.
      */
-    public function index()
+    public function index(): Response
     {
         Gate::authorize('viewAny', Role::class);
 
+        $storedRoles = Role::query()
+            ->where('guard_name', 'web')
+            ->with('permissions:id,name')
+            ->withCount('users')
+            ->get()
+            ->keyBy('name');
+        $storedPermissions = PermissionModel::query()
+            ->where('guard_name', 'web')
+            ->pluck('name');
+
+        $roles = collect(UserRole::cases())->map(function (UserRole $role) use ($storedRoles): array {
+            $storedRole = $storedRoles->get($role->value);
+            $assignedPermissions = $storedRole?->permissions->pluck('name')->sort()->values()->all() ?? [];
+            $declaredPermissions = collect($role->permissions())
+                ->map(fn (Permission $permission): string => $permission->value)
+                ->sort()
+                ->values()
+                ->all();
+
+            return [
+                'name' => $role->value,
+                'label' => $role->label(),
+                'description' => $role->description(),
+                'userCount' => (int) ($storedRole?->users_count ?? 0),
+                'permissions' => $assignedPermissions,
+                'isStored' => $storedRole !== null,
+                'isSynchronized' => $storedRole !== null && $assignedPermissions === $declaredPermissions,
+            ];
+        })->values();
+
+        $roleNames = collect(UserRole::all());
+        $permissionNames = collect(Permission::cases())->map(fn (Permission $permission): string => $permission->value);
+        $missingRoles = $roleNames->diff($storedRoles->keys())->values();
+        $missingPermissions = $permissionNames->diff($storedPermissions)->values();
+        $unexpectedRoles = $storedRoles->keys()->diff($roleNames)->values();
+        $unexpectedPermissions = $storedPermissions->diff($permissionNames)->values();
+
         return Inertia::render('backend/roles/index', [
-            'roles' => Role::paginate(20),
+            'roles' => $roles,
+            'permissionGroups' => $this->permissionGroups($storedPermissions),
+            'synchronization' => [
+                'isSynchronized' => $roles->every(fn (array $role): bool => $role['isSynchronized'])
+                    && $missingRoles->isEmpty()
+                    && $missingPermissions->isEmpty()
+                    && $unexpectedRoles->isEmpty()
+                    && $unexpectedPermissions->isEmpty(),
+                'missingRoles' => $missingRoles,
+                'missingPermissions' => $missingPermissions,
+                'unexpectedRoles' => $unexpectedRoles,
+                'unexpectedPermissions' => $unexpectedPermissions,
+            ],
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * @param  Collection<int, string>  $storedPermissions
+     * @return list<array{key: string, label: string, permissions: list<array{value: string, label: string, description: string, isStored: bool}>}>
      */
-    public function create()
+    private function permissionGroups(Collection $storedPermissions): array
     {
-        Gate::authorize('create', Role::class);
+        $groups = [];
 
-        return Inertia::render('backend/roles/create', [
-            'allPermissions' => Permission::all(),
-        ]);
-    }
+        foreach (Permission::cases() as $permission) {
+            $group = $permission->group();
+            $groups[$group] ??= [
+                'key' => $group,
+                'label' => $permission->groupLabel(),
+                'permissions' => [],
+            ];
+            $groups[$group]['permissions'][] = [
+                'value' => $permission->value,
+                'label' => $permission->label(),
+                'description' => $permission->description(),
+                'isStored' => $storedPermissions->contains($permission->value),
+            ];
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreRoleRequest $request)
-    {
-        Gate::authorize('create', Role::class);
-
-        $role = Role::create([
-            'name' => strtolower($request->validated()['name']),
-        ]);
-
-        $role->syncPermissions($request->validated('permissions'));
-
-        Inertia::flash('success', 'Role created successfully.');
-
-        return redirect()->route('app.roles.index');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Role $role)
-    {
-        Gate::authorize('view', $role);
-
-        return Inertia::render('backend/roles/show', [
-            'role' => $role,
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Role $role)
-    {
-        Gate::authorize('update', $role);
-
-        return Inertia::render('backend/roles/edit', [
-            'role' => $role,
-            'rolePermissions' => $role->permissions()->pluck('id'),
-            'allPermissions' => Permission::all(),
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateRoleRequest $request, Role $role)
-    {
-        Gate::authorize('update', $role);
-
-        $role->update([
-            'name' => strtolower($request->validated()['name']),
-        ]);
-
-        $role->syncPermissions($request->validated('permissions'));
-
-        Inertia::flash('success', 'Role updated successfully.');
-
-        return redirect()->route('app.roles.index');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Role $role)
-    {
-        Gate::authorize('delete', $role);
-
-        $role->delete();
-
-        return redirect()->route('app.roles.index');
+        return array_values($groups);
     }
 }

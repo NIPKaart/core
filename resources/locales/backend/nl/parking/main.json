@@ -57,7 +57,10 @@
                     "amenity": "Voorziening",
                     "orientation": "Oriëntatie",
                     "ip_address": "IP-adres",
-                    "copy_ip": "Kopieer IP"
+                    "copy_ip": "Kopieer IP",
+                    "reviewed": "Beoordeeld",
+                    "reviewed_value": "{{name}} op {{date}}",
+                    "reviewer_removed": "Verwijderd account"
                 }
             },
             "confirmations": {

@@ -27,7 +27,9 @@
         "actions": {
             "suspend": "Suspend",
             "unsuspend": "Unsuspend"
-        }
+        },
+        "last_login_at": "Last signed in",
+        "never_logged_in": "No sign-in recorded"
     },
     "form": {
         "account_info": "Account Info",
@@ -67,5 +69,13 @@
         "suspended": "User is suspended",
         "unsuspended": "User is unsuspended",
         "suspend_failed": "Failed to update suspension status"
+    },
+    "filters": {
+        "role": "Role",
+        "role_none": "No role",
+        "status": "Status",
+        "verification": "Email verification",
+        "login": "Last signed in",
+        "login_recent": "Last 30 days"
     }
 }

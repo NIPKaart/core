@@ -1,45 +1,38 @@
 {
     "head": {
-        "title": "Rollen",
-        "description": "Beheer gebruikersrollen en bijbehorende rechten.",
-        "edit": "Bewerk {{name}}",
-        "create": "Rol aanmaken"
+        "title": "Rollen en rechten",
+        "description": "Bekijk welke rechten iedere rol heeft. Rollen worden in code beheerd; wijzig de rol van een gebruiker via gebruikersbeheer."
     },
     "breadcrumbs": {
-        "index": "Rollen",
-        "edit": "Bewerk rol ({{name}})",
-        "create": "Rol aanmaken"
+        "index": "Rollen en rechten"
     },
     "buttons": {
-        "add": "Rol"
+        "users": "Gebruikers beheren"
     },
-    "table": {
-        "name": "Naam",
-        "guard": "Beveiliging",
-        "created_at": "Aangemaakt op"
+    "roles": {
+        "title": "Rollen",
+        "description": "Dit overzicht is bewust alleen-lezen: rollen en hun rechten veranderen alleen via code en de permissie-seeder.",
+        "synchronized": "Gesynchroniseerd",
+        "needs_review": "Controle nodig",
+        "users": "Gebruikers",
+        "permissions": "Rechten"
     },
-    "form": {
-        "name": {
-            "label": "Naam",
-            "placeholder": "admin, moderator..."
-        },
-        "permissions": {
-            "label": "Rechten",
-            "group_label": "{{resource}} rechten"
-        },
-        "submit": {
-            "create": "Rol opslaan",
-            "update": "Rol bijwerken"
-        }
+    "matrix": {
+        "title": "Rechtenmatrix",
+        "description": "Iedere rij is een recht uit de code; de vinkjes tonen de toewijzing die nu in de database staat.",
+        "permission": "Recht",
+        "missing": "Ontbreekt",
+        "assigned": "{{permission}} is toegewezen aan {{role}}",
+        "not_assigned": "{{permission}} is niet toegewezen aan {{role}}"
     },
-    "confirm": {
-        "delete_title": "Rol verwijderen?",
-        "delete_description": "Weet je zeker dat je de rol \"{{name}}\" wilt verwijderen?",
-        "delete_confirm": "Verwijderen"
-    },
-    "toast": {
-        "updated": "Rol succesvol bijgewerkt",
-        "deleted": "Rol succesvol verwijderd",
-        "error": "Er is iets misgegaan bij het bijwerken van de rol."
+    "sync": {
+        "ok_title": "Database en code zijn gesynchroniseerd",
+        "ok_description": "Alle opgeslagen rollen, rechten en toewijzingen komen overeen met de code.",
+        "drift_title": "De rechtenconfiguratie vraagt controle",
+        "drift_description": "Draai de permissie-seeder om de database weer gelijk te trekken met de code.",
+        "missing_role": "Ontbrekende rol: {{value}}",
+        "missing_permission": "Ontbrekend recht: {{value}}",
+        "unexpected_role": "Onbekende rol: {{value}}",
+        "unexpected_permission": "Onbekend recht: {{value}}"
     }
 }
