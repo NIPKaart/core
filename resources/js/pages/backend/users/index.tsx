@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
+import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
 import { Button } from '@/components/ui/button';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
@@ -19,11 +20,16 @@ type UserWithRoles = User & {
     roles: { id: number; name: string }[];
 };
 
+type FilterKey = 'role' | 'status' | 'verification' | 'login';
+
 type PageProps = {
     users: PaginatedResponse<UserWithRoles>;
+    filters: Record<FilterKey, string[]>;
+    facets: Record<FilterKey, Record<string, number>>;
+    roleOptions: { value: string; label: string }[];
 };
 
-export default function Index({ users }: PageProps) {
+export default function Index({ users, filters, facets, roleOptions }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/users');
     const page = usePage<SharedData>();
     const { auth } = page.props;
@@ -76,6 +82,40 @@ export default function Index({ users }: PageProps) {
 
     const columns = getUserColumns(can, auth.user, openDialog, { t, tGlobal });
 
+    const applyFilter = (key: FilterKey, selected: string[]) => {
+        const query: Record<string, string> = {};
+        for (const [name, values] of Object.entries({ ...filters, [key]: selected })) {
+            if (values.length > 0) query[name] = values.join(',');
+        }
+
+        router.get(app.users.index(), query, { preserveState: true, preserveScroll: true, replace: true });
+    };
+
+    const facetFilters: { key: FilterKey; options: { value: string; label: string }[] }[] = [
+        { key: 'role', options: [...roleOptions, { value: 'none', label: t('filters.role_none') }] },
+        {
+            key: 'status',
+            options: [
+                { value: 'active', label: t('table.active') },
+                { value: 'suspended', label: t('table.suspended') },
+            ],
+        },
+        {
+            key: 'verification',
+            options: [
+                { value: 'verified', label: t('table.verified') },
+                { value: 'unverified', label: t('table.unverified') },
+            ],
+        },
+        {
+            key: 'login',
+            options: [
+                { value: 'recent', label: t('filters.login_recent') },
+                { value: 'none', label: t('table.never_logged_in') },
+            ],
+        },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
@@ -97,6 +137,20 @@ export default function Index({ users }: PageProps) {
                         initialState={{ columnVisibility: { email_verified: false, created_at: false } }}
                         columns={columns}
                         data={users.data}
+                        filters={
+                            <div className="flex flex-wrap items-center gap-2">
+                                {facetFilters.map(({ key, options }) => (
+                                    <DataTableFacetFilter
+                                        key={key}
+                                        title={t(`filters.${key}`)}
+                                        selected={filters[key]}
+                                        options={options.map((option) => ({ ...option, count: facets[key][option.value] ?? 0 }))}
+                                        onChange={(selected) => applyFilter(key, selected)}
+                                        onClear={() => applyFilter(key, [])}
+                                    />
+                                ))}
+                            </div>
+                        }
                     />
                     <DataTablePagination pagination={users} />
                 </div>

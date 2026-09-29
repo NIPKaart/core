@@ -1,45 +1,38 @@
 {
     "head": {
-        "title": "Roles",
-        "description": "Manage user roles and their permissions.",
-        "edit": "Edit {{name}}",
-        "create": "Create Role"
+        "title": "Roles and permissions",
+        "description": "See which permissions each role holds. Roles are managed in code; change a user's role from user management."
     },
     "breadcrumbs": {
-        "index": "Roles",
-        "edit": "Edit role ({{name}})",
-        "create": "Create role"
+        "index": "Roles and permissions"
     },
     "buttons": {
-        "add": "Role"
+        "users": "Manage users"
     },
-    "table": {
-        "name": "Name",
-        "guard": "Guard",
-        "created_at": "Created at"
+    "roles": {
+        "title": "Roles",
+        "description": "This overview is intentionally read-only: roles and their permissions only change through code and the permission seeder.",
+        "synchronized": "Synchronized",
+        "needs_review": "Needs review",
+        "users": "Users",
+        "permissions": "Permissions"
     },
-    "form": {
-        "name": {
-            "label": "Name",
-            "placeholder": "admin, moderator..."
-        },
-        "permissions": {
-            "label": "Permissions",
-            "group_label": "{{resource}} permissions"
-        },
-        "submit": {
-            "create": "Save Role",
-            "update": "Update Role"
-        }
+    "matrix": {
+        "title": "Permission matrix",
+        "description": "Each row is a permission declared in code; the check marks show the assignment currently stored in the database.",
+        "permission": "Permission",
+        "missing": "Missing",
+        "assigned": "{{permission}} is assigned to {{role}}",
+        "not_assigned": "{{permission}} is not assigned to {{role}}"
     },
-    "confirm": {
-        "delete_title": "Delete role?",
-        "delete_description": "Are you sure you want to delete the role \"{{name}}\"?",
-        "delete_confirm": "Delete"
-    },
-    "toast": {
-        "updated": "Role updated successfully",
-        "deleted": "Role deleted successfully",
-        "error": "Something went wrong while updating the role."
+    "sync": {
+        "ok_title": "Database and code are synchronized",
+        "ok_description": "Every stored role, permission and assignment matches the code.",
+        "drift_title": "The permission configuration needs review",
+        "drift_description": "Run the permission seeder to bring the database back in line with the code.",
+        "missing_role": "Missing role: {{value}}",
+        "missing_permission": "Missing permission: {{value}}",
+        "unexpected_role": "Unknown role: {{value}}",
+        "unexpected_permission": "Unknown permission: {{value}}"
     }
 }

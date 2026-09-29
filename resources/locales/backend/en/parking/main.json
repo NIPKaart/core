@@ -55,7 +55,10 @@
                     "amenity": "Amenity",
                     "orientation": "Orientation",
                     "ip_address": "IP Address",
-                    "copy_ip": "Copy IP"
+                    "copy_ip": "Copy IP",
+                    "reviewed": "Reviewed",
+                    "reviewed_value": "{{name}} on {{date}}",
+                    "reviewer_removed": "Deleted account"
                 }
             },
             "confirmations": {

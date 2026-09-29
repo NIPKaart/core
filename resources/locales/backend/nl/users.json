@@ -27,7 +27,9 @@
         "actions": {
             "suspend": "Schorsen",
             "unsuspend": "Herstellen"
-        }
+        },
+        "last_login_at": "Laatst ingelogd",
+        "never_logged_in": "Geen login bekend"
     },
     "form": {
         "account_info": "Accountinformatie",
@@ -67,5 +69,13 @@
         "suspended": "Gebruiker is geschorst",
         "unsuspended": "Gebruiker is hersteld",
         "suspend_failed": "Bijwerken schorsingsstatus mislukt"
+    },
+    "filters": {
+        "role": "Rol",
+        "role_none": "Geen rol",
+        "status": "Status",
+        "verification": "E-mailverificatie",
+        "login": "Laatst ingelogd",
+        "login_recent": "Afgelopen 30 dagen"
     }
 }

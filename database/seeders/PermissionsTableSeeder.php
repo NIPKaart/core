@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Permission as PermissionEnum;
+use App\Enums\UserRole;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -9,42 +11,34 @@ use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsTableSeeder extends Seeder
 {
+    /**
+     * Seed every Permission case and sync each UserRole to exactly the permissions it declares.
+     *
+     * Permissions removed from a role's declaration are revoked from that role on the next run, and
+     * permissions no longer declared in code are deleted along with every role and user assignment.
+     */
     public function run(): void
     {
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $roles = config('permissions.roles');
+        $declaredPermissions = array_column(PermissionEnum::cases(), 'value');
 
-        foreach ($roles as $roleName => $roleData) {
-            $guardName = $roleData['guard_name'] ?? 'web';
+        foreach ($declaredPermissions as $permission) {
+            Permission::findOrCreate($permission, 'web');
+        }
 
-            $role = Role::firstOrCreate([
-                'name' => $roleName,
-                'guard_name' => $guardName,
-            ]);
+        Permission::query()
+            ->where('guard_name', 'web')
+            ->whereNotIn('name', $declaredPermissions)
+            ->get()
+            ->each->delete();
 
-            $this->assignResourcePermissions(
-                $roleData['permissions']['resource'] ?? [],
-                $role,
-                $guardName
+        foreach (UserRole::cases() as $role) {
+            Role::findOrCreate($role->value, 'web')->syncPermissions(
+                array_map(fn (PermissionEnum $permission): string => $permission->value, $role->permissions())
             );
         }
-    }
 
-    protected function assignResourcePermissions(array $resources, Role $role, string $guardName): void
-    {
-        foreach ($resources as $resource => $actions) {
-            foreach ($actions as $action) {
-                // Resource keeps exactly as defined (e.g. test-resource), so permission = "test-resource.view"
-                $permissionName = "{$resource}.{$action}";
-
-                $permission = Permission::firstOrCreate([
-                    'name' => $permissionName,
-                    'guard_name' => $guardName,
-                ]);
-
-                $role->givePermissionTo($permission);
-            }
-        }
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

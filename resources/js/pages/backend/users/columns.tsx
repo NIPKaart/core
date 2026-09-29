@@ -86,6 +86,18 @@ export function getUserColumns(
             },
         },
         {
+            accessorKey: 'last_login_at',
+            header: t('table.last_login_at'),
+            enableSorting: true,
+            enableHiding: true,
+            cell: ({ row }) =>
+                row.original.last_login_at ? (
+                    new Date(row.original.last_login_at).toLocaleString()
+                ) : (
+                    <span className="text-muted-foreground">{t('table.never_logged_in')}</span>
+                ),
+        },
+        {
             accessorKey: 'created_at',
             header: t('table.created_at'),
             enableSorting: true,

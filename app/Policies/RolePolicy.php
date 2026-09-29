@@ -2,64 +2,18 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
+use App\Enums\Permission;
 use App\Models\User;
 
 class RolePolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determine whether the user can view the read-only roles and permissions overview.
+     *
+     * Roles are declared in code, so there are no create, update or delete abilities.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('role.view_any');
+        return $user->can(Permission::ROLE_VIEW_ANY->value);
     }
-
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Role $role): bool
-    {
-        return $user->can('role.view');
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return $user->can('role.create');
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Role $role): bool
-    {
-        return $user->can('role.update');
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Role $role): bool
-    {
-        return $user->can('role.delete');
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    // public function restore(User $user, Role $role): bool
-    // {
-    //     return false;
-    // }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    // public function forceDelete(User $user, Role $role): bool
-    // {
-    //     return false;
-    // }
 }

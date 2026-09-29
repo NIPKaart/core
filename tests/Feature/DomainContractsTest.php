@@ -184,16 +184,10 @@ test('casts preserve JSON enum and nullable quantity contracts', function () {
 
 test('instance policy calls allow permitted operators and reject other users', function () {
     $operator = User::factory()->create();
-    $role = Role::factory()->create();
     $rule = ParkingRule::factory()->create();
-    $this->actingAs($operator)->get(route('app.roles.show', $role))->assertForbidden();
-    $this->delete(route('app.roles.destroy', $role))->assertForbidden();
-    $this->delete(route('app.parking-rules.destroy', $rule))->assertForbidden();
-    $operator->givePermissionTo(['role.view', 'role.delete', 'parking-rule.delete']);
-    $this->get(route('app.roles.show', $role))->assertOk();
-    $this->delete(route('app.roles.destroy', $role))->assertRedirect();
+    $this->actingAs($operator)->delete(route('app.parking-rules.destroy', $rule))->assertForbidden();
+    $operator->givePermissionTo('parking-rule.delete');
     $this->delete(route('app.parking-rules.destroy', $rule))->assertRedirect();
-    $this->assertModelMissing($role);
     $this->assertModelMissing($rule);
 });
 

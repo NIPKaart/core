@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class ParkingSpace extends Model
 {
@@ -75,6 +77,44 @@ class ParkingSpace extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the review decisions made about the ParkingSpace
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ParkingSpaceReview::class);
+    }
+
+    /**
+     * Get the most recent review decision about the ParkingSpace
+     */
+    public function latestReview(): HasOne
+    {
+        return $this->hasOne(ParkingSpaceReview::class)->latestOfMany('reviewed_at');
+    }
+
+    /**
+     * Save pending changes and, when the status changed, record the change as a review by the given moderator.
+     */
+    public function saveReviewedBy(User $reviewer): void
+    {
+        DB::transaction(function () use ($reviewer): void {
+            $statusChanged = $this->isDirty('status');
+            $previousStatus = $this->getOriginal('status');
+
+            $this->save();
+
+            if ($statusChanged) {
+                $this->reviews()->create([
+                    'reviewed_by' => $reviewer->getKey(),
+                    'from_status' => $previousStatus,
+                    'to_status' => $this->status,
+                    'reviewed_at' => now(),
+                ]);
+            }
+        });
     }
 
     /**
