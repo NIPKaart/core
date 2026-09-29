@@ -166,7 +166,7 @@
             "last": "Present, last",
             "none": "Not confirmed yet",
             "prompt": "Is this place still here?",
-            "help": "A confirmation tells others that this parking place is really here. It doesn't say whether the under-sign or parking time is right. You can confirm once a day."
+            "help": "A confirmation tells others that this parking place is really here. You can confirm once a day."
         }
     }
 }

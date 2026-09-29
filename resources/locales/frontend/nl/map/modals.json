@@ -166,7 +166,7 @@
             "last": "Aanwezig, laatst",
             "none": "Nog niet bevestigd",
             "prompt": "Is deze plek er nog?",
-            "help": "Met een bevestiging laat je weten dat deze parkeerplaats er echt is. Of het onderbord en de parkeerduur kloppen, zegt het niet. Je kunt elke dag één keer bevestigen."
+            "help": "Met een bevestiging laat je weten dat deze parkeerplaats er echt is. Je kunt elke dag één keer bevestigen."
         }
     }
 }

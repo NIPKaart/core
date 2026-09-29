@@ -243,7 +243,7 @@ test('community and municipal places show the same existence evidence, garages n
         assert.match(confirmed, /Confirmed 3× .*Present, last 4 Mar/, source);
         assert.match(
             confirmed,
-            /this parking place is really here\. It doesn&#x27;t say whether the under-sign or parking time is right|this parking place is really here\. It doesn't say whether the under-sign or parking time is right/,
+            /A confirmation tells others that this parking place is really here\./,
             source,
         );
         assert.doesNotMatch(confirmed, /reliab|trust|score/i, source);
