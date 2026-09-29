@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ParkingStatus;
 use App\Models\ParkingSpace;
 use App\Models\User;
 
@@ -61,6 +62,22 @@ class ParkingSpacePolicy
     public function trash(User $user): bool
     {
         return $user->can('parking-space.restore');
+    }
+
+    /**
+     * Determine whether the contributor can see the confirmation of their own submission.
+     */
+    public function viewSubmission(User $user, ParkingSpace $parkingSpace): bool
+    {
+        return $parkingSpace->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the contributor can still change their own submission, which is only while it awaits moderation.
+     */
+    public function updateSubmission(User $user, ParkingSpace $parkingSpace): bool
+    {
+        return $parkingSpace->user_id === $user->id && $parkingSpace->status === ParkingStatus::PENDING;
     }
 
     /**

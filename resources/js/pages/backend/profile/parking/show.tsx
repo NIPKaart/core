@@ -5,10 +5,11 @@ import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import { edit } from '@/routes/location-map';
 import profile from '@/routes/profile';
 import { BreadcrumbItem, ParkingSpace } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Building2, Clock4, Compass, Globe, Hash, Home, Landmark, MapPin, Tag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building2, Clock4, Compass, Globe, Hash, Home, Landmark, MapPin, PencilLine, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -132,6 +133,14 @@ export default function UserParkingShow({ parkingSpace, rejectionReason, canWith
                             {tGlobal('common.back')}
                         </Link>
                     </Button>
+                    {canWithdraw && (
+                        <Button asChild className="w-1/2 sm:w-auto">
+                            <Link href={edit.url({ parking_space: parkingSpace.id })}>
+                                <PencilLine className="h-4 w-4" />
+                                {t('parking_spaces.actions.edit')}
+                            </Link>
+                        </Button>
+                    )}
                     {canWithdraw && (
                         <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog(parkingSpace, 'delete')}>
                             <Trash2 className="h-4 w-4" />

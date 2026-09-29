@@ -60,7 +60,8 @@
                 "description": "Weet je zeker dat je je inzending op {{street}}, {{city}} ({{country}} - {{code}}) wilt intrekken? Een moderator beoordeelt hem dan niet meer.",
                 "confirm": "Inzending intrekken"
             },
-            "withdraw": "Intrekken"
+            "withdraw": "Intrekken",
+            "edit": "Aanpassen"
         },
         "toast": {
             "success": "Parkeerplaats succesvol bijgewerkt",

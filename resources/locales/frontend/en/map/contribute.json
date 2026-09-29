@@ -1,0 +1,118 @@
+{
+    "head": {
+        "add": "Add a place",
+        "edit": "Edit submission"
+    },
+    "header": {
+        "add": "Add a place",
+        "edit": "Edit submission",
+        "step": "Step {{step}} of 3 · {{name}}",
+        "cancel": "Cancel",
+        "back": "Back"
+    },
+    "steps": {
+        "location": "Location",
+        "details": "Details",
+        "review": "Review"
+    },
+    "location": {
+        "heading": "Where is the place?",
+        "intro": "Put the pin on one disabled parking bay. Several bays next to each other? Add each one separately.",
+        "hint": "Move the map until the pin sits exactly on the bay.",
+        "zoom_in": "Zoom in further to place the pin precisely.",
+        "chosen": "Chosen location",
+        "resolving": "Looking up the location…",
+        "failed_title": "We can't place this spot",
+        "failed_text": "We couldn't find a municipality in a supported country here. Move the map to the bay on the street, or try again.",
+        "retry": "Try again",
+        "nearby": "A known place is {{distance}} metres away. Only add this one if it is a different bay.",
+        "use": "Use this location",
+        "my_location": "Use my location",
+        "my_location_failed": "We couldn't determine your location. Move the map to the place yourself.",
+        "pin": "New place"
+    },
+    "details": {
+        "change": "Change",
+        "orientation": {
+            "title": "How is the bay laid out?",
+            "hint": "Relative to the kerb. This determines how much room there is to get in and out.",
+            "required": "Choose how the bay is laid out."
+        },
+        "streetview": "Not sure? View the place in Street View",
+        "under_sign": {
+            "title": "Is there a sub-sign?",
+            "hint": "An extra sign below the blue sign, for example with a time limit or times.",
+            "example": "Example of a disabled parking sign (E6)",
+            "yes": "Yes",
+            "no": "No",
+            "required": "Say whether there is a sub-sign.",
+            "optional": "Fill in what you know; everything below is optional.",
+            "text_label": "What does the sub-sign say?",
+            "text_placeholder": "E.g. \"Mon-Fri 9am-6pm, max. 2 hours\"",
+            "duration": "Maximum parking duration",
+            "duration_minutes": "{{count}} min",
+            "duration_hours_one": "{{count}} hour",
+            "duration_hours_other": "{{count}} hours",
+            "duration_other": "Other",
+            "hours": "Hours",
+            "minutes": "Minutes",
+            "applies": "Applies on",
+            "weekdays": "Weekdays",
+            "every_day": "Every day",
+            "from": "From",
+            "until": "Until"
+        },
+        "note": {
+            "title": "Note",
+            "optional": "(optional)",
+            "placeholder": "For example how to find the place"
+        },
+        "next": "Continue to review"
+    },
+    "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+    },
+    "review": {
+        "orientation": "Bay",
+        "under_sign": "Sub-sign",
+        "text": "Text",
+        "duration": "Duration",
+        "parking_disc": "parking disc",
+        "applies": "Applies on",
+        "note": "Note",
+        "none": "None",
+        "unknown": "Not filled in",
+        "change_location": "Change location",
+        "change_details": "Change details",
+        "after_title": "After you submit",
+        "after": [
+            "A moderator reviews your submission.",
+            "Until then you can edit or withdraw it in My NIPKaart.",
+            "Once approved, the place is on the map for everyone."
+        ],
+        "submit": "Submit place",
+        "save": "Save changes"
+    },
+    "submitted": {
+        "title": "Thank you, your place has been submitted",
+        "text": "A moderator will review it soon. You'll get a notification once it's approved, or if something isn't right.",
+        "pending": "Pending",
+        "view": "View my submission",
+        "add_another": "Add another place",
+        "back_to_map": "Back to the map"
+    },
+    "entry": {
+        "add": "Add a place",
+        "guest_title": "Sign in to add a place",
+        "guest_text": "That way moderators can review your submission and you can edit it later. Searching the map works without an account.",
+        "login": "Sign in",
+        "register": "Create an account",
+        "not_now": "Not now"
+    }
+}

@@ -1,0 +1,118 @@
+{
+    "head": {
+        "add": "Plek toevoegen",
+        "edit": "Inzending aanpassen"
+    },
+    "header": {
+        "add": "Plek toevoegen",
+        "edit": "Inzending aanpassen",
+        "step": "Stap {{step}} van 3 · {{name}}",
+        "cancel": "Annuleren",
+        "back": "Terug"
+    },
+    "steps": {
+        "location": "Locatie",
+        "details": "Gegevens",
+        "review": "Controleren"
+    },
+    "location": {
+        "heading": "Waar is de plek?",
+        "intro": "Zet de speld op één gehandicaptenparkeervak. Liggen er meer vakken naast elkaar? Voeg ze dan elk apart toe.",
+        "hint": "Schuif de kaart tot de speld precies op het vak staat.",
+        "zoom_in": "Zoom verder in om de speld precies te plaatsen.",
+        "chosen": "Gekozen locatie",
+        "resolving": "Locatie opzoeken…",
+        "failed_title": "Deze plek kunnen we niet plaatsen",
+        "failed_text": "We konden hier geen gemeente in een ondersteund land vinden. Schuif de kaart naar het vak op straat, of probeer het opnieuw.",
+        "retry": "Opnieuw proberen",
+        "nearby": "Op {{distance}} meter staat al een bekende plek. Voeg alleen toe als dit een ander vak is.",
+        "use": "Deze locatie gebruiken",
+        "my_location": "Gebruik mijn locatie",
+        "my_location_failed": "We konden je locatie niet bepalen. Schuif de kaart zelf naar de plek.",
+        "pin": "Nieuwe plek"
+    },
+    "details": {
+        "change": "Wijzig",
+        "orientation": {
+            "title": "Hoe ligt het vak?",
+            "hint": "Ten opzichte van de stoep. Dit bepaalt hoeveel ruimte er is om in en uit te stappen.",
+            "required": "Kies hoe het vak ligt."
+        },
+        "streetview": "Twijfel je? Bekijk de plek in Street View",
+        "under_sign": {
+            "title": "Hangt er een onderbord?",
+            "hint": "Een extra bord onder het blauwe bord, bijvoorbeeld met een parkeerduur of tijden.",
+            "example": "Voorbeeld van een gehandicaptenparkeerbord (E6)",
+            "yes": "Ja",
+            "no": "Nee",
+            "required": "Geef aan of er een onderbord hangt.",
+            "optional": "Vul in wat je weet, alles hieronder is optioneel.",
+            "text_label": "Wat staat er op het onderbord?",
+            "text_placeholder": "Bijv. \"Ma-vr 9-18 h, max. 2 uur\"",
+            "duration": "Maximale parkeerduur",
+            "duration_minutes": "{{count}} min",
+            "duration_hours_one": "{{count}} uur",
+            "duration_hours_other": "{{count}} uur",
+            "duration_other": "Anders",
+            "hours": "Uren",
+            "minutes": "Minuten",
+            "applies": "Geldig op",
+            "weekdays": "Werkdagen",
+            "every_day": "Elke dag",
+            "from": "Vanaf",
+            "until": "Tot"
+        },
+        "note": {
+            "title": "Opmerking",
+            "optional": "(optioneel)",
+            "placeholder": "Bijvoorbeeld hoe je de plek het beste vindt"
+        },
+        "next": "Verder naar controleren"
+    },
+    "days": {
+        "mon": "Ma",
+        "tue": "Di",
+        "wed": "Wo",
+        "thu": "Do",
+        "fri": "Vr",
+        "sat": "Za",
+        "sun": "Zo"
+    },
+    "review": {
+        "orientation": "Vak",
+        "under_sign": "Onderbord",
+        "text": "Tekst",
+        "duration": "Parkeerduur",
+        "parking_disc": "parkeerschijf",
+        "applies": "Geldig op",
+        "note": "Opmerking",
+        "none": "Geen",
+        "unknown": "Niet ingevuld",
+        "change_location": "Locatie wijzigen",
+        "change_details": "Gegevens wijzigen",
+        "after_title": "Na het versturen",
+        "after": [
+            "Een moderator bekijkt je inzending.",
+            "Tot die tijd kun je hem aanpassen of intrekken in Mijn NIPKaart.",
+            "Na goedkeuring staat de plek voor iedereen op de kaart."
+        ],
+        "submit": "Plek versturen",
+        "save": "Wijzigingen opslaan"
+    },
+    "submitted": {
+        "title": "Bedankt, je plek is verstuurd",
+        "text": "Een moderator bekijkt hem binnenkort. Je krijgt een melding zodra hij is goedgekeurd, of als er iets niet klopt.",
+        "pending": "In behandeling",
+        "view": "Bekijk mijn inzending",
+        "add_another": "Nog een plek toevoegen",
+        "back_to_map": "Terug naar de kaart"
+    },
+    "entry": {
+        "add": "Plek toevoegen",
+        "guest_title": "Log in om een plek toe te voegen",
+        "guest_text": "Zo kunnen moderators je inzending beoordelen en kun je hem later aanpassen. Zoeken op de kaart blijft zonder account mogelijk.",
+        "login": "Inloggen",
+        "register": "Account aanmaken",
+        "not_now": "Niet nu"
+    }
+}

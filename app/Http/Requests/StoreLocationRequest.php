@@ -28,21 +28,8 @@ class StoreLocationRequest extends FormRequest
         return [
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
-            'nominatim' => ['required', 'array'],
             ...$this->parkingSpaceDetailRules(),
         ];
-    }
-
-    /**
-     * Prepare inputs for validation.
-     */
-    protected function prepareForValidation(): void
-    {
-        $nominatim = json_decode($this->input('nominatim'), true);
-
-        $this->merge([
-            'nominatim' => is_array($nominatim) ? $nominatim : [],
-        ]);
     }
 
     /**

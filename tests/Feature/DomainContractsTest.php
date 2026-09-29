@@ -28,23 +28,16 @@ beforeEach(function () {
     Notification::fake();
 });
 
-test('community submission persists a UUID and redirects to the map', function () {
-    $municipality = Municipality::factory()->create();
+test('community submission persists a UUID and confirms the submission', function () {
     $user = User::factory()->create();
+    fakeReverseGeocoding(Municipality::factory()->create());
 
     $this->actingAs($user)->post(route('location-map.store'), [
         'latitude' => 52.37,
         'longitude' => 4.9,
         'orientation' => ParkingOrientation::all()[0],
         'under_sign' => 'no',
-        'nominatim' => json_encode([
-            'country_code' => $municipality->country->code,
-            'state' => $municipality->province->name,
-            'city' => $municipality->name,
-            'road' => 'Teststraat',
-            'postcode' => '1000 AA',
-        ]),
-    ])->assertSessionHasNoErrors()->assertRedirect(route('location-map'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('location-map.submitted', $user->parkingSpaces()->sole()));
 
     $space = $user->parkingSpaces()->sole();
     expect(Str::isUuid($space->id))->toBeTrue()

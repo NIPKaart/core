@@ -21,19 +21,13 @@ beforeEach(function () {
  */
 function submission(array $details = []): array
 {
-    $municipality = Municipality::factory()->create();
+    fakeReverseGeocoding(Municipality::factory()->create());
 
     return [
         'latitude' => 52.37,
         'longitude' => 4.9,
         'orientation' => ParkingOrientation::PARALLEL->value,
         'under_sign' => UnderSign::NO->value,
-        'nominatim' => json_encode([
-            'country_code' => $municipality->country->code,
-            'state' => $municipality->province->name,
-            'city' => $municipality->name,
-            'road' => 'Teststraat',
-        ]),
         ...$details,
     ];
 }
