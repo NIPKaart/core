@@ -67,6 +67,23 @@ The application therefore no longer creates, edits or deletes roles. `/app/roles
 
 The user list shows when each user last signed in. `RecordLastLogin` stores `users.last_login_at` on Laravel's `Login` event, so password, two-factor, passkey and remember-me sign-ins all count; existing users show no recorded sign-in until their next login. The session table is deliberately not used for this, because logout and session expiry delete its rows. Facet filters narrow the list by role (including users without a role), suspension, email verification and sign-in (last 30 days or none recorded); each option shows how many users match it.
 
+## Community account lifecycle
+
+Implementation for [#1209](https://github.com/NIPKaart/core/issues/1209).
+
+**Eligibility.** Every community action (opening and submitting the add form, confirming a place, and later improving and reporting) uses the `community` middleware group: `auth`, `verified` and `can:contribute`. The `contribute` ability is `User::isEligibleForCommunity()`: email verified and not suspended. Guests are sent to sign in, unverified accounts to email verification, and suspended accounts are signed out. Adding a place previously worked without an account; that is no longer possible. Moderation routes sit behind `auth` and `verified`, and the suspension gate check denies every ability to suspended accounts.
+
+**Suspension.** Suspension remains a manual administrator action. Suspending requires a reason (at most 500 characters). Each suspension is kept in `user_suspensions` with who suspended, why and when, and who lifted it and when; `users.suspended_at` remains the fast state flag. The user list shows the reason of an active suspension. Suspension does not delete, reject or otherwise resolve the user's pending contributions.
+
+**Account deletion.** Deleting an account, by the user or by an administrator, runs in one transaction and:
+
+- deletes the user's pending and rejected (including trashed) parking spaces, with their confirmations, reviews and other users' favorites of them;
+- keeps approved parking spaces as community facts, clearing `user_id` and `ip_address`;
+- deletes the user's favorites, confirmations, passkeys, suspension history and notifications;
+- keeps review and suspension records the user made about others, without their identity.
+
+Saved destinations (#1316) and contributor reliability (#1256) do not exist yet; they must be removed with the account when they are built.
+
 ## Deployment and recovery
 
 Run the two additive migrations before exposing the new code: nullable 2FA fields on users and a passkeys table with an account-deletion foreign key. Existing passwords, roles, locale and relationships require no data rewrite; users initially have neither 2FA nor passkeys. Do not roll back the schema after people enroll without an explicit plan for losing those credentials.

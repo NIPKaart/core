@@ -15,9 +15,11 @@ import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
 import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
 import { getUserColumns } from './columns';
+import { SuspendDialog } from './suspend-dialog';
 
 type UserWithRoles = User & {
     roles: { id: number; name: string }[];
+    active_suspension: { reason: string; suspended_at: string } | null;
 };
 
 type FilterKey = 'role' | 'status' | 'verification' | 'login';
@@ -62,22 +64,21 @@ export default function Index({ users, filters, facets, roleOptions }: PageProps
         });
     };
 
-    const toggleSuspend = (user: User) => {
+    const liftSuspension = (user: User) => {
         router.put(
             app.users.suspend({ id: user.id }),
-            {
-                suspended_at: user.suspended_at ? null : new Date().toISOString(),
-            },
+            {},
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    toast.success(user.suspended_at ? t('toast.unsuspended') : t('toast.suspended'));
-                },
-                onError: () => {
-                    toast.error(t('toast.suspend_failed'));
-                },
+                onSuccess: () => toast.success(t('toast.unsuspended')),
+                onError: () => toast.error(t('toast.suspend_failed')),
             },
         );
+    };
+
+    const closeDialog = () => {
+        setDialogUser(null);
+        setDialogType(null);
     };
 
     const columns = getUserColumns(can, auth.user, openDialog, { t, tGlobal });
@@ -172,23 +173,16 @@ export default function Index({ users, filters, facets, roleOptions }: PageProps
                 />
             )}
 
-            {dialogUser && dialogType === 'suspend' && (
+            {dialogUser && dialogType === 'suspend' && !dialogUser.suspended_at && <SuspendDialog user={dialogUser} onClose={closeDialog} />}
+
+            {dialogUser && dialogType === 'suspend' && dialogUser.suspended_at && (
                 <ConfirmDialog
                     variant="default"
-                    title={dialogUser.suspended_at ? t('confirm.unsuspend.title') : t('confirm.suspend.title')}
-                    description={
-                        dialogUser.suspended_at
-                            ? t('confirm.unsuspend.description', { name: dialogUser.name })
-                            : t('confirm.suspend.description', { name: dialogUser.name })
-                    }
-                    confirmText={dialogUser.suspended_at ? t('confirm.unsuspend.confirm') : t('confirm.suspend.confirm')}
-                    onConfirm={() => {
-                        toggleSuspend(dialogUser);
-                    }}
-                    onClose={() => {
-                        setDialogUser(null);
-                        setDialogType(null);
-                    }}
+                    title={t('confirm.unsuspend.title')}
+                    description={t('confirm.unsuspend.description', { name: dialogUser.name })}
+                    confirmText={t('confirm.unsuspend.confirm')}
+                    onConfirm={() => liftSuspension(dialogUser)}
+                    onClose={closeDialog}
                 />
             )}
         </AppLayout>

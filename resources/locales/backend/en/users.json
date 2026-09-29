@@ -55,7 +55,9 @@
         "suspend": {
             "title": "Suspend user",
             "description": "Are you sure you want to suspend: {{name}}?",
-            "confirm": "Suspend"
+            "confirm": "Suspend",
+            "reason": "Reason",
+            "reason_help": "Required, at most {{max}} characters. Visible to administrators."
         },
         "unsuspend": {
             "title": "Unsuspend user",

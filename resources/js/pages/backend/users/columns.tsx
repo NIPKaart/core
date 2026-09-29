@@ -16,6 +16,7 @@ import { MoreVertical } from 'lucide-react';
 
 type UserWithRoles = User & {
     roles: { id: number; name: string }[];
+    active_suspension: { reason: string; suspended_at: string } | null;
 };
 type OpenDialogFn = (user: UserWithRoles, type: 'delete' | 'suspend') => void;
 
@@ -61,7 +62,10 @@ export function getUserColumns(
             enableHiding: false,
             cell: ({ row }) =>
                 row.original.suspended_at ? (
-                    <Badge variant="destructive">{t('table.suspended')}</Badge>
+                    <div className="max-w-xs space-y-1 whitespace-normal">
+                        <Badge variant="destructive">{t('table.suspended')}</Badge>
+                        {row.original.active_suspension && <p className="text-xs text-muted-foreground">{row.original.active_suspension.reason}</p>}
+                    </div>
                 ) : (
                     <Badge variant="secondary">{t('table.active')}</Badge>
                 ),
