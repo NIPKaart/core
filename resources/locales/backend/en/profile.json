@@ -60,7 +60,8 @@
                 "description": "Are you sure you want to withdraw your submission at {{street}}, {{city}} ({{country}} - {{code}})? A moderator will no longer review it.",
                 "confirm": "Withdraw submission"
             },
-            "withdraw": "Withdraw"
+            "withdraw": "Withdraw",
+            "edit": "Edit"
         },
         "toast": {
             "success": "Parking space updated successfully",

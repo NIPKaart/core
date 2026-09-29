@@ -3,31 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Enums\ParkingConfirmationStatus;
-use App\Enums\ParkingOrientation;
-use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreLocationRequest;
-use App\Models\Country;
-use App\Models\ParkingSpace;
-use App\Models\User;
-use App\Notifications\CommunitySpace;
-use App\Traits\FindsOrCreatesMunicipality;
-use App\Traits\FindsOrCreatesProvince;
-use App\Traits\ParsesNominatimAddress;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ParkingSpaceController extends Controller
 {
-    use FindsOrCreatesMunicipality;
-    use FindsOrCreatesProvince;
-    use ParsesNominatimAddress;
-
     /**
-     * Frontend - Render the map page with parking spaces.
+     * Frontend - map page.
      */
     public function map()
     {
@@ -36,85 +18,5 @@ class ParkingSpaceController extends Controller
                 'confirmationStatus' => ParkingConfirmationStatus::options(),
             ],
         ]);
-    }
-
-    /**
-     * Frontend - add new location page.
-     */
-    public function locationAdd()
-    {
-        $parkingSpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')->get();
-
-        return Inertia::render('frontend/map/create', [
-            'parkingSpaces' => $parkingSpaces,
-            'selectOptions' => [
-                'orientation' => ParkingOrientation::options(),
-            ],
-        ]);
-    }
-
-    /**
-     * Store the parking location information.
-     */
-    public function store(StoreLocationRequest $request)
-    {
-        $validated = $request->validated();
-        $address = $validated['nominatim'];
-
-        try {
-            $countryId = Country::where('code', strtoupper($address['country_code'] ?? ''))->value('id');
-            $province = $this->findOrCreateProvince(
-                $address['state'] ?? $address['city'] ?? 'unknown',
-                $countryId,
-                $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
-            );
-            $municipality = $this->findOrCreateMunicipality(
-                $this->getMunicipality($address),
-                $countryId,
-                $province->id
-            );
-
-            $parkingSpace = new ParkingSpace([
-                'id' => (string) Str::uuid(),
-                'user_id' => Auth::id(),
-                'ip_address' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $request->getClientIp(),
-                'latitude' => $validated['latitude'],
-                'longitude' => $validated['longitude'],
-                ...$request->parkingSpaceDetails(),
-                'status' => ParkingStatus::PENDING,
-                'country_id' => $countryId,
-                'province_id' => $province->id,
-                'municipality_id' => $municipality->id,
-                'city' => $this->getCity($address),
-                'suburb' => $this->getSuburb($address),
-                'neighbourhood' => $this->getNeighbourhood($address),
-                'postcode' => str_replace(' ', '', $address['postcode'] ?? ''),
-                'street' => $this->getStreet($address),
-                'amenity' => $this->getAmenity($address),
-            ]);
-
-            $parkingSpace->save();
-
-            $admins = User::role(['admin', 'moderator'])->get();
-            Notification::send(
-                $admins,
-                new CommunitySpace\Submitted(
-                    $parkingSpace->id,
-                    $parkingSpace->street ?: "Space #{$parkingSpace->id}",
-                    submittedByUserId: Auth::id()
-                )
-            );
-
-            return redirect()->route('location-map');
-        } catch (\Throwable $e) {
-            Log::error('Error storing parking location', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return back()->withErrors([
-                'general' => 'Something went wrong while saving the parking location. Please try again later.',
-            ])->withInput();
-        }
     }
 }

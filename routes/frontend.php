@@ -6,10 +6,16 @@ use App\Http\Controllers\Frontend;
 Route::get('/', [Frontend\HomeController::class, 'index'])->name('home');
 
 // Map
-Route::prefix('map')->controller(Frontend\ParkingSpaceController::class)->group(function () {
-    Route::get('/', 'map')->name('location-map');
-    Route::get('add', 'locationAdd')->middleware('community')->name('location-map.add');
-    Route::post('add', 'store')->middleware('community')->name('location-map.store');
+Route::get('map', [Frontend\ParkingSpaceController::class, 'map'])->name('location-map');
+
+// Contributing a community parking place
+Route::prefix('map/add')->as('location-map.')->middleware('community')->controller(Frontend\ParkingContributionController::class)->group(function () {
+    Route::get('/', 'create')->name('add');
+    Route::post('/', 'store')->name('store');
+    Route::get('locate', 'locate')->middleware('throttle:60,1,parking-locate')->name('locate');
+    Route::get('{parking_space}/submitted', 'submitted')->whereUuid('parking_space')->name('submitted');
+    Route::get('{parking_space}/edit', 'edit')->whereUuid('parking_space')->name('edit');
+    Route::put('{parking_space}', 'update')->whereUuid('parking_space')->name('update');
 });
 
 // First-party browser JSON endpoints

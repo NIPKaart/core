@@ -7,16 +7,20 @@ interface MapLayoutProps {
     children: React.ReactNode;
     showSearch?: boolean;
     mapSearch?: boolean;
+    /** Hide the site navigation below the md breakpoint, for focused task pages with their own header. */
+    mobileNavbar?: boolean;
 }
 
-export default function MapLayout({ children, showSearch = true, mapSearch = false }: MapLayoutProps) {
+export default function MapLayout({ children, showSearch = true, mapSearch = false, mobileNavbar = true }: MapLayoutProps) {
     useSyncLocale();
     useNotifications();
 
     return (
         <>
             <div className="flex h-[100dvh] flex-col">
-                <Navbar showSearch={showSearch} mapSearch={mapSearch} />
+                <div className={mobileNavbar ? undefined : 'hidden md:block'}>
+                    <Navbar showSearch={showSearch} mapSearch={mapSearch} />
+                </div>
                 {children}
             </div>
 

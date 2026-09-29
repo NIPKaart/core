@@ -56,6 +56,12 @@ The search overlay shows Geoapify and OpenStreetMap attribution with the suggest
 - Before relying on the Geoapify free plan in production, confirm with Geoapify that 24-hour result caching is permitted. Their published terms do not address caching. If it is not permitted, shorten or remove the Geoapify cache.
 - Monitor Geoapify credit usage. Exceeding the free quota requires a paid plan or tighter client-side limits, not a switch to public Nominatim autocomplete.
 
+## Addendum: locating contributed places (2026-09-29, #1309)
+
+Adding a community parking place needs the reverse direction: which country, province and municipality a pin lies in. The same rules apply. The browser sends only the pin's coordinates to core (`/map/add/locate` while choosing, and again on submit); it never calls a geocoder and never supplies the address itself. `ParkingLocationResolver` asks Geoapify reverse geocoding first and falls back to public Nominatim `/reverse` within the shared `nominatim-public` limiter of 1 request/second. Results are cached for 24 hours per coordinate rounded to five decimals (about 1 m), so moving the pin back and submitting reuse the lookup. The locate endpoint is limited to 60 requests/minute per user and only available to accounts eligible to contribute.
+
+A pin is usable only when it resolves to a country NIPKaart knows and to a municipality; street and house number are optional. Looking up writes nothing. Only a submission creates a province or municipality seen for the first time, matching a known province by its ISO 3166-2 code before its name, so a provider answering in another language does not create a duplicate. Known province names are shown as NIPKaart stores them.
+
 ## References
 
 - [Destination-first search #1169](https://github.com/NIPKaart/core/issues/1169)

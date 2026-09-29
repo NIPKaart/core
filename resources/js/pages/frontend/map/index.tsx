@@ -1,3 +1,4 @@
+import AddPlaceButton from '@/components/contribute/add-place-button';
 import DestinationSearch from '@/components/map/destination-search';
 import DiscoveryFilters from '@/components/map/discovery-filters';
 import LocateControl from '@/components/map/locate-control';
@@ -310,6 +311,11 @@ export default function ParkingMap() {
                             <ZoomControl position="bottomright" focus={selectedResult ? [selectedResult.latitude, selectedResult.longitude] : null} />
                             <LocateControl position="bottomright" />
                         </MapContainer>
+                        <div className="pointer-events-none absolute inset-x-0 bottom-14 z-10 flex justify-center md:bottom-6">
+                            <div className="pointer-events-auto">
+                                <AddPlaceButton />
+                            </div>
+                        </div>
                     </section>
                 </div>
             </main>
