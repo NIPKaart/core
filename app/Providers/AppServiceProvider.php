@@ -3,12 +3,13 @@
 namespace App\Providers;
 
 use App\Contracts\DestinationGeocoder;
+use App\Contracts\ReverseGeocoder;
 use App\Enums\UserRole;
 use App\Models\ParkingSpace;
 use App\Models\User;
 use App\Observers\ParkingSpaceObserver;
 use App\Services\DatasetDeliveryStorage;
-use App\Services\GeoapifyDestinationGeocoder;
+use App\Services\GeocoderChain;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(DestinationGeocoder::class, GeoapifyDestinationGeocoder::class);
+        $this->app->singleton(GeocoderChain::class, fn ($app): GeocoderChain => GeocoderChain::fromConfig($app));
+        $this->app->bind(DestinationGeocoder::class, GeocoderChain::class);
+        $this->app->bind(ReverseGeocoder::class, GeocoderChain::class);
         $this->app->bind(DatasetDeliveryStorage::class, fn () => new DatasetDeliveryStorage(Storage::disk('dataset-deliveries')->getClient()));
 
         // Registered before boot so it precedes Spatie's permission check, which would otherwise grant a suspended user's role permissions.

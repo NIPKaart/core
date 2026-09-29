@@ -208,7 +208,10 @@ export default function SearchOverlay(): JSX.Element {
                 {Results}
                 {query.trim().length >= 2 && (
                     <p className="text-[11px] text-muted-foreground/70">
-                        {t('attribution')}{' '}
+                        <a href="https://www.pdok.nl/" target="_blank" rel="noopener noreferrer" className="underline">
+                            PDOK
+                        </a>{' '}
+                        · {t('attribution')}{' '}
                         <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" className="underline">
                             Geoapify
                         </a>{' '}

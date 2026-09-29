@@ -58,9 +58,21 @@ The search overlay shows Geoapify and OpenStreetMap attribution with the suggest
 
 ## Addendum: locating contributed places (2026-09-29, #1309)
 
-Adding a community parking place needs the reverse direction: which country, province and municipality a pin lies in. The same rules apply. The browser sends only the pin's coordinates to core (`/map/add/locate` while choosing, and again on submit); it never calls a geocoder and never supplies the address itself. `ParkingLocationResolver` asks Geoapify reverse geocoding first and falls back to public Nominatim `/reverse` within the shared `nominatim-public` limiter of 1 request/second. Results are cached for 24 hours per coordinate rounded to five decimals (about 1 m), so moving the pin back and submitting reuse the lookup. The locate endpoint is limited to 60 requests/minute per user and only available to accounts eligible to contribute.
+Adding a community parking place needs the reverse direction: which country, province and municipality a pin lies in. The same rules apply. The browser sends only the pin's coordinates to core (`/map/add/locate` while choosing, and again on submit); it never calls a geocoder and never supplies the address itself. `ParkingLocationResolver` asks the provider chain described in the next addendum (PDOK, Geoapify, then public Nominatim `/reverse` within the shared `nominatim-public` limiter of 1 request/second). Results are cached for 24 hours per coordinate rounded to five decimals (about 1 m), so moving the pin back and submitting reuse the lookup. The locate endpoint is limited to 60 requests/minute per user and only available to accounts eligible to contribute.
 
 A pin is usable only when it resolves to a country NIPKaart knows and to a municipality; street and house number are optional. Looking up writes nothing. Only a submission creates a province or municipality seen for the first time, matching a known province by its ISO 3166-2 code before its name, so a provider answering in another language does not create a duplicate. Known province names are shown as NIPKaart stores them.
+
+## Addendum: PDOK and a configurable provider chain (2026-09-29)
+
+The external providers are now one ordered chain, `GeocoderChain`, configured by `GEOCODING_PROVIDERS` (default `pdok,geoapify,nominatim`). Every provider implements the same contracts (`DestinationGeocoder`, and `ReverseGeocoder` for locating contributed places), so the order changes without a release and another provider is one class plus a config entry.
+
+| Path | Behaviour |
+| --- | --- |
+| Autocomplete | Internal matches plus the providers' suggestions interleaved in chain order: PDOK's first, Geoapify's first, PDOK's second, and so on. Nominatim never suggests. |
+| Explicit submit | The first provider that answers: PDOK, Geoapify, public Nominatim, then the best internal match. |
+| Locating a pin | The first provider that answers: PDOK, Geoapify, public Nominatim. |
+
+**PDOK Locatieserver** (the Dutch government's official BAG addresses, streets, postcodes and places) comes first because it is free, needs no key, has no quota and is the authoritative source for the Netherlands. It knows only the Netherlands and always returns its closest Dutch match, so its answers are filtered: a result must start with the query (for an explicit search, as a whole word), which keeps "Paris" or "Brussel" from becoming a Dutch street, and a reverse answer counts only for a pin inside the Netherlands' bounding box and within 250 m of a Dutch address. Otherwise the chain moves on to Geoapify. PDOK receives the same data as the other providers, from the NIPKaart server: the query text or the pin's coordinates. Its answers are cached for 24 hours per query; failed requests are not cached. The search overlay credits PDOK alongside Geoapify and OpenStreetMap.
 
 ## References
 

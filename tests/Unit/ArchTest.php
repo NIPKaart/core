@@ -6,6 +6,7 @@ use App\Models\ParkingSpace;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\GeoapifyDestinationGeocoder;
 use App\Services\NominatimDestinationResolver;
+use App\Services\PdokGeocoder;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,6 +22,7 @@ arch('application code avoids insecure PHP functions')
         DatasetDeliveryStorage::class,
         GeoapifyDestinationGeocoder::class,
         NominatimDestinationResolver::class,
+        PdokGeocoder::class,
     ]);
 
 arch('environment values are only read in configuration')
