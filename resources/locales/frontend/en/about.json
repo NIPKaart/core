@@ -1,68 +1,82 @@
 {
     "meta": {
         "title": "About NIPKaart",
-        "description": "NIPKaart makes data on accessible parking and garage occupancy easy to understand, so you know where to go before you leave.",
-        "keywords": ["nipkaart", "about", "accessible parking", "parking", "park and ride", "garage", "rules", "accessibility"]
+        "description": "NIPKaart brings disabled parking spaces, local rules and garage occupancy together in one place. See where the data comes from and how current it is."
     },
-    "hero": {
-        "eyebrow": "About NIPKaart",
-        "title": "Makes data insightful for you",
-        "subtitle": "We've compiled information about disabled parking, local regulations, and (semi-)live garage occupancy. This way, you can be sure you're well-prepared for your trip."
+    "title": "Know where you can park before you leave",
+    "intro": "NIPKaart brings disabled parking spaces, local rules and garage occupancy together in one place. For everyone with a disabled parking card, and for those travelling with them.",
+    "sources": {
+        "title": "Where the data comes from",
+        "intro": "Every place shows where its information comes from.",
+        "columns": {
+            "source": "Source",
+            "shows": "What you see",
+            "freshness": "How current"
+        },
+        "municipal": {
+            "name": "Municipalities",
+            "kind": "Open data",
+            "shows": "Official disabled parking spaces, with orientation, number of bays and time windows when the municipality shares them.",
+            "freshness": "Updated when the municipality shares new data."
+        },
+        "community": {
+            "name": "Community",
+            "kind": "Contributions from users",
+            "shows": "Places that are not (yet) in open data. Other users can confirm that a place is still there.",
+            "freshness": "Updated as users add or confirm places."
+        },
+        "offstreet": {
+            "name": "Garages and P+R",
+            "kind": "Operators and municipalities",
+            "shows": "The number of free spaces in the whole garage, not specifically the disabled spaces.",
+            "freshness": "Updated every few minutes, with the time of the latest measurement."
+        }
     },
-    "intro": {
-        "heading": "Why NIPKaart?",
+    "why": {
+        "title": "Why NIPKaart exists",
         "body": [
-            "Whether you hold a disabled parking card (GPK) or support someone who does, NIPKaart shows you in advance where you can park, what conditions apply, and which alternatives are available.",
-            "NIPKaart originated from a geoweb project during studies, it has since grown into a platform with data for the Netherlands and an increasing number of European locations. In 2025 the platform was rebuilt from the ground up for better performance, accessibility, and maintainability."
+            "With a disabled parking card you want to know beforehand whether there is a space, and under which conditions. That information often exists, but it is scattered across municipal datasets, signs and garage websites.",
+            "NIPKaart started in 2021 as a geoweb project during studies. Since 2022 we have been collecting data from across Europe. With this new website we are modernising the whole platform: searching starts at your destination, and every place shows where its information comes from."
         ]
     },
-    "stats": {
-        "euCoverage": "Expanding across Europe",
-        "openData": "Open data where possible",
-        "communityPowered": "Community-powered",
-        "rebuiltBadge": "Rebuilt in 2025"
-    },
-    "what": {
-        "heading": "What you can do",
-        "text": "For each location we show, among other things:",
-        "list": [
-            "The orientation of the parking space",
-            "Time limits and conditions (e.g., blue zone or time windows).",
-            "A link to local parking rules where available.",
-            "A Navigate button to instantly start a route in your maps app.",
-            "Garage or P+R as fallback, with (semi-)live occupancy."
-        ]
-    },
-    "features": {
-        "heading": "Key features",
+    "details": {
+        "title": "What you see for each place",
         "items": {
-            "addSpot": {
-                "title": "Add a parking space",
-                "desc": "Missing a disabled parking space? Add it quickly in just a few steps—we'll post it online after review.",
-                "cta": "Add location"
+            "orientation": {
+                "term": "Orientation",
+                "text": "Perpendicular, angled or parallel to the kerb"
             },
-            "share": {
-                "title": "Share a map view",
-                "desc": "Share exactly what you see: Copy the URL from your address bar and others will instantly open the same area with parking spaces around their destination.",
-                "cta": "Open map"
+            "times": {
+                "term": "Times",
+                "text": "Time windows and blue zones, when the source knows them"
             },
-            "offstreet": {
-                "title": "Garage & P+R occupancy",
-                "desc": "Check (semi-)live occupancy to avoid encountering a closed barrier. Note: Parking in a garage is often paid.",
-                "cta": "View garages"
+            "rules": {
+                "term": "Rules",
+                "text": "A link to the municipality's parking rules"
             },
-            "search": {
-                "title": "Fast search",
-                "desc": "Find by place, street, or garage name and jump straight there on the map.",
-                "cta": "Search"
+            "provenance": {
+                "term": "Source",
+                "text": "Where the information comes from and when it was updated"
+            },
+            "navigation": {
+                "term": "Navigation",
+                "text": "Open the place in your own maps app"
             }
         }
     },
-    "disclaimer": "All information on the website is indicative. Parking is at your own risk; no rights can be derived.",
-    "cta": {
-        "heading": "Get started now",
-        "body": "Missing a parking space or planning your next trip?",
-        "primary": "Add location",
-        "secondary": "Open map"
+    "open_source": {
+        "title": "Open source",
+        "text": "NIPKaart's code is public on GitHub. Report a bug there or help shape new features.",
+        "link": "NIPKaart on GitHub"
+    },
+    "disclaimer": {
+        "title": "Always check the signs",
+        "text": "The information on NIPKaart is indicative. What the signs on site say is what applies. No rights can be derived from the data."
+    },
+    "search": {
+        "title": "Where is your journey taking you today?"
+    },
+    "notes": {
+        "title": "Good to know"
     }
 }

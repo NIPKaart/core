@@ -24,14 +24,7 @@ class GarageController extends Controller
             ->sortKeys(SORT_NATURAL | SORT_FLAG_CASE)
             ->map(fn (Collection $garages, string $name): array => [
                 'name' => $name,
-                'garages' => $garages->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->map(fn (ParkingOffstreet $garage): array => [
-                    'id' => $garage->id,
-                    'name' => $garage->name,
-                    'type' => $garage->parking_type,
-                    'latitude' => $garage->latitude,
-                    'longitude' => $garage->longitude,
-                    ...$garage->publicOccupancy(),
-                ])->values()->all(),
+                'garages' => $garages->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->map(fn (ParkingOffstreet $garage): array => $garage->overview())->values()->all(),
             ])
             ->values()
             ->all();

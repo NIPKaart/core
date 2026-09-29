@@ -1,19 +1,8 @@
 {
-    "home": "Home",
-    "map": {
-        "title": "Map",
-        "view": {
-            "title": "View all locations",
-            "description": "Look at the map with all the locations."
-        },
-        "add": {
-            "title": "Add new location",
-            "description": "New location? Add it to the map."
-        }
-    },
-    "garages": "Garages",
-    "about": "About",
-    "contact": "Contact",
+    "find": "Find parking",
+    "add": "Add a place",
+    "garages": "Garages and P+R",
+    "about": "About NIPKaart",
     "dashboard": "Dashboard",
     "login": "Log in",
     "logout": "Log out"

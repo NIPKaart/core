@@ -1,0 +1,12 @@
+{
+    "tagline": "Makes parking data clear for everyone, so you know where you can park before you go, wherever you're headed.",
+    "parking": "Parking",
+    "nipkaart": "NIPKaart",
+    "find": "Find parking",
+    "add": "Add a place",
+    "garages": "Garages and P+R",
+    "about": "About NIPKaart",
+    "contact": "Contact",
+    "github": "Source code on GitHub",
+    "disclaimer": "© {{year}} NIPKaart. Information is indicative and parking is at your own risk. Always check the signs on site."
+}

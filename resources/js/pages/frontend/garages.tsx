@@ -1,209 +1,22 @@
-import { navigationUrl } from '@/components/map/parking-detail/navigation-handoff';
-import { Chip } from '@/components/map/parking-detail/parts';
+import { GarageTable, useMeasuredTime } from '@/components/frontend/garage-table';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getEcho } from '@/echo';
+import { useGarageUpdates } from '@/hooks/use-garage-updates';
 import FrontendLayout from '@/layouts/frontend-layout';
 import {
     filterMunicipalities,
-    garageLiveState,
     overviewSummary,
     sortGarages,
-    type GarageLiveState,
     type GarageSort,
     type GarageTypeFilter,
-    type OverviewGarage,
     type OverviewMunicipality,
 } from '@/lib/garage-overview';
-import { locationMap } from '@/routes';
-import { Head, router, usePoll } from '@inertiajs/react';
-import { MapPin, Navigation, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Props = { municipalities: OverviewMunicipality[] };
-
-/** Re-checked on this interval too, so a measurement that is no longer current stops looking live. */
-const REFRESH_MS = 120_000;
-
-const barTone: Record<'green' | 'orange' | 'red', string> = {
-    green: '[&>div]:bg-green-600',
-    orange: '[&>div]:bg-amber-600',
-    red: '[&>div]:bg-red-600',
-};
-
-const numberTone: Record<'green' | 'orange' | 'red', string> = {
-    green: 'text-green-700 dark:text-green-400',
-    orange: 'text-amber-700 dark:text-amber-400',
-    red: 'text-red-700 dark:text-red-400',
-};
-
-/** Desktop columns: location, status, free, occupancy, measured, actions. The header row uses the same template. */
-const columns = 'lg:grid-cols-[minmax(0,2.2fr)_9.5rem_8rem_minmax(0,1.6fr)_5.5rem_6.5rem]';
-
-const iconLink =
-    'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none';
-
-/** Time only for today's measurements; older ones also get the date. European 24-hour clock, also in English. */
-function useMeasuredTime(): (value: string) => string {
-    const { i18n } = useTranslation();
-    const locale = i18n.language.startsWith('en') ? 'en-GB' : i18n.language;
-
-    return (value: string) => {
-        const date = new Date(value);
-        const today = date.toDateString() === new Date().toDateString();
-
-        return date.toLocaleString(locale, {
-            ...(today ? {} : { day: 'numeric', month: 'short' }),
-            hour: '2-digit',
-            minute: '2-digit',
-            hourCycle: 'h23',
-        });
-    };
-}
-
-function StatusChip({ state }: { state: GarageLiveState }) {
-    const { t } = useTranslation('frontend/garages');
-
-    return <Chip tone={state.tone}>{t(state.status === 'free' ? 'status.live' : `status.${state.status}`)}</Chip>;
-}
-
-function GarageActions({ garage }: { garage: OverviewGarage }) {
-    const { t } = useTranslation('frontend/garages');
-    const navigate = navigationUrl(garage.latitude, garage.longitude);
-
-    return (
-        <div className="flex shrink-0 justify-end gap-2">
-            <a
-                href={locationMap.url({
-                    query: { destination: garage.name, destination_type: 'offstreet', lat: String(garage.latitude), lng: String(garage.longitude) },
-                })}
-                aria-label={t('actions.map_label', { name: garage.name })}
-                title={t('actions.map')}
-                className={`${iconLink} border hover:bg-muted`}
-            >
-                <MapPin className="h-[18px] w-[18px]" aria-hidden />
-            </a>
-            {navigate && (
-                <a
-                    href={navigate}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t('actions.navigate_label', { name: garage.name })}
-                    title={t('actions.navigate')}
-                    className={`${iconLink} bg-orange-600 text-white hover:bg-orange-700`}
-                >
-                    <Navigation className="h-[18px] w-[18px]" aria-hidden />
-                </a>
-            )}
-        </div>
-    );
-}
-
-function GarageRow({ garage }: { garage: OverviewGarage }) {
-    const { t } = useTranslation('frontend/garages');
-    const measured = useMeasuredTime();
-    const state = garageLiveState(garage);
-    const type = garage.type ? t(`types.${garage.type}`) : null;
-    const time = garage.observed_at ? measured(garage.observed_at) : null;
-    const hasTotal = state.free !== null && state.total !== null && state.free <= state.total;
-    const freeText =
-        state.free === null
-            ? null
-            : hasTotal
-              ? t('status.free_of', { free: state.free, total: state.total })
-              : t('status.free', { free: state.free });
-    const bar = state.percent !== null && (
-        <Progress
-            value={state.percent}
-            aria-label={t('status.general')}
-            aria-valuetext={t('status.occupied', { percent: state.percent })}
-            className={`h-2 w-full rounded-full bg-stone-200 dark:bg-neutral-800 ${state.bar ? barTone[state.bar] : ''}`}
-        />
-    );
-    const number = state.free !== null && (
-        <span className={`text-2xl font-bold tabular-nums ${state.bar ? numberTone[state.bar] : ''}`} aria-hidden>
-            {state.free}
-        </span>
-    );
-
-    return (
-        <li className="border-b border-stone-100 last:border-b-0 dark:border-neutral-800">
-            {/* Desktop: one table-like row. */}
-            <div className={`hidden min-h-[70px] items-center gap-x-5 px-5 py-2 lg:grid ${columns}`}>
-                <div className="flex min-w-0 flex-col gap-0.5">
-                    <h3 className="font-semibold wrap-break-word">{garage.name}</h3>
-                    {type && <span className="text-sm text-muted-foreground">{type}</span>}
-                </div>
-                <div>
-                    <StatusChip state={state} />
-                </div>
-                <div className="text-right">
-                    {state.free !== null ? (
-                        <>
-                            {number}
-                            {hasTotal && <span className="text-sm text-muted-foreground tabular-nums"> / {state.total}</span>}
-                            <span className="sr-only">{freeText}</span>
-                        </>
-                    ) : (
-                        <span className="text-xl text-muted-foreground" aria-hidden>
-                            —
-                        </span>
-                    )}
-                </div>
-                <div className="flex items-center gap-3">
-                    {bar}
-                    {state.percent !== null && (
-                        <span className="w-20 shrink-0 text-sm text-muted-foreground tabular-nums" aria-hidden>
-                            {t('status.occupied', { percent: state.percent })}
-                        </span>
-                    )}
-                </div>
-                <div className="text-sm text-muted-foreground tabular-nums">
-                    {time && (
-                        <>
-                            <span className="sr-only">{t('status.measured')} </span>
-                            <time dateTime={garage.observed_at ?? undefined}>{time}</time>
-                        </>
-                    )}
-                </div>
-                <GarageActions garage={garage} />
-            </div>
-
-            {/* Phone: name and count on one line, the occupancy bar and actions below. */}
-            <div className="flex flex-col gap-2 px-4 py-3.5 lg:hidden">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                        <h3 className="font-semibold wrap-break-word">{garage.name}</h3>
-                        <span className="text-sm text-muted-foreground">
-                            {[type, time && `${t('status.measured')} ${time}`].filter(Boolean).join(' · ')}
-                        </span>
-                    </div>
-                    {state.free !== null ? (
-                        <div className="shrink-0 text-right">
-                            {number}
-                            {hasTotal && (
-                                <span className="block text-xs text-muted-foreground" aria-hidden>
-                                    {t('status.free_of_short', { total: state.total })}
-                                </span>
-                            )}
-                            <span className="sr-only">{freeText}</span>
-                        </div>
-                    ) : (
-                        <div className="shrink-0">
-                            <StatusChip state={state} />
-                        </div>
-                    )}
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">{bar}</div>
-                    <GarageActions garage={garage} />
-                </div>
-            </div>
-        </li>
-    );
-}
 
 export default function Garages({ municipalities }: Props) {
     const { t, i18n } = useTranslation('frontend/garages');
@@ -222,18 +35,7 @@ export default function Garages({ municipalities }: Props) {
     );
     const shown = visible.reduce((count, municipality) => count + municipality.garages.length, 0);
 
-    usePoll(REFRESH_MS, { only: ['municipalities'] });
-
-    useEffect(() => {
-        const reload = () => router.reload({ only: ['municipalities'] });
-        const channel = getEcho()?.channel('parking-offstreet');
-        channel?.listen('.observations.applied', reload);
-
-        // Only this listener is removed: other components may share the channel.
-        return () => {
-            channel?.stopListening('.observations.applied', reload);
-        };
-    }, []);
+    useGarageUpdates(['municipalities']);
 
     const typeOptions: { value: GarageTypeFilter; count: number }[] = [
         { value: 'all', count: summary.total },
@@ -247,7 +49,7 @@ export default function Garages({ municipalities }: Props) {
                 <meta name="description" content={t('meta.description')} />
             </Head>
 
-            <div className="min-h-screen bg-stone-50 dark:bg-neutral-950">
+            <div className="min-h-screen bg-canvas dark:bg-neutral-950">
                 <div className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8 lg:pt-12">
                     <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
                         <div className="flex max-w-2xl flex-col gap-3">
@@ -342,43 +144,9 @@ export default function Garages({ municipalities }: Props) {
                             {visible.length === 0 ? (
                                 <p className="mt-10 text-muted-foreground">{t('filter.none')}</p>
                             ) : (
-                                visible.map((municipality) => {
-                                    const sectionId = `municipality-${municipality.name}`.replace(/\s+/g, '-');
-
-                                    return (
-                                        <section
-                                            key={municipality.name}
-                                            aria-labelledby={sectionId}
-                                            className="mt-6 overflow-hidden rounded-xl border bg-white lg:mt-8 dark:border-neutral-800 dark:bg-neutral-900"
-                                        >
-                                            <h2
-                                                id={sectionId}
-                                                className="border-b bg-stone-100 px-4 py-3 text-lg font-bold lg:px-5 dark:border-neutral-800 dark:bg-neutral-800/60"
-                                            >
-                                                {municipality.name}{' '}
-                                                <span className="text-[15px] font-medium text-muted-foreground">
-                                                    {t('locations', { count: municipality.garages.length })}
-                                                </span>
-                                            </h2>
-                                            <div
-                                                className={`hidden gap-x-5 border-b px-5 py-2.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase lg:grid dark:border-neutral-800 ${columns}`}
-                                                aria-hidden
-                                            >
-                                                <span>{t('columns.location')}</span>
-                                                <span>{t('columns.status')}</span>
-                                                <span className="text-right">{t('columns.free')}</span>
-                                                <span>{t('columns.occupancy')}</span>
-                                                <span>{t('columns.measured')}</span>
-                                                <span className="text-right">{t('columns.go_to')}</span>
-                                            </div>
-                                            <ul>
-                                                {municipality.garages.map((garage) => (
-                                                    <GarageRow key={garage.id} garage={garage} />
-                                                ))}
-                                            </ul>
-                                        </section>
-                                    );
-                                })
+                                visible.map((municipality) => (
+                                    <GarageTable key={municipality.name} municipality={municipality} className="mt-6 lg:mt-8" />
+                                ))
                             )}
                         </>
                     )}

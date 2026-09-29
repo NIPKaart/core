@@ -31,10 +31,10 @@ The map is a means to answer these questions, not the product goal by itself.
 | Community confirmations | Works | `ParkingSpaceConfirmation` + policy/UI | Evolve into explicit verification/trust signal |
 | Favorites | Works | Favorite domain/profile/map UI | Keep; integrate into destination workflow |
 | Search | Works/partial | PostgreSQL parking-record text search (#1195) | Shift from record search toward destination + nearby parking discovery |
-| Internationalization | Mostly works | #329; frontend home/contact remain incomplete | Product-wide requirement, not a standalone feature |
+| Internationalization | Mostly works | #329; home, about and contact are translated since #1178 | Product-wide requirement, not a standalone feature |
 | Garage overview | Placeholder | #668 and placeholder page | Rethink around fallback/discovery rather than a simple list |
-| Home page | Placeholder/legacy | #246/#329; current page minimal | Rebuild around destination search and product promise |
-| Contact | Placeholder | #674 | Low priority product/support surface |
+| Home page | Works | #1178: destination search, map legend, live garage preview and contribution call | Iterate on copy, colour and SEO surfaces |
+| Contact | Works | #1178: contact form mailed to info@nipkaart.nl (queued, not stored, honeypot and rate limit), plus e-mail and GitHub routes | Keep as a low-traffic support surface |
 | User dashboard | Partial/legacy concept | #335 | Rethink around useful personal activity, not global counters |
 | Municipal bulk management | Backlog | #455 | Keep as operator/admin capability |
 | Weekly new-space report | Backlog | #663 | Re-evaluate audience and operational value |

@@ -41,3 +41,4 @@ Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,de
 Route::get('garages', [Frontend\GarageController::class, 'index'])->name('garages');
 Route::get('about', [Frontend\AboutController::class, 'index'])->name('about');
 Route::get('contact', [Frontend\ContactController::class, 'index'])->name('contact');
+Route::post('contact', [Frontend\ContactController::class, 'store'])->middleware('throttle:5,10,contact')->name('contact.store');
