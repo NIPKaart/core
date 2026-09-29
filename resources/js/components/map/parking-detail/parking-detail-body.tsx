@@ -276,8 +276,8 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                 <img
                     src={getOrientationIllustration(detail.orientation)}
                     alt=""
-                    className="mx-auto max-h-24 w-auto object-contain"
-                    style={{ aspectRatio: '3 / 1', maxWidth: 260 }}
+                    className={detail.orientation ? 'mx-auto size-24 rounded-xl' : 'mx-auto max-h-24 w-auto object-contain'}
+                    style={detail.orientation ? undefined : { aspectRatio: '3 / 1', maxWidth: 260 }}
                 />
             )}
 

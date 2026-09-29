@@ -4,11 +4,11 @@ import type { EnumOption } from './types';
 export function getOrientationIllustration(orientation: EnumOption | null | undefined): string {
     switch (orientation?.value) {
         case 'perpendicular':
-            return '/assets/images/orientation/perpendicular.png';
+            return '/assets/images/orientation/perpendicular.svg';
         case 'parallel':
-            return '/assets/images/orientation/parallel.png';
+            return '/assets/images/orientation/parallel.svg';
         case 'angle':
-            return '/assets/images/orientation/angle.png';
+            return '/assets/images/orientation/angle.svg';
         default:
             return '/assets/images/car-illu.svg';
     }
