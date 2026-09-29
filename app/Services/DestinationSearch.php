@@ -9,7 +9,6 @@ final class DestinationSearch
     public function __construct(
         private InternalDestinationSearch $internal,
         private DestinationGeocoder $external,
-        private NominatimDestinationResolver $nominatim,
     ) {}
 
     public function suggestions(string $query, int $limit = 5): array
@@ -26,8 +25,7 @@ final class DestinationSearch
 
     public function resolve(string $query): ?array
     {
-        return $this->nominatim->resolve($query)
-            ?? $this->external->resolve($query)
+        return $this->external->resolve($query)
             ?? $this->internal->search($query, 1)[0]
             ?? null;
     }

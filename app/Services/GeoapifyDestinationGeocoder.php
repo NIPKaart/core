@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Contracts\DestinationGeocoder;
+use App\Contracts\ReverseGeocoder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-final class GeoapifyDestinationGeocoder implements DestinationGeocoder
+final class GeoapifyDestinationGeocoder implements DestinationGeocoder, ReverseGeocoder
 {
     public function autocomplete(string $query, int $limit = 5): array
     {
@@ -19,6 +20,45 @@ final class GeoapifyDestinationGeocoder implements DestinationGeocoder
     public function resolve(string $query): ?array
     {
         return $this->request('search', $query, 1)[0] ?? null;
+    }
+
+    public function reverse(float $latitude, float $longitude): ?array
+    {
+        $key = config('services.geoapify.key');
+        if (! is_string($key) || $key === '') {
+            return null;
+        }
+
+        try {
+            $result = Http::timeout(3)->retry(1, 100)->get('https://api.geoapify.com/v1/geocode/reverse', [
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'format' => 'json',
+                'apiKey' => $key,
+            ])->throw()->json('results.0');
+        } catch (ConnectionException|RequestException $exception) {
+            Log::warning('Reverse geocoding provider request failed.', ['provider' => 'geoapify', 'exception' => $exception::class]);
+
+            return null;
+        }
+
+        if (! is_array($result) || empty($result['country_code'])) {
+            return null;
+        }
+
+        return array_filter([
+            'country_code' => $result['country_code'],
+            'state' => $result['state'] ?? null,
+            'ISO3166-2-lvl4' => isset($result['state_code']) ? strtoupper($result['country_code']).'-'.$result['state_code'] : null,
+            'municipality' => $result['municipality'] ?? null,
+            'city' => $result['city'] ?? null,
+            'village' => $result['village'] ?? null,
+            'county' => $result['county'] ?? null,
+            'suburb' => $result['suburb'] ?? null,
+            'neighbourhood' => $result['district'] ?? null,
+            'road' => $result['street'] ?? null,
+            'postcode' => $result['postcode'] ?? null,
+        ], fn (mixed $value): bool => is_string($value) && $value !== '');
     }
 
     private function request(string $endpoint, string $query, int $limit): array

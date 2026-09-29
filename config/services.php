@@ -39,6 +39,13 @@ return [
         'key' => env('GEOAPIFY_API_KEY'),
     ],
 
+    /*
+     * External geocoders, asked in this order: PDOK (Netherlands), Geoapify, then public Nominatim. See ADR 0012.
+     */
+    'geocoding' => [
+        'providers' => array_values(array_filter(array_map('trim', explode(',', (string) env('GEOCODING_PROVIDERS', 'pdok,geoapify,nominatim'))))),
+    ],
+
     'nominatim' => [
         'enabled' => env('NOMINATIM_PUBLIC_ENABLED', true),
         'user_agent' => env('NOMINATIM_USER_AGENT', 'NIPKaart/1.0 (+https://nipkaart.nl)'),

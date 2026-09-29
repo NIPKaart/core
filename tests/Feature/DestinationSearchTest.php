@@ -67,11 +67,12 @@ test('autocomplete supplements internal results with geoapify when configured', 
     Http::assertSentCount(1);
 });
 
-test('explicit resolution prefers nominatim and avoids geoapify fallback when resolved', function () {
+test('explicit resolution falls back to nominatim when geoapify has no answer', function () {
     Cache::flush();
     RateLimiter::clear('nominatim-public');
     config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => true]);
     Http::fake([
+        'api.geoapify.com/*' => Http::response(['results' => []]),
         'nominatim.openstreetmap.org/*' => Http::response([[
             'place_id' => 123,
             'name' => 'Rijksmuseum',
@@ -80,7 +81,6 @@ test('explicit resolution prefers nominatim and avoids geoapify fallback when re
             'lat' => '52.359998',
             'lon' => '4.885219',
         ]]),
-        'api.geoapify.com/*' => Http::response(['results' => []]),
     ]);
 
     $this->getJson('/destinations/resolve?q=Rijksmuseum')
@@ -88,51 +88,38 @@ test('explicit resolution prefers nominatim and avoids geoapify fallback when re
         ->assertJsonPath('result.key', 'nominatim:123')
         ->assertJsonPath('result.type', 'museum');
 
+    Http::assertSentCount(2);
+});
+
+test('explicit resolution stops at geoapify when it answers', function () {
+    Cache::flush();
+    RateLimiter::clear('nominatim-public');
+    config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => true]);
+    Http::fake([
+        'api.geoapify.com/*' => Http::response(['results' => [[
+            'place_id' => 'museum',
+            'name' => 'Rijksmuseum',
+            'result_type' => 'amenity',
+            'lat' => 52.36,
+            'lon' => 4.885,
+        ]]]),
+    ]);
+
+    $this->getJson('/destinations/resolve?q=Rijksmuseum')->assertOk()->assertJsonPath('result.key', 'geoapify:museum');
+
     Http::assertSentCount(1);
 });
 
-test('explicit resolution falls back to geoapify when public nominatim budget is unavailable', function () {
+test('explicit resolution skips public nominatim once its budget is used', function () {
     Cache::flush();
     RateLimiter::clear('nominatim-public');
     RateLimiter::hit('nominatim-public', 60);
     config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => true]);
-    Http::fake([
-        'api.geoapify.com/*' => Http::response(['results' => [[
-            'place_id' => 'fallback',
-            'name' => 'Fallback place',
-            'result_type' => 'amenity',
-            'lat' => 50.0,
-            'lon' => 5.0,
-        ]]]),
-    ]);
+    Http::fake(['api.geoapify.com/*' => Http::response('Service unavailable', 503)]);
 
-    $this->getJson('/destinations/resolve?q=Fallback%20place')
-        ->assertOk()
-        ->assertJsonPath('result.key', 'geoapify:fallback');
+    $this->getJson('/destinations/resolve?q=Fallback%20place')->assertOk()->assertJsonPath('result', null);
 
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'api.geoapify.com'));
-});
-
-test('explicit resolution falls back to geoapify when public nominatim fails', function () {
-    Cache::flush();
-    RateLimiter::clear('nominatim-public');
-    config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => true]);
-    Http::fake([
-        'nominatim.openstreetmap.org/*' => Http::response('Service unavailable', 503),
-        'api.geoapify.com/*' => Http::response(['results' => [[
-            'place_id' => 'fallback',
-            'name' => 'Fallback place',
-            'result_type' => 'amenity',
-            'lat' => 50.0,
-            'lon' => 5.0,
-        ]]]),
-    ]);
-
-    $this->getJson('/destinations/resolve?q=Fallback%20place')
-        ->assertOk()
-        ->assertJsonPath('result.key', 'geoapify:fallback');
-
-    Http::assertSentCount(2);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'nominatim'));
 });
 
 test('an empty nominatim answer is cached so the same query is not sent again', function () {

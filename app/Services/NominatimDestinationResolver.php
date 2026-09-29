@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Contracts\DestinationGeocoder;
+use App\Contracts\ReverseGeocoder;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
@@ -9,8 +11,47 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 
-final class NominatimDestinationResolver
+/**
+ * Public Nominatim: explicit searches and reverse lookups only, within one shared request per second.
+ */
+final class NominatimDestinationResolver implements DestinationGeocoder, ReverseGeocoder
 {
+    /**
+     * Nominatim's usage policy forbids autocomplete, so it never suggests while typing.
+     */
+    public function autocomplete(string $query, int $limit = 5): array
+    {
+        return [];
+    }
+
+    public function reverse(float $latitude, float $longitude): ?array
+    {
+        if (! config('services.nominatim.enabled', true) || RateLimiter::tooManyAttempts('nominatim-public', 1)) {
+            return null;
+        }
+
+        RateLimiter::hit('nominatim-public', 1);
+
+        try {
+            $address = Http::withHeaders([
+                'User-Agent' => config('services.nominatim.user_agent'),
+                'Accept-Language' => app()->getLocale(),
+            ])->timeout(3)->get('https://nominatim.openstreetmap.org/reverse', [
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'format' => 'jsonv2',
+                'addressdetails' => 1,
+                'zoom' => 18,
+            ])->throw()->json('address');
+        } catch (ConnectionException|RequestException $exception) {
+            Log::warning('Reverse geocoding provider request failed.', ['provider' => 'nominatim', 'exception' => $exception::class]);
+
+            return null;
+        }
+
+        return is_array($address) && ! empty($address['country_code']) ? array_map('strval', $address) : null;
+    }
+
     /** @return array{key: string, label: string, sub: ?string, type: string, latitude: float, longitude: float}|null */
     public function resolve(string $query): ?array
     {
