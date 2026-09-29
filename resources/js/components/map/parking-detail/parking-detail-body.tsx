@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { navigationUrl, streetViewUrl } from './navigation-handoff';
 import { Chip, ConfirmedBadge, CopyButton, HelpPopover } from './parts';
 import type { MunicipalParkingDetail, OffstreetParkingDetail, ParkingSpaceDetail } from './types';
-import { getOrientationIllustration, occupancyPercent, occupancyStatus } from './utils';
+import { GARAGE_ILLUSTRATION, getOrientationIllustration, occupancyPercent, occupancyStatus } from './utils';
 
 export type ParkingDetailData =
     | { source: 'community'; detail: ParkingSpaceDetail }
@@ -272,14 +272,19 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
 
     return (
         <div className="flex flex-col gap-4">
-            {source !== 'offstreet' && (
-                <img
-                    src={getOrientationIllustration(detail.orientation)}
-                    alt=""
-                    className={detail.orientation ? 'mx-auto size-24 rounded-xl' : 'mx-auto max-h-24 w-auto object-contain'}
-                    style={detail.orientation ? undefined : { aspectRatio: '3 / 1', maxWidth: 260 }}
-                />
-            )}
+            {source !== 'offstreet' &&
+                (detail.orientation ? (
+                    <img src={getOrientationIllustration(detail.orientation, 'wide')} alt="" className="mx-auto w-full max-w-sm rounded-xl" />
+                ) : (
+                    <img
+                        src={getOrientationIllustration(null)}
+                        alt=""
+                        className="mx-auto max-h-24 w-auto object-contain"
+                        style={{ aspectRatio: '3 / 1', maxWidth: 260 }}
+                    />
+                ))}
+
+            {source === 'offstreet' && <img src={GARAGE_ILLUSTRATION} alt="" className="mx-auto w-full max-w-sm rounded-xl" />}
 
             {source === 'offstreet' && (
                 <section

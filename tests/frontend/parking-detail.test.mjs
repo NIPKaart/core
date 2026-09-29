@@ -254,3 +254,9 @@ test('municipal source shows the municipality and keeps dataset details as backg
     assert.match(html, /Source Municipality of Leiden/);
     assert.match(text(render('municipal', { municipality: null, provenance })), /Source Leiden algemene gehandicaptenparkeerplaatsen/);
 });
+
+test('the detail illustrates the bay orientation widely, a garage for garages, and a generic car when unknown', () => {
+    assert.match(render('community'), /src="\/assets\/images\/orientation\/parallel-wide\.svg"/);
+    assert.match(render('municipal'), /src="\/assets\/images\/car-illu\.svg"/);
+    assert.match(render('offstreet'), /src="\/assets\/images\/garage\.svg"/);
+});

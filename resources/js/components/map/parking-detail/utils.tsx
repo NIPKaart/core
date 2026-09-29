@@ -1,17 +1,18 @@
 import type { EnumOption } from './types';
 
-/** Picks the orientation illustration shown in the hero block, falling back to a generic car illustration. */
-export function getOrientationIllustration(orientation: EnumOption | null | undefined): string {
-    switch (orientation?.value) {
-        case 'perpendicular':
-            return '/assets/images/orientation/perpendicular.svg';
-        case 'parallel':
-            return '/assets/images/orientation/parallel.svg';
-        case 'angle':
-            return '/assets/images/orientation/angle.svg';
-        default:
-            return '/assets/images/car-illu.svg';
+/** Illustration shown at the top of a garage's detail. */
+export const GARAGE_ILLUSTRATION = '/assets/images/garage.svg';
+
+/**
+ * Picks the orientation illustration: square for choice cards, wide (12:5) for the detail hero.
+ * An unknown orientation falls back to a generic car illustration.
+ */
+export function getOrientationIllustration(orientation: EnumOption | null | undefined, variant: 'square' | 'wide' = 'square'): string {
+    if (orientation?.value === 'perpendicular' || orientation?.value === 'parallel' || orientation?.value === 'angle') {
+        return `/assets/images/orientation/${orientation.value}${variant === 'wide' ? '-wide' : ''}.svg`;
     }
+
+    return '/assets/images/car-illu.svg';
 }
 
 /** Occupancy status used to color the general-availability progress bar; never the only signal (text stays next to it). */
