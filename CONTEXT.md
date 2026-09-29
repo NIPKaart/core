@@ -7,7 +7,7 @@ NIPKaart helps people find accessible parking using community contributions, mun
 **ParkingSpace**: One physical accessible parking bay contributed by the community, subject to publication, verification and correction. Adjacent bays remain individual spaces.
 _Avoid_: ParkingSpot, UserParkingSpot, UserparkingSpot
 
-**ParkingSpaceConfirmation**: A person's dated confirmation or dispute about a community parking space, optionally accompanied by a comment.
+**ParkingSpaceConfirmation**: A signed-in person's dated confirmation that a published community or municipal parking place exists. It confirms existence only, not the under-sign, parking time, orientation, rules or availability. Older records may still carry a legacy dispute status or comment; those are not counted as confirmations.
 _Avoid_: ParkingSpotConfirmation
 
 **Under-sign**: The additional sign (onderbord) below a disabled parking sign that adds conditions, such as a maximum parking duration or the days and times it applies. A ParkingSpace records whether one exists (yes, no, or not known), its literal text and, where known, a structured interpretation. Not knowing is never recorded as no.

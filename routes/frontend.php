@@ -18,6 +18,12 @@ Route::prefix('map/add')->as('location-map.')->middleware('community')->controll
     Route::put('{parking_space}', 'update')->whereUuid('parking_space')->name('update');
 });
 
+// Confirming that a published community or municipal parking place exists
+Route::post('map/places/{source}/{id}/confirm', [Frontend\ParkingConfirmationController::class, 'store'])
+    ->whereIn('source', ['community', 'municipal'])
+    ->middleware(['community', 'throttle:30,1,parking-confirm'])
+    ->name('map.places.confirm');
+
 // First-party browser JSON endpoints
 Route::prefix('map')->as('map.')->group(function () {
     Route::get('parking-spaces/{id}', [Frontend\SpacesInfoController::class, 'ParkingSpaceInfo'])->name('parking-spaces.show');

@@ -6,6 +6,7 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
 use App\Enums\UnderSign;
+use App\Traits\Confirmable;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
 use Database\Factories\ParkingSpaceFactory;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 class ParkingSpace extends Model
 {
     /** @use HasFactory<ParkingSpaceFactory> */
-    use Favoritable, HasFactory, HasParkingLocation, SoftDeletes;
+    use Confirmable, Favoritable, HasFactory, HasParkingLocation, SoftDeletes;
 
     protected $table = 'parking_spaces';
 
@@ -147,14 +148,6 @@ class ParkingSpace extends Model
     public function province(): BelongsTo
     {
         return $this->belongsTo(Province::class);
-    }
-
-    /**
-     * Get the confirmations for the ParkingSpace
-     */
-    public function confirmations(): HasMany
-    {
-        return $this->hasMany(ParkingSpaceConfirmation::class);
     }
 
     /**

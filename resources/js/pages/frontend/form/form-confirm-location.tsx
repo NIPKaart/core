@@ -1,106 +1,83 @@
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import app from '@/routes/app';
-import { Form } from '@inertiajs/react';
-import React from 'react';
+import { login } from '@/routes';
+import { confirm } from '@/routes/map/places';
+import { Form, Link } from '@inertiajs/react';
+import { Check, CircleCheck } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Props = {
-    spaceId: string;
-    confirmationStatusOptions: Record<string, string>;
+    source: 'community' | 'municipal';
+    id: string;
+    signedIn: boolean;
     confirmedToday: boolean;
     onConfirmed?: () => void;
 };
 
-export function ParkingConfirmForm({ spaceId, confirmationStatusOptions, confirmedToday, onConfirmed }: Props) {
+/**
+ * Compact one-tap confirmation that the parking place exists, shown beside its confirmation count.
+ * It deliberately says nothing about the place's details; those are improved separately.
+ */
+export function ParkingConfirmForm({ source, id, signedIn, confirmedToday, onConfirmed }: Props) {
     const { t } = useTranslation('frontend/map/modals');
+    // Show the outcome straight away; the refreshed detail confirms it shortly after.
+    const [justConfirmed, setJustConfirmed] = useState(false);
 
-    const [status, setStatus] = React.useState<string>('confirmed');
-    const [comment, setComment] = React.useState<string>('');
+    if (confirmedToday || justConfirmed) {
+        return (
+            <p
+                role="status"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-800 dark:bg-green-950/70 dark:text-green-200"
+            >
+                <CircleCheck className="h-4 w-4 shrink-0" aria-hidden />
+                {t('community.confirm.confirmed_today')}
+            </p>
+        );
+    }
 
-    React.useEffect(() => {
-        setStatus('confirmed');
-        setComment('');
-    }, [spaceId]);
+    if (!signedIn) {
+        return (
+            <Button asChild variant="outline" size="sm" className="min-h-9 shrink-0">
+                <Link href={login()} aria-label={t('community.confirm.sign_in_label')}>
+                    <Check className="h-4 w-4" aria-hidden />
+                    {t('community.confirm.button')}
+                </Link>
+            </Button>
+        );
+    }
 
     return (
         <Form
             method="post"
-            action={app.parkingSpaces.confirm(spaceId)}
+            action={confirm({ source, id })}
             options={{ preserveScroll: true }}
             onSuccess={() => {
-                setStatus('confirmed');
-                setComment('');
+                setJustConfirmed(true);
                 onConfirmed?.();
             }}
-            className="mx-auto max-w-md space-y-5"
+            className="flex shrink-0 flex-col items-end gap-1"
         >
             {({ errors, processing }) => {
-                const otherErrors = Object.entries(errors ?? {}).filter(([key]) => key !== 'status' && key !== 'comment');
-                const generalError = otherErrors.length ? String(otherErrors[0][1] ?? '') : null;
+                const error = Object.values(errors ?? {})[0];
 
                 return (
                     <>
-                        <h2 className="mb-2 text-center text-lg font-semibold">{t('community.confirm.form.title')}</h2>
-                        <div className="mb-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-                            {t('community.confirm.form.description')}
-                            <br />
-                            <span className="text-sm text-zinc-400">{t('community.confirm.form.description_note')}</span>
-                        </div>
-
-                        {generalError && (
-                            <div className="mb-2 rounded border border-destructive/20 bg-destructive/10 px-3 py-2 text-center text-sm text-destructive dark:border-destructive/40 dark:bg-destructive/20">
-                                {generalError}
-                            </div>
-                        )}
-
-                        <div className="space-y-3">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">{t('community.confirm.form.field.status')}</label>
-                                <Select value={status} onValueChange={setStatus} disabled={confirmedToday || processing}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(confirmationStatusOptions).map(([value, label]) => (
-                                            <SelectItem key={value} value={value}>
-                                                {label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <input type="hidden" name="status" value={status} />
-                                <InputError message={errors.status} />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    {t('community.confirm.form.field.comment.label')}{' '}
-                                    <span className="ml-1 text-xs text-muted-foreground">{t('community.confirm.form.field.comment.optional')}</span>
-                                </label>
-                                <Textarea
-                                    name="comment"
-                                    rows={2}
-                                    className="resize-none text-xs"
-                                    placeholder={t('community.confirm.form.field.comment.placeholder')}
-                                    maxLength={500}
-                                    disabled={confirmedToday || processing}
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                />
-                                <InputError message={errors.comment} />
-                            </div>
-                        </div>
-
-                        <Button type="submit" size="lg" className="w-full cursor-pointer" disabled={confirmedToday || processing}>
-                            {confirmedToday
-                                ? t('community.confirm.buttons.alreadyConfirmed')
-                                : processing
-                                  ? t('community.confirm.buttons.confirming')
-                                  : t('community.confirm.buttons.confirm')}
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            className="min-h-9 cursor-pointer border-green-300 text-green-800 hover:bg-green-50 hover:text-green-900 dark:border-green-800 dark:text-green-200 dark:hover:bg-green-950"
+                            aria-label={t('community.confirm.label')}
+                            disabled={processing}
+                        >
+                            <Check className="h-4 w-4" aria-hidden />
+                            {processing ? t('community.confirm.confirming') : t('community.confirm.button')}
                         </Button>
+                        {error && (
+                            <p role="alert" className="max-w-48 text-right text-xs text-destructive">
+                                {String(error)}
+                            </p>
+                        )}
                     </>
                 );
             }}

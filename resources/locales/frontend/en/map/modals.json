@@ -6,14 +6,12 @@
         },
         "tabs": {
             "info": "Info",
-            "confirm": "Confirm or report",
             "description": "Description"
         },
         "table": {
             "max_time": "Max. parking time",
             "parking_disc": "Don't forget your parking disc!",
             "unlimited": "Unlimited",
-            "last_confirmed": "Last confirmed",
             "never": "Never",
             "area": "Area",
             "added_on": "Added on",
@@ -27,24 +25,11 @@
             "restriction": "Applies on"
         },
         "confirm": {
-            "form": {
-                "title": "Help keep the map up-to-date",
-                "description": "Confirm if the parking space is still present.",
-                "description_note": "(you can do this once per day, for each parking space)",
-                "field": {
-                    "status": "Status",
-                    "comment": {
-                        "label": "Comment",
-                        "optional": "(optional)",
-                        "placeholder": "Add any details or comments about the parking space..."
-                    }
-                }
-            },
-            "buttons": {
-                "confirm": "Confirm",
-                "confirming": "Confirming...",
-                "alreadyConfirmed": "Already confirmed today"
-            }
+            "button": "It's here",
+            "label": "Confirm that this parking place is here",
+            "sign_in_label": "Log in to confirm that this parking place is here",
+            "confirming": "Confirming…",
+            "confirmed_today": "Confirmed today"
         },
         "days": {
             "mon": "Mon",
@@ -132,8 +117,7 @@
             "rules": "Rules and restrictions",
             "layout": "Layout",
             "availability": "Accessibility and availability",
-            "source": "Source and freshness",
-            "contribute": "Confirm or report a problem"
+            "source": "Source and freshness"
         },
         "navigation": {
             "unavailable": "No valid coordinates are known for this location, so navigation is unavailable."
@@ -157,17 +141,8 @@
         "source": {
             "community": "Community contribution, approved for publication",
             "municipal": "Municipal open data",
-            "never_confirmed": "Not confirmed yet",
-            "confirmations_one": "Confirmed {{count}} time by the community",
-            "confirmations_other": "Confirmed {{count}} times by the community",
             "source_date": "Source date",
             "municipality": "Municipality of {{name}}"
-        },
-        "contribute_signed_out": "Sign in to confirm this parking space or report that it has moved or is unavailable.",
-        "log_in": "Log in",
-        "badges": {
-            "confirmed_one": "{{count}}x confirmed",
-            "confirmed_other": "{{count}}x confirmed"
         },
         "copy_id": "Copy location ID",
         "more_info": "More about {{label}}",
@@ -183,6 +158,15 @@
             "updated": "Updated",
             "measured": "Measured"
         },
-        "id_ending": "ending in"
+        "id_ending": "ending in",
+        "confirmations": {
+            "title": "Confirmations",
+            "count_one": "Confirmed {{count}}×",
+            "count_other": "Confirmed {{count}}×",
+            "last": "Present, last",
+            "none": "Not confirmed yet",
+            "prompt": "Is this place still here?",
+            "help": "A confirmation tells others that this parking place is really here. You can confirm once a day."
+        }
     }
 }

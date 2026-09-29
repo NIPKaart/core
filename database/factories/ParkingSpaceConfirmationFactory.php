@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ParkingConfirmationStatus;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\User;
@@ -20,5 +21,16 @@ class ParkingSpaceConfirmationFactory extends Factory
             'status' => ParkingConfirmationStatus::CONFIRMED,
             'comment' => null,
         ];
+    }
+
+    /**
+     * Confirm a municipal parking place instead of a community one.
+     */
+    public function municipal(): static
+    {
+        return $this->state([
+            'parking_space_id' => null,
+            'parking_municipal_id' => ParkingMunicipal::factory(),
+        ]);
     }
 }

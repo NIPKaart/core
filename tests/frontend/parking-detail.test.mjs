@@ -84,6 +84,8 @@ const details = {
         rule_url: null,
         updated_at: '2026-02-03T10:00:00Z',
         provenance: { name: null, attribution: null, url: null, terms_url: null, fetched_at: null, source_updated_at: null },
+        confirmations_count: { confirmed: 0 },
+        last_confirmed_at: null,
     },
     offstreet: {
         ...place,
@@ -108,8 +110,8 @@ const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 test('every source keeps the same group order but only shows the groups that apply to it', () => {
     const expected = {
         // Community places always show their sub-sign, even when it is not known.
-        community: ['Rules and restrictions', 'Layout', 'Source and freshness'],
-        municipal: ['Layout', 'Source and freshness'],
+        community: ['Confirmations', 'Rules and restrictions', 'Layout', 'Source and freshness'],
+        municipal: ['Confirmations', 'Layout', 'Source and freshness'],
         // Garages show their live state in the availability box; signed-out visitors see no source table.
         offstreet: ['Accessibility and availability'],
     };
@@ -166,8 +168,7 @@ test('street parking omits fields its source never provides and marks missing kn
 
     const community = text(render('community'));
     assert.doesNotMatch(community, /Max\. parking time|Unlimited|availability/i);
-    assert.match(community, /Not confirmed yet/);
-    assert.match(community, /Confirmed 0 times by the community/);
+    assert.match(community, /Not confirmed yet .*Is this place still here\?/);
     assert.match(text(render('community', { parking_time: 90 })), /1 hour &amp; 30 minutes Don&#x27;t forget your parking disc!/);
 });
 
@@ -236,10 +237,25 @@ test('the description card is no longer duplicated inside the body (it moved to 
     assert.doesNotMatch(text(render('community', { description: 'Watch for the low ceiling' })), /Watch for the low ceiling/);
 });
 
-test('community actions and signed-in details appear only where relevant', () => {
+test('community and municipal places show the same existence evidence, garages none', () => {
+    for (const source of ['community', 'municipal']) {
+        const confirmed = text(render(source, { confirmations_count: { confirmed: 3 }, last_confirmed_at: '2026-03-04T09:00:00Z' }));
+        assert.match(confirmed, /Confirmed 3× .*Present, last 4 Mar/, source);
+        assert.match(
+            confirmed,
+            /A confirmation tells others that this parking place is really here\./,
+            source,
+        );
+        assert.doesNotMatch(confirmed, /reliab|trust|score/i, source);
+    }
+    assert.doesNotMatch(text(render('offstreet')), /confirmed/i);
+});
+
+test('confirm actions and signed-in details appear only where relevant', () => {
     const actions = React.createElement('p', null, 'confirm-form');
-    assert.match(render('community', {}, { communityActions: actions }), /confirm-form/);
-    assert.doesNotMatch(render('municipal', {}, { communityActions: actions }), /confirm-form/);
+    assert.match(render('community', {}, { confirmActions: actions }), /confirm-form/);
+    assert.match(render('municipal', {}, { confirmActions: actions }), /confirm-form/);
+    assert.doesNotMatch(render('offstreet', {}, { confirmActions: actions }), /confirm-form/);
     assert.doesNotMatch(render('offstreet'), /Location ID/);
     assert.match(text(render('offstreet', {}, { isLoggedIn: true })), /Location ID abc/);
     const longId = '41a88722-92fa-4156-a0f9-89d55b6b6ffb';
@@ -259,4 +275,60 @@ test('the detail illustrates the bay orientation widely, a garage for garages, a
     assert.match(render('community'), /src="\/assets\/images\/orientation\/parallel-wide\.svg"/);
     assert.match(render('municipal'), /src="\/assets\/images\/car-illu\.svg"/);
     assert.match(render('offstreet'), /src="\/assets\/images\/garage\.svg"/);
+});
+
+test('the existence confirmation offers the action that fits the visitor', () => {
+    const source = ts.transpileModule(
+        readFileSync(new URL('../../resources/js/pages/frontend/form/form-confirm-location.tsx', import.meta.url), 'utf8'),
+        {
+            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+        },
+    ).outputText;
+    const context = {
+        exports: {},
+        require: (name) => {
+            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
+            if (name === '@/routes') return { login: () => '/login' };
+            if (name === '@/routes/map/places') return { confirm: ({ source, id }) => `/map/places/${source}/${id}/confirm` };
+            if (name === '@/components/ui/button')
+                return { Button: ({ asChild, children, ...props }) => (asChild ? children : React.createElement('button', props, children)) };
+            if (name === '@inertiajs/react') {
+                return {
+                    Form: ({ children, action }) => React.createElement('form', { action }, children({ errors: {}, processing: false })),
+                    Link: ({ children, ...props }) => React.createElement('a', props, children),
+                };
+            }
+            return require(name);
+        },
+    };
+    vm.runInNewContext(source, context);
+    const card = (props) =>
+        text(
+            renderToStaticMarkup(
+                React.createElement(context.exports.ParkingConfirmForm, {
+                    source: 'municipal',
+                    id: '42',
+                    signedIn: true,
+                    confirmedToday: false,
+                    ...props,
+                }),
+            ),
+        );
+
+    const html = (props) =>
+        renderToStaticMarkup(
+            React.createElement(context.exports.ParkingConfirmForm, {
+                source: 'municipal',
+                id: '42',
+                signedIn: true,
+                confirmedToday: false,
+                ...props,
+            }),
+        );
+    assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
+    assert.match(html(), /aria-label="Confirm that this parking place is here"/);
+    assert.match(card(), /It&#x27;s here|It's here/);
+    assert.match(html({ signedIn: false }), /<a href="\/login"[^>]*aria-label="Log in to confirm that this parking place is here"/);
+    assert.match(card({ confirmedToday: true }), /Confirmed today/);
+    assert.doesNotMatch(html({ confirmedToday: true }), /<form|<button/);
 });

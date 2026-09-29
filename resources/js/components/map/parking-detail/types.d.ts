@@ -46,6 +46,11 @@ export type MunicipalParkingDetail = {
     rule_url?: string | null;
     updated_at: datetime;
     is_favorited?: boolean;
+    confirmed_today?: boolean;
+    confirmations_count?: {
+        confirmed: number;
+    };
+    last_confirmed_at?: datetime | null;
 };
 
 export type OffstreetParkingDetail = {

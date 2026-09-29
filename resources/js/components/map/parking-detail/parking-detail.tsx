@@ -8,15 +8,14 @@ import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
-import { login } from '@/routes';
 import app from '@/routes/app';
 import { show as municipalDetails } from '@/routes/map/parking-municipal';
 import { show as offstreetDetails } from '@/routes/map/parking-offstreet';
 import { show as communityDetails } from '@/routes/map/parking-spaces';
 import type { ParkingResult } from '@/types/destination';
 import { Link } from '@inertiajs/react';
-import { Eye, FileText, Info as InfoIcon, MapPinCheckInside, Share2, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Eye, FileText, Info as InfoIcon, Share2, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ParkingDetailBody, { type ParkingDetailData } from './parking-detail-body';
 import { CommunityDescriptionCard, SourceIcon } from './parts';
@@ -28,7 +27,6 @@ type Props = {
     open: boolean;
     onClose: () => void;
     onCloseAutoFocus?: (event: Event) => void;
-    confirmationStatusOptions: Record<string, string>;
 };
 
 const detailUrls = {
@@ -46,7 +44,7 @@ const favoriteTypes = {
 const tabTriggerClass =
     'flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white';
 
-export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus, confirmationStatusOptions }: Props) {
+export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
     const { can, user } = useAuthorization();
@@ -56,19 +54,25 @@ export default function ParkingDetail({ result, approximateDestination = false, 
     const [shared, setShared] = useState(false);
     const [reload, setReload] = useState(0);
     const [tab, setTab] = useState('info');
+    // A refresh after confirming keeps the current view instead of flashing the loading state.
+    const silentReload = useRef(false);
 
     const source = result?.source;
     const id = result?.id;
 
     useEffect(() => {
-        setShared(false);
-        setTab('info');
+        const silent = silentReload.current;
+        silentReload.current = false;
+        if (!silent) {
+            setShared(false);
+            setTab('info');
+        }
         if (!open || !source || !id) {
             setData(null);
             return;
         }
         const request = new AbortController();
-        setStatus('loading');
+        if (!silent) setStatus('loading');
         fetch(detailUrls[source](id), { signal: request.signal, headers: { Accept: 'application/json' } })
             .then((response) => {
                 if (!response.ok) throw new Error('Parking detail request failed');
@@ -79,7 +83,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                 setStatus('ready');
             })
             .catch(() => {
-                if (!request.signal.aborted) setStatus('error');
+                if (!request.signal.aborted && !silent) setStatus('error');
             });
 
         return () => request.abort();
@@ -117,8 +121,10 @@ export default function ParkingDetail({ result, approximateDestination = false, 
 
     const detail = status === 'ready' && data?.source === result.source && data.detail.id === result.id ? data : null;
     const community = detail && detail.source === 'community' ? detail : null;
+    // Existence can be confirmed for every street place, whichever source describes it; garages are facilities.
+    const confirmable = detail && detail.source !== 'offstreet' ? detail : null;
     const hasDescription = !!community?.detail.description;
-    const showTabs = !!community && (!!user || hasDescription);
+    const showTabs = hasDescription;
     const title =
         (detail?.source === 'offstreet' ? detail.detail.name : detail?.detail.street)?.trim() || result.title.trim() || t('detail.no_address');
 
@@ -143,34 +149,21 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         </span>
     );
 
-    const signInHint = (
-        <section aria-labelledby="parking-detail-contribute" className="flex flex-col gap-2">
-            <h3 id="parking-detail-contribute" className="text-base font-semibold">
-                {t('detail.sections.contribute')}
-            </h3>
-            <p className="text-sm">
-                {t('detail.contribute_signed_out')}{' '}
-                <Link href={login()} className="underline underline-offset-2">
-                    {t('detail.log_in')}
-                </Link>
-            </p>
-        </section>
+    const confirmActions = confirmable && (
+        <ParkingConfirmForm
+            key={`${confirmable.source}:${confirmable.detail.id}`}
+            source={confirmable.source}
+            id={confirmable.detail.id}
+            signedIn={!!user}
+            confirmedToday={!!confirmable.detail.confirmed_today}
+            onConfirmed={() => {
+                silentReload.current = true;
+                setReload((value) => value + 1);
+            }}
+        />
     );
 
-    const infoContent = detail && (
-        <ParkingDetailBody data={detail} isLoggedIn={!!user} communityActions={community && !user ? signInHint : undefined} />
-    );
-
-    const confirmContent = community && user && (
-        <div className="py-3">
-            <ParkingConfirmForm
-                spaceId={community.detail.id}
-                confirmationStatusOptions={confirmationStatusOptions}
-                confirmedToday={!!community.detail.confirmed_today}
-                onConfirmed={() => setReload((value) => value + 1)}
-            />
-        </div>
-    );
+    const infoContent = detail && <ParkingDetailBody data={detail} isLoggedIn={!!user} confirmActions={confirmActions || undefined} />;
 
     const descriptionContent = community?.detail.description && (
         <CommunityDescriptionCard title={t('community.tabs.description')} description={community.detail.description} />
@@ -195,22 +188,13 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                         <InfoIcon className="h-4 w-4" aria-hidden />
                         {t('community.tabs.info')}
                     </TabsTrigger>
-                    {user && (
-                        <TabsTrigger value="confirm" className={tabTriggerClass}>
-                            <MapPinCheckInside className="h-4 w-4" aria-hidden />
-                            {t('community.tabs.confirm')}
-                        </TabsTrigger>
-                    )}
-                    {hasDescription && (
-                        <TabsTrigger value="description" className={tabTriggerClass}>
-                            <FileText className="h-4 w-4" aria-hidden />
-                            {t('community.tabs.description')}
-                        </TabsTrigger>
-                    )}
+                    <TabsTrigger value="description" className={tabTriggerClass}>
+                        <FileText className="h-4 w-4" aria-hidden />
+                        {t('community.tabs.description')}
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">{infoContent}</TabsContent>
-                {user && <TabsContent value="confirm">{confirmContent}</TabsContent>}
-                {hasDescription && <TabsContent value="description">{descriptionContent}</TabsContent>}
+                <TabsContent value="description">{descriptionContent}</TabsContent>
             </Tabs>
         ) : (
             infoContent
