@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests\App;
 
-use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Enums\RejectionReason;
+use App\Traits\ValidatesParkingSpaceDetails;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateParkingSpace extends FormRequest
 {
+    use ValidatesParkingSpaceDetails;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -42,13 +45,20 @@ class UpdateParkingSpace extends FormRequest
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
 
-            'parking_hours' => ['nullable', 'numeric', 'min:0'],
-            'parking_minutes' => ['nullable', 'numeric', 'min:0'],
-            'orientation' => ['required', Rule::in(ParkingOrientation::all())],
-            'window_times' => ['required', 'boolean'],
+            ...$this->parkingSpaceDetailRules(requireUnderSign: false),
 
-            'description' => ['nullable', 'string'],
-            'status' => ['required', Rule::in(ParkingStatus::all())],
+            'status' => ['required', Rule::enum(ParkingStatus::class)],
+            'rejection_reason' => [Rule::requiredIf($this->isBecomingRejected()), 'nullable', Rule::enum(RejectionReason::class)],
+            'rejection_note' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * Whether this update rejects a place that was not rejected before, which needs a reason.
+     */
+    private function isBecomingRejected(): bool
+    {
+        return $this->input('status') === ParkingStatus::REJECTED->value
+            && $this->route('parking_space')?->status !== ParkingStatus::REJECTED;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ParkingStatus;
+use App\Enums\RejectionReason;
 use Database\Factories\ParkingSpaceReviewFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,12 +24,15 @@ class ParkingSpaceReview extends Model
         'reviewed_by',
         'from_status',
         'to_status',
+        'reason',
+        'note',
         'reviewed_at',
     ];
 
     protected $casts = [
         'from_status' => ParkingStatus::class,
         'to_status' => ParkingStatus::class,
+        'reason' => RejectionReason::class,
         'reviewed_at' => 'datetime',
     ];
 

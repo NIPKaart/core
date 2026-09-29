@@ -36,10 +36,7 @@ test('community submission persists a UUID and redirects to the map', function (
         'latitude' => 52.37,
         'longitude' => 4.9,
         'orientation' => ParkingOrientation::all()[0],
-        'parking_hours' => null,
-        'parking_minutes' => null,
-        'message' => null,
-        'window_times' => false,
+        'under_sign' => 'no',
         'nominatim' => json_encode([
             'country_code' => $municipality->country->code,
             'state' => $municipality->province->name,
@@ -162,14 +159,14 @@ test('factories and inverse relationships preserve the geographic hierarchy and 
 
 test('casts preserve JSON enum and nullable quantity contracts', function () {
     $garage = ParkingOffstreet::factory()->create(['api_state' => ApiState::OK, 'free_space' => null, 'capacity' => null, 'visibility' => true]);
-    $space = ParkingSpace::factory()->create(['parking_disc' => true, 'window_times' => false, 'parking_time' => null]);
+    $space = ParkingSpace::factory()->create(['parking_disc' => true, 'under_sign' => null, 'parking_time' => null]);
     $municipal = ParkingMunicipal::factory()->create(['number' => 2, 'orientation' => null]);
     $rule = ParkingRule::factory()->nationwide()->create();
     expect($garage->fresh()->api_state)->toBe(ApiState::OK)
         ->and($garage->fresh()->toArray()['api_state'])->toBe('ok')
         ->and($garage->fresh()->toArray()['free_space'])->toBeNull()
         ->and($space->fresh()->parking_disc)->toBeTrue()
-        ->and($space->fresh()->window_times)->toBeFalse()
+        ->and($space->fresh()->under_sign)->toBeNull()
         ->and($space->fresh()->parking_time)->toBeNull()
         ->and($municipal->fresh()->number)->toBe(2)
         ->and($municipal->fresh()->latitude)->toBeFloat()

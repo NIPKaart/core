@@ -1,13 +1,14 @@
 import { RadioCardGroup } from '@/components/card-radio-group';
-import { SwitchCard } from '@/components/card-switch';
 import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Combobox } from '@/components/ui/combobox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Country, Municipality, ParkingSpace, Province } from '@/types';
 import type { ParkingStatusOption } from '@/types/enum';
 import { FileText, Layers, MapPin } from 'lucide-react';
@@ -27,12 +28,20 @@ export type FormValues = {
     parking_hours: number;
     parking_minutes: number;
     orientation: string;
-    window_times: boolean;
+    under_sign: string;
+    under_sign_text: string;
+    restriction_days: string[];
+    restriction_starts_at: string;
+    restriction_ends_at: string;
     latitude: number;
     longitude: number;
     description: string;
     status: string;
+    rejection_reason: string;
+    rejection_note: string;
 };
+
+type EnumOption = { value: string; label: string; description: string };
 
 type Props = {
     form: UseFormReturn<FormValues>;
@@ -41,6 +50,10 @@ type Props = {
     municipalities: Municipality[];
     statusOptions: ParkingStatusOption[];
     orientationOptions: Record<string, string>;
+    underSignOptions: EnumOption[];
+    rejectionReasonOptions: EnumOption[];
+    restrictionDays: string[];
+    initialStatus: string;
     onSubmit: () => void;
     submitting: boolean;
     nearbySpaces?: ParkingSpace[];
@@ -53,11 +66,17 @@ export default function ParkingSpaceForm({
     municipalities,
     statusOptions,
     orientationOptions,
+    underSignOptions,
+    rejectionReasonOptions,
+    restrictionDays,
+    initialStatus,
     onSubmit,
     submitting,
     nearbySpaces,
 }: Props) {
     const { t } = useTranslation('backend/parking/main');
+    const hasUnderSign = form.watch('under_sign') === 'yes';
+    const isBecomingRejected = form.watch('status') === 'rejected' && initialStatus !== 'rejected';
     return (
         <Form {...form}>
             <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6">
@@ -174,48 +193,128 @@ export default function ParkingSpaceForm({
 
                             <TabsContent value="extra" className="pt-4">
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div className="md:col-span-2">
-                                        <SwitchCard
-                                            name="window_times"
-                                            control={form.control}
-                                            label={t('edit.form.labels.windowTimes')}
-                                            description={t('edit.form.hints.windowTimes')}
-                                        />
-                                        <p className="my-2 text-sm text-muted-foreground">{t('edit.form.hints.windowTimesDescription')}</p>
-                                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="under_sign"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>{t('edit.form.labels.underSign')}</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder={t('edit.form.hints.underSignUnknown')} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {underSignOptions.map((option) => (
+                                                            <SelectItem key={option.value} value={option.value}>
+                                                                {option.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <p className="text-sm text-muted-foreground">{t('edit.form.hints.underSign')}</p>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                                    <div className="md:col-span-2">
-                                        <FormLabel className="text-sm font-medium">{t('edit.form.labels.parkingTime')}</FormLabel>
-                                        <p className="mb-2 text-sm text-muted-foreground">{t('edit.form.hints.parkingTime')}</p>
-                                        <div className="flex flex-col gap-4 md:flex-row">
+                                    {hasUnderSign && (
+                                        <>
                                             <FormField
-                                                name="parking_hours"
+                                                name="under_sign_text"
                                                 control={form.control}
                                                 render={({ field }) => (
-                                                    <FormItem className="w-full">
-                                                        <FormLabel>{t('edit.form.labels.hours')}</FormLabel>
+                                                    <FormItem className="md:col-span-2">
+                                                        <FormLabel>{t('edit.form.labels.underSignText')}</FormLabel>
                                                         <FormControl>
-                                                            <Input type="number" min={0} {...field} />
+                                                            <Input maxLength={255} {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <div className="md:col-span-2">
+                                                <FormLabel className="text-sm font-medium">{t('edit.form.labels.parkingTime')}</FormLabel>
+                                                <p className="mb-2 text-sm text-muted-foreground">{t('edit.form.hints.parkingTime')}</p>
+                                                <div className="flex flex-col gap-4 md:flex-row">
+                                                    <FormField
+                                                        name="parking_hours"
+                                                        control={form.control}
+                                                        render={({ field }) => (
+                                                            <FormItem className="w-full">
+                                                                <FormLabel>{t('edit.form.labels.hours')}</FormLabel>
+                                                                <FormControl>
+                                                                    <Input type="number" min={0} max={24} {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <FormField
+                                                        name="parking_minutes"
+                                                        control={form.control}
+                                                        render={({ field }) => (
+                                                            <FormItem className="w-full">
+                                                                <FormLabel>{t('edit.form.labels.minutes')}</FormLabel>
+                                                                <FormControl>
+                                                                    <Input type="number" min={0} max={59} {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
+
                                             <FormField
-                                                name="parking_minutes"
+                                                name="restriction_days"
                                                 control={form.control}
                                                 render={({ field }) => (
-                                                    <FormItem className="w-full">
-                                                        <FormLabel>{t('edit.form.labels.minutes')}</FormLabel>
-                                                        <FormControl>
-                                                            <Input type="number" min={0} max={59} {...field} />
-                                                        </FormControl>
+                                                    <FormItem className="md:col-span-2">
+                                                        <FormLabel>{t('edit.form.labels.restriction')}</FormLabel>
+                                                        <p className="text-sm text-muted-foreground">{t('edit.form.hints.restriction')}</p>
+                                                        <div className="flex flex-wrap gap-3">
+                                                            {restrictionDays.map((day) => (
+                                                                <label key={day} className="flex items-center gap-2 text-sm">
+                                                                    <Checkbox
+                                                                        checked={field.value.includes(day)}
+                                                                        onCheckedChange={(checked) =>
+                                                                            field.onChange(
+                                                                                checked
+                                                                                    ? [...field.value, day]
+                                                                                    : field.value.filter((value) => value !== day),
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    {t(`days.${day}`)}
+                                                                </label>
+                                                            ))}
+                                                        </div>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
-                                        </div>
-                                    </div>
+                                            {(['restriction_starts_at', 'restriction_ends_at'] as const).map((name) => (
+                                                <FormField
+                                                    key={name}
+                                                    name={name}
+                                                    control={form.control}
+                                                    render={({ field }) => (
+                                                        <FormItem className="w-full">
+                                                            <FormLabel>{t(`edit.form.labels.${name}`)}</FormLabel>
+                                                            <FormControl>
+                                                                <Input type="time" {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            ))}
+                                        </>
+                                    )}
+
                                     <FormField
                                         control={form.control}
                                         name="orientation"
@@ -247,10 +346,7 @@ export default function ParkingSpaceForm({
                                             <FormItem className="md:col-span-2">
                                                 <FormLabel>{t('edit.form.labels.description')}</FormLabel>
                                                 <FormControl>
-                                                    <textarea
-                                                        className="min-h-[100px] w-full resize-y rounded-md border px-3 py-2 text-sm"
-                                                        {...field}
-                                                    />
+                                                    <Textarea rows={4} maxLength={500} {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -261,6 +357,47 @@ export default function ParkingSpaceForm({
 
                             <TabsContent value="status" className="pt-4">
                                 <RadioCardGroup name="status" control={form.control} options={statusOptions} />
+                                {isBecomingRejected && (
+                                    <div className="mt-4 space-y-4 rounded-lg border p-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="rejection_reason"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>{t('edit.form.labels.rejectionReason')}</FormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder={t('edit.form.hints.rejectionReason')} />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {rejectionReasonOptions.map((option) => (
+                                                                <SelectItem key={option.value} value={option.value}>
+                                                                    {option.label}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            name="rejection_note"
+                                            control={form.control}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>{t('edit.form.labels.rejectionNote')}</FormLabel>
+                                                    <FormControl>
+                                                        <Textarea rows={3} maxLength={1000} {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
                             </TabsContent>
                         </Tabs>
                     </div>

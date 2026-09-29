@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Enums\UnderSign;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\User;
@@ -40,11 +41,27 @@ class ParkingSpaceFactory extends Factory
             'amenity' => fake()->optional()->word,
             'longitude' => fake()->longitude,
             'latitude' => fake()->latitude,
-            'parking_time' => fake()->optional()->numberBetween(30, 300),
+            'parking_time' => null,
             'orientation' => fake()->randomElement(ParkingOrientation::all()),
-            'parking_disc' => fake()->boolean,
-            'window_times' => fake()->boolean,
+            'under_sign' => UnderSign::NO,
+            'parking_disc' => false,
             'description' => fake()->optional()->sentence,
         ];
+    }
+
+    /**
+     * A place with a sub-sign limiting parking to two hours on weekdays during the day.
+     */
+    public function withUnderSign(): static
+    {
+        return $this->state([
+            'under_sign' => UnderSign::YES,
+            'under_sign_text' => 'Ma-vr 09-18 h, max. 2 uur',
+            'parking_time' => 120,
+            'parking_disc' => true,
+            'restriction_days' => ['mon', 'tue', 'wed', 'thu', 'fri'],
+            'restriction_starts_at' => '09:00',
+            'restriction_ends_at' => '18:00',
+        ]);
     }
 }

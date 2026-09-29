@@ -11,6 +11,11 @@ export type ParkingSpaceDetail = {
     description?: string | null;
     rule_url?: string | null;
     parking_time?: number | null;
+    under_sign?: EnumOption | null;
+    under_sign_text?: string | null;
+    restriction_days?: string[] | null;
+    restriction_starts_at?: string | null;
+    restriction_ends_at?: string | null;
     created_at: datetime;
     updated_at: datetime;
     is_favorited?: boolean;

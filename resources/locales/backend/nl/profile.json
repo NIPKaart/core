@@ -56,10 +56,11 @@
         },
         "actions": {
             "delete": {
-                "title": "Parkeerplaats verwijderen?",
-                "description": "Weet je zeker dat je de parkeerplaats op {{street}}, {{city}} ({{country}} - {{code}}) wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
-                "confirm": "Verwijder Parkeerplaats"
-            }
+                "title": "Inzending intrekken?",
+                "description": "Weet je zeker dat je je inzending op {{street}}, {{city}} ({{country}} - {{code}}) wilt intrekken? Een moderator beoordeelt hem dan niet meer.",
+                "confirm": "Inzending intrekken"
+            },
+            "withdraw": "Intrekken"
         },
         "toast": {
             "success": "Parkeerplaats succesvol bijgewerkt",
@@ -71,7 +72,8 @@
         },
         "search": {
             "placeholder": "Zoeken op straat, stad, postcode..."
-        }
+        },
+        "rejection_reason": "Reden van afwijzing"
     },
     "common": {
         "actions": {

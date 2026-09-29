@@ -34,7 +34,7 @@ function reviewPayload(ParkingSpace $space): array
         'latitude' => 52.37,
         'longitude' => 4.9,
         'orientation' => ParkingOrientation::all()[0],
-        'window_times' => false,
+        'under_sign' => 'no',
     ];
 }
 
@@ -87,7 +87,7 @@ test('every status change adds to the review history', function () {
     $admin = userWithRole(UserRole::ADMIN);
     $space = ParkingSpace::factory()->create(['status' => ParkingStatus::PENDING]);
 
-    $this->actingAs($moderator)->put(route('app.parking-spaces.update', $space), [...reviewPayload($space), 'status' => ParkingStatus::REJECTED->value]);
+    $this->actingAs($moderator)->put(route('app.parking-spaces.update', $space), [...reviewPayload($space), 'status' => ParkingStatus::REJECTED->value, 'rejection_reason' => 'duplicate']);
     $this->travel(1)->minute();
     $this->actingAs($admin)->put(route('app.parking-spaces.update', $space), [...reviewPayload($space), 'status' => ParkingStatus::APPROVED->value]);
 
@@ -104,6 +104,7 @@ test('bulk status changes are attributed to the moderator', function () {
     $this->actingAs($moderator)->patch(route('app.parking-spaces.bulk.update'), [
         'ids' => $spaces->modelKeys(),
         'status' => ParkingStatus::REJECTED->value,
+        'rejection_reason' => 'duplicate',
     ])->assertRedirect();
 
     $spaces->each(fn (ParkingSpace $space) => expect($space->reviews()->sole()->reviewed_by)->toBe($moderator->id));

@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ParkingOrientation;
+use App\Traits\ValidatesParkingSpaceDetails;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreLocationRequest extends FormRequest
 {
+    use ValidatesParkingSpaceDetails;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,12 +28,8 @@ class StoreLocationRequest extends FormRequest
         return [
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
-            'parking_hours' => ['nullable', 'numeric', 'min:0'],
-            'parking_minutes' => ['nullable', 'numeric', 'min:0'],
-            'orientation' => ['required', Rule::in(ParkingOrientation::all())],
-            'window_times' => ['sometimes', 'boolean'],
-            'message' => ['nullable', 'string', 'max:1000'],
             'nominatim' => ['required', 'array'],
+            ...$this->parkingSpaceDetailRules(),
         ];
     }
 
@@ -45,16 +42,7 @@ class StoreLocationRequest extends FormRequest
 
         $this->merge([
             'nominatim' => is_array($nominatim) ? $nominatim : [],
-            'window_times' => $this->toBoolean($this->window_times),
         ]);
-    }
-
-    /**
-     * Convert to boolean
-     */
-    private function toBoolean($boolean): mixed
-    {
-        return filter_var($boolean, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $boolean;
     }
 
     /**
@@ -64,7 +52,7 @@ class StoreLocationRequest extends FormRequest
     {
         return [
             'orientation.required' => 'Select an orientation for the parking space.',
-            'orientation.in' => 'The selected orientation is invalid. Please select a valid option.',
+            'orientation.enum' => 'The selected orientation is invalid. Please select a valid option.',
         ];
     }
 }

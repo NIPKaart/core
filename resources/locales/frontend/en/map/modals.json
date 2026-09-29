@@ -22,7 +22,9 @@
                 "hours_plural": "{{count}} hours",
                 "minutes": "{{count}} minute",
                 "minutes_plural": "{{count}} minutes"
-            }
+            },
+            "under_sign": "Sub-sign",
+            "restriction": "Applies on"
         },
         "confirm": {
             "form": {
@@ -43,6 +45,15 @@
                 "confirming": "Confirming...",
                 "alreadyConfirmed": "Already confirmed today"
             }
+        },
+        "days": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun"
         }
     },
     "municipal": {

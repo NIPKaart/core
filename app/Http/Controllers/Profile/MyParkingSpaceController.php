@@ -41,8 +41,12 @@ class MyParkingSpaceController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $rejection = $parkingSpace->status === ParkingStatus::REJECTED ? $parkingSpace->latestReview : null;
+
         return Inertia::render('backend/profile/parking/show', [
             'parkingSpace' => $parkingSpace,
+            'rejectionReason' => $rejection?->reason?->label(),
+            'canWithdraw' => $parkingSpace->status === ParkingStatus::PENDING && ! $parkingSpace->trashed(),
             'selectOptions' => [
                 'statuses' => ParkingStatus::mapped(),
                 'orientations' => ParkingOrientation::mapped(),
@@ -59,6 +63,10 @@ class MyParkingSpaceController extends Controller
         if ($space->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
+
+        // Once published, the place is community data and no longer the contributor's to remove.
+        abort_unless($space->status === ParkingStatus::PENDING, 403, 'Only pending submissions can be withdrawn.');
+
         $space->delete();
 
         return redirect()->route('profile.parking-spaces.index');

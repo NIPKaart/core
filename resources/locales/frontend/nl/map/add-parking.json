@@ -26,8 +26,8 @@
                 "streetviewLink": "Bekijk de locatie in Google Street View"
             },
             "parking_time": {
-                "title": "Parkeertijd",
-                "description": "Als er een tijdsbeperking is, voer deze hier in. Laat anders het veld leeg.",
+                "title": "Maximale parkeerduur",
+                "description": "Alleen invullen als het onderbord een parkeerduur noemt.",
                 "fields": {
                     "hours": {
                         "label": "Uren",
@@ -39,18 +39,37 @@
                     }
                 }
             },
-            "window_times": {
-                "title": "Extra informatie",
-                "description": "Help anderen de context beter te begrijpen.",
-                "note": "Beschrijf de specifieke tijden in het berichtveld.",
-                "switch": {
-                    "label": "Venstertijden",
-                    "description": "Bijvoorbeeld: Ma–Zo | 09:00–17:00"
+            "under_sign": {
+                "title": "Onderbord",
+                "description": "Hangt er onder het bord een extra bord met voorwaarden, zoals een parkeerduur of tijden?",
+                "label": "Onderbord aanwezig? *",
+                "yes": "Ja",
+                "no": "Nee",
+                "details_hint": "Vul in wat je weet; alles hieronder is optioneel.",
+                "text": {
+                    "label": "Tekst op het onderbord",
+                    "placeholder": "Bijv. \"Ma–vr 9–18 h, max. 2 uur\""
                 }
             },
-            "message": {
-                "title": "Bericht",
-                "placeholder": "Bijvoorbeeld, meer context of details over de locatie..."
+            "restriction": {
+                "title": "Geldig op",
+                "description": "Kies de dagen en tijden waarop het onderbord geldt.",
+                "restriction_starts_at": "Vanaf",
+                "restriction_ends_at": "Tot",
+                "days": {
+                    "mon": "Ma",
+                    "tue": "Di",
+                    "wed": "Wo",
+                    "thu": "Do",
+                    "fri": "Vr",
+                    "sat": "Za",
+                    "sun": "Zo"
+                }
+            },
+            "description": {
+                "title": "Opmerking",
+                "hint": "Optioneel, platte tekst, maximaal 500 tekens.",
+                "placeholder": "Bijv. hoe je de plek het beste kunt vinden"
             }
         },
         "success": {

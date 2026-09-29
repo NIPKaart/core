@@ -22,7 +22,9 @@
                 "hours_plural": "{{count}} uur",
                 "minutes": "{{count}} minuut",
                 "minutes_plural": "{{count}} minuten"
-            }
+            },
+            "under_sign": "Onderbord",
+            "restriction": "Geldig op"
         },
         "confirm": {
             "form": {
@@ -43,6 +45,15 @@
                 "confirming": "Bevestigen...",
                 "alreadyConfirmed": "Vandaag al bevestigd"
             }
+        },
+        "days": {
+            "mon": "ma",
+            "tue": "di",
+            "wed": "wo",
+            "thu": "do",
+            "fri": "vr",
+            "sat": "za",
+            "sun": "zo"
         }
     },
     "municipal": {

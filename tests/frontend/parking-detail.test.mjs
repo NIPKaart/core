@@ -107,7 +107,8 @@ const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
 test('every source keeps the same group order but only shows the groups that apply to it', () => {
     const expected = {
-        community: ['Layout', 'Source and freshness'],
+        // Community places always show their sub-sign, even when it is not known.
+        community: ['Rules and restrictions', 'Layout', 'Source and freshness'],
         municipal: ['Layout', 'Source and freshness'],
         // Garages show their live state in the availability box; signed-out visitors see no source table.
         offstreet: ['Accessibility and availability'],
@@ -124,6 +125,19 @@ test('every source keeps the same group order but only shows the groups that app
         assert.match(text(html), /Always check the signs on location\. Parking here is not guaranteed\./);
     }
     assert.match(text(render('community')), /Source Community contribution/);
+    assert.match(text(render('community')), /Sub-sign Unknown/);
+    assert.match(
+        text(
+            render('community', {
+                under_sign: { value: 'yes', label: 'Yes', description: '' },
+                under_sign_text: 'Mon-Fri 9-18',
+                restriction_days: ['mon', 'fri'],
+                restriction_starts_at: '09:00',
+                restriction_ends_at: '18:00',
+            }),
+        ),
+        /Sub-sign Yes “Mon-Fri 9-18” Applies on Mon, Fri · 09:00–18:00/,
+    );
     assert.match(
         text(render('municipal', { rule_url: 'https://example.test/rules' })),
         /Rules and restrictions Municipal regulations Local parking rules/,

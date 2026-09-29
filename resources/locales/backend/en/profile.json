@@ -56,10 +56,11 @@
         },
         "actions": {
             "delete": {
-                "title": "Delete parking space?",
-                "description": "Are you sure you want to delete the parking space at {{street}}, {{city}} ({{country}} - {{code}})? This action cannot be undone.",
-                "confirm": "Delete Parking Space"
-            }
+                "title": "Withdraw submission?",
+                "description": "Are you sure you want to withdraw your submission at {{street}}, {{city}} ({{country}} - {{code}})? A moderator will no longer review it.",
+                "confirm": "Withdraw submission"
+            },
+            "withdraw": "Withdraw"
         },
         "toast": {
             "success": "Parking space updated successfully",
@@ -71,7 +72,8 @@
         },
         "search": {
             "placeholder": "Search parking spaces by street, city, or postcode..."
-        }
+        },
+        "rejection_reason": "Reason for rejection"
     },
     "common": {
         "actions": {

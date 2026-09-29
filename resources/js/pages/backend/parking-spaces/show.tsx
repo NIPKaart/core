@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 type PageProps = {
     parkingSpace: ParkingSpace;
     selectOptions: {
+        rejectionReasons: { value: string; label: string; description: string }[];
         orientation: { value: string; label: string; description: string }[];
         parkingStatuses: { value: string; label: string; description: string }[];
         confirmationStatuses: { value: string; label: string; description: string }[];
@@ -90,7 +91,11 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                 ? t('show.cards.details.fields.reviewed_value', {
                       name: parkingSpace.latest_review.reviewer?.name ?? t('show.cards.details.fields.reviewer_removed'),
                       date: new Date(parkingSpace.latest_review.reviewed_at).toLocaleString(),
-                  })
+                  }) +
+                  (parkingSpace.latest_review.reason
+                      ? ` — ${selectOptions.rejectionReasons.find((reason) => reason.value === parkingSpace.latest_review?.reason)?.label ?? parkingSpace.latest_review.reason}`
+                      : '') +
+                  (parkingSpace.latest_review.note ? `: ${parkingSpace.latest_review.note}` : '')
                 : null,
         },
         {

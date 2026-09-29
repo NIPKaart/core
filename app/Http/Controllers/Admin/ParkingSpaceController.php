@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Enums\RejectionReason;
+use App\Enums\UnderSign;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
@@ -51,6 +53,7 @@ class ParkingSpaceController extends Controller
             ],
             'options' => [
                 'statuses' => ParkingStatus::options(),
+                'rejectionReasons' => RejectionReason::mapped(),
                 'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
             ],
         ]);
@@ -102,6 +105,8 @@ class ParkingSpaceController extends Controller
             'parkingSpace' => $parkingSpace,
             'selectOptions' => [
                 'orientation' => ParkingOrientation::mapped(),
+                'underSign' => UnderSign::mapped(),
+                'rejectionReasons' => RejectionReason::mapped(),
                 'parkingStatuses' => ParkingStatus::mapped(),
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
@@ -144,6 +149,9 @@ class ParkingSpaceController extends Controller
             'selectOptions' => [
                 'statuses' => ParkingStatus::mapped(),
                 'orientation' => ParkingOrientation::options(),
+                'underSign' => UnderSign::mapped(),
+                'rejectionReasons' => RejectionReason::mapped(),
+                'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
             ],
             'nearbySpaces' => $nearbySpaces,
         ]);
@@ -156,16 +164,14 @@ class ParkingSpaceController extends Controller
     {
         Gate::authorize('update', $parkingSpace);
 
-        $parkingTime = ($request->integer('parking_hours') ?? 0) * 60 + ($request->integer('parking_minutes') ?? 0);
-
-        $data = [
-            ...$request->validated(),
-            'parking_time' => $parkingTime > 0 ? $parkingTime : null,
-            'parking_disc' => $parkingTime > 0,
-        ];
-        unset($data['parking_hours'], $data['parking_minutes']);
-
-        $parkingSpace->fill($data)->saveReviewedBy($request->user());
+        $parkingSpace->fill([
+            ...$request->safe()->only(['country_id', 'province_id', 'municipality_id', 'city', 'suburb', 'neighbourhood', 'postcode', 'street', 'amenity', 'latitude', 'longitude', 'status']),
+            ...$request->parkingSpaceDetails(),
+        ])->saveReviewedBy(
+            $request->user(),
+            $request->enum('rejection_reason', RejectionReason::class),
+            $request->validated('rejection_note'),
+        );
 
         Inertia::flash('success', __('parking_spaces.flash.updated'));
 
@@ -195,10 +201,16 @@ class ParkingSpaceController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'uuid', 'exists:parking_spaces,id'],
             'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
+            'rejection_reason' => ['required_if:status,'.ParkingStatus::REJECTED->value, 'nullable', Rule::enum(RejectionReason::class)],
+            'rejection_note' => ['nullable', 'string', 'max:1000'],
         ]);
 
         ParkingSpace::whereIn('id', $request->input('ids'))
-            ->eachById(fn (ParkingSpace $space) => $space->fill(['status' => $request->input('status')])->saveReviewedBy($request->user()));
+            ->eachById(fn (ParkingSpace $space) => $space->fill(['status' => $request->input('status')])->saveReviewedBy(
+                $request->user(),
+                $request->enum('rejection_reason', RejectionReason::class),
+                $request->input('rejection_note'),
+            ));
 
         return back();
     }

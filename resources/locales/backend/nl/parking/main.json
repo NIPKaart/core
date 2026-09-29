@@ -38,7 +38,8 @@
         "error": {
             "ids": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer.",
             "status": "Selecteer een geldige status.",
-            "default": "Er is iets misgegaan. Probeer het opnieuw."
+            "default": "Er is iets misgegaan. Probeer het opnieuw.",
+            "rejection_reason": "Kies een reden om af te wijzen."
         }
     },
     "show": {
@@ -107,16 +108,24 @@
                 "street": "Straat",
                 "amenity": "Voorziening",
                 "orientation": "Oriëntatie *",
-                "description": "Beschrijving",
-                "windowTimes": "Tijdvensters",
+                "description": "Opmerking",
                 "parkingTime": "Parkeertijd",
                 "hours": "Uren",
-                "minutes": "Minuten"
+                "minutes": "Minuten",
+                "underSign": "Onderbord",
+                "underSignText": "Tekst op het onderbord",
+                "restriction": "Geldig op",
+                "restriction_starts_at": "Vanaf",
+                "restriction_ends_at": "Tot",
+                "rejectionReason": "Reden van afwijzing *",
+                "rejectionNote": "Toelichting (optioneel)"
             },
             "hints": {
-                "windowTimes": "Zijn er beperkte tijden op deze locatie?",
                 "parkingTime": "Maximale toegestane parkeertijd op deze locatie.",
-                "windowTimesDescription": "Beschrijf het tijdvenster in het beschrijving hieronder. Bijvoorbeeld: 'Beschikbaar van 8:00 tot 18:00.'"
+                "underSign": "Alleen bij \"Ja\" zijn de details hieronder van toepassing.",
+                "underSignUnknown": "Niet bekend",
+                "restriction": "Laat leeg als het onderbord geen dagen of tijden noemt.",
+                "rejectionReason": "Kies een reden"
             },
             "location": {
                 "title": "Locatie",
@@ -128,5 +137,14 @@
                 "save": "Wijzigingen opslaan"
             }
         }
+    },
+    "days": {
+        "mon": "Ma",
+        "tue": "Di",
+        "wed": "Wo",
+        "thu": "Do",
+        "fri": "Vr",
+        "sat": "Za",
+        "sun": "Zo"
     }
 }

@@ -10,7 +10,10 @@ _Avoid_: ParkingSpot, UserParkingSpot, UserparkingSpot
 **ParkingSpaceConfirmation**: A person's dated confirmation or dispute about a community parking space, optionally accompanied by a comment.
 _Avoid_: ParkingSpotConfirmation
 
-**ParkingSpaceReview**: A moderator's attributable change of a community parking space's review status (pending, approved or rejected), kept as history. It is the community-space form of a PublicationDecision.
+**Under-sign**: The additional sign (onderbord) below a disabled parking sign that adds conditions, such as a maximum parking duration or the days and times it applies. A ParkingSpace records whether one exists (yes, no, or not known), its literal text and, where known, a structured interpretation. Not knowing is never recorded as no.
+_Avoid_: window times
+
+**ParkingSpaceReview**: A moderator's attributable change of a community parking space's review status (pending, approved or rejected), kept as history. A rejection carries a reason from a fixed list and an optional note. It is the community-space form of a PublicationDecision.
 
 **ParkingMunicipal**: A municipal/open-data parking record. Its source and meaning remain distinct from a community contribution.
 
