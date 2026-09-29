@@ -41,8 +41,8 @@
         "streetview": "Not sure? View the place in Street View",
         "under_sign": {
             "title": "Is there a sub-sign?",
-            "hint": "An extra sign below the blue sign, for example with a time limit or times.",
-            "example": "Example of a disabled parking sign (E6)",
+            "hint": "The white sign below the blue sign, for example with a time limit or times.",
+            "example": "Example: a white sub-sign below the blue disabled parking sign",
             "yes": "Yes",
             "no": "No",
             "required": "Say whether there is a sub-sign.",

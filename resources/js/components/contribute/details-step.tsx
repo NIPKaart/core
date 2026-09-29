@@ -92,11 +92,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
             <fieldset className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
                 <legend className="float-left w-full text-base font-semibold">{t('details.under_sign.title')}</legend>
                 <div className="flex items-center gap-3">
-                    <img
-                        src="/assets/images/boards/e6.jpg"
-                        alt={t('details.under_sign.example')}
-                        className="size-11 shrink-0 rounded-md object-cover"
-                    />
+                    <img src="/assets/images/boards/under-sign.svg" alt={t('details.under_sign.example')} className="h-16 w-13 shrink-0 rounded-lg" />
                     <p className="text-sm text-muted-foreground">{t('details.under_sign.hint')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">

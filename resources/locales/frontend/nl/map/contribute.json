@@ -41,8 +41,8 @@
         "streetview": "Twijfel je? Bekijk de plek in Street View",
         "under_sign": {
             "title": "Hangt er een onderbord?",
-            "hint": "Een extra bord onder het blauwe bord, bijvoorbeeld met een parkeerduur of tijden.",
-            "example": "Voorbeeld van een gehandicaptenparkeerbord (E6)",
+            "hint": "Het witte bord onder het blauwe bord, bijvoorbeeld met een parkeerduur of tijden.",
+            "example": "Voorbeeld: een wit onderbord onder het blauwe gehandicaptenparkeerbord",
             "yes": "Ja",
             "no": "Nee",
             "required": "Geef aan of er een onderbord hangt.",

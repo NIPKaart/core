@@ -7,6 +7,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { newPlacePinSvg } from './new-place-pin';
 
 /**
  * Starts the add flow at the current map position; guests are first asked to sign in.
@@ -37,7 +38,11 @@ export default function AddPlaceButton() {
             <Sheet open={guestSheet} onOpenChange={setGuestSheet}>
                 <SheetContent side="bottom" className="mx-auto max-w-lg gap-4 rounded-t-2xl px-5 pb-7">
                     <SheetHeader className="gap-3 px-0">
-                        <img src="/assets/images/boards/e6.jpg" alt="" className="size-14 rounded-xl object-cover" />
+                        <span
+                            className="flex size-14 items-center justify-center rounded-2xl bg-orange-50 dark:bg-orange-950/40 [&>svg]:h-9 [&>svg]:w-auto"
+                            aria-hidden
+                            dangerouslySetInnerHTML={{ __html: newPlacePinSvg() }}
+                        />
                         <SheetTitle className="text-xl">{t('entry.guest_title')}</SheetTitle>
                         <SheetDescription className="text-base">{t('entry.guest_text')}</SheetDescription>
                     </SheetHeader>
