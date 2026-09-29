@@ -53,7 +53,7 @@ test('parking editor can correct server errors and the server derives parking du
         'parking_hours' => 1,
         'parking_minutes' => 15,
         'orientation' => ParkingOrientation::all()[0],
-        'window_times' => false,
+        'under_sign' => 'yes',
         'status' => $space->status->value,
     ];
     $this->actingAs($operator)->from('/_test/feedback')

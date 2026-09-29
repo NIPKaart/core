@@ -26,8 +26,8 @@
                 "streetviewLink": "Look up the location in Google Street View"
             },
             "parking_time": {
-                "title": "Parking time",
-                "description": "If there is a time restriction, enter it here. Otherwise leave it blank.",
+                "title": "Maximum parking duration",
+                "description": "Only fill this in when the sub-sign states a duration.",
                 "fields": {
                     "hours": {
                         "label": "Hours",
@@ -39,18 +39,37 @@
                     }
                 }
             },
-            "window_times": {
-                "title": "Additional info",
-                "description": "Help others understand the context better.",
-                "note": "Please describe the specific times in the message field.",
-                "switch": {
-                    "label": "Window times",
-                    "description": "For example: Mon–Sun | 09:00–17:00"
+            "under_sign": {
+                "title": "Sub-sign",
+                "description": "Is there an additional sign below the parking sign with conditions, such as a time limit or times?",
+                "label": "Sub-sign present? *",
+                "yes": "Yes",
+                "no": "No",
+                "details_hint": "Fill in what you know; everything below is optional.",
+                "text": {
+                    "label": "Text on the sub-sign",
+                    "placeholder": "E.g. \"Mon–Fri 9am–6pm, max. 2 hours\""
                 }
             },
-            "message": {
-                "title": "Message",
-                "placeholder": "For example, more context or details about the location..."
+            "restriction": {
+                "title": "Applies on",
+                "description": "Choose the days and times the sub-sign applies.",
+                "restriction_starts_at": "From",
+                "restriction_ends_at": "Until",
+                "days": {
+                    "mon": "Mon",
+                    "tue": "Tue",
+                    "wed": "Wed",
+                    "thu": "Thu",
+                    "fri": "Fri",
+                    "sat": "Sat",
+                    "sun": "Sun"
+                }
+            },
+            "description": {
+                "title": "Note",
+                "hint": "Optional, plain text, at most 500 characters.",
+                "placeholder": "E.g. how to find the place"
             }
         },
         "success": {

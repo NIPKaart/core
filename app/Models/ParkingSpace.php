@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Enums\RejectionReason;
+use App\Enums\UnderSign;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
 use Database\Factories\ParkingSpaceFactory;
@@ -38,9 +40,13 @@ class ParkingSpace extends Model
         'latitude',
         'longitude',
         'orientation',
+        'under_sign',
+        'under_sign_text',
         'parking_time',
         'parking_disc',
-        'window_times',
+        'restriction_days',
+        'restriction_starts_at',
+        'restriction_ends_at',
         'description',
         'status',
         'country_id',
@@ -62,8 +68,9 @@ class ParkingSpace extends Model
     protected $casts = [
         'status' => ParkingStatus::class,
         'orientation' => ParkingOrientation::class,
+        'under_sign' => UnderSign::class,
         'parking_disc' => 'boolean',
-        'window_times' => 'boolean',
+        'restriction_days' => 'array',
         'parking_time' => 'integer',
         'latitude' => 'float',
         'longitude' => 'float',
@@ -96,11 +103,18 @@ class ParkingSpace extends Model
     }
 
     /**
-     * Save pending changes and, when the status changed, record the change as a review by the given moderator.
+     * Days of the week a structured time restriction can apply to, in ISO order.
      */
-    public function saveReviewedBy(User $reviewer): void
+    public const array RESTRICTION_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    /**
+     * Save pending changes and, when the status changed, record the change as a review by the given moderator.
+     *
+     * A rejection carries the moderator's reason and optional note.
+     */
+    public function saveReviewedBy(User $reviewer, ?RejectionReason $reason = null, ?string $note = null): void
     {
-        DB::transaction(function () use ($reviewer): void {
+        DB::transaction(function () use ($reviewer, $reason, $note): void {
             $statusChanged = $this->isDirty('status');
             $previousStatus = $this->getOriginal('status');
 
@@ -111,6 +125,8 @@ class ParkingSpace extends Model
                     'reviewed_by' => $reviewer->getKey(),
                     'from_status' => $previousStatus,
                     'to_status' => $this->status,
+                    'reason' => $this->status === ParkingStatus::REJECTED ? $reason : null,
+                    'note' => $this->status === ParkingStatus::REJECTED ? $note : null,
                     'reviewed_at' => now(),
                 ]);
             }

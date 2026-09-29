@@ -36,7 +36,8 @@
         "error": {
             "ids": "Invalid selection. Some items may no longer exist.",
             "status": "Please select a valid status.",
-            "default": "Something went wrong. Please try again."
+            "default": "Something went wrong. Please try again.",
+            "rejection_reason": "Choose a reason to reject."
         }
     },
     "show": {
@@ -105,16 +106,24 @@
                 "street": "Street",
                 "amenity": "Amenity",
                 "orientation": "Orientation",
-                "description": "Description",
-                "windowTimes": "Window Times",
+                "description": "Note",
                 "parkingTime": "Parking Time",
                 "hours": "Hours",
-                "minutes": "Minutes"
+                "minutes": "Minutes",
+                "underSign": "Sub-sign",
+                "underSignText": "Text on the sub-sign",
+                "restriction": "Applies on",
+                "restriction_starts_at": "From",
+                "restriction_ends_at": "Until",
+                "rejectionReason": "Rejection reason *",
+                "rejectionNote": "Note (optional)"
             },
             "hints": {
-                "windowTimes": "Are there restricted hours at this location?",
                 "parkingTime": "Maximum parking duration allowed at this location.",
-                "windowTimesDescription": "Describe the time window in the description below. For example, 'Available from 8 AM to 6 PM.'"
+                "underSign": "The details below only apply when the answer is \"Yes\".",
+                "underSignUnknown": "Not known",
+                "restriction": "Leave empty when the sub-sign mentions no days or times.",
+                "rejectionReason": "Choose a reason"
             },
             "location": {
                 "title": "Location",
@@ -126,5 +135,14 @@
                 "save": "Save Changes"
             }
         }
+    },
+    "days": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
     }
 }

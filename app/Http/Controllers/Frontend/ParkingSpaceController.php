@@ -80,11 +80,7 @@ class ParkingSpaceController extends Controller
                 'ip_address' => $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $request->getClientIp(),
                 'latitude' => $validated['latitude'],
                 'longitude' => $validated['longitude'],
-                'orientation' => $validated['orientation'],
-                'parking_time' => $this->calculateParkingTime($validated['parking_hours'] ?? null, $validated['parking_minutes'] ?? null),
-                'parking_disc' => ! empty($validated['parking_hours']) || ! empty($validated['parking_minutes']),
-                'window_times' => $validated['window_times'],
-                'description' => $validated['message'] ?? null,
+                ...$request->parkingSpaceDetails(),
                 'status' => ParkingStatus::PENDING,
                 'country_id' => $countryId,
                 'province_id' => $province->id,
@@ -120,17 +116,5 @@ class ParkingSpaceController extends Controller
                 'general' => 'Something went wrong while saving the parking location. Please try again later.',
             ])->withInput();
         }
-    }
-
-    /**
-     * Get the parking time in minutes.
-     */
-    private function calculateParkingTime($hours, $minutes): ?int
-    {
-        if (empty($hours) && empty($minutes)) {
-            return null;
-        }
-
-        return ((int) $hours * 60) + (int) $minutes;
     }
 }

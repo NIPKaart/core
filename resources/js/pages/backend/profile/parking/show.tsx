@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 
 type PageProps = {
     parkingSpace: ParkingSpace;
+    rejectionReason: string | null;
+    canWithdraw: boolean;
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
         orientations: { value: string; label: string; description: string }[];
@@ -25,7 +27,7 @@ function formatDate(dateString: string) {
     return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export default function UserParkingShow({ parkingSpace, selectOptions }: PageProps) {
+export default function UserParkingShow({ parkingSpace, rejectionReason, canWithdraw, selectOptions }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/profile');
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -130,16 +132,23 @@ export default function UserParkingShow({ parkingSpace, selectOptions }: PagePro
                             {tGlobal('common.back')}
                         </Link>
                     </Button>
-                    <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog(parkingSpace, 'delete')}>
-                        <Trash2 className="h-4 w-4" />
-                        {tGlobal('common.delete')}
-                    </Button>
+                    {canWithdraw && (
+                        <Button variant="destructive" className="w-1/2 cursor-pointer sm:w-auto" onClick={() => openDialog(parkingSpace, 'delete')}>
+                            <Trash2 className="h-4 w-4" />
+                            {t('parking_spaces.actions.withdraw')}
+                        </Button>
+                    )}
                 </div>
             </div>
 
             {/* Banner Notification */}
             <div className="px-4 sm:px-6">
                 <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
+                {rejectionReason && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        {t('parking_spaces.rejection_reason')}: <span className="font-medium text-foreground">{rejectionReason}</span>
+                    </p>
+                )}
             </div>
 
             {/* Main grid */}

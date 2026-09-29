@@ -21,7 +21,7 @@ type Option = { id: number; name: string };
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
     filters: { status: string | null; municipality_id: string | null; deletion_requested: boolean };
-    options: { statuses: Record<ParkingStatus, string>; municipalities: Option[] };
+    options: { statuses: Record<ParkingStatus, string>; rejectionReasons: { value: string; label: string }[]; municipalities: Option[] };
 };
 
 export default function Index({ spaces, filters, options }: PageProps) {
@@ -31,6 +31,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [selectedStatus, setSelectedStatus] = useState<ParkingStatus | ''>('');
+    const [rejectionReason, setRejectionReason] = useState('');
     const [statusFilter, setStatusFilter] = useState<string[]>(filters.status ? filters.status.split(',') : []);
     const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality_id ? filters.municipality_id.split(',') : []);
 
@@ -64,21 +65,25 @@ export default function Index({ spaces, filters, options }: PageProps) {
             {
                 ids,
                 status: selectedStatus,
+                rejection_reason: selectedStatus === 'rejected' ? rejectionReason : null,
             },
             {
                 preserveState: true,
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedStatus('');
+                    setRejectionReason('');
                     toast.success(t('toast.success'));
                 },
                 onError: (errors) => {
                     if (errors.ids) {
-                        toast.error(t('toast.errors.ids'));
+                        toast.error(t('toast.error.ids'));
+                    } else if (errors.rejection_reason) {
+                        toast.error(t('toast.error.rejection_reason'));
                     } else if (errors.status) {
-                        toast.error(t('toast.errors.status'));
+                        toast.error(t('toast.error.status'));
                     } else {
-                        toast.error(t('toast.errors.default'));
+                        toast.error(t('toast.error.default'));
                     }
                 },
             },
@@ -123,7 +128,26 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 </SelectContent>
                             </Select>
 
-                            <Button onClick={handleBulkUpdate} disabled={!selectedStatus} className="w-full cursor-pointer sm:w-auto">
+                            {selectedStatus === 'rejected' && (
+                                <Select value={rejectionReason} onValueChange={setRejectionReason}>
+                                    <SelectTrigger className="w-full sm:w-[240px]" aria-label={t('edit.form.labels.rejectionReason')}>
+                                        <SelectValue placeholder={t('edit.form.hints.rejectionReason')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {options.rejectionReasons.map(({ value, label }) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+
+                            <Button
+                                onClick={handleBulkUpdate}
+                                disabled={!selectedStatus || (selectedStatus === 'rejected' && !rejectionReason)}
+                                className="w-full cursor-pointer sm:w-auto"
+                            >
                                 {t('bulk.update')}
                             </Button>
                         </div>

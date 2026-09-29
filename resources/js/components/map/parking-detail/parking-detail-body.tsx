@@ -122,6 +122,30 @@ export default function ParkingDetailBody({ data, isLoggedIn, communityActions }
                             },
                         ]
                       : []),
+                  ...(source === 'community'
+                      ? [
+                            {
+                                label: t('community.table.under_sign'),
+                                value: detail.under_sign ? detail.under_sign.label : unknown,
+                                note: detail.under_sign_text ? `“${detail.under_sign_text}”` : undefined,
+                            },
+                            ...(detail.restriction_days?.length || detail.restriction_starts_at
+                                ? [
+                                      {
+                                          label: t('community.table.restriction'),
+                                          value: [
+                                              detail.restriction_days?.map((day) => t(`community.days.${day}`)).join(', '),
+                                              detail.restriction_starts_at && detail.restriction_ends_at
+                                                  ? `${detail.restriction_starts_at}–${detail.restriction_ends_at}`
+                                                  : null,
+                                          ]
+                                              .filter(Boolean)
+                                              .join(' · '),
+                                      },
+                                  ]
+                                : []),
+                        ]
+                      : []),
                   ...(detail.rule_url
                       ? [
                             {

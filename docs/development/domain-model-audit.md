@@ -47,7 +47,7 @@ Passkeys, notifications, permission pivots, personal-access tokens, sessions, pa
 | `ParkingMunicipal` | `ParkingOrientation`, visibility boolean, timestamps | Allows source ID, geographic FKs, coordinates and descriptive fields; no explicit coordinate/number casts |
 | `ParkingOffstreet` | String ID, prices array, updated timestamp | Allows only geographic FKs; source fields require deliberate import assignment; missing `ApiState`, visibility, coordinate and capacity casts |
 | `ParkingRule` | Automatic timestamps | Allows country, municipality, URL, nationwide; missing boolean cast for nationwide |
-| `ParkingSpace` | `ParkingStatus`, `ParkingOrientation`, float coordinates, timestamps | Broad explicit allowlist includes identity, owner, IP and moderation status; missing boolean parking_disc/window_times and integer parking_time casts |
+| `ParkingSpace` | `ParkingStatus`, `ParkingOrientation`, float coordinates, timestamps | Broad explicit allowlist includes identity, owner, IP and moderation status; missing boolean parking_disc and integer parking_time casts. (#1309 later replaced window_times with the sub-sign fields.) |
 | `ParkingSpaceConfirmation` | `ParkingConfirmationStatus`, confirmed_at datetime | Allows space, user, status, comment and confirmation time; legacy `$dates` declaration is redundant with casts/default timestamps |
 | `Role` | Inherits package behavior | Spatie guards the primary key, otherwise permits assignment; controller explicitly supplies name and synchronizes permissions |
 | `User` | Verification/suspension/2FA datetimes; hashed password | Allows name, email, locale, password and suspended_at; authentication secrets are hidden; privileged suspension must remain an authorized server operation |

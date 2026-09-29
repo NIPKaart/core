@@ -24,6 +24,9 @@ type PageProps = {
     selectOptions: {
         statuses: { value: string; label: string; description: string }[];
         orientation: Record<string, string>;
+        underSign: { value: string; label: string; description: string }[];
+        rejectionReasons: { value: string; label: string; description: string }[];
+        restrictionDays: string[];
     };
     nearbySpaces?: ParkingSpace[];
 };
@@ -51,11 +54,17 @@ export default function Edit() {
             parking_hours: parkingSpace.parking_hours ?? 0,
             parking_minutes: parkingSpace.parking_minutes ?? 0,
             orientation: parkingSpace.orientation,
-            window_times: parkingSpace.window_times,
+            under_sign: parkingSpace.under_sign ?? '',
+            under_sign_text: parkingSpace.under_sign_text ?? '',
+            restriction_days: parkingSpace.restriction_days ?? [],
+            restriction_starts_at: parkingSpace.restriction_starts_at?.slice(0, 5) ?? '',
+            restriction_ends_at: parkingSpace.restriction_ends_at?.slice(0, 5) ?? '',
             latitude: parkingSpace.latitude,
             longitude: parkingSpace.longitude,
             description: parkingSpace.description ?? '',
             status: parkingSpace.status,
+            rejection_reason: '',
+            rejection_note: '',
         },
     });
 
@@ -153,6 +162,10 @@ export default function Edit() {
                     municipalities={municipalities}
                     statusOptions={statusOptions}
                     orientationOptions={selectOptions.orientation}
+                    underSignOptions={selectOptions.underSign}
+                    rejectionReasonOptions={selectOptions.rejectionReasons}
+                    restrictionDays={selectOptions.restrictionDays}
+                    initialStatus={parkingSpace.status}
                     onSubmit={handleSubmit}
                     submitting={submitting}
                     nearbySpaces={nearbySpaces}

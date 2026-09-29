@@ -171,7 +171,11 @@ export interface ParkingSpace {
     parking_minutes?: number;
     orientation: ParkingOrientation;
     parking_disc: boolean;
-    window_times: boolean;
+    under_sign: 'yes' | 'no' | null;
+    under_sign_text: string | null;
+    restriction_days: string[] | null;
+    restriction_starts_at: string | null;
+    restriction_ends_at: string | null;
     description: string | null;
 
     created_at: string;
@@ -297,6 +301,8 @@ export interface ParkingSpaceReview {
     reviewed_by: number | null;
     from_status: ParkingStatus | null;
     to_status: ParkingStatus;
+    reason: string | null;
+    note: string | null;
     reviewed_at: string;
     reviewer?: Pick<User, 'id' | 'name'> | null;
 }
