@@ -19,7 +19,7 @@ import {
     type DiscoveryFilters as Filters,
 } from '@/lib/discovery-filters';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
@@ -91,12 +91,6 @@ function DestinationFocus({ destination }: { destination: DestinationResult | nu
     ) : null;
 }
 
-type PageProps = {
-    selectOptions: {
-        confirmationStatus: Record<string, string>;
-    };
-};
-
 function getInitialPosition(): [number, number, number] {
     if (window.location.hash) {
         const match = window.location.hash.match(/^#(\d+(\.\d+)?)\/(-?\d+(\.\d+)?)\/(-?\d+(\.\d+)?)/);
@@ -119,7 +113,6 @@ export default function ParkingMap() {
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    const { selectOptions } = usePage<PageProps>().props;
 
     const [mapStyle, setMapStyle] = useState<MapStyle>('streets');
     const [modalOpen, setModalOpen] = useState(false);
@@ -326,7 +319,6 @@ export default function ParkingMap() {
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
                 onCloseAutoFocus={restoreFocus}
-                confirmationStatusOptions={selectOptions.confirmationStatus}
             />
         </MapLayout>
     );

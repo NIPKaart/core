@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ParkingOrientation;
+use App\Traits\Confirmable;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
 use Database\Factories\ParkingMunicipalFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ParkingMunicipal extends Model
 {
     /** @use HasFactory<ParkingMunicipalFactory> */
-    use Favoritable, HasFactory, HasParkingLocation;
+    use Confirmable, Favoritable, HasFactory, HasParkingLocation;
 
     protected $table = 'parking_municipal_spaces';
 

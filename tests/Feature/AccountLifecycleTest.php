@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Models\Favorite;
@@ -16,7 +15,7 @@ function communityRequest(string $action, ParkingSpace $space): array
     return match ($action) {
         'open add form' => ['get', route('location-map.add'), []],
         'submit a place' => ['post', route('location-map.store'), []],
-        'confirm a place' => ['post', route('app.parking-spaces.confirm', $space), ['status' => ParkingConfirmationStatus::CONFIRMED->value]],
+        'confirm a place' => ['post', route('map.places.confirm', ['source' => 'community', 'id' => $space->id]), []],
     };
 }
 

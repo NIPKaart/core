@@ -6,14 +6,12 @@
         },
         "tabs": {
             "info": "Info",
-            "confirm": "Bevestigen of melden",
             "description": "Beschrijving"
         },
         "table": {
             "max_time": "Max. parkeertijd",
             "parking_disc": "Vergeet uw parkeerschijf niet!",
             "unlimited": "Onbeperkt",
-            "last_confirmed": "Laatst bevestigd",
             "never": "Nooit",
             "area": "Gebied",
             "added_on": "Toegevoegd op",
@@ -27,24 +25,11 @@
             "restriction": "Geldig op"
         },
         "confirm": {
-            "form": {
-                "title": "Help mee de kaart up-to-date te houden",
-                "description": "Bevestig of deze parkeerplek nog steeds aanwezig is.",
-                "description_note": "(dit kan één keer per dag per plek)",
-                "field": {
-                    "status": "Status",
-                    "comment": {
-                        "label": "Opmerking",
-                        "optional": "(optioneel)",
-                        "placeholder": "Voeg details of opmerkingen over de parkeerplaats toe..."
-                    }
-                }
-            },
-            "buttons": {
-                "confirm": "Bevestigen",
-                "confirming": "Bevestigen...",
-                "alreadyConfirmed": "Vandaag al bevestigd"
-            }
+            "button": "De plek is er",
+            "label": "Bevestig dat deze parkeerplaats er is",
+            "sign_in_label": "Log in om te bevestigen dat deze parkeerplaats er is",
+            "confirming": "Bevestigen…",
+            "confirmed_today": "Vandaag bevestigd"
         },
         "days": {
             "mon": "ma",
@@ -132,8 +117,7 @@
             "rules": "Regels en beperkingen",
             "layout": "Indeling",
             "availability": "Toegankelijkheid en beschikbaarheid",
-            "source": "Bron en actualiteit",
-            "contribute": "Bevestigen of een probleem melden"
+            "source": "Bron en actualiteit"
         },
         "navigation": {
             "unavailable": "Voor deze locatie zijn geen geldige coördinaten bekend, dus navigeren is niet mogelijk."
@@ -157,17 +141,8 @@
         "source": {
             "community": "Bijdrage van de community, goedgekeurd voor publicatie",
             "municipal": "Open data van de gemeente",
-            "never_confirmed": "Nog niet bevestigd",
-            "confirmations_one": "{{count}} keer bevestigd door de community",
-            "confirmations_other": "{{count}} keer bevestigd door de community",
             "source_date": "Datum bij de bron",
             "municipality": "Gemeente {{name}}"
-        },
-        "contribute_signed_out": "Log in om deze parkeerplaats te bevestigen of te melden dat deze is verplaatst of niet beschikbaar is.",
-        "log_in": "Inloggen",
-        "badges": {
-            "confirmed_one": "{{count}}x bevestigd",
-            "confirmed_other": "{{count}}x bevestigd"
         },
         "copy_id": "Locatie-ID kopiëren",
         "more_info": "Meer over {{label}}",
@@ -183,6 +158,15 @@
             "updated": "Bijgewerkt",
             "measured": "Gemeten"
         },
-        "id_ending": "eindigend op"
+        "id_ending": "eindigend op",
+        "confirmations": {
+            "title": "Bevestigingen",
+            "count_one": "{{count}}× bevestigd",
+            "count_other": "{{count}}× bevestigd",
+            "last": "Aanwezig, laatst",
+            "none": "Nog niet bevestigd",
+            "prompt": "Is deze plek er nog?",
+            "help": "Een bevestiging betekent alleen dat deze gehandicaptenparkeerplaats hier bestaat. Het zegt niets over het onderbord, de parkeerduur of andere gegevens. Je kunt elke plek één keer per dag bevestigen."
+        }
     }
 }

@@ -44,7 +44,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ParkingSpace routes
         Route::prefix('parking-spaces')->as('parking-spaces.')->group(function () {
             // Confirmations routes
-            Route::post('{parking_space}/confirm', [Admin\ParkingSpaceConfirmationController::class, 'store'])->middleware('community')->name('confirm');
             Route::get('{parking_space}/confirmations', [Admin\ParkingSpaceConfirmationController::class, 'index'])->name('confirmations.index');
             Route::delete('{parking_space}/confirmations/{confirmation}', [Admin\ParkingSpaceConfirmationController::class, 'destroy'])->name('confirmations.destroy');
             Route::delete('{parking_space}/confirmations/bulk/delete', [Admin\ParkingSpaceConfirmationController::class, 'bulkDelete'])->name('confirmations.bulk.destroy');

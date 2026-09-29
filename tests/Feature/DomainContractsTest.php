@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\ApiState;
-use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Models\Country;
@@ -200,16 +199,11 @@ test('bulk status restore and force deletion emit the same model notifications a
     $this->assertModelMissing($space);
 });
 
-test('confirmations retain the daily rule and bulk deletion cannot cross the route parent', function () {
-    $this->travelTo(now()->startOfDay()->addHours(12));
+test('bulk confirmation deletion cannot cross the route parent', function () {
     $user = User::factory()->create();
     $space = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
-    $this->actingAs($user)->post(route('app.parking-spaces.confirm', $space), ['status' => ParkingConfirmationStatus::CONFIRMED->value])->assertSessionHasNoErrors();
-    $this->post(route('app.parking-spaces.confirm', $space), ['status' => ParkingConfirmationStatus::CONFIRMED->value])->assertSessionHasErrors('general');
-    expect($space->confirmations()->count())->toBe(1);
-    $this->travel(1)->days();
-    $this->post(route('app.parking-spaces.confirm', $space), ['status' => ParkingConfirmationStatus::CONFIRMED->value])->assertSessionHasNoErrors();
-    expect($space->confirmations()->count())->toBe(2);
+    ParkingSpaceConfirmation::factory()->count(2)->for($space)->create();
+    $this->actingAs($user);
 
     $other = ParkingSpaceConfirmation::factory()->create();
     $user->givePermissionTo('parking-space-confirmation.delete');

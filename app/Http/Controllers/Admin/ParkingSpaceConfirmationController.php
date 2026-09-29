@@ -7,52 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ParkingSpaceConfirmationController extends Controller
 {
-    public function store(Request $request, ParkingSpace $parkingSpace)
-    {
-        $request->validate([
-            'status' => ['required', 'string', Rule::in(ParkingConfirmationStatus::all())],
-            'comment' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        $user = Auth::user();
-
-        DB::transaction(function () use ($parkingSpace, $user, $request) {
-            // Serialize submissions for this space before checking the existing daily rule.
-            $space = ParkingSpace::whereKey($parkingSpace->id)->lockForUpdate()->firstOrFail();
-            $now = now();
-            $alreadyConfirmed = $space->confirmations()
-                ->where('user_id', $user->id)
-                ->whereDate('confirmed_at', $now->toDateString())
-                ->exists();
-
-            if ($alreadyConfirmed) {
-                throw ValidationException::withMessages([
-                    'general' => 'You already confirmed this space today.',
-                ]);
-            }
-
-            $space->confirmations()->create([
-                'user_id' => $user->id,
-                'confirmed_at' => $now,
-                'status' => $request->input('status'),
-                'comment' => $request->input('comment'),
-            ]);
-        });
-
-        Inertia::flash('success', 'Confirmation recorded successfully.');
-
-        return redirect()->back();
-    }
-
     public function index(Request $request, ParkingSpace $parkingSpace)
     {
         Gate::authorize('viewAny', ParkingSpaceConfirmation::class);

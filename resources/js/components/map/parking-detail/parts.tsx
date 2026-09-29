@@ -1,5 +1,5 @@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Check, Copy, FileText, HelpCircle, Landmark, MapPinned, ParkingSquare, Users } from 'lucide-react';
+import { Check, Copy, FileText, HelpCircle, Landmark, MapPinned, ParkingSquare } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 export type ParkingSource = 'community' | 'municipal' | 'offstreet';
@@ -10,17 +10,6 @@ export function SourceIcon({ source, className = 'h-6 w-6' }: { source: ParkingS
     if (source === 'municipal') return <Landmark className={shared} aria-hidden />;
     if (source === 'offstreet') return <ParkingSquare className={shared} aria-hidden />;
     return <MapPinned className={shared} aria-hidden />;
-}
-
-/** Green "confirmed by the community" pill. Renders nothing when there is nothing to celebrate yet. */
-export function ConfirmedBadge({ count, label }: { count: number; label: string }) {
-    if (!count || count <= 0) return null;
-    return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-800 shadow-sm dark:border-green-900 dark:bg-green-950/80 dark:text-green-300">
-            <Users className="h-4 w-4 text-green-600 dark:text-green-300" aria-hidden />
-            {label}
-        </span>
-    );
 }
 
 /** Small colored chip used for facility type / API status labels. */
