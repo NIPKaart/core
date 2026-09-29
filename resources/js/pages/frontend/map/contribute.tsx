@@ -378,17 +378,32 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
                     >
                         {step === 1 && <div className="mx-auto h-1 w-10 rounded-full bg-border md:hidden" aria-hidden />}
 
-                        <ol className="hidden gap-2 md:flex" aria-label={t('header.step', { step, name: stepNames[step] })}>
+                        <ol className="hidden items-center gap-2 md:flex" aria-label={t('header.step', { step, name: stepNames[step] })}>
                             {([1, 2, 3] as const).map((number) => (
                                 <li
                                     key={number}
-                                    className={cn(
-                                        'flex flex-1 flex-col gap-1.5 text-sm',
-                                        number === step ? 'font-semibold' : 'text-muted-foreground',
-                                    )}
+                                    aria-current={number === step ? 'step' : undefined}
+                                    className={cn('flex items-center gap-2 text-sm', number < 3 && 'flex-1')}
                                 >
-                                    <span className={cn('h-1 rounded-full', number <= step ? 'bg-orange-600' : 'bg-border')} aria-hidden />
-                                    {number} {stepNames[number]}
+                                    <span
+                                        className={cn(
+                                            'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums',
+                                            number <= step ? 'bg-orange-600 text-white' : 'border-2 border-border text-muted-foreground',
+                                            number === step && 'ring-4 ring-orange-600/15',
+                                        )}
+                                        aria-hidden
+                                    >
+                                        {number < step ? <Check className="size-4" strokeWidth={3} /> : number}
+                                    </span>
+                                    <span className={cn('whitespace-nowrap', number === step ? 'font-semibold' : 'text-muted-foreground')}>
+                                        {stepNames[number]}
+                                    </span>
+                                    {number < 3 && (
+                                        <span
+                                            className={cn('h-0.5 min-w-4 flex-1 rounded-full', number < step ? 'bg-orange-600' : 'bg-border')}
+                                            aria-hidden
+                                        />
+                                    )}
                                 </li>
                             ))}
                         </ol>
