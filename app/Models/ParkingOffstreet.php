@@ -100,6 +100,23 @@ class ParkingOffstreet extends Model
         ];
     }
 
+    /**
+     * The row the public garage overviews show: identity, type, location and the public occupancy.
+     *
+     * @return array{id: string, name: ?string, type: ?string, latitude: ?float, longitude: ?float, availability: string, occupancy_status: ?string, observed_at: ?CarbonImmutable, capacity: ?int, free_space: ?int}
+     */
+    public function overview(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'type' => $this->parking_type,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            ...$this->publicOccupancy(),
+        ];
+    }
+
     public function datasetSource(): BelongsTo
     {
         return $this->belongsTo(DatasetSource::class);

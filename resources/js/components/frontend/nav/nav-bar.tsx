@@ -3,12 +3,11 @@ import LanguageSwitcher from '@/components/language-switcher';
 import BellBadge from '@/components/notifications/badge-bell';
 import SearchButton from '@/components/search/search-button';
 import { closeSearch, openSearch, useSearchOpen } from '@/components/search/search-store';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
+import { NavigationMenu, NavigationMenuItem } from '@/components/ui/navigation-menu';
 import { useIsActive } from '@/lib/is-active';
 import { cn } from '@/lib/utils';
-import { about, contact, dashboard, garages, home, locationMap, login, logout } from '@/routes';
+import { about, dashboard, garages, home, locationMap, login, logout } from '@/routes';
 import { add } from '@/routes/location-map';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
@@ -32,25 +31,10 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
     const { isActive } = useIsActive();
 
     const navigation = [
-        { name: t('home'), href: home() },
-        {
-            name: t('map.title'),
-            children: [
-                {
-                    name: t('map.view.title'),
-                    href: locationMap(),
-                    description: t('map.view.description'),
-                },
-                {
-                    name: t('map.add.title'),
-                    href: add(),
-                    description: t('map.add.description'),
-                },
-            ],
-        },
+        { name: t('find'), href: locationMap() },
+        { name: t('add'), href: add() },
         { name: t('garages'), href: garages() },
         { name: t('about'), href: about() },
-        { name: t('contact'), href: contact() },
     ];
 
     useEffect(() => {
@@ -130,51 +114,14 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                         <NavigationMenu className="flex h-full items-stretch gap-x-2">
                             {navigation.map((item) => (
                                 <NavigationMenuItem key={item.name} className="relative flex h-full items-center">
-                                    {item.children ? (
-                                        <div className="relative flex h-full items-center">
-                                            <NavigationMenuTrigger
-                                                className={cn(
-                                                    'h-10 rounded bg-transparent px-6 text-base font-medium transition hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 dark:hover:bg-transparent',
-                                                    item.children.some((child) => isActive(child.href))
-                                                        ? 'text-orange-600 dark:text-orange-400'
-                                                        : 'text-gray-900 dark:text-white',
-                                                )}
-                                            >
-                                                {item.name}
-                                            </NavigationMenuTrigger>
-                                            <NavigationMenuContent>
-                                                <ul className="min-w-[280px] p-2">
-                                                    {item.children.map((child) => (
-                                                        <li key={child.name}>
-                                                            <Link
-                                                                href={child.href}
-                                                                className={cn(
-                                                                    'block rounded-md px-3 py-2 transition-colors hover:bg-accent focus:bg-accent',
-                                                                    isActive(child.href)
-                                                                        ? 'text-orange-600 dark:text-orange-400'
-                                                                        : 'text-gray-900 dark:text-neutral-100',
-                                                                )}
-                                                            >
-                                                                <div className="text-sm font-medium">{child.name}</div>
-                                                                {child.description && (
-                                                                    <p className="text-xs text-gray-500 dark:text-neutral-400">{child.description}</p>
-                                                                )}
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </NavigationMenuContent>
-                                        </div>
-                                    ) : (
-                                        <NavItem
-                                            name={item.name}
-                                            href={item.href.url}
-                                            className={cn(
-                                                'h-10 px-6 text-base',
-                                                isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
-                                            )}
-                                        />
-                                    )}
+                                    <NavItem
+                                        name={item.name}
+                                        href={item.href.url}
+                                        className={cn(
+                                            'h-10 px-3 text-base xl:px-6',
+                                            isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
+                                        )}
+                                    />
                                 </NavigationMenuItem>
                             ))}
                         </NavigationMenu>
@@ -192,7 +139,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                         {auth.user ? (
                             <UserNavMenu />
                         ) : (
-                            <Link href={login()} className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <Link href={login()} className="text-sm font-semibold whitespace-nowrap text-gray-900 dark:text-white">
                                 {t('login')} →
                             </Link>
                         )}
@@ -211,43 +158,11 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                     leaveTo="-translate-y-2 opacity-0"
                 >
                     <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
-                        <Accordion type="multiple" className="space-y-2">
-                            {navigation.map((item) =>
-                                item.children ? (
-                                    <AccordionItem key={item.name} value={item.name}>
-                                        <AccordionTrigger
-                                            className={cn(
-                                                'px-4 py-2 text-left text-base font-medium transition',
-                                                item.children.some((child) => isActive(child.href))
-                                                    ? 'text-orange-600 dark:text-orange-400'
-                                                    : 'text-gray-800 dark:text-white',
-                                            )}
-                                        >
-                                            {item.name}
-                                        </AccordionTrigger>
-                                        <AccordionContent className="pl-4">
-                                            {item.children.map((child) => (
-                                                <Link
-                                                    key={child.name}
-                                                    href={child.href}
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className={cn(
-                                                        'block px-2 py-1 text-sm transition',
-                                                        isActive(child.href)
-                                                            ? 'font-semibold text-orange-600 dark:text-orange-400'
-                                                            : 'text-gray-700 hover:underline dark:text-neutral-200',
-                                                    )}
-                                                >
-                                                    {child.name}
-                                                </Link>
-                                            ))}
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ) : (
-                                    <NavItem key={item.name} name={item.name} href={item.href.url} onClick={() => setMobileMenuOpen(false)} />
-                                ),
-                            )}
-                        </Accordion>
+                        <div className="space-y-2">
+                            {navigation.map((item) => (
+                                <NavItem key={item.name} name={item.name} href={item.href.url} onClick={() => setMobileMenuOpen(false)} />
+                            ))}
+                        </div>
 
                         {/* Compact utilities under the menu */}
                         <div className="mt-4 flex flex-col gap-4 border-t border-gray-200 px-4 pt-4 dark:border-gray-700">

@@ -1,0 +1,41 @@
+{
+    "meta": {
+        "title": "Contact",
+        "description": "Do you have a question or an idea, or is something not right on the map? Get in touch with NIPKaart."
+    },
+    "title": "Contact",
+    "intro": "Do you have a question or an idea, or is something not right on the map? We are happy to help.",
+    "form": {
+        "title": "Send a message",
+        "topic": "What is your message about?",
+        "topics": {
+            "question": "Question or idea",
+            "map_error": "Error on the map",
+            "data": "Municipality or data",
+            "other": "Something else"
+        },
+        "name": "Name",
+        "email": "E-mail address",
+        "location": "Which place?",
+        "location_placeholder": "Street and town, or the link to the place",
+        "message": "Message",
+        "message_map_error": "What is not right?",
+        "privacy": "We only use your details to answer your message and do not store them on the website.",
+        "submit": "Send",
+        "sending": "Sending…",
+        "website": "Leave this field empty"
+    },
+    "email": {
+        "title": "Prefer e-mail?",
+        "text": "You can also e-mail us directly. We reply in Dutch or English."
+    },
+    "data": {
+        "title": "Municipality or data provider",
+        "text": "Do you share open data about disabled parking spaces or garage occupancy? Choose ‘Municipality or data’ and tell us which dataset it is, and we will gladly see how we can show it."
+    },
+    "code": {
+        "title": "A bug or technical idea?",
+        "text": "NIPKaart is open source. You can also report it on GitHub.",
+        "link": "Report it on GitHub"
+    }
+}

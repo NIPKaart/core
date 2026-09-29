@@ -1,0 +1,57 @@
+{
+    "meta": {
+        "title": "Parking at your destination",
+        "description": "Search an address or place and see the disabled parking spaces and garages nearby. No account needed."
+    },
+    "hero": {
+        "eyebrow": "For everyone with a disabled parking card",
+        "title": "Park at your destination without circling the block",
+        "intro": "Search an address or place and see which disabled parking spaces are nearby. If the street is full, you can see straight away which garage still has room.",
+        "intro_short": "Search an address or place and see which disabled parking spaces are nearby.",
+        "label": "Where are you going?",
+        "placeholder": "E.g. Rijksmuseum or Utrecht Centraal",
+        "placeholder_short": "Address or place",
+        "submit": "Search",
+        "no_account": "No account needed",
+        "map": "Or browse the whole map"
+    },
+    "preview": {
+        "alt": "Map around the Rijksmuseum in Amsterdam with disabled parking spaces and a garage with free spaces",
+        "title": "Parking results",
+        "sorted": "Sorted by distance to Rijksmuseum",
+        "attribution": "© Mapbox © OpenStreetMap"
+    },
+    "legend": {
+        "title": "How to read the map",
+        "intro": "Each marker shows what kind of place it is. Choose one to see the details.",
+        "space": {
+            "title": "Disabled parking space",
+            "text": "From the municipality or added by a user. The details show which times and rules apply."
+        },
+        "garage": {
+            "title": "Garage or P+R",
+            "text": "The number shows the free spaces in the whole garage, not specifically the disabled spaces."
+        },
+        "cluster": {
+            "title": "Several places",
+            "text": "Places close together are grouped. Zoom in to see them individually."
+        },
+        "destination": {
+            "title": "Your destination",
+            "text": "Distances are measured from this point, so you can see which place is closest."
+        }
+    },
+    "garages": {
+        "title": "Street full? See which garage still has room",
+        "text": "For each municipality you can see how many spaces garages and park-and-ride sites have free right now, with the time of the latest measurement.",
+        "text_short": "Current occupancy per garage and P+R, with the time of measurement.",
+        "link": "All garages and P+R"
+    },
+    "contribute": {
+        "title": "Is a place missing?",
+        "text": "You often know your own neighbourhood and the places you visit regularly best. Add a disabled parking space you know in a few steps and help other visitors find their way. Every contribution makes the map more complete.",
+        "cta": "Add a place",
+        "step": "Put the pin on the spot",
+        "next": "Then fill in the orientation and any time limits"
+    }
+}

@@ -20,7 +20,9 @@ Audit for #1164, 2026-09-07, after the Inertia 3 baseline in #1161. The inventor
 | Zod and `@hookform/resolvers` | No application imports, schemas or resolver configuration | Remove unused direct dependencies; retain RHF itself |
 | Sonner / SweetAlert2 / Radix dialogs | Two layout-scoped toast renderers; SweetAlert2 used only for post-save success, not confirmation | One Sonner renderer in `app.tsx`, covering auth, public, map and admin layouts. Remove SweetAlert2. Retain Radix `ConfirmDialog`, password deletion dialog and domain modals |
 
-The municipal controller has edit/update endpoints but no municipal edit form page in the current frontend; this audit does not invent a missing product flow. Contact is also an empty page, not an existing form.
+The municipal controller has edit/update endpoints but no municipal edit form page in the current frontend; this audit does not invent a missing product flow.
+
+The public contact form (#1178) follows the same contract: an Inertia `<Form>` with inline field errors, a server `Inertia::flash('success', …)` after a redirect back, and `resetOnSuccess` for the typed fields. `StoreContactMessageRequest` validates; the message is queued as mail to `ContactMessage::RECIPIENT` and never stored in the database. A hidden honeypot field gets the same success response without sending, and the route allows five submissions per ten minutes.
 
 ## Feedback contract
 

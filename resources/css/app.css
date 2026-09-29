@@ -13,6 +13,10 @@
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
+    /* Warm page grounds for public pages, toned from the logo's amber; cards stay white on top. */
+    --color-canvas: oklch(0.978 0.007 80);
+    --color-canvas-strong: oklch(0.955 0.012 80);
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);

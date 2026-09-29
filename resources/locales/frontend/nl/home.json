@@ -1,0 +1,57 @@
+{
+    "meta": {
+        "title": "Parkeren bij je bestemming",
+        "description": "Zoek een adres of plek en bekijk de gehandicaptenparkeerplaatsen en garages in de buurt. Je hebt geen account nodig."
+    },
+    "hero": {
+        "eyebrow": "Voor iedereen met een gehandicaptenparkeerkaart",
+        "title": "Parkeren bij je bestemming, zonder rondjes te rijden",
+        "intro": "Zoek een adres of plek en zie welke gehandicaptenparkeerplaatsen er in de buurt liggen. Staat de straat vol, dan zie je meteen welke garage nog ruimte heeft.",
+        "intro_short": "Zoek een adres of plek en zie welke gehandicaptenparkeerplaatsen er in de buurt liggen.",
+        "label": "Waar ga je naartoe?",
+        "placeholder": "Bijv. Rijksmuseum of Utrecht Centraal",
+        "placeholder_short": "Adres of plek",
+        "submit": "Zoeken",
+        "no_account": "Geen account nodig",
+        "map": "Of bekijk de hele kaart"
+    },
+    "preview": {
+        "alt": "Kaart rond het Rijksmuseum in Amsterdam met gehandicaptenparkeerplaatsen en een garage met vrije plaatsen",
+        "title": "Parkeerresultaten",
+        "sorted": "Gesorteerd op afstand tot Rijksmuseum",
+        "attribution": "© Mapbox © OpenStreetMap"
+    },
+    "legend": {
+        "title": "Zo lees je de kaart",
+        "intro": "Elke markering laat zien wat voor plek het is. Kies er een om de details te bekijken.",
+        "space": {
+            "title": "Gehandicaptenparkeerplaats",
+            "text": "Afkomstig van de gemeente of toegevoegd door een gebruiker. In de details lees je welke tijden en regels er gelden."
+        },
+        "garage": {
+            "title": "Garage of P+R",
+            "text": "Het getal toont de vrije plaatsen in de hele garage, niet specifiek de gehandicaptenplaatsen."
+        },
+        "cluster": {
+            "title": "Meerdere plekken",
+            "text": "Plekken die dicht bij elkaar liggen, worden samengevoegd. Zoom in om ze afzonderlijk te bekijken."
+        },
+        "destination": {
+            "title": "Je bestemming",
+            "text": "Afstanden worden gemeten vanaf dit punt, zodat je ziet welke plek het dichtstbij ligt."
+        }
+    },
+    "garages": {
+        "title": "Straat vol? Kijk welke garage nog ruimte heeft",
+        "text": "Per gemeente zie je hoeveel plaatsen garages en P+R-terreinen op dit moment vrij hebben, met het tijdstip van de laatste meting.",
+        "text_short": "Actuele bezetting per garage en P+R, met het tijdstip van meting.",
+        "link": "Alle garages en P+R"
+    },
+    "contribute": {
+        "title": "Staat een plek er nog niet op?",
+        "text": "Je eigen buurt en de plekken waar je vaak komt, ken je vaak het best. Voeg een gehandicaptenparkeerplaats die je kent in een paar stappen toe en help andere bezoekers op weg. Zo wordt de kaart met elke bijdrage completer.",
+        "cta": "Plek toevoegen",
+        "step": "Zet de pin op de plek",
+        "next": "Daarna vul je de ligging en eventuele parkeertijden in"
+    }
+}

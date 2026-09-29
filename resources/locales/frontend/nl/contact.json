@@ -1,0 +1,41 @@
+{
+    "meta": {
+        "title": "Contact",
+        "description": "Heb je een vraag of een idee, of klopt er iets niet op de kaart? Neem contact op met NIPKaart."
+    },
+    "title": "Contact",
+    "intro": "Heb je een vraag of een idee, of klopt er iets niet op de kaart? We helpen je graag verder.",
+    "form": {
+        "title": "Stuur een bericht",
+        "topic": "Waar gaat je bericht over?",
+        "topics": {
+            "question": "Vraag of idee",
+            "map_error": "Fout op de kaart",
+            "data": "Gemeente of data",
+            "other": "Iets anders"
+        },
+        "name": "Naam",
+        "email": "E-mailadres",
+        "location": "Welke plek?",
+        "location_placeholder": "Straat en plaats, of de link van de plek",
+        "message": "Bericht",
+        "message_map_error": "Wat klopt er niet?",
+        "privacy": "We gebruiken je gegevens alleen om je bericht te beantwoorden en bewaren ze niet op de website.",
+        "submit": "Versturen",
+        "sending": "Versturen…",
+        "website": "Laat dit veld leeg"
+    },
+    "email": {
+        "title": "Liever mailen?",
+        "text": "Je kunt ons ook direct mailen. We antwoorden in het Nederlands of Engels."
+    },
+    "data": {
+        "title": "Gemeente of dataleverancier",
+        "text": "Deel je open data over gehandicaptenparkeerplaatsen of garagebezetting? Kies ‘Gemeente of data’ en vertel welke dataset het is, dan kijken we graag hoe we hem kunnen tonen."
+    },
+    "code": {
+        "title": "Een bug of technisch idee?",
+        "text": "NIPKaart is open source. Je kunt ook een melding maken op GitHub.",
+        "link": "Melding maken op GitHub"
+    }
+}
