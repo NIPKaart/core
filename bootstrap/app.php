@@ -28,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
             EnsureUserIsNotSuspended::class,
         ]);
+
+        // One eligibility boundary for every community action: signed in, email verified and not suspended.
+        $middleware->group('community', ['auth', 'verified', 'can:contribute']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->shouldRenderJsonWhen(

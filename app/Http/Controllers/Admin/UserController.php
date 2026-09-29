@@ -11,6 +11,7 @@ use App\Models\User;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -37,7 +38,7 @@ class UserController extends Controller
         ];
 
         $users = User::query()
-            ->with('roles:id,name')
+            ->with(['roles:id,name', 'activeSuspension'])
             ->tap(fn (Builder $query) => $this->applyFilters($query, $filters))
             ->latest()
             ->paginate(20)
@@ -144,7 +145,7 @@ class UserController extends Controller
     {
         Gate::authorize('delete', User::class);
 
-        $user->delete();
+        DB::transaction(fn () => $user->delete());
 
         return redirect()->route('app.users.index');
     }
@@ -152,14 +153,23 @@ class UserController extends Controller
     /**
      * Suspend or unsuspend the specified user.
      */
-    public function suspend(User $user)
+    public function suspend(Request $request, User $user)
     {
         if (auth()->id() === $user->id) {
             return redirect()->back()->withErrors(['suspended_at' => 'You cannot suspend yourself.']);
         }
 
-        $user->suspended_at = $user->suspended_at ? null : now();
-        $user->save();
+        if ($user->suspended_at) {
+            $user->liftSuspension($request->user());
+
+            return redirect()->back();
+        }
+
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $user->suspend($request->user(), $validated['reason']);
 
         return redirect()->back();
     }

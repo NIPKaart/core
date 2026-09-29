@@ -29,7 +29,7 @@ The shared rule applies to the existing registration, password reset and setting
 
 Laravel's uncompromised validator queries the Pwned Passwords range API using the first five characters of a SHA-1 hash, not the password itself. We retain the framework verifier and its failure behavior: unavailable or unsuccessful service responses do not reject an otherwise valid password. Tests substitute the verifier to cover both clean and compromised results without external network traffic. A separate fail-closed policy is not introduced here.
 
-The production feature tests exercise every rule through all three existing HTTP entry points and verify stored passwords on success and unchanged accounts on rejection. Legacy-password login and the existing non-production auth suite provide compatibility coverage. #1162 should retain this shared rule if it migrates these flows to Fortify. The administrative `user:create` command currently bypasses the HTTP validation rules; auditing administrative credential provisioning belongs to that auth review.
+The production feature tests exercise every rule through all three existing HTTP entry points and verify stored passwords on success and unchanged accounts on rejection. Legacy-password login and the existing non-production auth suite provide compatibility coverage. #1162 should retain this shared rule if it migrates these flows to Fortify. The legacy `user:create` command, which bypassed these rules, was retired in #1209.
 
 ## Date audit and deferral
 

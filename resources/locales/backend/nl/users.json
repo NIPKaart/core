@@ -23,7 +23,7 @@
         "unverified": "Niet geverifieerd",
         "created_at": "Aangemaakt op",
         "active": "Actief",
-        "suspended": "Gesuspend",
+        "suspended": "Geschorst",
         "actions": {
             "suspend": "Schorsen",
             "unsuspend": "Herstellen"
@@ -55,7 +55,9 @@
         "suspend": {
             "title": "Gebruiker schorsen",
             "description": "Weet je zeker dat je {{name}} wilt schorsen?",
-            "confirm": "Schorsen"
+            "confirm": "Schorsen",
+            "reason": "Reden",
+            "reason_help": "Verplicht, maximaal {{max}} tekens. Zichtbaar voor beheerders."
         },
         "unsuspend": {
             "title": "Gebruiker herstellen",

@@ -8,8 +8,8 @@ Route::get('/', [Frontend\HomeController::class, 'index'])->name('home');
 // Map
 Route::prefix('map')->controller(Frontend\ParkingSpaceController::class)->group(function () {
     Route::get('/', 'map')->name('location-map');
-    Route::get('add', 'locationAdd')->name('location-map.add');
-    Route::post('add', 'store')->name('location-map.store');
+    Route::get('add', 'locationAdd')->middleware('community')->name('location-map.add');
+    Route::post('add', 'store')->middleware('community')->name('location-map.store');
 });
 
 // First-party browser JSON endpoints

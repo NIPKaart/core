@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -22,7 +23,8 @@ test('production password policy applies to every password entry point', functio
         ->with(['value' => $password, 'threshold' => 0])
         ->andReturn($uncompromised);
 
-    $user = $flow === 'register' ? null : User::factory()->create();
+    $user = in_array($flow, ['register', 'admin create'], true) ? null : User::factory()->create();
+    $administrator = tap(User::factory()->create())->assignRole(UserRole::ADMIN);
     $data = ['password' => $password, 'password_confirmation' => $password];
 
     $response = match ($flow) {
@@ -36,6 +38,16 @@ test('production password policy applies to every password entry point', functio
         ]),
         'update' => $this->actingAs($user)->put(route('user-password.update'), $data + [
             'current_password' => 'password',
+        ]),
+        'admin create' => $this->actingAs($administrator)->post(route('app.users.store'), $data + [
+            'name' => 'Test User',
+            'email' => 'production@example.com',
+            'role' => UserRole::USER->value,
+        ]),
+        'admin update' => $this->actingAs($administrator)->put(route('app.users.update', $user), $data + [
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => UserRole::USER->value,
         ]),
     };
 
@@ -51,7 +63,7 @@ test('production password policy applies to every password entry point', functio
             $this->assertDatabaseMissing('users', ['email' => 'production@example.com']);
         }
     }
-})->with(['register', 'reset', 'update'])->with([
+})->with(['register', 'reset', 'update', 'admin create', 'admin update'])->with([
     'too short' => ['Abcdefghi1!', true, false],
     'no uppercase' => ['abcdefghijkl1!', true, false],
     'no lowercase' => ['ABCDEFGHIJKL1!', true, false],

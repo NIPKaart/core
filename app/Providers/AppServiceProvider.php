@@ -14,6 +14,7 @@ use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate as GateFacade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
@@ -60,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
             : null);
 
         ParkingSpace::observe(ParkingSpaceObserver::class);
+
+        GateFacade::define('contribute', fn (User $user): bool => $user->isEligibleForCommunity());
 
         LogViewer::auth(function ($request) {
             return $request->user() && ! $request->user()->suspended_at && $request->user()->hasRole(UserRole::ADMIN);
