@@ -1,6 +1,7 @@
+import improve from '@/routes/map/places/improve';
 import type { RouteDefinition } from '@/wayfinder';
 import { Link } from '@inertiajs/react';
-import { Check, ChevronRight, Flag, Landmark, MapPin, MapPinCheckInside, MapPinned } from 'lucide-react';
+import { Check, ChevronRight, Flag, Landmark, MapPin, MapPinCheckInside, MapPinned, PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { MunicipalParkingDetail, ParkingSpaceDetail } from './types';
 import { formatShortDate } from './utils';
@@ -14,7 +15,7 @@ type Props = {
 
 /**
  * The Contributions tab: what people have said about this place, where its information comes from, and what the visitor did.
- * Improving information (#1310) and linked sources (#1312) join this tab when they exist.
+ * Community places can be improved from here; linked sources (#1312) join this tab when they exist.
  */
 export default function Contributions({ data, signedIn, loginHref, onReport }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
@@ -23,6 +24,7 @@ export default function Contributions({ data, signedIn, loginHref, onReport }: P
     const date = (value: string) => <time dateTime={value}>{formatShortDate(value, i18n.language)}</time>;
     const reported = signedIn && !!detail.reported_by_you;
     const confirmedToday = signedIn && !!detail.confirmed_today;
+    const improvementPending = signedIn && source === 'community' && !!detail.improvement_pending;
 
     const municipalName =
         source === 'municipal'
@@ -81,6 +83,22 @@ export default function Contributions({ data, signedIn, loginHref, onReport }: P
                 )}
             </div>
 
+            {signedIn && source === 'community' && !improvementPending && (
+                <Link
+                    href={improve.create({ parking_space: detail.id })}
+                    className="flex min-h-15 items-center gap-3 rounded-xl border px-3 py-2.5 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                        <PencilLine className="h-4 w-4" aria-hidden />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+                        <span className="text-sm font-semibold">{t('detail.contribute.improve')}</span>
+                        <span className="text-xs text-muted-foreground">{t('detail.contribute.improve_note')}</span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                </Link>
+            )}
+
             <section aria-labelledby="parking-sources" className="flex flex-col gap-2.5 rounded-xl border p-3">
                 <h3 id="parking-sources" className="text-sm font-semibold">
                     {t('detail.contribute.sources')}
@@ -108,7 +126,7 @@ export default function Contributions({ data, signedIn, loginHref, onReport }: P
                 </p>
             </section>
 
-            {(confirmedToday || reported) && (
+            {(confirmedToday || reported || improvementPending) && (
                 <section aria-labelledby="parking-activity" className="flex flex-col gap-2">
                     <h3 id="parking-activity" className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
                         {t('detail.contribute.activity')}
@@ -117,6 +135,12 @@ export default function Contributions({ data, signedIn, loginHref, onReport }: P
                         <p className="flex items-center gap-2 text-sm">
                             <Check className="h-4 w-4 shrink-0 text-green-700 dark:text-green-400" aria-hidden />
                             {t('detail.contribute.confirmed_today')}
+                        </p>
+                    )}
+                    {improvementPending && (
+                        <p className="flex items-center gap-2 text-sm text-pretty">
+                            <PencilLine className="h-4 w-4 shrink-0 text-orange-700 dark:text-orange-400" aria-hidden />
+                            {t('detail.contribute.improvement_pending')}
                         </p>
                     )}
                     {reported && (

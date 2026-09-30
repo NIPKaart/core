@@ -22,6 +22,9 @@ _Avoid_: window times
 
 **ParkingSpaceReview**: A moderator's attributable change of a community parking space's review status (pending, approved or rejected), kept as history. A rejection carries a reason from a fixed list and an optional note. It is the community-space form of a PublicationDecision.
 
+**ParkingSpaceImprovement**: A signed-in person's proposed improvement to a published community ParkingSpace: its location, orientation, under-sign or note. The public space stays unchanged until a moderator approves it, possibly after correcting it; a rejection carries a reason from a fixed list. It keeps what was submitted, what was applied and what that replaced. Published community data belongs to the community, so anyone signed in may propose one; a person has one pending proposal per space. Municipal places are not improved this way; their source stays authoritative.
+_Avoid_: edit, revision
+
 **ParkingMunicipal**: A municipal/open-data parking record. Its source and meaning remain distinct from a community contribution.
 
 **ParkingOffstreet**: A garage or park-and-ride facility with facility information and potentially live general occupancy. General occupancy does not establish accessible-space availability.

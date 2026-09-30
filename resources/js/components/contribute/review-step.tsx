@@ -9,9 +9,19 @@ type Props = {
     restrictionDays: string[];
     onEditLocation: () => void;
     onEditDetails: () => void;
+    /** What happens after sending: a new place or an improvement to a published one. */
+    after?: 'review.after' | 'improve.after';
 };
 
-export default function ReviewStep({ data, location, orientationOptions, restrictionDays, onEditLocation, onEditDetails }: Props) {
+export default function ReviewStep({
+    data,
+    location,
+    orientationOptions,
+    restrictionDays,
+    onEditLocation,
+    onEditDetails,
+    after = 'review.after',
+}: Props) {
     const { t } = useTranslation('frontend/map/contribute');
     const duration = Number(data.parking_hours || 0) * 60 + Number(data.parking_minutes || 0);
     const days = restrictionDays.filter((day) => data.restriction_days.includes(day)).map((day) => t(`days.${day}`));
@@ -73,7 +83,7 @@ export default function ReviewStep({ data, location, orientationOptions, restric
                     {t('review.after_title')}
                 </h2>
                 <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
-                    {(t('review.after', { returnObjects: true }) as string[]).map((line) => (
+                    {(t(after, { returnObjects: true }) as string[]).map((line) => (
                         <li key={line}>{line}</li>
                     ))}
                 </ol>

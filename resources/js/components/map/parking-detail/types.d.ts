@@ -25,6 +25,7 @@ export type ParkingSpaceDetail = {
     };
     last_confirmed_at?: datetime | null;
     reported_by_you?: boolean;
+    improvement_pending?: boolean;
 };
 
 export type MunicipalParkingDetail = {

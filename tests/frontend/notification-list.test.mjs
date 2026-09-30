@@ -21,7 +21,10 @@ const context = {
     Intl,
     require: (name) => {
         if (name === 'lucide-react') return icons;
-        if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) };
+        if (name === 'react-i18next')
+            return {
+                useTranslation: () => ({ t: (key, options) => (options?.reason ? `${key}: ${options.reason}` : key), i18n: { language: 'en' } }),
+            };
         if (name === '@/utils/notifications') return { getNotificationLabel: (_, type) => labels[type] ?? labels.default };
         if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
         if (name === '@inertiajs/react')
@@ -62,4 +65,13 @@ test('each notification type has its own icon', () => {
         assert.match(html, new RegExp(`data-icon="${icon}"`));
     }
     assert.doesNotMatch(html, /data-icon="BellRing"/);
+});
+
+test('a decision with a reason names that reason below the subject', () => {
+    const html = render([
+        notification('community.improvement_rejected', { space_label: 'Breestraat', reason: 'improvement.spam' }),
+        notification('community.improvement_approved', { space_label: 'Kerkstraat', reason: null }),
+    ]);
+    assert.match(html, /Breestraat.*reason: reasons\.improvement\.spam/s);
+    assert.equal(html.match(/reason: /g).length, 1);
 });

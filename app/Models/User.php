@@ -72,6 +72,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
+     * Get the improvements the user proposed to community parking spaces.
+     */
+    public function parkingSpaceImprovements(): HasMany
+    {
+        return $this->hasMany(ParkingSpaceImprovement::class);
+    }
+
+    /**
      * Get the favorites for the user.
      */
     public function favorites(): HasMany

@@ -55,6 +55,7 @@ class SpacesInfoController extends Controller
             'is_favorited' => $isFavorited,
             ...$location->publicConfirmations($user),
             'reported_by_you' => $user ? $location->isReportedBy($user) : false,
+            'improvement_pending' => $user ? $location->improvements()->pending()->whereBelongsTo($user)->exists() : false,
         ]);
     }
 

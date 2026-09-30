@@ -1,0 +1,112 @@
+{
+    "title": "Verbeteringen",
+    "description": "De huidige informatie blijft zichtbaar tot je een voorstel goedkeurt.",
+    "search": "Zoek op straat, gemeente of indiener",
+    "tabs": {
+        "label": "Status",
+        "open": "Open",
+        "decided": "Afgehandeld"
+    },
+    "filters": {
+        "municipality": "Gemeente",
+        "change": "Wijziging",
+        "decision": "Besluit"
+    },
+    "columns": {
+        "place": "Parkeerplaats",
+        "change": "Wijziging",
+        "proposer": "Indiener",
+        "submitted": "Ingediend",
+        "decision": "Besluit",
+        "reviewer": "Door"
+    },
+    "groups": {
+        "location": "Locatie",
+        "orientation": "Vak",
+        "under_sign": "Onderbord",
+        "description": "Opmerking"
+    },
+    "flags": {
+        "other_municipality": "Andere gemeente",
+        "competing": "Meer voorstellen",
+        "reported": "Gemeld als weg"
+    },
+    "proposer": {
+        "new": "nieuw",
+        "rejected_one": "{{count}}× afgewezen",
+        "rejected_other": "{{count}}× afgewezen"
+    },
+    "decisions": {
+        "approved": "Goedgekeurd",
+        "approved_corrected": "Goedgekeurd, aangepast",
+        "rejected": "Afgewezen"
+    },
+    "values": {
+        "unknown": "Niet bekend",
+        "none": "Geen"
+    },
+    "actions": {
+        "start": "Beoordelen"
+    },
+    "empty": {
+        "open": "Geen open verbeteringen. Alles is beoordeeld.",
+        "decided": "Nog geen afgehandelde verbeteringen."
+    },
+    "bulk": {
+        "selected": "geselecteerd",
+        "clear": "Selectie wissen",
+        "reject_one": "{{count}} afwijzen",
+        "reject_other": "{{count}} afwijzen"
+    },
+    "history": {
+        "submitted_was": "Ingediend was {{value}}",
+        "by": "Voorgesteld door {{proposer}} {{submitted}}, besloten door {{reviewer}} {{reviewed}}."
+    },
+    "review": {
+        "title": "{{place}} beoordelen",
+        "position_label": "Plaats in de wachtrij",
+        "position": "{{index}} van {{total}}",
+        "previous": "Vorige verbetering",
+        "next": "Volgende verbetering",
+        "confirmations_one": "{{count}}× bevestigd",
+        "confirmations_other": "{{count}}× bevestigd",
+        "view_space": "Parkeerplaats bekijken",
+        "changes": "Voorgestelde wijzigingen",
+        "changes_hint": "Vink uit wat je niet overneemt",
+        "moved": "{{distance}} m verplaatst",
+        "location_moved": "Door jou verplaatst, wordt opgezocht bij goedkeuren",
+        "edited": "Aangepast · voorgesteld was {{value}}",
+        "edit": "{{field}} aanpassen",
+        "restore": "Voorstel herstellen",
+        "latitude": "Breedtegraad",
+        "longitude": "Lengtegraad",
+        "drag_hint": "Of sleep de oranje speld op de kaart.",
+        "show_unchanged": "Toon ongewijzigde velden",
+        "hide_unchanged": "Verberg ongewijzigde velden",
+        "map": "Kaart",
+        "view_map": "Kaart",
+        "view_streetview": "Street View",
+        "legend": {
+            "current": "Blauw: nu",
+            "proposed": "Oranje: voorstel",
+            "nearby": "Groen: andere parkeerplaatsen"
+        },
+        "taking_over": "{{count}} van {{total}} wijzigingen worden overgenomen",
+        "skip": "Overslaan",
+        "reject": "Afwijzen",
+        "approve": "Goedkeuren"
+    },
+    "reject": {
+        "title": "Waarom afwijzen?",
+        "description": "De parkeerplaats blijft zoals hij is.",
+        "reason": "Reden",
+        "note": "Toelichting (optioneel)",
+        "cancel": "Annuleren",
+        "confirm": "Afwijzen"
+    },
+    "not_public": "Niet openbaar",
+    "no_address": "Parkeerplaats zonder adres",
+    "unknown_user": "Onbekende gebruiker",
+    "select": "Selecteren",
+    "select_all": "Alles selecteren"
+}

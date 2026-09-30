@@ -12,11 +12,13 @@ use App\Models\ParkingPlaceRemoval;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\User;
+use App\Notifications\ParkingPlace\ReportResolved;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Moderator decisions on places reported as no longer existing.
@@ -62,9 +64,23 @@ class ParkingPlaceModeration
      */
     public function keep(ParkingSpace|ParkingMunicipal $place, User $moderator): void
     {
-        DB::transaction(function () use ($place, $moderator) {
-            $this->resolveOpenReports($this->lock($place), $moderator, ReportResolution::KEPT);
+        $reporters = DB::transaction(function () use ($place, $moderator) {
+            $place = $this->lock($place);
+            $reporters = $this->openReporters($place);
+            $this->resolveOpenReports($place, $moderator, ReportResolution::KEPT);
+
+            return $reporters;
         });
+
+        Notification::send($reporters, new ReportResolved(
+            placeLabel: $this->label($place) ?? '',
+            removed: false,
+            placeUrl: route('location-map', [
+                'place' => ($place instanceof ParkingSpace ? 'community' : 'municipal').":{$place->getKey()}",
+                'at' => sprintf('%.5f,%.5f', $place->latitude, $place->longitude),
+            ]),
+            actedByUserId: $moderator->id,
+        ));
     }
 
     /**
@@ -72,9 +88,10 @@ class ParkingPlaceModeration
      */
     public function remove(ParkingSpace|ParkingMunicipal $place, User $moderator, RemovalReason $reason, ?string $note): ParkingPlaceRemoval
     {
-        return DB::transaction(function () use ($place, $moderator, $reason, $note) {
+        [$removal, $reporters] = DB::transaction(function () use ($place, $moderator, $reason, $note) {
             $place = $this->lock($place);
             $community = $place instanceof ParkingSpace;
+            $reporters = $this->openReporters($place);
 
             $removal = ParkingPlaceRemoval::create([
                 'source' => $community ? 'community' : 'municipal',
@@ -97,8 +114,28 @@ class ParkingPlaceModeration
                 $this->resolveOpenReports($place, $moderator, ReportResolution::REMOVED);
             }
 
-            return $removal;
+            return [$removal, $reporters];
         });
+
+        Notification::send($reporters, new ReportResolved(
+            placeLabel: $removal->place_label ?? '',
+            removed: true,
+            placeUrl: null,
+            reason: $reason->value,
+            actedByUserId: $moderator->id,
+        ));
+
+        return $removal;
+    }
+
+    /**
+     * The people with an open report on the place, who hear the moderator's decision.
+     *
+     * @return Collection<int, User>
+     */
+    private function openReporters(ParkingSpace|ParkingMunicipal $place): Collection
+    {
+        return $place->reports()->open()->with('user')->get()->pluck('user')->filter()->unique('id')->values();
     }
 
     /**

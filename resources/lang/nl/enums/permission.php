@@ -110,6 +110,19 @@ return [
             ],
         ],
     ],
+    'parking-space-improvement' => [
+        'label' => 'Verbeteringen',
+        'actions' => [
+            'view_any' => [
+                'label' => 'Verbeteringen bekijken',
+                'description' => 'Geeft toegang tot voorgestelde verbeteringen van parkeerplaatsen van de community.',
+            ],
+            'review' => [
+                'label' => 'Verbeteringen beoordelen',
+                'description' => 'Maakt het aanpassen, goedkeuren en afwijzen van voorgestelde verbeteringen mogelijk.',
+            ],
+        ],
+    ],
     'parking-place-report' => [
         'label' => 'Meldingen',
         'actions' => [

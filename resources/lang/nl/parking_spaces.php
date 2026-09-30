@@ -9,11 +9,19 @@ return [
         'recorded' => 'Bedankt, je bevestiging is opgeslagen.',
         'already_today' => 'Je hebt deze parkeerplaats vandaag al bevestigd.',
     ],
+    'improve' => [
+        'submitted' => 'Bedankt. Een moderator bekijkt je verbetering; tot die tijd blijft de huidige informatie zichtbaar.',
+        'already_pending' => 'Je hebt al een verbetering voor deze parkeerplaats ingediend. Een moderator bekijkt het.',
+        'unchanged' => 'Je hebt nog niets veranderd.',
+    ],
     'report' => [
         'recorded' => 'Bedankt. Een moderator bekijkt je melding; tot die tijd blijft de parkeerplaats op de kaart.',
         'already_open' => 'Je hebt deze parkeerplaats al gemeld. Een moderator bekijkt het.',
     ],
     'moderation' => [
+        'improvement_approved' => 'De verbetering is doorgevoerd.',
+        'improvements_rejected' => '{1} :count verbetering afgewezen.|[2,*] :count verbeteringen afgewezen.',
+        'improvement_rejected' => 'De verbetering is afgewezen.',
         'kept' => 'De parkeerplaats blijft op de kaart en de meldingen zijn afgehandeld.',
         'deleted' => 'De parkeerplaats van de community is verwijderd.',
         'hidden' => 'De gemeentelijke parkeerplaats is verborgen op de kaart.',

@@ -45,7 +45,8 @@
         "default": "Notification",
         "dataset.import_ready_for_review": "Delivery ready for review",
         "dataset.source_awaiting_approval": "Source awaiting approval",
-        "dataset.source_awaiting_reapproval": "Changed source awaiting approval"
+        "dataset.source_awaiting_reapproval": "Changed source awaiting approval",
+        "report.*": "Report"
     },
     "titles": {
         "community.space_submitted": "New community space: {{space_label}}",
@@ -57,6 +58,25 @@
         "default": "Notification",
         "dataset.import_ready_for_review": "Delivery ready for review: {{source_name}}",
         "dataset.source_awaiting_approval": "Source awaiting approval: {{source_name}}",
-        "dataset.source_awaiting_reapproval": "Changed source awaiting approval: {{source_name}}"
+        "dataset.source_awaiting_reapproval": "Changed source awaiting approval: {{source_name}}",
+        "community.improvement_approved": "Improvement applied: {{space_label}}",
+        "community.improvement_rejected": "Improvement rejected: {{space_label}}",
+        "report.place_kept": "Report reviewed, parking space stays: {{space_label}}",
+        "report.place_removed": "Parking space removed after report: {{space_label}}"
+    },
+    "reason": "Reason: {{reason}}",
+    "reasons": {
+        "improvement": {
+            "incorrect": "Does not match the situation",
+            "insufficient_information": "Insufficient information",
+            "spam": "Spam or abuse",
+            "other": "Other"
+        },
+        "removal": {
+            "no_longer_exists": "No longer exists",
+            "not_a_disabled_bay": "Not a disabled parking space",
+            "duplicate": "Duplicate",
+            "other": "Other"
+        }
     }
 }

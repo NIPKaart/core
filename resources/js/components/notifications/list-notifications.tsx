@@ -22,6 +22,10 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     'community.space_deleted': Trash2,
     'community.space_deleted_by_user': Trash2,
     'community.space_restored': RotateCcw,
+    'community.improvement_approved': Check,
+    'community.improvement_rejected': Pencil,
+    'report.place_kept': MapPin,
+    'report.place_removed': Trash2,
     'dataset.source_awaiting_approval': Database,
     'dataset.source_awaiting_reapproval': RefreshCw,
     'dataset.import_ready_for_review': FileSearch,
@@ -112,6 +116,8 @@ function NotificationRow({
     const url = getStr(raw.url);
     // What the notification is about: a data source or a community space.
     const subject = getStr(n.data?.params?.source_name) ?? getStr(n.data?.params?.space_label);
+    // Why a moderator decided as they did, for example when rejecting an improvement.
+    const reason = getStr(n.data?.params?.reason);
 
     const unread = !n.read_at;
 
@@ -169,6 +175,9 @@ function NotificationRow({
                     )}
 
                     {subject && <div className="line-clamp-2 text-xs leading-4 text-muted-foreground">{subject}</div>}
+                    {reason && (
+                        <div className="text-xs leading-4 text-muted-foreground">{tGlobal('reason', { reason: tGlobal(`reasons.${reason}`) })}</div>
+                    )}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
                         {unread && (

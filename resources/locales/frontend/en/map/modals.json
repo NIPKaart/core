@@ -199,7 +199,10 @@
             "fetched": "fetched",
             "activity": "Your activity",
             "confirmed_today": "Confirmed today",
-            "reported": "Reported as gone · awaiting a moderator"
+            "reported": "Reported as gone · awaiting a moderator",
+            "improve": "Improve information",
+            "improve_note": "Location, bay, under-sign or note",
+            "improvement_pending": "Improvement proposed · awaiting a moderator"
         }
     }
 }

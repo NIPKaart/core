@@ -1,14 +1,16 @@
 {
     "head": {
         "add": "Parkeerplaats toevoegen",
-        "edit": "Inzending aanpassen"
+        "edit": "Inzending aanpassen",
+        "improve": "Informatie verbeteren"
     },
     "header": {
         "add": "Parkeerplaats toevoegen",
         "edit": "Inzending aanpassen",
         "step": "Stap {{step}} van 3 · {{name}}",
         "cancel": "Annuleren",
-        "back": "Terug"
+        "back": "Terug",
+        "improve": "Informatie verbeteren"
     },
     "steps": {
         "location": "Locatie",
@@ -114,5 +116,14 @@
         "login": "Inloggen",
         "register": "Account aanmaken",
         "not_now": "Niet nu"
+    },
+    "improve": {
+        "intro": "Pas aan wat niet klopt, ook de locatie. Een moderator bekijkt je verbetering; tot die tijd blijft de huidige informatie zichtbaar.",
+        "submit": "Verbetering versturen",
+        "after": [
+            "Een moderator bekijkt je verbetering en kan die nog aanpassen.",
+            "Tot die tijd ziet iedereen de huidige informatie.",
+            "Na goedkeuring ziet iedereen de verbeterde informatie."
+        ]
     }
 }

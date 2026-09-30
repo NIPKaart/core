@@ -45,7 +45,8 @@
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling",
         "dataset.source_awaiting_approval": "Bron wacht op goedkeuring",
-        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring"
+        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring",
+        "report.*": "Melding"
     },
     "titles": {
         "community.space_submitted": "Nieuwe community locatie: {{space_label}}",
@@ -57,6 +58,25 @@
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling: {{source_name}}",
         "dataset.source_awaiting_approval": "Bron wacht op goedkeuring: {{source_name}}",
-        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring: {{source_name}}"
+        "dataset.source_awaiting_reapproval": "Gewijzigde bron wacht op goedkeuring: {{source_name}}",
+        "community.improvement_approved": "Verbetering doorgevoerd: {{space_label}}",
+        "community.improvement_rejected": "Verbetering afgewezen: {{space_label}}",
+        "report.place_kept": "Melding bekeken, parkeerplaats blijft: {{space_label}}",
+        "report.place_removed": "Parkeerplaats verwijderd na melding: {{space_label}}"
+    },
+    "reason": "Reden: {{reason}}",
+    "reasons": {
+        "improvement": {
+            "incorrect": "Klopt niet met de situatie",
+            "insufficient_information": "Onvoldoende informatie",
+            "spam": "Spam of misbruik",
+            "other": "Anders"
+        },
+        "removal": {
+            "no_longer_exists": "Bestaat niet meer",
+            "not_a_disabled_bay": "Geen gehandicaptenparkeerplaats",
+            "duplicate": "Dubbel",
+            "other": "Anders"
+        }
     }
 }
