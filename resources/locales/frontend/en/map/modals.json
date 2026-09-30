@@ -5,7 +5,6 @@
             "description": "This space is part of our community parking initiative. You can confirm use or view more details."
         },
         "tabs": {
-            "info": "Info",
             "description": "Description"
         },
         "table": {
@@ -23,13 +22,6 @@
             },
             "under_sign": "Sub-sign",
             "restriction": "Applies on"
-        },
-        "confirm": {
-            "button": "It's here",
-            "label": "Confirm that this parking place is here",
-            "sign_in_label": "Log in to confirm that this parking place is here",
-            "confirming": "Confirming…",
-            "confirmed_today": "Confirmed today"
         },
         "days": {
             "mon": "Mon",
@@ -50,10 +42,10 @@
             "updated_at": "Last updated",
             "source": "Source",
             "terms": "Source terms",
-            "fetched_at": "Data fetched on"
+            "fetched_at": "Fetched on"
         },
         "unknown": "Unknown",
-        "fetched_note": "This is when the data was fetched, not an on-site check of the parking place."
+        "fetched_note": "This is when the data was fetched, not an on-site check of the parking space."
     },
     "offstreet": {
         "modal": {
@@ -159,14 +151,55 @@
             "measured": "Measured"
         },
         "id_ending": "ending in",
-        "confirmations": {
-            "title": "Confirmations",
+        "tabs": {
+            "info": "Info",
+            "contribute": "Contributions"
+        },
+        "existence": {
+            "question": "Is the parking space still here?",
             "count_one": "Confirmed {{count}}×",
             "count_other": "Confirmed {{count}}×",
-            "last": "Present, last",
             "none": "Not confirmed yet",
-            "prompt": "Is this place still here?",
-            "help": "A confirmation tells others that this parking place is really here. You can confirm once a day."
+            "present_since": "Present, last on",
+            "yes": "Yes",
+            "no": "No",
+            "yes_label": "Yes, the parking space is here",
+            "no_label": "No, the parking space is gone",
+            "thanks": "Thanks, you confirmed",
+            "today_by_you_one": "Confirmed {{count}}× · today also by you",
+            "today_by_you_other": "Confirmed {{count}}× · today also by you",
+            "reported": "You reported that the parking space is gone",
+            "reported_note": "A moderator will look at it.",
+            "log_in": "Log in",
+            "log_in_hint": "to confirm or report."
+        },
+        "report": {
+            "title": "The parking space is no longer there",
+            "back": "Back to the parking space",
+            "explanation": "A moderator will look at it. Until then the parking space stays on the map.",
+            "seen": "What did you see?",
+            "optional": "(optional)",
+            "reasons": {
+                "sign_removed": "Sign or bay has been removed",
+                "now_regular_bay": "It is now a regular parking space",
+                "other": "Something else"
+            },
+            "note": "Note",
+            "placeholder": "What has changed?",
+            "submit": "Send report",
+            "sending": "Sending…"
+        },
+        "contribute": {
+            "exists": "Does the parking space exist?",
+            "last": "last",
+            "report": "Report that the parking space is gone",
+            "report_note": "A moderator decides",
+            "sources": "Sources of this parking space",
+            "added": "added",
+            "fetched": "fetched",
+            "activity": "Your activity",
+            "confirmed_today": "Confirmed today",
+            "reported": "Reported as gone · awaiting a moderator"
         }
     }
 }

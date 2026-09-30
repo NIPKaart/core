@@ -1,5 +1,5 @@
 import { Progress } from '@/components/ui/progress';
-import { AlarmClock, Eye, Info, MapPin, Navigation, Users } from 'lucide-react';
+import { AlarmClock, Eye, Info, MapPin, Navigation } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { navigationUrl, streetViewUrl } from './navigation-handoff';
@@ -15,8 +15,8 @@ export type ParkingDetailData =
 type Props = {
     data: ParkingDetailData;
     isLoggedIn: boolean;
-    /** Existence confirmation control beside the confirmation evidence; only for community and municipal places. */
-    confirmActions?: ReactNode;
+    /** The "is it still here?" check below the navigation; only for community and municipal places. */
+    existence?: ReactNode;
 };
 
 /** `note` stays visible (warnings/semantics); `help` is optional background behind a help button. */
@@ -71,7 +71,7 @@ function ExternalLink({ href, children, className = '' }: { href: string; childr
     );
 }
 
-export default function ParkingDetailBody({ data, isLoggedIn, confirmActions }: Props) {
+export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { source, detail } = data;
 
@@ -91,20 +91,6 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions }: 
         ) : (
             unknown
         );
-
-    // Recent dates drop the year so the confirmation line stays on one row.
-    const shortDate = (value: string) => {
-        const parsed = new Date(value);
-        return (
-            <time dateTime={value}>
-                {parsed.toLocaleDateString(locale, {
-                    day: 'numeric',
-                    month: 'short',
-                    ...(parsed.getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' }),
-                })}
-            </time>
-        );
-    };
 
     const address = [detail.municipality, detail.province, detail.country]
         .map((part) => part?.trim())
@@ -361,42 +347,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions }: 
                 <p className="text-center text-xs text-muted-foreground">{t('detail.navigation.unavailable')}</p>
             )}
 
-            {source !== 'offstreet' && (
-                <section
-                    aria-labelledby="parking-detail-confirmations"
-                    className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2"
-                >
-                    <h3 id="parking-detail-confirmations" className="sr-only">
-                        {t('detail.confirmations.title')}
-                    </h3>
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5 text-sm">
-                        <Users className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                        <p className="flex min-w-0 flex-1 flex-col leading-tight">
-                            <span className="font-medium">
-                                {detail.confirmations_count?.confirmed
-                                    ? t('detail.confirmations.count', { count: detail.confirmations_count.confirmed })
-                                    : t('detail.confirmations.none')}{' '}
-                                <span className="inline-block align-[-3px]">
-                                    <HelpPopover
-                                        content={t('detail.confirmations.help')}
-                                        label={t('detail.more_info', { label: t('detail.confirmations.title') })}
-                                    />
-                                </span>
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {detail.last_confirmed_at ? (
-                                    <>
-                                        {t('detail.confirmations.last')} {shortDate(detail.last_confirmed_at)}
-                                    </>
-                                ) : (
-                                    t('detail.confirmations.prompt')
-                                )}
-                            </span>
-                        </p>
-                    </div>
-                    {confirmActions}
-                </section>
-            )}
+            {source !== 'offstreet' && existence}
 
             {groups.length > 0 && (
                 <div className="divide-y divide-zinc-100 rounded-lg border text-sm dark:divide-zinc-800">

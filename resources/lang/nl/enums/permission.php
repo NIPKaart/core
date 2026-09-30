@@ -110,6 +110,19 @@ return [
             ],
         ],
     ],
+    'parking-place-report' => [
+        'label' => 'Meldingen',
+        'actions' => [
+            'view_any' => [
+                'label' => 'Meldingen bekijken',
+                'description' => 'Geeft toegang tot parkeerplaatsen die als verdwenen zijn gemeld.',
+            ],
+            'resolve' => [
+                'label' => 'Meldingen afhandelen',
+                'description' => 'Laat een gemelde parkeerplaats staan, of verwijdert een parkeerplaats van de community en verbergt een gemeentelijke.',
+            ],
+        ],
+    ],
     'parking-municipal' => [
         'label' => 'Gemeentelijke parkeerplaatsen',
         'actions' => [

@@ -12,17 +12,72 @@ function mount(fetch, props = {}) {
     let timer, move, cleanup, effect;
     const delays = [];
     let zoom = 10;
-    const results = [], statuses = [];
-    const bounds = { contains: () => true, pad() { return this; }, getWest: () => 4, getSouth: () => 52, getEast: () => 5, getNorth: () => 53 };
-    const context = { exports: {}, AbortController, URLSearchParams, fetch, window: { setTimeout: (callback, delay) => { timer = callback; delays.push(delay); return 1; }, clearTimeout: () => { timer = null; } }, require: (name) => {
-        if (name === 'react') return { useRef: (current) => ({ current }), useCallback: (fn) => fn, useEffect: (fn) => { effect = fn; cleanup = fn(); } };
-        if (name === 'react-leaflet') return { useMap: () => ({ getBounds: () => bounds, getZoom: () => zoom }), useMapEvents: ({ moveend }) => { move = moveend; } };
-        if (name === '@/routes/map/parking') return { viewport: { url: ({ query }) => '/map/parking/viewport?' + new URLSearchParams(query) } };
-        throw new Error(`Unexpected import: ${name}`);
-    } };
+    const results = [],
+        statuses = [];
+    const bounds = {
+        contains: () => true,
+        pad() {
+            return this;
+        },
+        getWest: () => 4,
+        getSouth: () => 52,
+        getEast: () => 5,
+        getNorth: () => 53,
+    };
+    const context = {
+        exports: {},
+        AbortController,
+        URLSearchParams,
+        fetch,
+        window: {
+            setTimeout: (callback, delay) => {
+                timer = callback;
+                delays.push(delay);
+                return 1;
+            },
+            clearTimeout: () => {
+                timer = null;
+            },
+        },
+        require: (name) => {
+            if (name === 'react')
+                return {
+                    useRef: (current) => ({ current }),
+                    useCallback: (fn) => fn,
+                    useEffect: (fn) => {
+                        effect = fn;
+                        cleanup = fn();
+                    },
+                };
+            if (name === 'react-leaflet')
+                return {
+                    useMap: () => ({ getBounds: () => bounds, getZoom: () => zoom }),
+                    useMapEvents: ({ moveend }) => {
+                        move = moveend;
+                    },
+                };
+            if (name === '@/routes/map/parking') return { viewport: { url: ({ query }) => '/map/parking/viewport?' + new URLSearchParams(query) } };
+            throw new Error(`Unexpected import: ${name}`);
+        },
+    };
     vm.runInNewContext(source, context);
     context.exports.default({ onResults: (value) => results.push(value), onStatus: (value) => statuses.push(value), retry: 0, ...props });
-    return { results, statuses, delays, run: () => timer?.(), move: () => move(), zoom: () => { zoom++; move(); }, retry: () => { cleanup(); cleanup = effect(); }, cleanup: () => cleanup() };
+    return {
+        results,
+        statuses,
+        delays,
+        run: () => timer?.(),
+        move: () => move(),
+        zoom: () => {
+            zoom++;
+            move();
+        },
+        retry: () => {
+            cleanup();
+            cleanup = effect();
+        },
+        cleanup: () => cleanup(),
+    };
 }
 
 test('zooming reloads a capped area and replaces the previous result set', async () => {
@@ -62,10 +117,13 @@ for (const failure of ['http', 'network', 'json']) {
         let fail = true;
         const view = mount(async () => {
             if (fail && failure === 'network') throw new Error('offline');
-            return { ok: !(fail && failure === 'http'), json: async () => {
-                if (fail && failure === 'json') throw new Error('invalid json');
-                return { results: ['recovered'] };
-            } };
+            return {
+                ok: !(fail && failure === 'http'),
+                json: async () => {
+                    if (fail && failure === 'json') throw new Error('invalid json');
+                    return { results: ['recovered'] };
+                },
+            };
         });
         await view.run();
         assert.equal(view.statuses.at(-1), 'error');
@@ -81,7 +139,15 @@ for (const failure of ['http', 'network', 'json']) {
 test('a superseded response cannot overwrite the current map and list', async () => {
     let resolveFirst;
     let calls = 0;
-    const view = mount(async () => ({ ok: true, json: () => ++calls === 1 ? new Promise((resolve) => { resolveFirst = resolve; }) : Promise.resolve({ results: ['new'] }) }));
+    const view = mount(async () => ({
+        ok: true,
+        json: () =>
+            ++calls === 1
+                ? new Promise((resolve) => {
+                      resolveFirst = resolve;
+                  })
+                : Promise.resolve({ results: ['new'] }),
+    }));
     const first = view.run();
     await Promise.resolve();
     view.zoom();
@@ -93,7 +159,12 @@ test('a superseded response cannot overwrite the current map and list', async ()
 
 test('unmount cancels a pending response without announcing a false error', async () => {
     let resolve;
-    const view = mount(() => new Promise((done) => { resolve = done; }));
+    const view = mount(
+        () =>
+            new Promise((done) => {
+                resolve = done;
+            }),
+    );
     const pending = view.run();
     view.cleanup();
     resolve({ ok: true, json: async () => ({ results: ['obsolete'] }) });
@@ -102,13 +173,16 @@ test('unmount cancels a pending response without announcing a false error', asyn
     assert.deepEqual(view.statuses, ['loading']);
 });
 
-
 test('paging requests the next records in the same area and exposes whether another page exists', async () => {
-    const queries = [], more = [];
-    const view = mount(async (url) => {
-        queries.push(new URL(url, 'https://example.test').searchParams);
-        return { ok: true, json: async () => ({ results: ['page two'], has_more: true }) };
-    }, { page: 2, onHasMore: (value) => more.push(value) });
+    const queries = [],
+        more = [];
+    const view = mount(
+        async (url) => {
+            queries.push(new URL(url, 'https://example.test').searchParams);
+            return { ok: true, json: async () => ({ results: ['page two'], has_more: true }) };
+        },
+        { page: 2, onHasMore: (value) => more.push(value) },
+    );
     await view.run();
     assert.equal(queries[0].get('page'), '2');
     assert.equal(queries[0].get('west'), '4');

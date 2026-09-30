@@ -23,6 +23,23 @@ test('users can authenticate using the login screen', function () {
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
+test('logging in from a place returns to that place', function () {
+    $user = User::factory()->create();
+    $place = '/map?place=municipal%3A123&at=52.35829%2C4.78664';
+
+    $this->get(route('login', ['return' => $place]))->assertOk();
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
+        ->assertRedirect(url($place));
+});
+
+test('a return address outside this site is ignored', function (string $return) {
+    $user = User::factory()->create();
+
+    $this->get(route('login', ['return' => $return]))->assertOk();
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])
+        ->assertRedirect(route('dashboard', absolute: false));
+})->with(['https://example.com/map', '//example.com/map', '/\\example.com/map', 'map']);
+
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 

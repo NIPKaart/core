@@ -38,7 +38,7 @@
         },
         "destination": {
             "title": "Je bestemming",
-            "text": "Afstanden worden gemeten vanaf dit punt, zodat je ziet welke plek het dichtstbij ligt."
+            "text": "Afstanden worden gemeten vanaf dit punt, zodat je ziet welke parkeerplaats het dichtstbij ligt."
         }
     },
     "garages": {
@@ -48,9 +48,9 @@
         "link": "Alle garages en P+R"
     },
     "contribute": {
-        "title": "Staat een plek er nog niet op?",
+        "title": "Staat een parkeerplaats er nog niet op?",
         "text": "Je eigen buurt en de plekken waar je vaak komt, ken je vaak het best. Voeg een gehandicaptenparkeerplaats die je kent in een paar stappen toe en help andere bezoekers op weg. Zo wordt de kaart met elke bijdrage completer.",
-        "cta": "Plek toevoegen",
+        "cta": "Parkeerplaats toevoegen",
         "step": "Zet de pin op de plek",
         "next": "Daarna vul je de ligging en eventuele parkeertijden in"
     }

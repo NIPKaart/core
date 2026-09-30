@@ -40,6 +40,8 @@ enum UserRole: string
                 Permission::PARKING_SPACE_CONFIRMATION_VIEW,
                 Permission::PARKING_SPACE_CONFIRMATION_VIEW_ANY,
                 Permission::PARKING_SPACE_CONFIRMATION_DELETE,
+                Permission::PARKING_PLACE_REPORT_VIEW_ANY,
+                Permission::PARKING_PLACE_REPORT_RESOLVE,
                 Permission::PARKING_MUNICIPAL_VIEW,
                 Permission::PARKING_MUNICIPAL_VIEW_ANY,
                 Permission::PARKING_MUNICIPAL_UPDATE,

@@ -10,22 +10,41 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/compo
 }).outputText;
 function mount(fetch) {
     let cleanup;
-    const results = [], statuses = [], more = [];
-    const context = { exports: {}, AbortController, fetch, require: (name) => {
-        if (name === 'react') return { useEffect: (fn) => { cleanup = fn(); } };
-        if (name === '@/routes/map/parking') return { nearby: { url: ({ query }) => '/nearby?' + new URLSearchParams(query) } };
-        throw new Error(name);
-    } };
+    const results = [],
+        statuses = [],
+        more = [];
+    const context = {
+        exports: {},
+        AbortController,
+        fetch,
+        require: (name) => {
+            if (name === 'react')
+                return {
+                    useEffect: (fn) => {
+                        cleanup = fn();
+                    },
+                };
+            if (name === '@/routes/map/parking') return { nearby: { url: ({ query }) => '/nearby?' + new URLSearchParams(query) } };
+            throw new Error(name);
+        },
+    };
     vm.runInNewContext(source, context);
-    context.exports.default({ origin: { latitude: 52, longitude: 5 }, filters: { source: 'municipal', radius: 500, sort: 'balanced' }, page: 2, retry: 0,
-        onResults: value => results.push(value), onStatus: value => statuses.push(value), onHasMore: value => more.push(value) });
+    context.exports.default({
+        origin: { latitude: 52, longitude: 5 },
+        filters: { source: 'municipal', radius: 500, sort: 'balanced' },
+        page: 2,
+        retry: 0,
+        onResults: (value) => results.push(value),
+        onStatus: (value) => statuses.push(value),
+        onHasMore: (value) => more.push(value),
+    });
     return { results, statuses, more, cleanup: () => cleanup() };
 }
-const flush = () => new Promise(resolve => setImmediate(resolve));
+const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 test('destination filters and page are sent together and replace stale map/list results', async () => {
     let query;
-    const view = mount(async url => {
+    const view = mount(async (url) => {
         query = new URL(url, 'https://example.test').searchParams;
         return { ok: true, json: async () => ({ results: ['municipal:a'], has_more: true }) };
     });
@@ -43,7 +62,12 @@ test('destination filters and page are sent together and replace stale map/list 
 
 test('superseded requests cannot restore obsolete results', async () => {
     let resolve;
-    const view = mount(() => new Promise(done => { resolve = done; }));
+    const view = mount(
+        () =>
+            new Promise((done) => {
+                resolve = done;
+            }),
+    );
     view.cleanup();
     resolve({ ok: true, json: async () => ({ results: ['old'], has_more: true }) });
     await flush();
@@ -56,7 +80,12 @@ for (const kind of ['http', 'network', 'json']) {
     test(`${kind} failures expose an error with no obsolete results`, async () => {
         const view = mount(async () => {
             if (kind === 'network') throw new Error('offline');
-            return { ok: kind !== 'http', json: async () => { throw new Error('invalid json'); } };
+            return {
+                ok: kind !== 'http',
+                json: async () => {
+                    throw new Error('invalid json');
+                },
+            };
         });
         await flush();
         assert.deepEqual(view.statuses, ['loading', 'error']);

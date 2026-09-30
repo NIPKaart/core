@@ -54,6 +54,7 @@ class SpacesInfoController extends Controller
             'updated_at' => $location->updated_at,
             'is_favorited' => $isFavorited,
             ...$location->publicConfirmations($user),
+            'reported_by_you' => $user ? $location->isReportedBy($user) : false,
         ]);
     }
 
@@ -91,6 +92,7 @@ class SpacesInfoController extends Controller
             'updated_at' => $location->updated_at,
             'is_favorited' => $isFavorited,
             ...$location->publicConfirmations($user),
+            'reported_by_you' => $user ? $location->isReportedBy($user) : false,
         ]);
     }
 

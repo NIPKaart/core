@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const source = ts.transpileModule(readFileSync(new URL('../../resources/js/lib/destination-icon.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText;
-const context = { exports: {}, require: name => name === 'leaflet' ? { default: { divIcon: options => options } } : require(name) };
+const context = { exports: {}, require: (name) => (name === 'leaflet' ? { default: { divIcon: (options) => options } } : require(name)) };
 vm.runInNewContext(source, context);
 test('the destination marker has an accessible name and safely renders destination text', () => {
     const icon = context.exports.destinationIcon('Bestemming: <img src=x onerror="alert(1)">');

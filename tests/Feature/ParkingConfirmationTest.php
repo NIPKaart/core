@@ -64,7 +64,7 @@ test('each user confirms each place at most once per application day', function 
 
     $this->actingAs($this->user);
     $confirm()->assertSessionHasNoErrors();
-    $confirm()->assertSessionHasErrors(['general' => 'Je hebt deze plek vandaag al bevestigd.']);
+    $confirm()->assertSessionHasErrors(['general' => 'Je hebt deze parkeerplaats vandaag al bevestigd.']);
     $this->post(route('map.places.confirm', ['source' => 'community', 'id' => $other->id]))->assertSessionHasNoErrors();
     $this->actingAs(User::factory()->create());
     $confirm()->assertSessionHasNoErrors();

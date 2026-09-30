@@ -7,7 +7,7 @@
     "intro": "NIPKaart brings disabled parking spaces, local rules and garage occupancy together in one place. For everyone with a disabled parking card, and for those travelling with them.",
     "sources": {
         "title": "Where the data comes from",
-        "intro": "Every place shows where its information comes from.",
+        "intro": "Every parking space shows where its information comes from.",
         "columns": {
             "source": "Source",
             "shows": "What you see",
@@ -22,8 +22,8 @@
         "community": {
             "name": "Community",
             "kind": "Contributions from users",
-            "shows": "Places that are not (yet) in open data. Other users can confirm that a place is still there.",
-            "freshness": "Updated as users add or confirm places."
+            "shows": "Parking spaces that are not (yet) in open data. Other users can confirm that a parking space is still there.",
+            "freshness": "Updated as users add or confirm parking spaces."
         },
         "offstreet": {
             "name": "Garages and P+R",
@@ -36,11 +36,11 @@
         "title": "Why NIPKaart exists",
         "body": [
             "With a disabled parking card you want to know beforehand whether there is a space, and under which conditions. That information often exists, but it is scattered across municipal datasets, signs and garage websites.",
-            "NIPKaart started in 2021 as a geoweb project during studies. Since 2022 we have been collecting data from across Europe. With this new website we are modernising the whole platform: searching starts at your destination, and every place shows where its information comes from."
+            "NIPKaart started in 2021 as a geoweb project during studies. Since 2022 we have been collecting data from across Europe. With this new website we are modernising the whole platform: searching starts at your destination, and every parking space shows where its information comes from."
         ]
     },
     "details": {
-        "title": "What you see for each place",
+        "title": "What you see for each parking space",
         "items": {
             "orientation": {
                 "term": "Orientation",

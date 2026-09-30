@@ -30,7 +30,9 @@ test('invalid or unsupported shared filters fall back to explicit defaults', () 
 });
 
 test('choosing a new destination preserves filters and removes the previous map position and bounds', () => {
-    const url = new URL('https://example.test/map?destination=Old&lat=51&lng=4&source=municipal&radius=500&sort=distance&view=list&south=50&north=52&west=3&east=5#14/51/4');
+    const url = new URL(
+        'https://example.test/map?destination=Old&lat=51&lng=4&source=municipal&radius=500&sort=distance&view=list&south=50&north=52&west=3&east=5#14/51/4',
+    );
     const next = new URL(context.exports.discoveryDestinationUrl(url, { label: 'Amstel, Amsterdam', latitude: 52.36, longitude: 4.9 }), url);
     assert.equal(next.searchParams.get('destination'), 'Amstel, Amsterdam');
     assert.equal(next.searchParams.get('lat'), '52.36');
@@ -58,7 +60,9 @@ test('streets, areas and legacy destinations remain approximate while specific d
 });
 
 test('clearing the destination removes all destination state while preserving filters and the current map view', () => {
-    const url = new URL('https://example.test/map?destination=Amstel&destination_type=street&lat=52&lng=5&south=51&north=53&west=4&east=6&source=municipal&radius=500&sort=distance#17/52/5');
+    const url = new URL(
+        'https://example.test/map?destination=Amstel&destination_type=street&lat=52&lng=5&south=51&north=53&west=4&east=6&source=municipal&radius=500&sort=distance#17/52/5',
+    );
     const cleared = new URL(context.exports.clearDiscoveryDestinationUrl(url), url);
     assert.equal(cleared.search, '?source=municipal&radius=500&sort=distance');
     assert.equal(cleared.hash, '#17/52/5');

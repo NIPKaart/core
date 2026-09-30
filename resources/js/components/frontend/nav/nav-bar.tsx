@@ -49,7 +49,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
             <header className="relative z-50 bg-white dark:bg-neutral-900">
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-[18px] lg:px-8 lg:py-5" aria-label="Global">
                     {/* Logo */}
-                    <div className="z-50 flex lg:flex-1">
+                    <div className="z-50 flex shrink-0 lg:flex-1">
                         <Link href={home()} className="-m-1.5 p-1.5">
                             <span className="sr-only">NIPKaart</span>
                             <img src="/assets/images/logo-light.svg" alt="NIPKaart" className="h-8 w-auto dark:hidden" />
@@ -118,7 +118,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                                         name={item.name}
                                         href={item.href.url}
                                         className={cn(
-                                            'h-10 px-3 text-base xl:px-6',
+                                            'h-10 px-3 text-base whitespace-nowrap xl:px-6',
                                             isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
                                         )}
                                     />

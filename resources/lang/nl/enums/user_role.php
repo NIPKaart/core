@@ -7,7 +7,7 @@ return [
     ],
     'moderator' => [
         'label' => 'Moderator',
-        'description' => 'Beoordeelt community-bijdragen en verbergt verdwenen gemeentelijke plekken, zonder gebruikers-, rollen- of databeheer.',
+        'description' => 'Beoordeelt community-bijdragen en verbergt verdwenen gemeentelijke parkeerplaatsen, zonder gebruikers-, rollen- of databeheer.',
     ],
     'user' => [
         'label' => 'Gebruiker',

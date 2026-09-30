@@ -11,7 +11,7 @@ return [
     'mail' => [
         'subject' => 'Contact form: :topic from :name',
         'from' => 'From',
-        'location' => 'Place',
+        'location' => 'Parking space',
         'reply' => 'Reply to this e-mail to respond directly.',
     ],
 ];

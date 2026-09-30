@@ -7,18 +7,22 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
+import { placeLinkPath } from '@/lib/place-link';
+import { login } from '@/routes';
 import app from '@/routes/app';
 import { show as municipalDetails } from '@/routes/map/parking-municipal';
 import { show as offstreetDetails } from '@/routes/map/parking-offstreet';
 import { show as communityDetails } from '@/routes/map/parking-spaces';
 import type { ParkingResult } from '@/types/destination';
 import { Link } from '@inertiajs/react';
-import { Eye, FileText, Info as InfoIcon, Share2, X } from 'lucide-react';
+import { Eye, Share2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Contributions from './contributions';
+import ExistenceCheck from './existence-check';
 import ParkingDetailBody, { type ParkingDetailData } from './parking-detail-body';
 import { CommunityDescriptionCard, SourceIcon } from './parts';
+import ReportStep from './report-step';
 import { formatDistance } from './utils';
 
 type Props = {
@@ -41,9 +45,6 @@ const favoriteTypes = {
     offstreet: 'parking_offstreet',
 } as const;
 
-const tabTriggerClass =
-    'flex flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white';
-
 export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
@@ -54,6 +55,8 @@ export default function ParkingDetail({ result, approximateDestination = false, 
     const [shared, setShared] = useState(false);
     const [reload, setReload] = useState(0);
     const [tab, setTab] = useState('info');
+    // A step (reporting that the place is gone) temporarily replaces the tabs inside the same sheet.
+    const [step, setStep] = useState<'report' | null>(null);
     // A refresh after confirming keeps the current view instead of flashing the loading state.
     const silentReload = useRef(false);
 
@@ -66,6 +69,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         if (!silent) {
             setShared(false);
             setTab('info');
+            setStep(null);
         }
         if (!open || !source || !id) {
             setData(null);
@@ -121,10 +125,8 @@ export default function ParkingDetail({ result, approximateDestination = false, 
 
     const detail = status === 'ready' && data?.source === result.source && data.detail.id === result.id ? data : null;
     const community = detail && detail.source === 'community' ? detail : null;
-    // Existence can be confirmed for every street place, whichever source describes it; garages are facilities.
-    const confirmable = detail && detail.source !== 'offstreet' ? detail : null;
-    const hasDescription = !!community?.detail.description;
-    const showTabs = hasDescription;
+    // Street places get the existence check and a Contributions tab; garages are facilities and keep one plain view.
+    const street = detail && detail.source !== 'offstreet' ? detail : null;
     const title =
         (detail?.source === 'offstreet' ? detail.detail.name : detail?.detail.street)?.trim() || result.title.trim() || t('detail.no_address');
 
@@ -149,24 +151,37 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         </span>
     );
 
-    const confirmActions = confirmable && (
-        <ParkingConfirmForm
-            key={`${confirmable.source}:${confirmable.detail.id}`}
-            source={confirmable.source}
-            id={confirmable.detail.id}
+    // Logging in from this dialog returns to the same place instead of the dashboard.
+    const loginHref = login({ query: { return: placeLinkPath(result) } });
+
+    const refreshSilently = () => {
+        silentReload.current = true;
+        setReload((value) => value + 1);
+    };
+
+    const existence = street && (
+        <ExistenceCheck
+            key={`${street.source}:${street.detail.id}`}
+            source={street.source}
+            id={street.detail.id}
+            confirmedCount={street.detail.confirmations_count?.confirmed ?? 0}
+            lastConfirmedAt={street.detail.last_confirmed_at}
+            confirmedToday={!!street.detail.confirmed_today}
+            reported={!!street.detail.reported_by_you}
             signedIn={!!user}
-            confirmedToday={!!confirmable.detail.confirmed_today}
-            onConfirmed={() => {
-                silentReload.current = true;
-                setReload((value) => value + 1);
-            }}
+            loginHref={loginHref}
+            onConfirmed={refreshSilently}
+            onReport={() => setStep('report')}
         />
     );
 
-    const infoContent = detail && <ParkingDetailBody data={detail} isLoggedIn={!!user} confirmActions={confirmActions || undefined} />;
-
-    const descriptionContent = community?.detail.description && (
-        <CommunityDescriptionCard title={t('community.tabs.description')} description={community.detail.description} />
+    const infoContent = detail && (
+        <div className="flex flex-col gap-4">
+            <ParkingDetailBody data={detail} isLoggedIn={!!user} existence={existence || undefined} />
+            {community?.detail.description && (
+                <CommunityDescriptionCard title={t('community.tabs.description')} description={community.detail.description} />
+            )}
+        </div>
     );
 
     const body =
@@ -181,20 +196,31 @@ export default function ParkingDetail({ result, approximateDestination = false, 
             <p role="status" className="py-6 text-sm text-muted-foreground">
                 {t('detail.loading')}
             </p>
-        ) : showTabs ? (
+        ) : street && step === 'report' ? (
+            <ReportStep
+                source={street.source}
+                id={street.detail.id}
+                onBack={() => setStep(null)}
+                onReported={() => {
+                    setStep(null);
+                    setTab('info');
+                    refreshSilently();
+                }}
+            />
+        ) : street ? (
             <Tabs value={tab} onValueChange={setTab} className="w-full">
-                <TabsList className="mb-2 flex w-full">
-                    <TabsTrigger value="info" className={tabTriggerClass}>
-                        <InfoIcon className="h-4 w-4" aria-hidden />
-                        {t('community.tabs.info')}
+                <TabsList className="w-full">
+                    <TabsTrigger value="info" className="cursor-pointer">
+                        {t('detail.tabs.info')}
                     </TabsTrigger>
-                    <TabsTrigger value="description" className={tabTriggerClass}>
-                        <FileText className="h-4 w-4" aria-hidden />
-                        {t('community.tabs.description')}
+                    <TabsTrigger value="contribute" className="cursor-pointer">
+                        {t('detail.tabs.contribute')}
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="info">{infoContent}</TabsContent>
-                <TabsContent value="description">{descriptionContent}</TabsContent>
+                <TabsContent value="contribute">
+                    <Contributions data={street} signedIn={!!user} loginHref={loginHref} onReport={() => setStep('report')} />
+                </TabsContent>
             </Tabs>
         ) : (
             infoContent
@@ -265,7 +291,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                             <DialogTitle>{heading}</DialogTitle>
                             {headerActions}
                         </div>
-                        <DialogDescription className="text-center">{description}</DialogDescription>
+                        <DialogDescription className="text-center text-pretty">{description}</DialogDescription>
                     </DialogHeader>
                     {sharedStatus}
                     <div className="min-h-0 overflow-y-auto pr-1">{body}</div>
@@ -286,7 +312,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                         <DrawerTitle className="min-w-0">{heading}</DrawerTitle>
                         {headerActions}
                     </div>
-                    <DrawerDescription className="text-left text-xs leading-relaxed">{description}</DrawerDescription>
+                    <DrawerDescription className="text-left text-xs leading-relaxed text-pretty">{description}</DrawerDescription>
                 </DrawerHeader>
                 {sharedStatus}
                 <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">{body}</div>

@@ -48,6 +48,9 @@ export interface SharedData {
         dataSources: {
             attention: number;
         };
+        reports: {
+            open: number;
+        };
     };
     [key: string]: unknown;
 }

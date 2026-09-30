@@ -18,25 +18,43 @@ function find(node, predicate) {
     return null;
 }
 test('map layers and legend are mutually exclusive and changing the layer closes the panel', () => {
-    let panel = null, value = 'streets';
-    const context = { exports: {}, require: name => {
-        if (name === 'react') return { useState: () => [panel, next => { panel = next; }] };
-        if (name === 'react-i18next') return { useTranslation: () => ({ t: key => key }) };
-        if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
-        if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg></svg>' };
-        return require(name);
-    } };
+    let panel = null,
+        value = 'streets';
+    const context = {
+        exports: {},
+        require: (name) => {
+            if (name === 'react')
+                return {
+                    useState: () => [
+                        panel,
+                        (next) => {
+                            panel = next;
+                        },
+                    ],
+                };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+            if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
+            if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg></svg>' };
+            return require(name);
+        },
+    };
     vm.runInNewContext(source, context);
-    const render = () => context.exports.default({ value, onChange: next => { value = next; } });
-    const popover = (tree, key) => find(tree, node => node.type === 'Popover' && node.key === key);
+    const render = () =>
+        context.exports.default({
+            value,
+            onChange: (next) => {
+                value = next;
+            },
+        });
+    const popover = (tree, key) => find(tree, (node) => node.type === 'Popover' && node.key === key);
     popover(render(), 'legend').props.onOpenChange(true);
     assert.equal(popover(render(), 'legend').props.open, true);
     popover(render(), 'layers').props.onOpenChange(true);
     assert.equal(popover(render(), 'legend').props.open, false);
-    const satellite = find(render(), node => node.type === 'Button' && node.key === 'satellite');
+    const satellite = find(render(), (node) => node.type === 'Button' && node.key === 'satellite');
     assert.equal(satellite.props['aria-pressed'], false);
     satellite.props.onClick();
     assert.equal(value, 'satellite');
     assert.equal(popover(render(), 'layers').props.open, false);
-    assert.equal(find(render(), node => node.type === 'Button' && node.key === 'satellite').props['aria-pressed'], true);
+    assert.equal(find(render(), (node) => node.type === 'Button' && node.key === 'satellite').props['aria-pressed'], true);
 });

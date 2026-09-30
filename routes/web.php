@@ -86,6 +86,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         });
 
+        // Places reported as no longer existing
+        Route::prefix('reports')->as('reports.')->controller(Admin\ParkingPlaceReportController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('{source}/{id}/keep', 'keep')->whereIn('source', ['community', 'municipal'])->name('keep');
+            Route::post('{source}/{id}/remove', 'remove')->whereIn('source', ['community', 'municipal'])->name('remove');
+        });
+
         // Suspend user route
         Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])
             ->name('users.suspend')

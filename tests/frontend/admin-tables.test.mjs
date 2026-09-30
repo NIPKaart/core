@@ -13,28 +13,48 @@ const t = (key, params = {}) => {
     const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
     return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{{${name}}}`, String(value)), value);
 };
-const element = (tag) => ({ children, ...props }) => React.createElement(tag, props, children);
+const element =
+    (tag) =>
+    ({ children, ...props }) =>
+        React.createElement(tag, props, children);
 function load(path) {
     const source = ts.transpileModule(readFileSync(new URL(`../../resources/js/${path}`, import.meta.url), 'utf8'), {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
     }).outputText;
-    const context = { exports: {}, require: (name) => {
-        if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
-        if (name === '@inertiajs/react') return { router: {} };
-        if (name.startsWith('@/routes')) return {};
-        if (name === './columns-selector') return { ColumnsSelector: () => null };
-        if (name === '@/components/ui/input') return { Input: element('input') };
-        if (name === '@/components/ui/table') return Object.fromEntries(Object.entries({ Table: 'table', TableHeader: 'thead', TableBody: 'tbody', TableRow: 'tr', TableHead: 'th', TableCell: 'td' }).map(([key, tag]) => [key, element(tag)]));
-        if (name === '@/components/ui/button') return { Button: (props) => {
-            const attributes = { ...props };
-            delete attributes.variant;
-            delete attributes.size;
-            return React.createElement('button', attributes);
-        } };
-        if (name === '@/components/ui/switch') return { Switch: ({ checked }) => React.createElement('input', { type: 'checkbox', checked, readOnly: true }) };
-        if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: () => element('span') });
-        return require(name);
-    } };
+    const context = {
+        exports: {},
+        require: (name) => {
+            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
+            if (name === '@inertiajs/react') return { router: {} };
+            if (name.startsWith('@/routes')) return {};
+            if (name === './columns-selector') return { ColumnsSelector: () => null };
+            if (name === '@/components/ui/input') return { Input: element('input') };
+            if (name === '@/components/ui/table')
+                return Object.fromEntries(
+                    Object.entries({
+                        Table: 'table',
+                        TableHeader: 'thead',
+                        TableBody: 'tbody',
+                        TableRow: 'tr',
+                        TableHead: 'th',
+                        TableCell: 'td',
+                    }).map(([key, tag]) => [key, element(tag)]),
+                );
+            if (name === '@/components/ui/button')
+                return {
+                    Button: (props) => {
+                        const attributes = { ...props };
+                        delete attributes.variant;
+                        delete attributes.size;
+                        return React.createElement('button', attributes);
+                    },
+                };
+            if (name === '@/components/ui/switch')
+                return { Switch: ({ checked }) => React.createElement('input', { type: 'checkbox', checked, readOnly: true }) };
+            if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: () => element('span') });
+            return require(name);
+        },
+    };
     vm.runInNewContext(source, context);
     return context.exports;
 }
@@ -44,7 +64,10 @@ test('table exposes scoped search, keyboard sorting and restrained initial colum
     const { DataTable } = load('components/tables/data-table.tsx');
     const html = render(DataTable, {
         data: [{ name: 'Visible place', id: 'technical-id' }],
-        columns: [{ accessorKey: 'name', header: 'Location' }, { accessorKey: 'id', header: 'ID' }],
+        columns: [
+            { accessorKey: 'name', header: 'Location' },
+            { accessorKey: 'id', header: 'ID' },
+        ],
         initialState: { columnVisibility: { id: false }, sorting: [{ id: 'name', desc: false }] },
     });
     assert.match(html, /aria-label="Search this page…"/);
@@ -61,7 +84,21 @@ test('pagination has a clear empty state and genuinely disabled unavailable navi
     const empty = render(DataTablePagination, { pagination: { total: 0, from: null, to: null, last_page: 1 } });
     assert.match(empty, /No results/);
     assert.doesNotMatch(empty, /null|<nav/);
-    const first = render(DataTablePagination, { pagination: { total: 40, from: 1, to: 20, current_page: 1, last_page: 2, prev_page_url: null, next_page_url: '/page2', links: [{ label: '1', active: true, url: '/page1' }, { label: '2', active: false, url: '/page2' }] } });
+    const first = render(DataTablePagination, {
+        pagination: {
+            total: 40,
+            from: 1,
+            to: 20,
+            current_page: 1,
+            last_page: 2,
+            prev_page_url: null,
+            next_page_url: '/page2',
+            links: [
+                { label: '1', active: true, url: '/page1' },
+                { label: '2', active: false, url: '/page2' },
+            ],
+        },
+    });
     assert.match(first, /disabled=""[^>]*aria-label="Previous page"/);
     assert.match(first, /Page 1 of 2/);
     assert.match(first, /aria-current="page"[^>]*>1<\/button>/);
@@ -87,13 +124,19 @@ test('offstreet unknown availability remains unknown and visibility uses its own
     const inconsistent = { original: { ...full.original, free_space: 537, capacity: 410 } };
     assert.match(render(cell('parking_status'), { row: inconsistent }), /badges.inconsistent/);
     assert.doesNotMatch(render(cell('occupancy'), { row: inconsistent }), /role="progressbar"|%/);
-    assert.equal(columns.some((column) => column.id === 'long_parking'), false);
+    assert.equal(
+        columns.some((column) => column.id === 'long_parking'),
+        false,
+    );
 });
-
 
 test('table toolbar can be replaced or suppressed without changing the rows', () => {
     const { DataTable } = load('components/tables/data-table.tsx');
-    const props = { data: [{ name: 'Review location' }], columns: [{ accessorKey: 'name' }], filters: React.createElement('button', null, 'Default filter') };
+    const props = {
+        data: [{ name: 'Review location' }],
+        columns: [{ accessorKey: 'name' }],
+        filters: React.createElement('button', null, 'Default filter'),
+    };
     const standard = render(DataTable, props);
     assert.match(standard, /Search this page/);
     assert.match(standard, /Default filter/);

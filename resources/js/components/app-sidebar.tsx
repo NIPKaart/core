@@ -8,6 +8,7 @@ import parkingMunicipal from '@/routes/app/parking-municipal';
 import parkingOffstreet from '@/routes/app/parking-offstreet';
 import parkingRules from '@/routes/app/parking-rules';
 import parkingSpaces from '@/routes/app/parking-spaces';
+import reports from '@/routes/app/reports';
 import roles from '@/routes/app/roles';
 import users from '@/routes/app/users';
 import logViewer from '@/routes/log-viewer';
@@ -28,6 +29,7 @@ export function AppSidebar() {
     const userCount = props.counts.users;
     const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
     const { attention: dataSourcesAttention } = props.counts.dataSources;
+    const { open: openReports } = props.counts.reports;
     const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
@@ -76,6 +78,12 @@ export function AppSidebar() {
                 href: parkingSpaces.index(),
                 icon: icons.MapPin,
                 badge: activeParkingSpaces,
+            },
+            can('parking-place-report.view_any') && {
+                title: t('reports'),
+                href: reports.index(),
+                icon: icons.Flag,
+                badge: openReports || undefined,
             },
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),

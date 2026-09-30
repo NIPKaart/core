@@ -1,12 +1,12 @@
 {
     "head": {
-        "title": "Parkeerplekken (Community)",
+        "title": "Parkeerplaatsen (Community)",
         "edit": "Bewerken ({{id}})",
-        "show": "Parkeerplek ({{id}})",
-        "description": "Alle vermelde parkeerplekken zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
+        "show": "Parkeerplaats ({{id}})",
+        "description": "Alle vermelde parkeerplaatsen zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
     },
     "breadcrumbs": {
-        "index": "Parkeerplekken"
+        "index": "Parkeerplaatsen"
     },
     "selected": "geselecteerd",
     "table": {
@@ -34,7 +34,7 @@
         "update": "Status bijwerken"
     },
     "toast": {
-        "success": "Parkeerplekken succesvol bijgewerkt.",
+        "success": "Parkeerplaatsen succesvol bijgewerkt.",
         "error": {
             "ids": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer.",
             "status": "Selecteer een geldige status.",
@@ -47,7 +47,7 @@
         "cards": {
             "details": {
                 "title": "Details",
-                "description": "Alle basisinformatie over deze parkeerplek.",
+                "description": "Alle basisinformatie over deze parkeerplaats.",
                 "fields": {
                     "country": "Land",
                     "province": "Provincie",
@@ -73,11 +73,11 @@
             },
             "location": {
                 "title": "Locatie",
-                "description": "Waar de parkeerplek zich bevindt."
+                "description": "Waar de parkeerplaats zich bevindt."
             },
             "street_view": {
                 "title": "Street View",
-                "description": "Bekijk de omgeving van de parkeerplek."
+                "description": "Bekijk de omgeving van de parkeerplaats."
             }
         },
         "toast": {
@@ -90,8 +90,8 @@
         "anonymous": "Anoniem ingediend",
         "created": "Aangemaakt op:",
         "form": {
-            "title": "Parkeerplek details",
-            "description": "Bewerk de details van de parkeerplek.",
+            "title": "Parkeerplaats details",
+            "description": "Bewerk de details van de parkeerplaats.",
             "tabs": {
                 "basic": "Basis",
                 "extra": "Extra",

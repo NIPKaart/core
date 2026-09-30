@@ -17,12 +17,15 @@ function render(permissions = [], admin = false) {
     const context = {
         exports: {},
         require: (name) => {
-            if (name === '@/hooks/use-authorization') return { useAuthorization: () => ({ can: (permission) => permissions.includes(permission), hasRole: () => admin }) };
+            if (name === '@/hooks/use-authorization')
+                return { useAuthorization: () => ({ can: (permission) => permissions.includes(permission), hasRole: () => admin }) };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
-            if (name === '@inertiajs/react') return { Head: () => null, Link: ({ children, href }) => React.createElement('a', { href: href.url }, children) };
+            if (name === '@inertiajs/react')
+                return { Head: () => null, Link: ({ children, href }) => React.createElement('a', { href: href.url }, children) };
             if (name === '@/routes') return { dashboard: route('dashboard'), locationMap: route('map') };
-            if (name === '@/routes/profile') return { default: { parkingSpaces: { index: route('my-locations') }, favorites: { index: route('favorites') } } };
+            if (name === '@/routes/profile')
+                return { default: { parkingSpaces: { index: route('my-locations') }, favorites: { index: route('favorites') } } };
             if (name.startsWith('@/routes/app/')) return { default: { index: route(name.split('/').at(-1)) } };
             if (name.startsWith('@/actions/')) return { index: route('imports') };
             return require(name);

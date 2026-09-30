@@ -1,7 +1,7 @@
 {
     "title": "Zoeken",
-    "description": "Zoek naar gemeenten, garages of community plekken.",
-    "placeholder": "Zoek op stad, garage of plek…",
+    "description": "Zoek naar gemeenten, garages of parkeerplaatsen van de community.",
+    "placeholder": "Zoek op stad, garage of parkeerplaats…",
     "aria_input": "Zoekopdracht",
     "recent": "Recent",
     "clear": "Leegmaken",

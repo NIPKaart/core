@@ -47,7 +47,15 @@ const description = {
 const render = (overrides) =>
     renderToStaticMarkup(
         React.createElement(Approval, {
-            source: { id: 1, approval_state: 'pending', description, pending_description: null, registration_error: null, review_reason: null, ...overrides },
+            source: {
+                id: 1,
+                approval_state: 'pending',
+                description,
+                pending_description: null,
+                registration_error: null,
+                review_reason: null,
+                ...overrides,
+            },
         }),
     );
 
@@ -70,7 +78,11 @@ test('a changed description names the changed fields but ignores a new delivery 
 });
 
 test('registration problems are announced and a rejected source can only be approved again', () => {
-    const html = render({ approval_state: 'rejected', registration_error: 'Land NL of provincie NL-XX is niet bekend.', review_reason: 'Licence unclear' });
+    const html = render({
+        approval_state: 'rejected',
+        registration_error: 'Land NL of provincie NL-XX is niet bekend.',
+        review_reason: 'Licence unclear',
+    });
     assert.match(html, /role="alert"[^>]*>.*NL-XX/);
     assert.match(html, /Source rejected/);
     assert.match(html, /Reason: Licence unclear/);

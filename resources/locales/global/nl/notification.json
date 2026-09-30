@@ -1,10 +1,10 @@
 {
     "labels": {
-        "community.space_submitted": "Nieuwe parkeerplek toegevoegd",
-        "community.space_status_changed": "Status van parkeerplek gewijzigd",
-        "community.space_deleted": "Parkeerplek verwijderd",
-        "community.space_deleted_by_user": "Parkeerplek verwijderd door gebruiker",
-        "community.space_restored": "Parkeerplek hersteld",
+        "community.space_submitted": "Nieuwe parkeerplaats toegevoegd",
+        "community.space_status_changed": "Status van parkeerplaats gewijzigd",
+        "community.space_deleted": "Parkeerplaats verwijderd",
+        "community.space_deleted_by_user": "Parkeerplaats verwijderd door gebruiker",
+        "community.space_restored": "Parkeerplaats hersteld",
         "system.announcement": "Systeem aankondiging",
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling",

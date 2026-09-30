@@ -7,7 +7,7 @@ return [
     ],
     'moderator' => [
         'label' => 'Moderator',
-        'description' => 'Reviews community contributions and hides disappeared municipal places, without user, role or data administration.',
+        'description' => 'Reviews community contributions and hides disappeared municipal parking spaces, without user, role or data administration.',
     ],
     'user' => [
         'label' => 'User',

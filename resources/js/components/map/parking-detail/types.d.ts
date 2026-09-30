@@ -24,6 +24,7 @@ export type ParkingSpaceDetail = {
         confirmed: number;
     };
     last_confirmed_at?: datetime | null;
+    reported_by_you?: boolean;
 };
 
 export type MunicipalParkingDetail = {
@@ -51,6 +52,7 @@ export type MunicipalParkingDetail = {
         confirmed: number;
     };
     last_confirmed_at?: datetime | null;
+    reported_by_you?: boolean;
 };
 
 export type OffstreetParkingDetail = {

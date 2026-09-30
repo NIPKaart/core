@@ -3,7 +3,7 @@
 return [
     'duplicate' => [
         'label' => 'Duplicate',
-        'description' => 'This place is already known or was submitted before.',
+        'description' => 'This parking space is already known or was submitted before.',
     ],
     'not_a_disabled_bay' => [
         'label' => 'Not a disabled parking bay',
@@ -15,7 +15,7 @@ return [
     ],
     'insufficient_information' => [
         'label' => 'Insufficient information',
-        'description' => 'There is too little information to assess the place.',
+        'description' => 'There is too little information to assess the parking space.',
     ],
     'spam' => [
         'label' => 'Spam or abuse',

@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\User;
+use App\Services\ParkingPlaceModeration;
 use App\Services\SourceOverview;
 use App\Support\AppVersion;
 use Illuminate\Foundation\Inspiring;
@@ -92,6 +94,11 @@ class HandleInertiaRequests extends Middleware
                     ],
                     'userParkingSpaces' => [
                         'active' => ParkingSpace::where('user_id', auth()->id())->count(),
+                    ],
+                    'reports' => [
+                        'open' => auth()->user()?->can('viewAny', ParkingPlaceReport::class)
+                            ? app(ParkingPlaceModeration::class)->openPlaceCount()
+                            : 0,
                     ],
                     // Same total as the attention chips on the data sources page; only admins manage sources.
                     'dataSources' => [
