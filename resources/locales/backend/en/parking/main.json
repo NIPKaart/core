@@ -21,7 +21,7 @@
             "confirmations": "Confirmations",
             "trash": "Trash"
         },
-        "municipal_duplicate": "Municipal at {{distance}} m"
+        "nearby_municipal": "Municipal at {{distance}} m"
     },
     "filters": {
         "status": "Status",
@@ -83,7 +83,7 @@
         "toast": {
             "copied": "Copied to clipboard"
         },
-        "municipal_duplicate": {
+        "nearby_municipal": {
             "title": "A municipal parking space is {{distance}} m away",
             "description": "Check whether this submission describes the same parking space. If so, reject it as a duplicate."
         }

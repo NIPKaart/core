@@ -13,7 +13,7 @@ use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\Province;
-use App\Services\MunicipalDuplicates;
+use App\Services\NearbyMunicipalPlaces;
 use App\Support\GeoPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,11 +25,11 @@ class ParkingSpaceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, MunicipalDuplicates $municipalDuplicates)
+    public function index(Request $request, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
-        $query = $municipalDuplicates->withNearbyDistance(ParkingSpace::query())
+        $query = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
             ->with(['user', 'province', 'country', 'municipality']);
 
         // Filters
@@ -79,11 +79,11 @@ class ParkingSpaceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ParkingSpace $parkingSpace, MunicipalDuplicates $municipalDuplicates)
+    public function show(ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = $municipalDuplicates->withNearbyDistance(ParkingSpace::query())
+        $parkingSpace = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
             ->with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
             ->findOrFail($parkingSpace->id);
         $location = new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude);
@@ -98,8 +98,8 @@ class ParkingSpaceController extends Controller
             ->limit($limit)
             ->get();
 
-        // Visible municipal places around it, so a duplicate of municipal data is not approved unnoticed
-        $nearbyMunicipalSpaces = $municipalDuplicates->around($location, $limit);
+        // Visible municipal places around it, so the moderator sees what municipal data already covers
+        $nearbyMunicipalSpaces = $nearbyMunicipalPlaces->around($location, $limit);
 
         // Fetch the 8 most recent confirmations
         $recentConfirmations = $parkingSpace->confirmations()

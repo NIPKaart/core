@@ -23,7 +23,7 @@
             "confirmations": "Bevestigingen",
             "trash": "Prullenbak"
         },
-        "municipal_duplicate": "Gemeentelijk op {{distance}} m"
+        "nearby_municipal": "Gemeentelijk op {{distance}} m"
     },
     "filters": {
         "status": "Status",
@@ -85,7 +85,7 @@
         "toast": {
             "copied": "Gekopieerd naar klembord"
         },
-        "municipal_duplicate": {
+        "nearby_municipal": {
             "title": "Op {{distance}} m staat een gemeentelijke parkeerplaats",
             "description": "Controleer of deze melding dezelfde parkeerplaats beschrijft. Zo ja, wijs haar dan af als dubbele melding."
         }

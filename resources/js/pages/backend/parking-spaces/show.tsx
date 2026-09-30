@@ -197,10 +197,10 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, nearby
                     <Alert className="mt-3 border-2 border-violet-300/60 bg-violet-50 px-3 py-3 sm:py-4 dark:bg-violet-950/80">
                         <AlertTitle className="flex items-center gap-2 text-base font-semibold text-violet-900 dark:text-violet-100">
                             <MapPinned className="h-5 w-5 min-w-5 text-violet-500" aria-hidden />
-                            {t('show.municipal_duplicate.title', { distance: parkingSpace.nearby_municipal_metres })}
+                            {t('show.nearby_municipal.title', { distance: parkingSpace.nearby_municipal_metres })}
                         </AlertTitle>
                         <AlertDescription className="mt-2 w-full text-sm text-zinc-800 dark:text-violet-50">
-                            {t('show.municipal_duplicate.description')}
+                            {t('show.nearby_municipal.description')}
                         </AlertDescription>
                     </Alert>
                 )}

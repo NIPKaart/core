@@ -7,7 +7,7 @@ import type { PinLocation } from './types';
 /** The pin must be this close before a location can be used, so it lands on one bay. */
 export const MIN_PIN_ZOOM = 17;
 
-/** Known places within this distance are pointed out as a possible duplicate; moderators use the same distance (MunicipalDuplicates::THRESHOLD_METRES). */
+/** Known places within this distance are pointed out as a possible duplicate; moderators use the same distance (NearbyMunicipalPlaces::THRESHOLD_METRES). */
 const NEARBY_METRES = 30;
 
 /** About 60 m of latitude; enough to find known places near the pin. */

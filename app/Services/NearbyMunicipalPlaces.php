@@ -10,15 +10,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * Points moderators to community submissions that may duplicate a municipal place.
+ * Visible municipal places near a community submission, shown to moderators while they review it.
  *
- * The municipality's dataset is the source of truth for its places, so such a submission is simply not published.
- * This only flags; rejecting stays the moderator's decision and nothing is rejected or merged automatically.
+ * The municipality's dataset is the source of truth for its places. Whether a submission describes one of them is the
+ * moderator's decision: this only points out what lies nearby and never rejects, links or merges records.
  */
-class MunicipalDuplicates
+class NearbyMunicipalPlaces
 {
     /**
-     * A pending submission this close to a visible municipal place is pointed out as a possible duplicate.
+     * A pending submission this close to a visible municipal place is flagged for the moderator.
      * Matches NEARBY_METRES in the contributor's add flow (use-pin-location.ts), so both warn about the same places.
      */
     public const int THRESHOLD_METRES = 30;

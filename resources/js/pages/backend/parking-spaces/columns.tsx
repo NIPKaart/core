@@ -90,7 +90,7 @@ export function getParkingSpaceColumns(
                         {municipalMetres != null && (
                             <Badge variant="outline" className="border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300">
                                 <MapPinned className="h-3 w-3" aria-hidden />
-                                {t('table.municipal_duplicate', { distance: municipalMetres })}
+                                {t('table.nearby_municipal', { distance: municipalMetres })}
                             </Badge>
                         )}
                     </div>

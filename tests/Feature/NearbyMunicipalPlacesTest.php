@@ -5,7 +5,7 @@ use App\Enums\UserRole;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\User;
-use App\Services\MunicipalDuplicates;
+use App\Services\NearbyMunicipalPlaces;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /** About 1.1 m of latitude. */
@@ -58,7 +58,7 @@ test('a pending submission is not flagged for a municipal place that is hidden o
         ->assertInertia(fn (Assert $page) => $page->where('parkingSpace.nearby_municipal_metres', null));
 })->with([
     'hidden place within the threshold' => [4, false],
-    'visible place beyond the threshold' => [MunicipalDuplicates::THRESHOLD_METRES + 5, true],
+    'visible place beyond the threshold' => [NearbyMunicipalPlaces::THRESHOLD_METRES + 5, true],
 ]);
 
 test('hidden municipal places are left off the moderator map', function () {
