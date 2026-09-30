@@ -13,6 +13,7 @@ use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\Province;
+use App\Services\NearbyMunicipalPlaces;
 use App\Support\GeoPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -24,11 +25,11 @@ class ParkingSpaceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
-        $query = ParkingSpace::query()
+        $query = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
             ->with(['user', 'province', 'country', 'municipality']);
 
         // Filters
@@ -78,11 +79,14 @@ class ParkingSpaceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ParkingSpace $parkingSpace)
+    public function show(ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
+        $parkingSpace = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
+            ->with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
+            ->findOrFail($parkingSpace->id);
+        $location = new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude);
 
         // Get the 10 nearest parking spaces
         $limit = 10;
@@ -90,9 +94,12 @@ class ParkingSpaceController extends Controller
             ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->nearestTo(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude))
+            ->nearestTo($location)
             ->limit($limit)
             ->get();
+
+        // Visible municipal places around it, so the moderator sees what municipal data already covers
+        $nearbyMunicipalSpaces = $nearbyMunicipalPlaces->around($location, $limit);
 
         // Fetch the 8 most recent confirmations
         $recentConfirmations = $parkingSpace->confirmations()
@@ -111,6 +118,7 @@ class ParkingSpaceController extends Controller
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
             'nearbySpaces' => $nearbySpaces,
+            'nearbyMunicipalSpaces' => $nearbyMunicipalSpaces,
             'recentConfirmations' => $recentConfirmations,
         ]);
     }

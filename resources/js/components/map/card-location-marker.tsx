@@ -1,5 +1,5 @@
-import { getBlueMarkerIcon, getParkingStatusIcon } from '@/lib/icon-factory';
-import { ParkingSpace } from '@/types';
+import { getBlueMarkerIcon, getParkingStatusIcon, getVioletMarkerIcon } from '@/lib/icon-factory';
+import { ParkingMunicipal, ParkingSpace } from '@/types';
 import React, { useMemo } from 'react';
 import { FeatureGroup, LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import ZoomControl from './zoom-control';
@@ -11,6 +11,8 @@ type Props = {
     draggable?: boolean;
     scrollWheelZoom?: boolean;
     nearbySpaces?: ParkingSpace[];
+    /** Visible municipal places, shown in violet so they stand apart from community places. */
+    nearbyMunicipalSpaces?: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
     children?: React.ReactNode;
 };
 
@@ -27,7 +29,27 @@ const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({ spaces }
     return <FeatureGroup>{markers}</FeatureGroup>;
 });
 
-export default function LocationMarkerCard({ latitude, longitude, onChange, draggable, nearbySpaces, children, scrollWheelZoom = true }: Props) {
+const NearbyMunicipalMarkers = React.memo(function NearbyMunicipalMarkers({ spaces }: { spaces: NonNullable<Props['nearbyMunicipalSpaces']> }) {
+    const markers = useMemo(
+        () =>
+            spaces.map((space) => (
+                <Marker key={space.id} position={[space.latitude, space.longitude]} icon={getVioletMarkerIcon()} interactive={false} />
+            )),
+        [spaces],
+    );
+    return <FeatureGroup>{markers}</FeatureGroup>;
+});
+
+export default function LocationMarkerCard({
+    latitude,
+    longitude,
+    onChange,
+    draggable,
+    nearbySpaces,
+    nearbyMunicipalSpaces,
+    children,
+    scrollWheelZoom = true,
+}: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
 
     return (
@@ -61,6 +83,11 @@ export default function LocationMarkerCard({ latitude, longitude, onChange, drag
                     {nearbySpaces && nearbySpaces.length > 0 && (
                         <Overlay checked name="Nearby Parking Spaces">
                             <NearbyParkingMarkers spaces={nearbySpaces} />
+                        </Overlay>
+                    )}
+                    {nearbyMunicipalSpaces && nearbyMunicipalSpaces.length > 0 && (
+                        <Overlay checked name="Municipal Parking Spaces">
+                            <NearbyMunicipalMarkers spaces={nearbyMunicipalSpaces} />
                         </Overlay>
                     )}
                 </LayersControl>
