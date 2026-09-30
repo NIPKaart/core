@@ -5,7 +5,6 @@
             "description": "Deze parkeerplaats maakt deel uit van ons community parkeerinitiatief. U kunt het gebruik bevestigen of meer details bekijken."
         },
         "tabs": {
-            "info": "Info",
             "description": "Beschrijving"
         },
         "table": {
@@ -24,13 +23,6 @@
             "under_sign": "Onderbord",
             "restriction": "Geldig op"
         },
-        "confirm": {
-            "button": "De plek is er",
-            "label": "Bevestig dat deze parkeerplaats er is",
-            "sign_in_label": "Log in om te bevestigen dat deze parkeerplaats er is",
-            "confirming": "Bevestigen…",
-            "confirmed_today": "Vandaag bevestigd"
-        },
         "days": {
             "mon": "ma",
             "tue": "di",
@@ -39,20 +31,6 @@
             "fri": "vr",
             "sat": "za",
             "sun": "zo"
-        },
-        "report": {
-            "question": "Is de plek weg?",
-            "open": "Meld het",
-            "sign_in": "Log in om te melden",
-            "title": "Melden dat de plek er niet meer is",
-            "explanation": "Een moderator bekijkt je melding. Tot die tijd blijft de plek op de kaart.",
-            "note": "Wat zag je?",
-            "optional": "(optioneel)",
-            "placeholder": "Bijvoorbeeld: bord weggehaald, vak overgeschilderd",
-            "cancel": "Annuleren",
-            "submit": "Melden",
-            "sending": "Melden…",
-            "reported": "Gemeld dat de plek weg is. Een moderator kijkt ernaar."
         }
     },
     "municipal": {
@@ -64,7 +42,7 @@
             "updated_at": "Laatst bijgewerkt",
             "source": "Bron",
             "terms": "Bronvoorwaarden",
-            "fetched_at": "Gegevens opgehaald op"
+            "fetched_at": "Opgehaald op"
         },
         "unknown": "Onbekend",
         "fetched_note": "Dit is de ophaaldatum van de gegevens, geen controle van de parkeerplek."
@@ -173,15 +151,55 @@
             "measured": "Gemeten"
         },
         "id_ending": "eindigend op",
-        "confirmations": {
-            "title": "Bevestigingen",
+        "tabs": {
+            "info": "Info",
+            "contribute": "Bijdragen"
+        },
+        "existence": {
+            "question": "Is de plek er nog?",
             "count_one": "{{count}}× bevestigd",
             "count_other": "{{count}}× bevestigd",
-            "last": "Aanwezig, laatst",
             "none": "Nog niet bevestigd",
-            "prompt": "Is deze plek er nog?",
-            "help": "Met een bevestiging laat je weten dat deze parkeerplaats er echt is. Je kunt elke dag één keer bevestigen.",
-            "today_by_you": "Aanwezig, vandaag ook door jou"
+            "present_since": "Aanwezig, laatst op",
+            "yes": "Ja",
+            "no": "Nee",
+            "yes_label": "Ja, de plek is er",
+            "no_label": "Nee, de plek is weg",
+            "thanks": "Bedankt, je hebt bevestigd",
+            "today_by_you_one": "{{count}}× bevestigd · vandaag ook door jou",
+            "today_by_you_other": "{{count}}× bevestigd · vandaag ook door jou",
+            "reported": "Je hebt gemeld dat de plek weg is",
+            "reported_note": "Een moderator kijkt ernaar.",
+            "log_in": "Log in",
+            "log_in_hint": "om te bevestigen of te melden."
+        },
+        "report": {
+            "title": "De plek is er niet meer",
+            "back": "Terug naar de plek",
+            "explanation": "Een moderator kijkt ernaar. Tot dan blijft de plek op de kaart.",
+            "seen": "Wat zag je?",
+            "optional": "(optioneel)",
+            "reasons": {
+                "sign_removed": "Bord of vak is weggehaald",
+                "now_regular_bay": "Het is nu een gewone parkeerplek",
+                "other": "Iets anders"
+            },
+            "note": "Toelichting",
+            "placeholder": "Wat is er veranderd?",
+            "submit": "Melding versturen",
+            "sending": "Versturen…"
+        },
+        "contribute": {
+            "exists": "Bestaat de plek?",
+            "last": "laatst",
+            "report": "Melden dat de plek weg is",
+            "report_note": "Een moderator beslist",
+            "sources": "Bronnen van deze plek",
+            "added": "toegevoegd",
+            "fetched": "opgehaald",
+            "activity": "Jouw activiteit",
+            "confirmed_today": "Vandaag bevestigd",
+            "reported": "Gemeld dat de plek weg is · wacht op een moderator"
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReportReason;
 use App\Enums\ReportResolution;
 use Database\Factories\ParkingPlaceReportFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,10 +24,12 @@ class ParkingPlaceReport extends Model
         'parking_space_id',
         'parking_municipal_id',
         'user_id',
+        'reason',
         'note',
     ];
 
     protected $casts = [
+        'reason' => ReportReason::class,
         'resolution' => ReportResolution::class,
         'resolved_at' => 'datetime',
     ];

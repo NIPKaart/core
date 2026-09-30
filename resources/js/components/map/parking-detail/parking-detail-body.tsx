@@ -1,5 +1,5 @@
 import { Progress } from '@/components/ui/progress';
-import { AlarmClock, Eye, Info, MapPin, MapPinCheckInside, Navigation } from 'lucide-react';
+import { AlarmClock, Eye, Info, MapPin, Navigation } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { navigationUrl, streetViewUrl } from './navigation-handoff';
@@ -15,10 +15,8 @@ export type ParkingDetailData =
 type Props = {
     data: ParkingDetailData;
     isLoggedIn: boolean;
-    /** Existence confirmation control beside the confirmation evidence; only for community and municipal places. */
-    confirmActions?: ReactNode;
-    /** Report control at the end of the details; only for community and municipal places. */
-    reportActions?: ReactNode;
+    /** The "is it still here?" check below the navigation; only for community and municipal places. */
+    existence?: ReactNode;
 };
 
 /** `note` stays visible (warnings/semantics); `help` is optional background behind a help button. */
@@ -73,7 +71,7 @@ function ExternalLink({ href, children, className = '' }: { href: string; childr
     );
 }
 
-export default function ParkingDetailBody({ data, isLoggedIn, confirmActions, reportActions }: Props) {
+export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { source, detail } = data;
 
@@ -93,22 +91,6 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions, re
         ) : (
             unknown
         );
-
-    const confirmedCount = source === 'offstreet' ? 0 : (detail.confirmations_count?.confirmed ?? 0);
-
-    // Recent dates drop the year so the confirmation line stays on one row.
-    const shortDate = (value: string) => {
-        const parsed = new Date(value);
-        return (
-            <time dateTime={value}>
-                {parsed.toLocaleDateString(locale, {
-                    day: 'numeric',
-                    month: 'short',
-                    ...(parsed.getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' }),
-                })}
-            </time>
-        );
-    };
 
     const address = [detail.municipality, detail.province, detail.country]
         .map((part) => part?.trim())
@@ -365,52 +347,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions, re
                 <p className="text-center text-xs text-muted-foreground">{t('detail.navigation.unavailable')}</p>
             )}
 
-            {source !== 'offstreet' && (
-                <section
-                    aria-labelledby="parking-detail-confirmations"
-                    className={`flex items-center justify-between gap-3 rounded-xl px-3 py-3 ${
-                        confirmedCount > 0 ? 'bg-green-50 dark:bg-green-950/40' : 'bg-zinc-100/80 dark:bg-zinc-900'
-                    }`}
-                >
-                    <h3 id="parking-detail-confirmations" className="sr-only">
-                        {t('detail.confirmations.title')}
-                    </h3>
-                    <div className="flex min-w-0 flex-1 items-center gap-3 text-sm">
-                        <span
-                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                confirmedCount > 0
-                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/70 dark:text-green-300'
-                                    : 'bg-white text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
-                            }`}
-                        >
-                            {confirmedCount > 0 ? <MapPinCheckInside className="h-5 w-5" aria-hidden /> : <MapPin className="h-5 w-5" aria-hidden />}
-                        </span>
-                        <p className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
-                            <span className="font-semibold">
-                                {confirmedCount > 0 ? t('detail.confirmations.count', { count: confirmedCount }) : t('detail.confirmations.none')}{' '}
-                                <span className="inline-block align-[-3px] font-normal">
-                                    <HelpPopover
-                                        content={t('detail.confirmations.help')}
-                                        label={t('detail.more_info', { label: t('detail.confirmations.title') })}
-                                    />
-                                </span>
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {detail.confirmed_today ? (
-                                    t('detail.confirmations.today_by_you')
-                                ) : detail.last_confirmed_at ? (
-                                    <>
-                                        {t('detail.confirmations.last')} {shortDate(detail.last_confirmed_at)}
-                                    </>
-                                ) : (
-                                    t('detail.confirmations.prompt')
-                                )}
-                            </span>
-                        </p>
-                    </div>
-                    {confirmActions}
-                </section>
-            )}
+            {source !== 'offstreet' && existence}
 
             {groups.length > 0 && (
                 <div className="divide-y divide-zinc-100 rounded-lg border text-sm dark:divide-zinc-800">
@@ -424,8 +361,6 @@ export default function ParkingDetailBody({ data, isLoggedIn, confirmActions, re
                 <Info className="h-3 w-3 shrink-0" aria-hidden />
                 {t('detail.check_on_site')}
             </p>
-
-            {source !== 'offstreet' && reportActions}
         </div>
     );
 }

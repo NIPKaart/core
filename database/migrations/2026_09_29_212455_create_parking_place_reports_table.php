@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('parking_municipal_id')->nullable();
             $table->foreign('parking_municipal_id')->references('id')->on('parking_municipal_spaces')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('reason')->nullable();
             $table->string('note', 500)->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();

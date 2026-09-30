@@ -4,6 +4,7 @@ use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingStatus;
 use App\Enums\RemovalAction;
 use App\Enums\RemovalReason;
+use App\Enums\ReportReason;
 use App\Enums\ReportResolution;
 use App\Enums\UserRole;
 use App\Models\Favorite;
@@ -89,6 +90,17 @@ describe('reporting', function () {
         expect($place->reports()->open()->count())->toBe(1);
     });
 
+    test('a reporter may say what they saw from a fixed list', function () {
+        $place = ParkingMunicipal::factory()->create(['visibility' => true]);
+        $report = fn (array $data) => $this->post(route('map.places.report', ['source' => 'municipal', 'id' => $place->id]), $data);
+
+        $this->actingAs($this->user);
+        $report(['reason' => 'looks-odd'])->assertSessionHasErrors('reason');
+        $report(['reason' => ReportReason::NOW_REGULAR_BAY->value])->assertSessionHasNoErrors();
+
+        expect($place->reports()->sole()->reason)->toBe(ReportReason::NOW_REGULAR_BAY);
+    });
+
     test('the note is optional but bounded', function () {
         $place = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
 
@@ -140,7 +152,7 @@ describe('moderation', function () {
         ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
         ParkingSpaceConfirmation::factory()->for($community)->create(['confirmed_at' => '2026-09-19 10:00:00']);
         $reporter = User::factory()->create(['name' => 'Anne']);
-        reportOf($community, ['user_id' => $reporter->id, 'note' => 'Vak overgeschilderd']);
+        reportOf($community, ['user_id' => $reporter->id, 'reason' => ReportReason::SIGN_REMOVED, 'note' => 'Vak overgeschilderd']);
         reportOf($community, ['resolved_at' => now(), 'resolution' => ReportResolution::KEPT]);
         $this->travelTo('2026-09-22 12:00:00');
         reportOf($community);
@@ -160,6 +172,8 @@ describe('moderation', function () {
                 ->has('places.1.reports', 2)
                 ->where('places.1.reports.0.reporter', 'Anne')
                 ->where('places.1.reports.0.note', 'Vak overgeschilderd')
+                ->where('places.1.reports.0.reason', 'Bord of vak is weggehaald')
+                ->where('places.1.reports.1.reason', null)
                 ->where('places.1.confirmations_since_report', 1)
                 ->where('places.1.last_confirmed_at', '2026-09-21T10:00:00+00:00')
                 ->has('options.removalReasons', count(RemovalReason::cases())));

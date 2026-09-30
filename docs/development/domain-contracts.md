@@ -16,7 +16,7 @@ Existing database retention remains: soft deletion retains confirmations and fav
 
 ## Reports of disappeared places
 
-Reports (#1313) follow the same place identity as confirmations: `POST map/places/{source}/{id}/report` accepts a published community or municipal place and an optional note of at most 500 characters. A report never hides or deletes anything. A user has one open report per place (enforced by partial unique indexes), and may report again once a moderator has decided. Public detail JSON exposes only the viewer's own `reported_by_you`; report counts stay internal.
+Reports (#1313) follow the same place identity as confirmations: `POST map/places/{source}/{id}/report` accepts a published community or municipal place, an optional `ReportReason` (what the reporter saw: sign or bay removed, now a regular bay, something else) and an optional note of at most 500 characters. A report never hides or deletes anything. A user has one open report per place (enforced by partial unique indexes), and may report again once a moderator has decided. Public detail JSON exposes only the viewer's own `reported_by_you`; report counts stay internal.
 
 Moderators (`parking-place-report.view_any` and `.resolve`) work from the queue at `app/reports`. Each reported place appears once, with its open reports and notes, and the existence confirmations given since the first open report. They either keep the place, also when existence stays uncertain, which closes its reports, or remove it with a required `RemovalReason`:
 
@@ -24,6 +24,10 @@ Moderators (`parking-place-report.view_any` and `.resolve`) work from the queue 
 - a municipal place is hidden through `visibility`, which later imports preserve; its confirmations, favorites and resolved reports remain.
 
 Every removal writes a `ParkingPlaceRemoval` with source, identity, label, action, reason, note, open report count and moderator. There is no report threshold and no resurrection state: re-adding a place later is a new contribution. After deploying, run `php artisan db:seed --class=PermissionsTableSeeder --force` so moderators receive the new permissions.
+
+### Street-place detail dialog
+
+The detail of a community or municipal place has two tabs. **Info** holds the facts and one existence question, "Is de plek er nog?": *Ja* confirms at once, *Nee* opens a report step inside the same sheet. After confirming or reporting, the question gives way to the outcome until the next day or the moderator's decision. **Bijdragen** shows the confirmation evidence, the place's sources, the report action and the visitor's own activity; improving information (#1310) and linked sources (#1312) belong there. Signed-out visitors see only the facts plus a quiet "Log in" hint that returns them to the same place. Garages keep a single view without these parts.
 
 ## Favorites contract
 

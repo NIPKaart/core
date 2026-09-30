@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Frontend;
 
+use App\Enums\ReportReason;
 use App\Http\Controllers\Controller;
 use App\Services\ParkingPlaces;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -20,6 +22,7 @@ class ParkingReportController extends Controller
     public function store(Request $request, ParkingPlaces $places, string $source, string $id): RedirectResponse
     {
         $validated = $request->validate([
+            'reason' => ['nullable', Rule::enum(ReportReason::class)],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
         $user = $request->user();
@@ -36,6 +39,7 @@ class ParkingReportController extends Controller
 
             $place->reports()->create([
                 'user_id' => $user->id,
+                'reason' => $validated['reason'] ?? null,
                 'note' => filled($validated['note'] ?? null) ? trim($validated['note']) : null,
             ]);
         });

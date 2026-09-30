@@ -110,8 +110,8 @@ const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 test('every source keeps the same group order but only shows the groups that apply to it', () => {
     const expected = {
         // Community places always show their sub-sign, even when it is not known.
-        community: ['Confirmations', 'Rules and restrictions', 'Layout', 'Source and freshness'],
-        municipal: ['Confirmations', 'Layout', 'Source and freshness'],
+        community: ['Rules and restrictions', 'Layout', 'Source and freshness'],
+        municipal: ['Layout', 'Source and freshness'],
         // Garages show their live state in the availability box; signed-out visitors see no source table.
         offstreet: ['Accessibility and availability'],
     };
@@ -157,7 +157,7 @@ test('street parking omits fields its source never provides and marks missing kn
     const municipal = text(render('municipal'));
     assert.doesNotMatch(municipal, /Max\. parking time|availability|Source date/i);
     assert.match(municipal, /Orientation Unknown/);
-    assert.match(municipal, /Data fetched on Unknown/);
+    assert.match(municipal, /Fetched on Unknown/);
     assert.doesNotMatch(municipal, /This is when the data was fetched/);
     assert.match(municipal, /Leiden, Zuid-Holland, Netherlands/);
     assert.match(text(render('municipal', { municipality: null, province: null, country: ' ' })), /Parking location without an address/);
@@ -168,7 +168,6 @@ test('street parking omits fields its source never provides and marks missing kn
 
     const community = text(render('community'));
     assert.doesNotMatch(community, /Max\. parking time|Unlimited|availability/i);
-    assert.match(community, /Not confirmed yet .*Is this place still here\?/);
     assert.match(text(render('community', { parking_time: 90 })), /1 hour &amp; 30 minutes Don&#x27;t forget your parking disc!/);
 });
 
@@ -237,21 +236,12 @@ test('the description card is no longer duplicated inside the body (it moved to 
     assert.doesNotMatch(text(render('community', { description: 'Watch for the low ceiling' })), /Watch for the low ceiling/);
 });
 
-test('community and municipal places show the same existence evidence, garages none', () => {
-    for (const source of ['community', 'municipal']) {
-        const confirmed = text(render(source, { confirmations_count: { confirmed: 3 }, last_confirmed_at: '2026-03-04T09:00:00Z' }));
-        assert.match(confirmed, /Confirmed 3× .*Present, last 4 Mar/, source);
-        assert.match(confirmed, /A confirmation tells others that this parking place is really here\./, source);
-        assert.doesNotMatch(confirmed, /reliab|trust|score/i, source);
-    }
-    assert.doesNotMatch(text(render('offstreet')), /confirmed/i);
-});
-
-test('confirm actions and signed-in details appear only where relevant', () => {
-    const actions = React.createElement('p', null, 'confirm-form');
-    assert.match(render('community', {}, { confirmActions: actions }), /confirm-form/);
-    assert.match(render('municipal', {}, { confirmActions: actions }), /confirm-form/);
-    assert.doesNotMatch(render('offstreet', {}, { confirmActions: actions }), /confirm-form/);
+test('the existence check sits in the body of street places only, and signed-in details stay where relevant', () => {
+    const existence = React.createElement('p', null, 'existence-check');
+    assert.match(render('community', {}, { existence }), /existence-check/);
+    assert.match(render('municipal', {}, { existence }), /existence-check/);
+    assert.doesNotMatch(render('offstreet', {}, { existence }), /existence-check/);
+    assert.doesNotMatch(text(render('community')), /reliab|trust|score/i);
     assert.doesNotMatch(render('offstreet'), /Location ID/);
     assert.match(text(render('offstreet', {}, { isLoggedIn: true })), /Location ID abc/);
     const longId = '41a88722-92fa-4156-a0f9-89d55b6b6ffb';
@@ -273,75 +263,21 @@ test('the detail illustrates the bay orientation widely, a garage for garages, a
     assert.match(render('offstreet'), /src="\/assets\/images\/garage\.svg"/);
 });
 
-test('the existence confirmation offers the action that fits the visitor', () => {
-    const source = ts.transpileModule(
-        readFileSync(new URL('../../resources/js/pages/frontend/form/form-confirm-location.tsx', import.meta.url), 'utf8'),
-        {
-            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-        },
-    ).outputText;
+/** Loads one detail component with light stand-ins for the UI kit, routes and Inertia. */
+const loadComponent = (file) => {
+    const compiled = ts.transpileModule(readFileSync(new URL(`../../resources/js/components/map/parking-detail/${file}`, import.meta.url), 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+    }).outputText;
     const context = {
         exports: {},
         require: (name) => {
-            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
-            if (name === '@/routes/map/places') return { confirm: ({ source, id }) => `/map/places/${source}/${id}/confirm` };
-            if (name === '@/components/ui/button')
-                return { Button: ({ asChild, children, ...props }) => (asChild ? children : React.createElement('button', props, children)) };
-            if (name === '@inertiajs/react') {
+            if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
+            if (name === './utils') return utils;
+            if (name === '@/routes/map/places')
                 return {
-                    Form: ({ children, action }) => React.createElement('form', { action }, children({ errors: {}, processing: false })),
-                    Link: ({ children, ...props }) => React.createElement('a', props, children),
+                    confirm: ({ source, id }) => `/map/places/${source}/${id}/confirm`,
+                    report: ({ source, id }) => `/map/places/${source}/${id}/report`,
                 };
-            }
-            return require(name);
-        },
-    };
-    vm.runInNewContext(source, context);
-    const card = (props) =>
-        text(
-            renderToStaticMarkup(
-                React.createElement(context.exports.ParkingConfirmForm, {
-                    source: 'municipal',
-                    id: '42',
-                    signedIn: true,
-                    loginHref: '/login?return=%2Fmap',
-                    confirmedToday: false,
-                    ...props,
-                }),
-            ),
-        );
-
-    const html = (props) =>
-        renderToStaticMarkup(
-            React.createElement(context.exports.ParkingConfirmForm, {
-                source: 'municipal',
-                id: '42',
-                signedIn: true,
-                loginHref: '/login?return=%2Fmap',
-                confirmedToday: false,
-                ...props,
-            }),
-        );
-    assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
-    assert.match(html(), /aria-label="Confirm that this parking place is here"/);
-    assert.match(card(), /It&#x27;s here|It's here/);
-    assert.match(html({ signedIn: false }), /<a href="\/login\?return=%2Fmap"[^>]*aria-label="Log in to confirm that this parking place is here"/);
-    assert.match(card({ confirmedToday: true }), /Confirmed today/);
-    assert.doesNotMatch(html({ confirmedToday: true }), /<form|<button/);
-});
-
-test('reporting a gone place fits the visitor and never suggests the place is removed straight away', () => {
-    const source = ts.transpileModule(
-        readFileSync(new URL('../../resources/js/pages/frontend/form/form-report-location.tsx', import.meta.url), 'utf8'),
-        {
-            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-        },
-    ).outputText;
-    const context = {
-        exports: {},
-        require: (name) => {
-            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
-            if (name === '@/routes/map/places') return { report: ({ source, id }) => `/map/places/${source}/${id}/report` };
             if (name === '@/components/ui/button')
                 return { Button: ({ asChild, children, ...props }) => (asChild ? children : React.createElement('button', props, children)) };
             if (name === '@/components/ui/textarea') return { Textarea: (props) => React.createElement('textarea', props) };
@@ -354,27 +290,100 @@ test('reporting a gone place fits the visitor and never suggests the place is re
             return require(name);
         },
     };
-    vm.runInNewContext(source, context);
-    const html = (props) =>
+    vm.runInNewContext(compiled, context);
+    return context.exports.default;
+};
+
+test('the existence check asks one question when signed in and shows the outcome afterwards', () => {
+    const ExistenceCheck = loadComponent('existence-check.tsx');
+    const html = (props = {}) =>
         renderToStaticMarkup(
-            React.createElement(context.exports.ParkingReportForm, {
-                source: 'community',
-                id: 'abc',
+            React.createElement(ExistenceCheck, {
+                source: 'municipal',
+                id: '42',
+                confirmedCount: 3,
+                lastConfirmedAt: '2026-03-04T09:00:00Z',
+                confirmedToday: false,
+                reported: false,
                 signedIn: true,
                 loginHref: '/login?return=%2Fmap',
-                reported: false,
+                onReport: () => {},
                 ...props,
             }),
         );
 
-    assert.match(text(html()), /Is the place gone\? Report it/);
-    assert.doesNotMatch(html(), /<form/);
-    assert.match(html({ signedIn: false }), /<a href="\/login\?return=%2Fmap">Log in to report<\/a>/);
-    assert.match(text(html({ reported: true })), /Reported as gone\. A moderator will look at it\./);
-    assert.doesNotMatch(html({ reported: true }), /<button|<a /);
+    assert.match(text(html()), /Is the place still here\? Confirmed 3× · 4 Mar/);
+    assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
+    assert.match(html(), /aria-label="Yes, the place is here"/);
+    assert.match(html(), /aria-label="No, the place is gone"/);
+    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the place still here\? Not confirmed yet/);
 
-    const actions = React.createElement('p', null, 'report-form');
-    assert.match(render('community', {}, { reportActions: actions }), /report-form/);
-    assert.match(render('municipal', {}, { reportActions: actions }), /report-form/);
-    assert.doesNotMatch(render('offstreet', {}, { reportActions: actions }), /report-form/);
+    assert.match(text(html({ confirmedToday: true })), /Thanks, you confirmed Confirmed 3× · today also by you/);
+    assert.match(text(html({ reported: true })), /You reported that the place is gone A moderator will look at it\./);
+    for (const state of [{ confirmedToday: true }, { reported: true }]) assert.doesNotMatch(html(state), /<form|<button/);
+});
+
+test('signed-out visitors see only the evidence and a quiet hint to log in', () => {
+    const ExistenceCheck = loadComponent('existence-check.tsx');
+    const guest = renderToStaticMarkup(
+        React.createElement(ExistenceCheck, {
+            source: 'community',
+            id: 'abc',
+            confirmedCount: 3,
+            lastConfirmedAt: '2026-03-04T09:00:00Z',
+            confirmedToday: false,
+            reported: false,
+            signedIn: false,
+            loginHref: '/login?return=%2Fmap',
+            onReport: () => {},
+        }),
+    );
+
+    assert.match(text(guest), /Confirmed 3× Present, last on 4 Mar Log in to confirm or report\./);
+    assert.match(guest, /<a href="\/login\?return=%2Fmap"[^>]*>Log in<\/a>/);
+    assert.doesNotMatch(guest, /<form|<button|Is the place still here/);
+});
+
+test('the report step keeps the place on the map and asks only optional questions', () => {
+    const ReportStep = loadComponent('report-step.tsx');
+    const html = renderToStaticMarkup(React.createElement(ReportStep, { source: 'community', id: 'abc', onBack: () => {}, onReported: () => {} }));
+
+    assert.match(html, /<form action="\/map\/places\/community\/abc\/report"/);
+    assert.match(text(html), /The place is no longer there/);
+    assert.match(text(html), /Until then the place stays on the map\./);
+    assert.match(html, /aria-label="Back to the place"/);
+    for (const reason of ['sign_removed', 'now_regular_bay', 'other']) assert.match(html, new RegExp(`name="reason" value="${reason}"`));
+    assert.doesNotMatch(html, /\schecked[\s=/>]|\srequired[\s=/>]/);
+    assert.match(html, /name="note"[^>]*maxLength="500"|maxLength="500"[^>]*name="note"/);
+});
+
+test('the contributions tab shows evidence and sources to everyone and actions only to signed-in users', () => {
+    const Contributions = loadComponent('contributions.tsx');
+    const html = (source, detail = {}, props = {}) =>
+        renderToStaticMarkup(
+            React.createElement(Contributions, {
+                data: {
+                    source,
+                    detail: { ...details[source], confirmations_count: { confirmed: 2 }, last_confirmed_at: '2026-03-04T09:00:00Z', ...detail },
+                },
+                signedIn: true,
+                loginHref: '/login?return=%2Fmap',
+                onReport: () => {},
+                ...props,
+            }),
+        );
+
+    assert.match(text(html('community')), /Does the place exist\? Confirmed 2× · last 4 Mar/);
+    assert.match(text(html('community')), /Report that the place is gone/);
+    assert.match(text(html('community')), /Community contribution added 2 Jan/);
+    assert.match(text(html('municipal')), /Municipality of Leiden/);
+    assert.doesNotMatch(text(html('community')), /Your activity/);
+
+    const active = text(html('municipal', { confirmed_today: true, reported_by_you: true }));
+    assert.match(active, /Your activity Confirmed today Reported as gone · awaiting a moderator/);
+    assert.doesNotMatch(active, /Report that the place is gone/);
+
+    const guest = html('community', { confirmed_today: true }, { signedIn: false });
+    assert.doesNotMatch(text(guest), /Report that the place is gone|Your activity/);
+    assert.match(text(guest), /Log in to confirm or report\./);
 });

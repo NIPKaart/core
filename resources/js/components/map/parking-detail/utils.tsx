@@ -40,3 +40,15 @@ export function formatDistance(metres: number, language: string): string {
         ? `${Math.round(metres)} m`
         : `${(metres / 1000).toLocaleString(language, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
 }
+
+/** Day and short month, European order also in English; the year only when it is not the current one. */
+export function formatShortDate(value: string, language: string, now: Date = new Date()): string {
+    const date = new Date(value);
+    const locale = language.startsWith('en') ? 'en-GB' : language;
+
+    return date.toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'short',
+        ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
+    });
+}

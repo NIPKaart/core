@@ -29,7 +29,7 @@ type ReportedPlace = {
     published: boolean;
     first_reported_at: string;
     last_reported_at: string;
-    reports: { id: number; reporter: string | null; note: string | null; reported_at: string }[];
+    reports: { id: number; reporter: string | null; reason: string | null; note: string | null; reported_at: string }[];
     confirmations_since_report: number;
     last_confirmed_at: string | null;
 };
@@ -146,7 +146,12 @@ function ReportedPlaceCard({ place, canResolve, onRemove }: { place: ReportedPla
                     <ul className="flex flex-col gap-2">
                         {place.reports.map((report) => (
                             <li key={report.id} className="rounded-md bg-muted/60 px-3 py-2 text-sm">
-                                {report.note ? <p>“{report.note}”</p> : <p className="text-muted-foreground italic">{t('notes.none')}</p>}
+                                {report.reason && <p className="font-medium">{report.reason}</p>}
+                                {report.note ? (
+                                    <p>“{report.note}”</p>
+                                ) : (
+                                    !report.reason && <p className="text-muted-foreground italic">{t('notes.none')}</p>
+                                )}
                                 <p className="mt-0.5 text-xs text-muted-foreground">
                                     {report.reporter ?? t('notes.unknown_reporter')} · {ago(report.reported_at)}
                                 </p>

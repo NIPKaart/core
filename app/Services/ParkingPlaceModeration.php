@@ -160,6 +160,7 @@ class ParkingPlaceModeration
             'reports' => $place->reports->map(fn (ParkingPlaceReport $report) => [
                 'id' => $report->id,
                 'reporter' => $report->user?->name,
+                'reason' => $report->reason?->label(),
                 'note' => $report->note,
                 'reported_at' => $report->created_at,
             ])->values(),
