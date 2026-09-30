@@ -11,9 +11,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
 use App\Models\Municipality;
-use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\Province;
+use App\Services\MunicipalDuplicates;
 use App\Support\GeoPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,13 +25,12 @@ class ParkingSpaceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, MunicipalDuplicates $municipalDuplicates)
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
-        $query = ParkingSpace::query()
-            ->with(['user', 'province', 'country', 'municipality'])
-            ->withNearbyMunicipalDistance();
+        $query = $municipalDuplicates->withNearbyDistance(ParkingSpace::query())
+            ->with(['user', 'province', 'country', 'municipality']);
 
         // Filters
         if ($request->filled('status')) {
@@ -80,12 +79,12 @@ class ParkingSpaceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ParkingSpace $parkingSpace)
+    public function show(ParkingSpace $parkingSpace, MunicipalDuplicates $municipalDuplicates)
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
-            ->withNearbyMunicipalDistance()
+        $parkingSpace = $municipalDuplicates->withNearbyDistance(ParkingSpace::query())
+            ->with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
             ->findOrFail($parkingSpace->id);
         $location = new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude);
 
@@ -100,12 +99,7 @@ class ParkingSpaceController extends Controller
             ->get();
 
         // Visible municipal places around it, so a duplicate of municipal data is not approved unnoticed
-        $nearbyMunicipalSpaces = ParkingMunicipal::select('id', 'latitude', 'longitude')
-            ->where('visibility', true)
-            ->withinRadius($location, 100)
-            ->nearestTo($location)
-            ->limit($limit)
-            ->get();
+        $nearbyMunicipalSpaces = $municipalDuplicates->around($location, $limit);
 
         // Fetch the 8 most recent confirmations
         $recentConfirmations = $parkingSpace->confirmations()
