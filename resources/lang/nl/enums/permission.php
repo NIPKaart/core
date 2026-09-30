@@ -115,11 +115,11 @@ return [
         'actions' => [
             'view_any' => [
                 'label' => 'Meldingen bekijken',
-                'description' => 'Geeft toegang tot plekken die als verdwenen zijn gemeld.',
+                'description' => 'Geeft toegang tot parkeerplaatsen die als verdwenen zijn gemeld.',
             ],
             'resolve' => [
                 'label' => 'Meldingen afhandelen',
-                'description' => 'Laat een gemelde plek staan, of verwijdert een communityplek en verbergt een gemeentelijke plek.',
+                'description' => 'Laat een gemelde parkeerplaats staan, of verwijdert een parkeerplaats van de community en verbergt een gemeentelijke.',
             ],
         ],
     ],

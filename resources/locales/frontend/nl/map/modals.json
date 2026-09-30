@@ -45,7 +45,7 @@
             "fetched_at": "Opgehaald op"
         },
         "unknown": "Onbekend",
-        "fetched_note": "Dit is de ophaaldatum van de gegevens, geen controle van de parkeerplek."
+        "fetched_note": "Dit is de ophaaldatum van de gegevens, geen controle van de parkeerplaats."
     },
     "offstreet": {
         "modal": {
@@ -156,32 +156,32 @@
             "contribute": "Bijdragen"
         },
         "existence": {
-            "question": "Is de plek er nog?",
+            "question": "Is de parkeerplaats er nog?",
             "count_one": "{{count}}× bevestigd",
             "count_other": "{{count}}× bevestigd",
             "none": "Nog niet bevestigd",
             "present_since": "Aanwezig, laatst op",
             "yes": "Ja",
             "no": "Nee",
-            "yes_label": "Ja, de plek is er",
-            "no_label": "Nee, de plek is weg",
+            "yes_label": "Ja, de parkeerplaats is er",
+            "no_label": "Nee, de parkeerplaats is weg",
             "thanks": "Bedankt, je hebt bevestigd",
             "today_by_you_one": "{{count}}× bevestigd · vandaag ook door jou",
             "today_by_you_other": "{{count}}× bevestigd · vandaag ook door jou",
-            "reported": "Je hebt gemeld dat de plek weg is",
+            "reported": "Je hebt gemeld dat de parkeerplaats weg is",
             "reported_note": "Een moderator kijkt ernaar.",
             "log_in": "Log in",
             "log_in_hint": "om te bevestigen of te melden."
         },
         "report": {
-            "title": "De plek is er niet meer",
-            "back": "Terug naar de plek",
-            "explanation": "Een moderator kijkt ernaar. Tot dan blijft de plek op de kaart.",
+            "title": "De parkeerplaats is er niet meer",
+            "back": "Terug naar de parkeerplaats",
+            "explanation": "Een moderator kijkt ernaar. Tot dan blijft de parkeerplaats op de kaart.",
             "seen": "Wat zag je?",
             "optional": "(optioneel)",
             "reasons": {
                 "sign_removed": "Bord of vak is weggehaald",
-                "now_regular_bay": "Het is nu een gewone parkeerplek",
+                "now_regular_bay": "Het is nu een gewone parkeerplaats",
                 "other": "Iets anders"
             },
             "note": "Toelichting",
@@ -190,16 +190,16 @@
             "sending": "Versturen…"
         },
         "contribute": {
-            "exists": "Bestaat de plek?",
+            "exists": "Bestaat de parkeerplaats?",
             "last": "laatst",
-            "report": "Melden dat de plek weg is",
+            "report": "Melden dat de parkeerplaats weg is",
             "report_note": "Een moderator beslist",
-            "sources": "Bronnen van deze plek",
+            "sources": "Bronnen van deze parkeerplaats",
             "added": "toegevoegd",
             "fetched": "opgehaald",
             "activity": "Jouw activiteit",
             "confirmed_today": "Vandaag bevestigd",
-            "reported": "Gemeld dat de plek weg is · wacht op een moderator"
+            "reported": "Gemeld dat de parkeerplaats weg is · wacht op een moderator"
         }
     }
 }

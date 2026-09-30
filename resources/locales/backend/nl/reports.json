@@ -1,16 +1,16 @@
 {
     "title": "Meldingen",
-    "description": "Plekken die gebruikers als verdwenen hebben gemeld. Een melding haalt nooit zelf een plek van de kaart: jij beslist. Twijfel je, laat de plek dan staan.",
+    "description": "Parkeerplaatsen die gebruikers als verdwenen hebben gemeld. Een melding haalt nooit zelf een parkeerplaats van de kaart: jij beslist. Twijfel je, laat de parkeerplaats dan staan.",
     "empty": {
         "title": "Geen open meldingen",
-        "description": "Als gebruikers melden dat een plek weg is, zie je die hier."
+        "description": "Als gebruikers melden dat een parkeerplaats weg is, zie je die hier."
     },
     "sources": {
         "community": "Community",
         "municipal": "Gemeentelijke data"
     },
     "not_public": "Niet openbaar",
-    "no_address": "Plek zonder adres",
+    "no_address": "Parkeerplaats zonder adres",
     "signals": {
         "reports": "Meldingen",
         "report_count_one": "{{count}} melding",
@@ -41,14 +41,14 @@
         "note": "Toelichting",
         "optional": "(optioneel)",
         "community": {
-            "title": "Deze communityplek verwijderen?",
-            "description": "De plek wordt verwijderd, samen met de bevestigingen, meldingen en favorieten. Dit kan niet ongedaan worden; je besluit en de reden blijven bewaard.",
-            "confirm": "Plek verwijderen"
+            "title": "Deze parkeerplaats van de community verwijderen?",
+            "description": "De parkeerplaats wordt verwijderd, samen met de bevestigingen, meldingen en favorieten. Dit kan niet ongedaan worden; je besluit en de reden blijven bewaard.",
+            "confirm": "Parkeerplaats verwijderen"
         },
         "municipal": {
-            "title": "Deze gemeentelijke plek verbergen?",
-            "description": "De plek verdwijnt van de kaart en blijft ook na volgende imports verborgen. Je kunt hem weer tonen via gemeentelijke data.",
-            "confirm": "Plek verbergen"
+            "title": "Deze gemeentelijke parkeerplaats verbergen?",
+            "description": "De parkeerplaats verdwijnt van de kaart en blijft ook na volgende imports verborgen. Je kunt hem weer tonen via gemeentelijke data.",
+            "confirm": "Parkeerplaats verbergen"
         }
     }
 }

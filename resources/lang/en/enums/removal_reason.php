@@ -3,15 +3,15 @@
 return [
     'no_longer_exists' => [
         'label' => 'No longer exists',
-        'description' => 'The disabled parking place is no longer there.',
+        'description' => 'The disabled parking space is no longer there.',
     ],
     'not_a_disabled_bay' => [
-        'label' => 'Not a disabled parking place',
-        'description' => 'The location is not a disabled parking place.',
+        'label' => 'Not a disabled parking space',
+        'description' => 'The location is not a disabled parking space.',
     ],
     'duplicate' => [
         'label' => 'Duplicate',
-        'description' => 'Another record already shows this parking place.',
+        'description' => 'Another record already shows this parking space.',
     ],
     'other' => [
         'label' => 'Other',

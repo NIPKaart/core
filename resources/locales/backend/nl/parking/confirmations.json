@@ -1,16 +1,16 @@
 {
     "head": {
         "title": "Bevestigingen - #{{id}}",
-        "description": "Bekijk en beheer alle bevestigingen die zijn ingediend voor deze parkeerplek."
+        "description": "Bekijk en beheer alle bevestigingen die zijn ingediend voor deze parkeerplaats."
     },
     "breadcrumbs": {
-        "spaces": "Parkeerplekken",
+        "spaces": "Parkeerplaatsen",
         "show": "Bekijken",
         "confirmations": "Bevestigingen"
     },
     "selected": "geselecteerd",
     "unknown": "Onbekend",
-    "back": "Terug naar parkeerplek",
+    "back": "Terug naar parkeerplaats",
     "table": {
         "status": "Status",
         "user": "Gebruiker",
@@ -45,6 +45,6 @@
         }
     },
     "errors": {
-        "missingId": "Parkeerplek ID ontbreekt"
+        "missingId": "Parkeerplaats ID ontbreekt"
     }
 }

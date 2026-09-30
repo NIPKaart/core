@@ -312,14 +312,14 @@ test('the existence check asks one question when signed in and shows the outcome
             }),
         );
 
-    assert.match(text(html()), /Is the place still here\? Confirmed 3× · 4 Mar/);
+    assert.match(text(html()), /Is the parking space still here\? Confirmed 3× · 4 Mar/);
     assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
-    assert.match(html(), /aria-label="Yes, the place is here"/);
-    assert.match(html(), /aria-label="No, the place is gone"/);
-    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the place still here\? Not confirmed yet/);
+    assert.match(html(), /aria-label="Yes, the parking space is here"/);
+    assert.match(html(), /aria-label="No, the parking space is gone"/);
+    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the parking space still here\? Not confirmed yet/);
 
     assert.match(text(html({ confirmedToday: true })), /Thanks, you confirmed Confirmed 3× · today also by you/);
-    assert.match(text(html({ reported: true })), /You reported that the place is gone A moderator will look at it\./);
+    assert.match(text(html({ reported: true })), /You reported that the parking space is gone A moderator will look at it\./);
     for (const state of [{ confirmedToday: true }, { reported: true }]) assert.doesNotMatch(html(state), /<form|<button/);
 });
 
@@ -341,7 +341,7 @@ test('signed-out visitors see only the evidence and a quiet hint to log in', () 
 
     assert.match(text(guest), /Confirmed 3× Present, last on 4 Mar Log in to confirm or report\./);
     assert.match(guest, /<a href="\/login\?return=%2Fmap"[^>]*>Log in<\/a>/);
-    assert.doesNotMatch(guest, /<form|<button|Is the place still here/);
+    assert.doesNotMatch(guest, /<form|<button|Is the parking space still here/);
 });
 
 test('the report step keeps the place on the map and asks only optional questions', () => {
@@ -349,9 +349,9 @@ test('the report step keeps the place on the map and asks only optional question
     const html = renderToStaticMarkup(React.createElement(ReportStep, { source: 'community', id: 'abc', onBack: () => {}, onReported: () => {} }));
 
     assert.match(html, /<form action="\/map\/places\/community\/abc\/report"/);
-    assert.match(text(html), /The place is no longer there/);
-    assert.match(text(html), /Until then the place stays on the map\./);
-    assert.match(html, /aria-label="Back to the place"/);
+    assert.match(text(html), /The parking space is no longer there/);
+    assert.match(text(html), /Until then the parking space stays on the map\./);
+    assert.match(html, /aria-label="Back to the parking space"/);
     for (const reason of ['sign_removed', 'now_regular_bay', 'other']) assert.match(html, new RegExp(`name="reason" value="${reason}"`));
     assert.doesNotMatch(html, /\schecked[\s=/>]|\srequired[\s=/>]/);
     assert.match(html, /name="note"[^>]*maxLength="500"|maxLength="500"[^>]*name="note"/);
@@ -373,17 +373,17 @@ test('the contributions tab shows evidence and sources to everyone and actions o
             }),
         );
 
-    assert.match(text(html('community')), /Does the place exist\? Confirmed 2× · last 4 Mar/);
-    assert.match(text(html('community')), /Report that the place is gone/);
+    assert.match(text(html('community')), /Does the parking space exist\? Confirmed 2× · last 4 Mar/);
+    assert.match(text(html('community')), /Report that the parking space is gone/);
     assert.match(text(html('community')), /Community contribution added 2 Jan/);
     assert.match(text(html('municipal')), /Municipality of Leiden/);
     assert.doesNotMatch(text(html('community')), /Your activity/);
 
     const active = text(html('municipal', { confirmed_today: true, reported_by_you: true }));
     assert.match(active, /Your activity Confirmed today Reported as gone · awaiting a moderator/);
-    assert.doesNotMatch(active, /Report that the place is gone/);
+    assert.doesNotMatch(active, /Report that the parking space is gone/);
 
     const guest = html('community', { confirmed_today: true }, { signedIn: false });
-    assert.doesNotMatch(text(guest), /Report that the place is gone|Your activity/);
+    assert.doesNotMatch(text(guest), /Report that the parking space is gone|Your activity/);
     assert.match(text(guest), /Log in to confirm or report\./);
 });

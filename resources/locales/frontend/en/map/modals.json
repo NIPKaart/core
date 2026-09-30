@@ -45,7 +45,7 @@
             "fetched_at": "Fetched on"
         },
         "unknown": "Unknown",
-        "fetched_note": "This is when the data was fetched, not an on-site check of the parking place."
+        "fetched_note": "This is when the data was fetched, not an on-site check of the parking space."
     },
     "offstreet": {
         "modal": {
@@ -156,27 +156,27 @@
             "contribute": "Contributions"
         },
         "existence": {
-            "question": "Is the place still here?",
+            "question": "Is the parking space still here?",
             "count_one": "Confirmed {{count}}×",
             "count_other": "Confirmed {{count}}×",
             "none": "Not confirmed yet",
             "present_since": "Present, last on",
             "yes": "Yes",
             "no": "No",
-            "yes_label": "Yes, the place is here",
-            "no_label": "No, the place is gone",
+            "yes_label": "Yes, the parking space is here",
+            "no_label": "No, the parking space is gone",
             "thanks": "Thanks, you confirmed",
             "today_by_you_one": "Confirmed {{count}}× · today also by you",
             "today_by_you_other": "Confirmed {{count}}× · today also by you",
-            "reported": "You reported that the place is gone",
+            "reported": "You reported that the parking space is gone",
             "reported_note": "A moderator will look at it.",
             "log_in": "Log in",
             "log_in_hint": "to confirm or report."
         },
         "report": {
-            "title": "The place is no longer there",
-            "back": "Back to the place",
-            "explanation": "A moderator will look at it. Until then the place stays on the map.",
+            "title": "The parking space is no longer there",
+            "back": "Back to the parking space",
+            "explanation": "A moderator will look at it. Until then the parking space stays on the map.",
             "seen": "What did you see?",
             "optional": "(optional)",
             "reasons": {
@@ -190,11 +190,11 @@
             "sending": "Sending…"
         },
         "contribute": {
-            "exists": "Does the place exist?",
+            "exists": "Does the parking space exist?",
             "last": "last",
-            "report": "Report that the place is gone",
+            "report": "Report that the parking space is gone",
             "report_note": "A moderator decides",
-            "sources": "Sources of this place",
+            "sources": "Sources of this parking space",
             "added": "added",
             "fetched": "fetched",
             "activity": "Your activity",

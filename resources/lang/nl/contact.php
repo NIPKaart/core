@@ -11,7 +11,7 @@ return [
     'mail' => [
         'subject' => 'Contactformulier: :topic van :name',
         'from' => 'Van',
-        'location' => 'Plek',
+        'location' => 'Parkeerplaats',
         'reply' => 'Beantwoord deze e-mail om direct te reageren.',
     ],
 ];

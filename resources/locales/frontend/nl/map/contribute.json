@@ -1,10 +1,10 @@
 {
     "head": {
-        "add": "Plek toevoegen",
+        "add": "Parkeerplaats toevoegen",
         "edit": "Inzending aanpassen"
     },
     "header": {
-        "add": "Plek toevoegen",
+        "add": "Parkeerplaats toevoegen",
         "edit": "Inzending aanpassen",
         "step": "Stap {{step}} van 3 · {{name}}",
         "cancel": "Annuleren",
@@ -16,7 +16,7 @@
         "review": "Controleren"
     },
     "location": {
-        "heading": "Waar is de plek?",
+        "heading": "Waar is de parkeerplaats?",
         "intro": "Zet de speld op één gehandicaptenparkeervak. Liggen er meer vakken naast elkaar? Voeg ze dan elk apart toe.",
         "hint": "Schuif de kaart tot de speld precies op het vak staat.",
         "zoom_in": "Zoom verder in om de speld precies te plaatsen.",
@@ -25,11 +25,11 @@
         "failed_title": "Deze plek kunnen we niet plaatsen",
         "failed_text": "We konden hier geen gemeente in een ondersteund land vinden. Schuif de kaart naar het vak op straat, of probeer het opnieuw.",
         "retry": "Opnieuw proberen",
-        "nearby": "Op {{distance}} meter staat al een bekende plek. Voeg alleen toe als dit een ander vak is.",
+        "nearby": "Op {{distance}} meter staat al een bekende parkeerplaats. Voeg alleen toe als dit een ander vak is.",
         "use": "Deze locatie gebruiken",
         "my_location": "Gebruik mijn locatie",
         "my_location_failed": "We konden je locatie niet bepalen. Schuif de kaart zelf naar de plek.",
-        "pin": "Nieuwe plek"
+        "pin": "Nieuwe parkeerplaats"
     },
     "details": {
         "change": "Wijzig",
@@ -65,7 +65,7 @@
         "note": {
             "title": "Opmerking",
             "optional": "(optioneel)",
-            "placeholder": "Bijvoorbeeld hoe je de plek het beste vindt"
+            "placeholder": "Bijvoorbeeld hoe je de parkeerplaats het beste vindt"
         },
         "next": "Verder naar controleren"
     },
@@ -94,22 +94,22 @@
         "after": [
             "Een moderator bekijkt je inzending.",
             "Tot die tijd kun je hem aanpassen of intrekken in Mijn NIPKaart.",
-            "Na goedkeuring staat de plek voor iedereen op de kaart."
+            "Na goedkeuring staat de parkeerplaats voor iedereen op de kaart."
         ],
-        "submit": "Plek versturen",
+        "submit": "Parkeerplaats versturen",
         "save": "Wijzigingen opslaan"
     },
     "submitted": {
-        "title": "Bedankt, je plek is verstuurd",
+        "title": "Bedankt, je parkeerplaats is verstuurd",
         "text": "Een moderator bekijkt hem binnenkort. Je krijgt een melding zodra hij is goedgekeurd, of als er iets niet klopt.",
         "pending": "In behandeling",
         "view": "Bekijk mijn inzending",
-        "add_another": "Nog een plek toevoegen",
+        "add_another": "Nog een parkeerplaats toevoegen",
         "back_to_map": "Terug naar de kaart"
     },
     "entry": {
-        "add": "Plek toevoegen",
-        "guest_title": "Log in om een plek toe te voegen",
+        "add": "Parkeerplaats toevoegen",
+        "guest_title": "Log in om een parkeerplaats toe te voegen",
         "guest_text": "Zo kunnen moderators je inzending beoordelen en kun je hem later aanpassen. Zoeken op de kaart blijft zonder account mogelijk.",
         "login": "Inloggen",
         "register": "Account aanmaken",

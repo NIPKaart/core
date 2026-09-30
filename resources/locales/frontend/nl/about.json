@@ -7,7 +7,7 @@
     "intro": "NIPKaart brengt gehandicaptenparkeerplaatsen, lokale regels en garagebezetting samen op één plek. Voor iedereen met een gehandicaptenparkeerkaart, en voor wie met hen meereist.",
     "sources": {
         "title": "Waar de gegevens vandaan komen",
-        "intro": "Bij elke plek zie je waar de informatie vandaan komt.",
+        "intro": "Bij elke parkeerplaats zie je waar de informatie vandaan komt.",
         "columns": {
             "source": "Bron",
             "shows": "Wat je ziet",
@@ -22,8 +22,8 @@
         "community": {
             "name": "Community",
             "kind": "Bijdragen van gebruikers",
-            "shows": "Plekken die (nog) niet in open data staan. Andere gebruikers kunnen bevestigen dat een plek er nog is.",
-            "freshness": "Bijgewerkt zodra gebruikers een plek toevoegen of bevestigen."
+            "shows": "Parkeerplaatsen die (nog) niet in open data staan. Andere gebruikers kunnen bevestigen dat een parkeerplaats er nog is.",
+            "freshness": "Bijgewerkt zodra gebruikers een parkeerplaats toevoegen of bevestigen."
         },
         "offstreet": {
             "name": "Garages en P+R",
@@ -35,12 +35,12 @@
     "why": {
         "title": "Waarom NIPKaart bestaat",
         "body": [
-            "Met een gehandicaptenparkeerkaart wil je vooraf weten of er een plek is, en onder welke voorwaarden. Die informatie is er vaak wel, maar verspreid over gemeentelijke datasets, borden en garagesites.",
-            "NIPKaart begon in 2021 als geoweb-project tijdens een studie. Sinds 2022 verzamelen we gegevens uit heel Europa. Met deze vernieuwde website moderniseren we het hele platform: zoeken begint bij je bestemming, en bij elke plek zie je waar de informatie vandaan komt."
+            "Met een gehandicaptenparkeerkaart wil je vooraf weten of er een parkeerplaats is, en onder welke voorwaarden. Die informatie is er vaak wel, maar verspreid over gemeentelijke datasets, borden en garagesites.",
+            "NIPKaart begon in 2021 als geoweb-project tijdens een studie. Sinds 2022 verzamelen we gegevens uit heel Europa. Met deze vernieuwde website moderniseren we het hele platform: zoeken begint bij je bestemming, en bij elke parkeerplaats zie je waar de informatie vandaan komt."
         ]
     },
     "details": {
-        "title": "Wat je per plek ziet",
+        "title": "Wat je per parkeerplaats ziet",
         "items": {
             "orientation": {
                 "term": "Ligging",

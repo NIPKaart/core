@@ -1,16 +1,16 @@
 {
     "title": "Reports",
-    "description": "Places that users reported as no longer existing. A report never takes a place off the map: you decide. When it is uncertain, keep the place.",
+    "description": "Parking spaces that users reported as no longer existing. A report never takes a parking space off the map: you decide. When it is uncertain, keep the parking space.",
     "empty": {
         "title": "No open reports",
-        "description": "When users report that a place is gone, it appears here."
+        "description": "When users report that a parking space is gone, it appears here."
     },
     "sources": {
         "community": "Community",
         "municipal": "Municipal data"
     },
     "not_public": "Not public",
-    "no_address": "Place without an address",
+    "no_address": "Parking space without an address",
     "signals": {
         "reports": "Reports",
         "report_count_one": "{{count}} report",
@@ -41,14 +41,14 @@
         "note": "Note",
         "optional": "(optional)",
         "community": {
-            "title": "Delete this community place?",
-            "description": "The place is deleted together with its confirmations, reports and favorites. This cannot be undone; your decision and reason are kept.",
-            "confirm": "Delete place"
+            "title": "Delete this community parking space?",
+            "description": "The parking space is deleted together with its confirmations, reports and favorites. This cannot be undone; your decision and reason are kept.",
+            "confirm": "Delete parking space"
         },
         "municipal": {
-            "title": "Hide this municipal place?",
-            "description": "The place disappears from the map and stays hidden after later imports. You can show it again under municipal data.",
-            "confirm": "Hide place"
+            "title": "Hide this municipal parking space?",
+            "description": "The parking space disappears from the map and stays hidden after later imports. You can show it again under municipal data.",
+            "confirm": "Hide parking space"
         }
     }
 }

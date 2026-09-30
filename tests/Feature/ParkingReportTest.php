@@ -54,7 +54,7 @@ describe('reporting', function () {
         $this->actingAs($this->user)
             ->post(route('map.places.report', ['source' => $source, 'id' => $place->id]), ['note' => '  Bord is weggehaald  '])
             ->assertSessionHasNoErrors()
-            ->assertInertiaFlash('success', 'Bedankt. Een moderator bekijkt je melding; tot die tijd blijft de plek op de kaart.');
+            ->assertInertiaFlash('success', 'Bedankt. Een moderator bekijkt je melding; tot die tijd blijft de parkeerplaats op de kaart.');
 
         expect($place->reports()->sole())
             ->user_id->toBe($this->user->id)
@@ -79,7 +79,7 @@ describe('reporting', function () {
 
         $this->actingAs($this->user);
         $report()->assertSessionHasNoErrors();
-        $report()->assertSessionHasErrors(['general' => 'Je hebt deze plek al gemeld. Een moderator bekijkt het.']);
+        $report()->assertSessionHasErrors(['general' => 'Je hebt deze parkeerplaats al gemeld. Een moderator bekijkt het.']);
         $this->actingAs(User::factory()->create());
         $report()->assertSessionHasNoErrors();
         expect($place->reports()->count())->toBe(2);
@@ -196,7 +196,7 @@ describe('moderation', function () {
         $this->actingAs($this->moderator)
             ->post(route('app.reports.keep', ['source' => $source, 'id' => $place->id]))
             ->assertSessionHasNoErrors()
-            ->assertInertiaFlash('success', 'De plek blijft op de kaart en de meldingen zijn afgehandeld.');
+            ->assertInertiaFlash('success', 'De parkeerplaats blijft op de kaart en de meldingen zijn afgehandeld.');
 
         expect($place->reports()->sole())
             ->resolution->toBe(ReportResolution::KEPT)
@@ -231,7 +231,7 @@ describe('moderation', function () {
         $this->actingAs($this->moderator)
             ->post(route('app.reports.remove', ['source' => 'community', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value, 'note' => ' Ter plekke gecontroleerd '])
             ->assertSessionHasNoErrors()
-            ->assertInertiaFlash('success', 'De communityplek is verwijderd.');
+            ->assertInertiaFlash('success', 'De parkeerplaats van de community is verwijderd.');
 
         expect(ParkingSpace::withTrashed()->find($place->id))->toBeNull();
         foreach ([$confirmation, $review, $favorite, ...$reports] as $dependent) {
@@ -257,7 +257,7 @@ describe('moderation', function () {
         $this->actingAs($this->moderator)
             ->post(route('app.reports.remove', ['source' => 'municipal', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value])
             ->assertSessionHasNoErrors()
-            ->assertInertiaFlash('success', 'De gemeentelijke plek is verborgen op de kaart.');
+            ->assertInertiaFlash('success', 'De gemeentelijke parkeerplaats is verborgen op de kaart.');
 
         expect($place->fresh()->visibility)->toBeFalse()
             ->and($place->reports()->sole())->resolution->toBe(ReportResolution::REMOVED)->resolved_by->toBe($this->moderator->id)

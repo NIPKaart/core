@@ -115,11 +115,11 @@ return [
         'actions' => [
             'view_any' => [
                 'label' => 'View reports',
-                'description' => 'Grants access to places reported as no longer existing.',
+                'description' => 'Grants access to parking spaces reported as no longer existing.',
             ],
             'resolve' => [
                 'label' => 'Handle reports',
-                'description' => 'Allows keeping a reported place, or deleting a community place and hiding a municipal one.',
+                'description' => 'Allows keeping a reported parking space, or deleting a community one and hiding a municipal one.',
             ],
         ],
     ],

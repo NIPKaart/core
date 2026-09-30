@@ -38,7 +38,7 @@
         },
         "destination": {
             "title": "Your destination",
-            "text": "Distances are measured from this point, so you can see which place is closest."
+            "text": "Distances are measured from this point, so you can see which parking space is closest."
         }
     },
     "garages": {
@@ -48,9 +48,9 @@
         "link": "All garages and P+R"
     },
     "contribute": {
-        "title": "Is a place missing?",
+        "title": "Is a parking space missing?",
         "text": "You often know your own neighbourhood and the places you visit regularly best. Add a disabled parking space you know in a few steps and help other visitors find their way. Every contribution makes the map more complete.",
-        "cta": "Add a place",
+        "cta": "Add a parking space",
         "step": "Put the pin on the spot",
         "next": "Then fill in the orientation and any time limits"
     }

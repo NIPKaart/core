@@ -88,8 +88,8 @@
     "markers": {
         "full": "Vol",
         "closed": "Gesloten",
-        "free_one": "{{formatted}} algemene plek vrij",
-        "free_other": "{{formatted}} algemene plekken vrij",
+        "free_one": "{{formatted}} algemene plaats vrij",
+        "free_other": "{{formatted}} algemene plaatsen vrij",
         "unavailable": "Live gegevens tijdelijk niet beschikbaar"
     }
 }

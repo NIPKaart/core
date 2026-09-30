@@ -7,6 +7,8 @@ NIPKaart helps people find accessible parking using community contributions, mun
 **ParkingSpace**: One physical accessible parking bay contributed by the community, subject to publication, verification and correction. Adjacent bays remain individual spaces.
 _Avoid_: ParkingSpot, UserParkingSpot, UserparkingSpot
 
+_In the interface_: Dutch copy calls every community or municipal place a "parkeerplaats" (officially "gehandicaptenparkeerplaats"), English copy a "parking space"; "plek" and "place" mean a location only. See `.ai/rules/locales.md`.
+
 **ParkingSpaceConfirmation**: A signed-in person's dated confirmation that a published community or municipal parking place exists. It confirms existence only, not the under-sign, parking time, orientation, rules or availability. Older records may still carry a legacy dispute status or comment; those are not counted as confirmations.
 _Avoid_: ParkingSpotConfirmation
 

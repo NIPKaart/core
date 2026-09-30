@@ -3,7 +3,7 @@
 return [
     'duplicate' => [
         'label' => 'Dubbele melding',
-        'description' => 'Deze plek is al bekend of eerder ingezonden.',
+        'description' => 'Deze parkeerplaats is al bekend of eerder ingezonden.',
     ],
     'not_a_disabled_bay' => [
         'label' => 'Geen gehandicaptenparkeerplaats',
@@ -15,7 +15,7 @@ return [
     ],
     'insufficient_information' => [
         'label' => 'Onvoldoende informatie',
-        'description' => 'Er is te weinig informatie om de plek te beoordelen.',
+        'description' => 'Er is te weinig informatie om de parkeerplaats te beoordelen.',
     ],
     'spam' => [
         'label' => 'Spam of misbruik',
