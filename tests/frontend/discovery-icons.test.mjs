@@ -3,16 +3,26 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
-const compile = (path) => ts.transpileModule(readFileSync(new URL(`../../resources/js/lib/${path}`, import.meta.url), 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-}).outputText;
+const compile = (path) =>
+    ts.transpileModule(readFileSync(new URL(`../../resources/js/lib/${path}`, import.meta.url), 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText;
 const source = compile('discovery-icons.ts');
 const pins = { exports: {} };
 vm.runInNewContext(compile('pin-svg.ts'), { exports: pins.exports, require: () => ({}) });
 const timers = new Map();
 let timerId = 0;
 let reducedMotion = false;
-const context = { setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id), window: { matchMedia: () => ({ matches: reducedMotion }) }, exports: {}, require: name => (name === '@/lib/pin-svg' ? pins.exports : { default: { divIcon: options => options } }) };
+const context = {
+    setTimeout: (fn) => {
+        timers.set(++timerId, fn);
+        return timerId;
+    },
+    clearTimeout: (id) => timers.delete(id),
+    window: { matchMedia: () => ({ matches: reducedMotion }) },
+    exports: {},
+    require: (name) => (name === '@/lib/pin-svg' ? pins.exports : { default: { divIcon: (options) => options } }),
+};
 vm.runInNewContext(source, context);
 const { discoveryIcon } = context.exports;
 test('street sources share one pin while garages get a P pin in both selection states', () => {
@@ -52,13 +62,28 @@ test('a garage with temporarily missing live data shows a warning dot instead of
 
 function marker() {
     return {
-        icon: null, z: 0, classes: new Set(),
-        setIcon(icon) { this.icon = icon; this.classes.clear(); return this; },
-        setZIndexOffset(z) { this.z = z; return this; },
-        getElement() { return { classList: { add: value => this.classes.add(value) } }; },
+        icon: null,
+        z: 0,
+        classes: new Set(),
+        setIcon(icon) {
+            this.icon = icon;
+            this.classes.clear();
+            return this;
+        },
+        setZIndexOffset(z) {
+            this.z = z;
+            return this;
+        },
+        getElement() {
+            return { classList: { add: (value) => this.classes.add(value) } };
+        },
     };
 }
-function finishAnimations() { const pending = [...timers.values()]; timers.clear(); pending.forEach(fn => fn()); }
+function finishAnimations() {
+    const pending = [...timers.values()];
+    timers.clear();
+    pending.forEach((fn) => fn());
+}
 test('deselection keeps the selected artwork until its exit animation finishes', () => {
     const pin = marker();
     context.exports.setMarkerSelected(pin, 'municipal', true);

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const source = ts.transpileModule(readFileSync(new URL('../../resources/js/components/map/discovery-filters.tsx', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
@@ -14,20 +14,44 @@ function mount(desktop = false) {
     let index = 0;
     const applied = [];
     let value = { source: 'municipal', radius: 500, sort: 'distance' };
-    const context = { exports: {}, require: name => {
-        if (name === 'react') return { useId: () => 'filters', useState: initial => {
-            const key = index++;
-            if (!(key in state)) state[key] = initial;
-            return [state[key], next => { state[key] = next; }];
-        } };
-        if (name === 'react-i18next') return { useTranslation: () => ({ t: key => key }) };
-        if (name === '@/hooks/use-media-query') return { useMediaQuery: () => desktop };
-        if (name === '@/lib/discovery-filters') return { defaultDiscoveryFilters: defaults };
-        if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
-        return require(name);
-    } };
+    const context = {
+        exports: {},
+        require: (name) => {
+            if (name === 'react')
+                return {
+                    useId: () => 'filters',
+                    useState: (initial) => {
+                        const key = index++;
+                        if (!(key in state)) state[key] = initial;
+                        return [
+                            state[key],
+                            (next) => {
+                                state[key] = next;
+                            },
+                        ];
+                    },
+                };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+            if (name === '@/hooks/use-media-query') return { useMediaQuery: () => desktop };
+            if (name === '@/lib/discovery-filters') return { defaultDiscoveryFilters: defaults };
+            if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
+            return require(name);
+        },
+    };
     vm.runInNewContext(source, context);
-    return { applied, render: () => { index = 0; return context.exports.default({ value, onChange: next => { value = next; applied.push(next); } }); } };
+    return {
+        applied,
+        render: () => {
+            index = 0;
+            return context.exports.default({
+                value,
+                onChange: (next) => {
+                    value = next;
+                    applied.push(next);
+                },
+            });
+        },
+    };
 }
 function find(node, predicate) {
     if (!node || typeof node !== 'object') return null;
@@ -38,7 +62,9 @@ function find(node, predicate) {
     }
     return null;
 }
-function select(tree, value) { return find(tree, node => node.type === 'Select' && node.props.value === value); }
+function select(tree, value) {
+    return find(tree, (node) => node.type === 'Select' && node.props.value === value);
+}
 for (const desktop of [false, true]) {
     test(`${desktop ? 'dialog' : 'drawer'} only applies the draft on submit and discards cancelled changes`, () => {
         const app = mount(desktop);
@@ -55,8 +81,8 @@ for (const desktop of [false, true]) {
         assert.ok(select(tree, '500'));
         select(tree, 'distance').props.onValueChange('balanced');
         tree = app.render();
-        const apply = find(tree, node => node.type === 'Button' && node.props.children === 'filters.apply');
-        const form = find(tree, node => node.type === 'form' && node.props.id === apply.props.form);
+        const apply = find(tree, (node) => node.type === 'Button' && node.props.children === 'filters.apply');
+        const form = find(tree, (node) => node.type === 'form' && node.props.id === apply.props.form);
         assert.equal(apply.props.type, 'submit');
         assert.ok(form, 'Apply remains associated with its form when placed in the drawer footer');
         form.props.onSubmit({ preventDefault() {} });
@@ -69,12 +95,12 @@ test('reset restores every default as a draft before applying', () => {
     let tree = app.render();
     tree.props.onOpenChange(true);
     tree = app.render();
-    find(tree, node => node.type === 'Button' && node.props.children === 'filters.reset').props.onClick();
+    find(tree, (node) => node.type === 'Button' && node.props.children === 'filters.reset').props.onClick();
     assert.equal(app.applied.length, 0);
     tree = app.render();
     assert.ok(select(tree, 'all'));
     assert.ok(select(tree, '1000'));
     assert.ok(select(tree, 'balanced'));
-    find(tree, node => node.type === 'form').props.onSubmit({ preventDefault() {} });
+    find(tree, (node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
     assert.deepEqual({ ...app.applied[0] }, defaults);
 });

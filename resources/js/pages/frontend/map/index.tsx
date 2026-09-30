@@ -18,8 +18,9 @@ import {
     readDiscoveryFilters,
     type DiscoveryFilters as Filters,
 } from '@/lib/discovery-filters';
+import { readPlaceLink, withoutPlaceLink } from '@/lib/place-link';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
-import { Head } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import type { LatLngTuple } from 'leaflet';
 import { MapContainer, Marker, ScaleControl, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
@@ -91,7 +92,8 @@ function DestinationFocus({ destination }: { destination: DestinationResult | nu
     ) : null;
 }
 
-function getInitialPosition(): [number, number, number] {
+function getInitialPosition(linkedPlace: ParkingResult | null): [number, number, number] {
+    if (linkedPlace) return [linkedPlace.latitude, linkedPlace.longitude, 19];
     if (window.location.hash) {
         const match = window.location.hash.match(/^#(\d+(\.\d+)?)\/(-?\d+(\.\d+)?)\/(-?\d+(\.\d+)?)/);
         if (match) {
@@ -108,14 +110,17 @@ function getInitialPosition(): [number, number, number] {
 
 export default function ParkingMap() {
     const { t } = useTranslation('frontend/map/main');
-    const initial = getInitialPosition();
+    const { url } = usePage();
+    // A place reopened from a link, e.g. after logging in to confirm or report it; read once when the map mounts.
+    const [linkedPlace] = useState(() => readPlaceLink(new URL(url, window.location.origin).searchParams));
+    const initial = getInitialPosition(linkedPlace);
     const position: LatLngTuple = [initial[0], initial[1]];
     const initialZoom = initial[2];
 
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
     const [mapStyle, setMapStyle] = useState<MapStyle>('streets');
-    const [modalOpen, setModalOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState(() => linkedPlace !== null);
     const searchOpen = useSearchOpen();
     const [destination, setDestination] = useState<DestinationResult | null>(() => {
         const params = new URLSearchParams(window.location.search);
@@ -147,7 +152,14 @@ export default function ParkingMap() {
     const [retry, setRetry] = useState(0);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
-    const [selectedResult, setSelectedResult] = useState<ParkingResult | null>(null);
+    const [selectedResult, setSelectedResult] = useState<ParkingResult | null>(linkedPlace);
+
+    // Replace the one-off place link with the usual map position, so reloading does not reopen the place.
+    useEffect(() => {
+        // Inertia keeps its own page URL, so update that rather than only the browser history.
+        if (linkedPlace)
+            router.replace({ url: withoutPlaceLink(new URL(window.location.href), linkedPlace), preserveState: true, preserveScroll: true });
+    }, [linkedPlace]);
     const returnFocus = useRef<HTMLElement | null>(null);
     const resultsHeading = useRef<HTMLHeadingElement>(null);
 

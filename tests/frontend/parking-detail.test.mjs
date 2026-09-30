@@ -284,7 +284,6 @@ test('the existence confirmation offers the action that fits the visitor', () =>
         exports: {},
         require: (name) => {
             if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
-            if (name === '@/routes') return { login: () => '/login' };
             if (name === '@/routes/map/places') return { confirm: ({ source, id }) => `/map/places/${source}/${id}/confirm` };
             if (name === '@/components/ui/button')
                 return { Button: ({ asChild, children, ...props }) => (asChild ? children : React.createElement('button', props, children)) };
@@ -305,6 +304,7 @@ test('the existence confirmation offers the action that fits the visitor', () =>
                     source: 'municipal',
                     id: '42',
                     signedIn: true,
+                    loginHref: '/login?return=%2Fmap',
                     confirmedToday: false,
                     ...props,
                 }),
@@ -317,6 +317,7 @@ test('the existence confirmation offers the action that fits the visitor', () =>
                 source: 'municipal',
                 id: '42',
                 signedIn: true,
+                loginHref: '/login?return=%2Fmap',
                 confirmedToday: false,
                 ...props,
             }),
@@ -324,7 +325,7 @@ test('the existence confirmation offers the action that fits the visitor', () =>
     assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
     assert.match(html(), /aria-label="Confirm that this parking place is here"/);
     assert.match(card(), /It&#x27;s here|It's here/);
-    assert.match(html({ signedIn: false }), /<a href="\/login"[^>]*aria-label="Log in to confirm that this parking place is here"/);
+    assert.match(html({ signedIn: false }), /<a href="\/login\?return=%2Fmap"[^>]*aria-label="Log in to confirm that this parking place is here"/);
     assert.match(card({ confirmedToday: true }), /Confirmed today/);
     assert.doesNotMatch(html({ confirmedToday: true }), /<form|<button/);
 });
@@ -340,9 +341,9 @@ test('reporting a gone place fits the visitor and never suggests the place is re
         exports: {},
         require: (name) => {
             if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
-            if (name === '@/routes') return { login: () => '/login' };
             if (name === '@/routes/map/places') return { report: ({ source, id }) => `/map/places/${source}/${id}/report` };
-            if (name === '@/components/ui/button') return { Button: ({ children, ...props }) => React.createElement('button', props, children) };
+            if (name === '@/components/ui/button')
+                return { Button: ({ asChild, children, ...props }) => (asChild ? children : React.createElement('button', props, children)) };
             if (name === '@/components/ui/textarea') return { Textarea: (props) => React.createElement('textarea', props) };
             if (name === '@inertiajs/react') {
                 return {
@@ -356,12 +357,19 @@ test('reporting a gone place fits the visitor and never suggests the place is re
     vm.runInNewContext(source, context);
     const html = (props) =>
         renderToStaticMarkup(
-            React.createElement(context.exports.ParkingReportForm, { source: 'community', id: 'abc', signedIn: true, reported: false, ...props }),
+            React.createElement(context.exports.ParkingReportForm, {
+                source: 'community',
+                id: 'abc',
+                signedIn: true,
+                loginHref: '/login?return=%2Fmap',
+                reported: false,
+                ...props,
+            }),
         );
 
     assert.match(text(html()), /Is the place gone\? Report it/);
     assert.doesNotMatch(html(), /<form/);
-    assert.match(html({ signedIn: false }), /<a href="\/login"[^>]*>Log in to report<\/a>/);
+    assert.match(html({ signedIn: false }), /<a href="\/login\?return=%2Fmap">Log in to report<\/a>/);
     assert.match(text(html({ reported: true })), /Reported as gone\. A moderator will look at it\./);
     assert.doesNotMatch(html({ reported: true }), /<button|<a /);
 

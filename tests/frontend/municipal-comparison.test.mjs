@@ -15,15 +15,21 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages
 const context = {
     exports: {},
     require: (name) => {
-        if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key }) };
+        if (name === 'react-i18next')
+            return { useTranslation: () => ({ t: (key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key }) };
         if (name === '@/components/ui/button') return { Button: ({ children, onClick }) => React.createElement('button', { onClick }, children) };
         return require(name);
     },
 };
 vm.runInNewContext(source, context);
 const Comparison = context.exports.default;
-const claim = { street: 'Elzenhagensingel', number: 0, source_attributes: { orientation: 'Langs', regimes: [{ eTypeDescription: 'Accessible parking', dagen: ['ma', 'di'] }] } };
-const render = (before, after, fields = []) => renderToStaticMarkup(React.createElement(Comparison, { row: { before, after, fields }, onShowMap() {} }));
+const claim = {
+    street: 'Elzenhagensingel',
+    number: 0,
+    source_attributes: { orientation: 'Langs', regimes: [{ eTypeDescription: 'Accessible parking', dagen: ['ma', 'di'] }] },
+};
+const render = (before, after, fields = []) =>
+    renderToStaticMarkup(React.createElement(Comparison, { row: { before, after, fields }, onShowMap() {} }));
 
 test('missing and new locations show one meaningful side instead of a null comparison', () => {
     const missing = render(claim, null);
@@ -45,7 +51,6 @@ test('comparison emphasizes the changed value without emphasizing unchanged orie
     assert.match(html, /<button>View on the map<\/button>/);
 });
 
-
 test('missing source context states actual visibility without suggesting deletion', () => {
     const Notice = context.exports.MissingSourceNotice;
     const renderNotice = (status, visibility) => renderToStaticMarkup(React.createElement(Notice, { row: { status, current: { visibility } } }));
@@ -56,7 +61,12 @@ test('missing source context states actual visibility without suggesting deletio
 });
 
 test('offstreet facilities compare only what defines a facility', () => {
-    const garage = { name: 'Byzantium', source_name: 'P-106_ Byzantium (opendata)', facility_type: 'garage', geometry: { type: 'Point', coordinates: [4.88, 52.36] } };
+    const garage = {
+        name: 'Byzantium',
+        source_name: 'P-106_ Byzantium (opendata)',
+        facility_type: 'garage',
+        geometry: { type: 'Point', coordinates: [4.88, 52.36] },
+    };
     const html = render(garage, { ...garage, name: 'Byzantium garage' }, ['name']);
     assert.match(html, /<span class="[^"]*font-semibold[^"]*">Byzantium garage<\/span>/);
     assert.match(html, /Facility type/);

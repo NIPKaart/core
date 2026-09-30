@@ -180,7 +180,8 @@
             "last": "Present, last",
             "none": "Not confirmed yet",
             "prompt": "Is this place still here?",
-            "help": "A confirmation tells others that this parking place is really here. You can confirm once a day."
+            "help": "A confirmation tells others that this parking place is really here. You can confirm once a day.",
+            "today_by_you": "Present, today also by you"
         }
     }
 }

@@ -4,7 +4,10 @@ import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const compile = (path) => ts.transpileModule(readFileSync(new URL(`../../resources/js/${path}`, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+const compile = (path) =>
+    ts.transpileModule(readFileSync(new URL(`../../resources/js/${path}`, import.meta.url), 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText;
 const utils = { exports: {} };
 vm.runInNewContext(compile('components/map/parking-detail/utils.tsx'), { exports: utils.exports, require: () => ({}) });
 const context = { exports: {}, require: () => utils.exports };

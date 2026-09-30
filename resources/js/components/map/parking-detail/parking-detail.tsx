@@ -7,8 +7,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { placeLinkPath } from '@/lib/place-link';
 import { ParkingConfirmForm } from '@/pages/frontend/form/form-confirm-location';
 import { ParkingReportForm } from '@/pages/frontend/form/form-report-location';
+import { login } from '@/routes';
 import app from '@/routes/app';
 import { show as municipalDetails } from '@/routes/map/parking-municipal';
 import { show as offstreetDetails } from '@/routes/map/parking-offstreet';
@@ -150,12 +152,16 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         </span>
     );
 
+    // Logging in from this dialog returns to the same place instead of the dashboard.
+    const loginHref = login({ query: { return: placeLinkPath(result) } });
+
     const confirmActions = confirmable && (
         <ParkingConfirmForm
             key={`${confirmable.source}:${confirmable.detail.id}`}
             source={confirmable.source}
             id={confirmable.detail.id}
             signedIn={!!user}
+            loginHref={loginHref}
             confirmedToday={!!confirmable.detail.confirmed_today}
             onConfirmed={() => {
                 silentReload.current = true;
@@ -170,6 +176,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
             source={confirmable.source}
             id={confirmable.detail.id}
             signedIn={!!user}
+            loginHref={loginHref}
             reported={!!confirmable.detail.reported_by_you}
             onReported={() => {
                 silentReload.current = true;

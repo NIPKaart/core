@@ -12,16 +12,24 @@ const translations = JSON.parse(readFileSync(new URL('../../resources/locales/fr
 const source = ts.transpileModule(readFileSync(new URL('../../resources/js/components/map/parking-results.tsx', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
-const context = { exports: {}, require: (name) => {
-    if (name === 'react-i18next') return { useTranslation: () => ({ t: (key, params = {}) => {
-        if (key === 'results.count' || key === 'results.page_count') key += params.count === 1 ? '_one' : '_other';
-        const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
-        return Object.entries(params).reduce((text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)), value);
-    } }) };
-    if (name === './parking-detail/parts') return { SourceIcon: () => null };
-    if (name === '@/components/ui/button') return { Button: ({ variant: _variant, ...props }) => React.createElement('button', props) };
-    return require(name);
-} };
+const context = {
+    exports: {},
+    require: (name) => {
+        if (name === 'react-i18next')
+            return {
+                useTranslation: () => ({
+                    t: (key, params = {}) => {
+                        if (key === 'results.count' || key === 'results.page_count') key += params.count === 1 ? '_one' : '_other';
+                        const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
+                        return Object.entries(params).reduce((text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)), value);
+                    },
+                }),
+            };
+        if (name === './parking-detail/parts') return { SourceIcon: () => null };
+        if (name === '@/components/ui/button') return { Button: ({ variant: _variant, ...props }) => React.createElement('button', props) };
+        return require(name);
+    },
+};
 vm.runInNewContext(source, context);
 const Results = context.exports.default;
 const result = (source, title = 'Main street') => ({ key: `${source}:1`, id: '1', source, title, latitude: 52, longitude: 4, distance_metres: null });

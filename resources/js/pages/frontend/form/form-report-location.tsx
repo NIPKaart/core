@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { login } from '@/routes';
 import { report } from '@/routes/map/places';
+import type { RouteDefinition } from '@/wayfinder';
 import { Form, Link } from '@inertiajs/react';
 import { Flag } from 'lucide-react';
 import { useId, useState } from 'react';
@@ -11,6 +11,8 @@ type Props = {
     source: 'community' | 'municipal';
     id: string;
     signedIn: boolean;
+    /** Where a signed-out visitor logs in; it should bring them back to this place. */
+    loginHref: RouteDefinition<'get'> | string;
     reported: boolean;
     onReported?: () => void;
 };
@@ -20,7 +22,7 @@ const NOTE_MAX_LENGTH = 500;
 /**
  * Lets a visitor report that the parking place is gone. The report goes to a moderator; the place stays on the map.
  */
-export function ParkingReportForm({ source, id, signedIn, reported, onReported }: Props) {
+export function ParkingReportForm({ source, id, signedIn, loginHref, reported, onReported }: Props) {
     const { t } = useTranslation('frontend/map/modals');
     const noteId = useId();
     const [open, setOpen] = useState(false);
@@ -28,8 +30,8 @@ export function ParkingReportForm({ source, id, signedIn, reported, onReported }
 
     if (reported || justReported) {
         return (
-            <p role="status" className="flex items-start gap-2 px-1 text-xs text-muted-foreground">
-                <Flag className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <p role="status" className="flex items-start gap-2 border-t px-1 pt-3 text-sm text-muted-foreground">
+                <Flag className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 {t('community.report.reported')}
             </p>
         );
@@ -37,22 +39,27 @@ export function ParkingReportForm({ source, id, signedIn, reported, onReported }
 
     if (!open) {
         return (
-            <p className="px-1 text-right text-xs text-muted-foreground">
-                {t('community.report.question')}{' '}
+            <div className="flex items-center justify-between gap-3 border-t px-1 pt-3">
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Flag className="h-4 w-4 shrink-0" aria-hidden />
+                    {t('community.report.question')}
+                </p>
                 {signedIn ? (
-                    <button
+                    <Button
                         type="button"
-                        className="cursor-pointer font-medium text-foreground underline underline-offset-2 hover:text-orange-700 dark:hover:text-orange-300"
+                        variant="ghost"
+                        size="sm"
+                        className="min-h-9 shrink-0 cursor-pointer underline underline-offset-2"
                         onClick={() => setOpen(true)}
                     >
                         {t('community.report.open')}
-                    </button>
+                    </Button>
                 ) : (
-                    <Link href={login()} className="font-medium text-foreground underline underline-offset-2">
-                        {t('community.report.sign_in')}
-                    </Link>
+                    <Button asChild variant="ghost" size="sm" className="min-h-9 shrink-0 underline underline-offset-2">
+                        <Link href={loginHref}>{t('community.report.sign_in')}</Link>
+                    </Button>
                 )}
-            </p>
+            </div>
         );
     }
 
@@ -65,7 +72,7 @@ export function ParkingReportForm({ source, id, signedIn, reported, onReported }
                 setJustReported(true);
                 onReported?.();
             }}
-            className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-3"
+            className="flex flex-col gap-2 border-t px-1 pt-3"
         >
             {({ errors, processing }) => (
                 <>
