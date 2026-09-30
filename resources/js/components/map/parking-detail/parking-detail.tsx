@@ -45,9 +45,6 @@ const favoriteTypes = {
     offstreet: 'parking_offstreet',
 } as const;
 
-const tabTriggerClass =
-    'flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1 data-[state=active]:bg-white data-[state=active]:text-black dark:data-[state=active]:bg-white/10 dark:data-[state=active]:text-white';
-
 export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
     const { t: tGlobal } = useTranslation('frontend/global');
@@ -212,11 +209,11 @@ export default function ParkingDetail({ result, approximateDestination = false, 
             />
         ) : street ? (
             <Tabs value={tab} onValueChange={setTab} className="w-full">
-                <TabsList className="mb-2 flex w-full">
-                    <TabsTrigger value="info" className={tabTriggerClass}>
+                <TabsList className="w-full">
+                    <TabsTrigger value="info" className="cursor-pointer">
                         {t('detail.tabs.info')}
                     </TabsTrigger>
-                    <TabsTrigger value="contribute" className={tabTriggerClass}>
+                    <TabsTrigger value="contribute" className="cursor-pointer">
                         {t('detail.tabs.contribute')}
                     </TabsTrigger>
                 </TabsList>
