@@ -9,6 +9,10 @@ enum NotificationType: string
     case CommunitySpaceDeleted = 'community.space_deleted';
     case CommunitySpaceDeletedByUser = 'community.space_deleted_by_user';
     case CommunitySpaceRestored = 'community.space_restored';
+    case CommunityImprovementApproved = 'community.improvement_approved';
+    case CommunityImprovementRejected = 'community.improvement_rejected';
+    case ReportPlaceKept = 'report.place_kept';
+    case ReportPlaceRemoved = 'report.place_removed';
     case DatasetImportReadyForReview = 'dataset.import_ready_for_review';
     case DatasetSourceAwaitingApproval = 'dataset.source_awaiting_approval';
     case DatasetSourceAwaitingReapproval = 'dataset.source_awaiting_reapproval';

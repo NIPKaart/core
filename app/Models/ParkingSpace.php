@@ -97,6 +97,14 @@ class ParkingSpace extends Model
     }
 
     /**
+     * Get the improvements people proposed for the ParkingSpace
+     */
+    public function improvements(): HasMany
+    {
+        return $this->hasMany(ParkingSpaceImprovement::class);
+    }
+
+    /**
      * Get the most recent review decision about the ParkingSpace
      */
     public function latestReview(): HasOne

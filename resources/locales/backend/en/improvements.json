@@ -1,0 +1,112 @@
+{
+    "title": "Improvements",
+    "description": "The current information stays visible until you approve a proposal.",
+    "search": "Search by street, municipality or proposer",
+    "tabs": {
+        "label": "Status",
+        "open": "Open",
+        "decided": "Decided"
+    },
+    "filters": {
+        "municipality": "Municipality",
+        "change": "Change",
+        "decision": "Decision"
+    },
+    "columns": {
+        "place": "Parking space",
+        "change": "Change",
+        "proposer": "Proposer",
+        "submitted": "Submitted",
+        "decision": "Decision",
+        "reviewer": "By"
+    },
+    "groups": {
+        "location": "Location",
+        "orientation": "Bay",
+        "under_sign": "Under-sign",
+        "description": "Note"
+    },
+    "flags": {
+        "other_municipality": "Other municipality",
+        "competing": "More proposals",
+        "reported": "Reported as gone"
+    },
+    "proposer": {
+        "new": "new",
+        "rejected_one": "{{count}}× rejected",
+        "rejected_other": "{{count}}× rejected"
+    },
+    "decisions": {
+        "approved": "Approved",
+        "approved_corrected": "Approved, adjusted",
+        "rejected": "Rejected"
+    },
+    "values": {
+        "unknown": "Not known",
+        "none": "None"
+    },
+    "actions": {
+        "start": "Review"
+    },
+    "empty": {
+        "open": "No open improvements. Everything has been reviewed.",
+        "decided": "No decided improvements yet."
+    },
+    "bulk": {
+        "selected": "selected",
+        "clear": "Clear selection",
+        "reject_one": "Reject {{count}}",
+        "reject_other": "Reject {{count}}"
+    },
+    "history": {
+        "submitted_was": "Submitted was {{value}}",
+        "by": "Proposed by {{proposer}} {{submitted}}, decided by {{reviewer}} {{reviewed}}."
+    },
+    "review": {
+        "title": "Review {{place}}",
+        "position_label": "Place in the queue",
+        "position": "{{index}} of {{total}}",
+        "previous": "Previous improvement",
+        "next": "Next improvement",
+        "confirmations_one": "Confirmed {{count}}×",
+        "confirmations_other": "Confirmed {{count}}×",
+        "view_space": "View parking space",
+        "changes": "Proposed changes",
+        "changes_hint": "Untick what you do not take over",
+        "moved": "moved {{distance}} m",
+        "location_moved": "Moved by you, looked up on approval",
+        "edited": "Adjusted · proposed was {{value}}",
+        "edit": "Adjust {{field}}",
+        "restore": "Restore proposal",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "drag_hint": "Or drag the orange pin on the map.",
+        "show_unchanged": "Show unchanged fields",
+        "hide_unchanged": "Hide unchanged fields",
+        "map": "Map",
+        "view_map": "Map",
+        "view_streetview": "Street View",
+        "legend": {
+            "current": "Blue: now",
+            "proposed": "Orange: proposal",
+            "nearby": "Green: other parking spaces"
+        },
+        "taking_over": "Taking over {{count}} of {{total}} changes",
+        "skip": "Skip",
+        "reject": "Reject",
+        "approve": "Approve"
+    },
+    "reject": {
+        "title": "Why reject?",
+        "description": "The parking space stays as it is.",
+        "reason": "Reason",
+        "note": "Note (optional)",
+        "cancel": "Cancel",
+        "confirm": "Reject"
+    },
+    "not_public": "Not public",
+    "no_address": "Parking space without an address",
+    "unknown_user": "Unknown user",
+    "select": "Select",
+    "select_all": "Select all"
+}

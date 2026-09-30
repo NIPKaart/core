@@ -9,7 +9,11 @@
         "default": "Notification",
         "dataset.import_ready_for_review": "Delivery ready for review",
         "dataset.source_awaiting_approval": "Source awaiting approval",
-        "dataset.source_awaiting_reapproval": "Changed source awaiting approval"
+        "dataset.source_awaiting_reapproval": "Changed source awaiting approval",
+        "community.improvement_approved": "Your improvement was applied",
+        "community.improvement_rejected": "Your improvement was rejected",
+        "report.place_kept": "Your report was reviewed: the parking space stays",
+        "report.place_removed": "After your report the parking space was removed"
     },
     "actions": {
         "markRead": "Mark as read",
@@ -28,5 +32,20 @@
     "header": {
         "title": "Notifications",
         "subtitle": "Your recent notifications or activity"
+    },
+    "reason": "Reason: {{reason}}",
+    "reasons": {
+        "improvement": {
+            "incorrect": "Does not match the situation",
+            "insufficient_information": "Insufficient information",
+            "spam": "Spam or abuse",
+            "other": "Other"
+        },
+        "removal": {
+            "no_longer_exists": "No longer exists",
+            "not_a_disabled_bay": "Not a disabled parking space",
+            "duplicate": "Duplicate",
+            "other": "Other"
+        }
     }
 }

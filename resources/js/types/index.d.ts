@@ -48,6 +48,9 @@ export interface SharedData {
         dataSources: {
             attention: number;
         };
+        improvements: {
+            pending: number;
+        };
         reports: {
             open: number;
         };
@@ -287,6 +290,8 @@ export type NotificationItem = {
         params: {
             space_label?: string;
             source_name?: string;
+            /** A translation key under "reasons", such as "improvement.spam", when a moderator gave a reason. */
+            reason?: string | null;
         };
         url?: string;
         meta: {

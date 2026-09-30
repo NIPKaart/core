@@ -4,6 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { dashboard, garages, home, locationMap } from '@/routes';
+import improvements from '@/routes/app/improvements';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import parkingOffstreet from '@/routes/app/parking-offstreet';
 import parkingRules from '@/routes/app/parking-rules';
@@ -30,6 +31,7 @@ export function AppSidebar() {
     const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
     const { attention: dataSourcesAttention } = props.counts.dataSources;
     const { open: openReports } = props.counts.reports;
+    const { pending: pendingImprovements } = props.counts.improvements;
     const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
 
     const platformNavGroup: NavGroup = {
@@ -78,6 +80,12 @@ export function AppSidebar() {
                 href: parkingSpaces.index(),
                 icon: icons.MapPin,
                 badge: activeParkingSpaces,
+            },
+            can('parking-space-improvement.view_any') && {
+                title: t('improvements'),
+                href: improvements.index(),
+                icon: icons.PencilLine,
+                badge: pendingImprovements || undefined,
             },
             can('parking-place-report.view_any') && {
                 title: t('reports'),

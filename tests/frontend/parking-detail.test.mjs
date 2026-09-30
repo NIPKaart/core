@@ -273,6 +273,8 @@ const loadComponent = (file) => {
         require: (name) => {
             if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === './utils') return utils;
+            if (name === '@/routes/map/places/improve')
+                return { default: { create: ({ parking_space }) => `/map/places/community/${parking_space}/improve` } };
             if (name === '@/routes/map/places')
                 return {
                     confirm: ({ source, id }) => `/map/places/${source}/${id}/confirm`,
@@ -383,7 +385,13 @@ test('the contributions tab shows evidence and sources to everyone and actions o
     assert.match(active, /Your activity Confirmed today Reported as gone · awaiting a moderator/);
     assert.doesNotMatch(active, /Report that the parking space is gone/);
 
+    assert.match(html('community'), /href="\/map\/places\/community\/[^"]+\/improve"/);
+    assert.doesNotMatch(text(html('municipal')), /Improve information/);
+    const pending = text(html('community', { improvement_pending: true }));
+    assert.match(pending, /Your activity Improvement proposed · awaiting a moderator/);
+    assert.doesNotMatch(pending, /Improve information/);
+
     const guest = html('community', { confirmed_today: true }, { signedIn: false });
-    assert.doesNotMatch(text(guest), /Report that the parking space is gone|Your activity/);
+    assert.doesNotMatch(text(guest), /Report that the parking space is gone|Improve information|Your activity/);
     assert.match(text(guest), /Log in to confirm or report\./);
 });

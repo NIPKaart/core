@@ -84,14 +84,24 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 const url = typeof data?.url === 'string' ? (data.url as string) : undefined;
 
                 const title = resolveTitleForRow(n, t);
-
-                return url ? (
+                const params = data?.params as Record<string, unknown> | undefined;
+                const reason = typeof params?.reason === 'string' ? t('reason', { reason: t(`reasons.${params.reason}`) }) : null;
+                const heading = url ? (
                     <Link href={url} className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
                         {title}
                         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                     </Link>
                 ) : (
                     title
+                );
+
+                return reason ? (
+                    <div className="flex flex-col gap-0.5">
+                        {heading}
+                        <span className="text-xs text-muted-foreground">{reason}</span>
+                    </div>
+                ) : (
+                    heading
                 );
             },
         },

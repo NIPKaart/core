@@ -199,7 +199,10 @@
             "fetched": "opgehaald",
             "activity": "Jouw activiteit",
             "confirmed_today": "Vandaag bevestigd",
-            "reported": "Gemeld dat de parkeerplaats weg is · wacht op een moderator"
+            "reported": "Gemeld dat de parkeerplaats weg is · wacht op een moderator",
+            "improve": "Informatie verbeteren",
+            "improve_note": "Locatie, vak, onderbord of opmerking",
+            "improvement_pending": "Verbetering voorgesteld · wacht op een moderator"
         }
     }
 }

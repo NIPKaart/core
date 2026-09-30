@@ -18,6 +18,12 @@ Route::prefix('map/add')->as('location-map.')->middleware('community')->controll
     Route::put('{parking_space}', 'update')->whereUuid('parking_space')->name('update');
 });
 
+// Proposing an improvement to a published community parking space
+Route::prefix('map/places/community/{parking_space}/improve')->as('map.places.improve.')->middleware('community')->whereUuid('parking_space')->controller(Frontend\ParkingImprovementController::class)->group(function () {
+    Route::get('/', 'create')->name('create');
+    Route::post('/', 'store')->middleware('throttle:10,1,parking-improve')->name('store');
+});
+
 // Confirming that a published community or municipal parking place exists, or reporting that it no longer does
 Route::prefix('map/places/{source}/{id}')->as('map.places.')->whereIn('source', ['community', 'municipal'])->group(function () {
     Route::post('confirm', [Frontend\ParkingConfirmationController::class, 'store'])

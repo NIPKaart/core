@@ -16,6 +16,7 @@ use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceReview;
 use App\Models\User;
+use App\Notifications\ParkingPlace\ReportResolved;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -204,6 +205,31 @@ describe('moderation', function () {
             ->resolved_at->not->toBeNull()
             ->and(isPublished($place))->toBeTrue()
             ->and(ParkingPlaceRemoval::count())->toBe(0);
+    })->with('reportable places');
+
+    test('reporters hear that the place stays, with a link back to it', function (array $case) {
+        [$source, $place] = $case;
+        $report = reportOf($place);
+
+        $this->actingAs($this->moderator)->post(route('app.reports.keep', ['source' => $source, 'id' => $place->id]));
+
+        Notification::assertSentTo($report->user, ReportResolved::class, fn (ReportResolved $notification) => ! $notification->removed
+            && str_starts_with($notification->placeLabel, 'Breestraat')
+            && $notification->placeUrl === route('location-map', ['place' => "{$source}:{$place->id}", 'at' => sprintf('%.5f,%.5f', $place->latitude, $place->longitude)]));
+    })->with('reportable places');
+
+    test('every reporter hears why a place was removed', function (array $case) {
+        [$source, $place] = $case;
+        $reports = [reportOf($place), reportOf($place)];
+
+        $this->actingAs($this->moderator)
+            ->post(route('app.reports.remove', ['source' => $source, 'id' => $place->id]), ['reason' => RemovalReason::DUPLICATE->value]);
+
+        foreach ($reports as $report) {
+            Notification::assertSentTo($report->user, ReportResolved::class, fn (ReportResolved $notification) => $notification->removed
+                && $notification->reason === RemovalReason::DUPLICATE->value
+                && $notification->placeUrl === null);
+        }
     })->with('reportable places');
 
     test('removal requires a reported place and a bounded reason', function () {

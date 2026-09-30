@@ -4,8 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
+use App\Models\ParkingSpaceImprovement;
 use App\Models\User;
 use App\Services\ParkingPlaceModeration;
+use App\Services\ParkingSpaceImprovements;
 use App\Services\SourceOverview;
 use App\Support\AppVersion;
 use Illuminate\Foundation\Inspiring;
@@ -94,6 +96,11 @@ class HandleInertiaRequests extends Middleware
                     ],
                     'userParkingSpaces' => [
                         'active' => ParkingSpace::where('user_id', auth()->id())->count(),
+                    ],
+                    'improvements' => [
+                        'pending' => auth()->user()?->can('viewAny', ParkingSpaceImprovement::class)
+                            ? app(ParkingSpaceImprovements::class)->pendingCount()
+                            : 0,
                     ],
                     'reports' => [
                         'open' => auth()->user()?->can('viewAny', ParkingPlaceReport::class)

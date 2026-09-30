@@ -110,6 +110,19 @@ return [
             ],
         ],
     ],
+    'parking-space-improvement' => [
+        'label' => 'Improvements',
+        'actions' => [
+            'view_any' => [
+                'label' => 'View improvements',
+                'description' => 'Grants access to proposed improvements of community parking spaces.',
+            ],
+            'review' => [
+                'label' => 'Review improvements',
+                'description' => 'Allows correcting, approving and rejecting proposed improvements.',
+            ],
+        ],
+    ],
     'parking-place-report' => [
         'label' => 'Reports',
         'actions' => [

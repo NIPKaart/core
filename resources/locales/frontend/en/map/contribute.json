@@ -1,14 +1,16 @@
 {
     "head": {
         "add": "Add a parking space",
-        "edit": "Edit submission"
+        "edit": "Edit submission",
+        "improve": "Improve information"
     },
     "header": {
         "add": "Add a parking space",
         "edit": "Edit submission",
         "step": "Step {{step}} of 3 · {{name}}",
         "cancel": "Cancel",
-        "back": "Back"
+        "back": "Back",
+        "improve": "Improve information"
     },
     "steps": {
         "location": "Location",
@@ -114,5 +116,14 @@
         "login": "Sign in",
         "register": "Create an account",
         "not_now": "Not now"
+    },
+    "improve": {
+        "intro": "Change what is not right, including the location. A moderator reviews your improvement; the current information stays visible until then.",
+        "submit": "Send improvement",
+        "after": [
+            "A moderator reviews your improvement and may still adjust it.",
+            "Until then everyone sees the current information.",
+            "Once approved, everyone sees the improved information."
+        ]
     }
 }

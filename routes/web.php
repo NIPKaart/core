@@ -87,6 +87,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Places reported as no longer existing
+        Route::prefix('improvements')->as('improvements.')->controller(Admin\ParkingSpaceImprovementController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('start', 'start')->name('start');
+            Route::post('bulk/reject', 'bulkReject')->name('bulk.reject');
+            Route::get('{improvement}', 'show')->whereNumber('improvement')->name('show');
+            Route::post('{improvement}/approve', 'approve')->whereNumber('improvement')->name('approve');
+            Route::post('{improvement}/reject', 'reject')->whereNumber('improvement')->name('reject');
+        });
+
         Route::prefix('reports')->as('reports.')->controller(Admin\ParkingPlaceReportController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('{source}/{id}/keep', 'keep')->whereIn('source', ['community', 'municipal'])->name('keep');

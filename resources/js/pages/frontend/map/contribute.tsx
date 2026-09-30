@@ -8,8 +8,10 @@ import MapDisplayControls, { type MapStyle } from '@/components/map/map-display-
 import ParkingMapLayer from '@/components/map/parking-map-layer';
 import { Button } from '@/components/ui/button';
 import MapLayout from '@/layouts/map-layout';
+import { placeLinkPath } from '@/lib/place-link';
 import { cn } from '@/lib/utils';
 import { store, update } from '@/routes/location-map';
+import improve from '@/routes/map/places/improve';
 import profile from '@/routes/profile';
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { Map as LeafletMap } from 'leaflet';
@@ -37,6 +39,8 @@ type PageProps = {
     orientationOptions: OrientationOption[];
     restrictionDays: string[];
     parkingSpace: ExistingSubmission | null;
+    /** Proposing an improvement to a published space rather than editing one's own pending submission. */
+    improving?: boolean;
 };
 
 const COUNTRY_VIEW = { latitude: 52.2, longitude: 5.3, zoom: 8 };
@@ -169,7 +173,7 @@ function LocationStatus({ state, onRetry }: { state: PinLocation; onRetry: () =>
     );
 }
 
-export default function Contribute({ orientationOptions, restrictionDays, parkingSpace }: PageProps) {
+export default function Contribute({ orientationOptions, restrictionDays, parkingSpace, improving = false }: PageProps) {
     const { t } = useTranslation('frontend/map/contribute');
     const { t: tGlobal } = useTranslation('frontend/global');
     const editing = parkingSpace !== null;
@@ -234,7 +238,8 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
         form.clearErrors();
         const missing: Partial<Record<keyof ContributionForm, string>> = {};
         if (!form.data.orientation) missing.orientation = t('details.orientation.required');
-        if (!form.data.under_sign) missing.under_sign = t('details.under_sign.required');
+        // An improvement may leave an unknown under-sign unknown rather than force a guess.
+        if (!form.data.under_sign && !improving) missing.under_sign = t('details.under_sign.required');
         if (Object.keys(missing).length) {
             form.setError(missing);
             return;
@@ -247,24 +252,29 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
             preserveScroll: true,
             onError: (errors: Record<string, string>) => {
                 if (errors.latitude || errors.longitude) setStep(1);
+                else if (errors.general) setStep(2);
                 else if (DETAIL_FIELDS.some((field) => Object.keys(errors).some((key) => key === field || key.startsWith(`${field}.`)))) setStep(2);
             },
         };
-        if (editing) form.put(update.url({ parking_space: parkingSpace.id }), options);
+        if (improving) form.post(improve.store.url({ parking_space: parkingSpace!.id }), options);
+        else if (editing) form.put(update.url({ parking_space: parkingSpace.id }), options);
         else form.post(store.url(), options);
     };
 
+    const mode = improving ? 'improve' : editing ? 'edit' : 'add';
     const stepNames: Record<ContributionStep, string> = { 1: t('steps.location'), 2: t('steps.details'), 3: t('steps.review') };
     const canUseLocation = pinState.status === 'resolved' && !moving;
-    const cancelHref = editing
-        ? profile.parkingSpaces.show.url({ id: parkingSpace.id })
-        : '/map' + (step === 1 ? `#${Math.round(zoom)}/${center.latitude.toFixed(5)}/${center.longitude.toFixed(5)}` : '');
+    const cancelHref = improving
+        ? placeLinkPath({ source: 'community', id: parkingSpace!.id, latitude: parkingSpace!.latitude, longitude: parkingSpace!.longitude })
+        : editing
+          ? profile.parkingSpaces.show.url({ id: parkingSpace.id })
+          : '/map' + (step === 1 ? `#${Math.round(zoom)}/${center.latitude.toFixed(5)}/${center.longitude.toFixed(5)}` : '');
     const locationLabel =
         pinState.status === 'resolved' ? [pinState.location.street, pinState.location.municipality].filter(Boolean).join(', ') : null;
 
     return (
         <MapLayout showSearch={false} mobileNavbar={false}>
-            <Head title={t(editing ? 'head.edit' : 'head.add')} />
+            <Head title={t(`head.${mode}`)} />
 
             <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-1 md:hidden">
                 {step === 1 ? (
@@ -285,7 +295,7 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
                     </Button>
                 )}
                 <div className="text-center">
-                    <h1 className="text-base font-semibold">{t(editing ? 'header.edit' : 'header.add')}</h1>
+                    <h1 className="text-base font-semibold">{t(`header.${mode}`)}</h1>
                     <p className="text-xs text-muted-foreground">{t('header.step', { step, name: stepNames[step] })}</p>
                 </div>
                 <img src="/assets/images/logo-light.svg" alt="NIPKaart" className="mr-2 h-5 w-auto dark:hidden" />
@@ -413,6 +423,12 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
 
                         {step === 2 && (
                             <>
+                                {improving && (
+                                    <>
+                                        <p className="rounded-xl border bg-card p-3 text-sm text-muted-foreground">{t('improve.intro')}</p>
+                                        <InputError message={(form.errors as Record<string, string>).general} />
+                                    </>
+                                )}
                                 <div className="flex items-center gap-3 rounded-2xl border bg-card p-3 md:hidden">
                                     <div className="grid flex-1">
                                         <span className="font-semibold">{locationLabel ?? tGlobal('common.loading')}</span>
@@ -443,6 +459,7 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
                                 restrictionDays={restrictionDays}
                                 onEditLocation={() => setStep(1)}
                                 onEditDetails={() => setStep(2)}
+                                after={improving ? 'improve.after' : 'review.after'}
                             />
                         )}
                     </div>
@@ -474,7 +491,7 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
                                 onClick={submit}
                             >
                                 {form.processing && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
-                                {t(editing ? 'review.save' : 'review.submit')}
+                                {t(improving ? 'improve.submit' : editing ? 'review.save' : 'review.submit')}
                             </Button>
                         )}
                     </div>
