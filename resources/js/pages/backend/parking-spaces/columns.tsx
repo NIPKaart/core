@@ -15,7 +15,7 @@ import type { ParkingSpace, Translations } from '@/types';
 import { ParkingStatus } from '@/types/enum';
 import { Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreVertical } from 'lucide-react';
+import { MapPinned, MoreVertical } from 'lucide-react';
 
 const variantMap: Record<ParkingStatus, 'default' | 'secondary' | 'destructive'> = {
     pending: 'default',
@@ -83,7 +83,18 @@ export function getParkingSpaceColumns(
             enableHiding: false,
             cell: ({ row }) => {
                 const status = row.original.status as ParkingStatus;
-                return <Badge variant={variantMap[status] ?? 'default'}>{statuses[status]}</Badge>;
+                const municipalMetres = row.original.nearby_municipal_metres;
+                return (
+                    <div className="flex flex-wrap items-center gap-1">
+                        <Badge variant={variantMap[status] ?? 'default'}>{statuses[status]}</Badge>
+                        {municipalMetres != null && (
+                            <Badge variant="outline" className="border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300">
+                                <MapPinned className="h-3 w-3" aria-hidden />
+                                {t('table.municipal_duplicate', { distance: municipalMetres })}
+                            </Badge>
+                        )}
+                    </div>
+                );
             },
         },
         {

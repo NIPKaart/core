@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
 use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\Province;
 use App\Support\GeoPoint;
@@ -29,7 +30,8 @@ class ParkingSpaceController extends Controller
         Gate::authorize('viewAny', ParkingSpace::class);
 
         $query = ParkingSpace::query()
-            ->with(['user', 'province', 'country', 'municipality']);
+            ->with(['user', 'province', 'country', 'municipality'])
+            ->withNearbyMunicipalDistance();
 
         // Filters
         if ($request->filled('status')) {
@@ -82,7 +84,10 @@ class ParkingSpaceController extends Controller
     {
         Gate::authorize('view', $parkingSpace);
 
-        $parkingSpace = ParkingSpace::with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])->findOrFail($parkingSpace->id);
+        $parkingSpace = ParkingSpace::with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
+            ->withNearbyMunicipalDistance()
+            ->findOrFail($parkingSpace->id);
+        $location = new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude);
 
         // Get the 10 nearest parking spaces
         $limit = 10;
@@ -90,7 +95,15 @@ class ParkingSpaceController extends Controller
             ->where('id', '!=', $parkingSpace->id)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->nearestTo(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude))
+            ->nearestTo($location)
+            ->limit($limit)
+            ->get();
+
+        // Visible municipal places around it, so a duplicate of municipal data is not approved unnoticed
+        $nearbyMunicipalSpaces = ParkingMunicipal::select('id', 'latitude', 'longitude')
+            ->where('visibility', true)
+            ->withinRadius($location, 100)
+            ->nearestTo($location)
             ->limit($limit)
             ->get();
 
@@ -111,6 +124,7 @@ class ParkingSpaceController extends Controller
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
             'nearbySpaces' => $nearbySpaces,
+            'nearbyMunicipalSpaces' => $nearbyMunicipalSpaces,
             'recentConfirmations' => $recentConfirmations,
         ]);
     }

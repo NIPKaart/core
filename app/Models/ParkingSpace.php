@@ -11,6 +11,7 @@ use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
 use App\Traits\Reportable;
 use Database\Factories\ParkingSpaceFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -116,6 +117,36 @@ class ParkingSpace extends Model
      * Days of the week a structured time restriction can apply to, in ISO order.
      */
     public const array RESTRICTION_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    /**
+     * A pending submission this close to a visible municipal place is pointed out to moderators as a possible duplicate.
+     * Matches NEARBY_METRES in the contributor's add flow (use-pin-location.ts), so both warn about the same places.
+     */
+    public const int MUNICIPAL_DUPLICATE_METRES = 30;
+
+    /**
+     * Add `nearby_municipal_metres`: the rounded distance to the nearest visible municipal place within
+     * MUNICIPAL_DUPLICATE_METRES of a pending submission, or null. Only flags; nothing is rejected or merged.
+     */
+    public function scopeWithNearbyMunicipalDistance(Builder $query): Builder
+    {
+        if ($query->getQuery()->columns === null) {
+            $query->select($this->qualifyColumn('*'));
+        }
+
+        $grammar = $query->getQuery()->getGrammar();
+        $space = $grammar->wrap($this->qualifyColumn('location'));
+        $municipal = $grammar->wrap((new ParkingMunicipal)->qualifyColumn('location'));
+
+        return $query->selectSub(
+            ParkingMunicipal::query()
+                ->selectRaw("round(min(ST_Distance({$municipal}, {$space})))::integer")
+                ->where('visibility', true)
+                ->whereRaw("ST_DWithin({$municipal}, {$space}, ?)", [self::MUNICIPAL_DUPLICATE_METRES])
+                ->whereRaw($grammar->wrap($this->qualifyColumn('status')).' = ?', [ParkingStatus::PENDING->value]),
+            'nearby_municipal_metres',
+        );
+    }
 
     /**
      * Save pending changes and, when the status changed, record the change as a review by the given moderator.

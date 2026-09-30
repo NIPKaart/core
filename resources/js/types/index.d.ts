@@ -184,6 +184,9 @@ export interface ParkingSpace {
     restriction_ends_at: string | null;
     description: string | null;
 
+    /** Distance to a visible municipal place close enough to be a possible duplicate; only for pending submissions. */
+    nearby_municipal_metres?: number | null;
+
     created_at: string;
     updated_at: string;
     deleted_at: string | null;

@@ -2,6 +2,7 @@ import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
 import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import StreetViewCard from '@/components/map/card-location-streetview';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,11 +11,11 @@ import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
-import { BreadcrumbItem, ParkingSpace, ParkingSpaceConfirmation } from '@/types';
+import { BreadcrumbItem, ParkingMunicipal, ParkingSpace, ParkingSpaceConfirmation } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, Server, ShieldCheck, Tag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, MapPinned, Server, ShieldCheck, Tag, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 type PageProps = {
@@ -26,10 +27,11 @@ type PageProps = {
         confirmationStatuses: { value: string; label: string; description: string }[];
     };
     nearbySpaces: ParkingSpace[];
+    nearbyMunicipalSpaces: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
     recentConfirmations: ParkingSpaceConfirmation[];
 };
 
-export default function Show({ parkingSpace, selectOptions, nearbySpaces, recentConfirmations }: PageProps) {
+export default function Show({ parkingSpace, selectOptions, nearbySpaces, nearbyMunicipalSpaces, recentConfirmations }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/main');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
@@ -191,6 +193,17 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
             {/* Banner Notification */}
             <div className="px-4 sm:px-6">
                 <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
+                {parkingSpace.nearby_municipal_metres != null && (
+                    <Alert className="mt-3 border-2 border-violet-300/60 bg-violet-50 px-3 py-3 sm:py-4 dark:bg-violet-950/80">
+                        <AlertTitle className="flex items-center gap-2 text-base font-semibold text-violet-900 dark:text-violet-100">
+                            <MapPinned className="h-5 w-5 min-w-5 text-violet-500" aria-hidden />
+                            {t('show.municipal_duplicate.title', { distance: parkingSpace.nearby_municipal_metres })}
+                        </AlertTitle>
+                        <AlertDescription className="mt-2 w-full text-sm text-zinc-800 dark:text-violet-50">
+                            {t('show.municipal_duplicate.description')}
+                        </AlertDescription>
+                    </Alert>
+                )}
             </div>
 
             <div className="grid auto-rows-min grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-2">
@@ -304,7 +317,18 @@ export default function Show({ parkingSpace, selectOptions, nearbySpaces, recent
                     <div className="mb-4 space-y-1">
                         <HeadingSmall title={t('show.cards.location.title')} description={t('show.cards.location.description')} />
                     </div>
-                    <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} nearbySpaces={nearbySpaces} />
+                    <LocationMarkerCard
+                        latitude={parkingSpace.latitude}
+                        longitude={parkingSpace.longitude}
+                        nearbySpaces={nearbySpaces}
+                        nearbyMunicipalSpaces={nearbyMunicipalSpaces}
+                    />
+                    {nearbyMunicipalSpaces.length > 0 && (
+                        <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-block h-3 w-3 rounded-full bg-violet-500" aria-hidden />
+                            {t('show.cards.location.legend')}
+                        </p>
+                    )}
                 </div>
 
                 {/* Card 4: Street View */}

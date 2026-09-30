@@ -20,7 +20,8 @@
         "actions": {
             "confirmations": "Confirmations",
             "trash": "Trash"
-        }
+        },
+        "municipal_duplicate": "Municipal at {{distance}} m"
     },
     "filters": {
         "status": "Status",
@@ -71,7 +72,8 @@
             },
             "location": {
                 "title": "Location",
-                "description": "Where the parking space is located."
+                "description": "Where the parking space is located.",
+                "legend": "Violet: nearby municipal parking spaces"
             },
             "street_view": {
                 "title": "Street view",
@@ -80,6 +82,10 @@
         },
         "toast": {
             "copied": "Copied to clipboard"
+        },
+        "municipal_duplicate": {
+            "title": "A municipal parking space is {{distance}} m away",
+            "description": "Check whether this submission describes the same parking space. If so, reject it as a duplicate."
         }
     },
     "edit": {
