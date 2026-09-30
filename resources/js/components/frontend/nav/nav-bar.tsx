@@ -118,7 +118,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                                         name={item.name}
                                         href={item.href.url}
                                         className={cn(
-                                            'h-10 px-3 text-sm whitespace-nowrap xl:px-6 xl:text-base',
+                                            'h-10 px-3 text-base whitespace-nowrap xl:px-6',
                                             isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
                                         )}
                                     />
