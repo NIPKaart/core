@@ -10,13 +10,15 @@ import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse, ParkingSpace } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { ParkingSpaceTabs } from '../tabs';
 import { getParkingTrashColumns } from './columns';
 
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
+    trashedCount: number;
 };
 
-export default function Index({ spaces }: PageProps) {
+export default function Index({ spaces, trashedCount }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/trash');
     const { can } = useAuthorization();
 
@@ -40,6 +42,7 @@ export default function Index({ spaces }: PageProps) {
             <Head title={t('head.title')} />
             <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
                 <Heading level={1} title={t('head.title')} description={t('head.description')} />
+                <ParkingSpaceTabs current="trash" trashedCount={trashedCount} />
 
                 {selectedIds.length > 0 && (
                     <div className="mb-4 flex flex-col rounded-md border bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-muted/40">

@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\ParkingSpace;
-use App\Models\User;
 use App\Services\ModerationQueue;
 use App\Services\SourceOverview;
 use App\Support\AppVersion;
@@ -86,14 +84,6 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'counts' => function () {
                 return [
-                    'users' => User::count(),
-                    'parkingSpaces' => [
-                        'active' => ParkingSpace::count(),
-                        'trashed' => ParkingSpace::onlyTrashed()->count(),
-                    ],
-                    'userParkingSpaces' => [
-                        'active' => ParkingSpace::where('user_id', auth()->id())->count(),
-                    ],
                     'moderation' => [
                         'open' => auth()->user() ? app(ModerationQueue::class)->count(auth()->user()) : 0,
                     ],

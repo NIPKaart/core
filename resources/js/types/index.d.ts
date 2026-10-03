@@ -27,6 +27,7 @@ export interface NavItem {
     isActive?: boolean;
     target?: string;
     badge?: string | number | JSX.Element;
+    badgeTone?: 'neutral' | 'attention';
     children?: NavItem[];
 }
 
@@ -37,14 +38,6 @@ export interface SharedData {
     auth: Auth;
     sidebarOpen: boolean;
     counts: {
-        users: number;
-        parkingSpaces: {
-            active: number;
-            trashed: number;
-        };
-        userParkingSpaces: {
-            active: number;
-        };
         dataSources: {
             attention: number;
         };

@@ -47,6 +47,7 @@ class ParkingSpaceController extends Controller
 
         return inertia('backend/parking-spaces/index', [
             'spaces' => $spaces,
+            'trashedCount' => ParkingSpace::onlyTrashed()->count(),
             'filters' => [
                 'status' => $request->input('status'),
                 'municipality_id' => $request->input('municipality_id'),
@@ -238,6 +239,7 @@ class ParkingSpaceController extends Controller
 
         return inertia('backend/parking-spaces/trash/index', [
             'spaces' => $spaces,
+            'trashedCount' => $spaces->total(),
         ]);
     }
 
