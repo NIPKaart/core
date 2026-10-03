@@ -30,13 +30,11 @@ export default function Index({ spaces, filters, options }: PageProps) {
     const { openDialog, dialogElement } = useSpaceActionDialog();
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-    const [selectedStatus, setSelectedStatus] = useState<ParkingStatus | ''>('');
     const [rejectionReason, setRejectionReason] = useState('');
     const [statusFilter, setStatusFilter] = useState<string[]>(filters.status ? filters.status.split(',') : []);
     const [municipalityFilter, setMunicipalityFilter] = useState<string[]>(filters.municipality_id ? filters.municipality_id.split(',') : []);
 
     useEffect(() => {
-        setSelectedStatus('');
         setRowSelection({});
     }, [statusFilter, municipalityFilter, spaces.data]);
 
@@ -55,23 +53,22 @@ export default function Index({ spaces, filters, options }: PageProps) {
     // Get the columns for the data table
     const columns = getParkingSpaceColumns(options.statuses, can, openDialog, { t, tGlobal });
 
-    // Bulk update location status
-    const handleBulkUpdate = () => {
+    // Reject several places at once, for example spam; approving happens one place at a time in moderation.
+    const handleBulkReject = () => {
         const ids: string[] = spaces.data.filter((_, index) => rowSelection[index]).map((space) => space.id);
-        if (!selectedStatus || ids.length === 0) return;
+        if (!rejectionReason || ids.length === 0) return;
 
         router.patch(
             app.parkingSpaces.bulk.update(),
             {
                 ids,
-                status: selectedStatus,
-                rejection_reason: selectedStatus === 'rejected' ? rejectionReason : null,
+                status: 'rejected',
+                rejection_reason: rejectionReason,
             },
             {
                 preserveState: true,
                 onSuccess: () => {
                     setRowSelection({});
-                    setSelectedStatus('');
                     setRejectionReason('');
                     toast.success(t('toast.success'));
                 },
@@ -80,8 +77,6 @@ export default function Index({ spaces, filters, options }: PageProps) {
                         toast.error(t('toast.error.ids'));
                     } else if (errors.rejection_reason) {
                         toast.error(t('toast.error.rejection_reason'));
-                    } else if (errors.status) {
-                        toast.error(t('toast.error.status'));
                     } else {
                         toast.error(t('toast.error.default'));
                     }
@@ -115,12 +110,12 @@ export default function Index({ spaces, filters, options }: PageProps) {
                         </div>
 
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                            <Select value={selectedStatus} onValueChange={(value: ParkingStatus) => setSelectedStatus(value)}>
-                                <SelectTrigger className="w-full sm:w-[200px]">
-                                    <SelectValue placeholder={t('bulk.placeholder')} />
+                            <Select value={rejectionReason} onValueChange={setRejectionReason}>
+                                <SelectTrigger className="w-full sm:w-[240px]" aria-label={t('edit.form.labels.rejectionReason')}>
+                                    <SelectValue placeholder={t('edit.form.hints.rejectionReason')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {statusOptions.map(({ value, label }) => (
+                                    {options.rejectionReasons.map(({ value, label }) => (
                                         <SelectItem key={value} value={value}>
                                             {label}
                                         </SelectItem>
@@ -128,27 +123,13 @@ export default function Index({ spaces, filters, options }: PageProps) {
                                 </SelectContent>
                             </Select>
 
-                            {selectedStatus === 'rejected' && (
-                                <Select value={rejectionReason} onValueChange={setRejectionReason}>
-                                    <SelectTrigger className="w-full sm:w-[240px]" aria-label={t('edit.form.labels.rejectionReason')}>
-                                        <SelectValue placeholder={t('edit.form.hints.rejectionReason')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {options.rejectionReasons.map(({ value, label }) => (
-                                            <SelectItem key={value} value={value}>
-                                                {label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-
                             <Button
-                                onClick={handleBulkUpdate}
-                                disabled={!selectedStatus || (selectedStatus === 'rejected' && !rejectionReason)}
+                                variant="destructive"
+                                onClick={handleBulkReject}
+                                disabled={!rejectionReason}
                                 className="w-full cursor-pointer sm:w-auto"
                             >
-                                {t('bulk.update')}
+                                {t('bulk.reject', { count: Object.keys(rowSelection).length })}
                             </Button>
                         </div>
                     </div>

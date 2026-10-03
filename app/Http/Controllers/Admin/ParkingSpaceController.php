@@ -199,7 +199,7 @@ class ParkingSpaceController extends Controller
     }
 
     /**
-     * Bulk update the specified resource in storage.
+     * Reject several places at once, for example spam; approving always happens one place at a time.
      */
     public function bulkUpdate(Request $request)
     {
@@ -208,8 +208,8 @@ class ParkingSpaceController extends Controller
         $request->validate([
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'uuid', 'exists:parking_spaces,id'],
-            'status' => ['required', 'string', Rule::in(ParkingStatus::all())],
-            'rejection_reason' => ['required_if:status,'.ParkingStatus::REJECTED->value, 'nullable', Rule::enum(RejectionReason::class)],
+            'status' => ['required', 'string', Rule::in([ParkingStatus::REJECTED->value])],
+            'rejection_reason' => ['required', Rule::enum(RejectionReason::class)],
             'rejection_note' => ['nullable', 'string', 'max:1000'],
         ]);
 

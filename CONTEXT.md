@@ -25,6 +25,9 @@ _Avoid_: window times
 **ParkingSpaceImprovement**: A signed-in person's proposed improvement to a published community ParkingSpace: its location, orientation, under-sign or note. The public space stays unchanged until a moderator approves it, possibly after correcting it; a rejection carries a reason from a fixed list. It keeps what was submitted, what was applied and what that replaced. Published community data belongs to the community, so anyone signed in may propose one; a person has one pending proposal per space. It improves NIPKaart's own community data only: a municipality's dataset is the source of truth for its places and is never corrected or overlaid by the community.
 _Avoid_: edit, revision
 
+**Moderation queue**: The one queue of community decisions a moderator works through: pending ParkingSpace submissions, pending ParkingSpaceImprovements and places with open ParkingPlaceReports (one item per place). Reports have high priority because they concern information the map already shows; everything else is normal. Within a priority the item that has waited longest comes first. What is known about a contributor is shown as context and never changes the order. Approving happens one item at a time; submissions and improvements may be rejected in bulk with one shared reason. Dataset and import work is not part of it.
+_Avoid_: inbox items as a stored entity, moderation dashboard
+
 **ParkingMunicipal**: A municipal/open-data parking record. Its source and meaning remain distinct from a community contribution.
 
 **ParkingOffstreet**: A garage or park-and-ride facility with facility information and potentially live general occupancy. General occupancy does not establish accessible-space availability.

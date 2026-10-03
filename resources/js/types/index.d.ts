@@ -48,10 +48,7 @@ export interface SharedData {
         dataSources: {
             attention: number;
         };
-        improvements: {
-            pending: number;
-        };
-        reports: {
+        moderation: {
             open: number;
         };
     };

@@ -155,54 +155,54 @@ describe('moderating', function () {
         ]);
     });
 
-    test('the open queue lists proposals oldest first with what they change', function () {
+    test('the inbox lists open proposals oldest first with what they change', function () {
         $newer = ParkingSpaceImprovement::factory()->create(['submitted' => ['description' => 'Naast de apotheek']]);
 
-        $this->actingAs($this->moderator)->get(route('app.improvements.index'))
+        $this->actingAs($this->moderator)->get(route('app.moderation.index', ['type' => 'improvement']))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('backend/improvements/index')
+                ->component('backend/moderation/index')
                 ->where('status', 'open')
-                ->where('pendingCount', 2)
-                ->has('improvements.data', 2)
-                ->where('improvements.data.0.id', $this->improvement->id)
-                ->where('improvements.data.0.changes', ['orientation', 'under_sign'])
-                ->where('improvements.data.0.proposer.name', $this->user->name)
-                ->where('improvements.data.1.id', $newer->id));
+                ->has('items.data', 2)
+                ->where('items.data.0.key', "improvement:{$this->improvement->id}")
+                ->where('items.data.0.changes', ['orientation', 'under_sign'])
+                ->where('items.data.0.contributor.name', $this->user->name)
+                ->where('items.data.1.key', "improvement:{$newer->id}"));
     });
 
-    test('the queue narrows to a kind of change and to a search', function () {
-        $moved = ParkingSpaceImprovement::factory()->create(['submitted' => ['latitude' => 52.38, 'longitude' => 4.91, 'street' => 'Nieuwe Weg']]);
+    test('the inbox narrows to a search', function () {
+        ParkingSpaceImprovement::factory()->create(['submitted' => ['latitude' => 52.38, 'longitude' => 4.91, 'street' => 'Nieuwe Weg']]);
 
-        $this->actingAs($this->moderator)->get(route('app.improvements.index', ['changes' => 'location']))
-            ->assertInertia(fn (Assert $page) => $page->has('improvements.data', 1)->where('improvements.data.0.id', $moved->id));
-
-        $this->get(route('app.improvements.index', ['search' => 'breestr']))
-            ->assertInertia(fn (Assert $page) => $page->has('improvements.data', 1)->where('improvements.data.0.id', $this->improvement->id));
+        $this->actingAs($this->moderator)->get(route('app.moderation.index', ['type' => 'improvement', 'search' => 'breestr']))
+            ->assertInertia(fn (Assert $page) => $page->has('items.data', 1)->where('items.data.0.key', "improvement:{$this->improvement->id}"));
     });
 
     test('a moderator reviews one proposal with its place in the queue', function () {
         $next = ParkingSpaceImprovement::factory()->create();
 
-        $this->actingAs($this->moderator)->get(route('app.improvements.show', $this->improvement))
+        $this->actingAs($this->moderator)->get(route('app.moderation.improvements.show', $this->improvement))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('backend/improvements/show')
-                ->where('improvement.current.orientation', 'parallel')
-                ->where('improvement.submitted.orientation', 'perpendicular')
-                ->where('improvement.changes', ['orientation', 'under_sign'])
-                ->where('position', ['index' => 1, 'total' => 2, 'previous' => null, 'next' => $next->id]));
+                ->component('backend/moderation/index')
+                ->where('selected.key', "improvement:{$this->improvement->id}")
+                ->where('selected.details.current.orientation', 'parallel')
+                ->where('selected.details.submitted.orientation', 'perpendicular')
+                ->where('selected.details.changes', ['orientation', 'under_sign'])
+                ->where('position.index', 1)
+                ->where('position.total', 2)
+                ->where('position.previous', null)
+                ->where('position.next', ['type' => 'improvement', 'route' => ['improvement' => $next->id]]));
     });
 
     test('a moderator corrects the proposal, approves it and continues with the next one', function () {
         $next = ParkingSpaceImprovement::factory()->create();
 
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.approve', $this->improvement), currentForm($this->space, [
+            ->post(route('app.moderation.improvements.approve', $this->improvement), currentForm($this->space, [
                 'orientation' => 'perpendicular',
                 'under_sign' => 'yes',
                 'under_sign_text' => 'Ma-vr 9-18 uur',
             ]))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('app.improvements.show', $next));
+            ->assertRedirect(route('app.moderation.improvements.show', $next));
 
         expect($this->space->fresh())
             ->orientation->toBe(ParkingOrientation::PERPENDICULAR)
@@ -221,9 +221,9 @@ describe('moderating', function () {
         fakeReverseGeocoding($elsewhere, ['street' => 'Nieuwe Weg']);
 
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.approve', $this->improvement), currentForm($this->space, ['latitude' => 52.38, 'longitude' => 4.91]))
+            ->post(route('app.moderation.improvements.approve', $this->improvement), currentForm($this->space, ['latitude' => 52.38, 'longitude' => 4.91]))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('app.improvements.index'));
+            ->assertRedirect(route('app.moderation.index'));
 
         expect($this->space->fresh())
             ->latitude->toBe(52.38)
@@ -233,9 +233,9 @@ describe('moderating', function () {
 
     test('a moderator rejects a proposal with a reason and the space stays as it is', function () {
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.reject', $this->improvement), ['reason' => ImprovementRejectionReason::INCORRECT->value, 'note' => 'Klopt niet'])
+            ->post(route('app.moderation.improvements.reject', $this->improvement), ['reason' => ImprovementRejectionReason::INCORRECT->value, 'note' => 'Klopt niet'])
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('app.improvements.index'));
+            ->assertRedirect(route('app.moderation.index'));
 
         expect($this->improvement->fresh())
             ->status->toBe(ParkingStatus::REJECTED)
@@ -246,7 +246,7 @@ describe('moderating', function () {
 
     test('the proposer hears that their improvement was applied, with a link back to the space', function () {
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.approve', $this->improvement), currentForm($this->space, ['orientation' => 'perpendicular']))
+            ->post(route('app.moderation.improvements.approve', $this->improvement), currentForm($this->space, ['orientation' => 'perpendicular']))
             ->assertSessionHasNoErrors();
 
         Notification::assertSentTo($this->user, ImprovementDecided::class, fn (ImprovementDecided $notification, array $channels) => $notification->approved
@@ -259,18 +259,18 @@ describe('moderating', function () {
         $other = ParkingSpaceImprovement::factory()->create();
 
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.bulk.reject'), ['ids' => [$this->improvement->id, $other->id], 'reason' => 'incorrect'])
+            ->post(route('app.moderation.bulk.reject'), ['items' => ["improvement:{$this->improvement->id}", "improvement:{$other->id}"], 'reason' => 'spam'])
             ->assertSessionHasNoErrors();
 
         foreach ([$this->user, $other->user] as $proposer) {
             Notification::assertSentTo($proposer, ImprovementDecided::class, fn (ImprovementDecided $notification) => ! $notification->approved
-                && $notification->reason === ImprovementRejectionReason::INCORRECT->value);
+                && $notification->reason === ImprovementRejectionReason::SPAM->value);
         }
     });
 
     test('a rejection needs a reason', function () {
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.reject', $this->improvement))
+            ->post(route('app.moderation.improvements.reject', $this->improvement))
             ->assertSessionHasErrors('reason');
 
         expect($this->improvement->fresh()->status)->toBe(ParkingStatus::PENDING);
@@ -281,9 +281,9 @@ describe('moderating', function () {
         $decided = ParkingSpaceImprovement::factory()->create(['status' => ParkingStatus::APPROVED]);
 
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.bulk.reject'), ['ids' => [$this->improvement->id, $spam->id, $decided->id], 'reason' => 'spam'])
+            ->post(route('app.moderation.bulk.reject'), ['items' => ["improvement:{$this->improvement->id}", "improvement:{$spam->id}", "improvement:{$decided->id}"], 'reason' => 'spam'])
             ->assertSessionHasNoErrors()
-            ->assertInertiaFlash('success', '2 verbeteringen afgewezen.');
+            ->assertInertiaFlash('success', '2 items afgewezen.');
 
         expect($this->improvement->fresh()->status)->toBe(ParkingStatus::REJECTED)
             ->and($spam->fresh()->reason)->toBe(ImprovementRejectionReason::SPAM)
@@ -299,30 +299,32 @@ describe('moderating', function () {
             'reviewed_at' => now(),
         ]);
 
-        $this->actingAs($this->moderator)->get(route('app.improvements.index', ['status' => 'decided']))
+        $this->actingAs($this->moderator)->get(route('app.moderation.index', ['status' => 'decided']))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('status', 'decided')
-                ->has('improvements.data', 1)
-                ->where('improvements.data.0.corrected', true)
-                ->where('improvements.data.0.reviewer', $this->moderator->name)
-                ->where('improvements.data.0.applied.orientation', 'angle')
-                ->where('improvements.data.0.previous.orientation', 'parallel'));
+                ->has('history.data', 1)
+                ->where('history.data.0.type', 'improvement')
+                ->where('history.data.0.decision', 'approved')
+                ->where('history.data.0.corrected', true)
+                ->where('history.data.0.reviewer', $this->moderator->name)
+                ->where('history.data.0.applied.orientation', 'angle')
+                ->where('history.data.0.previous.orientation', 'parallel'));
     });
 
-    test('a decided proposal cannot be decided again and its review page returns to the history', function () {
+    test('a decided proposal cannot be decided again and its review page returns to the inbox', function () {
         $this->improvement->update(['status' => ParkingStatus::REJECTED]);
 
         $this->actingAs($this->moderator)
-            ->post(route('app.improvements.approve', $this->improvement), currentForm($this->space, ['orientation' => 'perpendicular']))
+            ->post(route('app.moderation.improvements.approve', $this->improvement), currentForm($this->space, ['orientation' => 'perpendicular']))
             ->assertNotFound();
-        $this->get(route('app.improvements.show', $this->improvement))
-            ->assertRedirect(route('app.improvements.index', ['status' => 'decided']));
+        $this->get(route('app.moderation.improvements.show', $this->improvement))
+            ->assertRedirect(route('app.moderation.index'));
     });
 
     test('users without the moderation permission cannot review', function () {
-        $this->actingAs($this->user)->get(route('app.improvements.index'))->assertForbidden();
-        $this->get(route('app.improvements.show', $this->improvement))->assertForbidden();
-        $this->post(route('app.improvements.reject', $this->improvement), ['reason' => 'other'])->assertForbidden();
-        $this->post(route('app.improvements.bulk.reject'), ['ids' => [$this->improvement->id], 'reason' => 'spam'])->assertForbidden();
+        $this->actingAs($this->user)->get(route('app.moderation.index'))->assertForbidden();
+        $this->get(route('app.moderation.improvements.show', $this->improvement))->assertForbidden();
+        $this->post(route('app.moderation.improvements.reject', $this->improvement), ['reason' => 'other'])->assertForbidden();
+        $this->post(route('app.moderation.bulk.reject'), ['items' => ["improvement:{$this->improvement->id}"], 'reason' => 'spam'])->assertForbidden();
     });
 });

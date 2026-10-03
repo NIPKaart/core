@@ -19,8 +19,11 @@ return [
         'already_open' => 'You already reported this parking space. A moderator will look at it.',
     ],
     'moderation' => [
+        'already_decided' => 'This item has already been decided.',
+        'submission_approved' => 'The parking space is approved and on the map.',
+        'submission_rejected' => 'The submission is rejected.',
+        'items_rejected' => '{0} Nothing rejected; these items were already decided.|{1} :count item rejected.|[2,*] :count items rejected.',
         'improvement_approved' => 'The improvement has been applied.',
-        'improvements_rejected' => '{1} :count improvement rejected.|[2,*] :count improvements rejected.',
         'improvement_rejected' => 'The improvement has been rejected.',
         'kept' => 'The parking space stays on the map and its reports are closed.',
         'deleted' => 'The community parking space has been deleted.',

@@ -85,7 +85,7 @@ describe('reporting', function () {
         $report()->assertSessionHasNoErrors();
         expect($place->reports()->count())->toBe(2);
 
-        $this->actingAs($this->moderator)->post(route('app.reports.keep', ['source' => 'municipal', 'id' => $place->id]));
+        $this->actingAs($this->moderator)->post(route('app.moderation.reports.keep', ['source' => 'municipal', 'id' => $place->id]));
         $this->actingAs($this->user);
         $report()->assertSessionHasNoErrors();
         expect($place->reports()->open()->count())->toBe(1);
@@ -137,8 +137,8 @@ describe('moderation', function () {
         reportOf($place);
         $this->actingAs(tap(User::factory()->create())->assignRole($role));
 
-        $this->get(route('app.reports.index'))->assertStatus($allowed ? 200 : 403);
-        $this->post(route('app.reports.keep', ['source' => 'community', 'id' => $place->id]))->assertStatus($allowed ? 302 : 403);
+        $this->get(route('app.moderation.index'))->assertStatus($allowed ? 200 : 403);
+        $this->post(route('app.moderation.reports.keep', ['source' => 'community', 'id' => $place->id]))->assertStatus($allowed ? 302 : 403);
         expect($place->reports()->open()->exists())->toBe(! $allowed);
     })->with([
         'administrator' => [UserRole::ADMIN, true],
@@ -146,7 +146,7 @@ describe('moderation', function () {
         'user' => [UserRole::USER, false],
     ]);
 
-    test('the queue lists each reported place once with its reports and later confirmations', function () {
+    test('the queue lists each reported place once, oldest report first, with its reports and later confirmations', function () {
         $this->travelTo('2026-09-20 12:00:00');
         $community = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'street' => 'Breestraat']);
         $municipal = ParkingMunicipal::factory()->create(['visibility' => true]);
@@ -162,22 +162,22 @@ describe('moderation', function () {
         $this->travelTo('2026-09-23 12:00:00');
         reportOf($municipal);
 
-        $this->actingAs($this->moderator)->get(route('app.reports.index'))
+        $this->actingAs($this->moderator)->get(route('app.moderation.reports.show', ['source' => 'community', 'id' => $community->id]))
             ->assertInertia(fn (Assert $page) => $page
-                ->component('backend/reports/index')
-                ->has('places', 2)
-                ->where('places.0.key', "municipal:{$municipal->id}")
-                ->where('places.1.key', "community:{$community->id}")
-                ->where('places.1.street', 'Breestraat')
-                ->where('places.1.published', true)
-                ->has('places.1.reports', 2)
-                ->where('places.1.reports.0.reporter', 'Anne')
-                ->where('places.1.reports.0.note', 'Vak overgeschilderd')
-                ->where('places.1.reports.0.reason', 'Bord of vak is weggehaald')
-                ->where('places.1.reports.1.reason', null)
-                ->where('places.1.confirmations_since_report', 1)
-                ->where('places.1.last_confirmed_at', '2026-09-21T10:00:00+00:00')
-                ->has('options.removalReasons', count(RemovalReason::cases())));
+                ->component('backend/moderation/index')
+                ->where('items.data.0.key', "report:community:{$community->id}")
+                ->where('items.data.1.key', "report:municipal:{$municipal->id}")
+                ->where('items.data.0.flags.reports', 2)
+                ->where('selected.details.street', 'Breestraat')
+                ->where('selected.details.published', true)
+                ->has('selected.details.reports', 2)
+                ->where('selected.details.reports.0.reporter', 'Anne')
+                ->where('selected.details.reports.0.note', 'Vak overgeschilderd')
+                ->where('selected.details.reports.0.reason', 'Bord of vak is weggehaald')
+                ->where('selected.details.reports.1.reason', null)
+                ->where('selected.details.confirmations_since_report', 1)
+                ->where('selected.details.last_confirmed_at', '2026-09-21T10:00:00+00:00')
+                ->has('options.reasons.report', count(RemovalReason::cases())));
     });
 
     test('moderators see how many places await a decision', function () {
@@ -186,8 +186,8 @@ describe('moderation', function () {
         reportOf($place);
         reportOf(ParkingMunicipal::factory()->create());
 
-        $this->actingAs($this->moderator)->get(route('app.reports.index'))->assertInertia(fn (Assert $page) => $page->where('counts.reports.open', 2));
-        $this->actingAs($this->user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page->where('counts.reports.open', 0));
+        $this->actingAs($this->moderator)->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('counts.moderation.open', 2));
+        $this->actingAs($this->user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page->where('counts.moderation.open', 0));
     });
 
     test('keeping a place closes its reports and leaves it published', function (array $case) {
@@ -195,7 +195,7 @@ describe('moderation', function () {
         reportOf($place);
 
         $this->actingAs($this->moderator)
-            ->post(route('app.reports.keep', ['source' => $source, 'id' => $place->id]))
+            ->post(route('app.moderation.reports.keep', ['source' => $source, 'id' => $place->id]))
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('success', 'De parkeerplaats blijft op de kaart en de meldingen zijn afgehandeld.');
 
@@ -211,7 +211,7 @@ describe('moderation', function () {
         [$source, $place] = $case;
         $report = reportOf($place);
 
-        $this->actingAs($this->moderator)->post(route('app.reports.keep', ['source' => $source, 'id' => $place->id]));
+        $this->actingAs($this->moderator)->post(route('app.moderation.reports.keep', ['source' => $source, 'id' => $place->id]));
 
         Notification::assertSentTo($report->user, ReportResolved::class, fn (ReportResolved $notification) => ! $notification->removed
             && str_starts_with($notification->placeLabel, 'Breestraat')
@@ -223,7 +223,7 @@ describe('moderation', function () {
         $reports = [reportOf($place), reportOf($place)];
 
         $this->actingAs($this->moderator)
-            ->post(route('app.reports.remove', ['source' => $source, 'id' => $place->id]), ['reason' => RemovalReason::DUPLICATE->value]);
+            ->post(route('app.moderation.reports.remove', ['source' => $source, 'id' => $place->id]), ['reason' => RemovalReason::DUPLICATE->value]);
 
         foreach ($reports as $report) {
             Notification::assertSentTo($report->user, ReportResolved::class, fn (ReportResolved $notification) => $notification->removed
@@ -234,7 +234,7 @@ describe('moderation', function () {
 
     test('removal requires a reported place and a bounded reason', function () {
         $place = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
-        $remove = fn (array $data) => $this->post(route('app.reports.remove', ['source' => 'community', 'id' => $place->id]), $data);
+        $remove = fn (array $data) => $this->post(route('app.moderation.reports.remove', ['source' => 'community', 'id' => $place->id]), $data);
 
         $this->actingAs($this->moderator);
         $remove(['reason' => RemovalReason::NO_LONGER_EXISTS->value])->assertNotFound();
@@ -255,7 +255,7 @@ describe('moderation', function () {
         $reports = [reportOf($place), reportOf($place, ['note' => 'Weg'])];
 
         $this->actingAs($this->moderator)
-            ->post(route('app.reports.remove', ['source' => 'community', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value, 'note' => ' Ter plekke gecontroleerd '])
+            ->post(route('app.moderation.reports.remove', ['source' => 'community', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value, 'note' => ' Ter plekke gecontroleerd '])
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('success', 'De parkeerplaats van de community is verwijderd.');
 
@@ -281,7 +281,7 @@ describe('moderation', function () {
         reportOf($place);
 
         $this->actingAs($this->moderator)
-            ->post(route('app.reports.remove', ['source' => 'municipal', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value])
+            ->post(route('app.moderation.reports.remove', ['source' => 'municipal', 'id' => $place->id]), ['reason' => RemovalReason::NO_LONGER_EXISTS->value])
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('success', 'De gemeentelijke parkeerplaats is verborgen op de kaart.');
 

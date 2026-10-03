@@ -19,8 +19,11 @@ return [
         'already_open' => 'Je hebt deze parkeerplaats al gemeld. Een moderator bekijkt het.',
     ],
     'moderation' => [
+        'already_decided' => 'Dit item is intussen al afgehandeld.',
+        'submission_approved' => 'De parkeerplaats is goedgekeurd en staat op de kaart.',
+        'submission_rejected' => 'De inzending is afgewezen.',
+        'items_rejected' => '{0} Niets afgewezen; deze items waren al afgehandeld.|{1} :count item afgewezen.|[2,*] :count items afgewezen.',
         'improvement_approved' => 'De verbetering is doorgevoerd.',
-        'improvements_rejected' => '{1} :count verbetering afgewezen.|[2,*] :count verbeteringen afgewezen.',
         'improvement_rejected' => 'De verbetering is afgewezen.',
         'kept' => 'De parkeerplaats blijft op de kaart en de meldingen zijn afgehandeld.',
         'deleted' => 'De parkeerplaats van de community is verwijderd.',

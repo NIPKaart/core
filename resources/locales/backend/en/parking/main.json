@@ -29,14 +29,13 @@
     },
     "bulk": {
         "clear": "Clear",
-        "placeholder": "Select status",
-        "update": "Update status"
+        "reject_one": "Reject {{count}}",
+        "reject_other": "Reject {{count}}"
     },
     "toast": {
-        "success": "Parking spaces updated successfully.",
+        "success": "Parking spaces rejected.",
         "error": {
             "ids": "Invalid selection. Some items may no longer exist.",
-            "status": "Please select a valid status.",
             "default": "Something went wrong. Please try again.",
             "rejection_reason": "Choose a reason to reject."
         }

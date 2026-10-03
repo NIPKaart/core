@@ -31,14 +31,13 @@
     },
     "bulk": {
         "clear": "Wissen",
-        "placeholder": "Selecteer status",
-        "update": "Status bijwerken"
+        "reject_one": "{{count}} afwijzen",
+        "reject_other": "{{count}} afwijzen"
     },
     "toast": {
-        "success": "Parkeerplaatsen succesvol bijgewerkt.",
+        "success": "Parkeerplaatsen afgewezen.",
         "error": {
             "ids": "Ongeldige selectie. Sommige items bestaan mogelijk niet meer.",
-            "status": "Selecteer een geldige status.",
             "default": "Er is iets misgegaan. Probeer het opnieuw.",
             "rejection_reason": "Kies een reden om af te wijzen."
         }

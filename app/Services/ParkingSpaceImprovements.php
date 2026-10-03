@@ -10,7 +10,6 @@ use App\Models\ParkingSpaceImprovement;
 use App\Models\User;
 use App\Notifications\CommunitySpace\ImprovementDecided;
 use BackedEnum;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -39,7 +38,7 @@ final class ParkingSpaceImprovements
     ];
 
     /** Accounts younger than this many days are marked as new to moderators. */
-    private const int NEW_ACCOUNT_DAYS = 7;
+    public const int NEW_ACCOUNT_DAYS = 7;
 
     public function __construct(private ParkingLocationResolver $resolver) {}
 
@@ -52,6 +51,24 @@ final class ParkingSpaceImprovements
      * @throws ValidationException when the moved pin does not resolve to a country and municipality, or nothing changes
      */
     public function changes(ParkingSpace $space, float $latitude, float $longitude, array $details): array
+    {
+        $changes = $this->corrections($space, $latitude, $longitude, $details);
+        if ($changes === []) {
+            throw ValidationException::withMessages(['general' => __('parking_spaces.improve.unchanged')]);
+        }
+
+        return $changes;
+    }
+
+    /**
+     * The values of the space that differ from the given pin and details, or none when nothing changes.
+     *
+     * @param  array<string, mixed>  $details  place details as ValidatesParkingSpaceDetails maps them
+     * @return array<string, mixed>
+     *
+     * @throws ValidationException when the moved pin does not resolve to a country and municipality
+     */
+    public function corrections(ParkingSpace $space, float $latitude, float $longitude, array $details): array
     {
         $current = $this->current($space);
         $proposed = array_map($this->normalize(...), $details);
@@ -67,9 +84,6 @@ final class ParkingSpaceImprovements
         }
 
         $changes = array_filter($proposed, fn (mixed $value, string $field) => $value !== $current[$field], ARRAY_FILTER_USE_BOTH);
-        if ($changes === []) {
-            throw ValidationException::withMessages(['general' => __('parking_spaces.improve.unchanged')]);
-        }
 
         // A moved pin replaces the whole location, also the parts that happen to stay the same.
         return isset($changes['latitude']) || isset($changes['longitude'])
@@ -108,6 +122,12 @@ final class ParkingSpaceImprovements
     public function approve(ParkingSpaceImprovement $improvement, User $moderator, array $changes): void
     {
         $space = DB::transaction(function () use ($improvement, $moderator, $changes) {
+            // Locking the proposal makes a concurrent approval or rejection wait, then find it decided.
+            $decided = ParkingSpaceImprovement::whereKey($improvement->getKey())->lockForUpdate()->first()?->status !== ParkingStatus::PENDING;
+            if ($decided) {
+                throw ValidationException::withMessages(['general' => __('parking_spaces.moderation.already_decided')]);
+            }
+
             $space = ParkingSpace::whereKey($improvement->parking_space_id)->lockForUpdate()->firstOrFail();
             $previous = array_intersect_key($this->current($space), $changes);
 
@@ -173,36 +193,37 @@ final class ParkingSpaceImprovements
     }
 
     /**
-     * One page of open proposals, oldest first, or of decided ones, most recent first.
+     * Every open proposal, oldest first, with what it changes and what a moderator should notice.
      *
-     * @param  array{search?: ?string, municipality_ids?: list<int>, changes?: list<string>, decisions?: list<string>}  $filters
+     * @return Collection<int, array<string, mixed>>
      */
-    public function list(bool $open, array $filters, int $perPage = 25): LengthAwarePaginator
+    public function open(): Collection
     {
-        $query = ParkingSpaceImprovement::query()
-            ->with(['parkingSpace:id,street,latitude,longitude,municipality_id', 'parkingSpace.municipality:id,name', 'reviewer:id,name'])
-            ->with(['user' => fn ($user) => $this->withTrackRecord($user)]);
+        $improvements = ParkingSpaceImprovement::pending()
+            ->whereHas('parkingSpace')
+            ->with(['parkingSpace:id,street,latitude,longitude,municipality_id', 'parkingSpace.municipality:id,name'])
+            ->with(['user' => fn ($user) => $this->withTrackRecord($user)])
+            ->selectRaw('parking_space_improvements.*, (select count(*) from parking_space_improvements other where other.parking_space_id = parking_space_improvements.parking_space_id and other.status = ?) as pending_for_space', [ParkingStatus::PENDING->value])
+            ->selectRaw('exists (select 1 from parking_place_reports report where report.parking_space_id = parking_space_improvements.parking_space_id and report.resolved_at is null) as reported')
+            ->oldest()->orderBy('id')
+            ->get();
+        $municipalities = $this->municipalityNames($improvements);
 
-        if ($open) {
-            $query->pending()->oldest()->orderBy('id')
-                ->selectRaw('parking_space_improvements.*, (select count(*) from parking_space_improvements other where other.parking_space_id = parking_space_improvements.parking_space_id and other.status = ?) as pending_for_space', [ParkingStatus::PENDING->value])
-                ->selectRaw('exists (select 1 from parking_place_reports report where report.parking_space_id = parking_space_improvements.parking_space_id and report.resolved_at is null) as reported');
-        } else {
-            $decisions = array_intersect($filters['decisions'] ?? [], [ParkingStatus::APPROVED->value, ParkingStatus::REJECTED->value]);
-            $query->whereIn('status', $decisions !== [] ? $decisions : [ParkingStatus::APPROVED, ParkingStatus::REJECTED])
-                ->latest('reviewed_at')->orderByDesc('id');
-        }
+        return $improvements->map(fn (ParkingSpaceImprovement $improvement) => $this->openRow($improvement, $municipalities));
+    }
 
-        $this->filter($query, $filters);
+    /**
+     * Decided proposals as history rows: what each field was, what was submitted and what was applied.
+     *
+     * @param  Collection<int, ParkingSpaceImprovement>  $improvements
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function decided(Collection $improvements): Collection
+    {
+        $improvements->loadMissing(['parkingSpace:id,street,municipality_id', 'parkingSpace.municipality:id,name', 'reviewer:id,name', 'user:id,name']);
+        $municipalities = $this->municipalityNames($improvements);
 
-        $page = $query->paginate($perPage)->withQueryString();
-        $municipalities = $this->municipalityNames($page->getCollection());
-
-        $page->through(fn (ParkingSpaceImprovement $improvement) => $open
-            ? $this->openRow($improvement, $municipalities)
-            : $this->decidedRow($improvement, $municipalities));
-
-        return $page;
+        return $improvements->map(fn (ParkingSpaceImprovement $improvement) => $this->decidedRow($improvement, $municipalities));
     }
 
     /**
@@ -235,37 +256,11 @@ final class ParkingSpaceImprovements
     }
 
     /**
-     * Where this proposal sits in the open queue, and its neighbours there.
-     *
-     * @return array{index: int, total: int, previous: ?int, next: ?int}
+     * Open proposals for spaces that still exist; a proposal for a space in the trash waits until it is restored.
      */
-    public function position(ParkingSpaceImprovement $improvement): array
-    {
-        $before = fn (Builder $query) => $query->where('created_at', '<', $improvement->created_at)
-            ->orWhere(fn (Builder $query) => $query->where('created_at', $improvement->created_at)->where('id', '<', $improvement->id));
-        $after = fn (Builder $query) => $query->where('created_at', '>', $improvement->created_at)
-            ->orWhere(fn (Builder $query) => $query->where('created_at', $improvement->created_at)->where('id', '>', $improvement->id));
-
-        return [
-            'index' => ParkingSpaceImprovement::pending()->where($before)->count() + 1,
-            'total' => ParkingSpaceImprovement::pending()->count(),
-            'previous' => ParkingSpaceImprovement::pending()->where($before)->latest()->orderByDesc('id')->value('id'),
-            'next' => ParkingSpaceImprovement::pending()->where($after)->oldest()->orderBy('id')->value('id'),
-        ];
-    }
-
-    /**
-     * The open proposal to review after this one: the next in the queue, else the oldest one left.
-     */
-    public function nextAfter(ParkingSpaceImprovement $improvement): ?int
-    {
-        return $this->position($improvement)['next']
-            ?? ParkingSpaceImprovement::pending()->whereKeyNot($improvement->id)->oldest()->orderBy('id')->value('id');
-    }
-
     public function pendingCount(): int
     {
-        return ParkingSpaceImprovement::pending()->count();
+        return ParkingSpaceImprovement::pending()->whereHas('parkingSpace')->count();
     }
 
     /**
@@ -295,34 +290,6 @@ final class ParkingSpaceImprovements
     }
 
     /**
-     * @param  Builder<ParkingSpaceImprovement>  $query
-     * @param  array{search?: ?string, municipality_ids?: list<int>, changes?: list<string>}  $filters
-     */
-    private function filter(Builder $query, array $filters): void
-    {
-        if (filled($filters['search'] ?? null)) {
-            $term = '%'.addcslashes(trim($filters['search']), '%_\\').'%';
-            $query->where(fn (Builder $query) => $query
-                ->whereHas('parkingSpace', fn (Builder $space) => $space->whereLike('street', $term)
-                    ->orWhereHas('municipality', fn (Builder $municipality) => $municipality->whereLike('name', $term)))
-                ->orWhereHas('user', fn (Builder $user) => $user->whereLike('name', $term)));
-        }
-
-        if (($filters['municipality_ids'] ?? []) !== []) {
-            $query->whereHas('parkingSpace', fn (Builder $space) => $space->whereIn('municipality_id', $filters['municipality_ids']));
-        }
-
-        $groups = array_intersect_key(self::CHANGE_GROUPS, array_flip($filters['changes'] ?? []));
-        if ($groups !== []) {
-            $query->where(function (Builder $query) use ($groups) {
-                foreach (array_merge(...array_values($groups)) as $field) {
-                    $query->orWhereJsonContainsKey("submitted->{$field}");
-                }
-            });
-        }
-    }
-
-    /**
      * @param  Collection<int, int|string>  $municipalities
      * @return array<string, mixed>
      */
@@ -333,7 +300,7 @@ final class ParkingSpaceImprovements
 
         return [
             'id' => $improvement->id,
-            'space' => ['id' => $space->id, 'street' => $space->street, 'municipality' => $space->municipality?->name],
+            'space' => ['id' => $space->id, 'street' => $space->street, 'municipality' => $space->municipality?->name, 'municipality_id' => $space->municipality_id],
             'changes' => $this->changeGroups($submitted),
             'distance_metres' => $this->distance(['latitude' => $space->latitude, 'longitude' => $space->longitude], $submitted),
             'flags' => [

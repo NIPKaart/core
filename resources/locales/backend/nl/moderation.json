@@ -1,0 +1,175 @@
+{
+    "title": "Moderatie",
+    "description": "Beoordeel wat de community instuurt. Hoge prioriteit eerst, daarbinnen het oudste item.",
+    "search": "Zoek op straat, gemeente of indiener",
+    "tabs": {
+        "label": "Status",
+        "open": "Open",
+        "decided": "Afgehandeld"
+    },
+    "filters": {
+        "type": "Type",
+        "municipality": "Gemeente"
+    },
+    "types": {
+        "submission": "Nieuw",
+        "improvement": "Verbetering",
+        "report": "Verdwenen"
+    },
+    "priority": {
+        "high": "Hoge prioriteit",
+        "normal": "Normaal"
+    },
+    "columns": {
+        "type": "Type",
+        "place": "Parkeerplaats",
+        "contributor": "Indiener",
+        "submitted": "Ingediend",
+        "decision": "Besluit",
+        "reviewer": "Door"
+    },
+    "groups": {
+        "location": "Locatie",
+        "orientation": "Vak",
+        "under_sign": "Onderbord",
+        "description": "Opmerking"
+    },
+    "flags": {
+        "nearby_municipal": "Gemeentelijk op {{distance}} m",
+        "other_municipality": "Andere gemeente",
+        "competing": "Meer voorstellen",
+        "reported": "Gemeld als weg",
+        "reports_one": "{{count}} melding",
+        "reports_other": "{{count}} meldingen"
+    },
+    "contributor": {
+        "new": "nieuw",
+        "rejected_one": "{{count}}× afgewezen",
+        "rejected_other": "{{count}}× afgewezen",
+        "history": "{{name}} · {{approved}} goedgekeurd, {{rejected}} afgewezen",
+        "reporters_one": "{{count}} melder",
+        "reporters_other": "{{count}} melders"
+    },
+    "decisions": {
+        "approved": "Goedgekeurd",
+        "approved_corrected": "Goedgekeurd, aangepast",
+        "rejected": "Afgewezen",
+        "kept": "Laten staan",
+        "removed": "Verwijderd"
+    },
+    "values": {
+        "unknown": "Niet bekend",
+        "none": "Geen"
+    },
+    "empty": {
+        "open": "Niets te beoordelen. Nieuwe inzendingen, verbeteringen en meldingen verschijnen hier vanzelf.",
+        "filtered": "Geen items voor deze filters.",
+        "decided": "Nog niets afgehandeld."
+    },
+    "bulk": {
+        "selected": "geselecteerd",
+        "clear": "Selectie wissen",
+        "reason": "Reden",
+        "reject_one": "{{count}} afwijzen",
+        "reject_other": "{{count}} afwijzen"
+    },
+    "history": {
+        "submitted_was": "Ingediend was {{value}}",
+        "decided": "Besloten door {{reviewer}} {{ago}}.",
+        "reports_one": "Na {{count}} melding.",
+        "reports_other": "Na {{count}} meldingen."
+    },
+    "review": {
+        "position_label": "Plaats in de wachtrij",
+        "position": "{{index}} van {{total}}",
+        "previous": "Vorig item",
+        "next": "Volgend item",
+        "close": "Sluiten",
+        "view_space": "Parkeerplaats bekijken",
+        "changes": "Voorgestelde wijzigingen",
+        "changes_hint": "Vink uit wat je niet overneemt",
+        "submitted": "Ingediende gegevens",
+        "submitted_hint": "Pas aan wat niet klopt voor je goedkeurt",
+        "moved": "{{distance}} m verplaatst",
+        "location_moved": "Door jou verplaatst, wordt opgezocht bij goedkeuren",
+        "edited": "Aangepast · ingediend was {{value}}",
+        "edit": "{{field}} aanpassen",
+        "restore": "Herstellen",
+        "latitude": "Breedtegraad",
+        "longitude": "Lengtegraad",
+        "drag_hint": "Of sleep de oranje speld op de kaart.",
+        "show_unchanged": "Toon ongewijzigde velden",
+        "hide_unchanged": "Verberg ongewijzigde velden",
+        "nearby_municipal": {
+            "title": "Gemeentelijke parkeerplaats op {{distance}} m",
+            "description": "Beschrijft deze inzending dezelfde parkeerplaats, wijs haar dan af als Dubbele melding."
+        },
+        "legend": {
+            "current": "Blauw: nu",
+            "proposed": "Oranje: voorstel",
+            "submitted": "Blauw: inzending",
+            "reported": "Blauw: gemelde parkeerplaats",
+            "nearby": "Groen: andere parkeerplaatsen",
+            "municipal": "Paars: gemeentelijk"
+        },
+        "skip": "Overslaan",
+        "reject": "Afwijzen",
+        "approve": "Goedkeuren"
+    },
+    "decide": {
+        "reason": "Reden",
+        "note": "Toelichting (optioneel)",
+        "cancel": "Annuleren",
+        "submission": {
+            "title": "Waarom afwijzen?",
+            "description": "De inzending wordt niet gepubliceerd. De indiener krijgt bericht.",
+            "confirm": "Afwijzen"
+        },
+        "improvement": {
+            "title": "Waarom afwijzen?",
+            "description": "De parkeerplaats blijft zoals hij is. De indiener krijgt bericht.",
+            "confirm": "Afwijzen"
+        },
+        "community": {
+            "title": "Waarom verwijderen?",
+            "description": "De parkeerplaats wordt verwijderd, samen met bevestigingen, meldingen en favorieten. Melders krijgen bericht.",
+            "confirm": "Verwijderen"
+        },
+        "municipal": {
+            "title": "Waarom verbergen?",
+            "description": "De parkeerplaats verdwijnt van de kaart en blijft ook na volgende imports verborgen. Melders krijgen bericht.",
+            "confirm": "Verbergen"
+        }
+    },
+    "reports": {
+        "sources": {
+            "community": "Community",
+            "municipal": "Gemeentelijke data"
+        },
+        "signals": {
+            "reports": "Meldingen",
+            "report_count_one": "{{count}} melding",
+            "report_count_other": "{{count}} meldingen",
+            "first_reported": "eerste {{ago}}",
+            "confirmations_since": "Bevestigd sinds eerste melding",
+            "confirmation_count_one": "{{count}}×",
+            "confirmation_count_other": "{{count}}×",
+            "last_confirmed": "laatst {{ago}}",
+            "never_confirmed": "nooit bevestigd"
+        },
+        "notes": {
+            "title": "Wat melders zagen",
+            "none": "Geen toelichting"
+        },
+        "keep": "Laten staan",
+        "remove": {
+            "community": "Verwijderen",
+            "municipal": "Verbergen"
+        }
+    },
+    "not_public": "Niet openbaar",
+    "no_address": "Parkeerplaats zonder adres",
+    "unknown_user": "Onbekende gebruiker",
+    "select": "Selecteren",
+    "select_all": "Alles op deze pagina selecteren"
+}
