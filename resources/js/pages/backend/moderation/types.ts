@@ -68,7 +68,7 @@ export type SelectedItem =
     | (QueueItem & { type: 'improvement'; details: ImprovementDetails })
     | (QueueItem & { type: 'report'; details: ReportDetails });
 
-export type ItemLink = { type: ItemType; route: RouteParams };
+export type ItemLink = { key?: string; type: ItemType; route: RouteParams };
 
 export type Position = { index: number; total: number; previous: ItemLink | null; next: ItemLink | null };
 
