@@ -1,4 +1,5 @@
 import { getBlueMarkerIcon, getParkingStatusIcon, getVioletMarkerIcon } from '@/lib/icon-factory';
+import { cn } from '@/lib/utils';
 import { ParkingMunicipal, ParkingSpace } from '@/types';
 import React, { useMemo } from 'react';
 import { FeatureGroup, LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
@@ -14,6 +15,8 @@ type Props = {
     /** Visible municipal places, shown in violet so they stand apart from community places. */
     nearbyMunicipalSpaces?: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
     children?: React.ReactNode;
+    /** Size of the map; defaults to the full-page detail size. */
+    className?: string;
 };
 
 const { BaseLayer, Overlay } = LayersControl;
@@ -49,6 +52,7 @@ export default function LocationMarkerCard({
     nearbyMunicipalSpaces,
     children,
     scrollWheelZoom = true,
+    className = 'h-80 md:h-[500px]',
 }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
 
@@ -59,7 +63,7 @@ export default function LocationMarkerCard({
                 zoom={19}
                 scrollWheelZoom={scrollWheelZoom}
                 zoomControl={false}
-                className="h-80 w-full rounded-xl border md:h-[500px]"
+                className={cn('w-full rounded-xl border', className)}
             >
                 <LayersControl position="topright">
                     <BaseLayer checked name="Google Hybrid">

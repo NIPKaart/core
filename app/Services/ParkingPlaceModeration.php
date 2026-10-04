@@ -55,6 +55,7 @@ class ParkingPlaceModeration
     public function openPlaceCount(): int
     {
         return (int) ParkingPlaceReport::open()
+            ->where(fn (Builder $reports) => $reports->whereNull('parking_space_id')->orWhereHas('parkingSpace'))
             ->selectRaw('count(distinct coalesce(parking_space_id::text, parking_municipal_id)) as places')
             ->value('places');
     }
@@ -189,6 +190,7 @@ class ParkingPlaceModeration
             'id' => $place->getKey(),
             'street' => $place->street,
             'municipality' => $place->municipality?->name,
+            'municipality_id' => $place->municipality_id,
             'latitude' => $place->latitude,
             'longitude' => $place->longitude,
             'published' => $published,

@@ -23,7 +23,7 @@ class ProvinceFactory extends Factory
                 return Country::query()->inRandomOrder()->value('id') ?? Country::factory()->create()->id;
             },
             'name' => fake()->name(),
-            'geocode' => strtoupper(fake()->bothify('??-##')),
+            'geocode' => strtoupper(fake()->unique()->bothify('??-##')),
         ];
     }
 }

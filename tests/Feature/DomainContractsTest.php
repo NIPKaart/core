@@ -184,9 +184,9 @@ test('bulk status restore and force deletion emit the same model notifications a
     $owner = User::factory()->create();
     $space = ParkingSpace::factory()->for($owner)->create(['status' => ParkingStatus::PENDING]);
     $operator = User::factory()->create();
-    $this->actingAs($operator)->patch(route('app.parking-spaces.bulk.update'), ['ids' => [$space->id], 'status' => 'approved'])->assertForbidden();
+    $this->actingAs($operator)->patch(route('app.parking-spaces.bulk.update'), ['ids' => [$space->id], 'status' => 'rejected', 'rejection_reason' => 'spam'])->assertForbidden();
     $operator->givePermissionTo(['parking-space.update', 'parking-space.restore', 'parking-space.force-delete']);
-    $this->patch(route('app.parking-spaces.bulk.update'), ['ids' => [$space->id], 'status' => 'approved'])->assertRedirect();
+    $this->patch(route('app.parking-spaces.bulk.update'), ['ids' => [$space->id], 'status' => 'rejected', 'rejection_reason' => 'spam'])->assertRedirect();
     Notification::assertSentToTimes($owner, StatusChanged::class, 1);
     $space->refresh()->delete();
     Notification::fake();

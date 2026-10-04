@@ -1,0 +1,175 @@
+{
+    "title": "Moderation",
+    "description": "Review what the community sends in. High priority first, then the oldest item.",
+    "search": "Search by street, municipality or contributor",
+    "tabs": {
+        "label": "Status",
+        "open": "Open",
+        "decided": "Decided"
+    },
+    "filters": {
+        "type": "Type",
+        "municipality": "Municipality"
+    },
+    "types": {
+        "submission": "New",
+        "improvement": "Improvement",
+        "report": "Gone"
+    },
+    "priority": {
+        "high": "High priority",
+        "normal": "Normal"
+    },
+    "columns": {
+        "type": "Type",
+        "place": "Parking space",
+        "contributor": "Contributor",
+        "submitted": "Submitted",
+        "decision": "Decision",
+        "reviewer": "By"
+    },
+    "groups": {
+        "location": "Location",
+        "orientation": "Bay",
+        "under_sign": "Under-sign",
+        "description": "Note"
+    },
+    "flags": {
+        "nearby_municipal": "Municipal at {{distance}} m",
+        "other_municipality": "Other municipality",
+        "competing": "More proposals",
+        "reported": "Reported as gone",
+        "reports_one": "{{count}} report",
+        "reports_other": "{{count}} reports"
+    },
+    "contributor": {
+        "new": "new",
+        "rejected_one": "{{count}}× rejected",
+        "rejected_other": "{{count}}× rejected",
+        "history": "{{name}} · {{approved}} approved, {{rejected}} rejected",
+        "reporters_one": "{{count}} reporter",
+        "reporters_other": "{{count}} reporters"
+    },
+    "decisions": {
+        "approved": "Approved",
+        "approved_corrected": "Approved, adjusted",
+        "rejected": "Rejected",
+        "kept": "Kept",
+        "removed": "Removed"
+    },
+    "values": {
+        "unknown": "Not known",
+        "none": "None"
+    },
+    "empty": {
+        "open": "Nothing to review. New submissions, improvements and reports appear here.",
+        "filtered": "No items for these filters.",
+        "decided": "Nothing decided yet."
+    },
+    "bulk": {
+        "selected": "selected",
+        "clear": "Clear selection",
+        "reason": "Reason",
+        "reject_one": "Reject {{count}}",
+        "reject_other": "Reject {{count}}"
+    },
+    "history": {
+        "submitted_was": "Submitted was {{value}}",
+        "decided": "Decided by {{reviewer}} {{ago}}.",
+        "reports_one": "After {{count}} report.",
+        "reports_other": "After {{count}} reports."
+    },
+    "review": {
+        "position_label": "Place in the queue",
+        "position": "{{index}} of {{total}}",
+        "previous": "Previous item",
+        "next": "Next item",
+        "close": "Close",
+        "view_space": "View parking space",
+        "changes": "Proposed changes",
+        "changes_hint": "Untick what you do not take over",
+        "submitted": "Submitted details",
+        "submitted_hint": "Correct what is wrong before you approve",
+        "moved": "moved {{distance}} m",
+        "location_moved": "Moved by you, looked up on approval",
+        "edited": "Adjusted · submitted was {{value}}",
+        "edit": "Adjust {{field}}",
+        "restore": "Restore",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "drag_hint": "Or drag the orange pin on the map.",
+        "show_unchanged": "Show unchanged fields",
+        "hide_unchanged": "Hide unchanged fields",
+        "nearby_municipal": {
+            "title": "Municipal parking space at {{distance}} m",
+            "description": "When this submission describes the same parking space, reject it as a duplicate."
+        },
+        "legend": {
+            "current": "Blue: now",
+            "proposed": "Orange: proposal",
+            "submitted": "Blue: submission",
+            "reported": "Blue: reported parking space",
+            "nearby": "Green: other parking spaces",
+            "municipal": "Purple: municipal"
+        },
+        "skip": "Skip",
+        "reject": "Reject",
+        "approve": "Approve"
+    },
+    "decide": {
+        "reason": "Reason",
+        "note": "Note (optional)",
+        "cancel": "Cancel",
+        "submission": {
+            "title": "Why reject?",
+            "description": "The submission is not published. The contributor is notified.",
+            "confirm": "Reject"
+        },
+        "improvement": {
+            "title": "Why reject?",
+            "description": "The parking space stays as it is. The contributor is notified.",
+            "confirm": "Reject"
+        },
+        "community": {
+            "title": "Why delete?",
+            "description": "The parking space is deleted with its confirmations, reports and favorites. Reporters are notified.",
+            "confirm": "Delete"
+        },
+        "municipal": {
+            "title": "Why hide?",
+            "description": "The parking space disappears from the map and stays hidden after later imports. Reporters are notified.",
+            "confirm": "Hide"
+        }
+    },
+    "reports": {
+        "sources": {
+            "community": "Community",
+            "municipal": "Municipal data"
+        },
+        "signals": {
+            "reports": "Reports",
+            "report_count_one": "{{count}} report",
+            "report_count_other": "{{count}} reports",
+            "first_reported": "first {{ago}}",
+            "confirmations_since": "Confirmed since the first report",
+            "confirmation_count_one": "{{count}}×",
+            "confirmation_count_other": "{{count}}×",
+            "last_confirmed": "last {{ago}}",
+            "never_confirmed": "never confirmed"
+        },
+        "notes": {
+            "title": "What reporters saw",
+            "none": "No note"
+        },
+        "keep": "Keep",
+        "remove": {
+            "community": "Delete",
+            "municipal": "Hide"
+        }
+    },
+    "not_public": "Not public",
+    "no_address": "Parking space without an address",
+    "unknown_user": "Unknown user",
+    "select": "Select",
+    "select_all": "Select all on this page"
+}

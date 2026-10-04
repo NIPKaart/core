@@ -86,21 +86,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         });
 
-        // Places reported as no longer existing
-        Route::prefix('improvements')->as('improvements.')->controller(Admin\ParkingSpaceImprovementController::class)->group(function () {
+        // Community moderation inbox: new submissions, proposed improvements and reported places
+        Route::prefix('moderation')->as('moderation.')->controller(Admin\ModerationController::class)->group(function () {
             Route::get('/', 'index')->name('index');
-            Route::get('start', 'start')->name('start');
             Route::post('bulk/reject', 'bulkReject')->name('bulk.reject');
-            Route::get('{improvement}', 'show')->whereNumber('improvement')->name('show');
-            Route::post('{improvement}/approve', 'approve')->whereNumber('improvement')->name('approve');
-            Route::post('{improvement}/reject', 'reject')->whereNumber('improvement')->name('reject');
+
+            Route::get('submissions/{parking_space}', 'submission')->whereUuid('parking_space')->name('submissions.show');
+            Route::post('submissions/{parking_space}/approve', 'approveSubmission')->whereUuid('parking_space')->name('submissions.approve');
+            Route::post('submissions/{parking_space}/reject', 'rejectSubmission')->whereUuid('parking_space')->name('submissions.reject');
+
+            Route::get('improvements/{improvement}', 'improvement')->whereNumber('improvement')->name('improvements.show');
+            Route::post('improvements/{improvement}/approve', 'approveImprovement')->whereNumber('improvement')->name('improvements.approve');
+            Route::post('improvements/{improvement}/reject', 'rejectImprovement')->whereNumber('improvement')->name('improvements.reject');
+
+            Route::get('reports/{source}/{id}', 'report')->whereIn('source', ['community', 'municipal'])->name('reports.show');
+            Route::post('reports/{source}/{id}/keep', 'keep')->whereIn('source', ['community', 'municipal'])->name('reports.keep');
+            Route::post('reports/{source}/{id}/remove', 'remove')->whereIn('source', ['community', 'municipal'])->name('reports.remove');
         });
 
-        Route::prefix('reports')->as('reports.')->controller(Admin\ParkingPlaceReportController::class)->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::post('{source}/{id}/keep', 'keep')->whereIn('source', ['community', 'municipal'])->name('keep');
-            Route::post('{source}/{id}/remove', 'remove')->whereIn('source', ['community', 'municipal'])->name('remove');
-        });
+        // Former queues, kept as addresses into the inbox
+        Route::get('improvements', fn () => redirect()->route('app.moderation.index', ['type' => 'improvement']));
+        Route::get('improvements/{improvement}', fn (string $improvement) => redirect()->route('app.moderation.improvements.show', $improvement))->whereNumber('improvement');
+        Route::get('reports', fn () => redirect()->route('app.moderation.index', ['type' => 'report']));
 
         // Suspend user route
         Route::put('/users/{user}/suspend', [Admin\UserController::class, 'suspend'])

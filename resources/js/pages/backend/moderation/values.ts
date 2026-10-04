@@ -35,7 +35,7 @@ type Options = { orientations: EnumOption[]; underSign?: EnumOption[]; restricti
 
 /** Readable text for one change group, with "not known" and "none" kept apart. */
 export function useValueFormatter(options: Options) {
-    const { t } = useTranslation('backend/improvements');
+    const { t } = useTranslation('backend/moderation');
     const { t: tContribute } = useTranslation('frontend/map/contribute');
 
     const duration = (minutes: number) =>
@@ -80,7 +80,7 @@ export function useValueFormatter(options: Options) {
 
 /** "Location (240 m), orientation" for a list of change groups. */
 export function useChangeSummary() {
-    const { t } = useTranslation('backend/improvements');
+    const { t } = useTranslation('backend/moderation');
 
     return (changes: ChangeGroup[], distance: number | null = null) =>
         changes

@@ -2,7 +2,8 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
-export type Proposer = { name: string | null; approved: number; rejected: number; is_new: boolean };
+/** What is known about the person behind a submission or improvement; context only, never priority. */
+export type Contributor = { name: string | null; approved: number; rejected: number; is_new: boolean };
 
 export function Flag({ children }: { children: React.ReactNode }) {
     return (
@@ -12,19 +13,19 @@ export function Flag({ children }: { children: React.ReactNode }) {
     );
 }
 
-/** The proposer's name, with a short note only when their track record stands out. */
-export function ProposerName({ proposer }: { proposer: Proposer }) {
-    const { t } = useTranslation('backend/improvements');
+/** The contributor's name, with a short note only when their track record stands out. */
+export function ContributorName({ contributor }: { contributor: Contributor }) {
+    const { t } = useTranslation('backend/moderation');
     const note =
-        proposer.rejected > proposer.approved && proposer.rejected > 0
-            ? t('proposer.rejected', { count: proposer.rejected })
-            : proposer.is_new
-              ? t('proposer.new')
+        contributor.rejected > contributor.approved && contributor.rejected > 0
+            ? t('contributor.rejected', { count: contributor.rejected })
+            : contributor.is_new
+              ? t('contributor.new')
               : null;
 
     return (
         <span>
-            {proposer.name ?? t('unknown_user')}
+            {contributor.name ?? t('unknown_user')}
             {note && <span className="ml-1.5 text-xs text-amber-700 dark:text-amber-400">{note}</span>}
         </span>
     );
