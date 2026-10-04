@@ -62,7 +62,7 @@ export default function Dashboard({ hasTodo, todo, activity, stats, favorites }:
     return (
         <AppLayout breadcrumbs={[{ title: t('title'), href: dashboard() }]}>
             <Head title={t('title')} />
-            <div className="flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:px-8 sm:py-8">
+            <div className="flex w-full flex-col gap-10 px-4 py-6 sm:px-8 sm:py-8">
                 <header className="flex flex-wrap items-end justify-between gap-4">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-semibold tracking-tight">{t(`greeting.${greeting}`, { name: auth.user.name.split(' ')[0] })}</h1>
