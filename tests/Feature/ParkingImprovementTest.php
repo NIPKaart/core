@@ -189,7 +189,7 @@ describe('moderating', function () {
                 ->where('position.index', 1)
                 ->where('position.total', 2)
                 ->where('position.previous', null)
-                ->where('position.next', ['type' => 'improvement', 'route' => ['improvement' => $next->id]]));
+                ->where('position.next', ['key' => "improvement:{$next->id}", 'type' => 'improvement', 'route' => ['improvement' => $next->id]]));
     });
 
     test('a moderator corrects the proposal, approves it and continues with the next one', function () {

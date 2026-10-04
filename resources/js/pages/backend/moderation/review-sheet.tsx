@@ -19,9 +19,10 @@ import { ContributorName, Flag, useAgo } from './parts';
 import { TypeBadge } from './type-badge';
 import {
     type ImprovementDetails,
-    itemUrl,
+    type ItemLink,
     type Options,
     type Position,
+    type QueueItem,
     type ReportDetails,
     type SelectedItem,
     type SubmissionDetails,
@@ -38,69 +39,78 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 export function ReviewSheet({
     selected,
     position,
+    loading,
     options,
     query,
+    onNavigate,
     onClose,
 }: {
     selected: SelectedItem | null;
     position: Position | null;
+    /** The item being opened, shown from the queue row while its details load. */
+    loading: { preview: QueueItem | null } | null;
     options: Options;
     query: Record<string, string>;
+    onNavigate: (link: ItemLink) => void;
     onClose: () => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const ago = useAgo();
-    const visit = (url: string) => router.visit(url, { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
+    const item: QueueItem | null = loading?.preview ?? selected;
+    const open = selected !== null || loading !== null;
 
     return (
-        <Sheet open={selected !== null} onOpenChange={(open) => !open && onClose()}>
-            <SheetContent className="w-full gap-0 sm:max-w-2xl">
-                {selected && position && (
+        <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
+            <SheetContent className="w-full gap-0 sm:max-w-2xl" showCloseButton={false}>
+                {item && (
                     <>
                         <SheetHeader className="gap-2 px-6 pt-6 pb-4">
-                            <div className="flex items-center gap-1.5 pr-8 text-sm text-muted-foreground">
-                                <TypeBadge type={selected.type} />
-                                <nav aria-label={t('review.position_label')} className="ml-auto flex items-center gap-1.5">
-                                    {t('review.position', { index: position.index, total: position.total })}
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="size-8 cursor-pointer"
-                                        disabled={!position.previous}
-                                        aria-label={t('review.previous')}
-                                        onClick={() => position.previous && visit(itemUrl(position.previous, query))}
-                                    >
-                                        <ChevronLeft className="size-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="size-8 cursor-pointer"
-                                        disabled={!position.next}
-                                        aria-label={t('review.next')}
-                                        onClick={() => position.next && visit(itemUrl(position.next, query))}
-                                    >
-                                        <ChevronRight className="size-4" />
-                                    </Button>
-                                </nav>
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <TypeBadge type={item.type} />
+                                {position && (
+                                    <nav aria-label={t('review.position_label')} className="ml-auto flex items-center gap-1.5">
+                                        {!loading && t('review.position', { index: position.index, total: position.total })}
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="size-8 cursor-pointer"
+                                            disabled={!position.previous || loading !== null}
+                                            aria-label={t('review.previous')}
+                                            onClick={() => position.previous && onNavigate(position.previous)}
+                                        >
+                                            <ChevronLeft className="size-4" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="size-8 cursor-pointer"
+                                            disabled={!position.next || loading !== null}
+                                            aria-label={t('review.next')}
+                                            onClick={() => position.next && onNavigate(position.next)}
+                                        >
+                                            <ChevronRight className="size-4" />
+                                        </Button>
+                                    </nav>
+                                )}
                             </div>
                             <SheetTitle className="text-lg">
-                                {[selected.street, selected.municipality].filter(Boolean).join(', ') || t('no_address')}
+                                {[item.street, item.municipality].filter(Boolean).join(', ') || t('no_address')}
                             </SheetTitle>
                             <SheetDescription className="flex flex-wrap items-center gap-x-2">
-                                {selected.contributor ? (
+                                {item.contributor ? (
                                     <span className="text-foreground">
-                                        <ContributorName contributor={selected.contributor} />
+                                        <ContributorName contributor={item.contributor} />
                                     </span>
                                 ) : (
-                                    <span>{t('contributor.reporters', { count: selected.flags.reports ?? 0 })}</span>
+                                    <span>{t('contributor.reporters', { count: item.flags.reports ?? 0 })}</span>
                                 )}
                                 <span aria-hidden>·</span>
-                                <span>{ago(selected.waiting_since)}</span>
+                                <span>{ago(item.waiting_since)}</span>
                             </SheetDescription>
                         </SheetHeader>
 
-                        {selected.type === 'submission' && (
+                        {(loading || !selected || !position) && <BodySkeleton />}
+                        {!loading && selected && position && selected.type === 'submission' && (
                             <SubmissionReview
                                 key={selected.key}
                                 item={selected}
@@ -108,10 +118,10 @@ export function ReviewSheet({
                                 position={position}
                                 options={options}
                                 query={query}
-                                onSkip={visit}
+                                onSkip={onNavigate}
                             />
                         )}
-                        {selected.type === 'improvement' && (
+                        {!loading && selected && position && selected.type === 'improvement' && (
                             <ImprovementReview
                                 key={selected.key}
                                 item={selected}
@@ -119,14 +129,27 @@ export function ReviewSheet({
                                 position={position}
                                 options={options}
                                 query={query}
-                                onSkip={visit}
+                                onSkip={onNavigate}
                             />
                         )}
-                        {selected.type === 'report' && <ReportReview key={selected.key} details={selected.details} options={options} query={query} />}
+                        {!loading && selected && position && selected.type === 'report' && (
+                            <ReportReview key={selected.key} details={selected.details} options={options} query={query} />
+                        )}
                     </>
                 )}
             </SheetContent>
         </Sheet>
+    );
+}
+
+/** Stands in for the body while the item's details load, so the sheet opens at once. */
+function BodySkeleton() {
+    return (
+        <div className="flex flex-1 flex-col gap-5 px-6 pb-6" aria-hidden>
+            <div className="h-64 animate-pulse rounded-xl bg-muted" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+            <div className="h-40 animate-pulse rounded-xl bg-muted" />
+        </div>
     );
 }
 
@@ -184,16 +207,12 @@ function useApprove(url: string) {
     return { approve, errors, processing };
 }
 
-function SkipButton({ position, query, onSkip }: { position: Position; query: Record<string, string>; onSkip: (url: string) => void }) {
+function SkipButton({ position, onSkip }: { position: Position; onSkip: (link: ItemLink) => void }) {
     const { t } = useTranslation('backend/moderation');
     if (!position.next) return null;
 
     return (
-        <Button
-            variant="ghost"
-            className="mr-auto cursor-pointer text-muted-foreground"
-            onClick={() => position.next && onSkip(itemUrl(position.next, query))}
-        >
+        <Button variant="ghost" className="mr-auto cursor-pointer text-muted-foreground" onClick={() => position.next && onSkip(position.next)}>
             {t('review.skip')}
         </Button>
     );
@@ -213,7 +232,7 @@ function SubmissionReview({
     position: Position;
     options: Options;
     query: Record<string, string>;
-    onSkip: (url: string) => void;
+    onSkip: (link: ItemLink) => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const format = useValueFormatter(options);
@@ -230,7 +249,7 @@ function SubmissionReview({
             actions={
                 options.can.submission && (
                     <>
-                        <SkipButton position={position} query={query} onSkip={onSkip} />
+                        <SkipButton position={position} onSkip={onSkip} />
                         <DecisionPopover
                             kind="submission"
                             action={app.moderation.submissions.reject.url({ parking_space: details.space.id }, { query })}
@@ -338,7 +357,7 @@ function ImprovementReview({
     position: Position;
     options: Options;
     query: Record<string, string>;
-    onSkip: (url: string) => void;
+    onSkip: (link: ItemLink) => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const format = useValueFormatter(options);
@@ -368,7 +387,7 @@ function ImprovementReview({
             actions={
                 options.can.improvement && (
                     <>
-                        <SkipButton position={position} query={query} onSkip={onSkip} />
+                        <SkipButton position={position} onSkip={onSkip} />
                         <DecisionPopover
                             kind="improvement"
                             action={app.moderation.improvements.reject.url({ improvement: details.id }, { query })}

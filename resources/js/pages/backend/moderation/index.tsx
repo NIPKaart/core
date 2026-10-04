@@ -7,14 +7,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
-import type { ColumnDef, RowSelectionState } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { Flag as FlagIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContributorName, Flag, useAgo } from './parts';
 import { ReviewSheet } from './review-sheet';
@@ -24,6 +25,7 @@ import {
     itemUrl,
     type Filters,
     type HistoryRow,
+    type ItemLink,
     type ItemType,
     type Options,
     type Position,
@@ -70,10 +72,21 @@ export default function Index({ status, filters, items, history, selected, posit
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
-    const review = (item: QueueItem) =>
-        router.visit(itemUrl(item, query), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
-    const closeReview = () =>
+    /** The sheet opens at once with what the queue row already shows; the item's details follow. */
+    const [loading, setLoading] = useState<{ preview: QueueItem | null } | null>(null);
+    const openItem = (link: ItemLink) => {
+        setLoading({ preview: items?.data.find((item) => item.key === link.key) ?? null });
+        router.visit(itemUrl(link, query), {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['selected', 'position'],
+            onFinish: () => setLoading(null),
+        });
+    };
+    const closeReview = () => {
+        setLoading(null);
         router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
+    };
     const breadcrumbs: BreadcrumbItem[] = [{ title: t('title'), href: app.moderation.index() }];
 
     return (
@@ -136,19 +149,30 @@ export default function Index({ status, filters, items, history, selected, posit
                         selectedKey={selected?.key ?? null}
                         options={options}
                         filtered={Object.keys(query).length > 0}
-                        onReview={review}
+                        onReview={openItem}
                     />
                 )}
                 {!open && history && <History history={history} onView={setViewing} />}
             </div>
 
-            <ReviewSheet selected={selected} position={position} options={options} query={query} onClose={closeReview} />
+            <ReviewSheet
+                selected={selected}
+                position={position}
+                loading={loading}
+                options={options}
+                query={query}
+                onNavigate={openItem}
+                onClose={closeReview}
+            />
             <DecisionSheet row={viewing} options={options} onClose={() => setViewing(null)} />
         </AppLayout>
     );
 }
 
-/** The open queue in two parts, high priority first; only submissions and improvements can be rejected in bulk. */
+/**
+ * The open queue in one list, grouped by priority with the oldest item first. Wide screens get a table; narrow
+ * screens get stacked rows. Only submissions and improvements can be rejected in bulk.
+ */
 function OpenQueue({
     items,
     selectedKey,
@@ -163,6 +187,7 @@ function OpenQueue({
     onReview: (item: QueueItem) => void;
 }) {
     const { t } = useTranslation('backend/moderation');
+    const ago = useAgo();
     const [checked, setChecked] = useState<string[]>([]);
     useEffect(() => setChecked([]), [items.data]);
 
@@ -170,6 +195,15 @@ function OpenQueue({
         .map((priority) => ({ priority, rows: items.data.filter((item) => item.priority === priority) }))
         .filter((group) => group.rows.length > 0);
     const selectable = (item: QueueItem) => item.type !== 'report' && options.can[item.type];
+    const selectableKeys = items.data.filter(selectable).map((item) => item.key);
+    const allChecked = selectableKeys.length > 0 && selectableKeys.every((key) => checked.includes(key));
+    const toggle = (key: string, on: boolean) => setChecked((current) => (on ? [...current, key] : current.filter((item) => item !== key)));
+    const openOnKey = (item: QueueItem) => (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onReview(item);
+        }
+    };
 
     if (items.data.length === 0) {
         return (
@@ -179,126 +213,127 @@ function OpenQueue({
         );
     }
 
+    const checkbox = (item: QueueItem) =>
+        selectable(item) && (
+            <Checkbox
+                checked={checked.includes(item.key)}
+                onCheckedChange={(on) => toggle(item.key, !!on)}
+                onClick={(event) => event.stopPropagation()}
+                aria-label={t('select')}
+            />
+        );
+    const contributor = (item: QueueItem) =>
+        item.contributor ? (
+            <ContributorName contributor={item.contributor} />
+        ) : (
+            <span className="text-muted-foreground">{t('contributor.reporters', { count: item.flags.reports ?? 0 })}</span>
+        );
+    const groupLabel = (priority: 'high' | 'normal', count: number) => (
+        <span className="inline-flex items-center gap-1.5">
+            {priority === 'high' && <FlagIcon className="size-3.5 text-orange-500" aria-hidden />}
+            {t(`priority.${priority}`)} <span className="tabular-nums">· {count}</span>
+        </span>
+    );
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {checked.length > 0 && <BulkReject keys={checked} reasons={options.bulkReasons} onClear={() => setChecked([])} />}
-            {groups.map((group) => (
-                <section key={group.priority} aria-labelledby={`priority-${group.priority}`} className="space-y-2">
-                    <h2 id={`priority-${group.priority}`} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                        {group.priority === 'high' && <FlagIcon className="size-3.5 text-orange-500" aria-hidden />}
-                        {t(`priority.${group.priority}`)} <span className="tabular-nums">· {group.rows.length}</span>
-                    </h2>
-                    <QueueTable
-                        rows={group.rows}
-                        selectedKey={selectedKey}
-                        checked={checked}
-                        selectable={group.rows.some(selectable) ? selectable : null}
-                        onCheckedChange={setChecked}
-                        onReview={onReview}
-                    />
-                </section>
-            ))}
+
+            <div className="hidden overflow-hidden rounded-md border md:block">
+                <Table>
+                    <TableHeader className="bg-muted">
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-10">
+                                {selectableKeys.length > 0 && (
+                                    <Checkbox
+                                        checked={allChecked}
+                                        onCheckedChange={(on) => setChecked(on ? selectableKeys : [])}
+                                        aria-label={t('select_all')}
+                                    />
+                                )}
+                            </TableHead>
+                            <TableHead>{t('columns.type')}</TableHead>
+                            <TableHead>{t('columns.place')}</TableHead>
+                            <TableHead>{t('columns.contributor')}</TableHead>
+                            <TableHead className="text-right">{t('columns.submitted')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {groups.map((group) => (
+                            <Fragment key={group.priority}>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableCell colSpan={5} className="bg-muted/30 py-1.5 text-xs font-medium text-muted-foreground">
+                                        {groupLabel(group.priority, group.rows.length)}
+                                    </TableCell>
+                                </TableRow>
+                                {group.rows.map((item) => (
+                                    <TableRow
+                                        key={item.key}
+                                        tabIndex={0}
+                                        data-state={item.key === selectedKey || checked.includes(item.key) ? 'selected' : undefined}
+                                        className="cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                                        onClick={() => onReview(item)}
+                                        onKeyDown={openOnKey(item)}
+                                    >
+                                        <TableCell>{checkbox(item)}</TableCell>
+                                        <TableCell>
+                                            <TypeBadge type={item.type} />
+                                        </TableCell>
+                                        <TableCell className="whitespace-normal">
+                                            <span className="inline-flex flex-wrap items-center gap-2">
+                                                <span>
+                                                    <span className="font-medium">{item.street || t('no_address')}</span>
+                                                    {item.municipality && <span className="text-muted-foreground"> · {item.municipality}</span>}
+                                                </span>
+                                                <ItemFlags item={item} />
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>{contributor(item)}</TableCell>
+                                        <TableCell className="text-right text-muted-foreground">{ago(item.waiting_since)}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </Fragment>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <ul className="overflow-hidden rounded-md border md:hidden">
+                {groups.map((group) => (
+                    <Fragment key={group.priority}>
+                        <li className="border-b bg-muted/30 px-4 py-1.5 text-xs font-medium text-muted-foreground">
+                            {groupLabel(group.priority, group.rows.length)}
+                        </li>
+                        {group.rows.map((item) => (
+                            <li
+                                key={item.key}
+                                data-state={item.key === selectedKey || checked.includes(item.key) ? 'selected' : undefined}
+                                className="grid grid-cols-[1rem_minmax(0,1fr)] gap-x-3 border-b px-4 py-3 last:border-b-0 data-[state=selected]:bg-muted"
+                            >
+                                <span className="pt-0.5">{checkbox(item)}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => onReview(item)}
+                                    className="flex min-w-0 cursor-pointer flex-col gap-1.5 text-left"
+                                >
+                                    <span className="flex w-full items-baseline gap-3">
+                                        <span className="min-w-0 flex-1 truncate text-sm font-medium">{item.street || t('no_address')}</span>
+                                        <span className="shrink-0 text-xs text-muted-foreground">{ago(item.waiting_since)}</span>
+                                    </span>
+                                    <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                        <TypeBadge type={item.type} />
+                                        {item.municipality}
+                                        <ItemFlags item={item} />
+                                    </span>
+                                </button>
+                            </li>
+                        ))}
+                    </Fragment>
+                ))}
+            </ul>
+
             <DataTablePagination pagination={items} />
         </div>
-    );
-}
-
-function QueueTable({
-    rows,
-    selectedKey,
-    checked,
-    selectable,
-    onCheckedChange,
-    onReview,
-}: {
-    rows: QueueItem[];
-    selectedKey: string | null;
-    checked: string[];
-    selectable: ((item: QueueItem) => boolean) | null;
-    onCheckedChange: (keys: string[]) => void;
-    onReview: (item: QueueItem) => void;
-}) {
-    const { t } = useTranslation('backend/moderation');
-    const ago = useAgo();
-
-    const rowSelection = useMemo<RowSelectionState>(
-        () => Object.fromEntries(rows.map((row, index) => [index, checked.includes(row.key) || row.key === selectedKey]).filter(([, on]) => on)),
-        [rows, checked, selectedKey],
-    );
-    const toggle = (key: string, on: boolean) => onCheckedChange(on ? [...checked, key] : checked.filter((item) => item !== key));
-    const selectableKeys = selectable ? rows.filter(selectable).map((row) => row.key) : [];
-    const allChecked = selectableKeys.length > 0 && selectableKeys.every((key) => checked.includes(key));
-
-    const columns: ColumnDef<QueueItem>[] = [
-        ...(selectable
-            ? [
-                  {
-                      id: 'select',
-                      header: () => (
-                          <Checkbox
-                              checked={allChecked}
-                              onCheckedChange={(on) =>
-                                  onCheckedChange(
-                                      on ? [...new Set([...checked, ...selectableKeys])] : checked.filter((key) => !selectableKeys.includes(key)),
-                                  )
-                              }
-                              aria-label={t('select_all')}
-                          />
-                      ),
-                      cell: ({ row }) =>
-                          selectable(row.original) && (
-                              <Checkbox
-                                  checked={checked.includes(row.original.key)}
-                                  onCheckedChange={(on) => toggle(row.original.key, !!on)}
-                                  onClick={(event) => event.stopPropagation()}
-                                  aria-label={t('select')}
-                              />
-                          ),
-                  } satisfies ColumnDef<QueueItem>,
-              ]
-            : []),
-        { id: 'type', header: t('columns.type'), cell: ({ row }) => <TypeBadge type={row.original.type} /> },
-        {
-            id: 'place',
-            header: t('columns.place'),
-            cell: ({ row }) => (
-                <span className="inline-flex flex-wrap items-center gap-2">
-                    <span>
-                        <span className="font-medium">{row.original.street || t('no_address')}</span>
-                        {row.original.municipality && <span className="text-muted-foreground"> · {row.original.municipality}</span>}
-                    </span>
-                    <ItemFlags item={row.original} />
-                </span>
-            ),
-        },
-        {
-            id: 'contributor',
-            header: t('columns.contributor'),
-            cell: ({ row }) =>
-                row.original.contributor ? (
-                    <ContributorName contributor={row.original.contributor} />
-                ) : (
-                    <span className="text-muted-foreground">{t('contributor.reporters', { count: row.original.flags.reports ?? 0 })}</span>
-                ),
-        },
-        {
-            id: 'submitted',
-            header: t('columns.submitted'),
-            meta: { align: 'right' },
-            cell: ({ row }) => <span className="text-muted-foreground">{ago(row.original.waiting_since)}</span>,
-        },
-    ];
-
-    return (
-        <DataTable
-            toolbar={null}
-            columns={columns}
-            data={rows}
-            enableSorting={false}
-            rowSelection={rowSelection}
-            onRowSelectionChange={() => undefined}
-            onRowClick={onReview}
-        />
     );
 }
 
