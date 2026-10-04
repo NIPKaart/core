@@ -43,7 +43,7 @@ test('a contributor sees their own figures and no work to do', function () {
             ->where('stats', ['added' => 2, 'published' => 1, 'pending' => 1, 'confirmed' => 2])
             ->where('hasTodo', false)
             ->missing('todo')
-            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'sources' => ['total' => 0, 'items' => []]])));
+            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'queue' => [], 'sources' => ['total' => 0, 'items' => []]])));
 });
 
 test('a moderator is pointed to the moderation queue', function () {
@@ -169,4 +169,50 @@ test('outcomes stay visible behind many operational notifications, and others\' 
             ->has('activity', 1)
             ->where('activity.0.kind', 'community.improvement_approved')
             ->where('activity.0.params.changes', ['orientation'])));
+});
+
+test('the dashboard names the person and their role', function () {
+    $this->travelTo('2025-03-12 09:00:00');
+    $moderator = tap(User::factory()->create(['name' => 'Klaas Schoute']))->assignRole(UserRole::MODERATOR);
+
+    $this->actingAs($moderator)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('profile.name', 'Klaas Schoute')
+            ->where('profile.role', UserRole::MODERATOR->label())
+            ->where('profile.member_since', '2025-03-12T09:00:00+00:00'));
+});
+
+test('a moderator sees the first five items of the queue, each opening its review', function () {
+    $moderator = tap(User::factory()->create())->assignRole(UserRole::MODERATOR);
+    $spaces = collect(range(1, 6))->map(function (int $day) {
+        $this->travelTo("2026-10-0{$day} 09:00:00");
+
+        return ParkingSpace::factory()->create(['status' => ParkingStatus::PENDING, 'street' => "Straat {$day}"]);
+    });
+
+    $this->actingAs($moderator)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+            ->has('todo.queue', 5)
+            ->where('todo.queue.0.type', 'submission')
+            ->where('todo.queue.0.street', 'Straat 1')
+            ->where('todo.queue.0.url', route('app.moderation.submissions.show', ['parking_space' => $spaces->first()->id]))));
+});
+
+test('the map shows the person\'s own spaces and only the saved places that are still public', function () {
+    $user = User::factory()->create();
+    $own = ParkingSpace::factory()->for($user)->create(['status' => ParkingStatus::PENDING, 'street' => 'Eigen straat']);
+    ParkingSpace::factory()->for(User::factory())->create();
+    $public = ParkingSpace::factory()->for(User::factory())->create(['status' => ParkingStatus::APPROVED, 'street' => 'Stationsplein']);
+    Favorite::factory()->for($user)->for($public, 'favoritable')->create();
+    Favorite::factory()->for($user)->for(ParkingMunicipal::factory()->create(['visibility' => false]), 'favoritable')->create();
+
+    $this->actingAs($user)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->missing('map')
+            ->loadDeferredProps(fn (Assert $reload) => $reload
+                ->has('map.spaces', 1)
+                ->where('map.spaces.0.status', 'pending')
+                ->where('map.spaces.0.url', route('profile.parking-spaces.show', ['id' => $own->id]))
+                ->has('map.favorites', 1)
+                ->where('map.favorites.0.label', 'Stationsplein')));
 });

@@ -25,19 +25,41 @@ class DashboardController extends Controller
 {
     private const int FAVORITES = 5;
 
+    private const int QUEUE_PREVIEW = 5;
+
+    private const int MAP_PLACES = 500;
+
     public function __invoke(Request $request, ModerationQueue $queue, SourceOverview $sources, UserActivity $activity): Response
     {
         $user = $request->user();
         $moderates = $queue->typesFor($user) !== [];
         $managesSources = $user->hasRole(UserRole::ADMIN);
 
+        $role = UserRole::tryFrom((string) $user->getRoleNames()->first());
+
         return Inertia::render('dashboard', [
+            'profile' => [
+                'name' => $user->name,
+                'role' => $role?->label(),
+                'member_since' => $user->created_at?->toIso8601String(),
+            ],
             'hasTodo' => $moderates || $managesSources,
             'todo' => Inertia::defer(function () use ($queue, $sources, $user, $moderates, $managesSources) {
                 $attention = $managesSources ? $sources->rows()->whereIn('status', SourceOverview::ATTENTION)->values() : collect();
 
                 return [
                     'moderation' => $moderates ? $queue->summary($user) : null,
+                    'queue' => $moderates ? $queue->items($user)->take(self::QUEUE_PREVIEW)->map(fn (array $item) => [
+                        'key' => $item['key'],
+                        'type' => $item['type'],
+                        'priority' => $item['priority'],
+                        'street' => $item['street'],
+                        'municipality' => $item['municipality'],
+                        'contributor' => $item['contributor']['name'] ?? null,
+                        'reports' => $item['flags']['reports'] ?? null,
+                        'waiting_since' => $item['waiting_since'],
+                        'url' => route("app.moderation.{$item['type']}s.show", $item['route']),
+                    ])->values()->all() : [],
                     'sources' => [
                         'total' => $attention->count(),
                         'items' => $attention->take(3)->map(fn (array $source) => [
@@ -51,6 +73,7 @@ class DashboardController extends Controller
                 ];
             }),
             'activity' => Inertia::defer(fn () => $activity->recent($user)),
+            'map' => Inertia::defer(fn () => $this->map($request)),
             'stats' => $this->stats($request),
             'favorites' => $user->favorites()
                 ->with(['favoritable' => fn (MorphTo $favoritable) => $favoritable->morphWith([
@@ -67,6 +90,38 @@ class DashboardController extends Controller
                 })
                 ->values(),
         ]);
+    }
+
+    /**
+     * The person's own parking spaces and the places they saved, for their map; hidden places are left out.
+     *
+     * @return array{spaces: list<array<string, mixed>>, favorites: list<array<string, mixed>>}
+     */
+    private function map(Request $request): array
+    {
+        $user = $request->user();
+
+        return [
+            'spaces' => $user->parkingSpaces()->latest()->limit(self::MAP_PLACES)
+                ->get(['id', 'latitude', 'longitude', 'status', 'street'])
+                ->map(fn (ParkingSpace $space) => [
+                    'id' => $space->id,
+                    'latitude' => $space->latitude,
+                    'longitude' => $space->longitude,
+                    'status' => $space->status->value,
+                    'label' => $space->street,
+                    'url' => route('profile.parking-spaces.show', ['id' => $space->id]),
+                ])->all(),
+            'favorites' => $user->favorites()->with('favoritable')->latest()->limit(self::MAP_PLACES)->get()
+                ->filter(fn (Favorite $favorite) => $favorite->favoritable !== null && UserActivity::isPublic($favorite->favoritable))
+                ->map(fn (Favorite $favorite) => [
+                    'id' => $favorite->id,
+                    'latitude' => $favorite->favoritable->latitude,
+                    'longitude' => $favorite->favoritable->longitude,
+                    'label' => $favorite->favoritable->street ?? $favorite->favoritable->name ?? null,
+                    'url' => UserActivity::mapUrl($favorite->favoritable),
+                ])->values()->all(),
+        ];
     }
 
     /**

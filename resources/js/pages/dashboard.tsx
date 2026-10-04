@@ -1,8 +1,9 @@
 import { show as importShow, index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
+import ContributionsMap, { type MapPlace } from '@/components/map/contributions-map';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { dashboard } from '@/routes';
+import { dashboard, locationMap as mapPage } from '@/routes';
 import app from '@/routes/app';
 import locationMap from '@/routes/location-map';
 import notifications from '@/routes/notifications';
@@ -11,13 +12,26 @@ import type { SharedData } from '@/types';
 import { Deferred, Head, Link, usePage } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
-import { ArrowRight, Building, Check, Flag, Heart, Inbox, Pencil, Plus, X } from 'lucide-react';
+import { ArrowRight, ChevronRight, Flag, MapPinPlus, PencilLine, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type ItemType = 'submission' | 'improvement' | 'report';
 
+type QueuePreviewItem = {
+    key: string;
+    type: ItemType;
+    priority: 'high' | 'normal';
+    street: string | null;
+    municipality: string | null;
+    contributor: string | null;
+    reports: number | null;
+    waiting_since: string;
+    url: string;
+};
+
 type Todo = {
     moderation: { total: number; high: number; types: Partial<Record<ItemType, number>>; oldest: string | null } | null;
+    queue: QueuePreviewItem[];
     sources: { total: number; items: { id: number; name: string; status: string; import_id: number | null; since: string | null }[] };
 };
 
@@ -40,117 +54,110 @@ type Favorite = {
     map_url: string | null;
 };
 
+type Stats = { added: number; published: number; pending: number; confirmed: number };
+
 type PageProps = {
+    profile: { name: string; role: string | null; member_since: string | null };
     hasTodo: boolean;
     todo?: Todo;
     activity?: ActivityEvent[];
-    stats: { added: number; published: number; pending: number; confirmed: number };
+    map?: { spaces: (MapPlace & { status: string })[]; favorites: MapPlace[] };
+    stats: Stats;
     favorites: Favorite[];
 };
 
 /**
- * The page people land on after signing in: what waits for them, what happened to their own contributions and their
- * saved places. One bordered list for the work; everything else is plain sections.
+ * The page people land on after signing in. People who moderate get their workplace: the first items in the queue and
+ * the data sources that need them, with everything about themselves in a side column. Everyone else starts from their
+ * figures and their own map. Plain sections and dividers; no cards in cards.
  */
-export default function Dashboard({ hasTodo, todo, activity, stats, favorites }: PageProps) {
+export default function Dashboard({ profile: person, hasTodo, todo, activity, map, stats, favorites }: PageProps) {
     const { t, i18n } = useTranslation('backend/dashboard');
     const { auth } = usePage<SharedData>().props;
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
     const today = new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
+    const header = (
+        <header className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-1">
+                <h1 className="text-2xl font-semibold tracking-tight">{t(`greeting.${greeting}`, { name: auth.user.name.split(' ')[0] })}</h1>
+                <p className="text-sm text-muted-foreground first-letter:uppercase">{today}</p>
+            </div>
+            <Button asChild className="bg-orange-700 text-white hover:bg-orange-600">
+                <Link href={locationMap.add()}>
+                    <Plus />
+                    {t('add_location')}
+                </Link>
+            </Button>
+        </header>
+    );
+
+    const mapSection = (size: string) => (
+        <section aria-labelledby="map-title" className="flex flex-col gap-3">
+            <SectionHeading id="map-title" title={t('map.title')} href={mapPage()} link={t('map.open')} />
+            <Deferred data="map" fallback={<div className={cn('animate-pulse rounded-xl bg-muted', size)} aria-hidden />}>
+                {map && (
+                    <>
+                        <ContributionsMap spaces={map.spaces} favorites={map.favorites} className={size} />
+                        <MapLegend stats={stats} favorites={map.favorites.length} />
+                    </>
+                )}
+            </Deferred>
+        </section>
+    );
+
+    const activitySection = (
+        <section aria-labelledby="activity-title">
+            <SectionHeading id="activity-title" title={t('activity.title')} href={notifications.index()} link={t('activity.all')} />
+            <Deferred data="activity" fallback={<ListSkeleton />}>
+                {activity && <ActivityList events={activity} />}
+            </Deferred>
+        </section>
+    );
+
+    const favoritesSection = (
+        <section aria-labelledby="favorites-title">
+            <SectionHeading id="favorites-title" title={t('favorites.title')} href={profile.favorites.index()} link={t('favorites.all')} />
+            <FavoriteList favorites={favorites} />
+        </section>
+    );
+
+    if (hasTodo) {
+        return (
+            <AppLayout breadcrumbs={[{ title: t('title'), href: dashboard() }]}>
+                <Head title={t('title')} />
+                <div className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_21rem]">
+                    <div className="flex min-w-0 flex-col gap-10 px-4 py-6 sm:px-8 sm:py-8">
+                        {header}
+                        <Deferred data="todo" fallback={<ListSkeleton rows={5} />}>
+                            <Workplace todo={todo} />
+                        </Deferred>
+                    </div>
+                    <aside className="flex flex-col gap-8 border-t bg-muted/20 px-4 py-6 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-8">
+                        <Profile person={person} />
+                        <StatGrid stats={stats} />
+                        {mapSection('h-56')}
+                        {activitySection}
+                        {favoritesSection}
+                    </aside>
+                </div>
+            </AppLayout>
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={[{ title: t('title'), href: dashboard() }]}>
             <Head title={t('title')} />
-            <div className="flex w-full flex-col gap-10 px-4 py-6 sm:px-8 sm:py-8">
-                <header className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">{t(`greeting.${greeting}`, { name: auth.user.name.split(' ')[0] })}</h1>
-                        <p className="text-sm text-muted-foreground first-letter:uppercase">{today}</p>
+            <div className="flex w-full flex-col gap-8 px-4 py-6 sm:px-8 sm:py-8">
+                {header}
+                <StatStrip stats={stats} />
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                    {mapSection('h-80 lg:h-[28rem]')}
+                    <div className="flex flex-col gap-8">
+                        {activitySection}
+                        {favoritesSection}
                     </div>
-                    <Button asChild className="bg-orange-700 text-white hover:bg-orange-600">
-                        <Link href={locationMap.add()}>
-                            <Plus />
-                            {t('add_location')}
-                        </Link>
-                    </Button>
-                </header>
-
-                {hasTodo && (
-                    <Deferred data="todo" fallback={<TodoSkeleton />}>
-                        <TodoList todo={todo} />
-                    </Deferred>
-                )}
-
-                <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:gap-12">
-                    <div className="flex min-w-0 flex-col gap-10">
-                        <section aria-labelledby="activity-title">
-                            <SectionHeading id="activity-title" title={t('activity.title')} href={notifications.index()} link={t('activity.all')} />
-                            <Deferred data="activity" fallback={<ActivitySkeleton />}>
-                                {activity && <ActivityTimeline events={activity} />}
-                            </Deferred>
-                        </section>
-
-                        <section aria-labelledby="favorites-title">
-                            <SectionHeading
-                                id="favorites-title"
-                                title={t('favorites.title')}
-                                href={profile.favorites.index()}
-                                link={t('favorites.all')}
-                            />
-                            {favorites.length === 0 ? (
-                                <p className="border-t py-4 text-sm text-muted-foreground">{t('favorites.empty')}</p>
-                            ) : (
-                                <ul>
-                                    {favorites.map((favorite) => (
-                                        <li
-                                            key={favorite.favorite_id}
-                                            className="grid grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-3 border-t py-3 text-sm sm:grid-cols-[1rem_minmax(0,1fr)_9rem_auto]"
-                                        >
-                                            <Heart className="size-4 fill-rose-600 text-rose-600" aria-hidden />
-                                            <span className="min-w-0 truncate">
-                                                <span className="font-medium">{favorite.title || t('favorites.untitled')}</span>
-                                                {(favorite.city ?? favorite.municipality?.name) && (
-                                                    <span className="text-muted-foreground"> · {favorite.city ?? favorite.municipality?.name}</span>
-                                                )}
-                                            </span>
-                                            <span className="hidden text-muted-foreground sm:block">{t(`favorites.sources.${favorite.type}`)}</span>
-                                            {favorite.map_url ? (
-                                                <a
-                                                    href={favorite.map_url}
-                                                    className="justify-self-end text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                                                >
-                                                    {t('favorites.view_on_map')}
-                                                </a>
-                                            ) : (
-                                                <span className="justify-self-end text-muted-foreground">{t('favorites.unavailable')}</span>
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </section>
-                    </div>
-
-                    <aside aria-labelledby="stats-title" className="border-t pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
-                        <h2 id="stats-title" className="mb-3 text-sm font-semibold">
-                            {t('stats.title')}
-                        </h2>
-                        <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
-                            {(['added', 'published', 'pending', 'confirmed'] as const).map((key) => (
-                                <div key={key}>
-                                    <dt className="text-sm text-muted-foreground">{t(`stats.${key}`)}</dt>
-                                    <dd className="mt-0.5 text-2xl font-semibold tabular-nums">{stats[key]}</dd>
-                                </div>
-                            ))}
-                        </dl>
-                        <Link
-                            href={profile.parkingSpaces.index()}
-                            className="mt-3 inline-block text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                        >
-                            {t('stats.my_locations')}
-                        </Link>
-                    </aside>
                 </div>
             </div>
         </AppLayout>
@@ -159,7 +166,7 @@ export default function Dashboard({ hasTodo, todo, activity, stats, favorites }:
 
 function SectionHeading({ id, title, href, link }: { id: string; title: string; href: Parameters<typeof Link>[0]['href']; link: string }) {
     return (
-        <div className="flex items-baseline justify-between gap-4 pb-3">
+        <div className="flex items-baseline justify-between gap-4 pb-2">
             <h2 id={id} className="text-sm font-semibold">
                 {title}
             </h2>
@@ -177,136 +184,254 @@ function useAgo() {
     return (value: string) => formatDistanceToNow(parseISO(value), { addSuffix: true, locale });
 }
 
-/** Work that waits for this person, each row with one action. Hidden for people without such work. */
-function TodoList({ todo }: { todo?: Todo }) {
-    const { t, i18n } = useTranslation('backend/dashboard');
-    const ago = useAgo();
-    if (!todo || (todo.moderation === null && todo.sources.total === 0)) return null;
+function ListSkeleton({ rows = 3 }: { rows?: number }) {
+    return (
+        <div className="flex flex-col gap-3" aria-hidden>
+            {Array.from({ length: rows }, (_, row) => (
+                <div key={row} className="h-10 animate-pulse rounded-md bg-muted" />
+            ))}
+        </div>
+    );
+}
 
-    const moderation = todo.moderation;
-    const details = moderation
-        ? [
-              (['submission', 'improvement', 'report'] as const)
-                  .filter((type) => moderation.types[type])
-                  .map((type) => t(`todo.types.${type}`, { count: moderation.types[type] }))
-                  .join(', '),
-              moderation.oldest ? t('todo.oldest', { ago: ago(moderation.oldest) }) : null,
-          ].filter(Boolean)
-        : [];
+/** The person this dashboard belongs to. */
+function Profile({ person }: { person: PageProps['profile'] }) {
+    const { t, i18n } = useTranslation('backend/dashboard');
+    const initials = person.name
+        .split(' ')
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+    const since = person.member_since
+        ? new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(new Date(person.member_since))
+        : null;
 
     return (
-        <section aria-labelledby="todo-title" className="flex flex-col gap-3">
-            <h2 id="todo-title" className="text-sm font-semibold">
-                {t('todo.title')}
+        <div className="flex items-center gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold dark:bg-neutral-700">
+                {initials}
+            </span>
+            <span className="flex min-w-0 flex-col">
+                <span className="truncate font-semibold">{person.name}</span>
+                <span className="text-xs text-muted-foreground">
+                    {[person.role, since && t('profile.since', { date: since })].filter(Boolean).join(' · ')}
+                </span>
+            </span>
+        </div>
+    );
+}
+
+const STAT_KEYS = ['added', 'published', 'pending', 'confirmed'] as const;
+
+function StatGrid({ stats }: { stats: Stats }) {
+    const { t } = useTranslation('backend/dashboard');
+
+    return (
+        <section aria-labelledby="stats-title">
+            <h2 id="stats-title" className="mb-3 text-sm font-semibold">
+                {t('stats.title')}
             </h2>
-            <ul className="divide-y rounded-lg border">
-                {moderation && (
-                    <TodoRow
-                        icon={Inbox}
-                        title={moderation.total ? t('todo.moderation', { count: moderation.total }) : t('todo.moderation_done')}
-                        description={
-                            moderation.total > 0 && (
-                                <span className="text-sm text-muted-foreground">
-                                    {moderation.high > 0 && (
-                                        <>
-                                            <Flag className="mr-1 inline size-3.5 -translate-y-px text-orange-500" aria-hidden />
-                                            {t('todo.high', { count: moderation.high })} ·{' '}
-                                        </>
-                                    )}
-                                    {details.join(' · ')}
-                                </span>
-                            )
-                        }
-                        action={
-                            moderation.total > 0 && (
-                                <TodoAction href={app.moderation.index()} primary>
-                                    {t('todo.review')}
-                                    <ArrowRight />
-                                </TodoAction>
-                            )
-                        }
-                    />
-                )}
-                {todo.sources.items.map((source) => (
-                    <TodoRow
-                        key={source.id}
-                        icon={Building}
-                        title={t(`todo.source.${source.status}`, { name: source.name })}
-                        description={
-                            source.since && (
-                                <span className="text-sm text-muted-foreground">
-                                    {t('todo.source.since', {
-                                        date: new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long' }).format(
-                                            new Date(source.since),
-                                        ),
-                                    })}
-                                </span>
-                            )
-                        }
-                        action={
-                            <TodoAction href={source.import_id ? importShow(source.import_id) : municipalImports({ query: { status: 'attention' } })}>
-                                {t('todo.check')}
-                            </TodoAction>
-                        }
-                    />
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+                {STAT_KEYS.map((key) => (
+                    <div key={key}>
+                        <dt className="text-sm text-muted-foreground">{t(`stats.${key}`)}</dt>
+                        <dd className="mt-0.5 text-2xl font-semibold tabular-nums">{stats[key]}</dd>
+                    </div>
                 ))}
-                {todo.sources.total > todo.sources.items.length && (
-                    <li className="px-5 py-3 text-sm">
-                        <Link
-                            href={municipalImports({ query: { status: 'attention' } })}
-                            className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                        >
-                            {t('todo.more_sources', { count: todo.sources.total - todo.sources.items.length })}
-                        </Link>
-                    </li>
-                )}
-            </ul>
+            </dl>
         </section>
     );
 }
 
-function TodoRow({
-    icon: Icon,
-    title,
-    description,
-    action,
-}: {
-    icon: typeof Inbox;
-    title: string;
-    description: React.ReactNode;
-    action: React.ReactNode;
-}) {
+/** The person's own figures in one band, divided rather than boxed. */
+function StatStrip({ stats }: { stats: Stats }) {
+    const { t } = useTranslation('backend/dashboard');
+
     return (
-        <li className="grid grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 px-5 py-4 sm:grid-cols-[1.25rem_minmax(0,1fr)_auto]">
-            <Icon className="size-5 text-muted-foreground" aria-hidden />
-            <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-sm font-medium">{title}</span>
-                {description}
-            </div>
-            {action && <div className="col-start-2 sm:col-start-auto">{action}</div>}
-        </li>
+        <dl className="grid grid-cols-2 rounded-lg border sm:grid-cols-4">
+            {STAT_KEYS.map((key, index) => (
+                <div
+                    key={key}
+                    className={cn(
+                        'flex flex-col gap-1 px-5 py-4',
+                        index % 2 === 1 && 'border-l',
+                        index > 1 && 'border-t sm:border-t-0',
+                        index === 2 && 'sm:border-l',
+                    )}
+                >
+                    <dt className="text-sm text-muted-foreground">{t(`stats.${key}`)}</dt>
+                    <dd className="text-3xl font-semibold tabular-nums">{stats[key]}</dd>
+                    <dd className="text-xs text-muted-foreground">{t(`stats.hint.${key}`)}</dd>
+                </div>
+            ))}
+        </dl>
     );
 }
 
-function TodoAction({ href, primary = false, children }: { href: Parameters<typeof Link>[0]['href']; primary?: boolean; children: React.ReactNode }) {
+function MapLegend({ stats, favorites }: { stats: Stats; favorites: number }) {
+    const { t } = useTranslation('backend/dashboard');
+    const entries = [
+        { color: 'bg-[#2AAD27]', label: t('map.legend.published', { count: stats.published }) },
+        { color: 'bg-[#CB8427]', label: t('map.legend.pending', { count: stats.pending }) },
+        { color: 'bg-[#9C2BCB]', label: t('map.legend.favorites', { count: favorites }) },
+    ];
+
     return (
-        <Button asChild variant={primary ? 'default' : 'outline'}>
-            <Link href={href}>{children}</Link>
-        </Button>
+        <p className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
+            {entries.map((entry) => (
+                <span key={entry.label} className="inline-flex items-center gap-1.5">
+                    <span className={cn('size-2.5 rounded-full', entry.color)} aria-hidden />
+                    {entry.label}
+                </span>
+            ))}
+        </p>
     );
 }
 
-function TodoSkeleton() {
-    return <div className="h-20 animate-pulse rounded-lg bg-muted" aria-hidden />;
+const TYPE_ICONS = { submission: MapPinPlus, improvement: PencilLine, report: Flag } satisfies Record<ItemType, unknown>;
+
+/** The first items in the moderation queue and the data sources that wait, each opening the work directly. */
+function Workplace({ todo }: { todo?: Todo }) {
+    const { t, i18n } = useTranslation('backend/dashboard');
+    const { t: tModeration } = useTranslation('backend/moderation');
+    const ago = useAgo();
+    if (!todo) return null;
+    const { moderation, queue, sources } = todo;
+
+    return (
+        <div className="flex flex-col gap-10">
+            {moderation && (
+                <section aria-labelledby="queue-title" className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h2 id="queue-title" className="text-sm font-semibold">
+                            {t('todo.queue_title')}
+                            {moderation.total > 0 && (
+                                <span className="ml-2 font-normal text-muted-foreground">
+                                    {[
+                                        t('todo.queue_count', { count: moderation.total }),
+                                        moderation.oldest && t('todo.oldest', { ago: ago(moderation.oldest) }),
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' · ')}
+                                </span>
+                            )}
+                        </h2>
+                        {moderation.total > 0 && (
+                            <Button asChild size="sm">
+                                <Link href={app.moderation.index()}>
+                                    {t('todo.review_all')}
+                                    <ArrowRight />
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                    {queue.length === 0 ? (
+                        <p className="rounded-lg border border-dashed px-5 py-8 text-center text-sm text-muted-foreground">
+                            {t('todo.moderation_done')}
+                        </p>
+                    ) : (
+                        <ul className="divide-y overflow-hidden rounded-lg border">
+                            {queue.map((item) => {
+                                const Icon = TYPE_ICONS[item.type];
+                                return (
+                                    <li key={item.key}>
+                                        <Link
+                                            href={item.url}
+                                            className={cn(
+                                                'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 border-l-3 px-4 py-3 text-sm hover:bg-muted/50 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto_1rem] sm:gap-4',
+                                                item.priority === 'high' ? 'border-l-orange-500' : 'border-l-transparent',
+                                            )}
+                                        >
+                                            <span className="inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
+                                                <Icon className="size-3" aria-hidden />
+                                                {tModeration(`types.${item.type}`)}
+                                            </span>
+                                            <span className="order-last col-span-2 min-w-0 sm:order-none sm:col-span-1 sm:truncate">
+                                                <span className="font-medium">{item.street || tModeration('no_address')}</span>
+                                                <span className="text-muted-foreground">
+                                                    {[item.municipality, item.contributor].filter(Boolean).map((part) => ` · ${part}`)}
+                                                </span>
+                                                {(item.reports ?? 0) > 1 && (
+                                                    <span className="ml-2 rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                                                        {tModeration('flags.reports', { count: item.reports })}
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <span className="justify-self-end text-muted-foreground sm:justify-self-auto">
+                                                {ago(item.waiting_since)}
+                                            </span>
+                                            <ChevronRight className="hidden size-4 text-muted-foreground sm:block" aria-hidden />
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                    {moderation.total > queue.length && (
+                        <p className="text-sm text-muted-foreground">
+                            {moderation.high > 0 && <Flag className="mr-1 inline size-3.5 -translate-y-px text-orange-500" aria-hidden />}
+                            {t('todo.more_items', { count: moderation.total - queue.length })} ·{' '}
+                            {(['submission', 'improvement', 'report'] as const)
+                                .filter((type) => moderation.types[type])
+                                .map((type) => t(`todo.types.${type}`, { count: moderation.types[type] }))
+                                .join(', ')}
+                        </p>
+                    )}
+                </section>
+            )}
+
+            {sources.total > 0 && (
+                <section aria-labelledby="sources-title" className="flex flex-col gap-2">
+                    <h2 id="sources-title" className="text-sm font-semibold">
+                        {t('todo.sources_title')}
+                    </h2>
+                    <ul>
+                        {sources.items.map((source) => (
+                            <li key={source.id} className="grid grid-cols-[0.5rem_minmax(0,1fr)_auto] items-center gap-4 border-t py-3 last:border-b">
+                                <span
+                                    className={cn('size-2 rounded-full', source.status === 'awaiting_review' ? 'bg-blue-600' : 'bg-amber-500')}
+                                    aria-hidden
+                                />
+                                <span className="min-w-0 text-sm">
+                                    <span className="block font-medium">{source.name}</span>
+                                    <span className="text-muted-foreground">
+                                        {t(`todo.source.${source.status}`)}
+                                        {source.since &&
+                                            ` · ${new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long' }).format(new Date(source.since))}`}
+                                    </span>
+                                </span>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link
+                                        href={source.import_id ? importShow(source.import_id) : municipalImports({ query: { status: 'attention' } })}
+                                    >
+                                        {t('todo.check')}
+                                    </Link>
+                                </Button>
+                            </li>
+                        ))}
+                    </ul>
+                    {sources.total > sources.items.length && (
+                        <Link
+                            href={municipalImports({ query: { status: 'attention' } })}
+                            className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                        >
+                            {t('todo.more_sources', { count: sources.total - sources.items.length })}
+                        </Link>
+                    )}
+                </section>
+            )}
+        </div>
+    );
 }
 
 const TONES = {
-    positive: { className: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300', icon: Check },
-    pending: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300', icon: Plus },
-    negative: { className: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300', icon: X },
-    improvement: { className: 'bg-muted text-muted-foreground', icon: Pencil },
-    saved: { className: 'bg-muted text-muted-foreground', icon: Heart },
-    neutral: { className: 'bg-muted text-muted-foreground', icon: Flag },
+    positive: 'bg-green-600',
+    pending: 'bg-amber-500',
+    negative: 'bg-red-600',
+    improvement: 'bg-muted-foreground/50',
+    saved: 'bg-muted-foreground/50',
+    neutral: 'bg-muted-foreground/50',
 } as const;
 
 /** How one event reads: its sentence, an optional detail and the tone of its marker. */
@@ -367,7 +492,8 @@ function useEventText() {
     };
 }
 
-function ActivityTimeline({ events }: { events: ActivityEvent[] }) {
+/** Recent events as a compact list: a coloured dot for the outcome, the sentence and when. */
+function ActivityList({ events }: { events: ActivityEvent[] }) {
     const { t } = useTranslation('backend/dashboard');
     const ago = useAgo();
     const describe = useEventText();
@@ -378,21 +504,14 @@ function ActivityTimeline({ events }: { events: ActivityEvent[] }) {
 
     return (
         <ol>
-            {events.map((event, index) => {
+            {events.map((event) => {
                 const { text, detail, tone } = describe(event);
-                const { className, icon: Icon } = TONES[tone];
                 const sentence = <span className={cn('text-sm', event.unread && 'font-medium')}>{text}</span>;
 
                 return (
-                    <li
-                        key={event.key}
-                        className="relative grid grid-cols-[2rem_minmax(0,1fr)] gap-3 pb-6 last:pb-0 sm:grid-cols-[2rem_minmax(0,1fr)_auto]"
-                    >
-                        {index < events.length - 1 && <span className="absolute top-8 bottom-0 left-4 w-px bg-border" aria-hidden />}
-                        <span className={cn('flex size-8 items-center justify-center rounded-full', className)} aria-hidden>
-                            <Icon className="size-4" />
-                        </span>
-                        <span className="flex min-w-0 flex-col gap-0.5 pt-1.5">
+                    <li key={event.key} className="grid grid-cols-[0.5rem_minmax(0,1fr)] gap-3 border-t py-2.5">
+                        <span className={cn('mt-1.5 size-2 rounded-full', TONES[tone])} aria-hidden />
+                        <span className="flex min-w-0 flex-col">
                             {event.url ? (
                                 <a href={event.url} className="hover:underline hover:underline-offset-4">
                                     {sentence}
@@ -400,14 +519,8 @@ function ActivityTimeline({ events }: { events: ActivityEvent[] }) {
                             ) : (
                                 sentence
                             )}
-                            {detail && <span className="text-sm text-muted-foreground">{detail}</span>}
-                            <time dateTime={event.at} className="text-xs text-muted-foreground sm:hidden">
-                                {ago(event.at)}
-                            </time>
+                            <span className="text-xs text-muted-foreground">{[detail, ago(event.at)].filter(Boolean).join(' · ')}</span>
                         </span>
-                        <time dateTime={event.at} className="hidden pt-1.5 text-xs whitespace-nowrap text-muted-foreground sm:block" aria-hidden>
-                            {ago(event.at)}
-                        </time>
                     </li>
                 );
             })}
@@ -415,15 +528,32 @@ function ActivityTimeline({ events }: { events: ActivityEvent[] }) {
     );
 }
 
-function ActivitySkeleton() {
+function FavoriteList({ favorites }: { favorites: Favorite[] }) {
+    const { t } = useTranslation('backend/dashboard');
+
+    if (favorites.length === 0) {
+        return <p className="border-t py-4 text-sm text-muted-foreground">{t('favorites.empty')}</p>;
+    }
+
     return (
-        <div className="flex flex-col gap-6" aria-hidden>
-            {[0, 1, 2].map((row) => (
-                <div key={row} className="flex animate-pulse items-center gap-3">
-                    <span className="size-8 rounded-full bg-muted" />
-                    <span className="h-3 w-2/3 rounded bg-muted" />
-                </div>
+        <ul>
+            {favorites.map((favorite) => (
+                <li key={favorite.favorite_id} className="flex items-baseline justify-between gap-3 border-t py-2.5 text-sm">
+                    <span className="min-w-0 truncate">
+                        <span className="font-medium">{favorite.title || t('favorites.untitled')}</span>
+                        {(favorite.city ?? favorite.municipality?.name) && (
+                            <span className="text-muted-foreground"> · {favorite.city ?? favorite.municipality?.name}</span>
+                        )}
+                    </span>
+                    {favorite.map_url ? (
+                        <a href={favorite.map_url} className="shrink-0 text-muted-foreground underline underline-offset-4 hover:text-foreground">
+                            {t('favorites.view_on_map')}
+                        </a>
+                    ) : (
+                        <span className="shrink-0 text-muted-foreground">{t('favorites.unavailable')}</span>
+                    )}
+                </li>
             ))}
-        </div>
+        </ul>
     );
 }

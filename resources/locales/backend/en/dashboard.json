@@ -7,14 +7,8 @@
     },
     "add_location": "Add parking space",
     "todo": {
-        "title": "To do",
-        "moderation_one": "{{count}} item waits in moderation",
-        "moderation_other": "{{count}} items wait in moderation",
         "moderation_done": "Nothing to review in moderation",
-        "high_one": "{{count}} high priority",
-        "high_other": "{{count}} high priority",
         "oldest": "oldest {{ago}}",
-        "review": "Review",
         "check": "Check",
         "types": {
             "submission_one": "{{count}} new",
@@ -25,15 +19,21 @@
             "report_other": "{{count}} gone"
         },
         "source": {
-            "awaiting_review": "{{name}} has a new delivery",
-            "awaiting_approval": "{{name}} awaits approval",
-            "reapproval": "{{name}} changed and awaits approval",
-            "intake_problem": "The delivery from {{name}} could not be processed",
-            "overdue": "The delivery from {{name}} is overdue",
-            "since": "Since {{date}}"
+            "awaiting_review": "New delivery waits for review",
+            "awaiting_approval": "New source waits for approval",
+            "reapproval": "Changed source waits for approval",
+            "intake_problem": "Delivery could not be processed",
+            "overdue": "Delivery is overdue"
         },
         "more_sources_one": "And {{count}} more data source",
-        "more_sources_other": "And {{count}} more data sources"
+        "more_sources_other": "And {{count}} more data sources",
+        "queue_title": "Waiting for you in moderation",
+        "queue_count_one": "{{count}} item",
+        "queue_count_other": "{{count}} items",
+        "review_all": "Review all",
+        "more_items_one": "{{count}} more item",
+        "more_items_other": "{{count}} more items",
+        "sources_title": "Data sources that need attention"
     },
     "activity": {
         "title": "Recent activity",
@@ -81,6 +81,27 @@
         "published": "On the map",
         "pending": "Pending",
         "confirmed": "Confirmed",
-        "my_locations": "My locations"
+        "my_locations": "My locations",
+        "hint": {
+            "added": "parking spaces you shared",
+            "published": "visible to everyone",
+            "pending": "waiting for a moderator",
+            "confirmed": "times you confirmed a place is still there"
+        }
+    },
+    "profile": {
+        "since": "member since {{date}}"
+    },
+    "map": {
+        "title": "Your map",
+        "open": "Open the map",
+        "legend": {
+            "published_one": "On the map ({{count}})",
+            "published_other": "On the map ({{count}})",
+            "pending_one": "Pending ({{count}})",
+            "pending_other": "Pending ({{count}})",
+            "favorites_one": "Favorite ({{count}})",
+            "favorites_other": "Favorites ({{count}})"
+        }
     }
 }

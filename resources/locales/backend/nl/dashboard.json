@@ -7,14 +7,8 @@
     },
     "add_location": "Parkeerplaats toevoegen",
     "todo": {
-        "title": "Te doen",
-        "moderation_one": "{{count}} item wacht in moderatie",
-        "moderation_other": "{{count}} items wachten in moderatie",
         "moderation_done": "Niets te beoordelen in moderatie",
-        "high_one": "{{count}} met hoge prioriteit",
-        "high_other": "{{count}} met hoge prioriteit",
         "oldest": "oudste {{ago}}",
-        "review": "Beoordelen",
         "check": "Controleren",
         "types": {
             "submission_one": "{{count}} nieuwe",
@@ -25,15 +19,21 @@
             "report_other": "{{count}} verdwenen"
         },
         "source": {
-            "awaiting_review": "{{name}} heeft een nieuwe levering",
-            "awaiting_approval": "{{name}} wacht op goedkeuring",
-            "reapproval": "{{name}} is gewijzigd en wacht op goedkeuring",
-            "intake_problem": "Levering van {{name}} kon niet worden verwerkt",
-            "overdue": "Levering van {{name}} is te laat",
-            "since": "Sinds {{date}}"
+            "awaiting_review": "Nieuwe levering wacht op controle",
+            "awaiting_approval": "Nieuwe bron wacht op goedkeuring",
+            "reapproval": "Gewijzigde bron wacht op goedkeuring",
+            "intake_problem": "Levering kon niet worden verwerkt",
+            "overdue": "Levering is te laat"
         },
         "more_sources_one": "En nog {{count}} databron",
-        "more_sources_other": "En nog {{count}} databronnen"
+        "more_sources_other": "En nog {{count}} databronnen",
+        "queue_title": "Wacht op jou in moderatie",
+        "queue_count_one": "{{count}} item",
+        "queue_count_other": "{{count}} items",
+        "review_all": "Alles beoordelen",
+        "more_items_one": "Nog {{count}} item",
+        "more_items_other": "Nog {{count}} items",
+        "sources_title": "Databronnen die aandacht vragen"
     },
     "activity": {
         "title": "Recente activiteit",
@@ -81,6 +81,27 @@
         "published": "Op de kaart",
         "pending": "In afwachting",
         "confirmed": "Bevestigd",
-        "my_locations": "Mijn locaties"
+        "my_locations": "Mijn locaties",
+        "hint": {
+            "added": "parkeerplaatsen die je deelde",
+            "published": "zichtbaar voor iedereen",
+            "pending": "wachten op een moderator",
+            "confirmed": "keer liet je weten dat een plek er nog is"
+        }
+    },
+    "profile": {
+        "since": "lid sinds {{date}}"
+    },
+    "map": {
+        "title": "Jouw kaart",
+        "open": "Open de kaart",
+        "legend": {
+            "published_one": "Op de kaart ({{count}})",
+            "published_other": "Op de kaart ({{count}})",
+            "pending_one": "In afwachting ({{count}})",
+            "pending_other": "In afwachting ({{count}})",
+            "favorites_one": "Favoriet ({{count}})",
+            "favorites_other": "Favorieten ({{count}})"
+        }
     }
 }
