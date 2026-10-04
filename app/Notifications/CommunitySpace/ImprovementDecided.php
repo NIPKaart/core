@@ -19,6 +19,7 @@ class ImprovementDecided extends Notification implements ShouldQueue
 
     /**
      * @param  string|null  $reason  the ImprovementRejectionReason value, only for a rejection
+     * @param  list<string>  $changes  the change groups that were applied, only for an approval
      */
     public function __construct(
         public string $spaceId,
@@ -27,6 +28,7 @@ class ImprovementDecided extends Notification implements ShouldQueue
         public string $placeUrl,
         public ?string $reason = null,
         public ?int $actedByUserId = null,
+        public array $changes = [],
     ) {}
 
     /**
@@ -63,6 +65,7 @@ class ImprovementDecided extends Notification implements ShouldQueue
             'params' => [
                 'space_label' => $this->spaceLabel,
                 'reason' => $this->reason !== null ? "improvement.{$this->reason}" : null,
+                'changes' => $this->changes,
             ],
             'url' => $this->placeUrl,
             'meta' => [

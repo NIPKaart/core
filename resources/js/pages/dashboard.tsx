@@ -1,4 +1,4 @@
-import { index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
+import { show as importShow, index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ type ItemType = 'submission' | 'improvement' | 'report';
 
 type Todo = {
     moderation: { total: number; high: number; types: Partial<Record<ItemType, number>>; oldest: string | null } | null;
-    sources: { total: number; names: string[] };
+    sources: { total: number; items: { id: number; name: string; status: string; import_id: number | null; since: string | null }[] };
 };
 
 type ActivityEvent = {
@@ -27,7 +27,7 @@ type ActivityEvent = {
     at: string;
     unread: boolean;
     url: string | null;
-    params: { space_label?: string | null; status?: string; new_status?: string; reason?: string };
+    params: { space_label?: string | null; status?: string; new_status?: string; reason?: string; changes?: string[] };
 };
 
 type Favorite = {
@@ -179,7 +179,7 @@ function useAgo() {
 
 /** Work that waits for this person, each row with one action. Hidden for people without such work. */
 function TodoList({ todo }: { todo?: Todo }) {
-    const { t } = useTranslation('backend/dashboard');
+    const { t, i18n } = useTranslation('backend/dashboard');
     const ago = useAgo();
     if (!todo || (todo.moderation === null && todo.sources.total === 0)) return null;
 
@@ -227,13 +227,38 @@ function TodoList({ todo }: { todo?: Todo }) {
                         }
                     />
                 )}
-                {todo.sources.total > 0 && (
+                {todo.sources.items.map((source) => (
                     <TodoRow
+                        key={source.id}
                         icon={Building}
-                        title={t('todo.sources', { count: todo.sources.total })}
-                        description={<span className="text-sm text-muted-foreground">{todo.sources.names.join(', ')}</span>}
-                        action={<TodoAction href={municipalImports({ query: { status: 'attention' } })}>{t('todo.check')}</TodoAction>}
+                        title={t(`todo.source.${source.status}`, { name: source.name })}
+                        description={
+                            source.since && (
+                                <span className="text-sm text-muted-foreground">
+                                    {t('todo.source.since', {
+                                        date: new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long' }).format(
+                                            new Date(source.since),
+                                        ),
+                                    })}
+                                </span>
+                            )
+                        }
+                        action={
+                            <TodoAction href={source.import_id ? importShow(source.import_id) : municipalImports({ query: { status: 'attention' } })}>
+                                {t('todo.check')}
+                            </TodoAction>
+                        }
                     />
+                ))}
+                {todo.sources.total > todo.sources.items.length && (
+                    <li className="px-5 py-3 text-sm">
+                        <Link
+                            href={municipalImports({ query: { status: 'attention' } })}
+                            className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                        >
+                            {t('todo.more_sources', { count: todo.sources.total - todo.sources.items.length })}
+                        </Link>
+                    </li>
                 )}
             </ul>
         </section>
@@ -288,6 +313,16 @@ const TONES = {
 function useEventText() {
     const { t } = useTranslation('backend/dashboard');
     const { t: tNotification } = useTranslation('global/notification');
+    const { t: tModeration, i18n } = useTranslation('backend/moderation');
+    /** "Gewijzigd: vak en onderbord." for the change groups an approved improvement applied. */
+    const changed = (groups?: string[]) =>
+        groups?.length
+            ? t('activity.changed', {
+                  fields: new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
+                      groups.map((group) => tModeration(`groups.${group}`).toLowerCase()),
+                  ),
+              })
+            : null;
 
     return (event: ActivityEvent): { text: string; detail: string | null; tone: keyof typeof TONES } => {
         const place = event.params.space_label || t('activity.unknown_place');
@@ -315,7 +350,7 @@ function useEventText() {
                       : { text: t('activity.status_changed', { place }), detail: null, tone: 'neutral' };
             }
             case 'community.improvement_approved':
-                return { text: t('activity.improvement_approved', { place }), detail: null, tone: 'positive' };
+                return { text: t('activity.improvement_approved', { place }), detail: changed(event.params.changes), tone: 'positive' };
             case 'community.improvement_rejected':
                 return { text: t('activity.improvement_rejected', { place }), detail: reason, tone: 'negative' };
             case 'report.place_kept':

@@ -15,8 +15,6 @@
         "high_other": "{{count}} high priority",
         "oldest": "oldest {{ago}}",
         "review": "Review",
-        "sources_one": "{{count}} data source needs attention",
-        "sources_other": "{{count}} data sources need attention",
         "check": "Check",
         "types": {
             "submission_one": "{{count}} new",
@@ -25,7 +23,17 @@
             "improvement_other": "{{count}} improvements",
             "report_one": "{{count}} gone",
             "report_other": "{{count}} gone"
-        }
+        },
+        "source": {
+            "awaiting_review": "{{name}} has a new delivery",
+            "awaiting_approval": "{{name}} awaits approval",
+            "reapproval": "{{name}} changed and awaits approval",
+            "intake_problem": "The delivery from {{name}} could not be processed",
+            "overdue": "The delivery from {{name}} is overdue",
+            "since": "Since {{date}}"
+        },
+        "more_sources_one": "And {{count}} more data source",
+        "more_sources_other": "And {{count}} more data sources"
     },
     "activity": {
         "title": "Recent activity",
@@ -50,7 +58,8 @@
         "report_kept_detail": "The parking space stays on the map.",
         "report_removed": "{{place}} was taken off the map after your report",
         "deleted": "{{place}} was deleted",
-        "restored": "{{place}} was restored"
+        "restored": "{{place}} was restored",
+        "changed": "Changed: {{fields}}."
     },
     "favorites": {
         "title": "Favorites",

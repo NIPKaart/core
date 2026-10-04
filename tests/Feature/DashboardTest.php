@@ -43,7 +43,7 @@ test('a contributor sees their own figures and no work to do', function () {
             ->where('stats', ['added' => 2, 'published' => 1, 'pending' => 1, 'confirmed' => 2])
             ->where('hasTodo', false)
             ->missing('todo')
-            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'sources' => ['total' => 0, 'names' => []]])));
+            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'sources' => ['total' => 0, 'items' => []]])));
 });
 
 test('a moderator is pointed to the moderation queue', function () {
@@ -115,10 +115,13 @@ test('administrators see the data sources that need attention, moderators do not
 
     $this->actingAs($admin)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->where('todo.sources', ['total' => 1, 'names' => ['Gemeente Utrecht']])));
+            ->where('todo.sources.total', 1)
+            ->where('todo.sources.items.0.name', 'Gemeente Utrecht')
+            ->where('todo.sources.items.0.status', 'awaiting_approval')
+            ->where('todo.sources.items.0.import_id', null)));
     $this->actingAs($moderator)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->where('todo.sources', ['total' => 0, 'names' => []])));
+            ->where('todo.sources', ['total' => 0, 'items' => []])));
 });
 
 test('a saved place the map no longer shows is not named or located', function () {
@@ -155,7 +158,7 @@ test('only the five newest favorites of the person are listed', function () {
 
 test('outcomes stay visible behind many operational notifications, and others\' notifications never show', function () {
     $admin = tap(User::factory()->create())->assignRole(UserRole::ADMIN);
-    notifyAbout($admin, 'community.improvement_approved', ['space_label' => 'Kerkstraat 8'], '2026-10-01 09:00:00');
+    notifyAbout($admin, 'community.improvement_approved', ['space_label' => 'Kerkstraat 8', 'changes' => ['orientation']], '2026-10-01 09:00:00');
     foreach (range(0, 59) as $minute) {
         notifyAbout($admin, 'community.space_submitted', ['space_label' => "Inzending {$minute}"], sprintf('2026-10-02 09:%02d:00', $minute));
     }
@@ -164,5 +167,6 @@ test('outcomes stay visible behind many operational notifications, and others\' 
     $this->actingAs($admin)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('activity', 1)
-            ->where('activity.0.kind', 'community.improvement_approved')));
+            ->where('activity.0.kind', 'community.improvement_approved')
+            ->where('activity.0.params.changes', ['orientation'])));
 });

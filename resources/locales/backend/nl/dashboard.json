@@ -15,8 +15,6 @@
         "high_other": "{{count}} met hoge prioriteit",
         "oldest": "oudste {{ago}}",
         "review": "Beoordelen",
-        "sources_one": "{{count}} databron vraagt aandacht",
-        "sources_other": "{{count}} databronnen vragen aandacht",
         "check": "Controleren",
         "types": {
             "submission_one": "{{count}} nieuwe",
@@ -25,7 +23,17 @@
             "improvement_other": "{{count}} verbeteringen",
             "report_one": "{{count}} verdwenen",
             "report_other": "{{count}} verdwenen"
-        }
+        },
+        "source": {
+            "awaiting_review": "{{name}} heeft een nieuwe levering",
+            "awaiting_approval": "{{name}} wacht op goedkeuring",
+            "reapproval": "{{name}} is gewijzigd en wacht op goedkeuring",
+            "intake_problem": "Levering van {{name}} kon niet worden verwerkt",
+            "overdue": "Levering van {{name}} is te laat",
+            "since": "Sinds {{date}}"
+        },
+        "more_sources_one": "En nog {{count}} databron",
+        "more_sources_other": "En nog {{count}} databronnen"
     },
     "activity": {
         "title": "Recente activiteit",
@@ -50,7 +58,8 @@
         "report_kept_detail": "De parkeerplaats blijft op de kaart.",
         "report_removed": "{{place}} is van de kaart gehaald na je melding",
         "deleted": "{{place}} is verwijderd",
-        "restored": "{{place}} is teruggezet"
+        "restored": "{{place}} is teruggezet",
+        "changed": "Gewijzigd: {{fields}}."
     },
     "favorites": {
         "title": "Favorieten",

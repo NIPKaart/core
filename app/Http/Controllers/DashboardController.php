@@ -40,7 +40,13 @@ class DashboardController extends Controller
                     'moderation' => $moderates ? $queue->summary($user) : null,
                     'sources' => [
                         'total' => $attention->count(),
-                        'names' => $attention->take(3)->pluck('name')->all(),
+                        'items' => $attention->take(3)->map(fn (array $source) => [
+                            'id' => $source['id'],
+                            'name' => $source['name'],
+                            'status' => $source['status'],
+                            'import_id' => $source['status'] === 'awaiting_review' ? ($source['latest_import']['id'] ?? null) : null,
+                            'since' => $source['latest_import']['retrieved_at'] ?? $source['latest_delivery']['created_at'] ?? null,
+                        ])->values()->all(),
                     ],
                 ];
             }),
