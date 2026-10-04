@@ -189,6 +189,7 @@ final class ParkingSpaceImprovements
             ]),
             reason: $reason?->value,
             actedByUserId: $moderator->id,
+            changes: $reason === null ? $this->changeGroups($improvement->approved ?? []) : [],
         ));
     }
 

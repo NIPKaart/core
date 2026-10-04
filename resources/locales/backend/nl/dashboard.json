@@ -1,14 +1,126 @@
 {
-    "intro": "Kies wat je wilt beheren of bekijken.",
-    "parking": "Parkeergegevens",
-    "community_hint": "Bekijk en beheer bijdragen van gebruikers.",
-    "municipal_hint": "Beoordeel leveringen en beheer bronlocaties.",
-    "municipal_locations_hint": "Bekijk en beheer gemeentelijke locaties.",
-    "offstreet_hint": "Beheer parkeergarages en voorzieningen.",
-    "rules_hint": "Beheer parkeerregels en beperkingen.",
-    "users_hint": "Bekijk en beheer gebruikersaccounts.",
-    "roles_hint": "Beheer rollen en rechten.",
-    "locations_hint": "Bekijk je eigen bijdragen.",
-    "favorites_hint": "Vind je opgeslagen locaties.",
-    "map_hint": "Bekijk parkeerlocaties op de kaart."
+    "title": "Dashboard",
+    "greeting": {
+        "morning": "Goedemorgen, {{name}}",
+        "afternoon": "Goedemiddag, {{name}}",
+        "evening": "Goedenavond, {{name}}"
+    },
+    "add_location": "Parkeerplaats toevoegen",
+    "todo": {
+        "moderation_done": "Niets te beoordelen in moderatie",
+        "oldest": "oudste {{ago}}",
+        "check": "Controleren",
+        "types": {
+            "submission_one": "{{count}} nieuwe",
+            "submission_other": "{{count}} nieuwe",
+            "improvement_one": "{{count}} verbetering",
+            "improvement_other": "{{count}} verbeteringen",
+            "report_one": "{{count}} verdwenen",
+            "report_other": "{{count}} verdwenen"
+        },
+        "source": {
+            "awaiting_review": "Nieuwe levering wacht op controle",
+            "awaiting_approval": "Nieuwe bron wacht op goedkeuring",
+            "reapproval": "Gewijzigde bron wacht op goedkeuring",
+            "intake_problem": "Levering kon niet worden verwerkt",
+            "overdue": "Levering is te laat"
+        },
+        "more_sources_one": "En nog {{count}} databron",
+        "more_sources_other": "En nog {{count}} databronnen",
+        "queue_title": "Wacht op jou in moderatie",
+        "queue_count_one": "{{count}} item",
+        "queue_count_other": "{{count}} items",
+        "review_all": "Alles beoordelen",
+        "more_items_one": "Nog {{count}} item",
+        "more_items_other": "Nog {{count}} items",
+        "sources_title": "Databronnen die aandacht vragen",
+        "high": "Hoge prioriteit",
+        "by": "door {{name}}",
+        "in_total": "in totaal {{types}}",
+        "sources_hint": "Alleen zichtbaar voor beheerders",
+        "source_tag": {
+            "awaiting_review": "Levering",
+            "awaiting_approval": "Goedkeuring",
+            "reapproval": "Goedkeuring",
+            "intake_problem": "Probleem",
+            "overdue": "Te laat"
+        }
+    },
+    "activity": {
+        "title": "Recente activiteit",
+        "all": "Alle notificaties",
+        "empty": "Nog geen activiteit. Voeg een parkeerplaats toe of bewaar een favoriet, dan zie je hier wat ermee gebeurt.",
+        "unknown_place": "Een parkeerplaats",
+        "added": "Je voegde {{place}} toe",
+        "status": {
+            "pending": "Wacht op een moderator.",
+            "approved": "Staat op de kaart.",
+            "rejected": "Afgewezen."
+        },
+        "proposed": "Je stelde een verbetering voor bij {{place}}",
+        "saved": "Je bewaarde {{place}}",
+        "published": "{{place}} staat op de kaart",
+        "published_detail": "Je inzending is goedgekeurd.",
+        "rejected": "Je inzending {{place}} is afgewezen",
+        "status_changed": "De status van {{place}} is gewijzigd",
+        "improvement_approved": "Je verbetering bij {{place}} is overgenomen",
+        "improvement_rejected": "Je verbetering bij {{place}} is afgewezen",
+        "report_kept": "Je melding over {{place}} is bekeken",
+        "report_kept_detail": "De parkeerplaats blijft op de kaart.",
+        "report_removed": "{{place}} is van de kaart gehaald na je melding",
+        "deleted": "{{place}} is verwijderd",
+        "restored": "{{place}} is teruggezet",
+        "changed": "Gewijzigd: {{fields}}."
+    },
+    "favorites": {
+        "title": "Favorieten",
+        "all": "Alles bekijken",
+        "empty": "Nog geen favorieten. Bewaar een parkeerplaats op de kaart om hem hier terug te vinden.",
+        "untitled": "Parkeerplaats zonder adres",
+        "view_on_map": "Bekijk op kaart",
+        "sources": {
+            "Community": "Community",
+            "Municipal": "Gemeentelijke data",
+            "Offstreet": "Parkeergarage",
+            "Unknown": "Onbekend"
+        },
+        "unavailable": "Niet meer op de kaart"
+    },
+    "stats": {
+        "title": "Jouw bijdragen",
+        "added": "Toegevoegd",
+        "published": "Op de kaart",
+        "pending": "In afwachting",
+        "confirmed": "Bevestigd",
+        "my_locations": "Mijn locaties",
+        "hint": {
+            "added": "parkeerplaatsen die je deelde",
+            "published": "zichtbaar voor iedereen",
+            "pending": "wachten op een moderator",
+            "confirmed": "keer liet je weten dat een plek er nog is"
+        }
+    },
+    "profile": {
+        "since": "lid sinds {{date}}"
+    },
+    "map": {
+        "title": "Jouw kaart",
+        "open": "Open de kaart",
+        "legend": {
+            "published": "Op de kaart",
+            "pending": "In afwachting",
+            "favorites": "Favoriet"
+        }
+    },
+    "summary": {
+        "items_one": "{{count}} item",
+        "items_other": "{{count}} items",
+        "sources_one": "{{count}} databron",
+        "sources_other": "{{count}} databronnen",
+        "waiting_one": "{{what}} wacht op je",
+        "waiting_other": "{{what}} wachten op je",
+        "nothing": "Er wacht niets op je",
+        "contributed_one": "Je deelde {{count}} parkeerplaats, {{published}} op de kaart",
+        "contributed_other": "Je deelde {{count}} parkeerplaatsen, {{published}} op de kaart"
+    }
 }

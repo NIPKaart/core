@@ -250,6 +250,7 @@ describe('moderating', function () {
             ->assertSessionHasNoErrors();
 
         Notification::assertSentTo($this->user, ImprovementDecided::class, fn (ImprovementDecided $notification, array $channels) => $notification->approved
+            && $notification->changes === ['orientation']
             && $notification->spaceLabel === 'Breestraat'
             && $notification->placeUrl === route('location-map', ['place' => "community:{$this->space->id}", 'at' => '52.37000,4.90000'])
             && $channels === ['database', 'broadcast']);
