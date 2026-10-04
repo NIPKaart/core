@@ -33,7 +33,18 @@
         "review_all": "Alles beoordelen",
         "more_items_one": "Nog {{count}} item",
         "more_items_other": "Nog {{count}} items",
-        "sources_title": "Databronnen die aandacht vragen"
+        "sources_title": "Databronnen die aandacht vragen",
+        "high": "Hoge prioriteit",
+        "by": "door {{name}}",
+        "in_total": "in totaal {{types}}",
+        "sources_hint": "Alleen zichtbaar voor beheerders",
+        "source_tag": {
+            "awaiting_review": "Levering",
+            "awaiting_approval": "Goedkeuring",
+            "reapproval": "Goedkeuring",
+            "intake_problem": "Probleem",
+            "overdue": "Te laat"
+        }
     },
     "activity": {
         "title": "Recente activiteit",
@@ -96,12 +107,20 @@
         "title": "Jouw kaart",
         "open": "Open de kaart",
         "legend": {
-            "published_one": "Op de kaart ({{count}})",
-            "published_other": "Op de kaart ({{count}})",
-            "pending_one": "In afwachting ({{count}})",
-            "pending_other": "In afwachting ({{count}})",
-            "favorites_one": "Favoriet ({{count}})",
-            "favorites_other": "Favorieten ({{count}})"
+            "published": "Op de kaart",
+            "pending": "In afwachting",
+            "favorites": "Favoriet"
         }
+    },
+    "summary": {
+        "items_one": "{{count}} item",
+        "items_other": "{{count}} items",
+        "sources_one": "{{count}} databron",
+        "sources_other": "{{count}} databronnen",
+        "waiting_one": "{{what}} wacht op je",
+        "waiting_other": "{{what}} wachten op je",
+        "nothing": "Er wacht niets op je",
+        "contributed_one": "Je deelde {{count}} parkeerplaats, {{published}} op de kaart",
+        "contributed_other": "Je deelde {{count}} parkeerplaatsen, {{published}} op de kaart"
     }
 }

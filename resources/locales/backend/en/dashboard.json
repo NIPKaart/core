@@ -33,7 +33,18 @@
         "review_all": "Review all",
         "more_items_one": "{{count}} more item",
         "more_items_other": "{{count}} more items",
-        "sources_title": "Data sources that need attention"
+        "sources_title": "Data sources that need attention",
+        "high": "High priority",
+        "by": "by {{name}}",
+        "in_total": "{{types}} in total",
+        "sources_hint": "Only visible to administrators",
+        "source_tag": {
+            "awaiting_review": "Delivery",
+            "awaiting_approval": "Approval",
+            "reapproval": "Approval",
+            "intake_problem": "Problem",
+            "overdue": "Overdue"
+        }
     },
     "activity": {
         "title": "Recent activity",
@@ -96,12 +107,20 @@
         "title": "Your map",
         "open": "Open the map",
         "legend": {
-            "published_one": "On the map ({{count}})",
-            "published_other": "On the map ({{count}})",
-            "pending_one": "Pending ({{count}})",
-            "pending_other": "Pending ({{count}})",
-            "favorites_one": "Favorite ({{count}})",
-            "favorites_other": "Favorites ({{count}})"
+            "published": "On the map",
+            "pending": "Pending",
+            "favorites": "Favorite"
         }
+    },
+    "summary": {
+        "items_one": "{{count}} item",
+        "items_other": "{{count}} items",
+        "sources_one": "{{count}} data source",
+        "sources_other": "{{count}} data sources",
+        "waiting_one": "{{what}} is waiting for you",
+        "waiting_other": "{{what}} are waiting for you",
+        "nothing": "Nothing is waiting for you",
+        "contributed_one": "You shared {{count}} parking space, {{published}} on the map",
+        "contributed_other": "You shared {{count}} parking spaces, {{published}} on the map"
     }
 }
