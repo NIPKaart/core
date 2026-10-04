@@ -124,6 +124,39 @@ final class ModerationQueue
             + (in_array(self::REPORT, $types, true) ? $this->reports->openPlaceCount() : 0);
     }
 
+    /**
+     * The queue at a glance, for pointing someone to it: how much waits, how urgent and since when.
+     *
+     * Counted with aggregates rather than by building the queue; reports are the only high-priority items.
+     *
+     * @return array{total: int, high: int, types: array<string, int>, oldest: ?string}
+     */
+    public function summary(User $user): array
+    {
+        $types = $this->typesFor($user);
+        $waiting = collect([
+            self::SUBMISSION => fn () => ParkingSpace::where('status', ParkingStatus::PENDING)
+                ->selectRaw('count(*) as total, min(created_at) as oldest')->toBase()->first(),
+            self::IMPROVEMENT => fn () => ParkingSpaceImprovement::pending()->whereHas('parkingSpace')
+                ->selectRaw('count(*) as total, min(created_at) as oldest')->toBase()->first(),
+            self::REPORT => fn () => (object) [
+                'total' => $this->reports->openPlaceCount(),
+                'oldest' => ParkingPlaceReport::open()
+                    ->where(fn (Builder $reports) => $reports->whereNull('parking_space_id')->orWhereHas('parkingSpace'))
+                    ->min('created_at'),
+            ],
+        ])->only($types)->map(fn (callable $count) => $count());
+
+        $oldest = $waiting->pluck('oldest')->filter()->map(fn (mixed $at) => Carbon::parse($at))->min();
+
+        return [
+            'total' => (int) $waiting->sum('total'),
+            'high' => (int) ($waiting->get(self::REPORT)?->total ?? 0),
+            'types' => $waiting->map(fn (object $row) => (int) $row->total)->filter()->all(),
+            'oldest' => $oldest?->toIso8601String(),
+        ];
+    }
+
     public static function submissionKey(string $id): string
     {
         return self::SUBMISSION.":{$id}";

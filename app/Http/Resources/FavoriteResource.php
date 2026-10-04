@@ -2,10 +2,10 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\ParkingStatus;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
+use App\Services\UserActivity;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,11 +25,7 @@ class FavoriteResource extends JsonResource
             ParkingOffstreet::class => 'Offstreet',
         ];
 
-        $available = match (true) {
-            $favoritable instanceof ParkingSpace => $favoritable->status === ParkingStatus::APPROVED,
-            $favoritable instanceof ParkingMunicipal, $favoritable instanceof ParkingOffstreet => $favoritable->visibility,
-            default => false,
-        };
+        $available = $favoritable !== null && UserActivity::isPublic($favoritable);
 
         if (! $available) {
             $favoritable = null;

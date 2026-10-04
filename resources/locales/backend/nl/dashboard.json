@@ -1,14 +1,77 @@
 {
-    "intro": "Kies wat je wilt beheren of bekijken.",
-    "parking": "Parkeergegevens",
-    "community_hint": "Bekijk en beheer bijdragen van gebruikers.",
-    "municipal_hint": "Beoordeel leveringen en beheer bronlocaties.",
-    "municipal_locations_hint": "Bekijk en beheer gemeentelijke locaties.",
-    "offstreet_hint": "Beheer parkeergarages en voorzieningen.",
-    "rules_hint": "Beheer parkeerregels en beperkingen.",
-    "users_hint": "Bekijk en beheer gebruikersaccounts.",
-    "roles_hint": "Beheer rollen en rechten.",
-    "locations_hint": "Bekijk je eigen bijdragen.",
-    "favorites_hint": "Vind je opgeslagen locaties.",
-    "map_hint": "Bekijk parkeerlocaties op de kaart."
+    "title": "Dashboard",
+    "greeting": {
+        "morning": "Goedemorgen, {{name}}",
+        "afternoon": "Goedemiddag, {{name}}",
+        "evening": "Goedenavond, {{name}}"
+    },
+    "add_location": "Parkeerplaats toevoegen",
+    "todo": {
+        "title": "Te doen",
+        "moderation_one": "{{count}} item wacht in moderatie",
+        "moderation_other": "{{count}} items wachten in moderatie",
+        "moderation_done": "Niets te beoordelen in moderatie",
+        "high_one": "{{count}} met hoge prioriteit",
+        "high_other": "{{count}} met hoge prioriteit",
+        "oldest": "oudste {{ago}}",
+        "review": "Beoordelen",
+        "sources_one": "{{count}} databron vraagt aandacht",
+        "sources_other": "{{count}} databronnen vragen aandacht",
+        "check": "Controleren",
+        "types": {
+            "submission_one": "{{count}} nieuwe",
+            "submission_other": "{{count}} nieuwe",
+            "improvement_one": "{{count}} verbetering",
+            "improvement_other": "{{count}} verbeteringen",
+            "report_one": "{{count}} verdwenen",
+            "report_other": "{{count}} verdwenen"
+        }
+    },
+    "activity": {
+        "title": "Recente activiteit",
+        "all": "Alle notificaties",
+        "empty": "Nog geen activiteit. Voeg een parkeerplaats toe of bewaar een favoriet, dan zie je hier wat ermee gebeurt.",
+        "unknown_place": "Een parkeerplaats",
+        "added": "Je voegde {{place}} toe",
+        "status": {
+            "pending": "Wacht op een moderator.",
+            "approved": "Staat op de kaart.",
+            "rejected": "Afgewezen."
+        },
+        "proposed": "Je stelde een verbetering voor bij {{place}}",
+        "saved": "Je bewaarde {{place}}",
+        "published": "{{place}} staat op de kaart",
+        "published_detail": "Je inzending is goedgekeurd.",
+        "rejected": "Je inzending {{place}} is afgewezen",
+        "status_changed": "De status van {{place}} is gewijzigd",
+        "improvement_approved": "Je verbetering bij {{place}} is overgenomen",
+        "improvement_rejected": "Je verbetering bij {{place}} is afgewezen",
+        "report_kept": "Je melding over {{place}} is bekeken",
+        "report_kept_detail": "De parkeerplaats blijft op de kaart.",
+        "report_removed": "{{place}} is van de kaart gehaald na je melding",
+        "deleted": "{{place}} is verwijderd",
+        "restored": "{{place}} is teruggezet"
+    },
+    "favorites": {
+        "title": "Favorieten",
+        "all": "Alles bekijken",
+        "empty": "Nog geen favorieten. Bewaar een parkeerplaats op de kaart om hem hier terug te vinden.",
+        "untitled": "Parkeerplaats zonder adres",
+        "view_on_map": "Bekijk op kaart",
+        "sources": {
+            "Community": "Community",
+            "Municipal": "Gemeentelijke data",
+            "Offstreet": "Parkeergarage",
+            "Unknown": "Onbekend"
+        },
+        "unavailable": "Niet meer op de kaart"
+    },
+    "stats": {
+        "title": "Jouw bijdragen",
+        "added": "Toegevoegd",
+        "published": "Op de kaart",
+        "pending": "In afwachting",
+        "confirmed": "Bevestigd",
+        "my_locations": "Mijn locaties"
+    }
 }

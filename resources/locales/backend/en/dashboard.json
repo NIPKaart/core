@@ -1,14 +1,77 @@
 {
-    "intro": "Choose what you want to manage or explore.",
-    "parking": "Parking data",
-    "community_hint": "Review and manage community contributions.",
-    "municipal_hint": "Review deliveries and manage source locations.",
-    "municipal_locations_hint": "View and manage municipal locations.",
-    "offstreet_hint": "Manage parking garages and facilities.",
-    "rules_hint": "Manage parking rules and restrictions.",
-    "users_hint": "View and manage user accounts.",
-    "roles_hint": "Manage roles and permissions.",
-    "locations_hint": "View your contributions.",
-    "favorites_hint": "Find your saved locations.",
-    "map_hint": "Explore parking locations on the map."
+    "title": "Dashboard",
+    "greeting": {
+        "morning": "Good morning, {{name}}",
+        "afternoon": "Good afternoon, {{name}}",
+        "evening": "Good evening, {{name}}"
+    },
+    "add_location": "Add parking space",
+    "todo": {
+        "title": "To do",
+        "moderation_one": "{{count}} item waits in moderation",
+        "moderation_other": "{{count}} items wait in moderation",
+        "moderation_done": "Nothing to review in moderation",
+        "high_one": "{{count}} high priority",
+        "high_other": "{{count}} high priority",
+        "oldest": "oldest {{ago}}",
+        "review": "Review",
+        "sources_one": "{{count}} data source needs attention",
+        "sources_other": "{{count}} data sources need attention",
+        "check": "Check",
+        "types": {
+            "submission_one": "{{count}} new",
+            "submission_other": "{{count}} new",
+            "improvement_one": "{{count}} improvement",
+            "improvement_other": "{{count}} improvements",
+            "report_one": "{{count}} gone",
+            "report_other": "{{count}} gone"
+        }
+    },
+    "activity": {
+        "title": "Recent activity",
+        "all": "All notifications",
+        "empty": "No activity yet. Add a parking space or save a favorite to see what happens with it here.",
+        "unknown_place": "A parking space",
+        "added": "You added {{place}}",
+        "status": {
+            "pending": "Waiting for a moderator.",
+            "approved": "On the map.",
+            "rejected": "Rejected."
+        },
+        "proposed": "You proposed an improvement to {{place}}",
+        "saved": "You saved {{place}}",
+        "published": "{{place}} is on the map",
+        "published_detail": "Your submission was approved.",
+        "rejected": "Your submission {{place}} was rejected",
+        "status_changed": "The status of {{place}} changed",
+        "improvement_approved": "Your improvement to {{place}} was applied",
+        "improvement_rejected": "Your improvement to {{place}} was rejected",
+        "report_kept": "Your report about {{place}} was reviewed",
+        "report_kept_detail": "The parking space stays on the map.",
+        "report_removed": "{{place}} was taken off the map after your report",
+        "deleted": "{{place}} was deleted",
+        "restored": "{{place}} was restored"
+    },
+    "favorites": {
+        "title": "Favorites",
+        "all": "View all",
+        "empty": "No favorites yet. Save a parking space on the map to find it here.",
+        "untitled": "Parking space without an address",
+        "view_on_map": "View on map",
+        "sources": {
+            "Community": "Community",
+            "Municipal": "Municipal data",
+            "Offstreet": "Parking garage",
+            "Unknown": "Unknown"
+        },
+        "unavailable": "No longer on the map"
+    },
+    "stats": {
+        "title": "Your contributions",
+        "added": "Added",
+        "published": "On the map",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "my_locations": "My locations"
+    }
 }
