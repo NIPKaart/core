@@ -216,3 +216,10 @@ test('the map shows the person\'s own spaces and only the saved places that are 
                 ->has('map.favorites', 1)
                 ->where('map.favorites.0.label', 'Stationsplein')));
 });
+
+test('people with moderation work get no map, so it is not loaded for them', function () {
+    $moderator = tap(User::factory()->create())->assignRole(UserRole::MODERATOR);
+
+    $this->actingAs($moderator)->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->missing('map')));
+});

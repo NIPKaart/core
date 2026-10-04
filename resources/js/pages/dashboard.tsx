@@ -93,20 +93,6 @@ export default function Dashboard({ profile: person, hasTodo, todo, activity, ma
         </header>
     );
 
-    const mapSection = (size: string) => (
-        <section aria-labelledby="map-title" className="flex flex-col gap-3">
-            <SectionHeading id="map-title" title={t('map.title')} href={mapPage()} link={t('map.open')} />
-            <Deferred data="map" fallback={<div className={cn('animate-pulse rounded-xl bg-muted', size)} aria-hidden />}>
-                {map && (
-                    <>
-                        <ContributionsMap spaces={map.spaces} favorites={map.favorites} className={size} />
-                        <MapLegend stats={stats} favorites={map.favorites.length} />
-                    </>
-                )}
-            </Deferred>
-        </section>
-    );
-
     const activitySection = (
         <section aria-labelledby="activity-title">
             <SectionHeading id="activity-title" title={t('activity.title')} href={notifications.index()} link={t('activity.all')} />
@@ -137,7 +123,6 @@ export default function Dashboard({ profile: person, hasTodo, todo, activity, ma
                     <aside className="flex flex-col gap-8 border-t bg-muted/20 px-4 py-6 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-8">
                         <Profile person={person} />
                         <StatGrid stats={stats} />
-                        {mapSection('h-56')}
                         {activitySection}
                         {favoritesSection}
                     </aside>
@@ -153,7 +138,17 @@ export default function Dashboard({ profile: person, hasTodo, todo, activity, ma
                 {header}
                 <StatStrip stats={stats} />
                 <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                    {mapSection('h-80 lg:h-[28rem]')}
+                    <section aria-labelledby="map-title" className="flex flex-col gap-3">
+                        <SectionHeading id="map-title" title={t('map.title')} href={mapPage()} link={t('map.open')} />
+                        <Deferred data="map" fallback={<div className="h-80 animate-pulse rounded-xl bg-muted lg:h-[28rem]" aria-hidden />}>
+                            {map && (
+                                <>
+                                    <ContributionsMap spaces={map.spaces} favorites={map.favorites} className="h-80 lg:h-[28rem]" />
+                                    <MapLegend stats={stats} favorites={map.favorites.length} />
+                                </>
+                            )}
+                        </Deferred>
+                    </section>
                     <div className="flex flex-col gap-8">
                         {activitySection}
                         {favoritesSection}

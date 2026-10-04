@@ -34,6 +34,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $moderates = $queue->typesFor($user) !== [];
         $managesSources = $user->hasRole(UserRole::ADMIN);
+        $hasTodo = $moderates || $managesSources;
 
         $role = UserRole::tryFrom((string) $user->getRoleNames()->first());
 
@@ -43,7 +44,7 @@ class DashboardController extends Controller
                 'role' => $role?->label(),
                 'member_since' => $user->created_at?->toIso8601String(),
             ],
-            'hasTodo' => $moderates || $managesSources,
+            'hasTodo' => $hasTodo,
             'todo' => Inertia::defer(function () use ($queue, $sources, $user, $moderates, $managesSources) {
                 $attention = $managesSources ? $sources->rows()->whereIn('status', SourceOverview::ATTENTION)->values() : collect();
 
@@ -73,7 +74,7 @@ class DashboardController extends Controller
                 ];
             }),
             'activity' => Inertia::defer(fn () => $activity->recent($user)),
-            'map' => Inertia::defer(fn () => $this->map($request)),
+            ...($hasTodo ? [] : ['map' => Inertia::defer(fn () => $this->map($request))]),
             'stats' => $this->stats($request),
             'favorites' => $user->favorites()
                 ->with(['favoritable' => fn (MorphTo $favoritable) => $favoritable->morphWith([
