@@ -151,5 +151,10 @@
         "fri": "Vr",
         "sat": "Za",
         "sun": "Zo"
+    },
+    "tabs": {
+        "label": "Weergave",
+        "all": "Alle",
+        "trash": "Prullenbak"
     }
 }

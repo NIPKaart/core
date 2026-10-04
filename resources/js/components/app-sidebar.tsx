@@ -3,7 +3,7 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { dashboard, garages, home, locationMap } from '@/routes';
+import { dashboard, home, locationMap } from '@/routes';
 import moderation from '@/routes/app/moderation';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import parkingOffstreet from '@/routes/app/parking-offstreet';
@@ -20,75 +20,59 @@ import { useTranslation } from 'react-i18next';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
 
+/**
+ * The admin navigation, grouped by what a person does: work that waits for a decision first, then their own
+ * contributions, the parking data they manage and account management. Only counts that ask for action are shown.
+ */
 export function AppSidebar() {
     const { can, hasRole } = useAuthorization();
     const { props, url } = usePage<SharedData>();
     const { t } = useTranslation('backend/sidebar');
 
-    // Sidebar badge counts
-    const userCount = props.counts.users;
-    const { active: activeParkingSpaces, trashed: trashedParkingSpaces } = props.counts.parkingSpaces;
-    const { attention: dataSourcesAttention } = props.counts.dataSources;
     const { open: openModeration } = props.counts.moderation;
-    const { active: activeUserParkingSpaces } = props.counts.userParkingSpaces;
+    const { attention: dataSourcesAttention } = props.counts.dataSources;
+    const canModerate = can('parking-space.view_any') || can('parking-space-improvement.view_any') || can('parking-place-report.view_any');
 
-    const platformNavGroup: NavGroup = {
-        title: t('platform'),
+    const workNavGroup: NavGroup = {
         items: [
             {
                 title: t('dashboard'),
                 href: dashboard(),
                 icon: icons.LayoutGrid,
             },
-            {
-                title: t('map'),
-                href: locationMap(),
-                icon: icons.Map,
-            },
-            {
-                title: t('garages'),
-                href: garages(),
-                icon: icons.SquareParking,
+            canModerate && {
+                title: t('moderation'),
+                href: moderation.index(),
+                icon: icons.Inbox,
+                badge: openModeration || undefined,
+                badgeTone: 'attention',
             },
         ].filter(Boolean) as NavItem[],
     };
 
-    const parkingNavGroup: NavGroup = {
+    const personalNavGroup: NavGroup = {
         title: t('personal'),
         items: [
             {
                 title: t('my_locations'),
                 href: profile.parkingSpaces.index(),
                 icon: icons.MapPin,
-                badge: activeUserParkingSpaces || undefined,
             },
             {
                 title: t('my_favorites'),
                 href: profile.favorites.index(),
                 icon: icons.Heart,
             },
-        ].filter(Boolean) as NavItem[],
+        ],
     };
 
-    const moderationNavGroup: NavGroup = {
-        title: t('moderation'),
+    const parkingDataNavGroup: NavGroup = {
+        title: t('parking_data'),
         items: [
             can('parking-space.view_any') && {
                 title: t('community_spaces'),
                 href: parkingSpaces.index(),
-                icon: icons.MapPin,
-                badge: activeParkingSpaces,
-            },
-            (can('parking-space.view_any') || can('parking-space-improvement.view_any') || can('parking-place-report.view_any')) && {
-                title: t('moderation'),
-                href: moderation.index(),
-                icon: icons.Inbox,
-                badge: openModeration || undefined,
-            },
-            can('parking-offstreet.view_any') && {
-                title: t('offstreet'),
-                href: parkingOffstreet.index(),
-                icon: icons.SquareParking,
+                icon: icons.MapPinned,
             },
             (can('parking-municipal.view_any') || hasRole('admin')) && {
                 title: t('municipal_data'),
@@ -98,17 +82,17 @@ export function AppSidebar() {
                 ),
                 icon: icons.Building,
                 badge: (hasRole('admin') && dataSourcesAttention) || undefined,
+                badgeTone: 'attention',
+            },
+            can('parking-offstreet.view_any') && {
+                title: t('offstreet'),
+                href: parkingOffstreet.index(),
+                icon: icons.SquareParking,
             },
             can('parking-rule.view_any') && {
                 title: t('rules'),
                 href: parkingRules.index(),
                 icon: icons.Gavel,
-            },
-            can('parking-space.restore') && {
-                title: t('trash'),
-                href: parkingSpaces.trash(),
-                icon: icons.Trash2,
-                badge: trashedParkingSpaces || undefined,
             },
         ].filter(Boolean) as NavItem[],
     };
@@ -120,35 +104,33 @@ export function AppSidebar() {
                 title: t('users'),
                 href: users.index(),
                 icon: icons.Users,
-                badge: userCount,
             },
             can('role.view_any') && {
                 title: t('roles'),
                 href: roles.index(),
                 icon: icons.Shield,
             },
+            hasRole('admin') && {
+                title: t('logs'),
+                href: logViewer.index(),
+                target: '_blank',
+                icon: icons.Logs,
+            },
         ].filter(Boolean) as NavItem[],
     };
 
     const footerNavItems: NavItem[] = [
-        // {
-        //     title: 'Repository',
-        //     href: logViewer.index(),
-        //     target: '_blank',
-        //     icon: Folder,
-        // },
-        hasRole('admin') && {
-            title: t('logs'),
-            href: logViewer.index(),
-            target: '_blank',
-            icon: icons.Logs,
+        {
+            title: t('map'),
+            href: locationMap(),
+            icon: icons.Map,
         },
         {
             title: t('back_to_frontend'),
             href: home(),
             icon: icons.ArrowLeft,
         },
-    ].filter(Boolean) as NavItem[];
+    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -165,9 +147,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavSection group={platformNavGroup} />
-                {parkingNavGroup.items.length > 0 && <NavSection group={parkingNavGroup} />}
-                {moderationNavGroup.items.length > 0 && <NavSection group={moderationNavGroup} />}
+                <NavSection group={workNavGroup} />
+                <NavSection group={personalNavGroup} />
+                {parkingDataNavGroup.items.length > 0 && <NavSection group={parkingDataNavGroup} />}
                 {managementNavGroup.items.length > 0 && <NavSection group={managementNavGroup} />}
             </SidebarContent>
 

@@ -1,8 +1,6 @@
 {
-    "platform": "Platform",
     "dashboard": "Dashboard",
     "map": "Kaart",
-    "garages": "Garages",
     "personal": "Persoonlijk",
     "my_locations": "Mijn Locaties",
     "my_favorites": "Mijn Favorieten",
@@ -11,7 +9,6 @@
     "offstreet": "Off-street Parkeren",
     "municipalities": "Gemeenten",
     "rules": "Parkeerregels",
-    "trash": "Prullenbak",
     "management": "Beheer",
     "users": "Gebruikers",
     "roles": "Rollen en rechten",
@@ -22,5 +19,6 @@
     "logout": "Uitloggen",
     "municipal_data": "Databronnen",
     "search": "Zoeken",
-    "search_placeholder": "Zoek parkeerlocaties…"
+    "search_placeholder": "Zoek parkeerlocaties…",
+    "parking_data": "Parkeerdata"
 }

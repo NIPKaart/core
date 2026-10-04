@@ -16,15 +16,17 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getParkingSpaceColumns } from './columns';
+import { ParkingSpaceTabs } from './tabs';
 
 type Option = { id: number; name: string };
 type PageProps = {
     spaces: PaginatedResponse<ParkingSpace>;
     filters: { status: string | null; municipality_id: string | null; deletion_requested: boolean };
     options: { statuses: Record<ParkingStatus, string>; rejectionReasons: { value: string; label: string }[]; municipalities: Option[] };
+    trashedCount: number;
 };
 
-export default function Index({ spaces, filters, options }: PageProps) {
+export default function Index({ spaces, filters, options, trashedCount }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/main');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
@@ -93,6 +95,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
 
             <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
                 <Heading level={1} title={t('head.title')} description={t('head.description')} />
+                <ParkingSpaceTabs current="all" trashedCount={trashedCount} />
 
                 {can('parking-space.update') && Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">

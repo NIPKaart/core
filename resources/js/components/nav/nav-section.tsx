@@ -14,6 +14,9 @@ import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const badgeClass = 'ml-auto rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+const attentionBadgeClass =
+    'ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground';
+const badgeClassFor = (item: NavItem) => (item.badgeTone === 'attention' ? attentionBadgeClass : badgeClass);
 
 function getPath(href?: string) {
     return new URL(href ?? '/', 'https://navigation.local').pathname.replace(/\/+$/, '') || '/';
@@ -37,14 +40,14 @@ function SimpleNavItem({ item, active, iconOnly }: { item: NavItem; active: bool
             <SidebarMenuButton asChild isActive={item.isActive ?? active} tooltip={{ children: item.title }}>
                 <Link
                     href={`${typeof item.href === 'string' ? item.href : (item.href?.url ?? '/')}`}
-                    prefetch
+                    prefetch={!item.target}
                     aria-current={(item.isActive ?? active) ? 'page' : undefined}
                     target={item.target}
                     className={`flex w-full items-center ${iconOnly ? 'justify-center' : ''}`}
                 >
                     {item.icon && <item.icon className={iconOnly ? 'h-5 w-5' : 'mr-2 h-4 w-4'} />}
                     {!iconOnly && <span className="flex-1">{item.title}</span>}
-                    {item.badge !== undefined && <SidebarMenuBadge className={badgeClass}>{item.badge}</SidebarMenuBadge>}
+                    {item.badge !== undefined && <SidebarMenuBadge className={badgeClassFor(item)}>{item.badge}</SidebarMenuBadge>}
                 </Link>
             </SidebarMenuButton>
         </SidebarMenuItem>
@@ -65,7 +68,7 @@ function CollapsibleNavItem({ item, currentUrl }: { item: NavItem; currentUrl: s
                     <SidebarMenuButton tooltip={item.title} className="cursor-pointer">
                         {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                         <span className="flex-1">{item.title}</span>
-                        {item.badge !== undefined && <SidebarMenuBadge className={badgeClass}>{item.badge}</SidebarMenuBadge>}
+                        {item.badge !== undefined && <SidebarMenuBadge className={badgeClassFor(item)}>{item.badge}</SidebarMenuBadge>}
                         <ChevronRight className="ml-2 h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                 </CollapsibleTrigger>

@@ -149,5 +149,10 @@
         "fri": "Fri",
         "sat": "Sat",
         "sun": "Sun"
+    },
+    "tabs": {
+        "label": "View",
+        "all": "All",
+        "trash": "Trash"
     }
 }
