@@ -25,6 +25,7 @@ import {
     itemUrl,
     type Filters,
     type HistoryRow,
+    type ItemLink,
     type ItemType,
     type Options,
     type Position,
@@ -71,10 +72,21 @@ export default function Index({ status, filters, items, history, selected, posit
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search]);
 
-    const review = (item: QueueItem) =>
-        router.visit(itemUrl(item, query), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
-    const closeReview = () =>
+    /** The sheet opens at once with what the queue row already shows; the item's details follow. */
+    const [loading, setLoading] = useState<{ preview: QueueItem | null } | null>(null);
+    const openItem = (link: ItemLink) => {
+        setLoading({ preview: items?.data.find((item) => item.key === link.key) ?? null });
+        router.visit(itemUrl(link, query), {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['selected', 'position'],
+            onFinish: () => setLoading(null),
+        });
+    };
+    const closeReview = () => {
+        setLoading(null);
         router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
+    };
     const breadcrumbs: BreadcrumbItem[] = [{ title: t('title'), href: app.moderation.index() }];
 
     return (
@@ -137,13 +149,21 @@ export default function Index({ status, filters, items, history, selected, posit
                         selectedKey={selected?.key ?? null}
                         options={options}
                         filtered={Object.keys(query).length > 0}
-                        onReview={review}
+                        onReview={openItem}
                     />
                 )}
                 {!open && history && <History history={history} onView={setViewing} />}
             </div>
 
-            <ReviewSheet selected={selected} position={position} options={options} query={query} onClose={closeReview} />
+            <ReviewSheet
+                selected={selected}
+                position={position}
+                loading={loading}
+                options={options}
+                query={query}
+                onNavigate={openItem}
+                onClose={closeReview}
+            />
             <DecisionSheet row={viewing} options={options} onClose={() => setViewing(null)} />
         </AppLayout>
     );

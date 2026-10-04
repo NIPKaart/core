@@ -381,7 +381,7 @@ class ModerationController extends Controller
     private function position(Collection $items, string $key): array
     {
         $position = $this->queue->position($items, $key);
-        $link = fn (?array $item) => $item === null ? null : ['type' => $item['type'], 'route' => $item['route']];
+        $link = fn (?array $item) => $item === null ? null : ['key' => $item['key'], 'type' => $item['type'], 'route' => $item['route']];
 
         return [...$position, 'previous' => $link($position['previous']), 'next' => $link($position['next'])];
     }
