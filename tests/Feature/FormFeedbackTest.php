@@ -7,12 +7,21 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Inertia\Testing\AssertableInertia as Assert;
 
 // Exercise the actual web middleware and Inertia protocol, including partial reloads.
 beforeEach(function () {
     Notification::fake();
     $this->withHeader('X-Inertia-Version', (string) app(HandleInertiaRequests::class)->version(request()));
-    Route::middleware('web')->get('/_test/feedback', fn () => Inertia::render('welcome', ['marker' => true]));
+    Route::middleware('web')->get('/_test/feedback', fn () => Inertia::render('frontend/home', ['garages' => null, 'marker' => true]));
+});
+
+test('the feedback endpoint resolves an existing product page on an initial visit', function () {
+    $this->get('/_test/feedback')->assertInertia(fn (Assert $page) => $page
+        ->component('frontend/home')
+        ->where('garages', null)
+        ->where('marker', true)
+    );
 });
 
 test('flash feedback is delivered once outside page props even on a partial reload', function (string $level) {
@@ -25,7 +34,7 @@ test('flash feedback is delivered once outside page props even on a partial relo
     $this->post('/_test/feedback')->assertRedirect('/_test/feedback');
     $headers = [
         'X-Inertia' => 'true',
-        'X-Inertia-Partial-Component' => 'welcome',
+        'X-Inertia-Partial-Component' => 'frontend/home',
         'X-Inertia-Partial-Data' => 'marker',
     ];
     $this->get('/_test/feedback', $headers)->assertOk()
