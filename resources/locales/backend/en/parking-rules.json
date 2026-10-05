@@ -8,7 +8,9 @@
         "add_short": "Add",
         "edit": "Edit",
         "delete": "Delete",
-        "for": "Actions for {{name}}"
+        "for": "Actions for {{name}}",
+        "check": "Check now",
+        "adopt_redirect": "Use the new address"
     },
     "changed": "Changed {{date}}",
     "national": {
@@ -69,5 +71,22 @@
         "country": "Visitors in {{name}} then see \"Not known\", except in municipalities with a source of their own.",
         "municipality": "Visitors in {{name}} then see the national source.",
         "confirm": "Delete"
+    },
+    "health": {
+        "summary_one": "{{count}} source does not open. Visitors land on an error page; check the address.",
+        "summary_other": "{{count}} sources do not open. Visitors land on an error page; check the addresses.",
+        "unchecked": "Not checked yet",
+        "ok": "Works · checked {{date}}",
+        "redirected": "Redirects to {{host}}",
+        "broken": "Broken",
+        "since": "since {{date}}",
+        "errors": {
+            "timeout": "timeout",
+            "dns": "unknown domain",
+            "tls": "certificate error",
+            "connection": "no connection",
+            "missing_location": "empty redirect",
+            "too_many_redirects": "too many redirects"
+        }
     }
 }

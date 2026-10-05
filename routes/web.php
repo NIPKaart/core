@@ -116,6 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Keep resource routes at the bottom to avoid conflicts with other routes
         Route::resource('users', Admin\UserController::class);
         Route::get('roles', [Admin\RoleController::class, 'index'])->name('roles.index');
+        Route::post('parking-rules/{parking_rule}/check', [Admin\ParkingRuleController::class, 'check'])->name('parking-rules.check');
         Route::resource('parking-rules', Admin\ParkingRuleController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('parking-spaces', Admin\ParkingSpaceController::class);
     });
