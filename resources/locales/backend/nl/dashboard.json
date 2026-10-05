@@ -23,7 +23,8 @@
             "awaiting_approval": "Nieuwe bron wacht op goedkeuring",
             "reapproval": "Gewijzigde bron wacht op goedkeuring",
             "intake_problem": "Levering kon niet worden verwerkt",
-            "overdue": "Levering is te laat"
+            "overdue": "Levering is te laat",
+            "live_stale": "Live bezetting komt niet meer binnen"
         },
         "more_sources_one": "En nog {{count}} databron",
         "more_sources_other": "En nog {{count}} databronnen",
@@ -43,7 +44,8 @@
             "awaiting_approval": "Goedkeuring",
             "reapproval": "Goedkeuring",
             "intake_problem": "Probleem",
-            "overdue": "Te laat"
+            "overdue": "Te laat",
+            "live_stale": "Live"
         }
     },
     "activity": {

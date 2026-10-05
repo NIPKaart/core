@@ -249,7 +249,8 @@
             "awaiting_approval": "Wacht op goedkeuring",
             "awaiting_review": "Wacht op beoordeling",
             "overdue": "Levering te laat",
-            "intake_problem": "Problemen bij intake"
+            "intake_problem": "Problemen bij intake",
+            "live_stale": "Live gegevens gestopt"
         },
         "statuses": {
             "awaiting_approval": "Wacht op goedkeuring",
@@ -259,8 +260,10 @@
             "awaiting_review": "Wacht op beoordeling",
             "awaiting_delivery": "Wacht op eerste levering",
             "published": "Gepubliceerd",
-            "rejected": "Afgewezen"
+            "rejected": "Afgewezen",
+            "live_stale": "Live gegevens gestopt"
         },
         "not_published": "Nog niet gepubliceerd"
-    }
+    },
+    "live_stale": "De laatste live meting is van {{time}}. Er komen geen nieuwe metingen binnen; bezoekers zien de bezetting als verouderd."
 }

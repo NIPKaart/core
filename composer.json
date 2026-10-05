@@ -15,6 +15,7 @@
         "itsgoingd/clockwork": "^5.3",
         "laravel/fortify": "^1.39",
         "laravel/framework": "^13.0",
+        "laravel/nightwatch": "^1.30",
         "laravel/reverb": "^1.5",
         "laravel/tinker": "^3.0.0",
         "laravel/wayfinder": "^0.1.10",

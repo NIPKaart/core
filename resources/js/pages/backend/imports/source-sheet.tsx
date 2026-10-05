@@ -43,6 +43,15 @@ export default function SourceSheet({ source, onClose }: Props) {
                                     {t('intake_problem')}
                                 </p>
                             )}
+                            {source.status === 'live_stale' && source.latest_observation_at && (
+                                <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                                    {t('live_stale', {
+                                        time: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(
+                                            new Date(source.latest_observation_at),
+                                        ),
+                                    })}
+                                </p>
+                            )}
                             {source.approval_state !== 'approved' && <SourceApproval source={source} />}
                             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                                 <div>

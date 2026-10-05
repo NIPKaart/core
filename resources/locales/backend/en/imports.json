@@ -249,7 +249,8 @@
             "awaiting_approval": "Awaiting approval",
             "awaiting_review": "Awaiting review",
             "overdue": "Delivery overdue",
-            "intake_problem": "Intake problems"
+            "intake_problem": "Intake problems",
+            "live_stale": "Live data stopped"
         },
         "statuses": {
             "awaiting_approval": "Awaiting approval",
@@ -259,8 +260,10 @@
             "awaiting_review": "Awaiting review",
             "awaiting_delivery": "Awaiting first delivery",
             "published": "Published",
-            "rejected": "Rejected"
+            "rejected": "Rejected",
+            "live_stale": "Live data stopped"
         },
         "not_published": "Not published yet"
-    }
+    },
+    "live_stale": "The latest live measurement is from {{time}}. No new measurements arrive; visitors see the occupancy as stale."
 }

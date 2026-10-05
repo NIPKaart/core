@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Observers\ParkingSpaceObserver;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\GeocoderChain;
+use App\Support\ObservabilityPrivacy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Model;
@@ -45,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ObservabilityPrivacy::register();
+
         RateLimiter::for('parking-discovery', function (Request $request): array {
             $key = $request->user() ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip();
 
