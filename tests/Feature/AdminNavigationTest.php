@@ -23,7 +23,7 @@ test('the trash is a view of the community list for those who may restore', func
 
     $this->actingAs($admin);
     $this->get(route('app.parking-spaces.index'))
-        ->assertInertia(fn (Assert $page) => $page->component('backend/parking-spaces/index')->where('trashedCount', 2));
+        ->assertInertia(fn (Assert $page) => $page->component('backend/parking-spaces/index')->where('tabCounts.trash', 2)->has('counts.moderation'));
     $this->get(route('app.parking-spaces.trash'))
-        ->assertInertia(fn (Assert $page) => $page->component('backend/parking-spaces/trash/index')->where('trashedCount', 2));
+        ->assertInertia(fn (Assert $page) => $page->component('backend/parking-spaces/trash/index')->where('tabCounts.trash', 2)->has('counts.moderation'));
 });

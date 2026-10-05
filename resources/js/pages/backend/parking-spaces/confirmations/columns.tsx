@@ -1,24 +1,23 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import type { ParkingSpaceConfirmation, Translations } from '@/types';
 import type { ColumnDef } from '@tanstack/react-table';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import { enUS } from 'date-fns/locale';
-import { Trash2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 
-const variantMap: Record<string, 'default' | 'secondary' | 'destructive'> = {
-    confirmed: 'secondary',
-    moved: 'default',
-    unavailable: 'destructive',
+export const CONFIRMATION_DOTS: Record<string, string> = { confirmed: 'bg-green-600', moved: 'bg-amber-600', unavailable: 'bg-red-600' };
+
+type Options = {
+    statuses: Record<string, string>;
+    can: (permission: string) => boolean;
+    openDialog: (type: 'delete', subject: ParkingSpaceConfirmation) => void;
+    when: (value: string) => string;
 };
-type OpenDialogFn = (type: 'delete', subject: ParkingSpaceConfirmation) => void;
 
 export function getConfirmationColumns(
-    statuses: Record<string, string>,
-    can: (permission: string) => boolean,
-    openDialog: OpenDialogFn,
-    { t }: Translations,
+    { statuses, can, openDialog, when }: Options,
+    { t, tGlobal }: Translations,
 ): ColumnDef<ParkingSpaceConfirmation>[] {
     return [
         {
@@ -29,7 +28,7 @@ export function getConfirmationColumns(
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                    aria-label="Select all"
+                    aria-label={tGlobal('common.selectAll')}
                     className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
@@ -37,42 +36,50 @@ export function getConfirmationColumns(
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                    aria-label="Select row"
+                    aria-label={tGlobal('common.selectRow')}
                     className="cursor-pointer"
                 />
             ),
         },
         {
-            accessorKey: 'status',
+            id: 'status',
             header: t('table.status'),
-            enableSorting: true,
+            enableSorting: false,
             enableHiding: false,
-            cell: ({ row }) => {
-                const status = row.original.status;
-                return <Badge variant={variantMap[status] || 'default'}>{statuses[status]}</Badge>;
-            },
+            cell: ({ row }) => (
+                <span className="inline-flex items-center gap-1.5 rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap">
+                    <span className={cn('size-1.75 rounded-full', CONFIRMATION_DOTS[row.original.status])} aria-hidden />
+                    {statuses[row.original.status] ?? row.original.status}
+                </span>
+            ),
         },
         {
-            accessorKey: 'user.name',
+            id: 'user',
             header: t('table.user'),
-            enableSorting: true,
+            enableSorting: false,
             enableHiding: false,
-            cell: ({ row }) => row.original.user?.name ?? <span className="text-muted-foreground italic">Unknown</span>,
+            cell: ({ row }) => <span className="font-medium">{row.original.user?.name ?? t('unknown')}</span>,
         },
         {
-            accessorKey: 'confirmed_at',
-            header: t('table.confirmedAt'),
-            enableSorting: true,
-            cell: ({ row }) => {
-                const date = row.original.confirmed_at;
-                return <span title={new Date(date).toLocaleString()}>{formatDistanceToNow(parseISO(date), { addSuffix: true, locale: enUS })}</span>;
-            },
-        },
-        {
-            accessorKey: 'comment',
+            id: 'comment',
             header: t('table.comment'),
             enableSorting: false,
-            cell: ({ row }) => row.original.comment ?? <span className="text-muted-foreground italic">—</span>,
+            cell: ({ row }) =>
+                row.original.comment ? (
+                    <span className="text-foreground/80">“{row.original.comment}”</span>
+                ) : (
+                    <span className="text-muted-foreground">—</span>
+                ),
+        },
+        {
+            id: 'confirmed_at',
+            header: t('table.confirmedAt'),
+            enableSorting: false,
+            cell: ({ row }) => (
+                <span className="whitespace-nowrap" title={new Date(row.original.confirmed_at).toLocaleString()}>
+                    {when(row.original.confirmed_at)}
+                </span>
+            ),
         },
         {
             id: 'actions',
@@ -81,10 +88,26 @@ export function getConfirmationColumns(
             meta: { align: 'right' },
             cell: ({ row }) =>
                 can('parking-space-confirmation.delete') && (
-                    <Button variant="destructive" size="icon" className="cursor-pointer" onClick={() => openDialog('delete', row.original)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">{t('table.actions.delete')}</span>
-                    </Button>
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8 text-muted-foreground" aria-label={t('table.actions.more')}>
+                                    <MoreVertical />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    className="cursor-pointer text-destructive"
+                                    onSelect={(event) => {
+                                        event.preventDefault();
+                                        openDialog('delete', row.original);
+                                    }}
+                                >
+                                    {t('table.actions.delete')}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 ),
         },
     ];

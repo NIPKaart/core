@@ -1,345 +1,544 @@
-import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
-import HeadingSmall from '@/components/heading-small';
 import LocationMarkerCard from '@/components/map/card-location-marker';
-import StreetViewCard from '@/components/map/card-location-streetview';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuthorization } from '@/hooks/use-authorization';
 import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import app from '@/routes/app';
-import { BreadcrumbItem, ParkingMunicipal, ParkingSpace, ParkingSpaceConfirmation } from '@/types';
+import type { BreadcrumbItem, ParkingMunicipal, ParkingSpace, ParkingSpaceConfirmation, User } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import clsx from 'clsx';
-import { formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, Compass, Copy, Edit, Globe, Hash, Home, Landmark, MapPin, MapPinned, Server, ShieldCheck, Tag, Trash2 } from 'lucide-react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { enUS, nl } from 'date-fns/locale';
+import { ArrowLeft, ArrowRight, Copy, ExternalLink, Flag, MoreHorizontal, PencilLine } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { StatusPill } from './parts';
+
+type Option = { value: string; label: string; description: string };
+type Contributor = User & { parking_spaces_count: number; published_spaces_count: number };
+type HistoryEvent = { kind: 'added' | 'review' | 'improvement'; at: string; by: string | null; status?: string; reason?: string | null };
 
 type PageProps = {
-    parkingSpace: ParkingSpace;
-    selectOptions: {
-        rejectionReasons: { value: string; label: string; description: string }[];
-        orientation: { value: string; label: string; description: string }[];
-        parkingStatuses: { value: string; label: string; description: string }[];
-        confirmationStatuses: { value: string; label: string; description: string }[];
-    };
+    parkingSpace: ParkingSpace & { user?: Contributor | null; open_reports_count: number; updated_at: string };
+    selectOptions: { rejectionReasons: Option[]; orientation: Option[]; underSign: Option[]; confirmationStatuses: Option[] };
     nearbySpaces: ParkingSpace[];
     nearbyMunicipalSpaces: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
-    recentConfirmations: ParkingSpaceConfirmation[];
+    openImprovement: { id: number; proposer: string | null; proposed_at: string; changes: string[] } | null;
+    confirmations: { counts: Record<string, number>; total: number; recent: ParkingSpaceConfirmation[] };
+    history: HistoryEvent[];
+    mapUrl: string | null;
 };
 
-export default function Show({ parkingSpace, selectOptions, nearbySpaces, nearbyMunicipalSpaces, recentConfirmations }: PageProps) {
+const CONFIRMATION_DOTS: Record<string, string> = { confirmed: 'bg-green-600', moved: 'bg-amber-600', unavailable: 'bg-red-600' };
+
+/**
+ * One community parking space for a moderator: what needs doing first, then where it is and what it says, with who added
+ * it, what visitors confirmed and what happened to it beside that.
+ */
+export default function Show({
+    parkingSpace: space,
+    selectOptions,
+    nearbySpaces,
+    nearbyMunicipalSpaces,
+    openImprovement,
+    confirmations,
+    history,
+    mapUrl,
+}: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/main');
+    const { t: tModeration, i18n } = useTranslation('backend/moderation');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
-
-    const statusOpt = selectOptions.parkingStatuses.find((s) => s.value === parkingSpace.status)!;
-
-    function copyToClipboard(val: string) {
-        navigator.clipboard.writeText(val);
+    const locale = i18n.language.startsWith('nl') ? nl : enUS;
+    const ago = (value: string) => formatDistanceToNow(parseISO(value), { addSuffix: true, locale });
+    const moment = (value: string) => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(parseISO(value));
+    const label = (options: Option[], value?: string | null) => options.find((option) => option.value === value)?.label ?? value;
+    const copy = (value: string) => {
+        navigator.clipboard.writeText(value);
         toast.success(t('show.toast.copied'));
-    }
+    };
 
-    const ipAddress = parkingSpace.ip_address ?? '';
-    const orientation = selectOptions.orientation.find((o) => o.value === parkingSpace.orientation);
-    const fields = [
-        {
-            icon: <Globe className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.country'),
-            value: parkingSpace.country?.name ? (
-                <>
-                    {parkingSpace.country.name}
-                    <span className="ml-1 font-normal text-muted-foreground">({parkingSpace.country.code})</span>
-                </>
-            ) : null,
-        },
-        {
-            icon: <Landmark className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.province'),
-            value: parkingSpace.province?.name,
-        },
-        {
-            icon: <MapPin className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.municipality'),
-            value: parkingSpace.municipality?.name,
-        },
-        {
-            icon: <Home className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.city'),
-            value: parkingSpace.city,
-        },
-        {
-            icon: <Tag className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.street'),
-            value: parkingSpace.street,
-        },
-        {
-            icon: <Hash className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.postcode'),
-            value: parkingSpace.postcode,
-        },
-        {
-            icon: <Compass className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.amenity'),
-            value: parkingSpace.amenity,
-        },
-        {
-            icon: <ShieldCheck className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.reviewed'),
-            value: parkingSpace.latest_review
-                ? t('show.cards.details.fields.reviewed_value', {
-                      name: parkingSpace.latest_review.reviewer?.name ?? t('show.cards.details.fields.reviewer_removed'),
-                      date: new Date(parkingSpace.latest_review.reviewed_at).toLocaleString(),
-                  }) +
-                  (parkingSpace.latest_review.reason
-                      ? ` — ${selectOptions.rejectionReasons.find((reason) => reason.value === parkingSpace.latest_review?.reason)?.label ?? parkingSpace.latest_review.reason}`
-                      : '') +
-                  (parkingSpace.latest_review.note ? `: ${parkingSpace.latest_review.note}` : '')
-                : null,
-        },
-        {
-            icon: <Compass className="h-4 w-4 rotate-90 text-muted-foreground" />,
-            label: t('show.cards.details.fields.orientation'),
-            value: orientation ? (
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <span className="cursor-help underline decoration-dotted underline-offset-4">{orientation.label}</span>
-                    </TooltipTrigger>
-                    <TooltipContent>{orientation.description}</TooltipContent>
-                </Tooltip>
-            ) : (
-                parkingSpace.orientation
-            ),
-        },
-        {
-            icon: <Server className="h-4 w-4 text-muted-foreground" />,
-            label: t('show.cards.details.fields.ip_address'),
-            value: ipAddress ? (
-                <span className="flex items-center gap-1">
-                    <a
-                        href={`https://whatismyipaddress.com/?s=${ipAddress}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-orange-600 hover:underline dark:text-orange-400"
-                    >
-                        {ipAddress}
-                    </a>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => copyToClipboard(ipAddress)}
-                        className="h-7 w-7 cursor-pointer text-muted-foreground hover:text-foreground"
-                        title={t('show.cards.details.fields.copy_ip')}
-                    >
-                        <Copy className="h-4 w-4" />
-                    </Button>
-                </span>
-            ) : null,
-        },
-    ];
+    const coordinates = `${space.latitude.toFixed(5)}, ${space.longitude.toFixed(5)}`;
+    const streetView = `https://www.google.com/maps?q=&layer=c&cbll=${space.latitude},${space.longitude}`;
+    const hours = space.parking_time ? Math.floor(space.parking_time / 60) : 0;
+    const minutes = space.parking_time ? space.parking_time % 60 : 0;
+    const days = space.restriction_days?.map((day) => t(`days.${day}`)).join(', ');
+    const times =
+        space.restriction_starts_at && space.restriction_ends_at
+            ? `${space.restriction_starts_at.slice(0, 5)}–${space.restriction_ends_at.slice(0, 5)}`
+            : null;
+    const changed = openImprovement?.changes.length
+        ? new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
+              openImprovement.changes.map((group) => tModeration(`groups.${group}`).toLowerCase()),
+          )
+        : null;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('breadcrumbs.index'), href: app.parkingSpaces.index() },
-        { title: parkingSpace.id, href: app.parkingSpaces.show({ parking_space: parkingSpace.id }) },
+        { title: space.street, href: app.parkingSpaces.show({ parking_space: space.id }) },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={t('head.show', { id: parkingSpace.id })} />
-            {/* Header */}
-            <header className="px-4 pt-6 sm:px-6">
-                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-                    <div className="min-w-0">
-                        <h1 className="truncate text-xl leading-none font-semibold tracking-tight sm:text-2xl">
-                            {t('head.show', { id: parkingSpace.id })}
-                        </h1>
+            <Head title={space.street} />
+            <div className="flex flex-col gap-7 px-4 py-6 sm:px-8 sm:py-7 lg:px-10">
+                <header className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0 space-y-1.5">
+                        <Link
+                            href={app.parkingSpaces.index()}
+                            className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"
+                        >
+                            <ArrowLeft className="size-3.5" aria-hidden />
+                            {t('breadcrumbs.index')}
+                        </Link>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-2xl font-semibold tracking-tight">{space.street}</h1>
+                            <StatusPill status={space.status} className="px-2.5 py-0.5" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {[[space.postcode, space.city].filter(Boolean).join(' '), space.province?.name, space.country?.name]
+                                .filter(Boolean)
+                                .join(' · ')}
+                        </p>
                     </div>
-
-                    <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:justify-end">
-                        <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
-                            <Link href={app.parkingSpaces.index()}>
-                                <ArrowLeft className="h-4 w-4" />
-                                {tGlobal('common.back')}
-                            </Link>
-                        </Button>
-
+                    <div className="flex flex-wrap gap-2">
                         {can('parking-space.update') && (
-                            <Button asChild variant="outline" className="h-10 flex-1 sm:h-9 sm:flex-none sm:px-3">
-                                <Link href={app.parkingSpaces.edit({ parking_space: parkingSpace.id })}>
-                                    <Edit className="h-4 w-4" />
+                            <Button asChild variant="outline">
+                                <Link href={app.parkingSpaces.edit({ parking_space: space.id })}>
+                                    <PencilLine />
                                     {tGlobal('common.edit')}
                                 </Link>
                             </Button>
                         )}
-
-                        {can('parking-space.delete') && (
-                            <Button
-                                variant="destructive"
-                                className="h-10 flex-1 cursor-pointer sm:h-9 sm:flex-none sm:px-3"
-                                onClick={() => openDialog('delete', parkingSpace)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                {t('show.trash')}
+                        {mapUrl && (
+                            <Button asChild variant="outline">
+                                <a href={mapUrl} target="_blank" rel="noopener noreferrer">
+                                    {t('show.view_on_map')}
+                                    <ExternalLink />
+                                </a>
                             </Button>
                         )}
-                    </div>
-                </div>
-            </header>
-
-            {/* Banner Notification */}
-            <div className="px-4 sm:px-6">
-                <ParkingSpaceStatusBanner parkingSpace={parkingSpace} label={statusOpt.label} description={statusOpt.description} />
-                {parkingSpace.nearby_municipal_metres != null && (
-                    <Alert className="mt-3 border-2 border-violet-300/60 bg-violet-50 px-3 py-3 sm:py-4 dark:bg-violet-950/80">
-                        <AlertTitle className="flex items-center gap-2 text-base font-semibold text-violet-900 dark:text-violet-100">
-                            <MapPinned className="h-5 w-5 min-w-5 text-violet-500" aria-hidden />
-                            {t('show.nearby_municipal.title', { distance: parkingSpace.nearby_municipal_metres })}
-                        </AlertTitle>
-                        <AlertDescription className="mt-2 w-full text-sm text-zinc-800 dark:text-violet-50">
-                            {t('show.nearby_municipal.description')}
-                        </AlertDescription>
-                    </Alert>
-                )}
-            </div>
-
-            <div className="grid auto-rows-min grid-cols-1 gap-6 px-4 py-6 sm:px-6 md:grid-cols-2">
-                {/* Card 1: Details */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('show.cards.details.title')} description={t('show.cards.details.description')} />
-                    </div>
-                    <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
-                        <dl>
-                            {fields.map(({ icon, label, value }, idx) => (
-                                <div
-                                    key={label}
-                                    className={clsx(
-                                        'flex items-center justify-between gap-3 px-4 py-3',
-                                        'sm:grid sm:grid-cols-[2rem_10rem_1fr] sm:items-start',
-                                        idx % 2 === 0 && 'bg-muted/20',
-                                        idx === 0 && 'rounded-t-xl',
-                                        idx === fields.length - 1 && 'rounded-b-xl',
-                                    )}
-                                >
-                                    {/* Icon + Label (mobile) */}
-                                    <div className="flex items-center gap-2 sm:col-span-1 sm:justify-center">
-                                        <div className="text-muted-foreground">{icon}</div>
-                                        <dt className="text-xs text-muted-foreground sm:hidden">{label}</dt>
-                                    </div>
-
-                                    {/* Label (desktop only) */}
-                                    <dt className="hidden text-xs text-muted-foreground sm:block">{label}</dt>
-
-                                    {/* Value */}
-                                    <dd className="text-right text-sm font-medium break-words text-foreground sm:text-left">
-                                        {value || <span className="text-muted-foreground">—</span>}
-                                    </dd>
-                                </div>
-                            ))}
-                        </dl>
-                    </div>
-                </div>
-
-                {/* Card 2: Recent confirmations */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('show.cards.confirmations.title')} description={t('show.cards.confirmations.description')} />
-                    </div>
-                    <div className="overflow-hidden rounded-lg border bg-background shadow-sm">
-                        {recentConfirmations && recentConfirmations.length > 0 ? (
-                            <>
-                                <ul>
-                                    {recentConfirmations.map((confirmation, i) => {
-                                        const statusOpt = selectOptions.confirmationStatuses.find((s) => s.value === confirmation.status);
-                                        const badgeVariant: 'default' | 'secondary' | 'destructive' =
-                                            confirmation.status === 'confirmed'
-                                                ? 'secondary'
-                                                : confirmation.status === 'moved'
-                                                  ? 'default'
-                                                  : confirmation.status === 'unavailable'
-                                                    ? 'destructive'
-                                                    : 'default';
-                                        return (
-                                            <li key={confirmation.id} className={`px-3 py-2 ${i !== 0 ? 'border-t border-muted' : ''}`}>
-                                                <div className="flex items-start gap-2">
-                                                    {/* Badge links */}
-                                                    <Badge variant={badgeVariant} className="mt-0.5 shrink-0">
-                                                        {statusOpt?.label ?? confirmation.status}
-                                                    </Badge>
-                                                    {/* Main info + comment */}
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex min-w-0 items-center justify-between">
-                                                            <span className="truncate font-medium">
-                                                                {confirmation.user?.name ?? t('show.cards.confirmations.unknown_user')}
-                                                            </span>
-                                                            <span className="shrink-0 pl-2 text-xs text-muted-foreground">
-                                                                {formatDistanceToNow(new Date(confirmation.confirmed_at), { addSuffix: true })}
-                                                            </span>
-                                                        </div>
-                                                        {confirmation.comment && (
-                                                            <span className="mt-0.5 block truncate text-xs text-muted-foreground italic">
-                                                                “{confirmation.comment}”
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                                {can('parking-space-confirmation.view_any') && (
-                                    <div className="flex justify-end bg-muted/50 px-3 py-3">
-                                        <Button
-                                            asChild
-                                            size="sm"
-                                            variant="outline"
-                                            className="transition-colors hover:bg-accent hover:text-accent-foreground"
-                                        >
-                                            <Link href={app.parkingSpaces.confirmations.index({ parking_space: parkingSpace.id })}>
-                                                {t('show.cards.confirmations.show_all')}
+                        {(can('parking-space-confirmation.view_any') || can('parking-space.delete')) && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="icon" aria-label={t('show.more_actions')}>
+                                        <MoreHorizontal />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-52">
+                                    {can('parking-space-confirmation.view_any') && (
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link href={app.parkingSpaces.confirmations.index({ parking_space: space.id })}>
+                                                {t('show.manage_confirmations')}
                                             </Link>
-                                        </Button>
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="px-3 py-5 text-sm text-muted-foreground">{t('show.cards.confirmations.empty')}</div>
+                                        </DropdownMenuItem>
+                                    )}
+                                    {can('parking-space.delete') && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                className="cursor-pointer text-destructive"
+                                                onSelect={(event) => {
+                                                    event.preventDefault();
+                                                    openDialog('delete', space);
+                                                }}
+                                            >
+                                                {t('index.move_to_trash')}
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         )}
                     </div>
-                </div>
+                </header>
 
-                {/* Card 3: Map */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('show.cards.location.title')} description={t('show.cards.location.description')} />
-                    </div>
-                    <LocationMarkerCard
-                        latitude={parkingSpace.latitude}
-                        longitude={parkingSpace.longitude}
-                        nearbySpaces={nearbySpaces}
-                        nearbyMunicipalSpaces={nearbyMunicipalSpaces}
-                    />
-                    {nearbyMunicipalSpaces.length > 0 && (
-                        <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-block h-3 w-3 rounded-full bg-violet-500" aria-hidden />
-                            {t('show.cards.location.legend')}
-                        </p>
-                    )}
-                </div>
+                {space.status === 'pending' && (
+                    <Notice tone="pending" action={t('show.review')} href={app.moderation.submissions.show({ parking_space: space.id })}>
+                        <span className="font-medium">{t('show.notice.pending', { ago: ago(space.created_at) })}</span>
+                        {space.nearby_municipal_metres != null && (
+                            <span className="text-amber-900 dark:text-amber-200">
+                                {' '}
+                                {t('show.notice.nearby', { distance: space.nearby_municipal_metres })}
+                            </span>
+                        )}
+                    </Notice>
+                )}
+                {openImprovement && (
+                    <Notice
+                        tone="neutral"
+                        icon={<PencilLine className="size-4" aria-hidden />}
+                        action={t('show.review')}
+                        href={app.moderation.improvements.show({ improvement: openImprovement.id })}
+                    >
+                        <span className="font-medium">
+                            {t('show.notice.improvement', {
+                                name: openImprovement.proposer ?? t('show.someone'),
+                                ago: ago(openImprovement.proposed_at),
+                            })}
+                        </span>
+                        {changed && <span className="text-muted-foreground"> {t('show.notice.changed', { fields: changed })}</span>}
+                    </Notice>
+                )}
+                {space.open_reports_count > 0 && (
+                    <Notice
+                        tone="pending"
+                        icon={<Flag className="size-4" aria-hidden />}
+                        action={t('show.review')}
+                        href={app.moderation.reports.show({ source: 'community', id: space.id })}
+                    >
+                        <span className="font-medium">{t('show.notice.reports', { count: space.open_reports_count })}</span>
+                    </Notice>
+                )}
 
-                {/* Card 4: Street View */}
-                <div>
-                    <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('show.cards.street_view.title')} description={t('show.cards.street_view.description')} />
+                <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                    <div className="flex min-w-0 flex-col gap-8">
+                        <section aria-labelledby="location-title">
+                            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2.5">
+                                <h2 id="location-title" className="text-sm font-semibold">
+                                    {t('show.location')}
+                                </h2>
+                                <span className="flex gap-4 text-[13px]">
+                                    <a
+                                        href={streetView}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                    >
+                                        {t('show.street_view')}
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => copy(coordinates)}
+                                        className="cursor-pointer text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                    >
+                                        {t('show.copy_coordinates')}
+                                    </button>
+                                </span>
+                            </div>
+                            <div className="relative">
+                                <LocationMarkerCard
+                                    latitude={space.latitude}
+                                    longitude={space.longitude}
+                                    nearbySpaces={nearbySpaces}
+                                    nearbyMunicipalSpaces={nearbyMunicipalSpaces}
+                                    scrollWheelZoom={false}
+                                    className="h-80 md:h-95"
+                                />
+                                <p className="absolute bottom-3 left-3 z-400 flex flex-wrap gap-x-3.5 gap-y-1 rounded-md bg-background/95 px-2.5 py-1.5 text-xs shadow-sm">
+                                    <Legend color="bg-[#2A81CB]" label={t('show.legend.this')} />
+                                    {nearbyMunicipalSpaces.length > 0 && <Legend color="bg-[#9C2BCB]" label={t('show.legend.municipal')} />}
+                                    {nearbySpaces.length > 0 && <Legend color="bg-[#2AAD27]" label={t('show.legend.community')} />}
+                                </p>
+                            </div>
+                            <p className="mt-2.5 text-[13px] text-muted-foreground">
+                                <span className="font-mono text-foreground">{coordinates}</span>
+                            </p>
+                        </section>
+
+                        <section aria-labelledby="details-title">
+                            <h2 id="details-title" className="text-sm font-semibold">
+                                {t('show.details')}
+                            </h2>
+                            <SubHeading>{t('show.address')}</SubHeading>
+                            <Fields>
+                                <Field label={t('edit.form.labels.street')}>{space.street}</Field>
+                                <Field label={t('edit.form.labels.postcode')}>{space.postcode}</Field>
+                                <Field label={t('edit.form.labels.city')}>{space.city}</Field>
+                                <Field label={t('show.area')}>{[space.suburb, space.neighbourhood].filter(Boolean).join(' · ')}</Field>
+                                <Field label={t('edit.form.labels.municipality')}>{space.municipality?.name}</Field>
+                                <Field label={t('show.region')}>{[space.province?.name, space.country?.name].filter(Boolean).join(' · ')}</Field>
+                            </Fields>
+                            <SubHeading>{t('show.parking')}</SubHeading>
+                            <Fields>
+                                <Field label={t('show.orientation')}>{label(selectOptions.orientation, space.orientation)}</Field>
+                                <Field label={t('show.parking_time')}>
+                                    {hours || minutes
+                                        ? t('show.max_time', {
+                                              time: [hours && `${hours} ${t('show.hours')}`, minutes && `${minutes} ${t('show.minutes')}`]
+                                                  .filter(Boolean)
+                                                  .join(' '),
+                                          })
+                                        : t('show.no_max')}
+                                </Field>
+                                <Field label={t('edit.form.labels.underSign')}>
+                                    {space.under_sign
+                                        ? [label(selectOptions.underSign, space.under_sign), space.under_sign_text && `“${space.under_sign_text}”`]
+                                              .filter(Boolean)
+                                              .join(' · ')
+                                        : null}
+                                </Field>
+                                <Field label={t('edit.form.labels.restriction')}>{[days, times].filter(Boolean).join(', ')}</Field>
+                                <Field label={t('show.nearby')}>{space.amenity}</Field>
+                            </Fields>
+                            {space.description && (
+                                <>
+                                    <SubHeading>{t('show.comment')}</SubHeading>
+                                    <blockquote className="border-l-2 py-0.5 pl-3.5 text-sm text-foreground/80">{space.description}</blockquote>
+                                </>
+                            )}
+                        </section>
                     </div>
-                    <StreetViewCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
+
+                    <aside className="flex flex-col gap-7">
+                        <section aria-labelledby="contributor-title">
+                            <h2 id="contributor-title" className="pb-2.5 text-sm font-semibold">
+                                {t('show.contributor')}
+                            </h2>
+                            {space.user ? (
+                                <>
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted font-semibold">
+                                            {space.user.name
+                                                .split(' ')
+                                                .map((part) => part[0])
+                                                .slice(0, 2)
+                                                .join('')
+                                                .toUpperCase()}
+                                        </span>
+                                        <span className="flex min-w-0 flex-col">
+                                            <span className="truncate font-medium">{space.user.name}</span>
+                                            {space.user.email && (
+                                                <span className="truncate text-[13px] text-muted-foreground">{space.user.email}</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <p className="mt-2.5 text-[13px] text-muted-foreground">
+                                        {t('show.contributions', {
+                                            since: new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(
+                                                parseISO(space.user.created_at),
+                                            ),
+                                            count: space.user.parking_spaces_count,
+                                            published: space.user.published_spaces_count,
+                                        })}
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">{t('index.removed_account')}</p>
+                            )}
+                        </section>
+
+                        <section aria-labelledby="confirmations-title">
+                            <div className="flex items-baseline justify-between pb-2.5">
+                                <h2 id="confirmations-title" className="text-sm font-semibold">
+                                    {t('show.confirmations')}
+                                </h2>
+                                {confirmations.total > 0 && can('parking-space-confirmation.view_any') && (
+                                    <Link
+                                        href={app.parkingSpaces.confirmations.index({ parking_space: space.id })}
+                                        className="text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                    >
+                                        {t('show.all_confirmations', { count: confirmations.total })}
+                                    </Link>
+                                )}
+                            </div>
+                            {confirmations.total === 0 ? (
+                                <p className="border-t py-3 text-sm text-muted-foreground">{t('show.no_confirmations')}</p>
+                            ) : (
+                                <>
+                                    <dl className="grid grid-cols-3 rounded-lg border">
+                                        {selectOptions.confirmationStatuses.map((status, index) => (
+                                            <div key={status.value} className={cn('px-3 py-2.5', index > 0 && 'border-l')}>
+                                                <dt className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                                                    <span
+                                                        className={cn('size-1.75 shrink-0 rounded-full', CONFIRMATION_DOTS[status.value])}
+                                                        aria-hidden
+                                                    />
+                                                    {status.label}
+                                                </dt>
+                                                <dd className="mt-0.5 text-xl font-semibold tabular-nums">
+                                                    {confirmations.counts[status.value] ?? 0}
+                                                </dd>
+                                            </div>
+                                        ))}
+                                    </dl>
+                                    <ul className="mt-1">
+                                        {confirmations.recent.map((confirmation) => (
+                                            <li
+                                                key={confirmation.id}
+                                                className="grid grid-cols-[0.5rem_minmax(0,1fr)_auto] gap-2.5 border-b py-2.5 text-sm last:border-b-0"
+                                            >
+                                                <span
+                                                    className={cn('mt-1.5 size-2 rounded-full', CONFIRMATION_DOTS[confirmation.status])}
+                                                    aria-hidden
+                                                />
+                                                <span className="min-w-0">
+                                                    <span className="block truncate">{confirmation.user?.name ?? t('show.someone')}</span>
+                                                    {confirmation.comment && (
+                                                        <span className="block text-[13px] text-muted-foreground">“{confirmation.comment}”</span>
+                                                    )}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">{ago(confirmation.confirmed_at)}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
+                        </section>
+
+                        <section aria-labelledby="history-title">
+                            <h2 id="history-title" className="pb-3 text-sm font-semibold">
+                                {t('show.history.title')}
+                            </h2>
+                            <ol className="ml-1 flex flex-col gap-4 border-l pl-5">
+                                {history.map((event, index) => (
+                                    <li key={`${event.kind}-${index}`} className="relative text-sm">
+                                        <span
+                                            className={cn(
+                                                'absolute top-1.5 -left-6.25 size-2.25 rounded-full',
+                                                event.kind === 'review' && event.status === 'approved' && 'bg-green-600',
+                                                event.kind === 'review' && event.status === 'rejected' && 'bg-red-600',
+                                                event.kind === 'review' && event.status === 'pending' && 'bg-amber-600',
+                                                event.kind !== 'review' && 'bg-muted-foreground/50',
+                                            )}
+                                            aria-hidden
+                                        />
+                                        <span className="block">
+                                            {event.kind === 'review'
+                                                ? t(`show.history.review.${event.status}`, { name: event.by ?? t('show.someone') })
+                                                : t(`show.history.${event.kind}`, { name: event.by ?? t('show.someone') })}
+                                            {event.kind === 'improvement' && event.status !== 'pending' && (
+                                                <span className="text-muted-foreground">
+                                                    {' '}
+                                                    · {t(`show.history.improvement_status.${event.status}`)}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {[moment(event.at), event.reason && label(selectOptions.rejectionReasons, event.reason)]
+                                                .filter(Boolean)
+                                                .join(' · ')}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </section>
+
+                        <section aria-labelledby="technical-title">
+                            <h2 id="technical-title" className="pb-1.5 text-sm font-semibold">
+                                {t('show.technical')}
+                            </h2>
+                            <dl className="text-[13px]">
+                                <TechnicalRow
+                                    label="ID"
+                                    value={space.id}
+                                    display={`${space.id.slice(0, 8)}…${space.id.slice(-7)}`}
+                                    onCopy={copy}
+                                    copyLabel={t('show.copy', { what: 'ID' })}
+                                />
+                                {space.ip_address && (
+                                    <TechnicalRow
+                                        label={t('show.ip_address')}
+                                        value={space.ip_address}
+                                        onCopy={copy}
+                                        copyLabel={t('show.copy', { what: t('show.ip_address') })}
+                                    />
+                                )}
+                                <div className="flex items-center justify-between gap-3 border-y py-2">
+                                    <dt className="text-muted-foreground">{t('show.updated')}</dt>
+                                    <dd>{moment(space.updated_at)}</dd>
+                                </div>
+                            </dl>
+                        </section>
+                    </aside>
                 </div>
             </div>
             {dialogElement}
         </AppLayout>
+    );
+}
+
+/** One thing that waits on this parking space, with the button that opens it in moderation. */
+function Notice({
+    tone,
+    icon,
+    action,
+    href,
+    children,
+}: {
+    tone: 'pending' | 'neutral';
+    icon?: ReactNode;
+    action: string;
+    href: Parameters<typeof Link>[0]['href'];
+    children: ReactNode;
+}) {
+    return (
+        <div
+            className={cn(
+                'flex flex-col gap-3 rounded-lg border px-4 py-3 text-sm sm:flex-row sm:items-center',
+                tone === 'pending' ? 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/60' : 'bg-muted/40',
+            )}
+        >
+            {icon && <span className="hidden size-8 shrink-0 items-center justify-center rounded-md border bg-background sm:flex">{icon}</span>}
+            <p className="flex-1">{children}</p>
+            <Button asChild size="sm">
+                <Link href={href}>
+                    {action}
+                    <ArrowRight />
+                </Link>
+            </Button>
+        </div>
+    );
+}
+
+function Legend({ color, label }: { color: string; label: string }) {
+    return (
+        <span className="inline-flex items-center gap-1.5">
+            <span className={cn('size-2 rounded-full', color)} aria-hidden />
+            {label}
+        </span>
+    );
+}
+
+function SubHeading({ children }: { children: ReactNode }) {
+    return <h3 className="mt-4 mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase first:mt-3">{children}</h3>;
+}
+
+function Fields({ children }: { children: ReactNode }) {
+    return <dl className="grid gap-x-8 text-sm sm:grid-cols-2">{children}</dl>;
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+    return (
+        <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3 border-t py-2.5">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="wrap-break-word">{children || <span className="text-muted-foreground">—</span>}</dd>
+        </div>
+    );
+}
+
+function TechnicalRow({
+    label,
+    value,
+    display,
+    onCopy,
+    copyLabel,
+}: {
+    label: string;
+    value: string;
+    display?: string;
+    onCopy: (value: string) => void;
+    copyLabel: string;
+}) {
+    return (
+        <div className="flex items-center justify-between gap-3 border-t py-1.5">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="flex items-center gap-1 font-mono text-xs">
+                {display ?? value}
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-muted-foreground"
+                    onClick={() => onCopy(value)}
+                    aria-label={copyLabel}
+                >
+                    <Copy className="size-3.5" />
+                </Button>
+            </dd>
+        </div>
     );
 }

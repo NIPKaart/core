@@ -4,6 +4,7 @@ namespace App\Http\Requests\App;
 
 use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
+use App\Models\Municipality;
 use App\Traits\ValidatesParkingSpaceDetails;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,6 +21,18 @@ class UpdateParkingSpace extends FormRequest
     public function authorize(): bool
     {
         return Gate::allows('parking-space.update');
+    }
+
+    /**
+     * The municipality decides the province and country, so the three always belong together.
+     */
+    protected function prepareForValidation(): void
+    {
+        $municipality = Municipality::query()->find($this->input('municipality_id'), ['id', 'province_id', 'country_id']);
+
+        if ($municipality !== null) {
+            $this->merge(['province_id' => $municipality->province_id, 'country_id' => $municipality->country_id]);
+        }
     }
 
     /**

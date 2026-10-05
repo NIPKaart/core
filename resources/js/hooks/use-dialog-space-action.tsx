@@ -6,7 +6,7 @@ import { ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-export type DialogType = 'delete' | 'restore' | 'forceDelete' | 'bulkRestore' | 'bulkForceDelete';
+export type DialogType = 'delete' | 'restore' | 'forceDelete' | 'bulkDelete' | 'bulkRestore' | 'bulkForceDelete';
 type DialogSubject = ParkingSpace | { ids: string[] } | null;
 
 type Options = {
@@ -77,6 +77,23 @@ export function useSpaceActionDialog(options: Options = {}) {
                 },
             });
         },
+        bulkDelete: () => {
+            if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
+            router.delete(app.parkingSpaces.bulk.destroy(), {
+                data: { ids: dialogSubject.ids },
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success(t('toast.bulkDelete.success', { count: dialogSubject.ids.length }));
+                    closeDialog();
+                    options.onSuccess?.();
+                },
+                onError: () => {
+                    toast.error(t('toast.bulkDelete.error'));
+                    closeDialog();
+                    options.onError?.();
+                },
+            });
+        },
         bulkRestore: () => {
             if (!dialogSubject || !('ids' in dialogSubject) || dialogSubject.ids.length === 0) return;
             router.patch(
@@ -141,6 +158,12 @@ export function useSpaceActionDialog(options: Options = {}) {
             title: t('confirm.forceDelete.title'),
             description: (s) => (s && 'id' in s ? t('confirm.forceDelete.description', { street: s.street, city: s.city }) : ''),
             confirmText: t('confirm.forceDelete.confirm'),
+            variant: 'destructive',
+        },
+        bulkDelete: {
+            title: t('confirm.bulkDelete.title'),
+            description: (s) => (s && 'ids' in s ? t('confirm.bulkDelete.description', { count: s.ids.length }) : ''),
+            confirmText: t('confirm.bulkDelete.confirm'),
             variant: 'destructive',
         },
         bulkRestore: {

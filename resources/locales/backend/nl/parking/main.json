@@ -1,14 +1,13 @@
 {
     "head": {
-        "title": "Parkeerplaatsen (Community)",
+        "title": "Community-locaties",
         "edit": "Bewerken ({{id}})",
         "show": "Parkeerplaats ({{id}})",
         "description": "Alle vermelde parkeerplaatsen zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
     },
     "breadcrumbs": {
-        "index": "Parkeerplaatsen"
+        "index": "Community-locaties"
     },
-    "selected": "geselecteerd",
     "table": {
         "submittedBy": "Ingediend door",
         "province": "Provincie",
@@ -27,7 +26,13 @@
     },
     "filters": {
         "status": "Status",
-        "municipality": "Gemeente"
+        "municipality": "Gemeente",
+        "signals": "Signalen",
+        "signal": {
+            "nearby_municipal": "Gemeentelijke parkeerplaats dichtbij",
+            "reports": "Open meldingen",
+            "improvement": "Open verbetering"
+        }
     },
     "bulk": {
         "clear": "Wissen",
@@ -43,65 +48,71 @@
         }
     },
     "show": {
-        "trash": "Prullenbak",
-        "cards": {
-            "details": {
-                "title": "Details",
-                "description": "Alle basisinformatie over deze parkeerplaats.",
-                "fields": {
-                    "country": "Land",
-                    "province": "Provincie",
-                    "municipality": "Gemeente",
-                    "city": "Stad",
-                    "street": "Straat",
-                    "postcode": "Postcode",
-                    "amenity": "Voorziening",
-                    "orientation": "Oriëntatie",
-                    "ip_address": "IP-adres",
-                    "copy_ip": "Kopieer IP",
-                    "reviewed": "Beoordeeld",
-                    "reviewed_value": "{{name}} op {{date}}",
-                    "reviewer_removed": "Verwijderd account"
-                }
+        "view_on_map": "Op de kaart bekijken",
+        "more_actions": "Meer acties",
+        "manage_confirmations": "Bevestigingen beheren",
+        "review": "Beoordelen",
+        "someone": "Iemand",
+        "notice": {
+            "pending": "Toegevoegd {{ago}}, wacht op beoordeling.",
+            "nearby": "Er ligt een gemeentelijke parkeerplaats op {{distance}} m; mogelijk dezelfde.",
+            "improvement": "{{name}} stelde {{ago}} een verbetering voor.",
+            "changed": "Gewijzigd: {{fields}}.",
+            "reports_one": "{{count}} melding dat deze parkeerplaats er niet meer is.",
+            "reports_other": "{{count}} meldingen dat deze parkeerplaats er niet meer is."
+        },
+        "location": "Locatie",
+        "street_view": "Street View openen",
+        "copy_coordinates": "Coördinaten kopiëren",
+        "legend": {
+            "this": "Deze parkeerplaats",
+            "municipal": "Gemeentelijke parkeerplaats",
+            "community": "Andere community-parkeerplaats"
+        },
+        "details": "Gegevens",
+        "address": "Adres",
+        "area": "Wijk en buurt",
+        "region": "Provincie en land",
+        "parking": "Parkeren",
+        "orientation": "Ligging",
+        "parking_time": "Parkeertijd",
+        "max_time": "Maximaal {{time}}",
+        "no_max": "Geen maximum",
+        "hours": "uur",
+        "minutes": "min",
+        "nearby": "In de buurt",
+        "comment": "Opmerking van de inzender",
+        "contributor": "Inzender",
+        "contributions_one": "Lid sinds {{since}} · {{count}} parkeerplaats toegevoegd, {{published}} op de kaart",
+        "contributions_other": "Lid sinds {{since}} · {{count}} parkeerplaatsen toegevoegd, {{published}} op de kaart",
+        "confirmations": "Bevestigingen",
+        "all_confirmations_one": "Alle {{count}}",
+        "all_confirmations_other": "Alle {{count}}",
+        "no_confirmations": "Nog geen bevestigingen.",
+        "history": {
+            "title": "Historie",
+            "added": "Toegevoegd door {{name}}",
+            "improvement": "Verbetering voorgesteld door {{name}}",
+            "improvement_status": {
+                "approved": "overgenomen",
+                "rejected": "afgewezen"
             },
-            "confirmations": {
-                "title": "Recente bevestigingen",
-                "description": "Laatste check-ins voor deze locatie.",
-                "empty": "Nog geen bevestigingen",
-                "show_all": "Toon alles",
-                "unknown_user": "Onbekende gebruiker"
-            },
-            "location": {
-                "title": "Locatie",
-                "description": "Waar de parkeerplaats zich bevindt.",
-                "legend": "Violet: gemeentelijke parkeerplaatsen in de buurt"
-            },
-            "street_view": {
-                "title": "Street View",
-                "description": "Bekijk de omgeving van de parkeerplaats."
+            "review": {
+                "approved": "Goedgekeurd door {{name}}",
+                "rejected": "Afgewezen door {{name}}",
+                "pending": "Teruggezet naar in afwachting door {{name}}"
             }
         },
+        "technical": "Technisch",
+        "ip_address": "IP-adres",
+        "updated": "Laatst gewijzigd",
+        "copy": "{{what}} kopiëren",
         "toast": {
             "copied": "Gekopieerd naar klembord"
-        },
-        "nearby_municipal": {
-            "title": "Op {{distance}} m staat een gemeentelijke parkeerplaats",
-            "description": "Controleer of deze melding dezelfde parkeerplaats beschrijft. Zo ja, wijs haar dan af als dubbele melding."
         }
     },
     "edit": {
-        "viewStreet": "Street View",
-        "submitted": "Ingediend door:",
-        "anonymous": "Anoniem ingediend",
-        "created": "Aangemaakt op:",
         "form": {
-            "title": "Parkeerplaats details",
-            "description": "Bewerk de details van de parkeerplaats.",
-            "tabs": {
-                "basic": "Basis",
-                "extra": "Extra",
-                "status": "Status"
-            },
             "labels": {
                 "country": "Land",
                 "province": "Provincie",
@@ -123,24 +134,52 @@
                 "restriction_starts_at": "Vanaf",
                 "restriction_ends_at": "Tot",
                 "rejectionReason": "Reden van afwijzing *",
-                "rejectionNote": "Toelichting (optioneel)"
+                "rejectionNote": "Toelichting (optioneel)",
+                "street_number": "Straat en huisnummer",
+                "maxTime": "Maximale parkeertijd"
             },
             "hints": {
                 "parkingTime": "Maximale toegestane parkeertijd op deze locatie.",
                 "underSign": "Alleen bij \"Ja\" zijn de details hieronder van toepassing.",
                 "underSignUnknown": "Niet bekend",
                 "restriction": "Laat leeg als het onderbord geen dagen of tijden noemt.",
-                "rejectionReason": "Kies een reden"
+                "rejectionReason": "Kies een reden",
+                "region": "Volgt uit de gemeente."
             },
             "location": {
-                "title": "Locatie",
-                "description": "Versleep de marker om de exacte plek aan te passen op de kaart.",
                 "latitude": "Breedtegraad",
                 "longitude": "Lengtegraad"
             },
             "actions": {
                 "save": "Wijzigingen opslaan"
             }
+        },
+        "breadcrumb": "Bewerken",
+        "title": "{{street}} bewerken",
+        "added_by": "Toegevoegd door {{name}} op {{date}}. Wijzigingen aan een parkeerplaats op de kaart zijn direct zichtbaar.",
+        "added": "Toegevoegd op {{date}}. Wijzigingen aan een parkeerplaats op de kaart zijn direct zichtbaar.",
+        "unsaved_one": "{{count}} wijziging niet opgeslagen",
+        "unsaved_other": "{{count}} wijzigingen niet opgeslagen",
+        "no_changes": "Geen wijzigingen",
+        "cancel": "Annuleren",
+        "sections": {
+            "address": {
+                "title": "Adres",
+                "description": "De gemeente bepaalt waar de parkeerplaats in het overzicht en op de kaart valt."
+            },
+            "parking": {
+                "title": "Parkeren",
+                "description": "Wat een bezoeker ter plekke ziet: hoe het vak ligt en welke borden er staan."
+            },
+            "status": {
+                "title": "Status",
+                "description": "Nieuwe parkeerplaatsen en verbeteringen beoordeel je in"
+            }
+        },
+        "map": {
+            "title": "Parkeerplaats op de kaart",
+            "drag": "Versleep de markering naar het vak",
+            "municipal": "Paarse markeringen zijn gemeentelijke parkeerplaatsen."
         }
     },
     "days": {
@@ -156,5 +195,55 @@
         "label": "Weergave",
         "all": "Alle",
         "trash": "Prullenbak"
+    },
+    "status": {
+        "pending": "In afwachting",
+        "approved": "Op de kaart",
+        "rejected": "Afgewezen"
+    },
+    "signals": {
+        "nearby_municipal": "Gemeentelijke parkeerplaats op {{distance}} m",
+        "reports_one": "{{count}} melding",
+        "reports_other": "{{count}} meldingen",
+        "improvement_one": "Verbetering open",
+        "improvement_other": "{{count}} verbeteringen open"
+    },
+    "index": {
+        "description": "Parkeerplaatsen die de community heeft toegevoegd. Nieuwe en gewijzigde parkeerplaatsen beoordeel je in",
+        "moderation": "Moderatie",
+        "view_map": "Op de kaart bekijken",
+        "add": "Parkeerplaats toevoegen",
+        "search": "Zoek op adres of inzender",
+        "empty": "Geen parkeerplaatsen gevonden.",
+        "select_all": "Alles selecteren",
+        "select": "Selecteer {{street}}",
+        "first_contribution": "Eerste bijdrage",
+        "contributions_one": "{{count}} bijdrage",
+        "contributions_other": "{{count}} bijdragen",
+        "removed_account": "Account verwijderd",
+        "review": "Beoordelen",
+        "actions_for": "Acties voor {{street}}",
+        "move_to_trash": "Naar prullenbak",
+        "columns": {
+            "location": "Locatie",
+            "municipality": "Gemeente",
+            "contributor": "Inzender",
+            "status": "Status",
+            "confirmations": "Bevestigd",
+            "added": "Toegevoegd"
+        },
+        "sort": {
+            "label": "Sorteren",
+            "newest": "Nieuwste eerst",
+            "oldest": "Oudste eerst"
+        },
+        "selection": {
+            "label": "Acties voor de selectie",
+            "count_one": "{{count}} geselecteerd",
+            "count_other": "{{count}} geselecteerd",
+            "reason": "Reden van afwijzing"
+        },
+        "confirmed_one": "{{count}} bevestiging",
+        "confirmed_other": "{{count}} bevestigingen"
     }
 }

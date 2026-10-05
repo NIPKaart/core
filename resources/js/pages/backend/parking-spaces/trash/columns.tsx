@@ -1,17 +1,24 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ParkingSpace, Translations } from '@/types';
-import { ColumnDef } from '@tanstack/react-table';
-import { RotateCcw, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import type { ParkingSpace, Translations } from '@/types';
+import type { ColumnDef } from '@tanstack/react-table';
+import { MoreVertical, RotateCcw } from 'lucide-react';
+import { StatusPill } from '../parts';
 
-type OpenDialogFn = (type: 'restore' | 'forceDelete', space: ParkingSpace) => void;
+export type TrashedSpace = ParkingSpace & { deleted_at: string };
+
+type Options = {
+    can: (permission: string) => boolean;
+    openDialog: (type: 'restore' | 'forceDelete', space: ParkingSpace) => void;
+    when: (value: string) => string;
+    rejectionReasons: { value: string; label: string }[];
+};
 
 export function getParkingTrashColumns(
-    can: (permission: string) => boolean,
-    openDialog: OpenDialogFn,
+    { can, openDialog, when, rejectionReasons }: Options,
     { t, tGlobal }: Translations,
-): ColumnDef<ParkingSpace>[] {
+): ColumnDef<TrashedSpace>[] {
     return [
         {
             id: 'select',
@@ -35,92 +42,99 @@ export function getParkingTrashColumns(
             ),
         },
         {
-            accessorKey: 'user.name',
-            header: t('table.submittedBy'),
-            enableSorting: true,
-            cell: ({ row }) => row.original.user?.name ?? '—',
+            id: 'location',
+            header: t('table.location'),
+            enableSorting: false,
+            enableHiding: false,
+            cell: ({ row }) => (
+                <div>
+                    <span className="block font-medium">{row.original.street}</span>
+                    <span className="text-[13px] text-muted-foreground">{[row.original.postcode, row.original.city].filter(Boolean).join(' ')}</span>
+                </div>
+            ),
         },
         {
-            accessorKey: 'municipality',
+            id: 'municipality',
             header: t('table.municipality'),
-            enableSorting: true,
-            cell: ({ row }) => row.original.municipality?.name ?? '—',
+            enableSorting: false,
+            cell: ({ row }) => (
+                <div>
+                    {row.original.municipality?.name ?? '—'}
+                    {row.original.province && <span className="block text-[13px] text-muted-foreground">{row.original.province.name}</span>}
+                </div>
+            ),
         },
         {
-            accessorKey: 'city',
-            header: t('table.city'),
-            enableSorting: true,
+            id: 'contributor',
+            header: t('table.submittedBy'),
+            enableSorting: false,
+            cell: ({ row }) => row.original.user?.name ?? <span className="text-muted-foreground">—</span>,
         },
         {
-            accessorKey: 'street',
-            header: t('table.street'),
-            enableSorting: true,
-            cell: ({ row }) => `${row.original.street}, ${row.original.postcode}`,
-        },
-        {
-            accessorKey: 'status',
+            id: 'status',
             header: t('table.status'),
-            enableSorting: true,
+            enableSorting: false,
             cell: ({ row }) => {
-                const status = row.original.status;
-                const variantMap = {
-                    pending: 'default',
-                    approved: 'secondary',
-                    rejected: 'destructive',
-                } as const;
+                const reason = row.original.status === 'rejected' && row.original.latest_review?.reason;
 
-                return <Badge variant={variantMap[status as keyof typeof variantMap] ?? 'default'}>{t(`status.${status}`)}</Badge>;
+                return (
+                    <div className="flex flex-col items-start gap-1">
+                        <StatusPill status={row.original.status} />
+                        {reason && (
+                            <span className="text-[13px] text-muted-foreground">
+                                {rejectionReasons.find((option) => option.value === reason)?.label ?? reason}
+                            </span>
+                        )}
+                    </div>
+                );
             },
         },
         {
-            accessorKey: 'created_at',
-            header: t('table.submittedAt'),
-            enableSorting: true,
-            cell: ({ row }) =>
-                new Date(row.original.created_at).toLocaleString(undefined, {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                }),
-        },
-        {
-            accessorKey: 'deleted_at',
+            id: 'deleted_at',
             header: t('table.deletedAt'),
-            enableSorting: true,
-            cell: ({ row }) => {
-                const deletedAt = row.original.deleted_at;
-                return deletedAt
-                    ? new Date(deletedAt).toLocaleString(undefined, {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                      })
-                    : '—';
-            },
+            enableSorting: false,
+            cell: ({ row }) => <span className="whitespace-nowrap">{when(row.original.deleted_at)}</span>,
         },
         {
             id: 'actions',
             enableSorting: false,
             enableHiding: false,
-            cell: ({ row }) => {
-                const space = row.original;
-
-                return (
-                    <div className="flex justify-end gap-2">
-                        {can('parking-space.restore') && (
-                            <Button variant="outline" className="cursor-pointer" size="icon" onClick={() => openDialog('restore', space)}>
-                                <RotateCcw className="h-4 w-4" />
-                                <span className="sr-only">{t('table.actions.restore')}</span>
-                            </Button>
-                        )}
-
-                        {can('parking-space.force-delete') && (
-                            <Button variant="destructive" className="cursor-pointer" size="icon" onClick={() => openDialog('forceDelete', space)}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">{t('table.actions.forceDelete')}</span>
-                            </Button>
-                        )}
-                    </div>
-                );
-            },
+            meta: { align: 'right' },
+            cell: ({ row }) => (
+                <div className="flex items-center justify-end gap-1">
+                    {can('parking-space.restore') && (
+                        <Button variant="outline" size="sm" onClick={() => openDialog('restore', row.original)}>
+                            <RotateCcw />
+                            {t('table.actions.restore')}
+                        </Button>
+                    )}
+                    {can('parking-space.force-delete') && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-8 text-muted-foreground"
+                                    aria-label={t('table.actions.more', { street: row.original.street })}
+                                >
+                                    <MoreVertical />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                    className="cursor-pointer text-destructive"
+                                    onSelect={(event) => {
+                                        event.preventDefault();
+                                        openDialog('forceDelete', row.original);
+                                    }}
+                                >
+                                    {t('table.actions.forceDelete')}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
+            ),
         },
     ];
 }

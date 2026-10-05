@@ -22,9 +22,15 @@ class ParkingSpaceConfirmationController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20);
 
+        $counts = $parkingSpace->confirmations()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+
         return Inertia::render('backend/parking-spaces/confirmations/index', [
-            'parkingSpace' => $parkingSpace->only('id', 'country_id', 'municipality', 'city', 'street'),
+            'parkingSpace' => ['id' => $parkingSpace->id, 'street' => $parkingSpace->street, 'city' => $parkingSpace->city],
             'confirmations' => $confirmations,
+            'outcomes' => [
+                'total' => (int) $counts->sum(),
+                ...collect(ParkingConfirmationStatus::cases())->mapWithKeys(fn (ParkingConfirmationStatus $status) => [$status->value => (int) ($counts[$status->value] ?? 0)])->all(),
+            ],
             'options' => [
                 'confirmationStatuses' => ParkingConfirmationStatus::options(),
             ],
