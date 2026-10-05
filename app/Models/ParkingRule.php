@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RuleLinkStatus;
 use Database\Factories\ParkingRuleFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +22,12 @@ class ParkingRule extends Model
 
     protected $table = 'parking_rules';
 
-    protected $casts = ['nationwide' => 'boolean'];
+    protected $casts = [
+        'nationwide' => 'boolean',
+        'link_status' => RuleLinkStatus::class,
+        'link_checked_at' => 'datetime',
+        'link_failing_since' => 'datetime',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -37,6 +43,11 @@ class ParkingRule extends Model
     {
         static::saving(function (ParkingRule $rule): void {
             $rule->nationwide = $rule->municipality_id === null;
+
+            // A new address has not been checked yet; the previous outcome belonged to the old one.
+            if ($rule->exists && $rule->isDirty('url')) {
+                $rule->forceFill(['link_status' => null, 'link_http_status' => null, 'link_error' => null, 'link_final_url' => null, 'link_checked_at' => null, 'link_failing_since' => null]);
+            }
         });
     }
 

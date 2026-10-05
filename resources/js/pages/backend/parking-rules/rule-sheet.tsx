@@ -14,7 +14,7 @@ import type { CountrySources, MunicipalityOption } from './index';
 
 export type SheetState =
     | { mode: 'create'; nationwide: boolean; countryId: number | null }
-    | { mode: 'edit'; id: number; url: string; nationwide: boolean; name: string }
+    | { mode: 'edit'; id: number; url: string; nationwide: boolean; name: string; suggestedUrl?: string }
     | null;
 
 type Props = {
@@ -157,7 +157,7 @@ function CreateForm({
 
 function EditForm({ rule, onClose }: { rule: Extract<SheetState, { mode: 'edit' }>; onClose: () => void }) {
     const { t } = useTranslation('backend/parking-rules');
-    const form = useForm({ url: rule.url });
+    const form = useForm({ url: rule.suggestedUrl ?? rule.url });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -178,7 +178,7 @@ function EditForm({ rule, onClose }: { rule: Extract<SheetState, { mode: 'edit' 
                 <Button type="button" variant="ghost" onClick={onClose}>
                     {t('sheet.cancel')}
                 </Button>
-                <Button type="submit" disabled={form.processing || !form.isDirty}>
+                <Button type="submit" disabled={form.processing || form.data.url === rule.url}>
                     {t('sheet.save')}
                 </Button>
             </SheetFooter>

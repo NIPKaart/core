@@ -8,7 +8,9 @@
         "add_short": "Toevoegen",
         "edit": "Bewerken",
         "delete": "Verwijderen",
-        "for": "Acties voor {{name}}"
+        "for": "Acties voor {{name}}",
+        "check": "Nu controleren",
+        "adopt_redirect": "Nieuw adres overnemen"
     },
     "changed": "Gewijzigd {{date}}",
     "national": {
@@ -69,5 +71,22 @@
         "country": "Bezoekers in {{name}} zien daarna \"Niet bekend\", behalve in gemeenten met een eigen bron.",
         "municipality": "Bezoekers in {{name}} zien daarna de landelijke bron.",
         "confirm": "Verwijderen"
+    },
+    "health": {
+        "summary_one": "{{count}} bron opent niet. Bezoekers komen dan op een foutpagina; controleer het adres.",
+        "summary_other": "{{count}} bronnen openen niet. Bezoekers komen dan op een foutpagina; controleer de adressen.",
+        "unchecked": "Nog niet gecontroleerd",
+        "ok": "Werkt · gecontroleerd {{date}}",
+        "redirected": "Verwijst door naar {{host}}",
+        "broken": "Werkt niet",
+        "since": "sinds {{date}}",
+        "errors": {
+            "timeout": "time-out",
+            "dns": "domein onbekend",
+            "tls": "certificaatfout",
+            "connection": "geen verbinding",
+            "missing_location": "lege doorverwijzing",
+            "too_many_redirects": "te veel doorverwijzingen"
+        }
     }
 }

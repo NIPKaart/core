@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\RuleLinkStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\StoreParkingRuleRequest;
 use App\Http\Requests\App\UpdateParkingRuleRequest;
 use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingRule;
+use App\Services\ParkingRuleLinkChecker;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,9 @@ use Inertia\Response;
 
 class ParkingRuleController extends Controller
 {
+    /** What admins see about whether a source's link still opens. */
+    private const array HEALTH = ['link_status', 'link_http_status', 'link_error', 'link_final_url', 'link_checked_at', 'link_failing_since'];
+
     /**
      * The country-wide source of each country, and the municipalities with a source of their own.
      */
@@ -41,7 +46,7 @@ class ParkingRuleController extends Controller
                 'code' => $country->code,
                 'municipalities' => (int) ($municipalities[$country->id] ?? 0),
                 'own_sources' => (int) ($ownSources[$country->id] ?? 0),
-                'rule' => $national->get($country->id)?->only(['id', 'url', 'updated_at']),
+                'rule' => $national->get($country->id)?->only(['id', 'url', 'updated_at', ...self::HEALTH]),
             ]);
 
         $rules = ParkingRule::query()
@@ -57,6 +62,7 @@ class ParkingRuleController extends Controller
             'countries' => $countries,
             'rules' => $rules,
             'filters' => ['search' => $search, 'country' => $countryId],
+            'brokenLinks' => ParkingRule::query()->where('link_status', RuleLinkStatus::BROKEN)->count(),
             'availableMunicipalities' => Inertia::defer(fn () => Municipality::query()
                 ->whereDoesntHave('parkingRules')
                 ->with('province:id,name')
@@ -93,6 +99,19 @@ class ParkingRuleController extends Controller
 
         $parkingRule->update($request->safe()->only('url'));
         Inertia::flash('success', __('parking_rules.flash.updated'));
+
+        return redirect()->route('app.parking-rules.index');
+    }
+
+    /**
+     * Check one source's link now, for example right after fixing it.
+     */
+    public function check(ParkingRule $parkingRule, ParkingRuleLinkChecker $checker): RedirectResponse
+    {
+        Gate::authorize('update', $parkingRule);
+
+        $status = $checker->check($parkingRule);
+        Inertia::flash($status === RuleLinkStatus::BROKEN ? 'error' : 'success', __("parking_rules.flash.checked.{$status->value}"));
 
         return redirect()->route('app.parking-rules.index');
     }

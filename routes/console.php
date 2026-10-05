@@ -29,3 +29,6 @@ if (config('dataset-deliveries.enabled')) {
     // The collector delivers observations every two minutes; only the newest unprocessed one is applied.
     Schedule::command('nipkaart:ingest-observations')->everyMinute()->onOneServer()->withoutOverlapping(5);
 }
+
+// Official parking-rule links are checked once a day; a failing link is reported to admins, never hidden or replaced.
+Schedule::command('nipkaart:check-rule-links')->dailyAt('04:15')->timezone('UTC')->environments(['production'])->onOneServer()->withoutOverlapping(60);
