@@ -1,24 +1,24 @@
 {
     "head": {
-        "title": "Confirmations - #{{id}}",
-        "description": "View and manage confirmations submitted for this parking space."
+        "title": "Confirmations · {{street}}",
+        "description": "What visitors reported on site about {{place}}. Only remove confirmations that are abuse or a mistake."
     },
     "breadcrumbs": {
-        "spaces": "Parking Spaces",
+        "spaces": "Community Spaces",
         "show": "Show",
         "confirmations": "Confirmations"
     },
-    "selected": "selected",
     "unknown": "Unknown",
     "back": "Back to parking space",
     "table": {
         "status": "Status",
-        "user": "User",
-        "confirmedAt": "Confirmed at",
+        "user": "Visitor",
+        "confirmedAt": "When",
         "comment": "Comment",
         "actions": {
             "delete": "Delete confirmation",
-            "deleteSelected": "Delete selected"
+            "deleteSelected": "Delete",
+            "more": "More actions"
         }
     },
     "bulk": {
@@ -46,5 +46,10 @@
     },
     "errors": {
         "missingId": "Missing parking space id"
-    }
+    },
+    "total": "Total",
+    "empty": "No confirmations yet.",
+    "selection": "Actions for the selection",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected"
 }

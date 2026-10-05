@@ -1,24 +1,24 @@
 {
     "head": {
-        "title": "Bevestigingen - #{{id}}",
-        "description": "Bekijk en beheer alle bevestigingen die zijn ingediend voor deze parkeerplaats."
+        "title": "Bevestigingen · {{street}}",
+        "description": "Wat bezoekers ter plekke meldden over {{place}}. Verwijder alleen bevestigingen die misbruik of een vergissing zijn."
     },
     "breadcrumbs": {
-        "spaces": "Parkeerplaatsen",
+        "spaces": "Community-locaties",
         "show": "Bekijken",
         "confirmations": "Bevestigingen"
     },
-    "selected": "geselecteerd",
     "unknown": "Onbekend",
     "back": "Terug naar parkeerplaats",
     "table": {
         "status": "Status",
-        "user": "Gebruiker",
-        "confirmedAt": "Bevestigd op",
+        "user": "Bezoeker",
+        "confirmedAt": "Wanneer",
         "comment": "Opmerking",
         "actions": {
             "delete": "Bevestiging verwijderen",
-            "deleteSelected": "Verwijder selectie"
+            "deleteSelected": "Verwijderen",
+            "more": "Meer acties"
         }
     },
     "bulk": {
@@ -46,5 +46,10 @@
     },
     "errors": {
         "missingId": "Parkeerplaats ID ontbreekt"
-    }
+    },
+    "total": "Totaal",
+    "empty": "Nog geen bevestigingen.",
+    "selection": "Acties voor de selectie",
+    "selected_one": "{{count}} geselecteerd",
+    "selected_other": "{{count}} geselecteerd"
 }

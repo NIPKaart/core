@@ -12,8 +12,12 @@ use App\Http\Requests\App\UpdateParkingSpace;
 use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
+use App\Models\ParkingSpaceImprovement;
+use App\Models\ParkingSpaceReview;
 use App\Models\Province;
 use App\Services\NearbyMunicipalPlaces;
+use App\Services\ParkingSpaceImprovements;
+use App\Services\UserActivity;
 use App\Support\GeoPoint;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -117,18 +121,21 @@ class ParkingSpaceController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * One community parking space: where it is, what it says, who added it, what visitors confirmed and what happened to it.
      */
-    public function show(ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
+    public function show(ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces, ParkingSpaceImprovements $improvements)
     {
         Gate::authorize('view', $parkingSpace);
 
         $parkingSpace = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
-            ->with(['user', 'latestReview.reviewer:id,name', 'province', 'country', 'municipality'])
+            ->with(['user' => fn (BelongsTo $user) => $user->withCount([
+                'parkingSpaces',
+                'parkingSpaces as published_spaces_count' => fn (Builder $spaces) => $spaces->where('status', ParkingStatus::APPROVED),
+            ]), 'province', 'country', 'municipality'])
+            ->withCount(['reports as open_reports_count' => fn (Builder $reports) => $reports->open()])
             ->findOrFail($parkingSpace->id);
         $location = new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude);
 
-        // Get the 10 nearest parking spaces
         $limit = 10;
         $nearbySpaces = ParkingSpace::select('id', 'latitude', 'longitude', 'status')
             ->where('id', '!=', $parkingSpace->id)
@@ -138,15 +145,8 @@ class ParkingSpaceController extends Controller
             ->limit($limit)
             ->get();
 
-        // Visible municipal places around it, so the moderator sees what municipal data already covers
-        $nearbyMunicipalSpaces = $nearbyMunicipalPlaces->around($location, $limit);
-
-        // Fetch the 8 most recent confirmations
-        $recentConfirmations = $parkingSpace->confirmations()
-            ->with('user')
-            ->latest('confirmed_at')
-            ->take(8)
-            ->get();
+        $openImprovement = $parkingSpace->improvements()->pending()->with('user:id,name')->latest()->first();
+        $confirmations = $parkingSpace->confirmations()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
         return inertia('backend/parking-spaces/show', [
             'parkingSpace' => $parkingSpace,
@@ -158,9 +158,49 @@ class ParkingSpaceController extends Controller
                 'confirmationStatuses' => ParkingConfirmationStatus::mapped(),
             ],
             'nearbySpaces' => $nearbySpaces,
-            'nearbyMunicipalSpaces' => $nearbyMunicipalSpaces,
-            'recentConfirmations' => $recentConfirmations,
+            'nearbyMunicipalSpaces' => $nearbyMunicipalPlaces->around($location, $limit),
+            'openImprovement' => $openImprovement ? [
+                'id' => $openImprovement->id,
+                'proposer' => $openImprovement->user?->name,
+                'proposed_at' => $openImprovement->created_at->toIso8601String(),
+                'changes' => $improvements->changeGroups($openImprovement->submitted ?? []),
+            ] : null,
+            'confirmations' => [
+                'counts' => collect(ParkingConfirmationStatus::cases())->mapWithKeys(fn (ParkingConfirmationStatus $status) => [$status->value => (int) ($confirmations[$status->value] ?? 0)])->all(),
+                'total' => (int) $confirmations->sum(),
+                'recent' => $parkingSpace->confirmations()->with('user:id,name')->latest('confirmed_at')->take(3)->get(),
+            ],
+            'history' => $this->history($parkingSpace),
+            'mapUrl' => $parkingSpace->status === ParkingStatus::APPROVED ? UserActivity::mapUrl($parkingSpace) : null,
         ]);
+    }
+
+    /**
+     * What happened to a parking space, newest first: proposed improvements, review decisions and its creation.
+     *
+     * @return list<array{kind: string, at: string, by: ?string, status?: string, reason?: ?string}>
+     */
+    private function history(ParkingSpace $parkingSpace): array
+    {
+        $reviews = $parkingSpace->reviews()->with('reviewer:id,name')->get()->map(fn (ParkingSpaceReview $review) => [
+            'kind' => 'review',
+            'at' => $review->reviewed_at->toIso8601String(),
+            'by' => $review->reviewer?->name,
+            'status' => $review->to_status->value,
+            'reason' => $review->reason?->value,
+        ]);
+        $proposals = $parkingSpace->improvements()->with('user:id,name')->get()->map(fn (ParkingSpaceImprovement $improvement) => [
+            'kind' => 'improvement',
+            'at' => $improvement->created_at->toIso8601String(),
+            'by' => $improvement->user?->name,
+            'status' => $improvement->status->value,
+        ]);
+
+        return $reviews->concat($proposals)
+            ->push(['kind' => 'added', 'at' => $parkingSpace->created_at->toIso8601String(), 'by' => $parkingSpace->user?->name])
+            ->sortByDesc('at')
+            ->values()
+            ->all();
     }
 
     /**

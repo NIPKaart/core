@@ -48,50 +48,67 @@
         }
     },
     "show": {
-        "trash": "Prullenbak",
-        "cards": {
-            "details": {
-                "title": "Details",
-                "description": "Alle basisinformatie over deze parkeerplaats.",
-                "fields": {
-                    "country": "Land",
-                    "province": "Provincie",
-                    "municipality": "Gemeente",
-                    "city": "Stad",
-                    "street": "Straat",
-                    "postcode": "Postcode",
-                    "amenity": "Voorziening",
-                    "orientation": "Oriëntatie",
-                    "ip_address": "IP-adres",
-                    "copy_ip": "Kopieer IP",
-                    "reviewed": "Beoordeeld",
-                    "reviewed_value": "{{name}} op {{date}}",
-                    "reviewer_removed": "Verwijderd account"
-                }
+        "view_on_map": "Op de kaart bekijken",
+        "more_actions": "Meer acties",
+        "manage_confirmations": "Bevestigingen beheren",
+        "review": "Beoordelen",
+        "someone": "Iemand",
+        "notice": {
+            "pending": "Toegevoegd {{ago}}, wacht op beoordeling.",
+            "nearby": "Er ligt een gemeentelijke parkeerplaats op {{distance}} m; mogelijk dezelfde.",
+            "improvement": "{{name}} stelde {{ago}} een verbetering voor.",
+            "changed": "Gewijzigd: {{fields}}.",
+            "reports_one": "{{count}} melding dat deze parkeerplaats er niet meer is.",
+            "reports_other": "{{count}} meldingen dat deze parkeerplaats er niet meer is."
+        },
+        "location": "Locatie",
+        "street_view": "Street View openen",
+        "copy_coordinates": "Coördinaten kopiëren",
+        "legend": {
+            "this": "Deze parkeerplaats",
+            "municipal": "Gemeentelijke parkeerplaats",
+            "community": "Andere community-parkeerplaats"
+        },
+        "details": "Gegevens",
+        "address": "Adres",
+        "area": "Wijk en buurt",
+        "region": "Provincie en land",
+        "parking": "Parkeren",
+        "orientation": "Ligging",
+        "parking_time": "Parkeertijd",
+        "max_time": "Maximaal {{time}}",
+        "no_max": "Geen maximum",
+        "hours": "uur",
+        "minutes": "min",
+        "nearby": "In de buurt",
+        "comment": "Opmerking van de inzender",
+        "contributor": "Inzender",
+        "contributions_one": "Lid sinds {{since}} · {{count}} parkeerplaats toegevoegd, {{published}} op de kaart",
+        "contributions_other": "Lid sinds {{since}} · {{count}} parkeerplaatsen toegevoegd, {{published}} op de kaart",
+        "confirmations": "Bevestigingen",
+        "all_confirmations_one": "Alle {{count}}",
+        "all_confirmations_other": "Alle {{count}}",
+        "no_confirmations": "Nog geen bevestigingen.",
+        "history": {
+            "title": "Historie",
+            "added": "Toegevoegd door {{name}}",
+            "improvement": "Verbetering voorgesteld door {{name}}",
+            "improvement_status": {
+                "approved": "overgenomen",
+                "rejected": "afgewezen"
             },
-            "confirmations": {
-                "title": "Recente bevestigingen",
-                "description": "Laatste check-ins voor deze locatie.",
-                "empty": "Nog geen bevestigingen",
-                "show_all": "Toon alles",
-                "unknown_user": "Onbekende gebruiker"
-            },
-            "location": {
-                "title": "Locatie",
-                "description": "Waar de parkeerplaats zich bevindt.",
-                "legend": "Violet: gemeentelijke parkeerplaatsen in de buurt"
-            },
-            "street_view": {
-                "title": "Street View",
-                "description": "Bekijk de omgeving van de parkeerplaats."
+            "review": {
+                "approved": "Goedgekeurd door {{name}}",
+                "rejected": "Afgewezen door {{name}}",
+                "pending": "Teruggezet naar in afwachting door {{name}}"
             }
         },
+        "technical": "Technisch",
+        "ip_address": "IP-adres",
+        "updated": "Laatst gewijzigd",
+        "copy": "{{what}} kopiëren",
         "toast": {
             "copied": "Gekopieerd naar klembord"
-        },
-        "nearby_municipal": {
-            "title": "Op {{distance}} m staat een gemeentelijke parkeerplaats",
-            "description": "Controleer of deze melding dezelfde parkeerplaats beschrijft. Zo ja, wijs haar dan af als dubbele melding."
         }
     },
     "edit": {

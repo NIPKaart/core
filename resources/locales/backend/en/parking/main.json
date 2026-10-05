@@ -46,50 +46,67 @@
         }
     },
     "show": {
-        "trash": "Trash",
-        "cards": {
-            "details": {
-                "title": "Details",
-                "description": "All basic info about this parking space.",
-                "fields": {
-                    "country": "Country",
-                    "province": "Province",
-                    "municipality": "Municipality",
-                    "city": "City",
-                    "street": "Street",
-                    "postcode": "Postcode",
-                    "amenity": "Amenity",
-                    "orientation": "Orientation",
-                    "ip_address": "IP Address",
-                    "copy_ip": "Copy IP",
-                    "reviewed": "Reviewed",
-                    "reviewed_value": "{{name}} on {{date}}",
-                    "reviewer_removed": "Deleted account"
-                }
+        "view_on_map": "View on the map",
+        "more_actions": "More actions",
+        "manage_confirmations": "Manage confirmations",
+        "review": "Review",
+        "someone": "Someone",
+        "notice": {
+            "pending": "Added {{ago}}, waiting for review.",
+            "nearby": "A municipal parking space lies {{distance}} m away; it may be the same one.",
+            "improvement": "{{name}} proposed an improvement {{ago}}.",
+            "changed": "Changed: {{fields}}.",
+            "reports_one": "{{count}} report that this parking space is gone.",
+            "reports_other": "{{count}} reports that this parking space is gone."
+        },
+        "location": "Location",
+        "street_view": "Open Street View",
+        "copy_coordinates": "Copy coordinates",
+        "legend": {
+            "this": "This parking space",
+            "municipal": "Municipal parking space",
+            "community": "Other community parking space"
+        },
+        "details": "Details",
+        "address": "Address",
+        "area": "District and neighbourhood",
+        "region": "Province and country",
+        "parking": "Parking",
+        "orientation": "Orientation",
+        "parking_time": "Parking time",
+        "max_time": "At most {{time}}",
+        "no_max": "No maximum",
+        "hours": "h",
+        "minutes": "min",
+        "nearby": "Nearby",
+        "comment": "Comment from the contributor",
+        "contributor": "Contributor",
+        "contributions_one": "Member since {{since}} · {{count}} parking space added, {{published}} on the map",
+        "contributions_other": "Member since {{since}} · {{count}} parking spaces added, {{published}} on the map",
+        "confirmations": "Confirmations",
+        "all_confirmations_one": "All {{count}}",
+        "all_confirmations_other": "All {{count}}",
+        "no_confirmations": "No confirmations yet.",
+        "history": {
+            "title": "History",
+            "added": "Added by {{name}}",
+            "improvement": "Improvement proposed by {{name}}",
+            "improvement_status": {
+                "approved": "applied",
+                "rejected": "rejected"
             },
-            "confirmations": {
-                "title": "Recent confirmations",
-                "description": "Latest check-ins for this location.",
-                "empty": "No confirmations yet",
-                "show_all": "Show all",
-                "unknown_user": "Unknown User"
-            },
-            "location": {
-                "title": "Location",
-                "description": "Where the parking space is located.",
-                "legend": "Violet: nearby municipal parking spaces"
-            },
-            "street_view": {
-                "title": "Street view",
-                "description": "See the area around the parking space."
+            "review": {
+                "approved": "Approved by {{name}}",
+                "rejected": "Rejected by {{name}}",
+                "pending": "Set back to pending by {{name}}"
             }
         },
+        "technical": "Technical",
+        "ip_address": "IP address",
+        "updated": "Last changed",
+        "copy": "Copy {{what}}",
         "toast": {
             "copied": "Copied to clipboard"
-        },
-        "nearby_municipal": {
-            "title": "A municipal parking space is {{distance}} m away",
-            "description": "Check whether this submission describes the same parking space. If so, reject it as a duplicate."
         }
     },
     "edit": {

@@ -1,10 +1,12 @@
 <?php
 
+use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
+use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -96,4 +98,51 @@ test('moving several parking spaces to the trash needs the delete permission', f
         ->assertForbidden();
 
     expect($space->fresh()->trashed())->toBeFalse();
+});
+
+test('the detail page leads with what waits on the parking space and summarises its confirmations and history', function () {
+    $moderator = User::factory()->create(['name' => 'Klaas Schoute']);
+    $this->travelTo('2026-03-18 21:40:00');
+    $space = ParkingSpace::factory()->for(User::factory()->create(['name' => 'Lotte Mulder']))->create(['status' => ParkingStatus::PENDING]);
+    $this->travelTo('2026-03-19 09:12:00');
+    $space->fill(['status' => ParkingStatus::APPROVED])->saveReviewedBy($moderator);
+    $this->travelTo('2026-09-30 10:00:00');
+    ParkingSpaceImprovement::factory()->for(User::factory()->create(['name' => 'Sanne Yilmaz']))->create(['parking_space_id' => $space->id, 'submitted' => ['under_sign' => 'yes', 'description' => 'Nieuw bord']]);
+    ParkingSpaceConfirmation::factory()->for(User::factory())->for($space)->count(2)->create();
+    ParkingSpaceConfirmation::factory()->for(User::factory())->for($space)->create(['status' => ParkingConfirmationStatus::MOVED]);
+    $this->travelTo('2026-10-05 09:00:00');
+
+    $this->actingAs($this->admin)->get(route('app.parking-spaces.show', $space))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('openImprovement.proposer', 'Sanne Yilmaz')
+            ->where('openImprovement.changes', ['under_sign', 'description'])
+            ->where('confirmations.total', 3)
+            ->where('confirmations.counts', ['confirmed' => 2, 'moved' => 1, 'unavailable' => 0])
+            ->has('confirmations.recent', 3)
+            ->where('history.0.kind', 'improvement')
+            ->where('history.1', ['kind' => 'review', 'at' => '2026-03-19T09:12:00+00:00', 'by' => 'Klaas Schoute', 'status' => 'approved', 'reason' => null])
+            ->where('history.2.kind', 'added')
+            ->where('history.2.by', 'Lotte Mulder')
+            ->where('parkingSpace.user.parking_spaces_count', 1)
+            ->where('parkingSpace.user.published_spaces_count', 1)
+            ->where('mapUrl', fn (string $url) => str_contains(urldecode($url), "community:{$space->id}")));
+});
+
+test('a parking space that is not on the map gets no public map link', function () {
+    $space = ParkingSpace::factory()->create(['status' => ParkingStatus::PENDING]);
+
+    $this->actingAs($this->admin)->get(route('app.parking-spaces.show', $space))
+        ->assertInertia(fn (Assert $page) => $page->where('mapUrl', null)->where('openImprovement', null));
+});
+
+test('the confirmations page counts every outcome, not only the current page', function () {
+    $space = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
+    ParkingSpaceConfirmation::factory()->for(User::factory())->for($space)->count(21)->create();
+    ParkingSpaceConfirmation::factory()->for(User::factory())->for($space)->create(['status' => ParkingConfirmationStatus::UNAVAILABLE]);
+
+    $this->actingAs($this->admin)->get(route('app.parking-spaces.confirmations.index', $space))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('confirmations.data', 20)
+            ->has('counts.moderation')
+            ->where('outcomes', ['total' => 22, 'confirmed' => 21, 'moved' => 0, 'unavailable' => 1]));
 });

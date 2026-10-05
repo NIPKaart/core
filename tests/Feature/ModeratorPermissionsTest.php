@@ -124,14 +124,15 @@ test('deleting the reviewer account keeps the review without its identity', func
     expect($review->fresh())->reviewed_by->toBeNull()->to_status->toBe(ParkingStatus::APPROVED);
 });
 
-test('the detail page shows the latest review', function () {
+test('the detail page shows the latest review in its history', function () {
     $space = ParkingSpace::factory()->create();
-    $review = ParkingSpaceReview::factory()->for($space)->create();
+    $review = ParkingSpaceReview::factory()->for($space)->create(['reviewed_at' => now()->addMinute()]);
 
     $this->actingAs(userWithRole(UserRole::MODERATOR))->get(route('app.parking-spaces.show', $space))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('parkingSpace.latest_review.id', $review->id)
-            ->where('parkingSpace.latest_review.reviewer.name', $review->reviewer->name));
+            ->where('history.0.kind', 'review')
+            ->where('history.0.by', $review->reviewer->name)
+            ->where('history.0.status', $review->to_status->value));
 });
 
 test('moderators cannot open user administration', function () {
