@@ -1,3 +1,6 @@
+/** The one official page with parking rules for a place: its municipality's own, or the country's. */
+export type ParkingRuleSource = { url: string; scope: 'municipality' | 'country'; name: string | null; host: string | null };
+
 export type ParkingSpaceDetail = {
     id: string;
     latitude: number;
@@ -9,7 +12,7 @@ export type ParkingSpaceDetail = {
     street: string | null;
     amenity?: string | null;
     description?: string | null;
-    rule_url?: string | null;
+    rule?: ParkingRuleSource | null;
     parking_time?: number | null;
     under_sign?: EnumOption | null;
     under_sign_text?: string | null;
@@ -45,7 +48,7 @@ export type MunicipalParkingDetail = {
     province: string | null;
     municipality: string | null;
     street: string | null;
-    rule_url?: string | null;
+    rule?: ParkingRuleSource | null;
     updated_at: datetime;
     is_favorited?: boolean;
     confirmed_today?: boolean;

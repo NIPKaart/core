@@ -8,89 +8,104 @@ use App\Http\Requests\App\UpdateParkingRuleRequest;
 use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingRule;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ParkingRuleController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * The country-wide source of each country, and the municipalities with a source of their own.
      */
-    public function index()
+    public function index(Request $request): Response
     {
         Gate::authorize('viewAny', ParkingRule::class);
 
-        $countries = Country::all();
-        $existingMunicipalityIds = ParkingRule::whereNotNull('municipality_id')->pluck('municipality_id')->toArray();
+        $search = trim((string) $request->input('search'));
+        $countryId = $request->integer('country') ?: null;
 
-        $availableMunicipalities = Municipality::whereNotIn('id', $existingMunicipalityIds)
+        $municipalities = Municipality::query()->toBase()->selectRaw('country_id, count(*) as total')->groupBy('country_id')->pluck('total', 'country_id');
+        $ownSources = ParkingRule::query()->whereNotNull('municipality_id')->toBase()->selectRaw('country_id, count(*) as total')->groupBy('country_id')->pluck('total', 'country_id');
+        $national = ParkingRule::query()->whereNull('municipality_id')->get()->keyBy('country_id');
+
+        $countries = Country::query()
+            ->where(fn (Builder $query) => $query->whereIn('id', $municipalities->keys())->orWhereIn('id', $national->keys()))
             ->orderBy('name')
-            ->get(['id', 'name', 'country_id', 'province_id']);
+            ->get(['id', 'name', 'code'])
+            ->map(fn (Country $country) => [
+                'id' => $country->id,
+                'name' => $country->name,
+                'code' => $country->code,
+                'municipalities' => (int) ($municipalities[$country->id] ?? 0),
+                'own_sources' => (int) ($ownSources[$country->id] ?? 0),
+                'rule' => $national->get($country->id)?->only(['id', 'url', 'updated_at']),
+            ]);
+
+        $rules = ParkingRule::query()
+            ->whereNotNull('municipality_id')
+            ->with(['municipality:id,name,province_id', 'municipality.province:id,name', 'country:id,name'])
+            ->when($countryId !== null, fn (Builder $query) => $query->where('country_id', $countryId))
+            ->when($search !== '', fn (Builder $query) => $query->whereHas('municipality', fn (Builder $municipality) => $municipality->where('name', 'ilike', '%'.addcslashes($search, '%_\\').'%')))
+            ->orderBy(Municipality::select('name')->whereColumn('municipalities.id', 'parking_rules.municipality_id'))
+            ->paginate(25)
+            ->withQueryString();
 
         return Inertia::render('backend/parking-rules/index', [
-            'parkingRules' => ParkingRule::with(['country', 'municipality'])->paginate(20),
             'countries' => $countries,
-            'municipalities' => $availableMunicipalities,
+            'rules' => $rules,
+            'filters' => ['search' => $search, 'country' => $countryId],
+            'availableMunicipalities' => Inertia::defer(fn () => Municipality::query()
+                ->whereDoesntHave('parkingRules')
+                ->with('province:id,name')
+                ->orderBy('name')
+                ->get(['id', 'name', 'country_id', 'province_id'])
+                ->map(fn (Municipality $municipality) => [
+                    'id' => $municipality->id,
+                    'name' => $municipality->name,
+                    'country_id' => $municipality->country_id,
+                    'province' => $municipality->province?->name,
+                ])),
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Add the source for a country or for one municipality.
      */
-    public function create()
-    {
-        // Modal for creating a new parking rule
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreParkingRuleRequest $request)
+    public function store(StoreParkingRuleRequest $request): RedirectResponse
     {
         Gate::authorize('create', ParkingRule::class);
 
         ParkingRule::create($request->validated());
+        Inertia::flash('success', __('parking_rules.flash.created'));
 
         return redirect()->route('app.parking-rules.index');
     }
 
     /**
-     * Display the specified resource.
+     * Point a source to another page; what it applies to stays the same.
      */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ParkingRule $parkingRule)
-    {
-        // Modal for editing an existing parking rule
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateParkingRuleRequest $request, ParkingRule $parkingRule)
+    public function update(UpdateParkingRuleRequest $request, ParkingRule $parkingRule): RedirectResponse
     {
         Gate::authorize('update', $parkingRule);
 
-        $parkingRule->update($request->validated());
+        $parkingRule->update($request->safe()->only('url'));
+        Inertia::flash('success', __('parking_rules.flash.updated'));
 
-        return redirect()
-            ->route('app.parking-rules.index');
+        return redirect()->route('app.parking-rules.index');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove a source; visitors then see the country's source, or that no source is known.
      */
-    public function destroy(ParkingRule $parkingRule)
+    public function destroy(ParkingRule $parkingRule): RedirectResponse
     {
         Gate::authorize('delete', $parkingRule);
 
         $parkingRule->delete();
+        Inertia::flash('success', __('parking_rules.flash.deleted'));
 
         return redirect()->route('app.parking-rules.index');
     }

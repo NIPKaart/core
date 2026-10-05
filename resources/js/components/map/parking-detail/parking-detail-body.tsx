@@ -146,14 +146,19 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
                                 : []),
                         ]
                       : []),
-                  ...(detail.rule_url
-                      ? [
-                            {
-                                label: t('common.table.regulations'),
-                                value: <ExternalLink href={detail.rule_url}>{t('detail.rules.local_rules')}</ExternalLink>,
-                            },
-                        ]
-                      : []),
+                  {
+                      label: t('detail.rules.title'),
+                      value: detail.rule ? (
+                          <ExternalLink href={detail.rule.url}>
+                              {detail.rule.scope === 'municipality'
+                                  ? t('detail.rules.municipality', { name: detail.rule.name })
+                                  : t('detail.rules.country')}
+                          </ExternalLink>
+                      ) : (
+                          unknown
+                      ),
+                      note: detail.rule ? [t('detail.rules.official'), detail.rule.host].filter(Boolean).join(' · ') : undefined,
+                  },
               ];
 
     const layout: Row[] =
@@ -357,7 +362,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
                 </div>
             )}
 
-            <p className="-mt-1 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
+            <p className="-mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Info className="h-3 w-3 shrink-0" aria-hidden />
                 {t('detail.check_on_site')}
             </p>

@@ -38,7 +38,7 @@ class StoreParkingRuleRequest extends FormRequest
                 Rule::exists('municipalities', 'id')->where('country_id', $this->input('country_id')),
                 Rule::unique('parking_rules', 'municipality_id')->where('country_id', $this->input('country_id'))->ignore($this->route('parking_rule')),
             ],
-            'url' => ['required', 'url', 'max:255'],
+            'url' => ['required', 'url:https', 'max:255'],
             'nationwide' => ['required', 'boolean'],
         ];
     }

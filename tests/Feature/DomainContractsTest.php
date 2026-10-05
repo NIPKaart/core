@@ -229,7 +229,7 @@ test('database constraints reject ambiguous rules and cross-country parking refe
         ->toThrow(QueryException::class);
     $municipality = Municipality::factory()->create();
     $otherCountry = Country::factory()->create();
-    expect(fn () => DB::transaction(fn () => ParkingRule::factory()->for($municipality)->create(['nationwide' => true])))
+    expect(fn () => DB::transaction(fn () => ParkingRule::withoutEvents(fn () => ParkingRule::factory()->for($municipality)->create(['nationwide' => true]))))
         ->toThrow(QueryException::class);
     expect(fn () => DB::transaction(fn () => Municipality::factory()->create(['province_id' => $municipality->province_id, 'country_id' => $otherCountry->id])))
         ->toThrow(QueryException::class);
