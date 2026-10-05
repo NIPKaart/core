@@ -57,6 +57,14 @@ class ParkingSpacePolicy
     }
 
     /**
+     * Determine whether the user can move several models to the trash at once.
+     */
+    public function bulkDelete(User $user): bool
+    {
+        return $user->can('parking-space.delete');
+    }
+
+    /**
      * Determine whether the user can restore the model.
      */
     public function trash(User $user): bool

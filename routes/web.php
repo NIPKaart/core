@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Bulk actions
             Route::prefix('bulk')->as('bulk.')->group(function () {
                 Route::patch('update', [Admin\ParkingSpaceController::class, 'bulkUpdate'])->name('update');
+                Route::delete('delete', [Admin\ParkingSpaceController::class, 'bulkDestroy'])->name('destroy');
                 Route::patch('restore', [Admin\ParkingSpaceController::class, 'bulkRestore'])->name('restore');
                 Route::delete('force-delete', [Admin\ParkingSpaceController::class, 'bulkForceDelete'])->name('force-delete');
             });

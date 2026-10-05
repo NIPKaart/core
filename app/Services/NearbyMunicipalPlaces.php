@@ -41,19 +41,51 @@ class NearbyMunicipalPlaces
             $query->select($query->getModel()->qualifyColumn('*'));
         }
 
-        $grammar = $query->getQuery()->getGrammar();
-        $space = $grammar->wrap($query->getModel()->qualifyColumn('location'));
-        $status = $grammar->wrap($query->getModel()->qualifyColumn('status'));
-        $municipal = $grammar->wrap((new ParkingMunicipal)->qualifyColumn('location'));
-
         return $query->selectSub(
-            ParkingMunicipal::query()
-                ->selectRaw("round(min(ST_Distance({$municipal}, {$space})))::integer")
-                ->where('visibility', true)
-                ->whereRaw("ST_DWithin({$municipal}, {$space}, ?)", [self::THRESHOLD_METRES])
-                ->whereRaw("{$status} = ?", [ParkingStatus::PENDING->value]),
+            $this->municipalWithinThreshold($query)->selectRaw('round(min(ST_Distance('.$this->municipalLocation($query).', '.$this->spaceLocation($query).')))::integer'),
             'nearby_municipal_metres',
         );
+    }
+
+    /**
+     * Limit the query to pending submissions with a visible municipal place within THRESHOLD_METRES.
+     *
+     * @param  Builder<ParkingSpace>  $query
+     * @return Builder<ParkingSpace>
+     */
+    public function whereNearby(Builder $query): Builder
+    {
+        return $query->whereExists($this->municipalWithinThreshold($query)->toBase()->selectRaw('1'));
+    }
+
+    /**
+     * @param  Builder<ParkingSpace>  $query
+     * @return Builder<ParkingMunicipal>
+     */
+    private function municipalWithinThreshold(Builder $query): Builder
+    {
+        $status = $query->getQuery()->getGrammar()->wrap($query->getModel()->qualifyColumn('status'));
+
+        return ParkingMunicipal::query()
+            ->where('visibility', true)
+            ->whereRaw('ST_DWithin('.$this->municipalLocation($query).', '.$this->spaceLocation($query).', ?)', [self::THRESHOLD_METRES])
+            ->whereRaw("{$status} = ?", [ParkingStatus::PENDING->value]);
+    }
+
+    /**
+     * @param  Builder<ParkingSpace>  $query
+     */
+    private function spaceLocation(Builder $query): string
+    {
+        return $query->getQuery()->getGrammar()->wrap($query->getModel()->qualifyColumn('location'));
+    }
+
+    /**
+     * @param  Builder<ParkingSpace>  $query
+     */
+    private function municipalLocation(Builder $query): string
+    {
+        return $query->getQuery()->getGrammar()->wrap((new ParkingMunicipal)->qualifyColumn('location'));
     }
 
     /**

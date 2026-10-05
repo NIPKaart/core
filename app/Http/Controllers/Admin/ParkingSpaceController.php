@@ -15,6 +15,8 @@ use App\Models\ParkingSpace;
 use App\Models\Province;
 use App\Services\NearbyMunicipalPlaces;
 use App\Support\GeoPoint;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -23,35 +25,56 @@ use Inertia\Inertia;
 class ParkingSpaceController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Signals a moderator can filter the list on.
+     */
+    private const array SIGNALS = ['nearby_municipal', 'reports', 'improvement'];
+
+    /**
+     * Community parking spaces, one status at a time, searchable and with the signals that need attention on each row.
      */
     public function index(Request $request, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
+        $statuses = array_values(array_intersect(explode(',', (string) $request->input('status')), array_column(ParkingStatus::cases(), 'value')));
+        $municipalities = array_filter(explode(',', (string) $request->input('municipality_id')), 'ctype_digit');
+        $signals = array_values(array_intersect(explode(',', (string) $request->input('signal')), self::SIGNALS));
+        $search = trim((string) $request->input('search'));
+        $oldestFirst = $request->input('sort') === 'oldest';
+
         $query = $nearbyMunicipalPlaces->withNearbyDistance(ParkingSpace::query())
-            ->with(['user', 'province', 'country', 'municipality']);
+            ->with(['user' => fn (BelongsTo $user) => $user->select('id', 'name')->withCount('parkingSpaces'), 'province:id,name', 'municipality:id,name', 'latestReview'])
+            ->withCount([
+                'confirmations',
+                'reports as open_reports_count' => fn (Builder $reports) => $reports->open(),
+                'improvements as open_improvements_count' => fn (Builder $improvements) => $improvements->pending(),
+            ])
+            ->when($statuses !== [], fn (Builder $query) => $query->whereIn('status', $statuses))
+            ->when($municipalities !== [], fn (Builder $query) => $query->whereIn('municipality_id', $municipalities))
+            ->when($search !== '', function (Builder $query) use ($search) {
+                $pattern = '%'.addcslashes($search, '%_\\').'%';
 
-        // Filters
-        if ($request->filled('status')) {
-            $statuses = explode(',', $request->input('status'));
-            $query->whereIn('status', $statuses);
-        }
+                $query->where(fn (Builder $match) => $match
+                    ->where('street', 'ilike', $pattern)
+                    ->orWhere('postcode', 'ilike', $pattern)
+                    ->orWhere('city', 'ilike', $pattern)
+                    ->orWhereHas('user', fn (Builder $user) => $user->where('name', 'ilike', $pattern)));
+            })
+            ->when(in_array('nearby_municipal', $signals, true), fn (Builder $query) => $nearbyMunicipalPlaces->whereNearby($query))
+            ->when(in_array('reports', $signals, true), fn (Builder $query) => $query->whereHas('reports', fn (Builder $reports) => $reports->open()))
+            ->when(in_array('improvement', $signals, true), fn (Builder $query) => $query->whereHas('improvements', fn (Builder $improvements) => $improvements->pending()));
 
-        if ($request->filled('municipality_id')) {
-            $municipalityIds = explode(',', $request->input('municipality_id'));
-            $query->whereIn('municipality_id', $municipalityIds);
-        }
-
-        $spaces = $query->latest()->paginate(25)->withQueryString();
+        $spaces = ($oldestFirst ? $query->oldest() : $query->latest())->paginate(25)->withQueryString();
 
         return inertia('backend/parking-spaces/index', [
             'spaces' => $spaces,
-            'trashedCount' => ParkingSpace::onlyTrashed()->count(),
+            'tabCounts' => $this->counts(),
             'filters' => [
-                'status' => $request->input('status'),
-                'municipality_id' => $request->input('municipality_id'),
-                'deletion_requested' => $request->boolean('deletion_requested'),
+                'status' => $statuses === [] ? null : implode(',', $statuses),
+                'municipality_id' => $municipalities === [] ? null : implode(',', $municipalities),
+                'signal' => $signals === [] ? null : implode(',', $signals),
+                'search' => $search,
+                'sort' => $oldestFirst ? 'oldest' : 'newest',
             ],
             'options' => [
                 'statuses' => ParkingStatus::options(),
@@ -59,6 +82,22 @@ class ParkingSpaceController extends Controller
                 'municipalities' => Municipality::select('id', 'name')->orderBy('name')->get(),
             ],
         ]);
+    }
+
+    /**
+     * How many parking spaces each status tab and the trash hold.
+     *
+     * @return array{all: int, pending: int, approved: int, rejected: int, trash: int}
+     */
+    private function counts(): array
+    {
+        $byStatus = ParkingSpace::query()->toBase()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+
+        return [
+            'all' => (int) $byStatus->sum(),
+            ...collect(array_column(ParkingStatus::cases(), 'value'))->mapWithKeys(fn (string $status) => [$status => (int) ($byStatus[$status] ?? 0)])->all(),
+            'trash' => ParkingSpace::onlyTrashed()->count(),
+        ];
     }
 
     /**
@@ -225,21 +264,42 @@ class ParkingSpaceController extends Controller
     }
 
     /**
-     * Display a listing of the trashed resources.
+     * Move several parking spaces to the trash at once.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        Gate::authorize('bulkDelete', ParkingSpace::class);
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'uuid', 'exists:parking_spaces,id'],
+        ]);
+
+        ParkingSpace::whereIn('id', $validated['ids'])->eachById(fn (ParkingSpace $space) => $space->delete());
+
+        return back();
+    }
+
+    /**
+     * Parking spaces in the trash, newest deletion first.
      */
     public function trash(Request $request)
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
         $spaces = ParkingSpace::onlyTrashed()
-            ->with(['user', 'province', 'country', 'municipality'])
-            ->latest()
+            ->with(['user:id,name', 'province:id,name', 'municipality:id,name', 'latestReview'])
+            ->latest('deleted_at')
             ->paginate(25)
             ->withQueryString();
 
         return inertia('backend/parking-spaces/trash/index', [
             'spaces' => $spaces,
-            'trashedCount' => $spaces->total(),
+            'tabCounts' => $this->counts(),
+            'options' => [
+                'statuses' => ParkingStatus::options(),
+                'rejectionReasons' => RejectionReason::mapped(),
+            ],
         ]);
     }
 

@@ -1,27 +1,28 @@
 {
     "head": {
         "title": "Verwijderde parkeerplaatsen",
-        "description": "Dit zijn (community) parkeerplaatsen die zijn verwijderd en in de prullenbak zijn geplaatst. Je kunt ze hier beheren, herstellen of permanent verwijderen."
+        "description": "Parkeerplaatsen die naar de prullenbak zijn verplaatst."
     },
     "breadcrumbs": {
         "index": "Parkeerplaatsen",
         "trash": "Prullenbak"
     },
-    "selected": "geselecteerd",
     "table": {
         "submittedBy": "Ingediend door",
         "municipality": "Gemeente",
         "city": "Stad",
         "street": "Straat",
-        "status": "Status",
+        "status": "Status bij verwijderen",
         "submittedAt": "Ingediend op",
-        "deletedAt": "Verwijderd op",
+        "deletedAt": "Verwijderd",
         "actions": {
-            "restoreSelected": "Geselecteerde herstellen",
-            "deleteSelected": "Geselecteerde verwijderen",
+            "restoreSelected": "Herstellen",
+            "deleteSelected": "Definitief verwijderen",
             "restore": "Herstellen",
-            "forceDelete": "Permanent verwijderen"
-        }
+            "forceDelete": "Definitief verwijderen",
+            "more": "Meer acties voor {{street}}"
+        },
+        "location": "Locatie"
     },
     "confirm": {
         "delete": {
@@ -48,6 +49,12 @@
             "title": "Geselecteerde permanent verwijderen?",
             "description": "Weet je zeker dat je {{count}} parkeerplaatsen permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
             "confirm": "Permanent verwijderen"
+        },
+        "bulkDelete": {
+            "title": "Naar de prullenbak verplaatsen?",
+            "description_one": "Weet je zeker dat je {{count}} parkeerplaats naar de prullenbak wilt verplaatsen? Hij verdwijnt van de kaart tot je hem herstelt.",
+            "description_other": "Weet je zeker dat je {{count}} parkeerplaatsen naar de prullenbak wilt verplaatsen? Ze verdwijnen van de kaart tot je ze herstelt.",
+            "confirm": "Naar prullenbak"
         }
     },
     "status": {
@@ -75,6 +82,13 @@
         "bulkForceDelete": {
             "success": "{{count}} parkeerplaatsen permanent verwijderd",
             "error": "Permanent verwijderen van geselecteerde parkeerplaatsen mislukt"
+        },
+        "bulkDelete": {
+            "success_one": "{{count}} parkeerplaats naar de prullenbak verplaatst",
+            "success_other": "{{count}} parkeerplaatsen naar de prullenbak verplaatst",
+            "error": "Verplaatsen naar de prullenbak mislukt"
         }
-    }
+    },
+    "notice": "Parkeerplaatsen in de prullenbak staan niet op de kaart. Herstel ze, of verwijder ze definitief als ze echt weg moeten.",
+    "empty": "De prullenbak is leeg."
 }

@@ -1,14 +1,13 @@
 {
     "head": {
-        "title": "Parkeerplaatsen (Community)",
+        "title": "Community-locaties",
         "edit": "Bewerken ({{id}})",
         "show": "Parkeerplaats ({{id}})",
         "description": "Alle vermelde parkeerplaatsen zijn toegevoegd door de community en maken deel uit van de eigen dataset van NIPKaart."
     },
     "breadcrumbs": {
-        "index": "Parkeerplaatsen"
+        "index": "Community-locaties"
     },
-    "selected": "geselecteerd",
     "table": {
         "submittedBy": "Ingediend door",
         "province": "Provincie",
@@ -27,7 +26,13 @@
     },
     "filters": {
         "status": "Status",
-        "municipality": "Gemeente"
+        "municipality": "Gemeente",
+        "signals": "Signalen",
+        "signal": {
+            "nearby_municipal": "Gemeentelijke parkeerplaats dichtbij",
+            "reports": "Open meldingen",
+            "improvement": "Open verbetering"
+        }
     },
     "bulk": {
         "clear": "Wissen",
@@ -156,5 +161,55 @@
         "label": "Weergave",
         "all": "Alle",
         "trash": "Prullenbak"
+    },
+    "status": {
+        "pending": "In afwachting",
+        "approved": "Op de kaart",
+        "rejected": "Afgewezen"
+    },
+    "signals": {
+        "nearby_municipal": "Gemeentelijke parkeerplaats op {{distance}} m",
+        "reports_one": "{{count}} melding",
+        "reports_other": "{{count}} meldingen",
+        "improvement_one": "Verbetering open",
+        "improvement_other": "{{count}} verbeteringen open"
+    },
+    "index": {
+        "description": "Parkeerplaatsen die de community heeft toegevoegd. Nieuwe en gewijzigde parkeerplaatsen beoordeel je in",
+        "moderation": "Moderatie",
+        "view_map": "Op de kaart bekijken",
+        "add": "Parkeerplaats toevoegen",
+        "search": "Zoek op adres of inzender",
+        "empty": "Geen parkeerplaatsen gevonden.",
+        "select_all": "Alles selecteren",
+        "select": "Selecteer {{street}}",
+        "first_contribution": "Eerste bijdrage",
+        "contributions_one": "{{count}} bijdrage",
+        "contributions_other": "{{count}} bijdragen",
+        "removed_account": "Account verwijderd",
+        "review": "Beoordelen",
+        "actions_for": "Acties voor {{street}}",
+        "move_to_trash": "Naar prullenbak",
+        "columns": {
+            "location": "Locatie",
+            "municipality": "Gemeente",
+            "contributor": "Inzender",
+            "status": "Status",
+            "confirmations": "Bevestigd",
+            "added": "Toegevoegd"
+        },
+        "sort": {
+            "label": "Sorteren",
+            "newest": "Nieuwste eerst",
+            "oldest": "Oudste eerst"
+        },
+        "selection": {
+            "label": "Acties voor de selectie",
+            "count_one": "{{count}} geselecteerd",
+            "count_other": "{{count}} geselecteerd",
+            "reason": "Reden van afwijzing"
+        },
+        "confirmed_one": "{{count}} bevestiging",
+        "confirmed_other": "{{count}} bevestigingen"
     }
 }

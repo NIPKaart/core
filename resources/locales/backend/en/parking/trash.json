@@ -1,27 +1,28 @@
 {
     "head": {
         "title": "Trashed Parking Spaces",
-        "description": "These are (community) parking spaces that have been deleted and placed in the trash. You can manage, restore, or permanently delete them here."
+        "description": "Parking spaces that were moved to the trash."
     },
     "breadcrumbs": {
         "index": "Parking Spaces",
         "trash": "Trash"
     },
-    "selected": "selected",
     "table": {
         "submittedBy": "Submitted By",
         "municipality": "Municipality",
         "city": "City",
         "street": "Street",
-        "status": "Status",
+        "status": "Status when deleted",
         "submittedAt": "Submitted At",
-        "deletedAt": "Deleted At",
+        "deletedAt": "Deleted",
         "actions": {
-            "restoreSelected": "Restore selected",
-            "deleteSelected": "Delete selected",
+            "restoreSelected": "Restore",
+            "deleteSelected": "Delete for good",
             "restore": "Restore",
-            "forceDelete": "Delete permanently"
-        }
+            "forceDelete": "Delete for good",
+            "more": "More actions for {{street}}"
+        },
+        "location": "Location"
     },
     "confirm": {
         "delete": {
@@ -48,6 +49,12 @@
             "title": "Permanently Delete Selected?",
             "description": "Are you sure you want to permanently delete {{count}} parking spaces? This cannot be undone.",
             "confirm": "Delete forever"
+        },
+        "bulkDelete": {
+            "title": "Move to the trash?",
+            "description_one": "Are you sure you want to move {{count}} parking space to the trash? It disappears from the map until you restore it.",
+            "description_other": "Are you sure you want to move {{count}} parking spaces to the trash? They disappear from the map until you restore them.",
+            "confirm": "Move to trash"
         }
     },
     "status": {
@@ -75,6 +82,13 @@
         "bulkForceDelete": {
             "success": "Deleted {{count}} selected spaces.",
             "error": "Delete failed."
+        },
+        "bulkDelete": {
+            "success_one": "{{count}} parking space moved to the trash",
+            "success_other": "{{count}} parking spaces moved to the trash",
+            "error": "Moving to the trash failed"
         }
-    }
+    },
+    "notice": "Parking spaces in the trash are not on the map. Restore them, or delete them for good if they really have to go.",
+    "empty": "The trash is empty."
 }

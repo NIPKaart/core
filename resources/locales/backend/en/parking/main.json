@@ -1,14 +1,13 @@
 {
     "head": {
-        "title": "Parking Spaces (Community)",
+        "title": "Community Spaces",
         "edit": "Edit ({{id}})",
         "show": "Parking Space ({{id}})",
         "description": "All listed parking spaces are contributed by the community and are part of NIPKaart’s own dataset."
     },
     "breadcrumbs": {
-        "index": "Parking Spaces"
+        "index": "Community Spaces"
     },
-    "selected": "selected",
     "table": {
         "submittedBy": "Submitted By",
         "province": "Province",
@@ -25,7 +24,13 @@
     },
     "filters": {
         "status": "Status",
-        "municipality": "Municipality"
+        "municipality": "Municipality",
+        "signals": "Signals",
+        "signal": {
+            "nearby_municipal": "Municipal parking space nearby",
+            "reports": "Open reports",
+            "improvement": "Open improvement"
+        }
     },
     "bulk": {
         "clear": "Clear",
@@ -154,5 +159,55 @@
         "label": "View",
         "all": "All",
         "trash": "Trash"
+    },
+    "status": {
+        "pending": "Pending",
+        "approved": "On the map",
+        "rejected": "Rejected"
+    },
+    "signals": {
+        "nearby_municipal": "Municipal parking space {{distance}} m away",
+        "reports_one": "{{count}} report",
+        "reports_other": "{{count}} reports",
+        "improvement_one": "Improvement open",
+        "improvement_other": "{{count}} improvements open"
+    },
+    "index": {
+        "description": "Parking spaces the community added. You review new and changed parking spaces in",
+        "moderation": "Moderation",
+        "view_map": "View on the map",
+        "add": "Add parking space",
+        "search": "Search by address or contributor",
+        "empty": "No parking spaces found.",
+        "select_all": "Select all",
+        "select": "Select {{street}}",
+        "first_contribution": "First contribution",
+        "contributions_one": "{{count}} contribution",
+        "contributions_other": "{{count}} contributions",
+        "removed_account": "Account removed",
+        "review": "Review",
+        "actions_for": "Actions for {{street}}",
+        "move_to_trash": "Move to trash",
+        "columns": {
+            "location": "Location",
+            "municipality": "Municipality",
+            "contributor": "Contributor",
+            "status": "Status",
+            "confirmations": "Confirmed",
+            "added": "Added"
+        },
+        "sort": {
+            "label": "Sort",
+            "newest": "Newest first",
+            "oldest": "Oldest first"
+        },
+        "selection": {
+            "label": "Actions for the selection",
+            "count_one": "{{count}} selected",
+            "count_other": "{{count}} selected",
+            "reason": "Rejection reason"
+        },
+        "confirmed_one": "{{count}} confirmation",
+        "confirmed_other": "{{count}} confirmations"
     }
 }
