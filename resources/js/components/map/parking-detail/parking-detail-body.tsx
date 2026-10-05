@@ -29,7 +29,7 @@ const progressTone: Record<'green' | 'orange' | 'red', string> = {
 };
 
 /** A labelled group in the hairline info list. The heading stays a real `<h3>` for screen readers, just visually small. */
-function Group({ id, title, rows, footer }: { id: string; title: string; rows: Row[]; footer?: ReactNode }) {
+function Group({ id, title, rows }: { id: string; title: string; rows: Row[] }) {
     const { t } = useTranslation('frontend/map/modals');
 
     return (
@@ -51,7 +51,6 @@ function Group({ id, title, rows, footer }: { id: string; title: string; rows: R
                     </div>
                 ))}
             </dl>
-            {footer && <p className="border-t border-zinc-100 px-3 pt-2 pb-2.5 text-xs text-muted-foreground dark:border-zinc-800">{footer}</p>}
         </section>
     );
 }
@@ -156,9 +155,9 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
                                   : t('detail.rules.country')}
                           </ExternalLink>
                       ) : (
-                          t('detail.rules.unknown')
+                          unknown
                       ),
-                      note: detail.rule ? [t('detail.rules.official'), detail.rule.host].filter(Boolean).join(' · ') : t('detail.rules.unknown_note'),
+                      note: detail.rule ? [t('detail.rules.official'), detail.rule.host].filter(Boolean).join(' · ') : undefined,
                   },
               ];
 
@@ -358,18 +357,12 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
             {groups.length > 0 && (
                 <div className="divide-y divide-zinc-100 rounded-lg border text-sm dark:divide-zinc-800">
                     {groups.map((group) => (
-                        <Group
-                            key={group.id}
-                            id={`parking-detail-${group.id}`}
-                            title={t(`detail.sections.${group.id}`)}
-                            rows={group.rows}
-                            footer={group.id === 'rules' && source !== 'offstreet' ? t('detail.rules.disclaimer') : undefined}
-                        />
+                        <Group key={group.id} id={`parking-detail-${group.id}`} title={t(`detail.sections.${group.id}`)} rows={group.rows} />
                     ))}
                 </div>
             )}
 
-            <p className="-mt-1 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground">
+            <p className="-mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Info className="h-3 w-3 shrink-0" aria-hidden />
                 {t('detail.check_on_site')}
             </p>

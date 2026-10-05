@@ -98,7 +98,7 @@
         "no_address": "Parking location without an address",
         "distance": "{{distance}} from your destination (straight line)",
         "distance_search_point": "{{distance}} from the search point (straight line)",
-        "check_on_site": "Parking here is not guaranteed.",
+        "check_on_site": "Check the signs; no rights can be derived from this.",
         "source_types": {
             "community": "Community contribution",
             "municipal": "Official municipal data",
@@ -118,10 +118,7 @@
             "title": "Parking rules",
             "municipality": "Municipality of {{name}}",
             "country": "National rules",
-            "official": "Official source",
-            "unknown": "Not known",
-            "unknown_note": "No official source is known for this place",
-            "disclaimer": "Check the signs; no rights can be derived from this."
+            "official": "Official source"
         },
         "availability": {
             "free_of": "{{free}} of {{total}} free",

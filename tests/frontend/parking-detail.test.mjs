@@ -124,7 +124,7 @@ test('every source keeps the same group order but only shows the groups that app
             source,
         );
         for (const [, id] of headings) assert.match(html, new RegExp(`<section aria-labelledby="${id}"`));
-        assert.match(text(html), /Parking here is not guaranteed\./);
+        assert.match(text(html), /Check the signs; no rights can be derived from this\./);
     }
     assert.match(text(render('community')), /Source Community contribution/);
     assert.match(text(render('community')), /Sub-sign Unknown/);
@@ -142,16 +142,20 @@ test('every source keeps the same group order but only shows the groups that app
     );
     assert.match(
         text(render('municipal', { rule: { url: 'https://www.haarlem.nl/regels', scope: 'municipality', name: 'Haarlem', host: 'haarlem.nl' } })),
-        /Parking rules Municipality of Haarlem \(opens in a new tab\) Official source · haarlem\.nl Check the signs/,
+        /Parking rules Municipality of Haarlem \(opens in a new tab\) Official source · haarlem\.nl Layout/,
     );
     assert.match(
-        text(render('municipal', { rule: { url: 'https://www.rijksoverheid.nl/regels', scope: 'country', name: 'Netherlands', host: 'rijksoverheid.nl' } })),
+        text(
+            render('municipal', {
+                rule: { url: 'https://www.rijksoverheid.nl/regels', scope: 'country', name: 'Netherlands', host: 'rijksoverheid.nl' },
+            }),
+        ),
         /Parking rules National rules \(opens in a new tab\) Official source · rijksoverheid\.nl/,
     );
-    assert.match(text(render('municipal')), /Parking rules Not known No official source is known for this place Check the signs/);
+    assert.match(text(render('municipal')), /Parking rules Unknown Layout/);
     const garage = text(render('offstreet', { url: 'https://example.test/garage' }));
     assert.match(garage, /Rules and restrictions Rates and opening hours Website/);
-    assert.doesNotMatch(garage, /Parking rules|Check the signs/);
+    assert.doesNotMatch(garage, /Parking rules/);
 });
 
 test('distance to the destination is formatted in metres or kilometres', () => {
