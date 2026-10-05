@@ -3,6 +3,7 @@
 use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
+use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
@@ -145,4 +146,30 @@ test('the confirmations page counts every outcome, not only the current page', f
             ->has('confirmations.data', 20)
             ->has('counts.moderation')
             ->where('outcomes', ['total' => 22, 'confirmed' => 21, 'moved' => 0, 'unavailable' => 1]));
+});
+
+test('the municipality decides the province and country of an edited parking space', function () {
+    $space = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
+    $haarlem = Municipality::factory()->create(['name' => 'Haarlem']);
+
+    $this->actingAs($this->admin)->get(route('app.parking-spaces.edit', $space))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('municipalities', fn ($municipalities) => collect($municipalities)->contains(fn (array $municipality) => $municipality['id'] === $haarlem->id
+                && $municipality['region'] === "{$haarlem->province->name} · {$haarlem->country->name}")));
+
+    $this->put(route('app.parking-spaces.update', $space), [
+        'municipality_id' => $haarlem->id,
+        'postcode' => '2011 HL',
+        'street' => 'Kerkstraat 12',
+        'latitude' => 52.381,
+        'longitude' => 4.6366,
+        'orientation' => 'parallel',
+        'under_sign' => 'no',
+        'status' => ParkingStatus::APPROVED->value,
+    ])->assertSessionHasNoErrors()->assertRedirect(route('app.parking-spaces.show', $space));
+
+    expect($space->fresh())
+        ->municipality_id->toBe($haarlem->id)
+        ->province_id->toBe($haarlem->province_id)
+        ->country_id->toBe($haarlem->country_id);
 });

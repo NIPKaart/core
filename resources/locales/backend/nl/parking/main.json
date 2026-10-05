@@ -112,18 +112,7 @@
         }
     },
     "edit": {
-        "viewStreet": "Street View",
-        "submitted": "Ingediend door:",
-        "anonymous": "Anoniem ingediend",
-        "created": "Aangemaakt op:",
         "form": {
-            "title": "Parkeerplaats details",
-            "description": "Bewerk de details van de parkeerplaats.",
-            "tabs": {
-                "basic": "Basis",
-                "extra": "Extra",
-                "status": "Status"
-            },
             "labels": {
                 "country": "Land",
                 "province": "Provincie",
@@ -145,24 +134,52 @@
                 "restriction_starts_at": "Vanaf",
                 "restriction_ends_at": "Tot",
                 "rejectionReason": "Reden van afwijzing *",
-                "rejectionNote": "Toelichting (optioneel)"
+                "rejectionNote": "Toelichting (optioneel)",
+                "street_number": "Straat en huisnummer",
+                "maxTime": "Maximale parkeertijd"
             },
             "hints": {
                 "parkingTime": "Maximale toegestane parkeertijd op deze locatie.",
                 "underSign": "Alleen bij \"Ja\" zijn de details hieronder van toepassing.",
                 "underSignUnknown": "Niet bekend",
                 "restriction": "Laat leeg als het onderbord geen dagen of tijden noemt.",
-                "rejectionReason": "Kies een reden"
+                "rejectionReason": "Kies een reden",
+                "region": "Volgt uit de gemeente."
             },
             "location": {
-                "title": "Locatie",
-                "description": "Versleep de marker om de exacte plek aan te passen op de kaart.",
                 "latitude": "Breedtegraad",
                 "longitude": "Lengtegraad"
             },
             "actions": {
                 "save": "Wijzigingen opslaan"
             }
+        },
+        "breadcrumb": "Bewerken",
+        "title": "{{street}} bewerken",
+        "added_by": "Toegevoegd door {{name}} op {{date}}. Wijzigingen aan een parkeerplaats op de kaart zijn direct zichtbaar.",
+        "added": "Toegevoegd op {{date}}. Wijzigingen aan een parkeerplaats op de kaart zijn direct zichtbaar.",
+        "unsaved_one": "{{count}} wijziging niet opgeslagen",
+        "unsaved_other": "{{count}} wijzigingen niet opgeslagen",
+        "no_changes": "Geen wijzigingen",
+        "cancel": "Annuleren",
+        "sections": {
+            "address": {
+                "title": "Adres",
+                "description": "De gemeente bepaalt waar de parkeerplaats in het overzicht en op de kaart valt."
+            },
+            "parking": {
+                "title": "Parkeren",
+                "description": "Wat een bezoeker ter plekke ziet: hoe het vak ligt en welke borden er staan."
+            },
+            "status": {
+                "title": "Status",
+                "description": "Nieuwe parkeerplaatsen en verbeteringen beoordeel je in"
+            }
+        },
+        "map": {
+            "title": "Parkeerplaats op de kaart",
+            "drag": "Versleep de markering naar het vak",
+            "municipal": "Paarse markeringen zijn gemeentelijke parkeerplaatsen."
         }
     },
     "days": {

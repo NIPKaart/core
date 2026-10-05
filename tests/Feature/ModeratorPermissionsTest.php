@@ -68,7 +68,7 @@ test('moderators can approve their own pending community submission', function (
     $this->actingAs($moderator)->put(route('app.parking-spaces.update', $space), [
         ...reviewPayload($space),
         'status' => ParkingStatus::APPROVED->value,
-    ])->assertSessionHasNoErrors()->assertRedirect(route('app.parking-spaces.index'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('app.parking-spaces.show', $space));
 
     expect($space->fresh()->status)->toBe(ParkingStatus::APPROVED)
         ->and($space->reviews()->sole())

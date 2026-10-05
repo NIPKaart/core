@@ -74,7 +74,7 @@ test('parking editor can correct server errors and the server derives parking du
 
     $payload['latitude'] = 52.37;
     $this->put(route('app.parking-spaces.update', $space), $payload)
-        ->assertSessionHasNoErrors()->assertRedirect(route('app.parking-spaces.index'));
+        ->assertSessionHasNoErrors()->assertRedirect(route('app.parking-spaces.show', $space));
     $this->get('/_test/feedback', ['X-Inertia' => 'true'])
         ->assertJsonPath('flash.success', __('parking_spaces.flash.updated'))
         ->assertJsonPath('props.errors', []);

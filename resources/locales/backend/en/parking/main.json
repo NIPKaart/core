@@ -110,18 +110,7 @@
         }
     },
     "edit": {
-        "viewStreet": "Street View",
-        "submitted": "Submitted by:",
-        "anonymous": "Submitted anonymously",
-        "created": "Created:",
         "form": {
-            "title": "Parking Space Details",
-            "description": "Edit the details of the parking space.",
-            "tabs": {
-                "basic": "Basic",
-                "extra": "Extra",
-                "status": "Status"
-            },
             "labels": {
                 "country": "Country",
                 "province": "Province",
@@ -143,24 +132,52 @@
                 "restriction_starts_at": "From",
                 "restriction_ends_at": "Until",
                 "rejectionReason": "Rejection reason *",
-                "rejectionNote": "Note (optional)"
+                "rejectionNote": "Note (optional)",
+                "street_number": "Street and number",
+                "maxTime": "Maximum parking time"
             },
             "hints": {
                 "parkingTime": "Maximum parking duration allowed at this location.",
                 "underSign": "The details below only apply when the answer is \"Yes\".",
                 "underSignUnknown": "Not known",
                 "restriction": "Leave empty when the sub-sign mentions no days or times.",
-                "rejectionReason": "Choose a reason"
+                "rejectionReason": "Choose a reason",
+                "region": "Follows from the municipality."
             },
             "location": {
-                "title": "Location",
-                "description": "Drag the marker to fine-tune the exact space on the map.",
                 "latitude": "Latitude",
                 "longitude": "Longitude"
             },
             "actions": {
-                "save": "Save Changes"
+                "save": "Save changes"
             }
+        },
+        "breadcrumb": "Edit",
+        "title": "Edit {{street}}",
+        "added_by": "Added by {{name}} on {{date}}. Changes to a parking space on the map are visible right away.",
+        "added": "Added on {{date}}. Changes to a parking space on the map are visible right away.",
+        "unsaved_one": "{{count}} unsaved change",
+        "unsaved_other": "{{count}} unsaved changes",
+        "no_changes": "No changes",
+        "cancel": "Cancel",
+        "sections": {
+            "address": {
+                "title": "Address",
+                "description": "The municipality decides where the parking space appears in the list and on the map."
+            },
+            "parking": {
+                "title": "Parking",
+                "description": "What a visitor sees on site: how the bay lies and which signs are there."
+            },
+            "status": {
+                "title": "Status",
+                "description": "You review new parking spaces and improvements in"
+            }
+        },
+        "map": {
+            "title": "Parking space on the map",
+            "drag": "Drag the marker onto the bay",
+            "municipal": "Purple markers are municipal parking spaces."
         }
     },
     "days": {

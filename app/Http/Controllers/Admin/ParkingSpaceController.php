@@ -9,12 +9,10 @@ use App\Enums\RejectionReason;
 use App\Enums\UnderSign;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\UpdateParkingSpace;
-use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\ParkingSpaceReview;
-use App\Models\Province;
 use App\Services\NearbyMunicipalPlaces;
 use App\Services\ParkingSpaceImprovements;
 use App\Services\UserActivity;
@@ -206,7 +204,7 @@ class ParkingSpaceController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ParkingSpace $parkingSpace)
+    public function edit(ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces)
     {
         Gate::authorize('update', $parkingSpace);
 
@@ -225,23 +223,26 @@ class ParkingSpaceController extends Controller
             ->limit($limit)
             ->get();
 
-        $countries = Country::select('id', 'name')->get();
-        $provinces = Province::select('id', 'name')->get();
-        $municipalities = Municipality::select('id', 'name')->get();
-
         return inertia('backend/parking-spaces/edit', [
             'parkingSpace' => $parkingSpace,
-            'countries' => $countries,
-            'provinces' => $provinces,
-            'municipalities' => $municipalities,
+            'municipalities' => Municipality::query()
+                ->with(['province:id,name', 'country:id,name'])
+                ->orderBy('name')
+                ->get(['id', 'name', 'province_id', 'country_id'])
+                ->map(fn (Municipality $municipality) => [
+                    'id' => $municipality->id,
+                    'name' => $municipality->name,
+                    'region' => collect([$municipality->province?->name, $municipality->country?->name])->filter()->implode(' · '),
+                ]),
             'selectOptions' => [
                 'statuses' => ParkingStatus::mapped(),
-                'orientation' => ParkingOrientation::options(),
+                'orientation' => ParkingOrientation::mapped(),
                 'underSign' => UnderSign::mapped(),
                 'rejectionReasons' => RejectionReason::mapped(),
                 'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
             ],
             'nearbySpaces' => $nearbySpaces,
+            'nearbyMunicipalSpaces' => $nearbyMunicipalPlaces->around(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude), $limit),
         ]);
     }
 
@@ -263,8 +264,7 @@ class ParkingSpaceController extends Controller
 
         Inertia::flash('success', __('parking_spaces.flash.updated'));
 
-        return redirect()
-            ->route('app.parking-spaces.index');
+        return redirect()->route('app.parking-spaces.show', $parkingSpace);
     }
 
     /**

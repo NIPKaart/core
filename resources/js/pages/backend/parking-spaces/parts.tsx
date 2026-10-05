@@ -19,7 +19,7 @@ export function StatusPill({ status, className }: { status: ParkingStatus; class
         <span
             className={cn('inline-flex w-fit items-center gap-1.5 rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap', className)}
         >
-            <span className={cn('size-[7px] rounded-full', STATUS_DOTS[status])} aria-hidden />
+            <span className={cn('size-1.75 rounded-full', STATUS_DOTS[status])} aria-hidden />
             {t(`status.${status}`)}
         </span>
     );

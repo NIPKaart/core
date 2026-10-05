@@ -48,7 +48,7 @@ export function getConfirmationColumns(
             enableHiding: false,
             cell: ({ row }) => (
                 <span className="inline-flex items-center gap-1.5 rounded-full border px-2 py-px text-xs font-medium whitespace-nowrap">
-                    <span className={cn('size-[7px] rounded-full', CONFIRMATION_DOTS[row.original.status])} aria-hidden />
+                    <span className={cn('size-1.75 rounded-full', CONFIRMATION_DOTS[row.original.status])} aria-hidden />
                     {statuses[row.original.status] ?? row.original.status}
                 </span>
             ),

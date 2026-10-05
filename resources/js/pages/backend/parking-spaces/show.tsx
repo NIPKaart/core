@@ -226,9 +226,9 @@ export default function Show({
                                     nearbySpaces={nearbySpaces}
                                     nearbyMunicipalSpaces={nearbyMunicipalSpaces}
                                     scrollWheelZoom={false}
-                                    className="h-80 md:h-[380px]"
+                                    className="h-80 md:h-95"
                                 />
-                                <p className="absolute bottom-3 left-3 z-[400] flex flex-wrap gap-x-3.5 gap-y-1 rounded-md bg-background/95 px-2.5 py-1.5 text-xs shadow-sm">
+                                <p className="absolute bottom-3 left-3 z-400 flex flex-wrap gap-x-3.5 gap-y-1 rounded-md bg-background/95 px-2.5 py-1.5 text-xs shadow-sm">
                                     <Legend color="bg-[#2A81CB]" label={t('show.legend.this')} />
                                     {nearbyMunicipalSpaces.length > 0 && <Legend color="bg-[#9C2BCB]" label={t('show.legend.municipal')} />}
                                     {nearbySpaces.length > 0 && <Legend color="bg-[#2AAD27]" label={t('show.legend.community')} />}
@@ -344,7 +344,7 @@ export default function Show({
                                             <div key={status.value} className={cn('px-3 py-2.5', index > 0 && 'border-l')}>
                                                 <dt className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
                                                     <span
-                                                        className={cn('size-[7px] shrink-0 rounded-full', CONFIRMATION_DOTS[status.value])}
+                                                        className={cn('size-1.75 shrink-0 rounded-full', CONFIRMATION_DOTS[status.value])}
                                                         aria-hidden
                                                     />
                                                     {status.label}
@@ -388,7 +388,7 @@ export default function Show({
                                     <li key={`${event.kind}-${index}`} className="relative text-sm">
                                         <span
                                             className={cn(
-                                                'absolute top-1.5 -left-[25px] size-[9px] rounded-full',
+                                                'absolute top-1.5 -left-6.25 size-2.25 rounded-full',
                                                 event.kind === 'review' && event.status === 'approved' && 'bg-green-600',
                                                 event.kind === 'review' && event.status === 'rejected' && 'bg-red-600',
                                                 event.kind === 'review' && event.status === 'pending' && 'bg-amber-600',
