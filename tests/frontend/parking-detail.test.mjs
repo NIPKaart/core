@@ -81,7 +81,7 @@ const details = {
         ...place,
         street: null,
         orientation: null,
-        rule_url: null,
+        rule: null,
         updated_at: '2026-02-03T10:00:00Z',
         provenance: { name: null, attribution: null, url: null, terms_url: null, fetched_at: null, source_updated_at: null },
         confirmations_count: { confirmed: 0 },
@@ -109,9 +109,9 @@ const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
 
 test('every source keeps the same group order but only shows the groups that apply to it', () => {
     const expected = {
-        // Community places always show their sub-sign, even when it is not known.
+        // Community and municipal places always show where their parking rules are, or that no source is known.
         community: ['Rules and restrictions', 'Layout', 'Source and freshness'],
-        municipal: ['Layout', 'Source and freshness'],
+        municipal: ['Rules and restrictions', 'Layout', 'Source and freshness'],
         // Garages show their live state in the availability box; signed-out visitors see no source table.
         offstreet: ['Accessibility and availability'],
     };
@@ -124,7 +124,7 @@ test('every source keeps the same group order but only shows the groups that app
             source,
         );
         for (const [, id] of headings) assert.match(html, new RegExp(`<section aria-labelledby="${id}"`));
-        assert.match(text(html), /Always check the signs on location\. Parking here is not guaranteed\./);
+        assert.match(text(html), /Parking here is not guaranteed\./);
     }
     assert.match(text(render('community')), /Source Community contribution/);
     assert.match(text(render('community')), /Sub-sign Unknown/);
@@ -141,10 +141,17 @@ test('every source keeps the same group order but only shows the groups that app
         /Sub-sign Yes “Mon-Fri 9-18” Applies on Mon, Fri · 09:00–18:00/,
     );
     assert.match(
-        text(render('municipal', { rule_url: 'https://example.test/rules' })),
-        /Rules and restrictions Municipal regulations Local parking rules/,
+        text(render('municipal', { rule: { url: 'https://www.haarlem.nl/regels', scope: 'municipality', name: 'Haarlem', host: 'haarlem.nl' } })),
+        /Parking rules Municipality of Haarlem \(opens in a new tab\) Official source · haarlem\.nl Check the signs/,
     );
-    assert.match(text(render('offstreet', { url: 'https://example.test/garage' })), /Rules and restrictions Rates and opening hours Website/);
+    assert.match(
+        text(render('municipal', { rule: { url: 'https://www.rijksoverheid.nl/regels', scope: 'country', name: 'Netherlands', host: 'rijksoverheid.nl' } })),
+        /Parking rules National rules \(opens in a new tab\) Official source · rijksoverheid\.nl/,
+    );
+    assert.match(text(render('municipal')), /Parking rules Not known No official source is known for this place Check the signs/);
+    const garage = text(render('offstreet', { url: 'https://example.test/garage' }));
+    assert.match(garage, /Rules and restrictions Rates and opening hours Website/);
+    assert.doesNotMatch(garage, /Parking rules|Check the signs/);
 });
 
 test('distance to the destination is formatted in metres or kilometres', () => {

@@ -29,7 +29,7 @@ const progressTone: Record<'green' | 'orange' | 'red', string> = {
 };
 
 /** A labelled group in the hairline info list. The heading stays a real `<h3>` for screen readers, just visually small. */
-function Group({ id, title, rows }: { id: string; title: string; rows: Row[] }) {
+function Group({ id, title, rows, footer }: { id: string; title: string; rows: Row[]; footer?: ReactNode }) {
     const { t } = useTranslation('frontend/map/modals');
 
     return (
@@ -51,6 +51,7 @@ function Group({ id, title, rows }: { id: string; title: string; rows: Row[] }) 
                     </div>
                 ))}
             </dl>
+            {footer && <p className="border-t border-zinc-100 px-3 pt-2 pb-2.5 text-xs text-muted-foreground dark:border-zinc-800">{footer}</p>}
         </section>
     );
 }
@@ -146,14 +147,19 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
                                 : []),
                         ]
                       : []),
-                  ...(detail.rule_url
-                      ? [
-                            {
-                                label: t('common.table.regulations'),
-                                value: <ExternalLink href={detail.rule_url}>{t('detail.rules.local_rules')}</ExternalLink>,
-                            },
-                        ]
-                      : []),
+                  {
+                      label: t('detail.rules.title'),
+                      value: detail.rule ? (
+                          <ExternalLink href={detail.rule.url}>
+                              {detail.rule.scope === 'municipality'
+                                  ? t('detail.rules.municipality', { name: detail.rule.name })
+                                  : t('detail.rules.country')}
+                          </ExternalLink>
+                      ) : (
+                          t('detail.rules.unknown')
+                      ),
+                      note: detail.rule ? [t('detail.rules.official'), detail.rule.host].filter(Boolean).join(' · ') : t('detail.rules.unknown_note'),
+                  },
               ];
 
     const layout: Row[] =
@@ -352,7 +358,13 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
             {groups.length > 0 && (
                 <div className="divide-y divide-zinc-100 rounded-lg border text-sm dark:divide-zinc-800">
                     {groups.map((group) => (
-                        <Group key={group.id} id={`parking-detail-${group.id}`} title={t(`detail.sections.${group.id}`)} rows={group.rows} />
+                        <Group
+                            key={group.id}
+                            id={`parking-detail-${group.id}`}
+                            title={t(`detail.sections.${group.id}`)}
+                            rows={group.rows}
+                            footer={group.id === 'rules' && source !== 'offstreet' ? t('detail.rules.disclaimer') : undefined}
+                        />
                     ))}
                 </div>
             )}

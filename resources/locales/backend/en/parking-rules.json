@@ -1,58 +1,73 @@
 {
     "head": {
-        "title": "Parking Rules",
-        "description": "Manage parking rules for municipalities or nationwide regulations."
+        "title": "Parking rules",
+        "description": "One national source per country, and optionally a source of its own per municipality. Visitors always see one link: the municipality's when it has one, otherwise the national one."
     },
-    "breadcrumbs": {
-        "index": "Parking Rules"
+    "actions": {
+        "add": "Add source",
+        "add_short": "Add",
+        "edit": "Edit",
+        "delete": "Delete",
+        "for": "Actions for {{name}}"
     },
-    "buttons": {
-        "add": "Parking Rule"
+    "changed": "Changed {{date}}",
+    "national": {
+        "title": "National sources",
+        "description": "The fallback for every municipality without a source of its own.",
+        "empty": "There are no countries with municipalities yet.",
+        "applies_to_one": "Applies to {{count}} municipality",
+        "applies_to_other": "Applies to {{count}} municipalities",
+        "missing": "No national source, visitors see \"Not known\"."
     },
-    "modal": {
-        "title_add": "Add Parking Rule",
-        "title_edit": "Edit Parking Rule",
-        "description": "This helps visitors understand the parking regulations in a municipality or for the whole country.",
-        "submit_add": "Add",
-        "submit_update": "Update"
-    },
-    "table": {
+    "municipal": {
+        "title": "Municipal sources",
+        "description": "Municipalities with a page of their own; it takes precedence over the national source.",
+        "coverage_one": "{{count}} of the {{total}} municipalities in {{country}} has a source of its own.",
+        "coverage_other": "{{count}} of the {{total}} municipalities in {{country}} have a source of their own.",
+        "search": "Search a municipality",
         "country": "Country",
-        "municipality": "Municipality",
-        "nationwide": "Nationwide",
-        "url": "URL",
-        "created_at": "Created at"
+        "all_countries": "All countries",
+        "empty": "No municipalities with a source of their own yet.",
+        "no_results": "No municipality found."
     },
-    "form": {
-        "country": {
-            "label": "Country",
-            "placeholder": "Select a country"
+    "sheet": {
+        "description": "A link to the official page of the government itself. NIPKaart does not copy its content.",
+        "create": {
+            "title": "Add source"
         },
-        "municipality": {
-            "label": "Municipality",
-            "placeholder": "Select a municipality"
-        },
-        "url": {
-            "label": "Official Rule URL",
-            "description": "Direct link to the official parking rule source or document."
+        "edit": {
+            "title": "Edit source",
+            "country": "The national source for {{name}}. You only change the page it points to.",
+            "municipality": "The source of the municipality of {{name}}. You only change the page it points to."
         },
         "scope": {
-            "title": "Scope",
-            "label": "Nationwide",
-            "description": "Check if this rule applies to the entire country."
+            "label": "Applies to",
+            "country": "A whole country",
+            "country_hint": "Fallback for all municipalities",
+            "municipality": "One municipality",
+            "municipality_hint": "Takes precedence over the national source"
         },
-        "save": "Save",
-        "create": "Create Rule",
-        "update": "Update Rule"
+        "country": "Country",
+        "country_placeholder": "Choose a country",
+        "has_source": "already has a source",
+        "municipality": "Municipality",
+        "municipality_placeholder": "Choose a municipality",
+        "municipality_hint": "Only municipalities without a source of their own.",
+        "url": "Official page",
+        "url_hint": "Starts with https:// and points to the site of the municipality or the government.",
+        "preview": "What visitors see",
+        "preview_label": "Parking rules",
+        "preview_country": "National rules",
+        "preview_municipality": "Municipality of {{name}}",
+        "preview_official": "Official source",
+        "cancel": "Cancel",
+        "save": "Save source",
+        "preview_pending": "Choose a municipality first"
     },
     "confirm": {
-        "delete_title": "Delete parking rule?",
-        "delete_description": "Are you sure you want to delete the rule for {{country}} ({{code}}), {{municipality}}?"
-    },
-    "toasts": {
-        "created": "Parking rule created successfully",
-        "updated": "Parking rule updated successfully",
-        "deleted": "Parking rule deleted",
-        "error": "Something went wrong while saving the parking rule."
+        "title": "Delete source?",
+        "country": "Visitors in {{name}} then see \"Not known\", except in municipalities with a source of their own.",
+        "municipality": "Visitors in {{name}} then see the national source.",
+        "confirm": "Delete"
     }
 }

@@ -1,58 +1,73 @@
 {
     "head": {
         "title": "Parkeerregels",
-        "description": "Beheer parkeerregels voor gemeenten of landelijke regelgeving."
+        "description": "Per land één landelijke bron, en per gemeente eventueel een eigen bron. Bezoekers zien altijd één link: die van de gemeente als die er is, anders de landelijke."
     },
-    "breadcrumbs": {
-        "index": "Parkeerregels"
+    "actions": {
+        "add": "Bron toevoegen",
+        "add_short": "Toevoegen",
+        "edit": "Bewerken",
+        "delete": "Verwijderen",
+        "for": "Acties voor {{name}}"
     },
-    "buttons": {
-        "add": "Parkeerregel"
+    "changed": "Gewijzigd {{date}}",
+    "national": {
+        "title": "Landelijke bronnen",
+        "description": "De terugval voor elke gemeente zonder eigen bron.",
+        "empty": "Er zijn nog geen landen met gemeenten.",
+        "applies_to_one": "Geldt voor {{count}} gemeente",
+        "applies_to_other": "Geldt voor {{count}} gemeenten",
+        "missing": "Geen landelijke bron, bezoekers zien \"Niet bekend\"."
     },
-    "modal": {
-        "title_add": "Toevoegen parkeerregel",
-        "title_edit": "Bewerk parkeerregel",
-        "description": "Dit helpt bezoekers om de parkeervoorschriften per gemeente of landelijk te begrijpen.",
-        "submit_add": "Toevoegen",
-        "submit_update": "Bijwerken"
-    },
-    "table": {
+    "municipal": {
+        "title": "Gemeentelijke bronnen",
+        "description": "Gemeenten met een eigen pagina; die gaat voor de landelijke bron.",
+        "coverage_one": "{{count}} van de {{total}} gemeenten in {{country}} heeft een eigen bron.",
+        "coverage_other": "{{count}} van de {{total}} gemeenten in {{country}} hebben een eigen bron.",
+        "search": "Zoek een gemeente",
         "country": "Land",
-        "municipality": "Gemeente",
-        "nationwide": "Landelijk",
-        "url": "URL",
-        "created_at": "Aangemaakt op"
+        "all_countries": "Alle landen",
+        "empty": "Nog geen gemeenten met een eigen bron.",
+        "no_results": "Geen gemeente gevonden."
     },
-    "form": {
-        "country": {
-            "label": "Land",
-            "placeholder": "Selecteer een land"
+    "sheet": {
+        "description": "Een link naar de officiële pagina van de overheid zelf. NIPKaart neemt de inhoud niet over.",
+        "create": {
+            "title": "Bron toevoegen"
         },
-        "municipality": {
-            "label": "Gemeente",
-            "placeholder": "Selecteer een gemeente"
-        },
-        "url": {
-            "label": "Officiële regel-URL",
-            "description": "Directe link naar de officiële bron of het document met de parkeerregel."
+        "edit": {
+            "title": "Bron bewerken",
+            "country": "De landelijke bron voor {{name}}. Je wijzigt alleen de pagina waar hij naar verwijst.",
+            "municipality": "De bron van gemeente {{name}}. Je wijzigt alleen de pagina waar hij naar verwijst."
         },
         "scope": {
-            "title": "Reikwijdte",
-            "label": "Landelijk",
-            "description": "Vink aan als deze regel geldt voor het hele land."
+            "label": "Geldt voor",
+            "country": "Heel een land",
+            "country_hint": "Terugval voor alle gemeenten",
+            "municipality": "Eén gemeente",
+            "municipality_hint": "Gaat voor de landelijke bron"
         },
-        "save": "Opslaan",
-        "create": "Maak regel aan",
-        "update": "Werk regel bij"
+        "country": "Land",
+        "country_placeholder": "Kies een land",
+        "has_source": "heeft al een bron",
+        "municipality": "Gemeente",
+        "municipality_placeholder": "Kies een gemeente",
+        "municipality_hint": "Alleen gemeenten zonder eigen bron.",
+        "url": "Officiële pagina",
+        "url_hint": "Begint met https:// en verwijst naar de site van de gemeente of de overheid.",
+        "preview": "Zo zien bezoekers het",
+        "preview_label": "Parkeerregels",
+        "preview_country": "Landelijke regels",
+        "preview_municipality": "Gemeente {{name}}",
+        "preview_official": "Officiële bron",
+        "cancel": "Annuleren",
+        "save": "Bron opslaan",
+        "preview_pending": "Kies eerst een gemeente"
     },
     "confirm": {
-        "delete_title": "Parkeerregel verwijderen?",
-        "delete_description": "Weet je zeker dat je de regel wilt verwijderen voor {{country}} ({{code}}), {{municipality}}?"
-    },
-    "toasts": {
-        "created": "Parkeerregel succesvol toegevoegd",
-        "updated": "Parkeerregel succesvol bijgewerkt",
-        "deleted": "Parkeerregel verwijderd",
-        "error": "Er is iets misgegaan bij het opslaan van de parkeerregel."
+        "title": "Bron verwijderen?",
+        "country": "Bezoekers in {{name}} zien daarna \"Niet bekend\", behalve in gemeenten met een eigen bron.",
+        "municipality": "Bezoekers in {{name}} zien daarna de landelijke bron.",
+        "confirm": "Verwijderen"
     }
 }

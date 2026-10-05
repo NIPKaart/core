@@ -19,14 +19,7 @@ class SpacesInfoController extends Controller
             ->where('status', ParkingStatus::APPROVED)
             ->firstOrFail();
 
-        $rule = ParkingRule::where('municipality_id', $location->municipality_id)->first();
-        // Fallback to nationwide rule if no municipal rule is found
-        if (empty($rule)) {
-            $rule = ParkingRule::where([
-                ['country_id', $location->country_id],
-                ['nationwide', 1],
-            ])->first();
-        }
+        $rule = ParkingRule::applicableTo($location->country_id, $location->municipality_id);
 
         // Check if the user has favorited this location
         $user = auth()->user();
@@ -43,7 +36,7 @@ class SpacesInfoController extends Controller
             'street' => $location->street,
             'amenity' => $location->amenity,
             'description' => $location->description,
-            'rule_url' => $rule ? $rule->url : null,
+            'rule' => $rule?->forVisitors(),
             'parking_time' => $location->parking_time,
             'under_sign' => $location->under_sign?->toArray(),
             'under_sign_text' => $location->under_sign_text,
@@ -66,14 +59,7 @@ class SpacesInfoController extends Controller
             ->where('visibility', true)
             ->firstOrFail();
 
-        $rule = ParkingRule::where('municipality_id', $location->municipality_id)->first();
-        // Fallback to nationwide rule if no municipal rule is found
-        if (empty($rule)) {
-            $rule = ParkingRule::where([
-                ['country_id', $location->country_id],
-                ['nationwide', 1],
-            ])->first();
-        }
+        $rule = ParkingRule::applicableTo($location->country_id, $location->municipality_id);
 
         // Check if the user has favorited this location
         $user = auth()->user();
@@ -89,7 +75,7 @@ class SpacesInfoController extends Controller
             'provenance' => $provenance->publicDetails($location),
             'orientation' => $location->orientation?->toArray(),
             'street' => $location->street ?? null,
-            'rule_url' => $rule ? $rule->url : null,
+            'rule' => $rule?->forVisitors(),
             'updated_at' => $location->updated_at,
             'is_favorited' => $isFavorited,
             ...$location->publicConfirmations($user),

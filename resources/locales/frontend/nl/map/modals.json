@@ -76,7 +76,6 @@
             "country": "Land",
             "province": "Provincie",
             "municipality": "Gemeente",
-            "regulations": "Gemeentelijke regels",
             "website": "Website",
             "no_information": "Geen informatie",
             "location_id": "Locatie-ID",
@@ -99,7 +98,7 @@
         "no_address": "Parkeerlocatie zonder adres",
         "distance": "{{distance}} van je bestemming (hemelsbreed)",
         "distance_search_point": "{{distance}} van het zoekpunt (hemelsbreed)",
-        "check_on_site": "Controleer de borden. Parkeren is niet gegarandeerd.",
+        "check_on_site": "Parkeren hier is niet gegarandeerd.",
         "source_types": {
             "community": "Bijdrage van de community",
             "municipal": "Officiële gemeentelijke gegevens",
@@ -115,8 +114,14 @@
             "unavailable": "Voor deze locatie zijn geen geldige coördinaten bekend, dus navigeren is niet mogelijk."
         },
         "rules": {
-            "local_rules": "Lokale parkeerregels",
-            "facility_info": "Tarieven en openingstijden"
+            "facility_info": "Tarieven en openingstijden",
+            "title": "Parkeerregels",
+            "municipality": "Gemeente {{name}}",
+            "country": "Landelijke regels",
+            "official": "Officiële bron",
+            "unknown": "Niet bekend",
+            "unknown_note": "Er is geen officiële bron voor deze plek bekend",
+            "disclaimer": "Controleer de borden; hieraan kun je geen rechten ontlenen."
         },
         "availability": {
             "free_of": "{{free}} van {{total}} vrij",

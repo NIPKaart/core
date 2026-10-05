@@ -76,7 +76,6 @@
             "country": "Country",
             "province": "Province",
             "municipality": "Municipality",
-            "regulations": "Municipal regulations",
             "website": "Website",
             "no_information": "No information",
             "location_id": "Location ID",
@@ -99,7 +98,7 @@
         "no_address": "Parking location without an address",
         "distance": "{{distance}} from your destination (straight line)",
         "distance_search_point": "{{distance}} from the search point (straight line)",
-        "check_on_site": "Always check the signs on location. Parking here is not guaranteed.",
+        "check_on_site": "Parking here is not guaranteed.",
         "source_types": {
             "community": "Community contribution",
             "municipal": "Official municipal data",
@@ -115,8 +114,14 @@
             "unavailable": "No valid coordinates are known for this location, so navigation is unavailable."
         },
         "rules": {
-            "local_rules": "Local parking rules",
-            "facility_info": "Rates and opening hours"
+            "facility_info": "Rates and opening hours",
+            "title": "Parking rules",
+            "municipality": "Municipality of {{name}}",
+            "country": "National rules",
+            "official": "Official source",
+            "unknown": "Not known",
+            "unknown_note": "No official source is known for this place",
+            "disclaimer": "Check the signs; no rights can be derived from this."
         },
         "availability": {
             "free_of": "{{free}} of {{total}} free",
