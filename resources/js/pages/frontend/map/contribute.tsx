@@ -175,7 +175,7 @@ function LocationStatus({ state, onRetry }: { state: PinLocation; onRetry: () =>
 
 export default function Contribute({ orientationOptions, restrictionDays, parkingSpace, improving = false }: PageProps) {
     const { t } = useTranslation('frontend/map/contribute');
-    const { t: tGlobal } = useTranslation('frontend/global');
+    const { t: tGlobal } = useTranslation('global/common');
     const editing = parkingSpace !== null;
     const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 

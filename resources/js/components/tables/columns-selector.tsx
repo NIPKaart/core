@@ -13,7 +13,7 @@ interface ColumnsSelectorProps<TData> {
 }
 
 export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: ColumnsSelectorProps<TData>) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const isMobile = useMediaQuery(mobileBreakpoint);
     const columns = table.getAllLeafColumns().filter((col) => col.getCanHide());
 

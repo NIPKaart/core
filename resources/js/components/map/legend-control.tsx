@@ -10,7 +10,7 @@ interface LegendControlProps {
 
 export default function LegendControl({ position = 'bottomleft', discovery = false }: LegendControlProps) {
     const map = useMap();
-    const { t } = useTranslation('frontend/global');
+    const { t } = useTranslation(['frontend/global', 'global/common']);
 
     useEffect(() => {
         const Legend = L.Control.extend({

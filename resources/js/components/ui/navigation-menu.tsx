@@ -14,7 +14,7 @@ function NavigationMenu({
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
   viewport?: boolean
 }) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <NavigationMenuPrimitive.Root
       aria-label={t("common.navigation")}

@@ -55,7 +55,7 @@ function DialogContent({
   showClose = true,
   ...props
 }: DialogContentProps) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />

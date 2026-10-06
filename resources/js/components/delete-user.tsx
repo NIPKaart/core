@@ -13,7 +13,7 @@ import { Form } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 
 export default function DeleteUser() {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const { t: tSettings } = useTranslation('backend/settings');
     const passwordInput = useRef<HTMLInputElement>(null);
 

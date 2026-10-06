@@ -15,7 +15,7 @@ type FavoriteButtonProps = {
 };
 
 export function FavoriteButton({ initial, id, type }: FavoriteButtonProps) {
-    const { t } = useTranslation('frontend/global');
+    const { t } = useTranslation('global/common');
     const { user } = useAuthorization();
     const [isFavorited, setIsFavorited] = useState(initial);
     const [loading, setLoading] = useState(false);

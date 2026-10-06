@@ -25,7 +25,7 @@ const iconMap = {
 
 export default function FavoritesDialog({ open, onClose, onGotoLocation }: FavoritesDialogProps) {
     const { t } = useTranslation('frontend/map/favorites');
-    const { t: tGlobal } = useTranslation('frontend/global');
+    const { t: tGlobal } = useTranslation('global/common');
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [favorites, setFavorites] = useState<Favorite[]>([]);
     const [loading, setLoading] = useState(false);
