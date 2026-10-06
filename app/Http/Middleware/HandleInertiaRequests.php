@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SupportedLocale;
 use App\Services\ModerationQueue;
 use App\Services\SourceOverview;
 use App\Support\AppVersion;
@@ -46,6 +47,10 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'locale' => App::getLocale(),
+            'localization' => [
+                'available' => SupportedLocale::options(),
+                'fallback' => (SupportedLocale::parse(config('app.fallback_locale')) ?? SupportedLocale::EN)->value,
+            ],
             'meta' => fn () => [
                 'appVersion' => AppVersion::get(),
                 'build' => AppVersion::getBuild(),

@@ -1,4 +1,5 @@
 import { Progress } from '@/components/ui/progress';
+import { formatLocale } from '@/locale-sync';
 import { AlarmClock, Eye, Info, MapPin, Navigation } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -77,7 +78,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
 
     const unknown = <span className="font-normal text-muted-foreground italic">{t('detail.unknown')}</span>;
     // European day-month order and a 24-hour clock, also in English.
-    const locale = i18n.language.startsWith('en') ? 'en-GB' : i18n.language;
+    const locale = formatLocale(i18n.language);
     const date = (value: string | null | undefined, withTime = false) =>
         value ? (
             <time dateTime={value}>

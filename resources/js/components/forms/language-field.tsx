@@ -1,8 +1,9 @@
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import i18n from '@/i18n';
 import { cn } from '@/lib/utils';
+import type { SharedData } from '@/types';
+import { usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Input } from '../ui/input';
 
@@ -19,11 +20,6 @@ export type LanguageFieldProps = {
     onChange?: (lng: string) => void;
 };
 
-const DEFAULT_LABELS: LanguageLabels = {
-    en: 'English',
-    nl: 'Nederlands',
-};
-
 export default function LanguageField({
     name = 'locale',
     label,
@@ -34,15 +30,10 @@ export default function LanguageField({
     className,
     onChange,
 }: LanguageFieldProps) {
-    const supportedLanguages = useMemo<string[]>(
-        () =>
-            supported ??
-            (Array.isArray(i18n.options.supportedLngs) ? (i18n.options.supportedLngs as string[]).filter((lng) => lng !== 'cimode') : ['en']),
-        [supported],
-    );
-
-    const labels: LanguageLabels = { ...DEFAULT_LABELS, ...(languageLabels ?? {}) };
-    const [value, setValue] = useState<string>(initial ?? i18n.language ?? supportedLanguages[0]);
+    const { localization, locale } = usePage<SharedData>().props;
+    const supportedLanguages = useMemo(() => supported ?? localization.available.map((language) => language.code), [supported, localization]);
+    const labels = { ...Object.fromEntries(localization.available.map((language) => [language.code, language.label])), ...languageLabels };
+    const [value, setValue] = useState(initial ?? locale);
 
     return (
         <div className={cn('grid gap-2', className)}>

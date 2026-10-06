@@ -27,5 +27,6 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('settings/appearance');
     })->name('appearance.edit');
 
-    Route::patch('settings/locale', [LocaleController::class, 'update'])->name('locale.update');
 });
+
+Route::patch('settings/locale', [LocaleController::class, 'update'])->name('locale.update');

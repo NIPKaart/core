@@ -62,6 +62,7 @@ function load(path, i18n) {
     const context = {
         exports: {},
         require: (name) => {
+        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === 'react-i18next') return { useTranslation: (ns) => ({ t: i18n.getFixedT(i18n.language, ns), i18n }) };
             if (name === '@/hooks/use-appearance') return { useAppearance: () => ({ appearance: 'light', updateAppearance: () => {} }) };
             if (name === '@/hooks/use-search-hotkey') return { useSearchHotkey: () => {} };

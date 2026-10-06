@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { formatLocale } from '@/locale-sync';
 import app from '@/routes/app';
 import { ParkingSpaceConfirmation } from '@/types';
 import { router } from '@inertiajs/react';
@@ -95,7 +96,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 s && 'id' in s
                     ? t('delete.description', {
                           user: s.user?.name ?? t('unknown', { defaultValue: 'Unknown' }),
-                          date: new Date(s.confirmed_at).toLocaleDateString(i18n.language.startsWith('en') ? 'en-GB' : i18n.language),
+                          date: new Date(s.confirmed_at).toLocaleDateString(formatLocale(i18n.language)),
                       })
                     : '',
             confirmText: t('delete.confirm'),

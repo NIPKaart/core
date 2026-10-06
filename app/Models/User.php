@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ParkingStatus;
+use App\Enums\SupportedLocale;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -25,7 +26,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function preferredLocale(): string
     {
-        return $this->locale ?? config('app.locale');
+        return (SupportedLocale::parse($this->locale) ?? SupportedLocale::default())->value;
     }
 
     /**

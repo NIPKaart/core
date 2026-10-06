@@ -1,5 +1,4 @@
 import i18n from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
 type TranslationJson = string | { [key: string]: TranslationJson };
@@ -30,21 +29,15 @@ for (const path in modules) {
     namespaces.add(namespace);
 }
 
-i18n.use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-        fallbackLng: 'en',
-        supportedLngs: ['en', 'nl'],
-        defaultNS: 'global',
-        ns: [...namespaces],
-        interpolation: {
-            escapeValue: false,
-        },
-        detection: {
-            order: ['localStorage', 'navigator', 'htmlTag'],
-            caches: ['localStorage'],
-        },
-        resources,
-    });
+i18n.use(initReactI18next).init({
+    fallbackLng: 'en',
+    initAsync: false,
+    defaultNS: 'global',
+    ns: [...namespaces],
+    interpolation: {
+        escapeValue: false,
+    },
+    resources,
+});
 
 export default i18n;

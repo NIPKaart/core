@@ -1,7 +1,6 @@
 import Navbar from '@/components/frontend/nav/nav-bar';
 import SearchOverlay from '@/components/search/search-overlay';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useSyncLocale } from '@/hooks/use-sync-locale';
 
 interface MapLayoutProps {
     children: React.ReactNode;
@@ -12,7 +11,6 @@ interface MapLayoutProps {
 }
 
 export default function MapLayout({ children, showSearch = true, mapSearch = false, mobileNavbar = true }: MapLayoutProps) {
-    useSyncLocale();
     useNotifications();
 
     return (

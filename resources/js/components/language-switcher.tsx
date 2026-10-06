@@ -1,69 +1,57 @@
-import { useSyncLocale } from '@/hooks/use-sync-locale';
 import locale from '@/routes/locale';
 import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
-import clsx from 'clsx';
 import { Globe } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
-const LANGUAGES = [
-    { code: 'en', label: 'EN' },
-    { code: 'nl', label: 'NL' },
-];
-
 export default function LanguageSwitcher() {
     const { t } = useTranslation('backend/global');
-    const { auth, locale: backendLocale } = usePage<SharedData>().props;
-    const [selected, setSelected] = useState<string>(backendLocale);
+    const { locale: selected, localization } = usePage<SharedData>().props;
+    const pending = useRef(false);
+    const [processing, setProcessing] = useState(false);
 
-    useSyncLocale();
-
-    useEffect(() => {
-        setSelected(backendLocale);
-    }, [backendLocale]);
-
-    const handleChange = async (newLocale: string) => {
-        setSelected(newLocale);
-
-        if (auth?.user) {
-            // Logged in user → update in database
-            router.patch(
-                locale.update(),
-                { locale: newLocale },
-                {
-                    onSuccess: () => router.reload(),
+    const handleChange = (code: string) => {
+        if (pending.current || code === selected) return;
+        pending.current = true;
+        setProcessing(true);
+        router.patch(
+            locale.update(),
+            { locale: code },
+            {
+                onFinish: () => {
+                    pending.current = false;
+                    setProcessing(false);
                 },
-            );
-        } else {
-            // Guest user → set cookie and reload
-            document.cookie = `locale=${newLocale}; path=/; max-age=31536000`;
-            router.reload();
-        }
+            },
+        );
     };
-
-    const currentLang = LANGUAGES.find((lang) => lang.code === selected);
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex cursor-pointer items-center gap-2" aria-label={t('common.language')}>
+                <Button
+                    variant="ghost"
+                    disabled={processing}
+                    aria-busy={processing}
+                    className="flex cursor-pointer items-center gap-2"
+                    aria-label={t('common.language')}
+                >
                     <Globe className="h-4 w-4" />
-                    <span className="sm:inline">{currentLang?.label}</span>
+                    <span>{selected.toUpperCase()}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                {LANGUAGES.map((lang) => (
+                {localization.available.map((language) => (
                     <DropdownMenuItem
-                        key={lang.code}
-                        onSelect={() => handleChange(lang.code)}
-                        className={clsx('cursor-pointer', {
-                            'font-bold': selected === lang.code,
-                        })}
+                        key={language.code}
+                        disabled={processing}
+                        onSelect={() => handleChange(language.code)}
+                        className={language.code === selected ? 'cursor-pointer font-bold' : 'cursor-pointer'}
                     >
-                        {lang.label}
+                        {language.label}
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

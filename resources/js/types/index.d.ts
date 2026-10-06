@@ -34,6 +34,7 @@ export interface NavItem {
 export interface SharedData {
     name: string;
     locale: string;
+    localization: { available: { code: string; label: string; formatLocale: string }[]; fallback: string };
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;

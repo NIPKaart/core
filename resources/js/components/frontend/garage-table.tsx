@@ -3,6 +3,7 @@ import { Chip } from '@/components/map/parking-detail/parts';
 import { Progress } from '@/components/ui/progress';
 import { garageLiveState, type GarageLiveState, type OverviewGarage, type OverviewMunicipality } from '@/lib/garage-overview';
 import { cn } from '@/lib/utils';
+import { formatLocale } from '@/locale-sync';
 import { locationMap } from '@/routes';
 import { MapPin, Navigation } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +32,7 @@ const iconLink =
 /** Time only for today's measurements; older ones also get the date. European 24-hour clock, also in English. */
 export function useMeasuredTime(): (value: string) => string {
     const { i18n } = useTranslation();
-    const locale = i18n.language.startsWith('en') ? 'en-GB' : i18n.language;
+    const locale = formatLocale(i18n.language);
 
     return (value: string) => {
         const date = new Date(value);

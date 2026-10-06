@@ -24,6 +24,7 @@ function load(path) {
     const context = {
         exports: {},
         require: (name) => {
+        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === '@/components/localized-date-time') return load('components/localized-date-time.tsx');
             if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === '@inertiajs/react') return { router: {} };

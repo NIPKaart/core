@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\SupportedLocale;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class LocaleController extends Controller
 {
-    public function update(Request $request)
+    public function update(Request $request): RedirectResponse
     {
-        $request->validate([
-            'locale' => ['required', 'in:nl,en'],
-        ]);
+        $validated = $request->validate(['locale' => ['required', Rule::enum(SupportedLocale::class)]]);
 
-        $user = Auth::user();
-        $user->locale = $request->input('locale');
-        $user->save();
+        $request->user()?->update(['locale' => $validated['locale']]);
 
-        return back();
+        return back()->withCookie(cookie('locale', $validated['locale'], 525600));
     }
 }
