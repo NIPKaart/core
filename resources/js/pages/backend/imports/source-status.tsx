@@ -8,6 +8,7 @@ import {
     FileSearch,
     Landmark,
     Loader2,
+    RadioTower,
     RefreshCw,
     Warehouse,
     type LucideIcon,
@@ -20,6 +21,7 @@ export const SOURCE_STATUSES = [
     'awaiting_approval',
     'reapproval',
     'intake_problem',
+    'live_stale',
     'overdue',
     'awaiting_review',
     'awaiting_delivery',
@@ -56,6 +58,7 @@ export type SourceRow = {
     visible_locations_count: number;
     needs_review: boolean;
     delivery_status: 'current' | 'awaiting' | 'overdue' | 'unknown';
+    latest_observation_at: string | null;
     processing: boolean;
 };
 
@@ -63,6 +66,7 @@ const appearance: Record<SourceStatusKey, { icon: LucideIcon; className: string 
     awaiting_approval: { icon: CircleAlert, className: 'text-amber-700 dark:text-amber-400' },
     reapproval: { icon: RefreshCw, className: 'text-amber-700 dark:text-amber-400' },
     intake_problem: { icon: CircleX, className: 'text-destructive' },
+    live_stale: { icon: RadioTower, className: 'text-destructive' },
     overdue: { icon: Clock, className: 'text-destructive' },
     awaiting_review: { icon: FileSearch, className: 'text-blue-700 dark:text-blue-400' },
     awaiting_delivery: { icon: CircleDashed, className: 'text-muted-foreground' },

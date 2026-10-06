@@ -55,6 +55,8 @@ Garage controllers currently read stored occupancy/capacity and `api_state`. No 
 
 ## Backup reference and deployment gates
 
+Monitoring, alert destinations, backup coverage, recovery expectations and the restore rehearsal are recorded in [operations](operations.md).
+
 Reference: the current DDS Platform repository's `routes/console.php`, `config/backup.php` and `config/filesystems.php`; production execution was not inspected. NIPKaart adopts a separate S3-compatible backups disk, required archive password, database-only job, monitoring, cleanup and retention defaults. No current upload workflow was found. Future uploads/object storage need their own backup contract. Git, `.env` and application keys are excluded; preserve deployment secrets and the original `APP_KEY` separately for encrypted fields.
 
 Before enabling `BACKUP_ENABLED=true` in production:

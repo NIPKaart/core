@@ -23,7 +23,8 @@
             "awaiting_approval": "New source waits for approval",
             "reapproval": "Changed source waits for approval",
             "intake_problem": "Delivery could not be processed",
-            "overdue": "Delivery is overdue"
+            "overdue": "Delivery is overdue",
+            "live_stale": "Live occupancy no longer arrives"
         },
         "more_sources_one": "And {{count}} more data source",
         "more_sources_other": "And {{count}} more data sources",
@@ -43,7 +44,8 @@
             "awaiting_approval": "Approval",
             "reapproval": "Approval",
             "intake_problem": "Problem",
-            "overdue": "Overdue"
+            "overdue": "Overdue",
+            "live_stale": "Live"
         }
     },
     "activity": {

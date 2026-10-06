@@ -4,7 +4,9 @@ use App\Enums\UserRole;
 use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
+use App\Models\ParkingOffstreet;
 use App\Models\User;
+use App\Services\SourceOverview;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -98,4 +100,20 @@ it('labels each delivery in the history with its source type', function () {
 
     $this->actingAs($this->admin)->get(route('app.imports.index', ['tab' => 'deliveries']))->assertInertia(fn (Assert $page) => $page
         ->where('imports.data.0.dataset_source.target_type', 'offstreet'));
+});
+
+it('asks for attention when a garage source stops sending live measurements, without hiding its places', function () {
+    $garages = DatasetSource::factory()->offstreet()->create(['name' => 'Garages']);
+    $place = ParkingOffstreet::factory()->for($garages, 'datasetSource')->create(['visibility' => true, 'observed_at' => now()->subMinutes(2)]);
+    $silent = DatasetSource::factory()->offstreet()->for($garages->municipality)->create(['code' => 'nl-utrecht-garages', 'name' => 'Stille garages']);
+    ParkingOffstreet::factory()->for($silent, 'datasetSource')->create(['visibility' => true, 'observed_at' => now()->subMinutes(25)]);
+    DatasetSource::factory()->offstreet()->for($garages->municipality)->create(['code' => 'nl-zwolle-garages', 'name' => 'Zonder live data']);
+
+    $statuses = app(SourceOverview::class)->rows()->pluck('status', 'name');
+
+    expect($statuses['Stille garages'])->toBe('live_stale')
+        ->and($statuses['Garages'])->not->toBe('live_stale')
+        ->and($statuses['Zonder live data'])->not->toBe('live_stale')
+        ->and(SourceOverview::ATTENTION)->toContain('live_stale')
+        ->and($place->fresh()->visibility)->toBeTrue();
 });

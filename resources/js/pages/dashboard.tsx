@@ -309,6 +309,7 @@ const SOURCE_TONES: Record<string, string> = {
     awaiting_approval: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
     reapproval: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
     intake_problem: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+    live_stale: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
     overdue: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
 };
 

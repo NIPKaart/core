@@ -6,6 +6,7 @@ use App\Models\DatasetSource;
 use App\Models\Province;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,12 +16,12 @@ class SourceOverview
 {
     /** Status order doubles as the default sort: sources that need an administrator come first. */
     public const array STATUSES = [
-        'awaiting_approval', 'reapproval', 'intake_problem', 'overdue', 'awaiting_review',
+        'awaiting_approval', 'reapproval', 'intake_problem', 'live_stale', 'overdue', 'awaiting_review',
         'awaiting_delivery', 'published', 'rejected',
     ];
 
     /** Statuses that need an administrator's action. */
-    public const array ATTENTION = ['awaiting_approval', 'reapproval', 'intake_problem', 'overdue', 'awaiting_review'];
+    public const array ATTENTION = ['awaiting_approval', 'reapproval', 'intake_problem', 'live_stale', 'overdue', 'awaiting_review'];
 
     public function __construct(private MunicipalProvenance $provenance) {}
 
@@ -41,6 +42,7 @@ class SourceOverview
                 'offstreetSpaces as visible_offstreet_count' => fn (Builder $builder) => $builder->where('visibility', true),
                 'deliveries as pending_deliveries_count' => fn (Builder $builder) => $builder->where('state', 'pending')->whereNull('error_code'),
             ])
+            ->withMax('offstreetSpaces as latest_observation_at', 'observed_at')
             ->orderBy('name')->get()
             ->map(fn (DatasetSource $source): array => $this->row($source, $provinces));
     }
@@ -59,6 +61,7 @@ class SourceOverview
             $source->approval_state === 'rejected' => 'rejected',
             $source->approval_state === 'pending' => $source->pending_description !== null ? 'reapproval' : 'awaiting_approval',
             $intakeProblem => 'intake_problem',
+            $this->liveFeedStopped($source) => 'live_stale',
             $deliveryStatus === 'overdue' => 'overdue',
             $needsReview => 'awaiting_review',
             $source->last_published_retrieved_at === null => 'awaiting_delivery',
@@ -80,5 +83,18 @@ class SourceOverview
             // Approved sources with pending deliveries are being processed; the page polls until they are done.
             'processing' => $source->approval_state === 'approved' && $source->pending_deliveries_count > 0,
         ];
+    }
+
+    /**
+     * A garage source whose live measurements stopped arriving: its newest measurement is older than visitors may see as
+     * current. Published places stay; visitors already see their occupancy as stale.
+     */
+    private function liveFeedStopped(DatasetSource $source): bool
+    {
+        $latest = $source->latest_observation_at;
+
+        return $source->target_type === 'offstreet'
+            && $latest !== null
+            && Carbon::parse($latest)->lt(now()->subMinutes(config('dataset-deliveries.observation_stale_after_minutes')));
     }
 }

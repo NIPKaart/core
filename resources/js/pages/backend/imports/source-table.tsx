@@ -34,6 +34,7 @@ const chips: { status: SourceFilters['status']; counts: SourceStatusKey[] }[] = 
     { status: 'awaiting_review', counts: ['awaiting_review'] },
     { status: 'overdue', counts: ['overdue'] },
     { status: 'intake_problem', counts: ['intake_problem'] },
+    { status: 'live_stale', counts: ['live_stale'] },
 ];
 
 export default function SourceTable({ sources, summary, countries, filters }: Props) {
@@ -133,7 +134,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
 
     return (
         <div className="min-w-0 space-y-4">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="group" aria-label={t('sources_table.summary')}>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" role="group" aria-label={t('sources_table.summary')}>
                 {chips.map((chip) => {
                     const count = chip.counts.reduce((total, status) => total + summary[status], 0);
                     const active = filters.status === chip.status;
