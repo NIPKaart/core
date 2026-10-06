@@ -5,5 +5,13 @@
     "about": "Over NIPKaart",
     "dashboard": "Dashboard",
     "login": "Inloggen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "navigation": "Hoofdnavigatie",
+    "toggle_menu": "Menu openen of sluiten",
+    "theme": {
+        "light": "Licht thema",
+        "dark": "Donker thema",
+        "system": "Systeemthema",
+        "toggle": "Schakel thema ({{mode}})"
+    }
 }

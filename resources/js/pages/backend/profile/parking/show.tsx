@@ -1,6 +1,7 @@
 import ParkingSpaceStatusBanner from '@/components/alerts/status-parking-space';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import HeadingSmall from '@/components/heading-small';
+import LocalizedDateTime from '@/components/localized-date-time';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import { Button } from '@/components/ui/button';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
@@ -22,11 +23,6 @@ type PageProps = {
         orientations: { value: string; label: string; description: string }[];
     };
 };
-
-function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
 
 export default function UserParkingShow({ parkingSpace, rejectionReason, canWithdraw, selectOptions }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/profile');
@@ -61,7 +57,7 @@ export default function UserParkingShow({ parkingSpace, rejectionReason, canWith
         {
             icon: <Clock4 className="h-4 w-4 text-muted-foreground" />,
             label: t('parking_spaces.table.added_at'),
-            value: parkingSpace.created_at ? formatDate(parkingSpace.created_at) : 'N/A',
+            value: parkingSpace.created_at ? <LocalizedDateTime value={parkingSpace.created_at} dateOnly /> : '—',
         },
         {
             icon: <Globe className="h-4 w-4 text-muted-foreground" />,

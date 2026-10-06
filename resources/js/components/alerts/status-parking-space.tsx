@@ -68,7 +68,7 @@ export default function ParkingSpaceStatusBanner({ parkingSpace, label, descript
         <div className="w-full">
             <Alert className={`w-full border-2 ${classes.border} ${classes.bg} px-3 py-3 sm:py-4`}>
                 <AlertTitle className={`flex items-center gap-2 text-base font-semibold ${classes.text}`}>
-                    <Icon className={`h-5 w-5 min-w-5 ${classes.icon}`} aria-label="Status" />
+                    <Icon className={`h-5 w-5 min-w-5 ${classes.icon}`} aria-hidden="true" />
                     {label}
                 </AlertTitle>
                 <AlertDescription className={`mt-2 w-full text-sm ${classes.description}`}>{description}</AlertDescription>

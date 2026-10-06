@@ -5,6 +5,7 @@ import { router, usePage } from '@inertiajs/react';
 import clsx from 'clsx';
 import { Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
@@ -14,6 +15,7 @@ const LANGUAGES = [
 ];
 
 export default function LanguageSwitcher() {
+    const { t } = useTranslation('backend/global');
     const { auth, locale: backendLocale } = usePage<SharedData>().props;
     const [selected, setSelected] = useState<string>(backendLocale);
 
@@ -47,7 +49,7 @@ export default function LanguageSwitcher() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex cursor-pointer items-center gap-2" aria-label="Language switcher">
+                <Button variant="ghost" className="flex cursor-pointer items-center gap-2" aria-label={t('common.language')}>
                     <Globe className="h-4 w-4" />
                     <span className="sm:inline">{currentLang?.label}</span>
                 </Button>

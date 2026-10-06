@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'validation' => [
+        'orientation_required' => 'Kies een oriëntatie voor de parkeerplaats.',
+        'orientation_invalid' => 'De gekozen oriëntatie is ongeldig. Kies een geldige optie.',
+    ],
     'contribute' => [
         'unresolved' => 'We konden hier geen gemeente in een ondersteund land vinden. Verschuif de speld naar het parkeervak of probeer het opnieuw.',
         'updated' => 'Je inzending is bijgewerkt.',

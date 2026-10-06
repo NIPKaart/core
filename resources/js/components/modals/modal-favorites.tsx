@@ -105,7 +105,7 @@ export default function FavoritesDialog({ open, onClose, onGotoLocation }: Favor
                                 <Heart className="h-6 w-6 text-red-500" fill="#ef4444" />
                                 <DialogTitle className="text-lg font-semibold">{t('title')}</DialogTitle>
                             </div>
-                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
+                            <Button className="cursor-pointer" size="icon" variant="ghost" aria-label={tGlobal('common.close')} onClick={onClose}>
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>

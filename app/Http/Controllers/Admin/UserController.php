@@ -156,7 +156,7 @@ class UserController extends Controller
     public function suspend(Request $request, User $user)
     {
         if (auth()->id() === $user->id) {
-            return redirect()->back()->withErrors(['suspended_at' => 'You cannot suspend yourself.']);
+            return redirect()->back()->withErrors(['suspended_at' => __('users.validation.self_suspension')]);
         }
 
         if ($user->suspended_at) {

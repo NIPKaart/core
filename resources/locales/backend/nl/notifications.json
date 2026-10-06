@@ -54,7 +54,6 @@
         "community.space_deleted": "Community locatie verwijderd: {{space_label}}",
         "community.space_deleted_by_user": "Community locatie verwijderd door gebruiker: {{space_label}}",
         "community.space_restored": "Community locatie hersteld: {{space_label}}",
-        "system_announcement": "Systeem aankondiging",
         "default": "Melding",
         "dataset.import_ready_for_review": "Levering klaar voor beoordeling: {{source_name}}",
         "dataset.source_awaiting_approval": "Bron wacht op goedkeuring: {{source_name}}",
@@ -62,7 +61,8 @@
         "community.improvement_approved": "Verbetering doorgevoerd: {{space_label}}",
         "community.improvement_rejected": "Verbetering afgewezen: {{space_label}}",
         "report.place_kept": "Melding bekeken, parkeerplaats blijft: {{space_label}}",
-        "report.place_removed": "Parkeerplaats verwijderd na melding: {{space_label}}"
+        "report.place_removed": "Parkeerplaats verwijderd na melding: {{space_label}}",
+        "system.announcement": "Systeem aankondiging"
     },
     "reason": "Reden: {{reason}}",
     "reasons": {
@@ -78,5 +78,6 @@
             "duplicate": "Dubbel",
             "other": "Anders"
         }
-    }
+    },
+    "selected": "geselecteerd"
 }

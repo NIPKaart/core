@@ -38,8 +38,8 @@ class StoreLocationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'orientation.required' => 'Select an orientation for the parking space.',
-            'orientation.enum' => 'The selected orientation is invalid. Please select a valid option.',
+            'orientation.required' => __('parking_spaces.validation.orientation_required'),
+            'orientation.enum' => __('parking_spaces.validation.orientation_invalid'),
         ];
     }
 }

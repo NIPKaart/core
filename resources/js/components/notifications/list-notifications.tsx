@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { cn } from '@/lib/utils';
 import { NotificationItem } from '@/types';
 import { getNotificationLabel } from '@/utils/notifications';
@@ -168,9 +169,7 @@ function NotificationRow({
 
                     {n.created_at && (
                         <div className="mt-0.5 text-[11px] text-muted-foreground sm:hidden">
-                            <time dateTime={n.created_at} title={new Date(n.created_at).toLocaleString()} aria-label={timeAgo(n.created_at)}>
-                                {timeAgo(n.created_at)}
-                            </time>
+                            <LocalizedDateTime value={n.created_at}>{timeAgo(n.created_at)}</LocalizedDateTime>
                         </div>
                     )}
 
@@ -211,14 +210,9 @@ function NotificationRow({
 
                 <div className="mt-0.5 flex items-center">
                     {n.created_at && (
-                        <time
-                            className="hidden text-[11px] text-muted-foreground sm:inline"
-                            dateTime={n.created_at}
-                            title={new Date(n.created_at).toLocaleString()}
-                            aria-label={timeAgo(n.created_at)}
-                        >
-                            {timeAgo(n.created_at)}
-                        </time>
+                        <span className="hidden text-[11px] text-muted-foreground sm:inline">
+                            <LocalizedDateTime value={n.created_at}>{timeAgo(n.created_at)}</LocalizedDateTime>
+                        </span>
                     )}
                     {unread && (
                         <button

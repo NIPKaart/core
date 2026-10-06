@@ -1,7 +1,9 @@
 import { useAppearance } from '@/hooks/use-appearance';
 import { Contrast, MoonStar, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function ThemeToggle() {
+    const { t } = useTranslation('frontend/navbar');
     const { appearance, updateAppearance } = useAppearance();
 
     const next = (mode: typeof appearance): typeof appearance => {
@@ -25,17 +27,13 @@ export function ThemeToggle() {
         system: <Contrast className="h-5 w-5" />,
     };
 
-    const label = {
-        light: 'Light mode',
-        dark: 'Dark mode',
-        system: 'System mode',
-    };
+    const label = t(`theme.${appearance}`);
 
     return (
         <button
             onClick={toggle}
-            title={label[appearance]}
-            aria-label={`Schakel thema (${label[appearance]})`}
+            title={label}
+            aria-label={t('theme.toggle', { mode: label })}
             className="cursor-pointer rounded-full p-2 transition hover:bg-gray-100 dark:hover:bg-neutral-800"
         >
             {icon[appearance]}

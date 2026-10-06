@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import * as React from "react"
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
 import { cva } from "class-variance-authority"
@@ -13,8 +14,10 @@ function NavigationMenu({
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
   viewport?: boolean
 }) {
+  const { t } = useTranslation("backend/global")
   return (
     <NavigationMenuPrimitive.Root
+      aria-label={t("common.navigation")}
       data-slot="navigation-menu"
       data-viewport={viewport}
       className={cn(

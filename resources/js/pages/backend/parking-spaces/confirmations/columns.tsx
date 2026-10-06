@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -76,8 +77,8 @@ export function getConfirmationColumns(
             header: t('table.confirmedAt'),
             enableSorting: false,
             cell: ({ row }) => (
-                <span className="whitespace-nowrap" title={new Date(row.original.confirmed_at).toLocaleString()}>
-                    {when(row.original.confirmed_at)}
+                <span className="whitespace-nowrap">
+                    <LocalizedDateTime value={row.original.confirmed_at}>{when(row.original.confirmed_at)}</LocalizedDateTime>
                 </span>
             ),
         },

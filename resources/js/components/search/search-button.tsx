@@ -4,6 +4,7 @@ import { useSearchHotkey } from '@/hooks/use-search-hotkey';
 import { cn } from '@/lib/utils';
 import { Search as SearchIcon } from 'lucide-react';
 import type { ButtonHTMLAttributes } from 'react';
+import { useTranslation } from 'react-i18next';
 import { JSX } from 'react/jsx-runtime';
 import { openSearch } from './search-store';
 
@@ -18,7 +19,10 @@ type Props = Readonly<
 
 const isMac = (): boolean => typeof navigator !== 'undefined' && /Mac/i.test(navigator.userAgent);
 
-export default function SearchButton({ variant = 'icon', placeholder = 'Searchâ€¦', tooltip = 'Search', className, ...rest }: Props): JSX.Element {
+export default function SearchButton({ variant = 'icon', placeholder, tooltip, className, ...rest }: Props): JSX.Element {
+    const { t } = useTranslation('global/search');
+    const searchLabel = tooltip ?? t('title');
+    const searchPlaceholder = placeholder ?? t('placeholder');
     useSearchHotkey();
 
     if (variant === 'bar' || variant === 'responsive') {
@@ -26,7 +30,7 @@ export default function SearchButton({ variant = 'icon', placeholder = 'Searchâ€
             <button
                 type="button"
                 onClick={openSearch}
-                aria-label={tooltip}
+                aria-label={searchLabel}
                 className={cn(
                     'group h-9 items-center gap-2 rounded-md text-left text-sm text-muted-foreground',
                     variant === 'responsive'
@@ -38,7 +42,7 @@ export default function SearchButton({ variant = 'icon', placeholder = 'Searchâ€
                 {...rest}
             >
                 <SearchIcon className="h-4 w-4 opacity-70" aria-hidden="true" />
-                <span className={cn('flex-1 truncate', variant === 'responsive' && 'hidden lg:block')}>{placeholder}</span>
+                <span className={cn('flex-1 truncate', variant === 'responsive' && 'hidden lg:block')}>{searchPlaceholder}</span>
                 <kbd className="pointer-events-none hidden items-center gap-1 rounded border bg-muted px-1.5 text-[10px] font-medium lg:inline-flex">
                     <span className="font-sans">{isMac() ? 'âŒ˜' : 'Ctrl'}</span> K
                 </kbd>
@@ -50,7 +54,7 @@ export default function SearchButton({ variant = 'icon', placeholder = 'Searchâ€
         <Button
             variant="ghost"
             size="icon"
-            aria-label={tooltip}
+            aria-label={searchLabel}
             onClick={openSearch}
             className={cn('cursor-pointer rounded-full hover:bg-muted', className)}
             {...rest}
@@ -59,12 +63,12 @@ export default function SearchButton({ variant = 'icon', placeholder = 'Searchâ€
         </Button>
     );
 
-    return tooltip ? (
+    return searchLabel ? (
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>{IconButton}</TooltipTrigger>
                 <TooltipContent side="bottom" align="center">
-                    {tooltip}
+                    {searchLabel}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>

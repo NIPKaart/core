@@ -53,7 +53,7 @@ class StoreParkingRuleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'municipality_id.required_unless' => 'Please select a municipality unless this rule is nationwide.',
+            'municipality_id.required_unless' => __('parking_rules.validation.municipality_required'),
         ];
     }
 }

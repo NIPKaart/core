@@ -9,5 +9,7 @@
     "goToLocation": "Go to {{title}} on map",
     "unavailable": "Location no longer available",
     "remove": "Remove favorite",
-    "remove_error": "Could not remove this favorite. Please try again."
+    "remove_error": "Could not remove this favorite. Please try again.",
+    "view": "View favorites",
+    "label": "Favorites"
 }

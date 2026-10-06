@@ -4,8 +4,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuthorization } from '@/hooks/use-authorization';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function FavoritesButton({ closeMobileMenu }: { closeMobileMenu?: () => void }) {
+    const { t } = useTranslation('frontend/map/favorites');
     const { user } = useAuthorization();
     const [open, setOpen] = useState(false);
 
@@ -24,7 +26,7 @@ export function FavoritesButton({ closeMobileMenu }: { closeMobileMenu?: () => v
                         <Button
                             variant="ghost"
                             size="icon"
-                            aria-label="View favorites"
+                            aria-label={t('view')}
                             className="cursor-pointer rounded-full"
                             onClick={() => setOpen(true)}
                         >
@@ -32,7 +34,7 @@ export function FavoritesButton({ closeMobileMenu }: { closeMobileMenu?: () => v
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" align="center">
-                        Favorites
+                        {t('label')}
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

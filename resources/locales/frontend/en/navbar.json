@@ -5,5 +5,13 @@
     "about": "About NIPKaart",
     "dashboard": "Dashboard",
     "login": "Log in",
-    "logout": "Log out"
+    "logout": "Log out",
+    "navigation": "Main navigation",
+    "toggle_menu": "Toggle menu",
+    "theme": {
+        "light": "Light mode",
+        "dark": "Dark mode",
+        "system": "System mode",
+        "toggle": "Switch theme ({{mode}})"
+    }
 }

@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ComboboxOption {
     label: string;
@@ -18,7 +19,8 @@ interface ComboboxProps {
     className?: string;
 }
 
-export function Combobox({ value, onChange, options, placeholder = 'Select...', className }: ComboboxProps) {
+export function Combobox({ value, onChange, options, placeholder, className }: ComboboxProps) {
+    const { t } = useTranslation('backend/global');
     const [open, setOpen] = React.useState(false);
     const selected = options.find((o) => o.value === value);
 
@@ -26,15 +28,15 @@ export function Combobox({ value, onChange, options, placeholder = 'Select...', 
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={open} className={cn('w-full justify-between', className)}>
-                    {selected?.label || placeholder}
+                    {selected?.label || placeholder || t('common.select')}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <Command>
-                    <CommandInput placeholder="Search..." className="h-9" />
+                    <CommandInput placeholder={t('search.placeholder')} className="h-9" />
                     <CommandList>
-                        <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandEmpty>{t('common.no_options')}</CommandEmpty>
                         <CommandGroup>
                             {options.map((option) => (
                                 <CommandItem
