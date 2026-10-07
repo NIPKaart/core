@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import parkingMunicipal from '@/routes/app/parking-municipal';
@@ -95,7 +96,7 @@ export function getParkingMunicipalColumns(
         {
             accessorKey: 'updated_at',
             header: t('table.updated'),
-            cell: ({ row }) => new Date(row.original.updated_at).toLocaleDateString(),
+            cell: ({ row }) => <LocalizedDateTime value={row.original.updated_at} dateOnly />,
         },
     ];
 }

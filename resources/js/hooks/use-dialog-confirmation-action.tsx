@@ -16,7 +16,7 @@ type Options = {
 };
 
 export function useConfirmationActionDialog(options: Options = {}) {
-    const { t } = useTranslation('backend/parking/confirmations');
+    const { t, i18n } = useTranslation('backend/parking/confirmations');
     const { t: tGlobal } = useTranslation('backend/global');
     const [dialogType, setDialogType] = useState<ConfirmationDialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
@@ -95,7 +95,7 @@ export function useConfirmationActionDialog(options: Options = {}) {
                 s && 'id' in s
                     ? t('delete.description', {
                           user: s.user?.name ?? t('unknown', { defaultValue: 'Unknown' }),
-                          date: new Date(s.confirmed_at).toLocaleDateString(),
+                          date: new Date(s.confirmed_at).toLocaleDateString(i18n.language.startsWith('en') ? 'en-GB' : i18n.language),
                       })
                     : '',
             confirmText: t('delete.confirm'),

@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ParkingOffstreet } from '@/types';
 import { AlertTriangle } from 'lucide-react';
@@ -37,7 +38,7 @@ export default function OutdatedMunicipalitiesBanner({ spaces, minDaysOutdated =
         <div className="mb-6 w-full">
             <Alert className="w-full border-2 border-orange-300/60 bg-orange-50 px-3 py-3 sm:py-4 dark:bg-orange-950/80">
                 <AlertTitle className="flex items-center gap-2 text-base font-semibold text-orange-800 dark:text-orange-100">
-                    <AlertTriangle className="h-5 w-5 min-w-5 text-orange-500" aria-label="Warning" />
+                    <AlertTriangle className="h-5 w-5 min-w-5 text-orange-500" aria-hidden="true" />
                     {t('banner.outdated.title')}
                 </AlertTitle>
                 <AlertDescription className="mt-2 w-full text-sm text-zinc-800 dark:text-orange-50">
@@ -62,7 +63,7 @@ export default function OutdatedMunicipalitiesBanner({ spaces, minDaysOutdated =
                             >
                                 {name}
                                 <span className="ml-1 text-[11px] text-zinc-600 dark:text-zinc-400">
-                                    ({new Date(updatedAt).toLocaleDateString()})
+                                    ({<LocalizedDateTime value={updatedAt} dateOnly />})
                                 </span>
                             </span>
                         ))}

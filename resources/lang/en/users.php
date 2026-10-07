@@ -2,6 +2,7 @@
 
 return [
     'validation' => [
+        'self_suspension' => 'You cannot suspend yourself.',
         'self_role_change' => 'You cannot change your own role.',
     ],
 ];

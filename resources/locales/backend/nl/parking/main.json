@@ -17,8 +17,6 @@
         "status": "Status",
         "submittedAt": "Ingediend op",
         "actions": {
-            "show": "Bekijken",
-            "edit": "Bewerken",
             "confirmations": "Bevestigingen",
             "trash": "Prullenbak"
         },

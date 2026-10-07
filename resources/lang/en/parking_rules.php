@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'validation' => [
+        'municipality_required' => 'Please select a municipality unless this rule is nationwide.',
+    ],
     'flash' => [
         'created' => 'The source was added.',
         'updated' => 'The source was updated.',

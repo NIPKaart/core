@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'validation' => [
+        'orientation_required' => 'Select an orientation for the parking space.',
+        'orientation_invalid' => 'The selected orientation is invalid. Please select a valid option.',
+    ],
     'contribute' => [
         'unresolved' => 'We could not find a municipality in a supported country here. Move the pin to the parking bay or try again.',
         'updated' => 'Your submission has been updated.',

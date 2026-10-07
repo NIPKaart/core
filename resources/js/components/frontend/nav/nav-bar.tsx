@@ -47,7 +47,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
     return (
         <>
             <header className="relative z-50 bg-white dark:bg-neutral-900">
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-[18px] lg:px-8 lg:py-5" aria-label="Global">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-[18px] lg:px-8 lg:py-5" aria-label={t('navigation')}>
                     {/* Logo */}
                     <div className="z-50 flex shrink-0 lg:flex-1">
                         <Link href={home()} className="-m-1.5 p-1.5">
@@ -104,7 +104,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                             aria-expanded={mobileMenuOpen}
                             aria-controls="mobile-nav"
                         >
-                            <span className="sr-only">Toggle menu</span>
+                            <span className="sr-only">{t('toggle_menu')}</span>
                             <Icon iconNode={mobileMenuOpen ? X : Menu} className="size-6 transition-transform duration-200" />
                         </button>
                     </div>

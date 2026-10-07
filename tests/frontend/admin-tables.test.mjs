@@ -24,7 +24,8 @@ function load(path) {
     const context = {
         exports: {},
         require: (name) => {
-            if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
+            if (name === '@/components/localized-date-time') return load('components/localized-date-time.tsx');
+            if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === '@inertiajs/react') return { router: {} };
             if (name.startsWith('@/routes')) return {};
             if (name === './columns-selector') return { ColumnsSelector: () => null };

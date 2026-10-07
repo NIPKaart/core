@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -96,7 +97,7 @@ export function getUserColumns(
             enableHiding: true,
             cell: ({ row }) =>
                 row.original.last_login_at ? (
-                    new Date(row.original.last_login_at).toLocaleString()
+                    <LocalizedDateTime value={row.original.last_login_at} />
                 ) : (
                     <span className="text-muted-foreground">{t('table.never_logged_in')}</span>
                 ),
@@ -106,7 +107,7 @@ export function getUserColumns(
             header: t('table.created_at'),
             enableSorting: true,
             enableHiding: true,
-            cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
+            cell: ({ row }) => <LocalizedDateTime value={row.original.created_at} dateOnly />,
         },
         {
             id: 'actions',

@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,14 +21,6 @@ const readVariantMap: Record<'read' | 'unread', 'secondary' | 'default'> = {
     read: 'secondary',
     unread: 'default',
 };
-
-const dtf = new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-});
 
 const resolveTitleForRow = (n: NotificationItem, tBackend: Translations['t']) => {
     const raw = (n.data ?? {}) as Record<string, unknown>;
@@ -60,7 +53,7 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                    aria-label="Select all"
+                    aria-label={tGlobal('common.selectAll')}
                     className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
@@ -68,7 +61,7 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                    aria-label="Select row"
+                    aria-label={tGlobal('common.selectRow')}
                     className="cursor-pointer"
                 />
             ),
@@ -127,8 +120,7 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
             header: t('table.createdAt'),
             cell: ({ row }) => {
                 const s = row.original.created_at;
-                const d = s ? new Date(s) : null;
-                return <span className="text-muted-foreground">{d ? dtf.format(d) : '—'}</span>;
+                return <span className="text-muted-foreground">{s ? <LocalizedDateTime value={s} /> : '—'}</span>;
             },
         },
         {

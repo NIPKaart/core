@@ -15,7 +15,17 @@
         "selectAll": "Select all",
         "selectRow": "Select row",
         "show": "Show",
-        "yes": "Yes"
+        "yes": "Yes",
+        "language": "Choose language",
+        "select": "Select…",
+        "no_options": "No options found.",
+        "sidebar": "Sidebar",
+        "sidebar_description": "Navigation menu on mobile.",
+        "toggle_sidebar": "Toggle sidebar",
+        "breadcrumb": "Breadcrumb",
+        "more": "More",
+        "more_pages": "More pages",
+        "navigation": "Navigation"
     },
     "search": {
         "placeholder": "Search..."

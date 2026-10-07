@@ -78,5 +78,6 @@
             "duplicate": "Duplicate",
             "other": "Other"
         }
-    }
+    },
+    "selected": "selected"
 }

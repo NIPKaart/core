@@ -20,6 +20,15 @@ const context = {
     exports: {},
     Intl,
     require: (name) => {
+        if (name === '@/components/localized-date-time') {
+            const dateContext = { exports: {}, require: context.require };
+            const dateSource = ts.transpileModule(
+                readFileSync(new URL('../../resources/js/components/localized-date-time.tsx', import.meta.url), 'utf8'),
+                { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } },
+            ).outputText;
+            vm.runInNewContext(dateSource, dateContext);
+            return dateContext.exports;
+        }
         if (name === 'lucide-react') return icons;
         if (name === 'react-i18next')
             return {

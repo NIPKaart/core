@@ -9,5 +9,7 @@
     "goToLocation": "Ga naar {{title}} op de kaart",
     "unavailable": "Locatie niet meer beschikbaar",
     "remove": "Favoriet verwijderen",
-    "remove_error": "De favoriet kon niet worden verwijderd. Probeer het opnieuw."
+    "remove_error": "De favoriet kon niet worden verwijderd. Probeer het opnieuw.",
+    "view": "Favorieten bekijken",
+    "label": "Favorieten"
 }

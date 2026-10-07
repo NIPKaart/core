@@ -119,7 +119,7 @@ export default function Index({ users, filters, facets, roleOptions }: PageProps
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Users" />
+            <Head title={t('head.index')} />
             <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="space-y-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">

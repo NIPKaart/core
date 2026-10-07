@@ -1,3 +1,4 @@
+import LocalizedDateTime from '@/components/localized-date-time';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -44,7 +45,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
                 <Checkbox
                     checked={table.getIsAllPageRowsSelected()}
                     onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                    aria-label="Select all"
+                    aria-label={tGlobal('common.selectAll')}
                     className="cursor-pointer border border-input bg-background data-[state=checked]:bg-primary"
                 />
             ),
@@ -52,7 +53,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                    aria-label="Select row"
+                    aria-label={tGlobal('common.selectRow')}
                     className="cursor-pointer"
                 />
             ),
@@ -157,7 +158,7 @@ export function getParkingOffstreetColumns(can: (permission: string) => boolean,
         {
             accessorKey: 'observed_at',
             header: t('table.observed_at'),
-            cell: ({ row }) => (row.original.observed_at ? new Date(row.original.observed_at).toLocaleString() : '—'),
+            cell: ({ row }) => (row.original.observed_at ? <LocalizedDateTime value={row.original.observed_at} /> : '—'),
         },
         {
             accessorKey: 'visibility',

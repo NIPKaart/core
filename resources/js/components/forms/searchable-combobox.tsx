@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Option = {
     label: string;
@@ -18,7 +19,8 @@ type Props = {
     disabled?: boolean;
 };
 
-export function SearchableCombobox({ label, placeholder = 'Select...', options, value, onChange, error, description, disabled = false }: Props) {
+export function SearchableCombobox({ label, placeholder, options, value, onChange, error, description, disabled = false }: Props) {
+    const { t } = useTranslation('backend/global');
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -88,7 +90,7 @@ export function SearchableCombobox({ label, placeholder = 'Select...', options, 
                 disabled={disabled}
                 onKeyDown={handleButtonKeyDown}
             >
-                <span>{selectedLabel || placeholder}</span>
+                <span>{selectedLabel || placeholder || t('common.select')}</span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </button>
             {open && (
@@ -105,7 +107,7 @@ export function SearchableCombobox({ label, placeholder = 'Select...', options, 
                         <input
                             ref={inputRef}
                             className="w-full rounded-md border border-zinc-200 bg-zinc-50 py-1.5 pr-2 pl-9 text-sm text-foreground transition placeholder:text-zinc-300 focus:border-primary focus:ring-1 focus:ring-primary/30 focus:outline-none dark:bg-zinc-800"
-                            placeholder="Search..."
+                            placeholder={t('search.placeholder')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             autoFocus
@@ -113,7 +115,7 @@ export function SearchableCombobox({ label, placeholder = 'Select...', options, 
                     </div>
                     <div className={cn('max-h-60 overflow-auto py-1', filteredOptions.length === 0 && 'py-2')}>
                         {filteredOptions.length === 0 ? (
-                            <div className="px-4 py-2 text-sm text-muted-foreground select-none">No options found.</div>
+                            <div className="px-4 py-2 text-sm text-muted-foreground select-none">{t('common.no_options')}</div>
                         ) : (
                             filteredOptions.map((option) => (
                                 <button

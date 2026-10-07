@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'validation' => [
+        'municipality_required' => 'Kies een gemeente, tenzij deze regel landelijk geldt.',
+    ],
     'flash' => [
         'created' => 'De bron is toegevoegd.',
         'updated' => 'De bron is bijgewerkt.',

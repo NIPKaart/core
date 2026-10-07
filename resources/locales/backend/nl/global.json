@@ -15,7 +15,17 @@
         "selectAll": "Alles selecteren",
         "selectRow": "Rij selecteren",
         "show": "Bekijken",
-        "yes": "Ja"
+        "yes": "Ja",
+        "language": "Kies taal",
+        "select": "Selecteer…",
+        "no_options": "Geen opties gevonden.",
+        "sidebar": "Zijbalk",
+        "sidebar_description": "Navigatiemenu op mobiel.",
+        "toggle_sidebar": "Zijbalk openen of sluiten",
+        "breadcrumb": "Broodkruimelnavigatie",
+        "more": "Meer",
+        "more_pages": "Meer pagina’s",
+        "navigation": "Navigatie"
     },
     "search": {
         "placeholder": "Zoeken..."
