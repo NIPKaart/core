@@ -26,7 +26,7 @@ export default function SearchOverlay(): JSX.Element {
     const [results, setResults] = useState<DestinationResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [resolving, setResolving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<'error' | 'no_destination' | null>(null);
     const controller = useRef<AbortController | null>(null);
 
     useEffect(() => {
@@ -183,7 +183,9 @@ export default function SearchOverlay(): JSX.Element {
                                 <div className="mt-1 text-xs text-muted-foreground">
                                     {result.type === 'street'
                                         ? t('parking_count', { count: result.parking_count })
-                                        : t(`types.${['community', 'municipal', 'offstreet'].includes(result.type) ? result.type : 'destination'}`)}
+                                        : t(
+                                              `types.${result.type === 'community' || result.type === 'municipal' || result.type === 'offstreet' ? result.type : 'destination'}` as const,
+                                          )}
                                 </div>
                             </div>
                             <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />

@@ -3,7 +3,7 @@ import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import ParkingSpaceForm, { type FormValues, type MunicipalityOption } from '@/pages/backend/form-parking-space';
 import app from '@/routes/app';
-import type { BreadcrumbItem, ParkingMunicipal, ParkingSpace } from '@/types';
+import type { BreadcrumbItem, ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
@@ -20,7 +20,7 @@ type PageProps = {
         orientation: EnumOption[];
         underSign: EnumOption[];
         rejectionReasons: EnumOption[];
-        restrictionDays: string[];
+        restrictionDays: RestrictionDay[];
     };
     nearbySpaces?: ParkingSpace[];
     nearbyMunicipalSpaces?: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];

@@ -16,6 +16,13 @@ type PageProps = {
     favorites?: Favorite[];
 };
 
+const typeKeys = {
+    Community: 'favorites.types.community',
+    Municipal: 'favorites.types.municipal',
+    Offstreet: 'favorites.types.offstreet',
+    Unknown: 'favorites.types.unknown',
+} as const;
+
 const iconMap = {
     Community: MapPin,
     Municipal: Landmark,
@@ -91,9 +98,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                     </span>
                                                 )}
                                             </CardTitle>
-                                            <CardDescription className="mt-0.5 text-xs capitalize">
-                                                {t(`favorites.types.${fav.type.toLowerCase()}`)}
-                                            </CardDescription>
+                                            <CardDescription className="mt-0.5 text-xs capitalize">{t(typeKeys[fav.type])}</CardDescription>
                                         </div>
                                     </CardHeader>
                                     <CardFooter className="mt-2 flex items-center justify-between border-t pt-4">

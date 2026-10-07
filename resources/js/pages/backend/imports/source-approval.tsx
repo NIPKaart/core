@@ -32,7 +32,7 @@ type Props = {
 /** Fields whose change requires approval again; the delivery interval is excluded (ADR 0013). */
 const approvedFields = ['name', 'publisher', 'source_url', 'licence', 'terms_url', 'attribution', 'area', 'bounds'] as const;
 
-export function changedFields(approved: SourceDescription, proposed: SourceDescription | null): string[] {
+export function changedFields(approved: SourceDescription, proposed: SourceDescription | null): (typeof approvedFields)[number][] {
     if (!proposed) return [];
     return approvedFields.filter((field) => JSON.stringify(approved[field]) !== JSON.stringify(proposed[field]));
 }
@@ -75,7 +75,7 @@ export default function SourceApproval({ source }: Props) {
             )}
             {changed.length > 0 && (
                 <p className="text-sm">
-                    {t('approval.changed_fields')}: {changed.map((field) => t(`approval.fields.${field}`)).join(', ')}
+                    {t('approval.changed_fields')}: {changed.map((field) => t(`approval.fields.${field}` as const)).join(', ')}
                 </p>
             )}
             <dl className="grid gap-3 text-sm sm:grid-cols-[10rem_1fr]">

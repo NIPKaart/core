@@ -1,5 +1,5 @@
 import app from '@/routes/app';
-import type { ParkingMunicipal, ParkingSpace } from '@/types';
+import type { ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
 import type { Contributor } from './parts';
 import type { ChangeGroup, EnumOption, ImprovementValues } from './values';
 
@@ -100,7 +100,7 @@ export type Options = {
     municipalities: { id: number; name: string }[];
     orientations: EnumOption[];
     underSign: EnumOption[];
-    restrictionDays: string[];
+    restrictionDays: RestrictionDay[];
     changes: ChangeGroup[];
     reasons: Record<ItemType, EnumOption[]>;
     bulkReasons: EnumOption[];

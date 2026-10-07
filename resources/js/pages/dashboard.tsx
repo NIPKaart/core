@@ -3,12 +3,16 @@ import ContributionsMap, { type MapPlace } from '@/components/map/contributions-
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import type { SourceStatusKey } from '@/pages/backend/imports/source-status';
+import type { ChangeGroup } from '@/pages/backend/moderation/values';
 import { dashboard, locationMap as mapPage } from '@/routes';
 import app from '@/routes/app';
 import locationMap from '@/routes/location-map';
 import notifications from '@/routes/notifications';
 import profile from '@/routes/profile';
 import type { SharedData } from '@/types';
+import type { ParkingStatus } from '@/types/enum';
+import { translateSourceValue } from '@/utils/translation';
 import { Deferred, Head, Link, usePage } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
@@ -33,7 +37,16 @@ type QueuePreviewItem = {
 type Todo = {
     moderation: { total: number; high: number; types: Partial<Record<ItemType, number>>; oldest: string | null } | null;
     queue: QueuePreviewItem[];
-    sources: { total: number; items: { id: number; name: string; status: string; import_id: number | null; since: string | null }[] };
+    sources: {
+        total: number;
+        items: {
+            id: number;
+            name: string;
+            status: Exclude<SourceStatusKey, 'published' | 'rejected' | 'awaiting_delivery'>;
+            import_id: number | null;
+            since: string | null;
+        }[];
+    };
 };
 
 type ActivityEvent = {
@@ -42,7 +55,7 @@ type ActivityEvent = {
     at: string;
     unread: boolean;
     url: string | null;
-    params: { space_label?: string | null; status?: string; new_status?: string; reason?: string; changes?: string[] };
+    params: { space_label?: string | null; status?: ParkingStatus; new_status?: ParkingStatus; reason?: string; changes?: ChangeGroup[] };
 };
 
 type Favorite = {
@@ -82,7 +95,9 @@ export default function Dashboard({ profile: person, hasTodo, todo, activity, ma
     const header = (summary: ReactNode) => (
         <header className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">{t(`greeting.${greeting}`, { name: auth.user.name.split(' ')[0] })}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">
+                    {t(`greeting.${greeting}` as const, { name: auth.user.name.split(' ')[0] })}
+                </h1>
                 <p className="text-sm text-muted-foreground first-letter:uppercase">{summary}</p>
             </div>
             <Button asChild className="bg-orange-700 text-white hover:bg-orange-600">
@@ -249,7 +264,7 @@ function StatGrid({ stats }: { stats: Stats }) {
             <dl className="grid grid-cols-2 border-y">
                 {STAT_KEYS.map((key, index) => (
                     <div key={key} className={cn('py-3', index % 2 === 1 && 'border-l pl-4', index > 1 && 'border-t')}>
-                        <dt className="text-[13px] text-muted-foreground">{t(`stats.${key}`)}</dt>
+                        <dt className="text-[13px] text-muted-foreground">{t(`stats.${key}` as const)}</dt>
                         <dd className="mt-0.5 text-[22px] leading-7 font-semibold tabular-nums">{stats[key]}</dd>
                     </div>
                 ))}
@@ -276,10 +291,10 @@ function StatStrip({ stats }: { stats: Stats }) {
                 >
                     <dt className="flex items-center gap-1.5 text-sm text-muted-foreground">
                         {MARKER_DOTS[key] && <span className={cn('size-2 rounded-full', MARKER_DOTS[key])} aria-hidden />}
-                        {t(`stats.${key}`)}
+                        {t(`stats.${key}` as const)}
                     </dt>
                     <dd className="text-3xl font-semibold tabular-nums">{stats[key]}</dd>
-                    <dd className="text-xs text-muted-foreground">{t(`stats.hint.${key}`)}</dd>
+                    <dd className="text-xs text-muted-foreground">{t(`stats.hint.${key}` as const)}</dd>
                 </div>
             ))}
         </dl>
@@ -295,7 +310,7 @@ function MapLegend() {
             {(['published', 'pending', 'favorites'] as const).map((key) => (
                 <span key={key} className="inline-flex items-center gap-1.5">
                     <span className={cn('size-2 rounded-full', MARKER_DOTS[key])} aria-hidden />
-                    {t(`map.legend.${key}`)}
+                    {t(`map.legend.${key}` as const)}
                 </span>
             ))}
         </p>
@@ -382,14 +397,14 @@ function Workplace({ todo }: { todo?: Todo }) {
                                         >
                                             <span className="inline-flex w-fit items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium">
                                                 <Icon className="size-3" aria-hidden />
-                                                {tModeration(`types.${item.type}`)}
+                                                {tModeration(`types.${item.type}` as const)}
                                             </span>
                                             <span className="order-last col-span-2 min-w-0 sm:order-none sm:col-span-1">
                                                 <span className="flex items-center gap-2">
                                                     <span className="truncate font-medium">{item.street || tModeration('no_address')}</span>
                                                     {(item.reports ?? 0) > 1 && (
                                                         <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-px text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-                                                            {tModeration('flags.reports', { count: item.reports })}
+                                                            {tModeration('flags.reports', { count: item.reports ?? 0 })}
                                                         </span>
                                                     )}
                                                 </span>
@@ -421,7 +436,7 @@ function Workplace({ todo }: { todo?: Todo }) {
                                     {t('todo.in_total', {
                                         types: (['submission', 'improvement', 'report'] as const)
                                             .filter((type) => moderation.types[type])
-                                            .map((type) => t(`todo.types.${type}`, { count: moderation.types[type] }))
+                                            .map((type) => t(`todo.types.${type}` as const, { count: moderation.types[type] ?? 0 }))
                                             .join(', '),
                                     })}
                                 </li>
@@ -457,10 +472,10 @@ function Workplace({ todo }: { todo?: Todo }) {
                                     <span className="block font-medium">{source.name}</span>
                                     <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
                                         <span className={cn('rounded-md px-1.5 py-px text-xs font-medium', SOURCE_TONES[source.status])}>
-                                            {t(`todo.source_tag.${source.status}`)}
+                                            {t(`todo.source_tag.${source.status}` as const)}
                                         </span>
                                         <span>
-                                            {t(`todo.source.${source.status}`)}
+                                            {t(`todo.source.${source.status}` as const)}
                                             {source.since &&
                                                 ` · ${new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long' }).format(new Date(source.since))}`}
                                         </span>
@@ -507,25 +522,27 @@ function useEventText() {
     const { t: tNotification } = useTranslation('global/notification');
     const { t: tModeration, i18n } = useTranslation('backend/moderation');
     /** "Gewijzigd: vak en onderbord." for the change groups an approved improvement applied. */
-    const changed = (groups?: string[]) =>
+    const changed = (groups?: ChangeGroup[]) =>
         groups?.length
             ? t('activity.changed', {
                   fields: new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
-                      groups.map((group) => tModeration(`groups.${group}`).toLowerCase()),
+                      groups.map((group) => tModeration(`groups.${group}` as const).toLowerCase()),
                   ),
               })
             : null;
 
     return (event: ActivityEvent): { text: string; detail: string | null; tone: keyof typeof TONES } => {
         const place = event.params.space_label || t('activity.unknown_place');
-        const reason = event.params.reason ? tNotification('reason', { reason: tNotification(`reasons.${event.params.reason}`) }) : null;
+        const reason = event.params.reason
+            ? tNotification('reason', { reason: translateSourceValue('global/notification', `reasons.${event.params.reason}`) })
+            : null;
 
         switch (event.kind) {
             case 'added': {
                 const status = event.params.status ?? 'pending';
                 return {
                     text: t('activity.added', { place }),
-                    detail: t(`activity.status.${status}`),
+                    detail: t(`activity.status.${status}` as const),
                     tone: status === 'approved' ? 'positive' : status === 'rejected' ? 'negative' : 'pending',
                 };
             }

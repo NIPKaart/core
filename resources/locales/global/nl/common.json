@@ -30,7 +30,8 @@
         "loading": "Laden...",
         "log_out": "Uitloggen",
         "add_favorite": "Toevoegen aan favorieten",
-        "remove_favorite": "Verwijderen uit favorieten"
+        "remove_favorite": "Verwijderen uit favorieten",
+        "unknown": "Onbekend"
     },
     "search": {
         "placeholder": "Zoeken..."

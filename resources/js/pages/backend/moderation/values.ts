@@ -1,3 +1,4 @@
+import type { RestrictionDay } from '@/types';
 import { useTranslation } from 'react-i18next';
 
 /** The improvable values of a community space, as the server compares and stores them. */
@@ -11,7 +12,7 @@ export type ImprovementValues = {
     under_sign: 'yes' | 'no' | null;
     under_sign_text: string | null;
     parking_time: number | null;
-    restriction_days: string[] | null;
+    restriction_days: RestrictionDay[] | null;
     restriction_starts_at: string | null;
     restriction_ends_at: string | null;
     description: string | null;
@@ -31,7 +32,7 @@ export const CHANGE_GROUPS = Object.keys(GROUP_FIELDS) as ChangeGroup[];
 
 export type EnumOption = { value: string; label: string };
 
-type Options = { orientations: EnumOption[]; underSign?: EnumOption[]; restrictionDays?: string[] };
+type Options = { orientations: EnumOption[]; underSign?: EnumOption[]; restrictionDays?: RestrictionDay[] };
 
 /** Readable text for one change group, with "not known" and "none" kept apart. */
 export function useValueFormatter(options: Options) {
@@ -57,7 +58,7 @@ export function useValueFormatter(options: Options) {
                 if (values.under_sign === 'no') return tContribute('details.under_sign.no');
                 const days = (options.restrictionDays ?? [])
                     .filter((day) => values.restriction_days?.includes(day))
-                    .map((day) => tContribute(`days.${day}`))
+                    .map((day) => tContribute(`days.${day}` as const))
                     .join(', ');
                 const times =
                     values.restriction_starts_at && values.restriction_ends_at
@@ -85,7 +86,7 @@ export function useChangeSummary() {
     return (changes: ChangeGroup[], distance: number | null = null) =>
         changes
             .map((group, index) => {
-                const label = t(`groups.${group}`);
+                const label = t(`groups.${group}` as const);
                 const text = index === 0 ? label : label.toLowerCase();
                 return group === 'location' && distance !== null ? `${text} (${distance} m)` : text;
             })

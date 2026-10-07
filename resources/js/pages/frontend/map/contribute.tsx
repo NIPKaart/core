@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { store, update } from '@/routes/location-map';
 import improve from '@/routes/map/places/improve';
 import profile from '@/routes/profile';
+import type { RestrictionDay } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import type { Map as LeafletMap } from 'leaflet';
 import { AlertTriangle, Check, ChevronLeft, Info, LoaderCircle, LocateFixed, Move, PencilLine, X } from 'lucide-react';
@@ -29,7 +30,7 @@ type ExistingSubmission = {
     under_sign: 'yes' | 'no' | null;
     under_sign_text: string | null;
     parking_time: number | null;
-    restriction_days: string[] | null;
+    restriction_days: RestrictionDay[] | null;
     restriction_starts_at: string | null;
     restriction_ends_at: string | null;
     description: string | null;
@@ -37,7 +38,7 @@ type ExistingSubmission = {
 
 type PageProps = {
     orientationOptions: OrientationOption[];
-    restrictionDays: string[];
+    restrictionDays: RestrictionDay[];
     parkingSpace: ExistingSubmission | null;
     /** Proposing an improvement to a published space rather than editing one's own pending submission. */
     improving?: boolean;

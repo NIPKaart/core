@@ -75,7 +75,7 @@ export default function DiscoveryFilters({
                     <SelectContent>
                         {(['all', 'community', 'municipal', 'offstreet'] as const).map((source) => (
                             <SelectItem key={source} value={source}>
-                                {t(`filters.sources.${source}`)}
+                                {t(`filters.sources.${source}` as const)}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -107,14 +107,14 @@ export default function DiscoveryFilters({
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        {['balanced', 'distance'].map((sort) => (
+                        {(['balanced', 'distance'] as const).map((sort) => (
                             <SelectItem key={sort} value={sort}>
-                                {t(`filters.sorts.${sort}`)}
+                                {t(`filters.sorts.${sort}` as const)}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
-                <p className="text-xs leading-relaxed text-muted-foreground">{t(`filters.explanation.${draft.sort}`)}</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{t(`filters.explanation.${draft.sort}` as const)}</p>
             </div>
             {isDesktop && actions}
         </form>

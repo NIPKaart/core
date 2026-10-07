@@ -25,7 +25,7 @@ export default function DestinationSearch({
     const open = useSearchOpen();
     const desktop = useMediaQuery('(min-width: 1024px)');
     const [query, setQuery] = useState(destination?.label ?? '');
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<'error' | 'no_destination' | null>(null);
     const [resolving, setResolving] = useState(false);
     const [selectedSuggestion, setSelectedSuggestion] = useState('');
     const editing = query !== destination?.label;

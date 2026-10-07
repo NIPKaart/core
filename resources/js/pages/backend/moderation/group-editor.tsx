@@ -28,7 +28,7 @@ export function GroupEditor({
                     {(['latitude', 'longitude'] as const).map((field) => (
                         <div key={field} className="grid gap-1">
                             <Label htmlFor={`edit-${field}`} className="text-xs text-muted-foreground">
-                                {t(`review.${field}`)}
+                                {t(`review.${field}` as const)}
                             </Label>
                             <Input
                                 id={`edit-${field}`}
@@ -106,7 +106,7 @@ export function GroupEditor({
                         {(['hours', 'minutes'] as const).map((unit) => (
                             <div key={unit} className="grid gap-1">
                                 <Label htmlFor={`edit-${unit}`} className="text-xs text-muted-foreground">
-                                    {tContribute(`details.under_sign.${unit}`)}
+                                    {tContribute(`details.under_sign.${unit}` as const)}
                                 </Label>
                                 <Input
                                     id={`edit-${unit}`}
@@ -128,13 +128,15 @@ export function GroupEditor({
                         variant="outline"
                         size="sm"
                         value={draft.restriction_days ?? []}
-                        onValueChange={(days) => update({ restriction_days: days.length ? days : null })}
+                        onValueChange={(days) =>
+                            update({ restriction_days: days.length ? options.restrictionDays.filter((day) => days.includes(day)) : null })
+                        }
                         aria-label={tContribute('details.under_sign.applies')}
                         className="justify-start"
                     >
                         {options.restrictionDays.map((day) => (
                             <ToggleGroupItem key={day} value={day}>
-                                {tContribute(`days.${day}`)}
+                                {tContribute(`days.${day}` as const)}
                             </ToggleGroupItem>
                         ))}
                     </ToggleGroup>
@@ -142,7 +144,7 @@ export function GroupEditor({
                         {(['restriction_starts_at', 'restriction_ends_at'] as const).map((field) => (
                             <div key={field} className="grid gap-1">
                                 <Label htmlFor={`edit-${field}`} className="text-xs text-muted-foreground">
-                                    {tContribute(`details.under_sign.${field === 'restriction_starts_at' ? 'from' : 'until'}`)}
+                                    {tContribute(`details.under_sign.${field === 'restriction_starts_at' ? 'from' : 'until'}` as const)}
                                 </Label>
                                 <Input
                                     id={`edit-${field}`}
