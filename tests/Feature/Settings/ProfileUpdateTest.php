@@ -5,6 +5,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+test('settings redirects to the profile for every supported HTTP method', function (string $method) {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->call($method, '/settings')
+        ->assertRedirect(route('profile.edit'));
+})->with(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']);
+
+test('guests must sign in before opening settings', function () {
+    $this->get('/settings')->assertRedirect(route('login'));
+});
+
 test('profile page is displayed', function () {
     $user = User::factory()->create();
 
