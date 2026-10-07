@@ -8,11 +8,13 @@ use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
 use App\Models\Province;
 use App\Models\User;
 use App\Notifications\DatasetImport\SourceAwaitingApproval;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetDeliveryStorage;
+use App\Services\MunicipalImportService;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
@@ -72,9 +74,9 @@ function objectResult(string $json): Result
 }
 
 /** One discovery pass over one municipal folder; the newest object is read when the source is unknown. */
-function discoverFolder(MockHandler $handler, array $objects, ?string $readJson = null): void
+function discoverFolder(MockHandler $handler, array $objects, ?string $readJson = null, string $dataset = 'nl-amsterdam'): void
 {
-    $handler->append(new Result(['CommonPrefixes' => [['Prefix' => 'municipal/nl-amsterdam/']], 'IsTruncated' => false]));
+    $handler->append(new Result(['CommonPrefixes' => [['Prefix' => 'municipal/'.$dataset.'/']], 'IsTruncated' => false]));
     $handler->append(new Result(['Contents' => $objects, 'IsTruncated' => false]));
     if ($readJson !== null) {
         $handler->append(objectResult($readJson));
@@ -85,7 +87,7 @@ function discoverFolder(MockHandler $handler, array $objects, ?string $readJson 
 
 function objectFor(string $json, string $modified): array
 {
-    return ['Key' => 'municipal/nl-amsterdam/'.json_decode($json, true)['delivery_id'].'.json', 'ETag' => '"'.md5($json).'"', 'LastModified' => $modified];
+    return ['Key' => 'municipal/'.json_decode($json, true)['dataset'].'/'.json_decode($json, true)['delivery_id'].'.json', 'ETag' => '"'.md5($json).'"', 'LastModified' => $modified];
 }
 
 it('registers an unknown folder as a source awaiting approval, links the municipality and holds its deliveries', function () {
@@ -221,4 +223,95 @@ it('refuses a manual upload for a source that is not approved', function () {
         'file' => UploadedFile::fake()->createWithContent('delivery.json', discoveryDelivery()),
     ])->assertSessionHasErrors('dataset');
     expect(DatasetImport::count())->toBe(0);
+});
+
+function namurDiscoveryDelivery(): string
+{
+    $data = json_decode(discoveryDelivery([
+        'name' => 'Namur parkeerplaatsen voor personen met beperkte mobiliteit', 'publisher' => 'Ville de Namur',
+        'source_url' => 'https://data.namur.be/explore/dataset/namur-parking-emplacements/', 'licence' => 'CC-BY-4.0',
+        'terms_url' => 'https://creativecommons.org/licenses/by/4.0/', 'attribution' => 'Ville de Namur; CC-BY-4.0.',
+        'area' => ['country' => 'BE', 'subdivision' => 'BE-WNA', 'municipality' => ['scheme' => 'be-ins', 'code' => '92094', 'name' => 'Namur']],
+        'bounds' => [4.70, 50.35, 5.05, 50.60],
+    ]), true);
+    $data['dataset'] = 'be-namur';
+    $data['selection'] = 'pmr-all';
+    $data['records'] = [[
+        'external_id' => '000123', 'geometry' => ['type' => 'Point', 'coordinates' => [4.86, 50.46]],
+        'number' => null, 'street' => 'Rue de Bruxelles', 'access_category' => 'general', 'orientation' => null,
+        'source_attributes' => ['type' => 'PMR', 'horaire' => '24h/24'], 'source_updated_at' => '2026-09-01',
+    ]];
+
+    return json_encode($data, JSON_THROW_ON_ERROR);
+}
+
+it('discovers approves publishes and repeats a Belgian source without inventing unknown values', function () {
+    $this->freezeTime();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $admin = discoveryAdmin();
+    $province = Province::factory()->state(['geocode' => 'BE-WNA'])->for(Country::factory()->state(['code' => 'BE']))->create();
+    $handler = discoveryBucket();
+    $json = namurDiscoveryDelivery();
+
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:00:00Z')], $json, 'be-namur');
+
+    $source = DatasetSource::sole();
+    expect($source)->code->toBe('be-namur')->approval_state->toBe('pending')->municipality_id->toBeNull()->registration_error->toBeNull();
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $this->assertDatabaseCount('dataset_imports', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors()->assertRedirect();
+
+    $municipality = Municipality::sole();
+    expect($municipality)->code_scheme->toBe('be-ins')->code->toBe('92094')->country_id->toBe($province->country_id)->province_id->toBe($province->id);
+    expect($source->fresh())->approval_state->toBe('approved')->municipality_id->toBe($municipality->id)->licence->toBe('CC-BY-4.0');
+    Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === DatasetDelivery::sole()->id);
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $import = DatasetImport::sole();
+    expect($import->state)->toBe('pending');
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $service = app(MunicipalImportService::class);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+
+    $space = ParkingMunicipal::sole();
+    expect($space)->municipality_id->toBe($municipality->id)->external_id->toBe('000123')->number->toBeNull()->orientation->toBeNull();
+    expect($space->source_record)->toEqual(json_decode($json, true)['records'][0]);
+    $this->getJson(route('map.parking.viewport', ['west' => 4.8, 'south' => 50.4, 'east' => 4.9, 'north' => 50.5]))
+        ->assertOk()->assertJsonCount(1, 'results')->assertJsonPath('results.0.key', 'municipal:'.$space->id);
+
+    $this->travel(2)->minutes();
+    $repeat = json_decode($json, true);
+    $repeat['delivery_id'] = (string) Str::uuid();
+    $repeat['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z');
+    $json = json_encode($repeat, JSON_THROW_ON_ERROR);
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:02:00Z')], null, 'be-namur');
+    $delivery = DatasetDelivery::latest('id')->firstOrFail();
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process($delivery->id);
+    $import = DatasetImport::latest('id')->firstOrFail();
+    expect($service->review($import)['counts']['unchanged'])->toBe(1);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+
+    $this->assertDatabaseCount('parking_municipal_spaces', 1);
+    expect($space->fresh())->id->toBe($space->id)->source_record->toEqual($repeat['records'][0])->published_import_id->toBe($import->id);
+});
+
+it('holds a Belgian source with an unknown subdivision until reference data is available', function () {
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $admin = discoveryAdmin();
+    Country::factory()->create(['code' => 'BE']);
+    $handler = discoveryBucket();
+    $json = namurDiscoveryDelivery();
+
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:00:00Z')], $json, 'be-namur');
+    $source = DatasetSource::sole();
+    expect($source)->municipality_id->toBeNull()->registration_error->toContain('BE-WNA');
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasErrors('source');
+
+    expect($source->fresh()->approval_state)->toBe('pending');
+    Queue::assertNothingPushed();
+    $this->assertDatabaseCount('municipalities', 0);
+    $this->assertDatabaseCount('dataset_imports', 0);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });

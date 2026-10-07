@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 final class SourceDescription
 {
     /** Official municipality code schemes; add one when the first source of a country needs it. */
-    public const array SCHEMES = ['nl-cbs' => '/^GM\d{4}$/'];
+    public const array SCHEMES = ['nl-cbs' => '/^GM[0-9]{4}$/', 'be-ins' => '/^[0-9]{5}$/'];
 
     /**
      * Validates and normalizes a source block.
@@ -48,6 +48,9 @@ final class SourceDescription
         $area = $block['area'];
         if (! str_starts_with($area['subdivision'], $area['country'].'-')) {
             self::fail('source.area.subdivision', 'De provincie hoort niet bij het opgegeven land.');
+        }
+        if (['nl-cbs' => 'NL', 'be-ins' => 'BE'][$area['municipality']['scheme']] !== $area['country']) {
+            self::fail('source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.');
         }
         if (! preg_match(self::SCHEMES[$area['municipality']['scheme']], $area['municipality']['code'])) {
             self::fail('source.area.municipality.code', 'Ongeldige officiële gemeentecode.');
