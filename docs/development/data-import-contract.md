@@ -10,28 +10,54 @@ Status: working agreement for [#1214](https://github.com/NIPKaart/core/issues/12
 
 The first handoff uses a local file. The collector then uploads the same format to a private bucket, where core discovers complete files. The bucket is part of the automated architecture. Cloudflare R2 has been selected; provisioning and operational acceptance belong to #1217. The collector never connects directly to the core API or database.
 
-| Component | Responsibility |
-| --- | --- |
-| Reusable package | Source protocol, complete retrieval of a selection, source IDs, original values and completeness evidence. Independently usable without NIPKaart. |
-| disabled-parking | Dataset selection, mapping, delivery metadata and file output. Python and source-specific tests belong here or upstream. |
-| core | Allowed datasets, file validation, differences, review, publication and preservation of corrections. No Python environment. |
-| offstreet-parking | A separate collector for facilities later; share execution code only when actual common needs emerge. |
+| Component         | Responsibility                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reusable package  | Source protocol, complete retrieval of a selection, source IDs, original values and completeness evidence. Independently usable without NIPKaart. |
+| disabled-parking  | Dataset selection, mapping, delivery metadata and file output. Python and source-specific tests belong here or upstream.                          |
+| core              | Allowed datasets, file validation, differences, review, publication and preservation of corrections. No Python environment.                       |
+| offstreet-parking | A separate collector for facilities later; share execution code only when actual common needs emerge.                                             |
+
+## Reusable package snapshot contract
+
+Municipal source packages expose the same complete-retrieval entry point: `await client.parking_snapshot(parking_type=..., max_records=...)`. They return a public `ParkingSnapshot` with the following envelope. This is a Python package API, separate from the `nipkaart-municipal-2` JSON delivery format below; the package must not depend on NIPKaart.
+
+| Field            | Contract                                                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `records`        | All parsed records in the requested source selection. Records retain their source-specific model and vocabulary, an original `spot_id` and `source_attributes` containing original source fields. No NIPKaart access, orientation or capacity interpretation. |
+| `total_count`    | Non-negative integer reported by the source for this selection, excluding booleans; equal to the number of unique returned records.                                                                                                                           |
+| `pages_fetched`  | Positive integer counting selection pages fetched, including a page proving an empty selection; metadata requests and final verification requests do not count.                                                                                               |
+| `source_version` | Opaque non-empty string for a genuinely dataset-wide revision exposed by the source, or `None` when unavailable. It is not a record-update date, retrieval timestamp or guarantee of a transactional snapshot.                                                |
+| `complete`       | Always `True` on successful return. Partial results are errors, never successful snapshots with `complete=False`.                                                                                                                                             |
+
+`max_records` is a positive integer safety ceiling, never a truncation target. Defaults and hard upper bounds may differ with the source API. Counts exceeding the ceiling, short or extra pages, changed totals, blank or duplicate IDs and malformed records raise the package's source exception and yield no snapshot. If a dataset-wide version exists, compare it before and after pagination and reject changes. Sources without one must document their remaining consistency limitations rather than manufacture a version from an individual record. No API makes the source transactional merely by calling its result a snapshot.
+
+A verified empty selection can return a complete empty snapshot. That does not authorize publication or removal: the NIPKaart collector rejects empty deliveries and keeps the last valid file. Source coverage, rights, permitted access and currency still require their own acceptance evidence.
+
+Existing capped or inspection APIs remain available for their existing consumers. The NIPKaart delivery path uses `parking_snapshot()` for every connected municipal source. Source HTTP access, pagination, IDs, parsing and completeness checks belong in the reusable package so every consumer receives the same source guarantees. The collector selects the approved dataset, maps source claims to the NIPKaart record contract, validates that mapping and bounds, and writes/uploads deliveries. Core validates, compares, reviews and publishes; it does not fetch municipal APIs.
+
+| Package         | Selection                      | Version evidence                                                                                                                                                                                                                                 |
+| --------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `odp-amsterdam` | `E6a`                          | `source_version=None`: the source exposes record `version_date`, not a verified dataset-wide revision. Existing total/ID and first-record rechecks detect some changes, but cannot prove an atomic snapshot or detect every same-count mutation. |
+| `eindhoven`     | `ParkingType.DISABLED_PARKING` | Opendatasoft `metas.default.data_processed`, compared before and after retrieval; original `objectid` is the record identity.                                                                                                                    |
+| `namur`         | `ParkingType.PMR`              | Opendatasoft `metas.default.data_processed`, compared before and after retrieval; original `identifiant` is the record identity.                                                                                                                 |
+
+Package releases precede the collector release. Draft collectors may pin exact package commits for integration tests; replace those Git pins with published version constraints and refresh the lockfile before merging the collector. Package READMEs document their own filters, bounds and source limitations; this section defines the common envelope and ownership.
 
 ## One file
 
 UTF-8 JSON containing one object, a `source` block and a `records` array. No separate manifest, JSONL, schema release or storage-provider ID for the local pilot. The concrete source record and mapping are documented in the [pilot description](data-import-pilot.md).
 
-| Field | Meaning |
-| --- | --- |
-| `format` | `nipkaart-municipal-2`; shared by collector and consumer. Replaces `nipkaart-municipal-pilot-1` without a compatibility layer. |
-| `dataset` | Stable dataset code, equal to the bucket folder (`municipal/<dataset>/`). Core discovers new codes and registers them as sources awaiting approval ([ADR 0013](../adr/0013-discover-dataset-sources-from-deliveries-with-one-time-approval.md)). |
-| `source` | Description of the source: name, publisher, source URL, SPDX `licence` or `null`, terms URL, attribution, `area` (ISO 3166 country and subdivision, official municipality `scheme`/`code`/`name`), `bounds` and `expected_interval_hours`. Identical in every delivery of a dataset; a change other than the interval holds deliveries until an administrator approves the source again. |
-| `delivery_id` | UUID created once per successful retrieval. Retrying the same file preserves its ID and bytes. |
-| `retrieved_at` | UTC retrieval start, RFC 3339 with `Z`; orders deliveries. Not an observation date. One active retrieval per dataset. |
-| `selection` | Code for the collection/filter, such as `all`, registered with the source. A different selection is rejected; a scope change needs a new dataset code. |
-| `complete` | Must be `true` for intake. The collector declares this only on the basis of source evidence. |
-| `source_count` | Count reported by the source for this selection; equal to the number of unique received records. A total alone does not prove completeness when another page remains. |
-| `records` | Every record in the selection, without silently rejected or skipped source rows. |
+| Field          | Meaning                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format`       | `nipkaart-municipal-2`; shared by collector and consumer. Replaces `nipkaart-municipal-pilot-1` without a compatibility layer.                                                                                                                                                                                                                                                           |
+| `dataset`      | Stable dataset code, equal to the bucket folder (`municipal/<dataset>/`). Core discovers new codes and registers them as sources awaiting approval ([ADR 0013](../adr/0013-discover-dataset-sources-from-deliveries-with-one-time-approval.md)).                                                                                                                                         |
+| `source`       | Description of the source: name, publisher, source URL, SPDX `licence` or `null`, terms URL, attribution, `area` (ISO 3166 country and subdivision, official municipality `scheme`/`code`/`name`), `bounds` and `expected_interval_hours`. Identical in every delivery of a dataset; a change other than the interval holds deliveries until an administrator approves the source again. |
+| `delivery_id`  | UUID created once per successful retrieval. Retrying the same file preserves its ID and bytes.                                                                                                                                                                                                                                                                                           |
+| `retrieved_at` | UTC retrieval start, RFC 3339 with `Z`; orders deliveries. Not an observation date. One active retrieval per dataset.                                                                                                                                                                                                                                                                    |
+| `selection`    | Code for the collection/filter, such as `all`, registered with the source. A different selection is rejected; a scope change needs a new dataset code.                                                                                                                                                                                                                                   |
+| `complete`     | Must be `true` for intake. The collector declares this only on the basis of source evidence.                                                                                                                                                                                                                                                                                             |
+| `source_count` | Count reported by the source for this selection; equal to the number of unique received records. A total alone does not prove completeness when another page remains.                                                                                                                                                                                                                    |
+| `records`      | Every record in the selection, without silently rejected or skipped source rows.                                                                                                                                                                                                                                                                                                         |
 
 The collector checks source pages, counts and unique IDs before writing the file. Catching parsing failures and continuing with the remaining records does not produce a complete delivery. If a source provides no total, agree another demonstrable completeness check first; do not invent `source_count` from the received list alone.
 
@@ -39,16 +65,16 @@ Core accepts only the known format for an approved source with its registered se
 
 ## A record
 
-| Field | Rule |
-| --- | --- |
-| `external_id` | Non-empty original ID as a string. Identity is `(dataset, external_id)`; preserve full IDs and leading zeros. No coordinate hash or internal core ID. |
-| `geometry` | Original GeoJSON `Polygon`, `MultiPolygon` or `Point` in WGS84, using `[longitude, latitude]`; every position inside the source `bounds`. Preserve rings, bound size and validate coordinate ranges and geometry. Do not invent a source point. |
-| `number` | Non-negative integer or `null`; an estimate from the Amsterdam source, not a verified count. Zero and unknown remain distinct; do not turn a source aggregate into invented individual bays. |
-| `street` | Source address or `null`; a nearby address is not an exact parking address. |
-| `access_category` | `general` (accessible parking without a personal reservation, not availability or permit-free parking) or `unknown`. The collector adapter decides this from its source and leaves out anything outside the selection, such as personal reservations. |
-| `orientation` | `perpendicular`, `parallel`, `angle` or `null`. The collector maps the source's own terms; core does not know source vocabularies. |
-| `source_attributes` | Object with the source's own claims, kept as-is. For Amsterdam: `regimes`, `orientation` and `version_date`; for Eindhoven: `objectid` and `type_en_merk`. No generic rules engine or claim of current availability. |
-| `source_updated_at` | `null`, or a calendar date `YYYY-MM-DD` when the source demonstrably dates the record. Empty strings, timestamps and other values are rejected. Portal processing is not a field inspection. |
+| Field               | Rule                                                                                                                                                                                                                                                        |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `external_id`       | Non-empty original ID as a string. Identity is `(dataset, external_id)`; preserve full IDs and leading zeros. No coordinate hash or internal core ID.                                                                                                       |
+| `geometry`          | Original GeoJSON `Polygon`, `MultiPolygon` or `Point` in WGS84, using `[longitude, latitude]`; every position inside the source `bounds`. Preserve rings, bound size and validate coordinate ranges and geometry. Do not invent a source point.             |
+| `number`            | Non-negative integer or `null`; an estimate from the Amsterdam source, not a verified count. Zero and unknown remain distinct; do not turn a source aggregate into invented individual bays.                                                                |
+| `street`            | Source address or `null`; a nearby address is not an exact parking address.                                                                                                                                                                                 |
+| `access_category`   | `general` (accessible parking without a personal reservation, not availability or permit-free parking) or `unknown`. The collector adapter decides this from its source and leaves out anything outside the selection, such as personal reservations.       |
+| `orientation`       | `perpendicular`, `parallel`, `angle` or `null`. The collector maps the source's own terms; core does not know source vocabularies.                                                                                                                          |
+| `source_attributes` | Object with the source's own claims, kept as-is. For Amsterdam: `regimes`, `orientation` and `version_date`; for Eindhoven: original Opendatasoft fields including `objectid` and `type_en_merk`. No generic rules engine or claim of current availability. |
+| `source_updated_at` | `null`, or a calendar date `YYYY-MM-DD` when the source demonstrably dates the record. Empty strings, timestamps and other values are rejected. Portal processing is not a field inspection.                                                                |
 
 Core preserves the original source geometry with the source claim and uses PostGIS `ST_PointOnSurface` for the public map marker. The public map displays only that marker, not the parking polygon. Where possible, an invalid polygon receives a separate derivation through `ST_MakeValid(geometry, 'method=linework')`; only a valid, non-empty Polygon or MultiPolygon is usable. Geometries that collapse into lines/points or mixed collections are rejected without filtering out components. The map point is calculated from the usable area. It lies within that area and represents neither an entrance nor an individual bay; it need not be the geometric centroid. Core writes the existing latitude/longitude columns; PostgreSQL continues deriving the existing `location`. No additional Python geometry package or competing derivation is needed. See [PostGIS PointOnSurface](https://postgis.net/docs/ST_PointOnSurface.html), [MakeValid](https://postgis.net/docs/ST_MakeValid.html) and the [existing storage agreement](postgresql.md#spatial-representation).
 
@@ -56,18 +82,18 @@ Core associates country and administrative relationships from the source `area`:
 
 ## Repeated deliveries and changes
 
-| Case | Behavior |
-| --- | --- |
-| First complete delivery | Validate, show differences and a map sample; publish after review. |
-| Same dataset and delivery ID, identical bytes | Return the existing import status; no second processing or publication. Core stores the SHA-256 of received bytes. |
-| Same delivery ID, different bytes | Reject the conflict; never replace an existing delivery. |
-| New delivery, unchanged records | No duplicate places or content revisions; record the new receipt. |
-| `retrieved_at` older than the last accepted delivery | Do not overwrite current data. Equal timestamps with different delivery IDs are a conflict, not an arbitrary winner. |
-| A field changes for the same source ID | Present the new source value for review; preserve identity, favorites and detail references. |
-| A record is missing from a complete selection | Flag it as potentially removed and review it; no automatic deletion. A returning record keeps its identity. |
-| Empty/incomplete/invalid delivery or failed fetch | No publication; preserve existing data and the last valid export. |
-| Source value conflicts with an accepted correction | Store the source value in the received delivery, preserve the correction and block publication on conflict, including in the first import implementation. |
-| Unknown access or changed scope | No automatic general publication or missing-record comparison; review first. |
+| Case                                                 | Behavior                                                                                                                                                  |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First complete delivery                              | Validate, show differences and a map sample; publish after review.                                                                                        |
+| Same dataset and delivery ID, identical bytes        | Return the existing import status; no second processing or publication. Core stores the SHA-256 of received bytes.                                        |
+| Same delivery ID, different bytes                    | Reject the conflict; never replace an existing delivery.                                                                                                  |
+| New delivery, unchanged records                      | No duplicate places or content revisions; record the new receipt.                                                                                         |
+| `retrieved_at` older than the last accepted delivery | Do not overwrite current data. Equal timestamps with different delivery IDs are a conflict, not an arbitrary winner.                                      |
+| A field changes for the same source ID               | Present the new source value for review; preserve identity, favorites and detail references.                                                              |
+| A record is missing from a complete selection        | Flag it as potentially removed and review it; no automatic deletion. A returning record keeps its identity.                                               |
+| Empty/incomplete/invalid delivery or failed fetch    | No publication; preserve existing data and the last valid export.                                                                                         |
+| Source value conflicts with an accepted correction   | Store the source value in the received delivery, preserve the correction and block publication on conflict, including in the first import implementation. |
+| Unknown access or changed scope                      | No automatic general publication or missing-record comparison; review first.                                                                              |
 
 Core rechecks ordering and current corrections at publication, including when two reviewed imports are ready concurrently. `retrieved_at` provides a simple ordering rule for one collector with an accurate UTC clock; it does not establish a transactional source snapshot. Future or implausible timestamps require review. Do not build a distributed counter for the pilot.
 
@@ -130,14 +156,14 @@ A catalog (`nipkaart-offstreet-catalog-3`, produced by offstreet-parking) carrie
 
 Live occupancy is a separate stream from the catalog and needs no review. The collector uploads `nipkaart-offstreet-observations-2` to `offstreet-observations/<dataset>/<YYYYMMDDTHHMMSSZ>-<delivery_id>.json` every two minutes; the time prefix makes keys sort by fetch time. The envelope holds `format`, `dataset`, `selection`, `delivery_id`, `fetched_at`, `source_count` and `records`. Each record has exactly:
 
-| Field | Meaning |
-| --- | --- |
-| `external_id` | Source ID; joins the observation to the catalog facility. |
-| `observed_at` | The source's measurement time, or `null`. Not the fetch time. |
-| `source_state` | Feed state: `ok`, `error` or `null`. |
-| `status` | Operator status: `counting` (live count), `open` or `full` (sites without counts), `closed`, `malfunction`, or `null`. A closed site also reports `0` free, so `0` alone never means full. |
-| `capacity` | Capacity at the moment of measurement, or `null`. |
-| `available` | General free spaces, or `null`. `null` means unknown and `0` means zero. |
+| Field          | Meaning                                                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `external_id`  | Source ID; joins the observation to the catalog facility.                                                                                                                                  |
+| `observed_at`  | The source's measurement time, or `null`. Not the fetch time.                                                                                                                              |
+| `source_state` | Feed state: `ok`, `error` or `null`.                                                                                                                                                       |
+| `status`       | Operator status: `counting` (live count), `open` or `full` (sites without counts), `closed`, `malfunction`, or `null`. A closed site also reports `0` free, so `0` alone never means full. |
+| `capacity`     | Capacity at the moment of measurement, or `null`.                                                                                                                                          |
+| `available`    | General free spaces, or `null`. `null` means unknown and `0` means zero.                                                                                                                   |
 
 Only general spaces for visitors are delivered. Long-stay counts (season tickets) and accessible counts are not part of the contract; general free spaces never imply free accessible bays. Core rejects the whole delivery for extra or missing fields, duplicate IDs, a count mismatch, unknown states or statuses, negative counts, or times more than five minutes ahead of the fetch.
 
@@ -186,7 +212,6 @@ The interruption probe verifies one aborted HTTP PUT and one successful retry, n
 The collector's successful write outside the municipal source prefix and successful overwrite/delete show that the current token does **not** enforce source-prefix isolation or a separate cleanup boundary. This remains the known access limitation of the deployment described above. The successful core denial checks remain evidence of the separate read-only consumer boundary.
 
 Next: the owner follows the [Ubuntu installation guide](collector-staging.md), checks one delivery in core and starts daily collection. Record actual VM and recovery results when performed; these remain separate from the earlier development-machine probes and any production decision.
-
 
 ## Eindhoven source-review integration
 
