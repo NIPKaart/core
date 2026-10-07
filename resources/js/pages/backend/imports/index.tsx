@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useImportUpdates } from '@/hooks/use-import-updates';
 import AppLayout from '@/layouts/app-layout';
 import type { PaginatedResponse } from '@/types';
-import { translateSourceValue } from '@/utils/translation';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { FileUp, Search } from 'lucide-react';
@@ -31,7 +30,7 @@ export type Dataset = {
 };
 export type Import = {
     id: number;
-    state: string;
+    state: 'pending' | 'published' | 'rejected';
     superseded?: boolean;
     delivery_id: string;
     retrieved_at: string;
@@ -46,7 +45,7 @@ type Props = {
     summary: SourceSummary;
     countries: string[];
     imports: PaginatedResponse<Import>;
-    filters: SourceFilters & { q: string; state: string; dataset: number | null; tab: string };
+    filters: SourceFilters & { q: string; state: 'all' | 'pending' | 'published' | 'rejected' | 'superseded'; dataset: number | null; tab: string };
 };
 
 export default function Index({ datasets, sources, summary, countries, imports, filters }: Props) {
@@ -83,7 +82,7 @@ export default function Index({ datasets, sources, summary, countries, imports, 
             header: t('status'),
             cell: ({ row: { original: item } }) => (
                 <Badge variant={item.state === 'pending' && !item.superseded ? 'secondary' : 'outline'}>
-                    {translateSourceValue('backend/imports', `states.${item.superseded ? 'superseded' : item.state}`)}
+                    {t(`states.${item.superseded ? 'superseded' : item.state}` as const)}
                 </Badge>
             ),
         },
@@ -218,9 +217,9 @@ export default function Index({ datasets, sources, summary, countries, imports, 
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('all_deliveries')}</SelectItem>
-                                        {['pending', 'published', 'rejected', 'superseded'].map((state) => (
+                                        {(['pending', 'published', 'rejected', 'superseded'] as const).map((state) => (
                                             <SelectItem key={state} value={state}>
-                                                {translateSourceValue('backend/imports', `states.${state}`)}
+                                                {t(`states.${state}` as const)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

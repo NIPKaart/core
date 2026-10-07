@@ -1,4 +1,4 @@
-import { translateSourceValue } from '@/utils/translation';
+import type { RestrictionDay } from '@/types';
 import { useTranslation } from 'react-i18next';
 import StaticPinMap from './static-pin-map';
 import type { ContributionForm, OrientationOption, ResolvedLocation } from './types';
@@ -7,7 +7,7 @@ type Props = {
     data: ContributionForm;
     location: ResolvedLocation | null;
     orientationOptions: OrientationOption[];
-    restrictionDays: string[];
+    restrictionDays: RestrictionDay[];
     onEditLocation: () => void;
     onEditDetails: () => void;
     /** What happens after sending: a new place or an improvement to a published one. */
@@ -25,15 +25,13 @@ export default function ReviewStep({
 }: Props) {
     const { t } = useTranslation('frontend/map/contribute');
     const duration = Number(data.parking_hours || 0) * 60 + Number(data.parking_minutes || 0);
-    const days = restrictionDays
-        .filter((day) => data.restriction_days.includes(day))
-        .map((day) => translateSourceValue('frontend/map/contribute', `days.${day}`));
+    const days = restrictionDays.filter((day) => data.restriction_days.includes(day)).map((day) => t(`days.${day}` as const));
     const times = data.restriction_starts_at && data.restriction_ends_at ? `${data.restriction_starts_at}–${data.restriction_ends_at}` : null;
     const title = [location?.street, location?.municipality].filter(Boolean).join(', ');
 
     const rows: [string, string | null][] = [
         [t('review.orientation'), orientationOptions.find((option) => option.value === data.orientation)?.label ?? null],
-        [t('review.under_sign'), data.under_sign ? translateSourceValue('frontend/map/contribute', `details.under_sign.${data.under_sign}`) : null],
+        [t('review.under_sign'), data.under_sign ? t(`details.under_sign.${data.under_sign}` as const) : null],
         ...(data.under_sign === 'yes'
             ? ([
                   [t('review.text'), data.under_sign_text ? `“${data.under_sign_text}”` : null],

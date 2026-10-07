@@ -170,7 +170,7 @@ export interface ParkingSpace {
     parking_disc: boolean;
     under_sign: 'yes' | 'no' | null;
     under_sign_text: string | null;
-    restriction_days: string[] | null;
+    restriction_days: RestrictionDay[] | null;
     restriction_starts_at: string | null;
     restriction_ends_at: string | null;
     description: string | null;
@@ -308,3 +308,5 @@ export interface ParkingSpaceReview {
     reviewed_at: string;
     reviewer?: Pick<User, 'id' | 'name'> | null;
 }
+
+export type RestrictionDay = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';

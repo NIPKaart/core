@@ -1,6 +1,5 @@
 import { Progress } from '@/components/ui/progress';
 import { formatLocale } from '@/locale-sync';
-import { translateSourceValue } from '@/utils/translation';
 import { AlarmClock, Eye, Info, MapPin, Navigation } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -102,10 +101,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
     // A garage entrance is not visible from the street view position, so garages only offer navigation.
     const streetView = source === 'offstreet' ? null : streetViewUrl(detail.latitude, detail.longitude);
     const liveOk = source === 'offstreet' && detail.availability === 'current';
-    const liveState =
-        source === 'offstreet' && detail.availability !== 'current'
-            ? translateSourceValue('frontend/map/modals', `detail.availability.${detail.availability}`)
-            : null;
+    const liveState = source === 'offstreet' && detail.availability !== 'current' ? t(`detail.availability.${detail.availability}` as const) : null;
 
     const rules: Row[] =
         source === 'offstreet'
@@ -139,9 +135,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
                                       {
                                           label: t('community.table.restriction'),
                                           value: [
-                                              detail.restriction_days
-                                                  ?.map((day) => translateSourceValue('frontend/map/modals', `community.days.${day}`))
-                                                  .join(', '),
+                                              detail.restriction_days?.map((day) => t(`community.days.${day}` as const)).join(', '),
                                               detail.restriction_starts_at && detail.restriction_ends_at
                                                   ? `${detail.restriction_starts_at}–${detail.restriction_ends_at}`
                                                   : null,
@@ -244,9 +238,9 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
 
     /** Fixed order for every source; groups without rows for this source are left out. */
     const groups = [
-        { id: 'rules', rows: rules },
-        { id: 'layout', rows: layout },
-        { id: 'source', rows: provenance },
+        { id: 'rules' as const, rows: rules },
+        { id: 'layout' as const, rows: layout },
+        { id: 'source' as const, rows: provenance },
     ].filter((group) => group.rows.length > 0);
 
     const occupancyRow = (label: string, free: number | null, total: number | null) => {
@@ -364,12 +358,7 @@ export default function ParkingDetailBody({ data, isLoggedIn, existence }: Props
             {groups.length > 0 && (
                 <div className="divide-y divide-zinc-100 rounded-lg border text-sm dark:divide-zinc-800">
                     {groups.map((group) => (
-                        <Group
-                            key={group.id}
-                            id={`parking-detail-${group.id}`}
-                            title={translateSourceValue('frontend/map/modals', `detail.sections.${group.id}`)}
-                            rows={group.rows}
-                        />
+                        <Group key={group.id} id={`parking-detail-${group.id}`} title={t(`detail.sections.${group.id}` as const)} rows={group.rows} />
                     ))}
                 </div>
             )}

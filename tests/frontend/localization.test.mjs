@@ -166,3 +166,19 @@ for (const language of ['en', 'nl']) {
         assert.equal(notifications.resolveNotificationTitleBackend(translate, 'unknown.future.type'), language === 'en' ? 'Notification' : 'Melding');
     });
 }
+
+for (const language of ['en', 'nl']) {
+    test(`known source choices render directly from the typed ${language} catalog`, async () => {
+        const i18n = i18next.createInstance();
+        await i18n.init({ resources, lng: language, fallbackLng: false });
+        const SourceComparison = load('pages/backend/imports/source-comparison.tsx', i18n).default;
+        const html = render(SourceComparison, {
+            row: { before: null, after: { name: 'Central', source_name: 'City', facility_type: 'garage' }, fields: [] },
+            onShowMap() {},
+        });
+        assert.ok(html.includes(language === 'en' ? 'New in this delivery' : 'Nieuw in deze levering'));
+        assert.ok(html.includes(language === 'en' ? 'Facility type' : 'Type voorziening'));
+        assert.ok(html.includes('Garage'));
+        assert.ok(!html.includes('facility_types.garage'));
+    });
+}

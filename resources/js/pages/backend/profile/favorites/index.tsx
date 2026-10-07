@@ -7,7 +7,6 @@ import AppLayout from '@/layouts/app-layout';
 import { locationMap } from '@/routes';
 import profile from '@/routes/profile';
 import { Favorite } from '@/types';
-import { translateSourceValue } from '@/utils/translation';
 import { Head, Link } from '@inertiajs/react';
 import { HeartCrack, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -16,6 +15,13 @@ import { useTranslation } from 'react-i18next';
 type PageProps = {
     favorites?: Favorite[];
 };
+
+const typeKeys = {
+    Community: 'favorites.types.community',
+    Municipal: 'favorites.types.municipal',
+    Offstreet: 'favorites.types.offstreet',
+    Unknown: 'favorites.types.unknown',
+} as const;
 
 const iconMap = {
     Community: MapPin,
@@ -92,9 +98,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                     </span>
                                                 )}
                                             </CardTitle>
-                                            <CardDescription className="mt-0.5 text-xs capitalize">
-                                                {translateSourceValue('backend/profile', `favorites.types.${fav.type.toLowerCase()}`)}
-                                            </CardDescription>
+                                            <CardDescription className="mt-0.5 text-xs capitalize">{t(typeKeys[fav.type])}</CardDescription>
                                         </div>
                                     </CardHeader>
                                     <CardFooter className="mt-2 flex items-center justify-between border-t pt-4">

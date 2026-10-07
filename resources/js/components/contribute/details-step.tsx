@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { translateSourceValue } from '@/utils/translation';
+import type { RestrictionDay } from '@/types';
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,14 +12,14 @@ import type { ContributionForm, OrientationOption } from './types';
 
 const DURATION_PRESETS = [30, 60, 120, 180];
 const NOTE_MAX = 500;
-const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+const WEEKDAYS: RestrictionDay[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
 
 type Props = {
     data: ContributionForm;
     setData: <K extends keyof ContributionForm>(key: K, value: ContributionForm[K]) => void;
     errors: Partial<Record<keyof ContributionForm | `restriction_days.${number}`, string>>;
     orientationOptions: OrientationOption[];
-    restrictionDays: string[];
+    restrictionDays: RestrictionDay[];
 };
 
 const choiceClass = (selected: boolean) =>
@@ -44,7 +44,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
         setData('parking_minutes', next ? String(next % 60) : '');
     };
 
-    const toggleDay = (day: string) =>
+    const toggleDay = (day: RestrictionDay) =>
         setData(
             'restriction_days',
             data.restriction_days.includes(day) ? data.restriction_days.filter((value) => value !== day) : [...data.restriction_days, day],
@@ -110,7 +110,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                 onChange={() => setData('under_sign', answer)}
                                 className="sr-only"
                             />
-                            {translateSourceValue('frontend/map/contribute', `details.under_sign.${answer}`)}
+                            {t(`details.under_sign.${answer}` as const)}
                         </label>
                     ))}
                 </div>
@@ -165,10 +165,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                     {(['parking_hours', 'parking_minutes'] as const).map((name) => (
                                         <div key={name} className="grid gap-1">
                                             <Label htmlFor={name} className="text-muted-foreground">
-                                                {translateSourceValue(
-                                                    'frontend/map/contribute',
-                                                    `details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}`,
-                                                )}
+                                                {t(`details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}` as const)}
                                             </Label>
                                             <Input
                                                 id={name}
@@ -218,7 +215,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                         onClick={() => toggleDay(day)}
                                         className="h-11 rounded-lg border text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
                                     >
-                                        {translateSourceValue('frontend/map/contribute', `days.${day}`)}
+                                        {t(`days.${day}` as const)}
                                     </button>
                                 ))}
                             </div>
@@ -227,10 +224,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                 {(['restriction_starts_at', 'restriction_ends_at'] as const).map((name) => (
                                     <div key={name} className="grid gap-1">
                                         <Label htmlFor={name} className="text-muted-foreground">
-                                            {translateSourceValue(
-                                                'frontend/map/contribute',
-                                                `details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}`,
-                                            )}
+                                            {t(`details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}` as const)}
                                         </Label>
                                         <Input
                                             id={name}

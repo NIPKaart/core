@@ -1,3 +1,4 @@
+import type { RestrictionDay } from '@/types';
 /** The one official page with parking rules for a place: its municipality's own, or the country's. */
 export type ParkingRuleSource = { url: string; scope: 'municipality' | 'country'; name: string | null; host: string | null };
 
@@ -16,7 +17,7 @@ export type ParkingSpaceDetail = {
     parking_time?: number | null;
     under_sign?: EnumOption | null;
     under_sign_text?: string | null;
-    restriction_days?: string[] | null;
+    restriction_days?: RestrictionDay[] | null;
     restriction_starts_at?: string | null;
     restriction_ends_at?: string | null;
     created_at: datetime;

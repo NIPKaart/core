@@ -6,9 +6,10 @@ import { useSpaceActionDialog } from '@/hooks/use-dialog-space-action';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import type { ChangeGroup } from '@/pages/backend/moderation/values';
 import app from '@/routes/app';
 import type { BreadcrumbItem, ParkingMunicipal, ParkingSpace, ParkingSpaceConfirmation, User } from '@/types';
-import { translateSourceValue } from '@/utils/translation';
+import type { ParkingStatus } from '@/types/enum';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
@@ -20,14 +21,16 @@ import { StatusPill } from './parts';
 
 type Option = { value: string; label: string; description: string };
 type Contributor = User & { parking_spaces_count: number; published_spaces_count: number };
-type HistoryEvent = { kind: 'added' | 'review' | 'improvement'; at: string; by: string | null; status?: string; reason?: string | null };
+type HistoryEvent = { at: string; by: string | null; reason?: string | null } & (
+    { kind: 'added'; status?: never } | { kind: 'review' | 'improvement'; status: ParkingStatus }
+);
 
 type PageProps = {
     parkingSpace: ParkingSpace & { user?: Contributor | null; open_reports_count: number; updated_at: string };
     selectOptions: { rejectionReasons: Option[]; orientation: Option[]; underSign: Option[]; confirmationStatuses: Option[] };
     nearbySpaces: ParkingSpace[];
     nearbyMunicipalSpaces: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
-    openImprovement: { id: number; proposer: string | null; proposed_at: string; changes: string[] } | null;
+    openImprovement: { id: number; proposer: string | null; proposed_at: string; changes: ChangeGroup[] } | null;
     confirmations: { counts: Record<string, number>; total: number; recent: ParkingSpaceConfirmation[] };
     history: HistoryEvent[];
     mapUrl: string | null;
@@ -50,7 +53,7 @@ export default function Show({
     mapUrl,
 }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/main');
-    const { i18n } = useTranslation('backend/moderation');
+    const { t: tModeration, i18n } = useTranslation('backend/moderation');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
     const locale = i18n.language.startsWith('nl') ? nl : enUS;
@@ -66,14 +69,14 @@ export default function Show({
     const streetView = `https://www.google.com/maps?q=&layer=c&cbll=${space.latitude},${space.longitude}`;
     const hours = space.parking_time ? Math.floor(space.parking_time / 60) : 0;
     const minutes = space.parking_time ? space.parking_time % 60 : 0;
-    const days = space.restriction_days?.map((day) => translateSourceValue('backend/parking/main', `days.${day}`)).join(', ');
+    const days = space.restriction_days?.map((day) => t(`days.${day}` as const)).join(', ');
     const times =
         space.restriction_starts_at && space.restriction_ends_at
             ? `${space.restriction_starts_at.slice(0, 5)}–${space.restriction_ends_at.slice(0, 5)}`
             : null;
     const changed = openImprovement?.changes.length
         ? new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
-              openImprovement.changes.map((group) => translateSourceValue('backend/moderation', `groups.${group}`).toLowerCase()),
+              openImprovement.changes.map((group) => tModeration(`groups.${group}` as const).toLowerCase()),
           )
         : null;
 
@@ -399,17 +402,12 @@ export default function Show({
                                         />
                                         <span className="block">
                                             {event.kind === 'review'
-                                                ? translateSourceValue('backend/parking/main', `show.history.review.${event.status}`, {
-                                                      name: event.by ?? t('show.someone'),
-                                                  })
-                                                : translateSourceValue('backend/parking/main', `show.history.${event.kind}`, {
-                                                      name: event.by ?? t('show.someone'),
-                                                  })}
+                                                ? t(`show.history.review.${event.status}` as const, { name: event.by ?? t('show.someone') })
+                                                : t(`show.history.${event.kind}` as const, { name: event.by ?? t('show.someone') })}
                                             {event.kind === 'improvement' && event.status !== 'pending' && (
                                                 <span className="text-muted-foreground">
                                                     {' '}
-                                                    ·{' '}
-                                                    {translateSourceValue('backend/parking/main', `show.history.improvement_status.${event.status}`)}
+                                                    · {t(`show.history.improvement_status.${event.status}` as const)}
                                                 </span>
                                             )}
                                         </span>

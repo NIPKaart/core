@@ -52,7 +52,7 @@ export function claimCapacity(claim: Claim | null | undefined): number | null {
 type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 export type Row = {
     external_id: string;
-    status: string;
+    status: 'new' | 'changed' | 'missing' | 'conflict' | 'unchanged';
     fields: string[];
     conflicts: string[];
     before: Claim | null;
@@ -68,7 +68,7 @@ type Props = {
     import: Import;
     dataset: Dataset;
     municipalityName: string;
-    review: { derivations: number; counts: Record<string, number>; blockers: string[]; rows: Row[]; token: string };
+    review: { derivations: number; counts: Record<Row['status'], number>; blockers: string[]; rows: Row[]; token: string };
     page: number;
     pages: number;
     total: number;
@@ -113,7 +113,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
             cell: ({ row }) => (
                 <div className="max-w-64 space-y-1">
                     <Badge variant={row.original.status === 'conflict' ? 'destructive' : 'outline'}>
-                        {translateSourceValue('backend/imports', `counts.${row.original.status}`)}
+                        {t(`counts.${row.original.status}` as const)}
                     </Badge>
                     {row.original.fields.length > 0 && (
                         <p className="text-xs text-muted-foreground">
@@ -155,7 +155,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
                                 <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
-                                    {translateSourceValue('backend/imports', `states.${delivery.superseded ? 'superseded' : delivery.state}`)}
+                                    {t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
                                 </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
@@ -327,7 +327,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                         {t('navigation.locations')}
                                     </h2>
                                     <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                                        {['new', 'changed', 'missing', 'conflict', 'unchanged']
+                                        {(['new', 'changed', 'missing', 'conflict', 'unchanged'] as const)
                                             .map((kind) => [kind, review.counts[kind]] as const)
                                             .filter(([, count]) => count > 0)
                                             .map(([kind, count]) => (
@@ -335,7 +335,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                     <span className="font-medium text-foreground tabular-nums">
                                                         {count.toLocaleString(i18n.language)}
                                                     </span>{' '}
-                                                    {translateSourceValue('backend/imports', `counts.${kind}`)}
+                                                    {t(`counts.${kind}` as const)}
                                                 </span>
                                             ))}
                                     </p>
@@ -377,9 +377,9 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                 {t('geometry_review')} ({review.derivations})
                                             </SelectItem>
                                         )}
-                                        {Object.entries(review.counts).map(([status, count]) => (
+                                        {(Object.entries(review.counts) as [Row['status'], number][]).map(([status, count]) => (
                                             <SelectItem key={status} value={status}>
-                                                {translateSourceValue('backend/imports', `counts.${status}`)} ({count})
+                                                {t(`counts.${status}` as const)} ({count})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -498,10 +498,10 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                     <summary className="w-fit cursor-pointer hover:text-foreground">{t('timeline')}</summary>
                     <p className="mt-2 text-sm text-muted-foreground">{t('timeline_note')}</p>
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {Object.entries(times).map(([key, value]) => (
+                        {(Object.keys(times) as (keyof Props['times'])[]).map((key) => (
                             <div key={key}>
-                                <dt className="text-xs text-muted-foreground">{translateSourceValue('backend/imports', `times.${key}`)}</dt>
-                                <dd className="mt-1 text-sm">{value ? <MunicipalDateTime value={value} /> : t('unknown')}</dd>
+                                <dt className="text-xs text-muted-foreground">{t(`times.${key}` as const)}</dt>
+                                <dd className="mt-1 text-sm">{times[key] ? <MunicipalDateTime value={times[key]} /> : t('unknown')}</dd>
                             </div>
                         ))}
                     </dl>
@@ -529,7 +529,7 @@ function RecordDetails({ row }: { row: Row }) {
                     {claimTitle(row.after) ?? claimTitle(row.before) ?? t(isFacility(mapSource) ? 'unknown_name' : 'unknown_street')}
                 </DialogTitle>
                 <DialogDescription className="break-all">
-                    {row.external_id} · {translateSourceValue('backend/imports', `counts.${row.status}`)}
+                    {row.external_id} · {t(`counts.${row.status}` as const)}
                 </DialogDescription>
             </DialogHeader>
             <MissingSourceNotice row={row} />
@@ -687,7 +687,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                                 style={{ borderColor: changeColor(status), borderStyle: status === 'missing' ? 'dashed' : 'solid' }}
                                 aria-hidden="true"
                             />
-                            {translateSourceValue('backend/imports', `counts.${status}`)}
+                            {t(`counts.${status}` as const)}
                         </span>
                     ))}
                 </div>
@@ -713,7 +713,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                         eventHandlers={{ click: () => onSelect(row) }}
                     >
                         <Tooltip permanent direction="top" className="max-w-40 text-center whitespace-normal">
-                            <span className="block font-medium">{translateSourceValue('backend/imports', `counts.${row.status}`)}</span>
+                            <span className="block font-medium">{t(`counts.${row.status}` as const)}</span>
                             <span className="block text-xs">{row.external_id}</span>
                         </Tooltip>
                     </GeoJSON>

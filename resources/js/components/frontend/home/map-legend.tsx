@@ -1,5 +1,4 @@
 import { pinSvg } from '@/lib/pin-svg';
-import { translateSourceValue } from '@/utils/translation';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -12,7 +11,7 @@ function Pin({ markup }: { markup: string }) {
 
 export default function MapLegend() {
     const { t } = useTranslation('frontend/home');
-    const items: { key: string; marker: ReactNode }[] = [
+    const items: { key: 'space' | 'garage' | 'cluster' | 'destination'; marker: ReactNode }[] = [
         { key: 'space', marker: <Pin markup={pinSvg(false, null)} /> },
         { key: 'garage', marker: <Pin markup={pinSvg(true, { text: '484', tone: 'green', label: '' })} /> },
         {
@@ -51,10 +50,8 @@ export default function MapLegend() {
                     >
                         <span className="flex h-12 w-14 shrink-0 items-start lg:w-auto">{marker}</span>
                         <span className="flex flex-col gap-1 lg:gap-3.5">
-                            <h3 className="text-[17px] font-semibold lg:text-lg">{translateSourceValue('frontend/home', `legend.${key}.title`)}</h3>
-                            <p className="text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
-                                {translateSourceValue('frontend/home', `legend.${key}.text`)}
-                            </p>
+                            <h3 className="text-[17px] font-semibold lg:text-lg">{t(`legend.${key}.title` as const)}</h3>
+                            <p className="text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">{t(`legend.${key}.text` as const)}</p>
                         </span>
                     </li>
                 ))}

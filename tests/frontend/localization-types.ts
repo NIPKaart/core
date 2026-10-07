@@ -9,3 +9,10 @@ i18n.t('common.typo', { ns: 'global/common', defaultValue: 'Typo' });
 i18n.t('common.close', { ns: 'global/typo' });
 // @ts-expect-error Key from another namespace.
 i18n.t('common.close', { ns: 'backend/imports' });
+
+// Finite application choices use t directly and preserve plural/count handling.
+declare const status: 'pending' | 'approved' | 'rejected';
+i18n.t(`status.${status}` as const, { ns: 'backend/parking/main' });
+declare const invalidStatus: 'approved' | 'published';
+// @ts-expect-error A dynamic union still rejects values missing from its catalog.
+i18n.t(`status.${invalidStatus}` as const, { ns: 'backend/parking/main' });

@@ -6,8 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
-import type { ParkingMunicipal, ParkingSpace } from '@/types';
-import { translateSourceValue } from '@/utils/translation';
+import type { ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
 import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
@@ -27,7 +26,7 @@ export type FormValues = {
     orientation: string;
     under_sign: string;
     under_sign_text: string;
-    restriction_days: string[];
+    restriction_days: RestrictionDay[];
     restriction_starts_at: string;
     restriction_ends_at: string;
     latitude: number;
@@ -49,7 +48,7 @@ type Props = {
     orientationOptions: EnumOption[];
     underSignOptions: EnumOption[];
     rejectionReasonOptions: EnumOption[];
-    restrictionDays: string[];
+    restrictionDays: RestrictionDay[];
     initialStatus: string;
     onSubmit: () => void;
     nearbySpaces?: ParkingSpace[];
@@ -258,7 +257,7 @@ export default function ParkingSpaceForm({
                                                                         min={0}
                                                                         max={name === 'parking_hours' ? 24 : 59}
                                                                         aria-label={t(
-                                                                            `edit.form.labels.${name === 'parking_hours' ? 'hours' : 'minutes'}`,
+                                                                            `edit.form.labels.${name === 'parking_hours' ? 'hours' : 'minutes'}` as const,
                                                                         )}
                                                                         className="h-full w-16 bg-transparent px-3 text-sm outline-none"
                                                                         {...field}
@@ -309,7 +308,7 @@ export default function ParkingSpaceForm({
                                                                             )
                                                                         }
                                                                     />
-                                                                    {translateSourceValue('backend/parking/main', `days.${day}`)}
+                                                                    {t(`days.${day}` as const)}
                                                                 </label>
                                                             );
                                                         })}
@@ -325,7 +324,7 @@ export default function ParkingSpaceForm({
                                                     render={({ field }) => (
                                                         <FormItem className="flex flex-row items-center gap-2 space-y-0">
                                                             <FormLabel className="font-normal text-muted-foreground">
-                                                                {translateSourceValue('backend/parking/main', `edit.form.labels.${name}`)}
+                                                                {t(`edit.form.labels.${name}` as const)}
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <Input type="time" className="h-8 w-28" {...field} />
@@ -407,7 +406,7 @@ export default function ParkingSpaceForm({
                                                         )}
                                                         aria-hidden
                                                     />
-                                                    {translateSourceValue('backend/parking/main', `status.${option.value}`)}
+                                                    {option.label}
                                                 </label>
                                             );
                                         })}
@@ -497,7 +496,7 @@ export default function ParkingSpaceForm({
                                 control={form.control}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>{translateSourceValue('backend/parking/main', `edit.form.location.${name}`)}</FormLabel>
+                                        <FormLabel>{t(`edit.form.location.${name}` as const)}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 readOnly

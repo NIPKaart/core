@@ -14,8 +14,7 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
         {
             key: 'facility_type',
             label: t('fields.facility_type'),
-            value: (claim: Claim) =>
-                claim.facility_type ? translateSourceValue('backend/imports', `facility_types.${claim.facility_type}`) : t('unknown'),
+            value: (claim: Claim) => (claim.facility_type ? t(`facility_types.${claim.facility_type}` as const) : t('unknown')),
         },
     ];
     const spaceFields = [

@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { PaginatedResponse } from '@/types';
-import { translateSourceValue } from '@/utils/translation';
 import { Form, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ChevronRight, Search } from 'lucide-react';
@@ -30,13 +29,13 @@ export type SourceSummary = Record<SourceStatusKey, number> & { total: number; p
 type Props = { sources: PaginatedResponse<SourceRow>; summary: SourceSummary; countries: string[]; filters: SourceFilters };
 
 /** Summary chips that filter the table; approval counts include sources awaiting re-approval. */
-const chips: { status: SourceFilters['status']; counts: SourceStatusKey[] }[] = [
+const chips = [
     { status: 'awaiting_approval', counts: ['awaiting_approval', 'reapproval'] },
     { status: 'awaiting_review', counts: ['awaiting_review'] },
     { status: 'overdue', counts: ['overdue'] },
     { status: 'intake_problem', counts: ['intake_problem'] },
     { status: 'live_stale', counts: ['live_stale'] },
-];
+] satisfies { status: SourceFilters['status']; counts: SourceStatusKey[] }[];
 
 export default function SourceTable({ sources, summary, countries, filters }: Props) {
     const { t, i18n } = useTranslation('backend/imports');
@@ -153,7 +152,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                             )}
                         >
                             <span className="text-xl font-semibold tabular-nums">{count}</span>
-                            <span className="text-xs">{translateSourceValue('backend/imports', `sources_table.chips.${chip.status}`)}</span>
+                            <span className="text-xs">{t(`sources_table.chips.${chip.status}` as const)}</span>
                         </button>
                     );
                 })}
@@ -240,7 +239,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                                     <SelectItem value="attention">{t('sources_table.attention')}</SelectItem>
                                     {SOURCE_STATUSES.map((status) => (
                                         <SelectItem key={status} value={status}>
-                                            {translateSourceValue('backend/imports', `sources_table.statuses.${status}`)}
+                                            {t(`sources_table.statuses.${status}` as const)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

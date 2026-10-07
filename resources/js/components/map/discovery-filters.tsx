@@ -4,7 +4,6 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { defaultDiscoveryFilters, type DiscoveryFilters as Filters } from '@/lib/discovery-filters';
-import { translateSourceValue } from '@/utils/translation';
 import { SlidersHorizontal } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -76,7 +75,7 @@ export default function DiscoveryFilters({
                     <SelectContent>
                         {(['all', 'community', 'municipal', 'offstreet'] as const).map((source) => (
                             <SelectItem key={source} value={source}>
-                                {translateSourceValue('frontend/map/main', `filters.sources.${source}`)}
+                                {t(`filters.sources.${source}` as const)}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -108,16 +107,14 @@ export default function DiscoveryFilters({
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        {['balanced', 'distance'].map((sort) => (
+                        {(['balanced', 'distance'] as const).map((sort) => (
                             <SelectItem key={sort} value={sort}>
-                                {translateSourceValue('frontend/map/main', `filters.sorts.${sort}`)}
+                                {t(`filters.sorts.${sort}` as const)}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                    {translateSourceValue('frontend/map/main', `filters.explanation.${draft.sort}`)}
-                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{t(`filters.explanation.${draft.sort}` as const)}</p>
             </div>
             {isDesktop && actions}
         </form>

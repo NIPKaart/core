@@ -1,3 +1,4 @@
+import type { RestrictionDay } from '@/types';
 export type OrientationOption = { value: string; label: string; description: string };
 
 export type ContributionForm = {
@@ -8,7 +9,7 @@ export type ContributionForm = {
     under_sign_text: string;
     parking_hours: string;
     parking_minutes: string;
-    restriction_days: string[];
+    restriction_days: RestrictionDay[];
     restriction_starts_at: string;
     restriction_ends_at: string;
     description: string;
