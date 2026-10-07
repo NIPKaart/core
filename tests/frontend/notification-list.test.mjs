@@ -20,6 +20,7 @@ const context = {
     exports: {},
     Intl,
     require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
         if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
         if (name === '@/components/localized-date-time') {
             const dateContext = { exports: {}, require: context.require };

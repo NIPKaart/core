@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { translateSourceValue } from '@/utils/translation';
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -109,7 +110,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                 onChange={() => setData('under_sign', answer)}
                                 className="sr-only"
                             />
-                            {t(`details.under_sign.${answer}`)}
+                            {translateSourceValue('frontend/map/contribute', `details.under_sign.${answer}`)}
                         </label>
                     ))}
                 </div>
@@ -164,7 +165,10 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                     {(['parking_hours', 'parking_minutes'] as const).map((name) => (
                                         <div key={name} className="grid gap-1">
                                             <Label htmlFor={name} className="text-muted-foreground">
-                                                {t(`details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}`)}
+                                                {translateSourceValue(
+                                                    'frontend/map/contribute',
+                                                    `details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}`,
+                                                )}
                                             </Label>
                                             <Input
                                                 id={name}
@@ -214,7 +218,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                         onClick={() => toggleDay(day)}
                                         className="h-11 rounded-lg border text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
                                     >
-                                        {t(`days.${day}`)}
+                                        {translateSourceValue('frontend/map/contribute', `days.${day}`)}
                                     </button>
                                 ))}
                             </div>
@@ -223,7 +227,10 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                 {(['restriction_starts_at', 'restriction_ends_at'] as const).map((name) => (
                                     <div key={name} className="grid gap-1">
                                         <Label htmlFor={name} className="text-muted-foreground">
-                                            {t(`details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}`)}
+                                            {translateSourceValue(
+                                                'frontend/map/contribute',
+                                                `details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}`,
+                                            )}
                                         </Label>
                                         <Input
                                             id={name}

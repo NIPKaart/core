@@ -8,6 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { BreadcrumbItem, ParkingMunicipal, ParkingSpace, ParkingSpaceConfirmation, User } from '@/types';
+import { translateSourceValue } from '@/utils/translation';
 import { Head, Link } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
@@ -49,7 +50,7 @@ export default function Show({
     mapUrl,
 }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/parking/main');
-    const { t: tModeration, i18n } = useTranslation('backend/moderation');
+    const { i18n } = useTranslation('backend/moderation');
     const { can } = useAuthorization();
     const { openDialog, dialogElement } = useSpaceActionDialog();
     const locale = i18n.language.startsWith('nl') ? nl : enUS;
@@ -65,14 +66,14 @@ export default function Show({
     const streetView = `https://www.google.com/maps?q=&layer=c&cbll=${space.latitude},${space.longitude}`;
     const hours = space.parking_time ? Math.floor(space.parking_time / 60) : 0;
     const minutes = space.parking_time ? space.parking_time % 60 : 0;
-    const days = space.restriction_days?.map((day) => t(`days.${day}`)).join(', ');
+    const days = space.restriction_days?.map((day) => translateSourceValue('backend/parking/main', `days.${day}`)).join(', ');
     const times =
         space.restriction_starts_at && space.restriction_ends_at
             ? `${space.restriction_starts_at.slice(0, 5)}–${space.restriction_ends_at.slice(0, 5)}`
             : null;
     const changed = openImprovement?.changes.length
         ? new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
-              openImprovement.changes.map((group) => tModeration(`groups.${group}`).toLowerCase()),
+              openImprovement.changes.map((group) => translateSourceValue('backend/moderation', `groups.${group}`).toLowerCase()),
           )
         : null;
 
@@ -398,12 +399,17 @@ export default function Show({
                                         />
                                         <span className="block">
                                             {event.kind === 'review'
-                                                ? t(`show.history.review.${event.status}`, { name: event.by ?? t('show.someone') })
-                                                : t(`show.history.${event.kind}`, { name: event.by ?? t('show.someone') })}
+                                                ? translateSourceValue('backend/parking/main', `show.history.review.${event.status}`, {
+                                                      name: event.by ?? t('show.someone'),
+                                                  })
+                                                : translateSourceValue('backend/parking/main', `show.history.${event.kind}`, {
+                                                      name: event.by ?? t('show.someone'),
+                                                  })}
                                             {event.kind === 'improvement' && event.status !== 'pending' && (
                                                 <span className="text-muted-foreground">
                                                     {' '}
-                                                    · {t(`show.history.improvement_status.${event.status}`)}
+                                                    ·{' '}
+                                                    {translateSourceValue('backend/parking/main', `show.history.improvement_status.${event.status}`)}
                                                 </span>
                                             )}
                                         </span>

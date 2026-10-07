@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { translateSourceValue } from '@/utils/translation';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { MultiPolygon, Point, Polygon } from 'geojson';
@@ -111,10 +112,14 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
             header: t('status'),
             cell: ({ row }) => (
                 <div className="max-w-64 space-y-1">
-                    <Badge variant={row.original.status === 'conflict' ? 'destructive' : 'outline'}>{t(`counts.${row.original.status}`)}</Badge>
+                    <Badge variant={row.original.status === 'conflict' ? 'destructive' : 'outline'}>
+                        {translateSourceValue('backend/imports', `counts.${row.original.status}`)}
+                    </Badge>
                     {row.original.fields.length > 0 && (
                         <p className="text-xs text-muted-foreground">
-                            {row.original.fields.map((field) => t(`fields.${field}`, { defaultValue: field })).join(', ')}
+                            {row.original.fields
+                                .map((field) => translateSourceValue('backend/imports', `fields.${field}`, { defaultValue: field }))
+                                .join(', ')}
                         </p>
                     )}
                 </div>
@@ -150,7 +155,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
                                 <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
-                                    {t(`states.${delivery.superseded ? 'superseded' : delivery.state}`)}
+                                    {translateSourceValue('backend/imports', `states.${delivery.superseded ? 'superseded' : delivery.state}`)}
                                 </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
@@ -330,7 +335,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                     <span className="font-medium text-foreground tabular-nums">
                                                         {count.toLocaleString(i18n.language)}
                                                     </span>{' '}
-                                                    {t(`counts.${kind}`)}
+                                                    {translateSourceValue('backend/imports', `counts.${kind}`)}
                                                 </span>
                                             ))}
                                     </p>
@@ -374,7 +379,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                         )}
                                         {Object.entries(review.counts).map(([status, count]) => (
                                             <SelectItem key={status} value={status}>
-                                                {t(`counts.${status}`)} ({count})
+                                                {translateSourceValue('backend/imports', `counts.${status}`)} ({count})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -495,7 +500,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {Object.entries(times).map(([key, value]) => (
                             <div key={key}>
-                                <dt className="text-xs text-muted-foreground">{t(`times.${key}`)}</dt>
+                                <dt className="text-xs text-muted-foreground">{translateSourceValue('backend/imports', `times.${key}`)}</dt>
                                 <dd className="mt-1 text-sm">{value ? <MunicipalDateTime value={value} /> : t('unknown')}</dd>
                             </div>
                         ))}
@@ -524,7 +529,7 @@ function RecordDetails({ row }: { row: Row }) {
                     {claimTitle(row.after) ?? claimTitle(row.before) ?? t(isFacility(mapSource) ? 'unknown_name' : 'unknown_street')}
                 </DialogTitle>
                 <DialogDescription className="break-all">
-                    {row.external_id} · {t(`counts.${row.status}`)}
+                    {row.external_id} · {translateSourceValue('backend/imports', `counts.${row.status}`)}
                 </DialogDescription>
             </DialogHeader>
             <MissingSourceNotice row={row} />
@@ -609,12 +614,18 @@ function RecordDetails({ row }: { row: Row }) {
                     )}
                     {row.fields.length > 0 && (
                         <p className="mt-2">
-                            {t('changed_fields')}: {row.fields.map((field) => t(`fields.${field}`, { defaultValue: field })).join(', ')}
+                            {t('changed_fields')}:{' '}
+                            {row.fields
+                                .map((field) => translateSourceValue('backend/imports', `fields.${field}`, { defaultValue: field }))
+                                .join(', ')}
                         </p>
                     )}
                     {row.conflicts.length > 0 && (
                         <p className="mt-2 text-destructive">
-                            {t('protected_fields')}: {row.conflicts.map((field) => t(`fields.${field}`, { defaultValue: field })).join(', ')}
+                            {t('protected_fields')}:{' '}
+                            {row.conflicts
+                                .map((field) => translateSourceValue('backend/imports', `fields.${field}`, { defaultValue: field }))
+                                .join(', ')}
                         </p>
                     )}
                     <SourceComparison row={row} onShowMap={() => setActiveTab('map')} />
@@ -676,7 +687,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                                 style={{ borderColor: changeColor(status), borderStyle: status === 'missing' ? 'dashed' : 'solid' }}
                                 aria-hidden="true"
                             />
-                            {t(`counts.${status}`)}
+                            {translateSourceValue('backend/imports', `counts.${status}`)}
                         </span>
                     ))}
                 </div>
@@ -702,7 +713,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                         eventHandlers={{ click: () => onSelect(row) }}
                     >
                         <Tooltip permanent direction="top" className="max-w-40 text-center whitespace-normal">
-                            <span className="block font-medium">{t(`counts.${row.status}`)}</span>
+                            <span className="block font-medium">{translateSourceValue('backend/imports', `counts.${row.status}`)}</span>
                             <span className="block text-xs">{row.external_id}</span>
                         </Tooltip>
                     </GeoJSON>

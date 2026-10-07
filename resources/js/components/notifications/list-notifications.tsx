@@ -2,6 +2,7 @@ import LocalizedDateTime from '@/components/localized-date-time';
 import { cn } from '@/lib/utils';
 import { NotificationItem } from '@/types';
 import { getNotificationLabel } from '@/utils/notifications';
+import { translateSourceValue } from '@/utils/translation';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
 import { BellRing, Check, ChevronRight, Database, FileSearch, Inbox, MapPin, Megaphone, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
@@ -34,8 +35,8 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     default: BellRing,
 };
 
-function useI18nDates(ns = 'global/notification') {
-    const { t, i18n } = useTranslation(ns);
+function useI18nDates() {
+    const { t, i18n } = useTranslation('global/notification');
 
     const dateFmt = useMemo(
         () =>
@@ -111,7 +112,7 @@ function NotificationRow({
     onMarkOne: (id: string) => void;
     onOpen?: (id: string, url: string) => void;
 }) {
-    const { t: tGlobal, timeAgo } = useI18nDates('global/notification');
+    const { t: tGlobal, timeAgo } = useI18nDates();
 
     const raw = (n.data ?? {}) as Record<string, unknown>;
     const url = getStr(raw.url);
@@ -175,7 +176,9 @@ function NotificationRow({
 
                     {subject && <div className="line-clamp-2 text-xs leading-4 text-muted-foreground">{subject}</div>}
                     {reason && (
-                        <div className="text-xs leading-4 text-muted-foreground">{tGlobal('reason', { reason: tGlobal(`reasons.${reason}`) })}</div>
+                        <div className="text-xs leading-4 text-muted-foreground">
+                            {tGlobal('reason', { reason: translateSourceValue('global/notification', `reasons.${reason}`) })}
+                        </div>
                     )}
 
                     <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
@@ -245,7 +248,7 @@ function NotificationRow({
 }
 
 export function NotificationsList({ items, loading = false, onMarkOne, onOpen }: NotificationsListProps) {
-    const { t, relDayLabel } = useI18nDates('global/notification');
+    const { t, relDayLabel } = useI18nDates();
     const groups = useMemo(() => groupByDay(items, (d) => relDayLabel(d)), [items, relDayLabel]);
 
     const EmptyState = (

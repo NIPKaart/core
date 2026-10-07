@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useImportUpdates } from '@/hooks/use-import-updates';
 import AppLayout from '@/layouts/app-layout';
 import type { PaginatedResponse } from '@/types';
+import { translateSourceValue } from '@/utils/translation';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { FileUp, Search } from 'lucide-react';
@@ -82,7 +83,7 @@ export default function Index({ datasets, sources, summary, countries, imports, 
             header: t('status'),
             cell: ({ row: { original: item } }) => (
                 <Badge variant={item.state === 'pending' && !item.superseded ? 'secondary' : 'outline'}>
-                    {t(`states.${item.superseded ? 'superseded' : item.state}`)}
+                    {translateSourceValue('backend/imports', `states.${item.superseded ? 'superseded' : item.state}`)}
                 </Badge>
             ),
         },
@@ -219,7 +220,7 @@ export default function Index({ datasets, sources, summary, countries, imports, 
                                         <SelectItem value="all">{t('all_deliveries')}</SelectItem>
                                         {['pending', 'published', 'rejected', 'superseded'].map((state) => (
                                             <SelectItem key={state} value={state}>
-                                                {t(`states.${state}`)}
+                                                {translateSourceValue('backend/imports', `states.${state}`)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

@@ -9,6 +9,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse } from '@/types';
+import { translateSourceValue } from '@/utils/translation';
 import { Head, router } from '@inertiajs/react';
 import { AlertCircle, ExternalLink, MoreVertical, Plus, Search } from 'lucide-react';
 import { useRef, useState, type ReactNode } from 'react';
@@ -345,7 +346,11 @@ function HealthStatus({
     day: (value: string) => string;
 }) {
     const { t } = useTranslation('backend/parking-rules');
-    const reason = health.link_http_status ? String(health.link_http_status) : health.link_error ? t(`health.errors.${health.link_error}`) : null;
+    const reason = health.link_http_status
+        ? String(health.link_http_status)
+        : health.link_error
+          ? translateSourceValue('backend/parking-rules', `health.errors.${health.link_error}`)
+          : null;
 
     return (
         <span className="flex min-w-0 flex-col text-[13px]">

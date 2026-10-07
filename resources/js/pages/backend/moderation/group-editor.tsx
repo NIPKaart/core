@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { translateSourceValue } from '@/utils/translation';
 import { useTranslation } from 'react-i18next';
 import type { Options } from './types';
 import type { ChangeGroup, ImprovementValues } from './values';
@@ -28,7 +29,7 @@ export function GroupEditor({
                     {(['latitude', 'longitude'] as const).map((field) => (
                         <div key={field} className="grid gap-1">
                             <Label htmlFor={`edit-${field}`} className="text-xs text-muted-foreground">
-                                {t(`review.${field}`)}
+                                {translateSourceValue('backend/moderation', `review.${field}`)}
                             </Label>
                             <Input
                                 id={`edit-${field}`}
@@ -106,7 +107,7 @@ export function GroupEditor({
                         {(['hours', 'minutes'] as const).map((unit) => (
                             <div key={unit} className="grid gap-1">
                                 <Label htmlFor={`edit-${unit}`} className="text-xs text-muted-foreground">
-                                    {tContribute(`details.under_sign.${unit}`)}
+                                    {translateSourceValue('frontend/map/contribute', `details.under_sign.${unit}`)}
                                 </Label>
                                 <Input
                                     id={`edit-${unit}`}
@@ -134,7 +135,7 @@ export function GroupEditor({
                     >
                         {options.restrictionDays.map((day) => (
                             <ToggleGroupItem key={day} value={day}>
-                                {tContribute(`days.${day}`)}
+                                {translateSourceValue('frontend/map/contribute', `days.${day}`)}
                             </ToggleGroupItem>
                         ))}
                     </ToggleGroup>
@@ -142,7 +143,10 @@ export function GroupEditor({
                         {(['restriction_starts_at', 'restriction_ends_at'] as const).map((field) => (
                             <div key={field} className="grid gap-1">
                                 <Label htmlFor={`edit-${field}`} className="text-xs text-muted-foreground">
-                                    {tContribute(`details.under_sign.${field === 'restriction_starts_at' ? 'from' : 'until'}`)}
+                                    {translateSourceValue(
+                                        'frontend/map/contribute',
+                                        `details.under_sign.${field === 'restriction_starts_at' ? 'from' : 'until'}`,
+                                    )}
                                 </Label>
                                 <Input
                                     id={`edit-${field}`}

@@ -2,6 +2,7 @@ import { update } from '@/actions/App/Http/Controllers/Admin/DatasetSourceContro
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { translateSourceValue } from '@/utils/translation';
 import { Form } from '@inertiajs/react';
 import { ExternalLink, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -75,7 +76,8 @@ export default function SourceApproval({ source }: Props) {
             )}
             {changed.length > 0 && (
                 <p className="text-sm">
-                    {t('approval.changed_fields')}: {changed.map((field) => t(`approval.fields.${field}`)).join(', ')}
+                    {t('approval.changed_fields')}:{' '}
+                    {changed.map((field) => translateSourceValue('backend/imports', `approval.fields.${field}`)).join(', ')}
                 </p>
             )}
             <dl className="grid gap-3 text-sm sm:grid-cols-[10rem_1fr]">

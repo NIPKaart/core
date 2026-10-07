@@ -17,6 +17,7 @@ function mount(desktop = false) {
     const context = {
         exports: {},
         require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             if (name === 'react')
                 return {
                     useId: () => 'filters',

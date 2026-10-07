@@ -26,6 +26,7 @@ function render(pageProps) {
         exports: {},
         Intl,
         require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
             if (name === '@/components/ui/button') return { Button: ({ children }) => children };

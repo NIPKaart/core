@@ -30,7 +30,8 @@
         "loading": "Loading...",
         "log_out": "Log out",
         "add_favorite": "Add to favorites",
-        "remove_favorite": "Remove from favorites"
+        "remove_favorite": "Remove from favorites",
+        "unknown": "Unknown"
     },
     "search": {
         "placeholder": "Search..."

@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { translateSourceValue } from '@/utils/translation';
 import { useTranslation } from 'react-i18next';
 import type { Claim, Row } from './show';
 
@@ -13,7 +14,8 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
         {
             key: 'facility_type',
             label: t('fields.facility_type'),
-            value: (claim: Claim) => (claim.facility_type ? t(`facility_types.${claim.facility_type}`) : t('unknown')),
+            value: (claim: Claim) =>
+                claim.facility_type ? translateSourceValue('backend/imports', `facility_types.${claim.facility_type}`) : t('unknown'),
         },
     ];
     const spaceFields = [
@@ -82,7 +84,9 @@ export default function SourceComparison({ row, onShowMap }: { row: Row; onShowM
                                                 .filter(([, value]) => value !== null && value !== '')
                                                 .map(([key, value]) => (
                                                     <div key={key} className="grid grid-cols-2 gap-3">
-                                                        <dt className="text-muted-foreground">{t(`rule_fields.${key}`, { defaultValue: key })}</dt>
+                                                        <dt className="text-muted-foreground">
+                                                            {translateSourceValue('backend/imports', `rule_fields.${key}`, { defaultValue: key })}
+                                                        </dt>
                                                         <dd className="min-w-0 break-words">
                                                             {Array.isArray(value) ? value.join(', ') : String(value)}
                                                         </dd>

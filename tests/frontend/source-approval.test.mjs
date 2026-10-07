@@ -20,6 +20,7 @@ const t = (key, params = {}) => {
 const context = {
     exports: {},
     require: (name) => {
+        if (name === '@/utils/translation') return { translateSourceValue: (_, key, options) => t(key, options) };
         if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
         if (name === '@/actions/App/Http/Controllers/Admin/DatasetSourceController') return { update: { form: () => ({}) } };
         if (name === '@inertiajs/react') return { Form: ({ children }) => children({ errors: {}, processing: false }) };

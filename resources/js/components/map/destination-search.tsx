@@ -7,6 +7,7 @@ import { useSearchHotkey } from '@/hooks/use-search-hotkey';
 import { useRecentSearches } from '@/hooks/use-search-recent';
 import { resolve as resolveDestination } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
+import { translateSourceValue } from '@/utils/translation';
 import { ArrowLeft, History, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -200,7 +201,7 @@ export default function DestinationSearch({
                         >
                             {(status === 'loading' || resolving || error || status === 'error') && (
                                 <p role="status" className="px-4 py-3 text-sm text-muted-foreground">
-                                    {t(error ?? (status === 'error' ? 'error' : 'searching'))}
+                                    {translateSourceValue('global/search', error ?? (status === 'error' ? 'error' : 'searching'))}
                                 </p>
                             )}
                             {status === 'ready' && results.length === 0 && editing && (

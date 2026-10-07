@@ -27,6 +27,7 @@ function mount(results, response = { result: { label: 'Amsterdam', latitude: 52.
             return { ok: true, json: async () => response };
         },
         require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key };
             if (name === 'react')
                 return {
                     ...React,

@@ -63,6 +63,8 @@ function load(path, i18n) {
         exports: {},
         require: (name) => {
         if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
+            if (name === '@/utils/translation') return load('utils/translation.ts', i18n);
+            if (name === '@/i18n') return { default: i18n };
             if (name === 'react-i18next') return { useTranslation: (ns) => ({ t: i18n.getFixedT(i18n.language, ns), i18n }) };
             if (name === '@/hooks/use-appearance') return { useAppearance: () => ({ appearance: 'light', updateAppearance: () => {} }) };
             if (name === '@/hooks/use-search-hotkey') return { useSearchHotkey: () => {} };
@@ -146,3 +148,21 @@ test('literal message lookups in known page namespaces resolve in both languages
     }
     assert.ok(lookups > 2000);
 });
+
+
+for (const language of ['en', 'nl']) {
+    test(`source values resolve in ${language} and unknown values cannot leak keys`, async () => {
+        const i18n = i18next.createInstance();
+        await i18n.init({ resources, lng: language, fallbackLng: false });
+        const { translateSourceValue } = load('utils/translation.ts', i18n);
+        assert.equal(translateSourceValue('backend/imports', 'counts.new'), language === 'en' ? 'New' : 'Nieuw');
+        assert.equal(translateSourceValue('backend/imports', 'counts.new_unrecognized_value'), language === 'en' ? 'Unknown' : 'Onbekend');
+        assert.equal(translateSourceValue('backend/imports', 'fields.external_field', { defaultValue: 'External field' }), 'External field');
+        assert.equal(translateSourceValue('backend/imports', 'counts'), language === 'en' ? 'Unknown' : 'Onbekend');
+        assert.equal(translateSourceValue('backend/imports', 'result_count', { count: 2, total: 2 }), language === 'en' ? '2 records' : '2 records');
+        const notifications = load('utils/notifications.tsx', i18n);
+        const translate = i18n.getFixedT(language, 'backend/notifications');
+        assert.equal(notifications.resolveNotificationTitleBackend(translate, 'system.announcement'), language === 'en' ? 'System announcement' : 'Systeem aankondiging');
+        assert.equal(notifications.resolveNotificationTitleBackend(translate, 'unknown.future.type'), language === 'en' ? 'Notification' : 'Melding');
+    });
+}

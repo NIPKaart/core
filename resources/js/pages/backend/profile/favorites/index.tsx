@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { locationMap } from '@/routes';
 import profile from '@/routes/profile';
 import { Favorite } from '@/types';
+import { translateSourceValue } from '@/utils/translation';
 import { Head, Link } from '@inertiajs/react';
 import { HeartCrack, Landmark, MapPin, Warehouse } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -92,7 +93,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
                                                 )}
                                             </CardTitle>
                                             <CardDescription className="mt-0.5 text-xs capitalize">
-                                                {t(`favorites.types.${fav.type.toLowerCase()}`)}
+                                                {translateSourceValue('backend/profile', `favorites.types.${fav.type.toLowerCase()}`)}
                                             </CardDescription>
                                         </div>
                                     </CardHeader>

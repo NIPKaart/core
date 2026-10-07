@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { locationMap } from '@/routes';
 import { resolve as resolveDestination, suggestions } from '@/routes/destinations';
 import type { DestinationResult } from '@/types/destination';
+import { translateSourceValue } from '@/utils/translation';
 import { Root as VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { ArrowRight, MapPin, Search as SearchIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -183,7 +184,10 @@ export default function SearchOverlay(): JSX.Element {
                                 <div className="mt-1 text-xs text-muted-foreground">
                                     {result.type === 'street'
                                         ? t('parking_count', { count: result.parking_count })
-                                        : t(`types.${['community', 'municipal', 'offstreet'].includes(result.type) ? result.type : 'destination'}`)}
+                                        : translateSourceValue(
+                                              'global/search',
+                                              `types.${['community', 'municipal', 'offstreet'].includes(result.type) ? result.type : 'destination'}`,
+                                          )}
                                 </div>
                             </div>
                             <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -201,7 +205,7 @@ export default function SearchOverlay(): JSX.Element {
                 {RecentChips}
                 {error && (
                     <p role="alert" className="text-sm text-destructive">
-                        {t(error)}
+                        {translateSourceValue('global/search', error)}
                     </p>
                 )}
                 {query.trim().length >= 2 && <h2 className="mt-2 text-sm font-semibold">{t('suggestions')}</h2>}

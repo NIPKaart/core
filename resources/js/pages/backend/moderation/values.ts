@@ -1,3 +1,4 @@
+import { translateSourceValue } from '@/utils/translation';
 import { useTranslation } from 'react-i18next';
 
 /** The improvable values of a community space, as the server compares and stores them. */
@@ -57,7 +58,7 @@ export function useValueFormatter(options: Options) {
                 if (values.under_sign === 'no') return tContribute('details.under_sign.no');
                 const days = (options.restrictionDays ?? [])
                     .filter((day) => values.restriction_days?.includes(day))
-                    .map((day) => tContribute(`days.${day}`))
+                    .map((day) => translateSourceValue('frontend/map/contribute', `days.${day}`))
                     .join(', ');
                 const times =
                     values.restriction_starts_at && values.restriction_ends_at
@@ -80,12 +81,12 @@ export function useValueFormatter(options: Options) {
 
 /** "Location (240 m), orientation" for a list of change groups. */
 export function useChangeSummary() {
-    const { t } = useTranslation('backend/moderation');
+    useTranslation('backend/moderation');
 
     return (changes: ChangeGroup[], distance: number | null = null) =>
         changes
             .map((group, index) => {
-                const label = t(`groups.${group}`);
+                const label = translateSourceValue('backend/moderation', `groups.${group}`);
                 const text = index === 0 ? label : label.toLowerCase();
                 return group === 'location' && distance !== null ? `${text} (${distance} m)` : text;
             })

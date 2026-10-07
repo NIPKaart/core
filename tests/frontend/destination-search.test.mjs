@@ -35,6 +35,7 @@ function mount() {
             }),
         },
         require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             if (name === 'react')
                 return {
                     useEffect: () => {},

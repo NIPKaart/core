@@ -16,6 +16,7 @@ function mount(query = '', props = {}) {
     const context = {
         exports: {},
         require: (name) => {
+            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             if (name === '@/components/search/search-store')
                 return {
                     useSearchQuery: () => query,
