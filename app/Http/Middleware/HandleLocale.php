@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SupportedLocale;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -16,12 +17,12 @@ class HandleLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->user()?->locale
-            ?? $request->cookies->get('locale')
-            ?? $request->getPreferredLanguage(['en', 'nl'])
-            ?? config('app.locale');
+        $locale = SupportedLocale::parse($request->user()?->locale)
+            ?? SupportedLocale::parse($request->cookie('locale'))
+            ?? SupportedLocale::parse($request->getPreferredLanguage(array_column(SupportedLocale::cases(), 'value')))
+            ?? SupportedLocale::default();
 
-        App::setLocale($locale);
+        App::setLocale($locale->value);
 
         return $next($request);
     }

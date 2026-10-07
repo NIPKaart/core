@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Enums\SupportedLocale;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,7 +31,7 @@ class ProfileUpdateRequest extends FormRequest
             'current_password' => $this->input('email') !== $this->user()->email
                 ? ['required', 'string', 'current_password']
                 : ['exclude'],
-            'locale' => ['string', 'in:en,nl'],
+            'locale' => ['string', Rule::enum(SupportedLocale::class)],
         ];
     }
 }

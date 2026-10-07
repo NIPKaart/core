@@ -1,9 +1,10 @@
+import { formatLocale } from '@/locale-sync';
 import { useTranslation } from 'react-i18next';
 
 export default function MunicipalDateTime({ value }: { value: string }) {
     const { t, i18n } = useTranslation('backend/imports');
     const language = i18n.resolvedLanguage ?? i18n.language;
-    const locale = language.startsWith('en') ? 'en-GB' : language;
+    const locale = formatLocale(language);
     const date = new Date(value);
 
     return (

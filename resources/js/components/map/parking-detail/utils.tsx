@@ -1,3 +1,4 @@
+import { formatLocale } from '@/locale-sync';
 import type { EnumOption } from './types';
 
 /** Illustration shown at the top of a garage's detail. */
@@ -44,7 +45,7 @@ export function formatDistance(metres: number, language: string): string {
 /** Day and short month, European order also in English; the year only when it is not the current one. */
 export function formatShortDate(value: string, language: string, now: Date = new Date()): string {
     const date = new Date(value);
-    const locale = language.startsWith('en') ? 'en-GB' : language;
+    const locale = formatLocale(language);
 
     return date.toLocaleDateString(locale, {
         day: 'numeric',

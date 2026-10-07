@@ -112,3 +112,35 @@ it('shows malformed passkey errors in the selected language', function (string $
     ['nl', 'Ongeldig formaat van inloggegevens.'],
     ['en', 'Invalid credential format.'],
 ]);
+
+it('ignores invalid preferences and negotiates a supported browser language', function (mixed $cookie) {
+    $this->withUnencryptedCookie('locale', $cookie)->withHeader('Accept-Language', 'de-DE, nl-NL;q=0.9, en;q=0.8')
+        ->get(route('contact'))->assertInertia(fn (Assert $page) => $page->where('locale', 'nl'));
+})->with(['unknown', ['nl']]);
+
+it('shares the language catalog and a safe configured default', function () {
+    config(['app.locale' => 'invalid']);
+    $this->withHeader('Accept-Language', '')->get(route('contact'))
+        ->assertInertia(fn (Assert $page) => $page->where('locale', 'en')
+            ->where('localization.available', [
+                ['code' => 'en', 'label' => 'English', 'formatLocale' => 'en-GB'],
+                ['code' => 'nl', 'label' => 'Nederlands', 'formatLocale' => 'nl-NL'],
+            ]));
+});
+
+it('stores a validated guest language in a cookie', function () {
+    $this->from(route('contact'))->patch(route('locale.update'), ['locale' => 'nl'])
+        ->assertRedirect(route('contact'))->assertPlainCookie('locale', 'nl');
+    $this->assertGuest();
+});
+
+it('rejects an unsupported language without changing the account', function () {
+    $user = User::factory()->create(['locale' => 'en']);
+    $this->actingAs($user)->patch(route('locale.update'), ['locale' => 'xx'])
+        ->assertSessionHasErrors('locale')->assertCookieMissing('locale');
+    expect($user->refresh()->locale)->toBe('en');
+});
+
+it('uses a supported mail locale for legacy account preferences', function () {
+    expect(User::factory()->make(['locale' => 'xx'])->preferredLocale())->toBe('en');
+});

@@ -25,6 +25,7 @@ const t = (key, params = {}) => {
 };
 // Stubs for shadcn primitives that rely on Radix portals/path aliases the plain Node require() cannot resolve.
 const uiStubs = (name) => {
+    if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
     if (name === '@/components/ui/popover') {
         return {
             Popover: ({ children }) => children,
@@ -282,6 +283,7 @@ const loadComponent = (file) => {
     const context = {
         exports: {},
         require: (name) => {
+        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === './utils') return utils;
             if (name === '@/routes/map/places/improve')
