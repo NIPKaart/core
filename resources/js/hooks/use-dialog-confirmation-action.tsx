@@ -18,7 +18,7 @@ type Options = {
 
 export function useConfirmationActionDialog(options: Options = {}) {
     const { t, i18n } = useTranslation('backend/parking/confirmations');
-    const { t: tGlobal } = useTranslation('backend/global');
+    const { t: tGlobal } = useTranslation('global/common');
     const [dialogType, setDialogType] = useState<ConfirmationDialogType | null>(null);
     const [dialogSubject, setDialogSubject] = useState<DialogSubject>(null);
 

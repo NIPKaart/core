@@ -9,7 +9,7 @@ export type MapStyle = 'streets' | 'satellite';
 
 export default function MapDisplayControls({ value, onChange }: { value: MapStyle; onChange: (value: MapStyle) => void }) {
     const { t } = useTranslation('frontend/map/main');
-    const { t: tGlobal } = useTranslation('frontend/global');
+    const { t: tGlobal } = useTranslation(['frontend/global', 'global/common']);
     const [panel, setPanel] = useState<'layers' | 'legend' | null>(null);
 
     return (

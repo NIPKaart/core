@@ -23,7 +23,7 @@ interface DataTableFacetFilterProps {
 }
 
 export function DataTableFacetFilter({ title, selected, options, onChange, onClear }: DataTableFacetFilterProps) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const [open, setOpen] = useState(false);
 
     const toggle = (value: string) => {

@@ -32,7 +32,7 @@ for (const path in modules) {
 i18n.use(initReactI18next).init({
     fallbackLng: 'en',
     initAsync: false,
-    defaultNS: 'global',
+    defaultNS: 'global/common',
     ns: [...namespaces],
     interpolation: {
         escapeValue: false,

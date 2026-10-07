@@ -25,7 +25,12 @@
         "breadcrumb": "Breadcrumb",
         "more": "More",
         "more_pages": "More pages",
-        "navigation": "Navigation"
+        "navigation": "Navigation",
+        "confirm": "Confirm",
+        "loading": "Loading...",
+        "log_out": "Log out",
+        "add_favorite": "Add to favorites",
+        "remove_favorite": "Remove from favorites"
     },
     "search": {
         "placeholder": "Search..."

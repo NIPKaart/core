@@ -47,7 +47,7 @@ const favoriteTypes = {
 
 export default function ParkingDetail({ result, approximateDestination = false, open, onClose, onCloseAutoFocus }: Props) {
     const { t, i18n } = useTranslation('frontend/map/modals');
-    const { t: tGlobal } = useTranslation('frontend/global');
+    const { t: tGlobal } = useTranslation('global/common');
     const { can, user } = useAuthorization();
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [data, setData] = useState<ParkingDetailData | null>(null);

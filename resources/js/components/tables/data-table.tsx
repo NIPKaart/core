@@ -49,7 +49,7 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange,
     initialState,
 }: DataTableProps<TData, TValue>) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
     const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
     const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(initialState?.columnVisibility ?? {});

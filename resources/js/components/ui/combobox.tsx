@@ -20,7 +20,7 @@ interface ComboboxProps {
 }
 
 export function Combobox({ value, onChange, options, placeholder, className }: ComboboxProps) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const [open, setOpen] = React.useState(false);
     const selected = options.find((o) => o.value === value);
 

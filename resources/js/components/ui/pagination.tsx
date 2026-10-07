@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <nav
       role="navigation"
@@ -71,7 +71,7 @@ function PaginationPrevious({
   className,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <PaginationLink
       aria-label={t("table.previous_page")}
@@ -89,7 +89,7 @@ function PaginationNext({
   className,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <PaginationLink
       aria-label={t("table.next_page")}
@@ -107,7 +107,7 @@ function PaginationEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <span
       aria-hidden

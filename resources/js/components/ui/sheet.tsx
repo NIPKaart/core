@@ -53,7 +53,7 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <SheetPortal>
       <SheetOverlay />

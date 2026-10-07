@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-const translations = JSON.parse(readFileSync(new URL('../../resources/locales/backend/en/global.json', import.meta.url), 'utf8'));
+const translations = JSON.parse(readFileSync(new URL('../../resources/locales/global/en/common.json', import.meta.url), 'utf8'));
 const t = (key, params = {}) => {
     const value = key.split('.').reduce((value, part) => value?.[part], translations) ?? key;
     return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{{${name}}}`, String(value)), value);

@@ -25,7 +25,12 @@
         "breadcrumb": "Broodkruimelnavigatie",
         "more": "Meer",
         "more_pages": "Meer pagina’s",
-        "navigation": "Navigatie"
+        "navigation": "Navigatie",
+        "confirm": "Bevestigen",
+        "loading": "Laden...",
+        "log_out": "Uitloggen",
+        "add_favorite": "Toevoegen aan favorieten",
+        "remove_favorite": "Verwijderen uit favorieten"
     },
     "search": {
         "placeholder": "Zoeken..."

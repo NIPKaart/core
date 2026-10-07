@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function SearchableCombobox({ label, placeholder, options, value, onChange, error, description, disabled = false }: Props) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const buttonRef = useRef<HTMLButtonElement>(null);

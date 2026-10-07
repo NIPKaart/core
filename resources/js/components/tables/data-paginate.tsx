@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function DataTablePagination({ pagination, preserveScroll = true }: Props) {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const goTo = (url: string | null) => {
         if (url) router.get(url, {}, { preserveScroll });
     };

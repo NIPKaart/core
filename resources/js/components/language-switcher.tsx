@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 export default function LanguageSwitcher() {
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const { locale: selected, localization } = usePage<SharedData>().props;
     const pending = useRef(false);
     const [processing, setProcessing] = useState(false);

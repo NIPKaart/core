@@ -6,7 +6,7 @@ import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return <nav aria-label={t("common.breadcrumb")} data-slot="breadcrumb" {...props} />
 }
 
@@ -86,7 +86,7 @@ function BreadcrumbEllipsis({
   className,
   ...props
 }: React.ComponentProps<"span">) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   return (
     <span
       data-slot="breadcrumb-ellipsis"

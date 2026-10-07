@@ -162,7 +162,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
   if (collapsible === "none") {
@@ -255,7 +255,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -278,7 +278,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { t } = useTranslation("backend/global")
+  const { t } = useTranslation("global/common")
   const { toggleSidebar } = useSidebar()
 
   return (

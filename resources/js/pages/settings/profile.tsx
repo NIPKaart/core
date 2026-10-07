@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage<SharedData>().props;
     const [email, setEmail] = useState(auth.user.email);
-    const { t } = useTranslation('backend/global');
+    const { t } = useTranslation('global/common');
     const { t: tSettings } = useTranslation('backend/settings');
 
     const breadcrumbs: BreadcrumbItem[] = [
