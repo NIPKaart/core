@@ -1,7 +1,7 @@
 # NIPKaart architecture
 
 - Before planning implementation, issues, epics or architecture, read `.ai/rules/index.md` and follow the repository pre-flight in `.ai/rules/planning.md`; verify current code and existing work before calling something missing.
-- Shared cross-repository workflows are maintained in [NIPKaart/skills](https://github.com/NIPKaart/skills): `nipkaart-context`, `cross-repo-planning`, `dataset-integration`, `collector-review` and `retro`. Load the relevant `SKILL.md` when work spans repositories; local rules and accepted ADRs remain authoritative. Linking a skill does not automatically install it.
+- Shared cross-repository workflows are maintained in [NIPKaart/skills](https://github.com/NIPKaart/skills): `nipkaart-context`, `cross-repo-planning`, `dataset-integration`, `collector-review` and `retro`. Load the relevant `SKILL.md` when work spans repositories; local rules and accepted ADRs remain authoritative. The skills repository is private: links do not grant access or install skills. Load them only with authorized access; otherwise follow local rules and accessible contracts without claiming to have read a shared skill.
 - Use Laravel 13 and PHP 8.4 as the supported baseline. Read `docs/development/quality-checks.md` before changing tooling or running checks.
 - Use `ParkingSpace` for community contributions. Read `CONTEXT.md` before changing domain terminology or models.
 - Keep `ParkingSpace`, `ParkingMunicipal` and `ParkingOffstreet` as separate source models and persistence tables. Shared discovery is a read model; read `docs/product/discovery-read-model.md` and `docs/development/domain-contracts.md` before changing discovery or source identity.
