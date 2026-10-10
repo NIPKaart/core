@@ -13,10 +13,11 @@ it('accepts official municipality identifiers for their own country', function (
 })->with([
     'Dutch CBS' => ['NL', 'NL-NH', 'nl-cbs', 'GM0363'],
     'Belgian INS' => ['BE', 'BE-WNA', 'be-ins', '92094'],
+    'German Hamburg AGS' => ['DE', 'DE-HH', 'de-ags', '02000000'],
     'Belgian leading zero' => ['BE', 'BE-WNA', 'be-ins', '01234'],
 ]);
 
-it('rejects identifiers from a different country and malformed Belgian codes', function (string $country, string $scheme, string $code, string $field, string $message) {
+it('rejects identifiers from a different country and malformed municipality codes', function (string $country, string $scheme, string $code, string $field, string $message) {
     $description = DatasetSourceFactory::municipalDescription([
         'area' => ['country' => $country, 'subdivision' => $country.'-NH', 'municipality' => ['scheme' => $scheme, 'code' => $code, 'name' => 'Municipality']],
     ]);
@@ -31,6 +32,10 @@ it('rejects identifiers from a different country and malformed Belgian codes', f
     'Belgian scheme in Netherlands' => ['NL', 'be-ins', '92094', 'source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.'],
     'Dutch scheme in Belgium' => ['BE', 'nl-cbs', 'GM0363', 'source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.'],
     'Dutch scheme in Germany' => ['DE', 'nl-cbs', 'GM0363', 'source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.'],
+    'German scheme in Belgium' => ['BE', 'de-ags', '02000000', 'source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.'],
+    'short German code' => ['DE', 'de-ags', '2000000', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
+    'long German code' => ['DE', 'de-ags', '020000000', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
+    'prefixed German code' => ['DE', 'de-ags', 'DE02000000', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
     'short Belgian code' => ['BE', 'be-ins', '9209', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
     'long Belgian code' => ['BE', 'be-ins', '920940', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
     'prefixed Belgian code' => ['BE', 'be-ins', 'BE92094', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
