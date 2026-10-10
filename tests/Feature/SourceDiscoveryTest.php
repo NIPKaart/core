@@ -9,12 +9,14 @@ use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
 use App\Models\Province;
 use App\Models\User;
 use App\Notifications\DatasetImport\SourceAwaitingApproval;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
+use App\Services\OffstreetImportService;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
@@ -74,20 +76,25 @@ function objectResult(string $json): Result
 }
 
 /** One discovery pass over one municipal folder; the newest object is read when the source is unknown. */
-function discoverFolder(MockHandler $handler, array $objects, ?string $readJson = null, string $dataset = 'nl-amsterdam'): void
+function discoverFolder(MockHandler $handler, array $objects, ?string $readJson = null, string $dataset = 'nl-amsterdam', string $type = 'municipal'): void
 {
-    $handler->append(new Result(['CommonPrefixes' => [['Prefix' => 'municipal/'.$dataset.'/']], 'IsTruncated' => false]));
+    if ($type === 'offstreet') {
+        $handler->append(new Result(['IsTruncated' => false]));
+    }
+    $handler->append(new Result(['CommonPrefixes' => [['Prefix' => $type.'/'.$dataset.'/']], 'IsTruncated' => false]));
     $handler->append(new Result(['Contents' => $objects, 'IsTruncated' => false]));
     if ($readJson !== null) {
         $handler->append(objectResult($readJson));
     }
-    $handler->append(new Result(['IsTruncated' => false]));
+    if ($type === 'municipal') {
+        $handler->append(new Result(['IsTruncated' => false]));
+    }
     app(DatasetDeliveryService::class)->discover();
 }
 
-function objectFor(string $json, string $modified): array
+function objectFor(string $json, string $modified, string $type = 'municipal'): array
 {
-    return ['Key' => 'municipal/'.json_decode($json, true)['dataset'].'/'.json_decode($json, true)['delivery_id'].'.json', 'ETag' => '"'.md5($json).'"', 'LastModified' => $modified];
+    return ['Key' => $type.'/'.json_decode($json, true)['dataset'].'/'.json_decode($json, true)['delivery_id'].'.json', 'ETag' => '"'.md5($json).'"', 'LastModified' => $modified];
 }
 
 it('registers an unknown folder as a source awaiting approval, links the municipality and holds its deliveries', function () {
@@ -314,4 +321,58 @@ it('holds a Belgian source with an unknown subdivision until reference data is a
     $this->assertDatabaseCount('municipalities', 0);
     $this->assertDatabaseCount('dataset_imports', 0);
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
+});
+
+it('discovers approves publishes and repeats the Hamburg P+R catalog with German identity', function () {
+    $this->freezeTime();
+    Notification::fake();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $province = Province::factory()->state(['geocode' => 'DE-HH'])->for(Country::factory()->state(['code' => 'DE']))->create();
+    $admin = discoveryAdmin();
+    $handler = discoveryBucket();
+    $data = json_decode(discoveryDelivery(), true);
+    $data = array_replace($data, [
+        'format' => 'nipkaart-offstreet-catalog-3', 'dataset' => 'de-hamburg-pr', 'selection' => 'pr-all',
+        'source' => DatasetSourceFactory::offstreetDescription([
+            'name' => 'Hamburg Park + Ride Anlagen', 'publisher' => 'Freie und Hansestadt Hamburg',
+            'source_url' => 'https://api.hamburg.de/datasets/v1/p_und_r/collections/p_und_r/items',
+            'licence' => 'DL-DE-BY-2.0', 'terms_url' => 'https://suche.transparenz.hamburg.de/dataset/park-ride-anlagen-hamburg32',
+            'attribution' => 'Freie und Hansestadt Hamburg, BVM; Datenlizenz Deutschland – Namensnennung – Version 2.0',
+            'area' => ['country' => 'DE', 'subdivision' => 'DE-HH', 'municipality' => ['scheme' => 'de-ags', 'code' => '02000000', 'name' => 'Hamburg']],
+            'bounds' => [9.7, 53.35, 10.35, 53.8],
+        ]),
+        'records' => [['external_id' => '12675697', 'name' => 'Volksdorf', 'source_name' => 'Volksdorf',
+            'facility_type' => 'park_and_ride', 'geometry' => ['type' => 'Point', 'coordinates' => [10.16169, 53.64967]]]],
+    ]);
+    $json = json_encode($data, JSON_THROW_ON_ERROR);
+
+    discoverFolder($handler, [objectFor($json, '2026-10-10T20:00:00Z', 'offstreet')], $json, 'de-hamburg-pr', 'offstreet');
+
+    $source = DatasetSource::sole();
+    expect($source)->approval_state->toBe('pending')->municipality_id->toBeNull();
+    $this->assertDatabaseCount('parking_offstreet_spaces', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertRedirect();
+    $municipality = $source->fresh()->municipality;
+    expect($municipality)->code_scheme->toBe('de-ags')->code->toBe('02000000')->province_id->toBe($province->id);
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $service = app(OffstreetImportService::class);
+    $import = DatasetImport::sole();
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+    $facility = ParkingOffstreet::sole();
+    expect($facility)->external_id->toBe('12675697')->parking_type->toBe('parkandride')->municipality_id->toBe($municipality->id)
+        ->capacity->toBeNull()->free_space->toBeNull()->observed_at->toBeNull();
+
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z');
+    $json = json_encode($data, JSON_THROW_ON_ERROR);
+    discoverFolder($handler, [objectFor($json, '2026-10-10T20:02:00Z', 'offstreet')], null, 'de-hamburg-pr', 'offstreet');
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
+    $repeat = DatasetImport::latest('id')->firstOrFail();
+    expect($service->review($repeat)['counts']['unchanged'])->toBe(1);
+    $service->decide($repeat, $admin, 'publish', null, $service->review($repeat)['token']);
+    $this->assertDatabaseCount('parking_offstreet_spaces', 1);
+    expect($facility->fresh())->id->toBe($facility->id)->published_import_id->toBe($repeat->id);
 });
