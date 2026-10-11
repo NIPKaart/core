@@ -20,6 +20,7 @@ class DatasetSource extends Model
     protected $fillable = ['code', 'name', 'selection', 'target_type', 'publisher', 'source_url', 'licence', 'attribution', 'terms_url', 'municipality_id', 'bounds', 'expected_interval_hours', 'description'];
 
     protected $casts = [
+        'requires_identity_context' => 'boolean',
         'bounds' => 'array', 'description' => 'array', 'pending_description' => 'array',
         'expected_interval_hours' => 'integer', 'reviewed_at' => 'immutable_datetime', 'last_published_retrieved_at' => 'immutable_datetime',
     ];

@@ -51,6 +51,12 @@ export function claimCapacity(claim: Claim | null | undefined): number | null {
 }
 type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
 export type Row = {
+    identity?: {
+        method: string;
+        facility_id: string | null;
+        candidates: { id: string; name: string; distance_metres: number; same_name: boolean; same_type: boolean }[];
+        decision: { reason: string } | null;
+    };
     external_id: string;
     status: 'new' | 'changed' | 'missing' | 'conflict' | 'unchanged';
     fields: string[];
@@ -68,7 +74,14 @@ type Props = {
     import: Import;
     dataset: Dataset;
     municipalityName: string;
-    review: { derivations: number; counts: Record<Row['status'], number>; blockers: string[]; rows: Row[]; token: string };
+    review: {
+        observation_reference_required?: boolean;
+        derivations: number;
+        counts: Record<Row['status'], number>;
+        blockers: string[];
+        rows: Row[];
+        token: string;
+    };
     page: number;
     pages: number;
     total: number;
@@ -125,6 +138,82 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                 </div>
             ),
         },
+        ...(facilities
+            ? ([
+                  {
+                      id: 'identity',
+                      header: t('identity.title'),
+                      cell: ({ row: { original: row } }) =>
+                          row.identity ? (
+                              <div className="space-y-2">
+                                  <Badge variant={row.identity.method === 'review' ? 'destructive' : 'outline'}>
+                                      {t(`identity.methods.${row.identity.method}` as 'identity.methods.new')}
+                                  </Badge>
+                                  {row.identity.decision && <p className="max-w-64 text-sm text-muted-foreground">{row.identity.decision.reason}</p>}
+                                  {delivery.state === 'pending' && !delivery.superseded && (
+                                      <Dialog>
+                                          <DialogTrigger asChild>
+                                              <Button variant="outline" size="sm">
+                                                  {t('identity.review')}
+                                              </Button>
+                                          </DialogTrigger>
+                                          <DialogContent className="max-h-[90dvh] overflow-y-auto">
+                                              <DialogHeader>
+                                                  <DialogTitle>
+                                                      {t('identity.review')} · {claimTitle(row.after)}
+                                                  </DialogTitle>
+                                                  <DialogDescription>{t('identity.hint')}</DialogDescription>
+                                              </DialogHeader>
+                                              <Form {...update.form(delivery.id)} options={{ preserveScroll: true }} className="space-y-4">
+                                                  {({ errors, processing }) => (
+                                                      <>
+                                                          <input type="hidden" name="decision" value="resolve_identity" />
+                                                          <input type="hidden" name="external_id" value={row.external_id} />
+                                                          <input type="hidden" name="review_token" value={review.token} />
+                                                          <Label className="flex flex-col items-start gap-2">
+                                                              {t('identity.target')}
+                                                              <select
+                                                                  name="facility_id"
+                                                                  defaultValue={row.identity?.facility_id ?? ''}
+                                                                  className="w-full rounded-md border bg-background p-2"
+                                                              >
+                                                                  <option value="">{t('identity.new')}</option>
+                                                                  {row.identity?.candidates.map((candidate) => (
+                                                                      <option key={candidate.id} value={candidate.id}>
+                                                                          {candidate.name} · {Math.round(candidate.distance_metres)} m ·{' '}
+                                                                          {candidate.id}
+                                                                      </option>
+                                                                  ))}
+                                                              </select>
+                                                          </Label>
+                                                          <Label className="flex flex-col items-start gap-2">
+                                                              {t('reason')}
+                                                              <Textarea
+                                                                  name="reason"
+                                                                  required
+                                                                  maxLength={2000}
+                                                                  defaultValue={row.identity?.decision?.reason ?? ''}
+                                                              />
+                                                          </Label>
+                                                          {Object.entries(errors).map(([field, message]) => (
+                                                              <InputError key={field} message={message} />
+                                                          ))}
+                                                          <Button type="submit" disabled={processing}>
+                                                              {t('identity.save')}
+                                                          </Button>
+                                                      </>
+                                                  )}
+                                              </Form>
+                                          </DialogContent>
+                                      </Dialog>
+                                  )}
+                              </div>
+                          ) : (
+                              '—'
+                          ),
+                  },
+              ] satisfies ColumnDef<Row>[])
+            : []),
         {
             id: 'geometry',
             header: t('fields.geometry'),
@@ -149,6 +238,11 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
         >
             <Head title={`${t('review')} · ${dataset.name}`} />
             <div className="flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-6">
+                {facilities && review.observation_reference_required && (
+                    <p role="status" className="rounded-lg border bg-muted p-4 text-sm">
+                        {t('identity.observation_reference')}
+                    </p>
+                )}
                 <header className="space-y-4">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0 flex-1 basis-64 space-y-2">

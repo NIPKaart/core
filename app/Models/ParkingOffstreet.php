@@ -28,7 +28,7 @@ class ParkingOffstreet extends Model
      * The attributes that are mass assignable.
      */
     /** Source provenance stays out of public JSON; detail endpoints choose what to expose. */
-    protected $hidden = ['source_record', 'last_imported_values', 'published_import_id', 'publishedImport'];
+    protected $hidden = ['source_record', 'last_imported_values', 'published_import_id', 'publishedImport', 'missing_since', 'consecutive_missing_deliveries', 'observation_identity'];
 
     protected $fillable = [
         'country_id',
@@ -54,6 +54,9 @@ class ParkingOffstreet extends Model
         'observation_fetched_at' => 'immutable_datetime',
         'capacity' => 'integer',
         'source_record' => 'array',
+        'observation_identity' => 'array',
+        'missing_since' => 'immutable_datetime',
+        'consecutive_missing_deliveries' => 'integer',
         'last_imported_values' => 'array',
         'last_checked_at' => 'immutable_datetime',
         'updated_at' => 'datetime',

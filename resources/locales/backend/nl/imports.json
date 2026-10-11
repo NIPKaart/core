@@ -265,5 +265,21 @@
         },
         "not_published": "Nog niet gepubliceerd"
     },
-    "live_stale": "De laatste live meting is van {{time}}. Er komen geen nieuwe metingen binnen; bezoekers zien de bezetting als verouderd."
+    "live_stale": "De laatste live meting is van {{time}}. Er komen geen nieuwe metingen binnen; bezoekers zien de bezetting als verouderd.",
+    "identity": {
+        "title": "Locatiekoppeling",
+        "review": "Koppeling beoordelen",
+        "hint": "Vergelijk de bronlocatie met bestaande locaties. Afstand alleen bewijst niet dat het dezelfde voorziening is. Een beslissing verandert pas na publicatie de catalogus.",
+        "target": "Bestaande of nieuwe locatie",
+        "new": "Dit is een nieuwe locatie",
+        "save": "Koppeling bewaren",
+        "methods": {
+            "new": "Nieuw",
+            "source_id": "Bekende bron-ID",
+            "name_type_location": "Naam, type en locatie komen overeen",
+            "review": "Beoordeling nodig",
+            "manual": "Handmatig beoordeeld"
+        },
+        "observation_reference": "Deze bron heeft veranderende locatie-ID’s. Bezettingsleveringen moeten kenmerken uit dezelfde bronophaling of een exacte catalogusverwijzing meesturen. Nieuwe of twijfelachtige locaties krijgen nog geen bezetting."
+    }
 }
