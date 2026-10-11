@@ -85,7 +85,7 @@ function GarageActions({ garage }: { garage: OverviewGarage }) {
     );
 }
 
-function GarageRow({ garage, grid }: { garage: OverviewGarage; grid: string }) {
+function GarageRow({ garage, grid, previewOnly }: { garage: OverviewGarage; grid: string; previewOnly?: boolean }) {
     const { t } = useTranslation('frontend/garages');
     const measured = useMeasuredTime();
     const state = garageLiveState(garage);
@@ -120,9 +120,7 @@ function GarageRow({ garage, grid }: { garage: OverviewGarage; grid: string }) {
                     <h3 className="font-semibold wrap-break-word">{garage.name}</h3>
                     {type && <span className="text-sm text-muted-foreground">{type}</span>}
                 </div>
-                <div>
-                    <StatusChip state={state} />
-                </div>
+                <div>{previewOnly ? <Chip tone="green">{t('status.open')}</Chip> : <StatusChip state={state} />}</div>
                 <div className="text-right">
                     {state.free !== null ? (
                         <>
@@ -144,15 +142,17 @@ function GarageRow({ garage, grid }: { garage: OverviewGarage; grid: string }) {
                         </span>
                     )}
                 </div>
-                <div className="text-sm text-muted-foreground tabular-nums">
-                    {time && (
-                        <>
-                            <span className="sr-only">{t('status.measured')} </span>
-                            <time dateTime={garage.observed_at ?? undefined}>{time}</time>
-                        </>
-                    )}
-                </div>
-                <GarageActions garage={garage} />
+                {!previewOnly && (
+                    <div className="text-sm text-muted-foreground tabular-nums">
+                        {time && (
+                            <>
+                                <span className="sr-only">{t('status.measured')} </span>
+                                <time dateTime={garage.observed_at ?? undefined}>{time}</time>
+                            </>
+                        )}
+                    </div>
+                )}
+                {!previewOnly && <GarageActions garage={garage} />}
             </div>
 
             {/* Phone: name and count on one line, the occupancy bar and actions below. */}
@@ -175,14 +175,12 @@ function GarageRow({ garage, grid }: { garage: OverviewGarage; grid: string }) {
                             <span className="sr-only">{freeText}</span>
                         </div>
                     ) : (
-                        <div className="shrink-0">
-                            <StatusChip state={state} />
-                        </div>
+                        <div className="shrink-0">{previewOnly ? <Chip tone="green">{t('status.open')}</Chip> : <StatusChip state={state} />}</div>
                     )}
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">{bar}</div>
-                    <GarageActions garage={garage} />
+                    {!previewOnly && <GarageActions garage={garage} />}
                 </div>
             </div>
         </li>
@@ -197,16 +195,18 @@ export function GarageTable({
     municipality,
     total,
     compact = false,
+    previewOnly,
     className,
 }: {
     municipality: OverviewMunicipality;
     total?: number;
     compact?: boolean;
+    previewOnly?: boolean;
     className?: string;
 }) {
     const { t } = useTranslation('frontend/garages');
     const sectionId = `municipality-${municipality.name}`.replace(/\s+/g, '-');
-    const grid = compact ? compactColumns : columns;
+    const grid = previewOnly ? 'lg:grid-cols-[minmax(0,1.5fr)_6rem_7rem_minmax(0,1fr)] lg:gap-x-4' : compact ? compactColumns : columns;
 
     return (
         <section
@@ -227,12 +227,12 @@ export function GarageTable({
                 <span>{t('columns.status')}</span>
                 <span className="text-right">{t('columns.free')}</span>
                 <span>{t('columns.occupancy')}</span>
-                <span>{t('columns.measured')}</span>
-                <span className="text-right">{t('columns.go_to')}</span>
+                {!previewOnly && <span>{t('columns.measured')}</span>}
+                {!previewOnly && <span className="text-right">{t('columns.go_to')}</span>}
             </div>
             <ul>
                 {municipality.garages.map((garage) => (
-                    <GarageRow key={garage.id} garage={garage} grid={grid} />
+                    <GarageRow key={garage.id} garage={garage} grid={grid} previewOnly={previewOnly} />
                 ))}
             </ul>
         </section>

@@ -45,7 +45,13 @@
         "title": "Street full? See which garage still has room",
         "text": "For each municipality you can see how many spaces garages and park-and-ride sites have free right now, with the time of the latest measurement.",
         "text_short": "Current occupancy per garage and P+R, with the time of measurement.",
-        "link": "All garages and P+R"
+        "link": "All garages and P+R",
+        "example_municipality": "Amsterdam",
+        "example_names": {
+            "centre": "City Centre Garage",
+            "station": "Station Garage",
+            "park_and_ride": "P+R City Edge"
+        }
     },
     "contribute": {
         "title": "Is a parking space missing?",
