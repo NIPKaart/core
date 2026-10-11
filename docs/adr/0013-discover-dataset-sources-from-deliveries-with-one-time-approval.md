@@ -40,6 +40,8 @@ The delivery envelope gains a `source` block. There is no separate manifest file
 
 The formats that carry this block get a new version: `nipkaart-municipal-2` and `nipkaart-offstreet-catalog-2`. The dataset code stays the folder name in the bucket (`<type>/<dataset>/<delivery_id>.json`) and remains the stable identity of a source. Occupancy observations (#1221) reference a catalog dataset and do not repeat the block.
 
+The catalog version above describes the initial source-block change. The current producer/validator contract is `nipkaart-offstreet-catalog-3`, with capacity delivered separately in `nipkaart-offstreet-observations-2`; see the [integration inventory](../development/integration-contracts.md). This format clarification does not change this ADR's `proposed` status.
+
 ### Discovery and approval in core
 
 1. The scheduled discovery lists dataset folders under each known type prefix (`municipal/`, `offstreet/`) instead of reading a fixed list from configuration.
