@@ -45,7 +45,13 @@
         "title": "Straat vol? Kijk welke garage nog ruimte heeft",
         "text": "Per gemeente zie je hoeveel plaatsen garages en P+R-terreinen op dit moment vrij hebben, met het tijdstip van de laatste meting.",
         "text_short": "Actuele bezetting per garage en P+R, met het tijdstip van meting.",
-        "link": "Alle garages en P+R"
+        "link": "Alle garages en P+R",
+        "example_municipality": "Amsterdam",
+        "example_names": {
+            "centre": "Garage Centrum",
+            "station": "Garage Station",
+            "park_and_ride": "P+R Stadsrand"
+        }
     },
     "contribute": {
         "title": "Staat een parkeerplaats er nog niet op?",

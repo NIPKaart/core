@@ -1,5 +1,5 @@
 import Footer from '@/components/frontend/footer';
-import { GarageTable } from '@/components/frontend/garage-table';
+import HomeGaragePreview from '@/components/frontend/home/home-garage-preview';
 import HomeSearch from '@/components/frontend/home/home-search';
 import MapLegend from '@/components/frontend/home/map-legend';
 import MapPreview from '@/components/frontend/home/map-preview';
@@ -30,17 +30,19 @@ export default function Home({ garages }: Props) {
 
             <div className="bg-canvas dark:bg-neutral-950">
                 <div className="border-b border-stone-200/70 bg-canvas-strong lg:grid lg:min-h-[660px] lg:grid-cols-2 dark:border-neutral-800 dark:bg-neutral-900/40">
-                    <div className="flex flex-col gap-4 px-5 pt-9 pb-8 sm:px-6 lg:justify-center lg:gap-5.5 lg:py-20 lg:pr-16 lg:pl-[max(2rem,calc((100vw-80rem)/2+2rem))]">
-                        <span className="text-sm font-medium text-stone-600 lg:text-[15px] dark:text-stone-400">{t('hero.eyebrow')}</span>
-                        <h1 className="text-4xl leading-[1.06] font-bold tracking-[-0.035em] text-balance text-stone-900 lg:text-[3.5rem] lg:leading-[1.04] dark:text-white">
-                            {t('hero.title')}
-                        </h1>
-                        <p className="max-w-lg text-[17px] leading-relaxed text-stone-600 lg:text-lg dark:text-stone-300">
-                            <span className="lg:hidden">{t('hero.intro_short')}</span>
-                            <span className="max-lg:hidden">{t('hero.intro')}</span>
-                        </p>
-                        <div className="mt-1.5 lg:mt-3.5">
-                            <HomeSearch />
+                    <div className="flex flex-col gap-4 px-5 pt-9 pb-8 sm:px-6 lg:justify-center lg:gap-5.5 lg:px-[clamp(2rem,5vw,7rem)] lg:py-20">
+                        <div className="flex w-full max-w-2xl flex-col gap-4 lg:gap-5.5">
+                            <span className="text-sm font-medium text-stone-600 lg:text-[15px] dark:text-stone-400">{t('hero.eyebrow')}</span>
+                            <h1 className="text-4xl leading-[1.06] font-bold tracking-[-0.035em] text-balance text-stone-900 lg:text-[clamp(3.5rem,3.25vw,4.5rem)] lg:leading-[1.04] dark:text-white">
+                                {t('hero.title')}
+                            </h1>
+                            <p className="max-w-xl text-[17px] leading-relaxed text-stone-600 lg:text-lg dark:text-stone-300">
+                                <span className="lg:hidden">{t('hero.intro_short')}</span>
+                                <span className="max-lg:hidden">{t('hero.intro')}</span>
+                            </p>
+                            <div className="mt-1.5 lg:mt-3.5">
+                                <HomeSearch />
+                            </div>
                         </div>
                     </div>
                     <MapPreview />
@@ -62,7 +64,7 @@ export default function Home({ garages }: Props) {
                                 {t('garages.link')}
                             </Link>
                         </div>
-                        {garages && <GarageTable municipality={garages.municipality} total={garages.total} compact className="min-w-0 flex-1" />}
+                        <HomeGaragePreview garages={garages} />
                         <Link href={garageOverview()} className={`${textLink} lg:hidden`}>
                             {t('garages.link')}
                         </Link>
