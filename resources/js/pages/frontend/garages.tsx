@@ -125,7 +125,9 @@ export default function Garages({ municipalities }: Props) {
                                         <label htmlFor="garage-sort" className="sr-only sm:not-sr-only">
                                             {t('sort.label')}
                                         </label>
-                                        <Select value={sort} onValueChange={(value: GarageSort) => setSort(value)}>
+                                        <Select value={sort} onValueChange={(value) => {
+                                            if (value === 'name' || value === 'free') setSort(value);
+                                        }>
                                             <SelectTrigger id="garage-sort" className="min-h-11 w-40 bg-white text-foreground dark:bg-neutral-900">
                                                 <SelectValue />
                                             </SelectTrigger>
