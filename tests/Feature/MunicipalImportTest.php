@@ -692,3 +692,82 @@ it('tells open pages about deliveries and decisions', function () {
 
     Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->scope === 'imports' && $event->targetType === 'municipal');
 });
+
+it('preserves source lines and derives markers without creating areas or separate bays', function (array $geometry) {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry'] = $geometry;
+    $data['records'][0]['orientation'] = null;
+
+    $import = stageMunicipal($data, $user);
+    approveMunicipal($import, $user);
+
+    $space = ParkingMunicipal::sole();
+    expect($space->source_record['geometry'])->toEqual($geometry)->and($space->geometry_derivation)->toBeNull();
+    $point = DB::selectOne('SELECT ST_Intersects(ST_GeomFromGeoJSON(?), ST_SetSRID(ST_MakePoint(?, ?), 4326)) AS on_line', [json_encode($geometry, JSON_THROW_ON_ERROR), $space->longitude, $space->latitude]);
+    expect($point->on_line)->toBeTrue();
+    $this->assertDatabaseCount('parking_municipal_spaces', 1);
+})->with([
+    'line' => [['type' => 'LineString', 'coordinates' => [[4.9, 52.3], [4.91, 52.31]]]],
+    'multiple lines' => [['type' => 'MultiLineString', 'coordinates' => [[[4.9, 52.3], [4.91, 52.31]], [[4.92, 52.32], [4.93, 52.33]]]]],
+]);
+
+it('rejects malformed collapsed and out of area source lines without partial intake', function (array $geometry) {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry'] = $geometry;
+
+    expect(fn () => stageMunicipal($data, $user))->toThrow(ValidationException::class);
+
+    $this->assertDatabaseCount('dataset_imports', 0);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+})->with([
+    'short' => [['type' => 'LineString', 'coordinates' => [[4.9, 52.3]]]],
+    'boolean' => [['type' => 'LineString', 'coordinates' => [[true, 52.3], [4.91, 52.31]]]],
+    'third coordinate' => [['type' => 'LineString', 'coordinates' => [[4.9, 52.3, 1], [4.91, 52.31, 1]]]],
+    'outside' => [['type' => 'LineString', 'coordinates' => [[4.9, 52.3], [6, 52.31]]]],
+    'empty component' => [['type' => 'MultiLineString', 'coordinates' => [[[4.9, 52.3], [4.91, 52.31]], []]]],
+    'collapsed component' => [['type' => 'MultiLineString', 'coordinates' => [[[4.9, 52.3], [4.91, 52.31]], [[4.92, 52.32], [4.92, 52.32]]]]],
+]);
+
+it('requires geometry review for a collapsed source line while retaining its original coordinates', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry'] = ['type' => 'LineString', 'coordinates' => [[4.9, 52.3], [4.9, 52.3]]];
+    $service = app(MunicipalImportService::class);
+    $import = stageMunicipal($data, $user);
+    $review = $service->review($import);
+    expect($review['derivations'])->toBe(1);
+    expect(fn () => $service->decide($import, $user, 'publish', null, $review['token']))->toThrow(ValidationException::class);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+
+    $service->decide($import, $user, 'publish', 'Reviewed source line collapsed to its own point.', $review['token'], true);
+
+    $space = ParkingMunicipal::sole();
+    expect($space->source_record['geometry'])->toEqual($data['records'][0]['geometry']);
+    expect($space->geometry_derivation['geometry'])->toEqual(['type' => 'Point', 'coordinates' => [4.9, 52.3]]);
+    expect($space->longitude)->toBe(4.9)->and($space->latitude)->toBe(52.3);
+});
+
+it('retains a collapsed multiline component in the reviewed derivation when its point lies on another source line', function () {
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'][0]['geometry'] = ['type' => 'MultiLineString', 'coordinates' => [[[4.9, 52.3], [4.91, 52.31]], [[4.9, 52.3], [4.9, 52.3]]]];
+    $service = app(MunicipalImportService::class);
+    $import = stageMunicipal($data, $user);
+    $review = $service->review($import);
+    expect($review['derivations'])->toBe(1);
+    expect(fn () => $service->decide($import, $user, 'publish', null, $review['token']))->toThrow(ValidationException::class);
+
+    $service->decide($import, $user, 'publish', 'Reviewed complete line and point derivation.', $review['token'], true);
+
+    $space = ParkingMunicipal::sole();
+    expect($space->source_record['geometry'])->toEqual($data['records'][0]['geometry']);
+    expect($space->geometry_derivation['geometry']['type'])->toBe('GeometryCollection');
+    expect($space->geometry_derivation['geometry']['geometries'])->toHaveCount(2);
+    expect($space->geometry_derivation['geometry']['geometries'][0])->toEqual(['type' => 'Point', 'coordinates' => [4.9, 52.3]]);
+});
