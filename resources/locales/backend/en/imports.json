@@ -265,5 +265,21 @@
         },
         "not_published": "Not published yet"
     },
-    "live_stale": "The latest live measurement is from {{time}}. No new measurements arrive; visitors see the occupancy as stale."
+    "live_stale": "The latest live measurement is from {{time}}. No new measurements arrive; visitors see the occupancy as stale.",
+    "identity": {
+        "title": "Facility identity",
+        "review": "Review identity",
+        "hint": "Compare the source record with existing facilities. Distance alone does not establish identity. A decision takes effect when the catalog is published.",
+        "target": "Existing or new facility",
+        "new": "This is a new facility",
+        "save": "Save identity decision",
+        "methods": {
+            "new": "New",
+            "source_id": "Known source ID",
+            "name_type_location": "Matching name, type and location",
+            "review": "Review required",
+            "manual": "Manually reviewed"
+        },
+        "observation_reference": "This source has changing facility IDs. Occupancy deliveries must include same-fetch identity claims or an exact catalog reference. New or ambiguous facilities do not receive occupancy updates."
+    }
 }

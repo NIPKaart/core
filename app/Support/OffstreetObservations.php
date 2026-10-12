@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -33,7 +34,11 @@ final class OffstreetObservations
     {
         [$data] = SnapshotJson::decode($json);
         Validator::make($data, [
-            'format' => ['required', 'in:'.self::FORMAT],
+            'format' => ['required', 'in:'.self::FORMAT.',nipkaart-offstreet-observations-3'],
+            'catalog_delivery_id' => [Rule::requiredIf(($data['format'] ?? null) === 'nipkaart-offstreet-observations-3' && ! isset($data['identity_records'])), 'prohibited_if:format,'.self::FORMAT, Rule::prohibitedIf(isset($data['identity_records'])), 'uuid'],
+            'identity_records' => ['sometimes', 'required', 'array', 'list', 'min:1', 'max:10000', 'prohibited_if:format,'.self::FORMAT],
+            'identity_records.*' => ['required', 'array'],
+            'identity_records.*.geometry' => ['required', 'array'],
             'dataset' => ['required', 'string', 'max:255'],
             'selection' => ['required', 'string', 'max:255'],
             'delivery_id' => ['required', 'uuid'],
@@ -84,7 +89,7 @@ final class OffstreetObservations
 
         return [
             'dataset' => $data['dataset'], 'selection' => $data['selection'], 'delivery_id' => $data['delivery_id'],
-            'fetched_at' => $fetchedAt, 'records' => $records,
+            'fetched_at' => $fetchedAt, 'records' => $records, 'catalog_delivery_id' => $data['catalog_delivery_id'] ?? null, 'identity_records' => $data['identity_records'] ?? null,
         ];
     }
 

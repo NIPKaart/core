@@ -28,7 +28,7 @@ final class OffstreetSnapshot
             'delivery_id' => ['required', 'uuid'],
             'retrieved_at' => ['required', 'string', 'regex:/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/', 'date'],
             'selection' => ['required', 'string'],
-            'records' => ['required', 'array', 'list', 'min:1', 'max:10000'],
+            'records' => ['present', 'array', 'list', 'max:10000'],
         ])->validate();
         if (($data['complete'] ?? null) !== true || ! is_int($data['source_count'] ?? null) || $data['source_count'] !== count($data['records'])) {
             $this->fail('file', 'De levering moet volledig zijn en het bronaantal moet overeenkomen.');

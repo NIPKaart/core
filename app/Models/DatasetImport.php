@@ -17,9 +17,9 @@ class DatasetImport extends Model
 
     protected $fillable = ['dataset_source_id', 'delivery_id', 'fingerprint', 'retrieved_at', 'dataset_config', 'records', 'submitted_by'];
 
-    protected $casts = ['dataset_config' => 'array', 'records' => 'array', 'before_values' => 'array', 'retrieved_at' => 'immutable_datetime', 'reviewed_at' => 'immutable_datetime'];
+    protected $casts = ['dataset_config' => 'array', 'records' => 'array', 'before_values' => 'array', 'identity_decisions' => 'array', 'identity_resolution' => 'array', 'retrieved_at' => 'immutable_datetime', 'reviewed_at' => 'immutable_datetime'];
 
-    protected $hidden = ['records', 'before_values', 'dataset_config'];
+    protected $hidden = ['records', 'before_values', 'dataset_config', 'identity_decisions', 'identity_resolution'];
 
     public function isSuperseded(): bool
     {

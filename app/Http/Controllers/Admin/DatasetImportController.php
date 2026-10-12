@@ -8,6 +8,7 @@ use App\Models\DatasetImport;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetImports;
 use App\Services\MunicipalProvenance;
+use App\Services\OffstreetImportService;
 use App\Services\SourceOverview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -145,14 +147,24 @@ class DatasetImportController extends Controller
         ]);
     }
 
-    public function update(Request $request, DatasetImport $datasetImport, DatasetImports $imports): RedirectResponse
+    public function update(Request $request, DatasetImport $datasetImport, DatasetImports $imports, OffstreetImportService $offstreet): RedirectResponse
     {
         Gate::authorize('update', $datasetImport);
         $data = $request->validate([
-            'decision' => ['required', 'in:publish,reject'], 'reason' => ['nullable', 'string', 'max:2000'],
+            'decision' => ['required', 'in:publish,reject,resolve_identity'], 'reason' => ['nullable', 'string', 'max:2000'],
             'review_token' => ['required', 'string', 'size:64'],
+            'external_id' => ['required_if:decision,resolve_identity', 'string', 'max:255'],
+            'facility_id' => ['nullable', 'string', 'max:255'],
             'geometry_reviewed' => ['sometimes', 'boolean'],
         ]);
+        if ($data['decision'] === 'resolve_identity') {
+            if ($datasetImport->datasetSource->target_type !== 'offstreet' || trim($data['reason'] ?? '') === '') {
+                throw ValidationException::withMessages(['reason' => 'Een locatiekoppeling vereist een offstreetbron en een reden.']);
+            }
+            $offstreet->resolveIdentity($datasetImport, $request->user(), $data['external_id'], $data['facility_id'] ?? null, $data['reason'], $data['review_token']);
+
+            return back();
+        }
         $imports->forSource($datasetImport->datasetSource)->decide($datasetImport, $request->user(), $data['decision'], $data['reason'] ?? null, $data['review_token'], (bool) ($data['geometry_reviewed'] ?? false));
 
         return to_route('app.imports.show', $datasetImport);
