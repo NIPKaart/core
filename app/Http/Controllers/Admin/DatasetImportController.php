@@ -7,6 +7,7 @@ use App\Http\Requests\App\StoreDatasetImportRequest;
 use App\Models\DatasetImport;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetImports;
+use App\Services\MunicipalImportService;
 use App\Services\MunicipalProvenance;
 use App\Services\OffstreetImportService;
 use App\Services\SourceOverview;
@@ -137,6 +138,7 @@ class DatasetImportController extends Controller
         $pages = max(1, (int) ceil($total / 25));
         $page = max(1, min((int) $request->query('page', 1), $pages));
         $review['rows'] = array_slice($rows, ($page - 1) * 25, 25);
+        unset($review['identities']);
 
         return Inertia::render('backend/imports/show', [
             'import' => [...$datasetImport->toArray(), 'superseded' => $datasetImport->isSuperseded()], 'dataset' => $datasetImport->datasetSource,
@@ -147,7 +149,7 @@ class DatasetImportController extends Controller
         ]);
     }
 
-    public function update(Request $request, DatasetImport $datasetImport, DatasetImports $imports, OffstreetImportService $offstreet): RedirectResponse
+    public function update(Request $request, DatasetImport $datasetImport, DatasetImports $imports, OffstreetImportService $offstreet, MunicipalImportService $municipal): RedirectResponse
     {
         Gate::authorize('update', $datasetImport);
         $data = $request->validate([
@@ -158,10 +160,10 @@ class DatasetImportController extends Controller
             'geometry_reviewed' => ['sometimes', 'boolean'],
         ]);
         if ($data['decision'] === 'resolve_identity') {
-            if ($datasetImport->datasetSource->target_type !== 'offstreet' || trim($data['reason'] ?? '') === '') {
-                throw ValidationException::withMessages(['reason' => 'Een locatiekoppeling vereist een offstreetbron en een reden.']);
+            if (trim($data['reason'] ?? '') === '') {
+                throw ValidationException::withMessages(['reason' => 'Een locatiekoppeling vereist een reden.']);
             }
-            $offstreet->resolveIdentity($datasetImport, $request->user(), $data['external_id'], $data['facility_id'] ?? null, $data['reason'], $data['review_token']);
+            ($datasetImport->datasetSource->target_type === 'offstreet' ? $offstreet : $municipal)->resolveIdentity($datasetImport, $request->user(), $data['external_id'], $data['facility_id'] ?? null, $data['reason'], $data['review_token']);
 
             return back();
         }

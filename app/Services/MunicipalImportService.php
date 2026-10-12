@@ -6,16 +6,20 @@ use App\Contracts\DatasetImporter;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\ParkingMunicipal;
+use App\Models\User;
 use App\Support\MunicipalSnapshot;
 use App\Traits\StagesDatasetImports;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class MunicipalImportService implements DatasetImporter
 {
     use StagesDatasetImports;
 
-    public function __construct(private MunicipalSnapshot $snapshot) {}
+    public function __construct(private MunicipalSnapshot $snapshot, private MunicipalIdentityService $identity) {}
 
     /** @return array<string, mixed> */
     protected function decodeSnapshot(string $json): array
@@ -40,12 +44,14 @@ class MunicipalImportService implements DatasetImporter
         if ($lock) {
             $query->lockForUpdate();
         }
-        $existing = $query->get()->keyBy('external_id');
+        $existing = $query->get()->keyBy('id');
+        $identities = $this->identity->resolve($import, $existing);
         $rows = [];
         $counts = ['new' => 0, 'changed' => 0, 'unchanged' => 0, 'missing' => 0, 'conflict' => 0];
-        foreach ($import->records as $record) {
+        foreach ($import->records as $index => $record) {
             $id = $record['source']['external_id'];
-            $space = $existing->get($id);
+            $identity = $identities[$index];
+            $space = $existing->get($identity['facility_id']);
             $fields = [];
             $conflicts = [];
             if ($space) {
@@ -69,10 +75,10 @@ class MunicipalImportService implements DatasetImporter
             if ($space && MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null) !== MunicipalSnapshot::fingerprint($space->geometry_derivation)) {
                 $fields[] = 'geometry_derivation';
             }
-            $status = ! $space ? 'new' : ($conflicts ? 'conflict' : ($fields ? 'changed' : 'unchanged'));
+            $status = $identity['method'] === 'review' ? 'conflict' : (! $space ? 'new' : ($conflicts ? 'conflict' : ($fields ? 'changed' : 'unchanged')));
             $counts[$status]++;
             $rows[] = [
-                'external_id' => $id, 'status' => $status, 'fields' => $fields, 'conflicts' => $conflicts,
+                'external_id' => $id, 'identity' => $identity, 'status' => $status, 'fields' => $fields, 'conflicts' => $conflicts,
                 'before' => $space?->source_record, 'after' => $record['source'],
                 'geometry_derivation' => $record['geometry_derivation'] ?? null,
                 'geometry_review_required' => ! empty($record['geometry_derivation']) && (! $space
@@ -82,11 +88,11 @@ class MunicipalImportService implements DatasetImporter
                 'point' => ['latitude' => $record['values']['latitude'], 'longitude' => $record['values']['longitude']],
                 'current' => $space?->only(['id', 'number', 'street', 'orientation', 'latitude', 'longitude', 'visibility']),
             ];
-            $existing->forget($id);
+            $existing->forget($identity['facility_id']);
         }
         foreach ($existing as $space) {
             $counts['missing']++;
-            $rows[] = ['external_id' => $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'point' => ['latitude' => $space->latitude, 'longitude' => $space->longitude], 'current' => $space->only(['id', 'visibility'])];
+            $rows[] = ['external_id' => $space->source_record['external_id'] ?? $space->external_id, 'status' => 'missing', 'fields' => [], 'conflicts' => [], 'before' => $space->source_record, 'after' => null, 'point' => ['latitude' => $space->latitude, 'longitude' => $space->longitude], 'current' => $space->only(['id', 'visibility'])];
         }
         $rows = collect($rows)->sortByDesc(fn ($row) => $row['geometry_review_required'] ?? false)->values()->all();
         $derivations = count(array_filter($rows, fn ($row) => $row['geometry_review_required'] ?? false));
@@ -97,22 +103,56 @@ class MunicipalImportService implements DatasetImporter
         if ($source->last_published_retrieved_at && $import->retrieved_at->lessThanOrEqualTo($source->last_published_retrieved_at)) {
             $blockers[] = 'Deze levering is niet nieuwer dan de laatst gepubliceerde levering.';
         }
-        if ($counts['conflict'] > 0) {
+        if (collect($identities)->contains('method', 'review')) {
+            $blockers[] = 'Beoordeel eerst de onzekere locatiekoppelingen.';
+        }
+        if (collect($rows)->contains(fn (array $row): bool => $row['conflicts'] !== [])) {
             $blockers[] = 'Bronwijzigingen conflicteren met handmatig aangepaste velden. Publicatie is geblokkeerd.';
         }
 
-        return ['rows' => $rows, 'counts' => $counts, 'derivations' => $derivations, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows])];
+        return ['identities' => $identities, 'rows' => $rows, 'counts' => $counts, 'derivations' => $derivations, 'blockers' => $blockers, 'token' => MunicipalSnapshot::fingerprint([$source->configuration(), $source->last_published_retrieved_at, $rows, $import->identity_decisions])];
+    }
+
+    /** Records an explicit identity decision without changing published municipal spaces. */
+    public function resolveIdentity(DatasetImport $import, User $actor, string $externalId, ?string $facilityId, string $reason, string $token): void
+    {
+        Gate::forUser($actor)->authorize('update', $import);
+        DB::transaction(function () use ($import, $actor, $externalId, $facilityId, $reason, $token): void {
+            $source = DatasetSource::whereKey($import->dataset_source_id)->lockForUpdate()->firstOrFail();
+            $import = DatasetImport::whereKey($import->id)->lockForUpdate()->firstOrFail();
+            $import->setRelation('datasetSource', $source);
+            $review = $this->review($import, true);
+            if ($import->state !== 'pending' || $import->isSuperseded() || ! hash_equals($review['token'], $token)) {
+                throw ValidationException::withMessages(['identity' => 'De levering is veranderd of al beoordeeld. Bekijk de verschillen opnieuw.']);
+            }
+            $row = collect($review['identities'])->firstWhere('external_id', $externalId);
+            if ($row === null || ($facilityId !== null && ! ParkingMunicipal::where('dataset_source_id', $source->id)->whereKey($facilityId)->exists())) {
+                throw ValidationException::withMessages(['identity' => 'De bronlocatie of gekoppelde locatie hoort niet bij deze dataset.']);
+            }
+            $decisions = $import->identity_decisions ?? [];
+            $key = hash('sha256', $externalId);
+            $decisions[$key] = [
+                'facility_id' => $facilityId, 'reason' => $reason, 'actor_id' => $actor->id,
+                'decided_at' => now()->toISOString(), 'previous' => $decisions[$key] ?? null,
+            ];
+            $import->forceFill(['identity_decisions' => $decisions])->save();
+        });
     }
 
     protected function publish(DatasetImport $import, DatasetSource $source): void
     {
         $municipality = $source->municipality;
-        $existing = ParkingMunicipal::where('dataset_source_id', $source->id)->get()->keyBy('external_id');
+        $existing = ParkingMunicipal::where('dataset_source_id', $source->id)->get()->keyBy('id');
+        $identities = $this->identity->resolve($import, $existing);
+        $seen = [];
         $updates = [];
         $before = [];
-        foreach ($import->records as $record) {
+        foreach ($import->records as $index => $record) {
             $externalId = $record['source']['external_id'];
-            $space = $existing->get($externalId);
+            $space = $existing->get($identities[$index]['facility_id']);
+            $id = $space?->id ?? (string) Str::uuid();
+            $identities[$index]['facility_id'] = $id;
+            $seen[] = $id;
             if ($space && MunicipalSnapshot::fingerprint($space->source_record) === MunicipalSnapshot::fingerprint($record['source']) && MunicipalSnapshot::fingerprint($space->geometry_derivation) === MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null)) {
                 continue;
             }
@@ -124,7 +164,6 @@ class MunicipalImportService implements DatasetImporter
                     }
                 }
             }
-            $id = $space?->id ?? (string) Str::uuid();
             $before[$id] = $space?->getAttributes();
             unset($before[$id]['location']);
             $updates[] = [
@@ -141,9 +180,10 @@ class MunicipalImportService implements DatasetImporter
             ParkingMunicipal::upsert($chunk, ['id'], ['street', 'number', 'orientation', 'latitude', 'longitude', 'source_record', 'geometry_derivation', 'last_imported_values', 'last_checked_at', 'updated_at']);
         }
         ParkingMunicipal::where('dataset_source_id', $source->id)
-            ->whereIn('external_id', array_column(array_column($import->records, 'source'), 'external_id'))
+            ->whereIn('id', $seen)
             ->toBase()->update(['last_checked_at' => now(), 'published_import_id' => $import->id]);
         $import->before_values = $before;
+        $import->identity_resolution = $identities;
     }
 
     /** @param array<string, mixed> $attributes
