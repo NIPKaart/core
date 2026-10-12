@@ -376,3 +376,133 @@ it('discovers approves publishes and repeats the Hamburg P+R catalog with German
     $this->assertDatabaseCount('parking_offstreet_spaces', 1);
     expect($facility->fresh())->id->toBe($facility->id)->published_import_id->toBe($repeat->id);
 });
+
+function stockholmDiscoveryDelivery(): string
+{
+    $data = json_decode(discoveryDelivery(), true);
+    $data['dataset'] = 'se-stockholm';
+    $data['selection'] = 'prorelsehindrad-all';
+    $data['source'] = [
+        ...$data['source'], 'name' => 'Stockholm parking regulations', 'publisher' => 'Stockholms stad, Trafikkontoret',
+        'source_url' => 'https://openparking.stockholm.se/LTF-Tolken/v1/prorelsehindrad/all',
+        'licence' => null, 'terms_url' => 'https://openstreetws.stockholm.se/home/', 'attribution' => 'Stockholms stad, Trafikkontoret',
+        'area' => ['country' => 'SE', 'subdivision' => 'SE-AB', 'municipality' => ['scheme' => 'se-scb', 'code' => '0180', 'name' => 'Stockholm']],
+        'bounds' => [17.7, 59.2, 18.3, 59.5],
+    ];
+    $data['records'][0]['geometry'] = ['type' => 'LineString', 'coordinates' => [[18.08, 59.30], [18.09, 59.31]]];
+    $data['records'][0]['access_category'] = 'unknown';
+    $data['records'][0]['orientation'] = null;
+
+    return json_encode($data, JSON_THROW_ON_ERROR);
+}
+
+it('discovers approves publishes and repeats a Swedish source without inventing unknown values', function () {
+    $this->freezeTime();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $admin = discoveryAdmin();
+    $province = Province::factory()->state(['geocode' => 'SE-AB'])->for(Country::factory()->state(['code' => 'SE']))->create();
+    $handler = discoveryBucket();
+    $json = stockholmDiscoveryDelivery();
+
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:00:00Z')], $json, 'se-stockholm');
+
+    $source = DatasetSource::sole();
+    expect($source)->code->toBe('se-stockholm')->approval_state->toBe('pending')->municipality_id->toBeNull()->registration_error->toBeNull();
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $this->assertDatabaseCount('dataset_imports', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors()->assertRedirect();
+
+    $municipality = Municipality::sole();
+    expect($municipality)->code_scheme->toBe('se-scb')->code->toBe('0180')->country_id->toBe($province->country_id)->province_id->toBe($province->id);
+    expect($source->fresh())->approval_state->toBe('approved')->municipality_id->toBe($municipality->id)->licence->toBeNull();
+    Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === DatasetDelivery::sole()->id);
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $import = DatasetImport::sole();
+    expect($import->state)->toBe('pending');
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $service = app(MunicipalImportService::class);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+
+    $space = ParkingMunicipal::sole();
+    expect($space)->municipality_id->toBe($municipality->id)->external_id->toBe('000123')->number->toBeNull()->orientation->toBeNull();
+    expect($space->source_record)->toEqual(json_decode($json, true)['records'][0]);
+    $this->getJson(route('map.parking.viewport', ['west' => 17.7, 'south' => 59.2, 'east' => 18.2, 'north' => 59.5]))
+        ->assertOk()->assertJsonCount(1, 'results')->assertJsonPath('results.0.key', 'municipal:'.$space->id);
+
+    $this->travel(2)->minutes();
+    $repeat = json_decode($json, true);
+    $repeat['delivery_id'] = (string) Str::uuid();
+    $repeat['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z');
+    $json = json_encode($repeat, JSON_THROW_ON_ERROR);
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:02:00Z')], null, 'se-stockholm');
+    $delivery = DatasetDelivery::latest('id')->firstOrFail();
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process($delivery->id);
+    $import = DatasetImport::latest('id')->firstOrFail();
+    expect($service->review($import)['counts']['unchanged'])->toBe(1);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+
+    $this->assertDatabaseCount('parking_municipal_spaces', 1);
+    expect($space->fresh())->id->toBe($space->id)->source_record->toEqual($repeat['records'][0])->published_import_id->toBe($import->id);
+});
+
+it('rejects invalid Swedish identities before registering a source', function (array $municipality, string $country) {
+    $handler = discoveryBucket();
+    $data = json_decode(stockholmDiscoveryDelivery(), true);
+    $data['source']['area']['country'] = $country;
+    $data['source']['area']['municipality'] = [...$data['source']['area']['municipality'], ...$municipality];
+    $json = json_encode($data, JSON_THROW_ON_ERROR);
+
+    discoverFolder($handler, [objectFor($json, '2026-09-28T10:00:00Z')], $json, 'se-stockholm');
+
+    $this->assertDatabaseCount('dataset_sources', 0);
+    $this->assertDatabaseCount('dataset_deliveries', 0);
+})->with([
+    'missing leading zero' => [['code' => '180'], 'SE'],
+    'non numeric code' => [['code' => '01AB'], 'SE'],
+    'foreign scheme' => [['scheme' => 'be-ins', 'code' => '92094'], 'SE'],
+    'foreign country' => [['scheme' => 'se-scb', 'code' => '0180'], 'NL'],
+]);
+
+it('accepts a complete live Stockholm delivery through isolated approval publication and repeat intake', function () {
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $admin = discoveryAdmin();
+    Province::factory()->state(['geocode' => 'SE-AB'])->for(Country::factory()->state(['code' => 'SE']))->create();
+    $handler = discoveryBucket();
+    $json = file_get_contents(getenv('STOCKHOLM_ACCEPTANCE_FILE'));
+    $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+    $count = $data['source_count'];
+    expect($data['dataset'])->toBe('se-stockholm')->and($count)->toBeGreaterThan(0);
+
+    discoverFolder($handler, [objectFor($json, now()->toIso8601String())], $json, 'se-stockholm');
+
+    $source = DatasetSource::sole();
+    expect($source)->approval_state->toBe('pending');
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors();
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $service = app(MunicipalImportService::class);
+    $import = DatasetImport::sole();
+    expect($service->review($import)['counts']['new'])->toBe($count);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+    $this->assertDatabaseCount('parking_municipal_spaces', $count);
+    $first = ParkingMunicipal::where('external_id', $data['records'][0]['external_id'])->sole();
+    expect($first->source_record)->toEqual($data['records'][0]);
+
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z');
+    $repeat = json_encode($data, JSON_THROW_ON_ERROR);
+    discoverFolder($handler, [objectFor($repeat, now()->toIso8601String())], null, 'se-stockholm');
+    $handler->append(objectResult($repeat));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
+    $import = DatasetImport::latest('id')->firstOrFail();
+    expect($service->review($import)['counts']['unchanged'])->toBe($count);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+
+    $this->assertDatabaseCount('parking_municipal_spaces', $count);
+    expect($first->fresh())->id->toBe($first->id)->published_import_id->toBe($import->id);
+})->skip(fn () => ! getenv('STOCKHOLM_ACCEPTANCE_FILE'), 'Provide a live collector export for isolated acceptance.');

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -11,9 +12,6 @@ use Illuminate\Validation\ValidationException;
  */
 final class SourceDescription
 {
-    /** Official municipality code schemes; add one when the first source of a country needs it. */
-    public const array SCHEMES = ['nl-cbs' => '/^GM[0-9]{4}$/', 'be-ins' => '/^[0-9]{5}$/', 'de-ags' => '/^[0-9]{8}$/'];
-
     /**
      * Validates and normalizes a source block.
      *
@@ -28,6 +26,8 @@ final class SourceDescription
         if (array_diff(array_keys($block), $keys) !== [] || array_diff($keys, array_keys($block)) !== []) {
             self::fail('source', 'Onverwachte of ontbrekende velden in de bronbeschrijving.');
         }
+        /** @var array<string, array{country: string, pattern: string}> $schemes */
+        $schemes = Config::array('municipality-code-schemes');
         Validator::make(['source' => $block], [
             'source.name' => ['required', 'string', 'max:255'],
             'source.publisher' => ['required', 'string', 'max:255'],
@@ -39,7 +39,7 @@ final class SourceDescription
             'source.area.country' => ['required', 'string', 'regex:/^[A-Z]{2}$/'],
             'source.area.subdivision' => ['required', 'string', 'regex:/^[A-Z]{2}-[A-Z0-9]{1,3}$/'],
             'source.area.municipality' => ['required', 'array:scheme,code,name'],
-            'source.area.municipality.scheme' => ['required', 'string', 'in:'.implode(',', array_keys(self::SCHEMES))],
+            'source.area.municipality.scheme' => ['required', 'string', 'in:'.implode(',', array_keys($schemes))],
             'source.area.municipality.code' => ['required', 'string', 'max:32'],
             'source.area.municipality.name' => ['required', 'string', 'max:255'],
             'source.bounds' => ['required', 'array', 'list', 'size:4'],
@@ -49,10 +49,11 @@ final class SourceDescription
         if (! str_starts_with($area['subdivision'], $area['country'].'-')) {
             self::fail('source.area.subdivision', 'De provincie hoort niet bij het opgegeven land.');
         }
-        if (['nl-cbs' => 'NL', 'be-ins' => 'BE', 'de-ags' => 'DE'][$area['municipality']['scheme']] !== $area['country']) {
+        $scheme = $schemes[$area['municipality']['scheme']];
+        if ($scheme['country'] !== $area['country']) {
             self::fail('source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.');
         }
-        if (! preg_match(self::SCHEMES[$area['municipality']['scheme']], $area['municipality']['code'])) {
+        if (! preg_match($scheme['pattern'], $area['municipality']['code'])) {
             self::fail('source.area.municipality.code', 'Ongeldige officiële gemeentecode.');
         }
         foreach ($block['bounds'] as $value) {

@@ -15,6 +15,7 @@ it('accepts official municipality identifiers for their own country', function (
     'Belgian INS' => ['BE', 'BE-WNA', 'be-ins', '92094'],
     'German Hamburg AGS' => ['DE', 'DE-HH', 'de-ags', '02000000'],
     'Belgian leading zero' => ['BE', 'BE-WNA', 'be-ins', '01234'],
+    'Swedish SCB leading zero' => ['SE', 'SE-AB', 'se-scb', '0180'],
 ]);
 
 it('rejects identifiers from a different country and malformed municipality codes', function (string $country, string $scheme, string $code, string $field, string $message) {
@@ -39,4 +40,23 @@ it('rejects identifiers from a different country and malformed municipality code
     'short Belgian code' => ['BE', 'be-ins', '9209', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
     'long Belgian code' => ['BE', 'be-ins', '920940', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
     'prefixed Belgian code' => ['BE', 'be-ins', 'BE92094', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
+    'Swedish scheme in Netherlands' => ['NL', 'se-scb', '0180', 'source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.'],
+    'short Swedish code' => ['SE', 'se-scb', '180', 'source.area.municipality.code', 'Ongeldige officiële gemeentecode.'],
 ]);
+
+it('uses a configured scheme for its allowed values country and code format', function () {
+    config(['municipality-code-schemes.additional' => ['country' => 'NL', 'pattern' => '/^X[0-9]{3}$/']]);
+    $description = DatasetSourceFactory::municipalDescription([
+        'area' => ['country' => 'NL', 'subdivision' => 'NL-NH', 'municipality' => ['scheme' => 'additional', 'code' => 'X036', 'name' => 'Municipality']],
+    ]);
+
+    expect(SourceDescription::validate($description)['area'])->toBe($description['area']);
+
+    $description['area']['municipality']['code'] = 'GM0363';
+    expect(fn () => SourceDescription::validate($description))->toThrow(ValidationException::class, 'Ongeldige officiële gemeentecode.');
+
+    $description['area']['municipality']['code'] = 'X036';
+    $description['area']['country'] = 'BE';
+    $description['area']['subdivision'] = 'BE-WNA';
+    expect(fn () => SourceDescription::validate($description))->toThrow(ValidationException::class, 'Het gemeentecodestelsel hoort niet bij het opgegeven land.');
+});

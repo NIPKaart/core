@@ -68,7 +68,7 @@ final class MunicipalSnapshot
                 'orientation' => ['present', 'nullable', 'in:perpendicular,parallel,angle'],
                 'source_updated_at' => ['present', 'nullable', 'date_format:Y-m-d'],
                 'source_attributes' => ['present', 'array'],
-                'geometry.type' => ['required', 'in:Point,Polygon,MultiPolygon'],
+                'geometry.type' => ['required', 'in:Point,LineString,MultiLineString,Polygon,MultiPolygon'],
                 'geometry.coordinates' => ['required', 'array', 'list'],
             ])->errors();
             if ($errors->isNotEmpty()) {
@@ -87,15 +87,21 @@ final class MunicipalSnapshot
             }
             $polygons = match ($record['geometry']['type']) {
                 'Point' => [[[$record['geometry']['coordinates']]]],
+                'LineString' => [[$record['geometry']['coordinates']]],
+                'MultiLineString' => [$record['geometry']['coordinates']],
                 'Polygon' => [$record['geometry']['coordinates']],
                 'MultiPolygon' => $record['geometry']['coordinates'],
             };
             $positions = 0;
             foreach ($polygons as $polygon) {
                 foreach (is_array($polygon) ? $polygon : [null] as $ring) {
-                    $closed = $record['geometry']['type'] === 'Point' || (is_array($ring) && array_is_list($ring) && count($ring) >= 4 && $ring[0] === $ring[array_key_last($ring)]);
+                    $closed = match ($record['geometry']['type']) {
+                        'Point' => true,
+                        'LineString', 'MultiLineString' => is_array($ring) && count($ring) >= 2,
+                        default => is_array($ring) && array_is_list($ring) && count($ring) >= 4 && $ring[0] === $ring[array_key_last($ring)],
+                    };
                     if (! is_array($ring) || ! array_is_list($ring) || ! $closed) {
-                        $this->fail("$prefix.geometry", 'Ongeldige of niet gesloten polygoonring.');
+                        $this->fail("$prefix.geometry", 'Ongeldige lijn of niet gesloten polygoonring.');
                     }
                     $positions += count($ring);
                     if ($positions > 10000) {
@@ -122,10 +128,20 @@ final class MunicipalSnapshot
             ), derived AS (
                 SELECT *, CASE WHEN original_valid THEN shape ELSE ST_MakeValid(shape, 'method=linework') END AS usable FROM assessed
             ), points AS (
-                SELECT *, ST_PointOnSurface(usable) AS point FROM derived
+                SELECT *, ST_PointOnSurface(CASE WHEN GeometryType(shape) = 'MULTILINESTRING' AND GeometryType(usable) = 'GEOMETRYCOLLECTION'
+                    THEN ST_CollectionExtract(usable, 2) ELSE usable END) AS point FROM derived
             ) SELECT external_id, original_valid, reason,
-                ST_IsValid(usable) AND NOT ST_IsEmpty(usable) AND CASE WHEN GeometryType(shape) = 'POINT'
-                    THEN GeometryType(usable) = 'POINT' ELSE GeometryType(usable) IN ('POLYGON', 'MULTIPOLYGON') END AS usable,
+                ST_IsValid(usable) AND NOT ST_IsEmpty(usable) AND CASE
+                    WHEN GeometryType(shape) = 'POINT' THEN GeometryType(usable) = 'POINT'
+                    WHEN GeometryType(shape) = 'LINESTRING' THEN
+                        (original_valid AND ST_Length(usable) > 0 AND GeometryType(usable) = 'LINESTRING')
+                        OR (NOT original_valid AND GeometryType(usable) = 'POINT')
+                    WHEN GeometryType(shape) = 'MULTILINESTRING' THEN
+                        (original_valid AND ST_Length(usable) > 0 AND GeometryType(usable) = 'MULTILINESTRING')
+                        OR (NOT original_valid AND GeometryType(usable) = 'GEOMETRYCOLLECTION'
+                            AND ST_Length(ST_CollectionExtract(usable, 2)) > 0
+                            AND ST_CoveredBy(usable, ST_CollectionExtract(usable, 2)))
+                    ELSE GeometryType(usable) IN ('POLYGON', 'MULTIPOLYGON') END AS usable,
                 ST_CoveredBy(ST_Envelope(shape), ST_MakeEnvelope(?, ?, ?, ?, 4326)) AS inside,
                 ST_X(point) AS longitude, ST_Y(point) AS latitude,
                 CASE WHEN NOT original_valid THEN ST_AsGeoJSON(usable, 15, 0) END AS geometry,
