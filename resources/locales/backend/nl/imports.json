@@ -269,13 +269,14 @@
     "identity": {
         "title": "Locatiekoppeling",
         "review": "Koppeling beoordelen",
-        "hint": "Vergelijk de bronlocatie met bestaande locaties. Afstand alleen bewijst niet dat het dezelfde voorziening is. Een beslissing verandert pas na publicatie de catalogus.",
+        "hint": "Vergelijk de bronlocatie met bestaande locaties. Afstand alleen bewijst niet dat het dezelfde parkeerlocatie is. Een beslissing verandert pas na publicatie de gegevens.",
         "target": "Bestaande of nieuwe locatie",
         "new": "Dit is een nieuwe locatie",
         "save": "Koppeling bewaren",
         "methods": {
             "new": "Nieuw",
             "source_id": "Bekende bron-ID",
+            "geometry": "Geometrie, straat en toegang komen overeen",
             "name_type_location": "Naam, type en locatie komen overeen",
             "review": "Beoordeling nodig",
             "manual": "Handmatig beoordeeld"

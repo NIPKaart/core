@@ -269,13 +269,14 @@
     "identity": {
         "title": "Facility identity",
         "review": "Review identity",
-        "hint": "Compare the source record with existing facilities. Distance alone does not establish identity. A decision takes effect when the catalog is published.",
+        "hint": "Compare the source record with existing parking locations. Distance alone does not establish identity. A decision takes effect when the data is published.",
         "target": "Existing or new facility",
         "new": "This is a new facility",
         "save": "Save identity decision",
         "methods": {
             "new": "New",
             "source_id": "Known source ID",
+            "geometry": "Geometry, street and access match",
             "name_type_location": "Matching name, type and location",
             "review": "Review required",
             "manual": "Manually reviewed"

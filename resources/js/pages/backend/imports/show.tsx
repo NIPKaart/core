@@ -138,7 +138,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                 </div>
             ),
         },
-        ...(facilities
+        ...(review.rows.some((row) => row.identity)
             ? ([
                   {
                       id: 'identity',

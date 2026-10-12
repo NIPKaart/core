@@ -467,8 +467,10 @@ it('retains reviewed derivations on repeat and clears them when the source becom
     $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
     $data['records'][0]['geometry'] = $validGeometry;
     $corrected = stageMunicipal($data, $user);
-    expect($service->review($corrected)['derivations'])->toBe(0);
-    approveMunicipal($corrected, $user);
+    $review = $service->review($corrected);
+    expect($review['derivations'])->toBe(0);
+    $service->resolveIdentity($corrected, $user, '000123', $space->id, 'De bron heeft de geometrie van dezelfde parkeerplaats hersteld.', $review['token']);
+    approveMunicipal($corrected->fresh(), $user);
 
     expect($space->fresh())->source_record->toEqual($data['records'][0])->geometry_derivation->toBeNull()->visibility->toBeFalse();
     expect(json_decode($corrected->fresh()->before_values[$space->id]['geometry_derivation'], true))->toEqual($originalDerivation);
@@ -557,6 +559,10 @@ it('requires renewed geometry review when the source geometry changes', function
     $data['records'][0]['geometry']['coordinates'][0][1][0] = 4.92;
     $changed = stageMunicipal($data, $user);
     $review = $service->review($changed);
+
+    expect($review['identities'][0]['method'])->toBe('review');
+    $service->resolveIdentity($changed, $user, '000123', ParkingMunicipal::sole()->id, 'De gewijzigde brongeometrie beschrijft dezelfde parkeerplaats.', $review['token']);
+    $review = $service->review($changed->fresh());
 
     expect($review['derivations'])->toBe(1);
     $this->actingAs($user)->patch(route('app.imports.update', $changed), [
