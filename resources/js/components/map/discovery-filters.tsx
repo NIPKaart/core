@@ -72,7 +72,7 @@ export default function DiscoveryFilters({
                     if (source === 'all' || source === 'community' || source === 'municipal' || source === 'offstreet') {
                         setDraft({ ...draft, source });
                     }
-                }>
+                }}>
                     <SelectTrigger id={`${id}-source`} className="min-h-11 w-full">
                         <SelectValue />
                     </SelectTrigger>
@@ -108,7 +108,7 @@ export default function DiscoveryFilters({
                 </label>
                 <Select value={draft.sort} onValueChange={(sort) => {
                     if (sort === 'balanced' || sort === 'distance') setDraft({ ...draft, sort });
-                }>
+                }}>
                     <SelectTrigger id={`${id}-sort`} className="min-h-11 w-full">
                         <SelectValue />
                     </SelectTrigger>
