@@ -1,11 +1,11 @@
 {
     "meta": {
-        "title": "Garages en P+R",
-        "description": "Live overzicht van parkeergarages en P+R-terreinen per gemeente, met de algemene bezetting en het tijdstip van de laatste meting."
+        "title": "Garages, parkeerterreinen en P+R",
+        "description": "Live overzicht van parkeergarages, parkeerterreinen en P+R per gemeente, met de algemene bezetting en het tijdstip van de laatste meting."
     },
-    "title": "Garages en P+R",
-    "intro": "De laatste algemene bezetting van elke garage en P+R, per gemeente. Handig als er geen gehandicaptenparkeerplaats op straat vrij is.",
-    "empty": "Er zijn nog geen garages of P+R-terreinen beschikbaar.",
+    "title": "Garages, parkeerterreinen en P+R",
+    "intro": "De laatste algemene bezetting van elke garage, parkeerterrein en P+R, per gemeente. Handig als er geen gehandicaptenparkeerplaats op straat vrij is.",
+    "empty": "Er zijn nog geen parkeervoorzieningen beschikbaar.",
     "locations_one": "{{count}} locatie",
     "locations_other": "{{count}} locaties",
     "summary": {
@@ -14,20 +14,22 @@
     },
     "types": {
         "garage": "Parkeergarage",
-        "parkandride": "P+R"
+        "parkandride": "P+R",
+        "parking_lot": "Parkeerterrein"
     },
     "filter": {
         "label": "Zoek op gemeente of naam",
-        "placeholder": "Gemeente of garagenaam",
+        "placeholder": "Gemeente of naam",
         "type": "Type",
         "types": {
             "all": "Alle",
             "garage": "Garages",
-            "parkandride": "P+R"
+            "parkandride": "P+R",
+            "parking_lot": "Terreinen"
         },
         "count_one": "{{count}} van {{total}} locatie",
         "count_other": "{{count}} van {{total}} locaties",
-        "none": "Geen garages gevonden voor je zoekopdracht."
+        "none": "Geen parkeervoorzieningen gevonden voor je zoekopdracht."
     },
     "sort": {
         "label": "Sorteer",

@@ -76,7 +76,7 @@ final class OffstreetSnapshot
                 $this->fail("$prefix.external_id", 'Bron-ID is ongeldig of dubbel.');
             }
             $seen[$id] = true;
-            if (! in_array($record['facility_type'], ['garage', 'park_and_ride'], true)) {
+            if (! in_array($record['facility_type'], ['garage', 'park_and_ride', 'parking_lot'], true)) {
                 $this->fail("$prefix.facility_type", 'Onbekend type parkeervoorziening.');
             }
             $geometry = $record['geometry'];
@@ -97,7 +97,7 @@ final class OffstreetSnapshot
                 'source' => $record,
                 'values' => [
                     'name' => $record['name'],
-                    'parking_type' => $record['facility_type'] === 'park_and_ride' ? 'parkandride' : 'garage',
+                    'parking_type' => $record['facility_type'] === 'park_and_ride' ? 'parkandride' : $record['facility_type'],
                     'latitude' => round((float) $latitude, 7), 'longitude' => round((float) $longitude, 7),
                 ],
             ];

@@ -4,7 +4,7 @@ import { occupancyPercent, occupancyStatus } from '@/components/map/parking-deta
 export type OverviewGarage = {
     id: string;
     name: string;
-    type: 'garage' | 'parkandride' | null;
+    type: 'garage' | 'parkandride' | 'parking_lot' | null;
     latitude: number;
     longitude: number;
     availability: 'current' | 'closed' | 'stale' | 'unavailable' | 'unknown';
@@ -48,7 +48,7 @@ export function garageLiveState(garage: OverviewGarage): GarageLiveState {
     };
 }
 
-export type GarageTypeFilter = 'all' | 'garage' | 'parkandride';
+export type GarageTypeFilter = 'all' | 'garage' | 'parkandride' | 'parking_lot';
 export type GarageSort = 'name' | 'free';
 
 /**
@@ -91,6 +91,7 @@ export type OverviewSummary = {
     total: number;
     garages: number;
     parkandride: number;
+    parkingLots: number;
     current: number;
     closed: number;
     withoutLiveData: number;
@@ -100,11 +101,21 @@ export type OverviewSummary = {
 
 /** Counts for the type filter and the live summary; stale, failing and never-measured facilities are "without live data". */
 export function overviewSummary(municipalities: OverviewMunicipality[]): OverviewSummary {
-    const summary: OverviewSummary = { total: 0, garages: 0, parkandride: 0, current: 0, closed: 0, withoutLiveData: 0, latestObservedAt: null };
+    const summary: OverviewSummary = {
+        total: 0,
+        garages: 0,
+        parkandride: 0,
+        parkingLots: 0,
+        current: 0,
+        closed: 0,
+        withoutLiveData: 0,
+        latestObservedAt: null,
+    };
     for (const garage of municipalities.flatMap((municipality) => municipality.garages)) {
         summary.total++;
         if (garage.type === 'garage') summary.garages++;
         if (garage.type === 'parkandride') summary.parkandride++;
+        if (garage.type === 'parking_lot') summary.parkingLots++;
         if (garage.availability === 'current') summary.current++;
         else if (garage.availability === 'closed') summary.closed++;
         else summary.withoutLiveData++;

@@ -122,7 +122,17 @@ test('the summary counts types and live states and finds the newest measurement'
     ]);
     assert.deepEqual(
         { ...summary },
-        { total: 4, garages: 3, parkandride: 1, current: 1, closed: 1, withoutLiveData: 2, latestObservedAt: '2026-09-28T10:05:00Z' },
+        { total: 4, garages: 3, parkandride: 1, parkingLots: 0, current: 1, closed: 1, withoutLiveData: 2, latestObservedAt: '2026-09-28T10:05:00Z' },
     );
     assert.equal(overviewSummary([]).latestObservedAt, null);
+});
+
+test('parking lots have their own filter and count instead of being counted as garages', () => {
+    const municipalities = [{ name: 'Gent', garages: [garage(), garage({ id: 'lot', type: 'parking_lot' })] }];
+    assert.deepEqual(
+        Array.from(filterMunicipalities(municipalities, '', 'parking_lot')[0].garages, (row) => row.id),
+        ['lot'],
+    );
+    assert.equal(overviewSummary(municipalities).parkingLots, 1);
+    assert.equal(overviewSummary(municipalities).garages, 1);
 });

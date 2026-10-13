@@ -66,7 +66,8 @@
             "long_term": "Long-term parking",
             "more_info": "More information",
             "no_link": "No link",
-            "latest_update": "Latest update"
+            "latest_update": "Latest update",
+            "parking_lot": "Parking lot"
         }
     },
     "common": {
@@ -144,7 +145,8 @@
             "community": "Parking space added by the community and approved for publication.",
             "municipal": "Official municipal parking space, based on open data from the municipality.",
             "garage": "Parking garage. Parking here usually involves costs.",
-            "parkandride": "P+R facility. Parking here usually involves costs."
+            "parkandride": "P+R facility. Parking here usually involves costs.",
+            "parking_lot": "Public parking lot. General free spaces do not indicate accessible parking availability."
         },
         "live": {
             "label": "Live data",

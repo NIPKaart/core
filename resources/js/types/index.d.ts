@@ -206,7 +206,7 @@ export type ParkingOffstreet = {
     name: string;
     free_space: number | null;
     capacity: number | null;
-    parking_type: 'garage' | 'parkandride';
+    parking_type: 'garage' | 'parkandride' | 'parking_lot';
     prices: json | null;
     api_state: string | null;
     occupancy_status: 'counting' | 'open' | 'full' | 'closed' | 'malfunction' | null;

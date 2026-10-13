@@ -65,7 +65,7 @@ export type OffstreetParkingDetail = {
     latitude: number;
     longitude: number;
     name: string;
-    type: 'garage' | 'parkandride';
+    type: 'garage' | 'parkandride' | 'parking_lot';
     country: string | null;
     province: string | null;
     municipality: string | null;
