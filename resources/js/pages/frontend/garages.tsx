@@ -41,6 +41,7 @@ export default function Garages({ municipalities }: Props) {
         { value: 'all', count: summary.total },
         { value: 'garage', count: summary.garages },
         { value: 'parkandride', count: summary.parkandride },
+        { value: 'parking_lot', count: summary.parkingLots },
     ];
 
     return (
@@ -102,7 +103,7 @@ export default function Garages({ municipalities }: Props) {
                                     <div
                                         role="group"
                                         aria-label={t('filter.type')}
-                                        className="flex gap-1 self-start rounded-lg bg-stone-200/70 p-1 dark:bg-neutral-800"
+                                        className="flex flex-wrap gap-1 self-start rounded-lg bg-stone-200/70 p-1 dark:bg-neutral-800"
                                     >
                                         {typeOptions.map((option) => (
                                             <button

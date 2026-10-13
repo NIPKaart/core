@@ -1,11 +1,11 @@
 {
     "meta": {
-        "title": "Garages and P+R",
-        "description": "Live overview of parking garages and P+R facilities per municipality, with general occupancy and the time of the last measurement."
+        "title": "Garages, parking lots and P+R",
+        "description": "Live overview of garages, parking lots and P+R facilities per municipality, with general occupancy and the time of the last measurement."
     },
-    "title": "Garages and P+R",
-    "intro": "The latest general occupancy of every garage and P+R, per municipality. Useful when no accessible street space is free.",
-    "empty": "No garages or P+R facilities are available yet.",
+    "title": "Garages, parking lots and P+R",
+    "intro": "The latest general occupancy of every garage, parking lot and P+R, per municipality. Useful when no accessible street space is free.",
+    "empty": "No parking facilities are available yet.",
     "locations_one": "{{count}} location",
     "locations_other": "{{count}} locations",
     "summary": {
@@ -14,20 +14,22 @@
     },
     "types": {
         "garage": "Parking garage",
-        "parkandride": "P+R"
+        "parkandride": "P+R",
+        "parking_lot": "Parking lot"
     },
     "filter": {
         "label": "Search by municipality or name",
-        "placeholder": "Municipality or garage name",
+        "placeholder": "Municipality or name",
         "type": "Type",
         "types": {
             "all": "All",
             "garage": "Garages",
-            "parkandride": "P+R"
+            "parkandride": "P+R",
+            "parking_lot": "Parking lots"
         },
         "count_one": "{{count}} of {{total}} location",
         "count_other": "{{count}} of {{total}} locations",
-        "none": "No garages match your search."
+        "none": "No parking facilities match your search."
     },
     "sort": {
         "label": "Sort",

@@ -182,7 +182,8 @@
     "back_to_history": "Terug",
     "facility_types": {
         "garage": "Garage",
-        "park_and_ride": "P+R"
+        "park_and_ride": "P+R",
+        "parking_lot": "Parkeerterrein"
     },
     "unknown_name": "Voorziening zonder naam",
     "approval": {

@@ -182,7 +182,8 @@
     "back_to_history": "Back",
     "facility_types": {
         "garage": "Garage",
-        "park_and_ride": "P+R"
+        "park_and_ride": "P+R",
+        "parking_lot": "Parking lot"
     },
     "unknown_name": "Facility without a name",
     "approval": {

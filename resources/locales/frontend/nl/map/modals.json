@@ -66,7 +66,8 @@
             "long_term": "Lang parkeren",
             "more_info": "Meer informatie",
             "no_link": "Geen link",
-            "latest_update": "Laatste update"
+            "latest_update": "Laatste update",
+            "parking_lot": "Parkeerterrein"
         }
     },
     "common": {
@@ -144,7 +145,8 @@
             "community": "Parkeerplaats toegevoegd door de community en goedgekeurd voor publicatie.",
             "municipal": "Officiële gemeentelijke parkeerplaats, gebaseerd op open data van de gemeente.",
             "garage": "Parkeergarage. Parkeren kost hier meestal geld.",
-            "parkandride": "P+R-terrein. Parkeren kost hier meestal geld."
+            "parkandride": "P+R-terrein. Parkeren kost hier meestal geld.",
+            "parking_lot": "Publiek parkeerterrein. Algemene vrije plaatsen zeggen niets over vrije gehandicaptenparkeerplaatsen."
         },
         "live": {
             "label": "Live gegevens",

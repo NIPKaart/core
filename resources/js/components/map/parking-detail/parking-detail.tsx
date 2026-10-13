@@ -137,7 +137,7 @@ export default function ParkingDetail({ result, approximateDestination = false, 
               })
             : null;
     const description = t(
-        `detail.descriptions.${result.source === 'offstreet' ? (detail?.source === 'offstreet' && detail.detail.type === 'parkandride' ? 'parkandride' : 'garage') : result.source}`,
+        `detail.descriptions.${result.source === 'offstreet' ? (detail?.source === 'offstreet' ? detail.detail.type : 'garage') : result.source}`,
     );
     const heading = (
         <span className="flex min-w-0 items-center gap-3">

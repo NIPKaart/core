@@ -34,7 +34,7 @@ export type Claim = {
     /** Offstreet catalog fields (`nipkaart-offstreet-catalog-3`); capacity is an observation, not a catalog claim. */
     name?: string;
     source_name?: string;
-    facility_type?: 'garage' | 'park_and_ride';
+    facility_type?: 'garage' | 'park_and_ride' | 'parking_lot';
 };
 
 /** Offstreet facilities are named; municipal spaces are identified by their street. */
