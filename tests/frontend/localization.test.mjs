@@ -171,6 +171,41 @@ for (const [language, labels] of Object.entries({
     });
 }
 
+test('existing Leaflet registrations and marker options receive the new language without replacing layers', async () => {
+    const i18n = i18next.createInstance();
+    await i18n.init({ resources, lng: 'nl', fallbackLng: false });
+    const { synchronizeLayerLabel, synchronizeMarkerLabel } = load('components/map/card-location-marker.tsx', i18n);
+    const streetLayer = { id: 'streets' };
+    const nearbyLayer = { id: 'nearby' };
+    const activeLayers = new Set([streetLayer, nearbyLayer]);
+    const entries = new Map();
+    const control = {
+        removeLayer: (layer) => entries.delete(layer),
+        addBaseLayer: (layer, label) => entries.set(layer, { label, overlay: false }),
+        addOverlay: (layer, label) => entries.set(layer, { label, overlay: true }),
+    };
+    const attributes = new Map();
+    const marker = { options: {}, getElement: () => ({ setAttribute: (name, value) => attributes.set(name, value) }) };
+    const update = () => {
+        synchronizeLayerLabel(control, streetLayer, i18n.t('controls.streets', { ns: 'frontend/map/main' }));
+        synchronizeLayerLabel(control, nearbyLayer, i18n.t('controls.nearby_spaces', { ns: 'frontend/map/main' }), true);
+        synchronizeMarkerLabel(marker, i18n.t('results.selected', { ns: 'frontend/map/main' }));
+    };
+    update();
+    assert.equal(entries.get(streetLayer).label, 'Kaart');
+
+    await i18n.changeLanguage('en');
+    update();
+
+    assert.equal(entries.size, 2);
+    assert.deepEqual(entries.get(streetLayer), { label: 'Map', overlay: false });
+    assert.deepEqual(entries.get(nearbyLayer), { label: 'Nearby parking spaces', overlay: true });
+    assert.deepEqual([...activeLayers], [streetLayer, nearbyLayer]);
+    assert.equal(marker.options.alt, 'Selected location');
+    assert.equal(marker.options.title, 'Selected location');
+    assert.equal(attributes.get('aria-label'), 'Selected location');
+});
+
 for (const [language, expected] of Object.entries({
     en: {
         close: 'Close',
