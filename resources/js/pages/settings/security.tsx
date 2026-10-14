@@ -19,7 +19,7 @@ export default function Security({ twoFactorEnabled, twoFactorPending, passkeys 
     const { t } = useTranslation('backend/security');
     const [setup, setSetup] = useState<{ svg: string; secretKey: string } | null>(null);
     const [codes, setCodes] = useState<string[]>([]);
-    const [error, setError] = useState('');
+    const [error, setError] = useState<'request_error' | 'cancelled' | 'passkey_error' | ''>('');
     const [busy, setBusy] = useState(false);
     const [name, setName] = useState('');
     const [supported, setSupported] = useState(false);
@@ -43,7 +43,7 @@ export default function Security({ twoFactorEnabled, twoFactorPending, passkeys 
             const [qr, secret] = await Promise.all([readJson(twoFactor.qrCode.url()), readJson(twoFactor.secretKey.url())]);
             setSetup({ svg: qr.svg, secretKey: secret.secretKey });
         } catch {
-            setError(t('request_error'));
+            setError('request_error');
         } finally {
             setBusy(false);
         }
@@ -54,7 +54,7 @@ export default function Security({ twoFactorEnabled, twoFactorPending, passkeys 
         try {
             setCodes(await readJson(twoFactor.recoveryCodes.url()));
         } catch {
-            setError(t('request_error'));
+            setError('request_error');
         } finally {
             setBusy(false);
         }
@@ -68,7 +68,7 @@ export default function Security({ twoFactorEnabled, twoFactorPending, passkeys 
             setName('');
             router.reload();
         } catch (error) {
-            setError(t(error instanceof UserCancelledError ? 'cancelled' : 'passkey_error'));
+            setError(error instanceof UserCancelledError ? 'cancelled' : 'passkey_error');
         } finally {
             setBusy(false);
         }
@@ -197,7 +197,7 @@ export default function Security({ twoFactorEnabled, twoFactorPending, passkeys 
                         <Input id="passkey-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={255} required />
                         <Button disabled={!supported || busy}>{t('add_passkey')}</Button>
                     </form>
-                    <InputError message={error} />
+                    <InputError message={error ? t(error) : ''} />
                 </div>
             </SettingsLayout>
         </AppLayout>
