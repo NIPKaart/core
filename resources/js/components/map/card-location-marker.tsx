@@ -39,6 +39,7 @@ export function synchronizeMarkerLabel(marker: L.Marker | null, label: string): 
     const element = marker.getElement();
     element?.setAttribute('title', label);
     element?.setAttribute('aria-label', label);
+    element?.setAttribute('alt', label);
 }
 
 const NearbyParkingMarkers = React.memo(function NearbyParkingMarkers({

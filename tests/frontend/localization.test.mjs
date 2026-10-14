@@ -204,6 +204,7 @@ test('existing Leaflet registrations and marker options receive the new language
     assert.equal(marker.options.alt, 'Selected location');
     assert.equal(marker.options.title, 'Selected location');
     assert.equal(attributes.get('aria-label'), 'Selected location');
+    assert.equal(attributes.get('alt'), 'Selected location');
 });
 
 for (const [language, expected] of Object.entries({
