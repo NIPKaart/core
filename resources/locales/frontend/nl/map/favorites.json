@@ -11,5 +11,7 @@
     "remove": "Favoriet verwijderen",
     "remove_error": "De favoriet kon niet worden verwijderd. Probeer het opnieuw.",
     "view": "Favorieten bekijken",
-    "label": "Favorieten"
+    "label": "Favorieten",
+    "load_error": "Laden van je favorieten is mislukt. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen"
 }

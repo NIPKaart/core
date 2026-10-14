@@ -1,7 +1,7 @@
 import { FavoriteButton } from '@/components/frontend/button/favorite';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getEcho } from '@/echo';
@@ -239,7 +239,13 @@ export default function ParkingDetail({ result, approximateDestination = false, 
             <TooltipProvider>
                 <Tooltip open={shared} onOpenChange={() => setShared(false)} delayDuration={0}>
                     <TooltipTrigger asChild>
-                        <Button size="icon" variant="ghost" className="size-11" aria-label={t('detail.share')} onClick={share}>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="cursor-pointer text-foreground transition hover:text-red-500"
+                            aria-label={t('detail.share')}
+                            onClick={share}
+                        >
                             <Share2 className="h-5 w-5" aria-hidden />
                         </Button>
                     </TooltipTrigger>
@@ -248,11 +254,32 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
+            {detail?.source === 'community' && can('parking-space.view') && (
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button asChild size="icon" variant="ghost" className="cursor-pointer text-foreground transition hover:text-red-500">
+                                <Link
+                                    href={app.parkingSpaces.show({ parking_space: detail.detail.id })}
+                                    target="_blank"
+                                    rel="noopener"
+                                    aria-label={t('detail.admin')}
+                                >
+                                    <Eye className="h-5 w-5" aria-hidden />
+                                </Link>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                            {t('detail.admin')}
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
             {isDesktop && (
                 <Button
                     size="icon"
                     variant="ghost"
-                    className="size-11 rounded-full bg-muted text-muted-foreground"
+                    className="cursor-pointer text-foreground transition hover:text-red-500"
                     aria-label={tGlobal('common.close')}
                     onClick={onClose}
                 >
@@ -261,16 +288,6 @@ export default function ParkingDetail({ result, approximateDestination = false, 
             )}
         </div>
     );
-
-    const footer =
-        detail?.source === 'community' && can('parking-space.view') ? (
-            <Button asChild variant="outline" className="min-h-11">
-                <Link href={app.parkingSpaces.show({ parking_space: detail.detail.id })} target="_blank" rel="noopener">
-                    <Eye className="h-4 w-4" aria-hidden />
-                    {t('detail.admin')}
-                </Link>
-            </Button>
-        ) : null;
 
     const sharedStatus = (
         <p role="status" aria-live="polite" className="sr-only">
@@ -295,7 +312,6 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                     </DialogHeader>
                     {sharedStatus}
                     <div className="min-h-0 overflow-y-auto pr-1">{body}</div>
-                    {footer && <DialogFooter className="flex flex-row justify-end gap-2">{footer}</DialogFooter>}
                 </DialogContent>
             </Dialog>
         );
@@ -316,11 +332,6 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                 </DrawerHeader>
                 {sharedStatus}
                 <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">{body}</div>
-                {footer && (
-                    <DrawerFooter className="flex shrink-0 flex-row justify-end gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-                        {footer}
-                    </DrawerFooter>
-                )}
             </DrawerContent>
         </Drawer>
     );

@@ -11,5 +11,7 @@
     "remove": "Remove favorite",
     "remove_error": "Could not remove this favorite. Please try again.",
     "view": "View favorites",
-    "label": "Favorites"
+    "label": "Favorites",
+    "load_error": "Could not load your favorites. Please try again.",
+    "retry": "Try again"
 }

@@ -1,0 +1,17 @@
+{
+    "title": "Opgeslagen bestemmingen",
+    "description": "Open een bestemming om te zoeken met actuele parkeerresultaten en je huidige filters.",
+    "label": "Persoonlijk label",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "error": "Opslaan of laden van je bestemmingen is mislukt. Probeer het opnieuw.",
+    "rename": "{{label}} hernoemen",
+    "remove": "{{label}} verwijderen",
+    "save_current": "Huidige bestemming opslaan",
+    "loading": "Bestemmingen laden…",
+    "retry": "Opnieuw proberen",
+    "empty": {
+        "title": "Nog geen bestemmingen",
+        "description": "Zoek een bestemming op de kaart en sla deze op."
+    }
+}

@@ -1,5 +1,6 @@
 import { Icon } from '@/components/icon';
 import LanguageSwitcher from '@/components/language-switcher';
+import type { SavedMapContext } from '@/components/modals/modal-saved';
 import BellBadge from '@/components/notifications/badge-bell';
 import SearchButton from '@/components/search/search-button';
 import { closeSearch, openSearch, useSearchOpen } from '@/components/search/search-store';
@@ -16,12 +17,20 @@ import { LayoutDashboard, LogOut, Menu, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FavoritesButton } from './badge/favorites';
+import { SavedButton } from './badge/saved';
 import { UserNavMenu } from './badge/user';
 import { NavItem } from './nav-item';
 import { ThemeToggle } from './theme-toggle';
 
-export default function Navbar({ showSearch = true, mapSearch = false }: { showSearch?: boolean; mapSearch?: boolean }) {
+export default function Navbar({
+    showSearch = true,
+    mapSearch = false,
+    savedMapContext,
+}: {
+    showSearch?: boolean;
+    mapSearch?: boolean;
+    savedMapContext?: SavedMapContext;
+}) {
     const searchOpen = useSearchOpen();
     const { t } = useTranslation('frontend/navbar');
     const { t: tSearch } = useTranslation('global/search');
@@ -57,13 +66,13 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                         </Link>
                     </div>
 
-                    {/* Mobile actions (favorites, notifications, hamburger) */}
+                    {/* Mobile actions (saved items, notifications, hamburger) */}
                     <div className="relative z-50 flex items-center gap-2 lg:hidden">
                         {showSearch && <SearchButton variant="icon" tooltip={tSearch('title')} />}
                         {auth.user && (
                             <div className="me-1 flex items-center gap-1">
                                 <div className="relative flex min-w-8 justify-center">
-                                    <FavoritesButton />
+                                    <SavedButton mapContext={savedMapContext} />
                                 </div>
                                 <div className="relative flex min-w-8 justify-center">
                                     <BellBadge />
@@ -131,7 +140,7 @@ export default function Navbar({ showSearch = true, mapSearch = false }: { showS
                     <div className="hidden items-center gap-4 lg:flex lg:flex-1 lg:justify-end">
                         <div className="flex items-center gap-2">
                             {showSearch && <SearchButton variant="icon" tooltip={tSearch('title')} />}
-                            {auth.user && <FavoritesButton />}
+                            {auth.user && <SavedButton mapContext={savedMapContext} />}
                             {auth.user && <BellBadge />}
                             {!auth.user && <LanguageSwitcher />}
                             {!auth.user && <ThemeToggle />}

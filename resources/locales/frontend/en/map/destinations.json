@@ -1,0 +1,17 @@
+{
+    "title": "Saved destinations",
+    "description": "Open a destination to find parking with current results and your current filters.",
+    "label": "Personal label",
+    "save": "Save",
+    "cancel": "Cancel",
+    "error": "Could not save or load your destinations. Please try again.",
+    "rename": "Rename {{label}}",
+    "remove": "Remove {{label}}",
+    "save_current": "Save current destination",
+    "loading": "Loading destinations…",
+    "retry": "Try again",
+    "empty": {
+        "title": "No destinations yet",
+        "description": "Search for a destination on the map and save it."
+    }
+}

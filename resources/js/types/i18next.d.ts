@@ -31,9 +31,11 @@ declare module 'i18next' {
             'frontend/global': typeof import('../../locales/frontend/en/global.json');
             'frontend/home': typeof import('../../locales/frontend/en/home.json');
             'frontend/map/contribute': typeof import('../../locales/frontend/en/map/contribute.json');
+            'frontend/map/destinations': typeof import('../../locales/frontend/en/map/destinations.json');
             'frontend/map/favorites': typeof import('../../locales/frontend/en/map/favorites.json');
             'frontend/map/main': typeof import('../../locales/frontend/en/map/main.json');
             'frontend/map/modals': typeof import('../../locales/frontend/en/map/modals.json');
+            'frontend/map/saved': typeof import('../../locales/frontend/en/map/saved.json');
             'frontend/navbar': typeof import('../../locales/frontend/en/navbar.json');
             'global/common': typeof import('../../locales/global/en/common.json');
             'global/notification': typeof import('../../locales/global/en/notification.json');
