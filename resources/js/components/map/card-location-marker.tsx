@@ -2,7 +2,7 @@ import { getBlueMarkerIcon, getParkingStatusIcon, getVioletMarkerIcon } from '@/
 import { cn } from '@/lib/utils';
 import { ParkingMunicipal, ParkingSpace } from '@/types';
 import type L from 'leaflet';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FeatureGroup, LayersControl, MapContainer, Marker, TileLayer } from 'react-leaflet';
 import ZoomControl from './zoom-control';
@@ -72,13 +72,13 @@ export default function LocationMarkerCard({
 }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
     const { t } = useTranslation('frontend/map/main');
-    const layersControl = useRef<L.Control.Layers>(null);
+    const [layersControl, setLayersControl] = useState<L.Control.Layers | null>(null);
 
     useEffect(() => {
-        const toggle = layersControl.current?.getContainer()?.querySelector('.leaflet-control-layers-toggle');
+        const toggle = layersControl?.getContainer()?.querySelector('.leaflet-control-layers-toggle');
         toggle?.setAttribute('title', t('controls.layers'));
         toggle?.setAttribute('aria-label', t('controls.layers'));
-    }, [t]);
+    }, [layersControl, t]);
 
     return (
         <div className="relative z-0">
@@ -89,7 +89,7 @@ export default function LocationMarkerCard({
                 zoomControl={false}
                 className={cn('w-full rounded-xl border', className)}
             >
-                <LayersControl ref={layersControl} position="topright">
+                <LayersControl ref={setLayersControl} position="topright">
                     <BaseLayer checked name={t('controls.satellite')}>
                         <TileLayer
                             attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
