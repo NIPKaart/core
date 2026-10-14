@@ -67,7 +67,7 @@ test('permanent deletion sends exactly one owner notification', function () {
     Notification::assertSentToTimes($owner, Deleted::class, 1);
 });
 
-test('unavailable favorites remain removable without resolving their target', function () {
+test('unavailable favorites are removed with their target and legacy deletion remains idempotent', function () {
     $user = User::factory()->create();
     $space = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
     $favorite = $user->favorites()->create([
@@ -76,11 +76,8 @@ test('unavailable favorites remain removable without resolving their target', fu
     ]);
     $space->delete();
 
-    $this->actingAs($user)->getJson(route('profile.favorites.list'))
-        ->assertOk()
-        ->assertJsonPath('favorites.0.favorite_id', $favorite->id)
-        ->assertJsonPath('favorites.0.available', false)
-        ->assertJsonPath('favorites.0.latitude', null);
+    $this->actingAs($user)->getJson(route('profile.favorites.list'))->assertOk()->assertJsonCount(0, 'favorites');
+    $this->assertModelMissing($favorite);
 
     $this->delete(route('profile.favorites.destroy'), [
         'type' => 'parking_space',
@@ -89,7 +86,7 @@ test('unavailable favorites remain removable without resolving their target', fu
     $this->assertModelMissing($favorite);
 });
 
-test('favorite lists preserve visible records and conceal unavailable target details', function (string $model, array $visible, array $hidden, string $type) {
+test('favorite lists preserve visible records and remove shortcuts to unavailable targets', function (string $model, array $visible, array $hidden, string $type) {
     $user = User::factory()->create();
     $space = $model::factory()->create($visible);
     $favorite = Favorite::factory()->for($user)->for($space, 'favoritable')->create();
@@ -99,15 +96,11 @@ test('favorite lists preserve visible records and conceal unavailable target det
         ->assertJsonPath('favorites.0.available', true);
 
     $space->forceFill($hidden)->save();
-    $this->getJson(route('profile.favorites.list'))->assertOk()
-        ->assertJsonPath('favorites.0.available', false)
-        ->assertJsonPath('favorites.0.title', '')
-        ->assertJsonPath('favorites.0.longitude', null);
-
-    $space instanceof ParkingSpace ? $space->forceDelete() : $space->delete();
-    $this->getJson(route('profile.favorites.list'))->assertOk()->assertJsonPath('favorites.0.available', false);
-    $this->delete(route('profile.favorites.destroy'), ['favorite_id' => $favorite->id])->assertRedirect();
+    $this->getJson(route('profile.favorites.list'))->assertOk()->assertJsonCount(0, 'favorites');
     $this->assertModelMissing($favorite);
+    $space->forceFill($visible)->save();
+    $this->getJson(route('profile.favorites.list'))->assertOk()->assertJsonCount(0, 'favorites');
+
 })->with([
     'community' => [ParkingSpace::class, ['status' => ParkingStatus::APPROVED], ['status' => ParkingStatus::REJECTED], 'Community'],
     'municipal' => [ParkingMunicipal::class, ['visibility' => true], ['visibility' => false], 'Municipal'],

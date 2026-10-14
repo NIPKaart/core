@@ -289,7 +289,7 @@ describe('moderation', function () {
             ->and($place->reports()->sole())->resolution->toBe(ReportResolution::REMOVED)->resolved_by->toBe($this->moderator->id)
             ->and(ParkingPlaceRemoval::sole())->action->toBe(RemovalAction::HIDDEN)->place_id->toBe($place->id)->note->toBeNull();
         $this->assertModelExists($confirmation);
-        $this->assertModelExists($favorite);
+        $this->assertModelMissing($favorite);
         $this->getJson(route('map.parking-municipal.show', $place->id))->assertNotFound();
     });
 });

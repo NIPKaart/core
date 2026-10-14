@@ -1,23 +1,22 @@
 import { show as importShow, index as municipalImports } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
-import ContributionsMap, { type MapPlace } from '@/components/map/contributions-map';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import Destinations from '@/components/map/destinations';
+import Favorites from '@/components/map/favorites';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
+import { destinationMapUrl, favoriteMapUrl, favoriteParkingResult } from '@/lib/saved-places';
 import { cn } from '@/lib/utils';
 import type { SourceStatusKey } from '@/pages/backend/imports/source-status';
-import type { ChangeGroup } from '@/pages/backend/moderation/values';
 import { dashboard, locationMap as mapPage } from '@/routes';
 import app from '@/routes/app';
 import locationMap from '@/routes/location-map';
-import notifications from '@/routes/notifications';
-import profile from '@/routes/profile';
-import type { SharedData } from '@/types';
-import type { ParkingStatus } from '@/types/enum';
-import { translateSourceValue } from '@/utils/translation';
-import { Deferred, Head, Link, usePage } from '@inertiajs/react';
+import { destroy as withdrawSubmission } from '@/routes/profile/parking-spaces';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
 import { ArrowRight, ChevronRight, Database, Flag, MapPinPlus, PencilLine, Plus } from 'lucide-react';
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type ItemType = 'submission' | 'improvement' | 'report';
@@ -49,154 +48,170 @@ type Todo = {
     };
 };
 
-type ActivityEvent = {
+type Contribution = {
     key: string;
-    kind: string;
+    kind: ItemType;
     at: string;
-    unread: boolean;
+    label: string | null;
+    status: 'pending' | 'approved' | 'rejected' | 'kept' | 'removed' | 'unavailable';
+    reason: string | null;
     url: string | null;
-    params: { space_label?: string | null; status?: ParkingStatus; new_status?: ParkingStatus; reason?: string; changes?: ChangeGroup[] };
+    action: 'edit' | 'map' | null;
+    withdraw_id: string | null;
 };
+type Contributions = { data: Contribution[]; current_page: number; prev_page_url: string | null; next_page_url: string | null };
+type PageProps = { section: string; hasTodo: boolean; todo?: Todo; contributions?: Contributions };
 
-type Favorite = {
-    favorite_id: number;
-    available: boolean;
-    type: string;
-    title: string;
-    city: string | null;
-    municipality: { name: string } | null;
-    map_url: string | null;
-};
-
-type Stats = { added: number; published: number; pending: number; confirmed: number };
-
-type PageProps = {
-    profile: { name: string; role: string | null; member_since: string | null };
-    hasTodo: boolean;
-    todo?: Todo;
-    activity?: ActivityEvent[];
-    map?: { spaces: (MapPlace & { status: string })[]; favorites: MapPlace[] };
-    stats: Stats;
-    favorites: Favorite[];
-};
-
-/**
- * The page people land on after signing in. People who moderate get their workplace: the first items in the queue and
- * the data sources that need them, with everything about themselves in a side column. Everyone else starts from their
- * figures and their own map. Plain sections and dividers; no cards in cards.
- */
-export default function Dashboard({ profile: person, hasTodo, todo, activity, map, stats, favorites }: PageProps) {
-    const { t, i18n } = useTranslation('backend/dashboard');
-    const { auth } = usePage<SharedData>().props;
-    const hour = new Date().getHours();
-    const greeting = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
-    const today = new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
-
-    const header = (summary: ReactNode) => (
-        <header className="flex flex-wrap items-end justify-between gap-4">
-            <div className="space-y-1">
-                <h1 className="text-2xl font-semibold tracking-tight">
-                    {t(`greeting.${greeting}` as const, { name: auth.user.name.split(' ')[0] })}
-                </h1>
-                <p className="text-sm text-muted-foreground first-letter:uppercase">{summary}</p>
-            </div>
-            <Button asChild className="bg-orange-700 text-white hover:bg-orange-600">
-                <Link href={locationMap.add()}>
-                    <Plus />
-                    {t('add_location')}
-                </Link>
-            </Button>
-        </header>
-    );
-
-    /** "8 items en 3 databronnen wachten op je", from the work that was loaded. */
-    const waiting = (work: Todo) => {
-        const parts = [
-            work.moderation?.total ? t('summary.items', { count: work.moderation.total }) : null,
-            work.sources.total ? t('summary.sources', { count: work.sources.total }) : null,
-        ].filter((part): part is string => part !== null);
-        const count = (work.moderation?.total ?? 0) + work.sources.total;
-
-        return parts.length
-            ? t('summary.waiting', { what: new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(parts), count })
-            : t('summary.nothing');
-    };
-
-    const activitySection = (
-        <section aria-labelledby="activity-title">
-            <SectionHeading id="activity-title" title={t('activity.title')} href={notifications.index()} link={t('activity.all')} />
-            <Deferred data="activity" fallback={<ListSkeleton />}>
-                {activity && <ActivityList events={activity} />}
-            </Deferred>
-        </section>
-    );
-
-    const favoritesSection = (
-        <section aria-labelledby="favorites-title">
-            <SectionHeading id="favorites-title" title={t('favorites.title')} href={profile.favorites.index()} link={t('favorites.all')} />
-            <FavoriteList favorites={favorites} />
-        </section>
-    );
-
-    if (hasTodo) {
-        return (
-            <AppLayout breadcrumbs={[{ title: t('title'), href: dashboard() }]}>
-                <Head title={t('title')} />
-                <div className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_21rem]">
-                    <div className="flex min-w-0 flex-col gap-9 px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
-                        {header(todo ? waiting(todo) : today)}
-                        <Deferred data="todo" fallback={<ListSkeleton rows={5} />}>
-                            <Workplace todo={todo} />
-                        </Deferred>
-                    </div>
-                    <aside className="flex flex-col gap-8 border-t bg-muted/30 px-4 py-7 sm:px-8 lg:border-t-0 lg:border-l lg:bg-transparent lg:px-7 lg:py-8">
-                        <Profile person={person} />
-                        <StatGrid stats={stats} />
-                        {activitySection}
-                        {favoritesSection}
-                    </aside>
-                </div>
-            </AppLayout>
-        );
-    }
-
+export default function Dashboard({ section, hasTodo, todo, contributions }: PageProps) {
+    const { t } = useTranslation('backend/dashboard');
+    const { t: tSaved } = useTranslation('frontend/map/saved');
     return (
         <AppLayout breadcrumbs={[{ title: t('title'), href: dashboard() }]}>
             <Head title={t('title')} />
-            <div className="flex w-full flex-col gap-8 px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
-                {header(stats.added > 0 ? t('summary.contributed', { count: stats.added, published: stats.published }) : today)}
-                <StatStrip stats={stats} />
-                <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                    <section aria-labelledby="map-title">
-                        <SectionHeading id="map-title" title={t('map.title')} href={mapPage()} link={t('map.open')} />
-                        <Deferred data="map" fallback={<div className="h-80 animate-pulse rounded-xl bg-muted lg:h-[28rem]" aria-hidden />}>
-                            {map && (
-                                <div className="relative">
-                                    <ContributionsMap spaces={map.spaces} favorites={map.favorites} className="h-80 lg:h-[28rem]" />
-                                    <MapLegend />
-                                </div>
-                            )}
-                        </Deferred>
-                    </section>
-                    <div className="flex flex-col gap-8">
-                        {activitySection}
-                        {favoritesSection}
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-8 sm:py-8">
+                <header className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('continuity_intro')}</p>
                     </div>
-                </div>
+                    <div className="flex gap-2">
+                        <Button asChild variant="outline">
+                            <Link href={mapPage()}>{t('map.open')}</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href={locationMap.add()}>
+                                <Plus aria-hidden />
+                                {t('add_location')}
+                            </Link>
+                        </Button>
+                    </div>
+                </header>
+                {hasTodo && (
+                    <Deferred data="todo" fallback={<ListSkeleton rows={5} />}>
+                        <Workplace todo={todo} />
+                    </Deferred>
+                )}
+                <Tabs
+                    value={section}
+                    onValueChange={(value) =>
+                        router.get(dashboard.url({ query: { section: value } }), {}, { preserveState: true, preserveScroll: true })
+                    }
+                >
+                    <TabsList className="h-11 w-full sm:w-fit" aria-label={t('title')}>
+                        <TabsTrigger value="destinations">{tSaved('destinations')}</TabsTrigger>
+                        <TabsTrigger value="favorites">{tSaved('favorites')}</TabsTrigger>
+                        <TabsTrigger value="contributions">{t('contributions.title')}</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="destinations" className="mt-4 max-w-2xl">
+                        <Destinations
+                            open={section === 'destinations'}
+                            destination={null}
+                            onSelect={(value) => router.visit(destinationMapUrl(value), { preserveState: false })}
+                        />
+                    </TabsContent>
+                    <TabsContent value="favorites" className="mt-4 max-w-2xl">
+                        <Favorites
+                            open={section === 'favorites'}
+                            onSelect={(value) => {
+                                const place = favoriteParkingResult(value);
+                                if (place) router.visit(favoriteMapUrl(place), { preserveState: false });
+                            }}
+                        />
+                    </TabsContent>
+                    <TabsContent value="contributions" className="mt-4">
+                        <Deferred data="contributions" fallback={<ListSkeleton />}>
+                            {contributions && <ContributionList contributions={contributions} />}
+                        </Deferred>
+                    </TabsContent>
+                </Tabs>
             </div>
         </AppLayout>
     );
 }
 
-function SectionHeading({ id, title, href, link }: { id: string; title: string; href: Parameters<typeof Link>[0]['href']; link: string }) {
+function ContributionList({ contributions }: { contributions: Contributions }) {
+    const { t, i18n } = useTranslation('backend/dashboard');
+    const [withdrawId, setWithdrawId] = useState<string | null>(null);
+    const [withdrawing, setWithdrawing] = useState(false);
+    if (!contributions.data.length) return <p className="py-8 text-sm text-muted-foreground">{t('contributions.empty')}</p>;
     return (
-        <div className="flex items-baseline justify-between gap-4 pb-2">
-            <h2 id={id} className="text-sm font-semibold">
-                {title}
-            </h2>
-            <Link href={href} className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                {link}
-            </Link>
+        <div>
+            {withdrawId && (
+                <ConfirmDialog
+                    title={t('contributions.withdraw.title')}
+                    description={t('contributions.withdraw.description')}
+                    confirmText={t('contributions.withdraw.label')}
+                    cancelText={t('contributions.withdraw.cancel')}
+                    variant="destructive"
+                    disabled={withdrawing}
+                    onClose={() => setWithdrawId(null)}
+                    onConfirm={() => {
+                        setWithdrawing(true);
+                        router.delete(withdrawSubmission.url(withdrawId), {
+                            preserveScroll: true,
+                            onFinish: () => {
+                                setWithdrawing(false);
+                                setWithdrawId(null);
+                            },
+                        });
+                    }}
+                />
+            )}
+            <ul className="divide-y rounded-lg border">
+                {contributions.data.map((item) => (
+                    <li key={item.key} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                        <div className="min-w-0 flex-1 space-y-1">
+                            <p className="text-sm font-medium">{item.label ?? t('activity.unknown_place')}</p>
+                            <p className="text-sm text-muted-foreground">
+                                {t(`contributions.kinds.${item.kind}`)} · {t(`contributions.status.${item.status}`)}
+                            </p>
+                            {item.reason && <p className="text-sm text-muted-foreground">{item.reason}</p>}
+                            <time dateTime={item.at} className="text-xs text-muted-foreground">
+                                {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(item.at))}
+                            </time>
+                        </div>
+                        <div className="flex gap-2">
+                            {item.withdraw_id && (
+                                <Button variant="ghost" size="sm" onClick={() => setWithdrawId(item.withdraw_id)}>
+                                    {t('contributions.withdraw.label')}
+                                </Button>
+                            )}
+                            {item.url && item.action && (
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={item.url}>{t(`contributions.actions.${item.action}`)}</Link>
+                                </Button>
+                            )}
+                        </div>
+                    </li>
+                ))}
+            </ul>
+            {(contributions.prev_page_url || contributions.next_page_url) && (
+                <nav className="mt-4 flex items-center justify-between gap-3" aria-label={t('contributions.pagination')}>
+                    {contributions.prev_page_url ? (
+                        <Button asChild variant="outline">
+                            <Link href={contributions.prev_page_url} preserveScroll>
+                                {t('contributions.previous')}
+                            </Link>
+                        </Button>
+                    ) : (
+                        <Button variant="outline" disabled>
+                            {t('contributions.previous')}
+                        </Button>
+                    )}
+                    <span className="text-sm text-muted-foreground">{t('contributions.page', { page: contributions.current_page })}</span>
+                    {contributions.next_page_url ? (
+                        <Button asChild variant="outline">
+                            <Link href={contributions.next_page_url} preserveScroll>
+                                {t('contributions.next')}
+                            </Link>
+                        </Button>
+                    ) : (
+                        <Button variant="outline" disabled>
+                            {t('contributions.next')}
+                        </Button>
+                    )}
+                </nav>
+            )}
         </div>
     );
 }
@@ -215,105 +230,6 @@ function ListSkeleton({ rows = 3 }: { rows?: number }) {
                 <div key={row} className="h-10 animate-pulse rounded-md bg-muted" />
             ))}
         </div>
-    );
-}
-
-/** The person this dashboard belongs to. */
-function Profile({ person }: { person: PageProps['profile'] }) {
-    const { t, i18n } = useTranslation('backend/dashboard');
-    const initials = person.name
-        .split(' ')
-        .map((part) => part[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-    const since = person.member_since
-        ? new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(new Date(person.member_since))
-        : null;
-
-    return (
-        <div className="flex items-center gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-muted font-semibold">{initials}</span>
-            <span className="flex min-w-0 flex-col">
-                <span className="truncate font-semibold">{person.name}</span>
-                <span className="text-xs text-muted-foreground">
-                    {[person.role, since && t('profile.since', { date: since })].filter(Boolean).join(' · ')}
-                </span>
-            </span>
-        </div>
-    );
-}
-
-const STAT_KEYS = ['added', 'published', 'pending', 'confirmed'] as const;
-
-/** The marker colours of the map, so the figures and the map read as one. */
-const MARKER_DOTS: Partial<Record<(typeof STAT_KEYS)[number] | 'favorites', string>> = {
-    published: 'bg-[#2AAD27]',
-    pending: 'bg-[#CB8427]',
-    favorites: 'bg-[#9C2BCB]',
-};
-
-function StatGrid({ stats }: { stats: Stats }) {
-    const { t } = useTranslation('backend/dashboard');
-
-    return (
-        <section aria-labelledby="stats-title">
-            <h2 id="stats-title" className="pb-1 text-sm font-semibold">
-                {t('stats.title')}
-            </h2>
-            <dl className="grid grid-cols-2 border-y">
-                {STAT_KEYS.map((key, index) => (
-                    <div key={key} className={cn('py-3', index % 2 === 1 && 'border-l pl-4', index > 1 && 'border-t')}>
-                        <dt className="text-[13px] text-muted-foreground">{t(`stats.${key}` as const)}</dt>
-                        <dd className="mt-0.5 text-[22px] leading-7 font-semibold tabular-nums">{stats[key]}</dd>
-                    </div>
-                ))}
-            </dl>
-        </section>
-    );
-}
-
-/** The person's own figures in one band, divided rather than boxed. */
-function StatStrip({ stats }: { stats: Stats }) {
-    const { t } = useTranslation('backend/dashboard');
-
-    return (
-        <dl className="grid grid-cols-2 rounded-lg border sm:grid-cols-4">
-            {STAT_KEYS.map((key, index) => (
-                <div
-                    key={key}
-                    className={cn(
-                        'flex flex-col gap-1 px-5 py-4',
-                        index % 2 === 1 && 'border-l',
-                        index > 1 && 'border-t sm:border-t-0',
-                        index === 2 && 'sm:border-l',
-                    )}
-                >
-                    <dt className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        {MARKER_DOTS[key] && <span className={cn('size-2 rounded-full', MARKER_DOTS[key])} aria-hidden />}
-                        {t(`stats.${key}` as const)}
-                    </dt>
-                    <dd className="text-3xl font-semibold tabular-nums">{stats[key]}</dd>
-                    <dd className="text-xs text-muted-foreground">{t(`stats.hint.${key}` as const)}</dd>
-                </div>
-            ))}
-        </dl>
-    );
-}
-
-/** What the marker colours mean, laid over the map. */
-function MapLegend() {
-    const { t } = useTranslation('backend/dashboard');
-
-    return (
-        <p className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-x-3.5 gap-y-1 rounded-md bg-background/95 px-2.5 py-1.5 text-xs shadow-sm">
-            {(['published', 'pending', 'favorites'] as const).map((key) => (
-                <span key={key} className="inline-flex items-center gap-1.5">
-                    <span className={cn('size-2 rounded-full', MARKER_DOTS[key])} aria-hidden />
-                    {t(`map.legend.${key}` as const)}
-                </span>
-            ))}
-        </p>
     );
 }
 
@@ -504,140 +420,5 @@ function Workplace({ todo }: { todo?: Todo }) {
                 </section>
             )}
         </div>
-    );
-}
-
-const TONES = {
-    positive: 'bg-green-600',
-    pending: 'bg-amber-500',
-    negative: 'bg-red-600',
-    improvement: 'bg-muted-foreground/50',
-    saved: 'bg-muted-foreground/50',
-    neutral: 'bg-muted-foreground/50',
-} as const;
-
-/** How one event reads: its sentence, an optional detail and the tone of its marker. */
-function useEventText() {
-    const { t } = useTranslation('backend/dashboard');
-    const { t: tNotification } = useTranslation('global/notification');
-    const { t: tModeration, i18n } = useTranslation('backend/moderation');
-    /** "Gewijzigd: vak en onderbord." for the change groups an approved improvement applied. */
-    const changed = (groups?: ChangeGroup[]) =>
-        groups?.length
-            ? t('activity.changed', {
-                  fields: new Intl.ListFormat(i18n.language, { type: 'conjunction' }).format(
-                      groups.map((group) => tModeration(`groups.${group}` as const).toLowerCase()),
-                  ),
-              })
-            : null;
-
-    return (event: ActivityEvent): { text: string; detail: string | null; tone: keyof typeof TONES } => {
-        const place = event.params.space_label || t('activity.unknown_place');
-        const reason = event.params.reason
-            ? tNotification('reason', { reason: translateSourceValue('global/notification', `reasons.${event.params.reason}`) })
-            : null;
-
-        switch (event.kind) {
-            case 'added': {
-                const status = event.params.status ?? 'pending';
-                return {
-                    text: t('activity.added', { place }),
-                    detail: t(`activity.status.${status}` as const),
-                    tone: status === 'approved' ? 'positive' : status === 'rejected' ? 'negative' : 'pending',
-                };
-            }
-            case 'proposed':
-                return { text: t('activity.proposed', { place }), detail: null, tone: 'improvement' };
-            case 'saved':
-                return { text: t('activity.saved', { place }), detail: null, tone: 'saved' };
-            case 'community.space_status_changed': {
-                const status = event.params.new_status;
-                return status === 'approved'
-                    ? { text: t('activity.published', { place }), detail: t('activity.published_detail'), tone: 'positive' }
-                    : status === 'rejected'
-                      ? { text: t('activity.rejected', { place }), detail: null, tone: 'negative' }
-                      : { text: t('activity.status_changed', { place }), detail: null, tone: 'neutral' };
-            }
-            case 'community.improvement_approved':
-                return { text: t('activity.improvement_approved', { place }), detail: changed(event.params.changes), tone: 'positive' };
-            case 'community.improvement_rejected':
-                return { text: t('activity.improvement_rejected', { place }), detail: reason, tone: 'negative' };
-            case 'report.place_kept':
-                return { text: t('activity.report_kept', { place }), detail: t('activity.report_kept_detail'), tone: 'neutral' };
-            case 'report.place_removed':
-                return { text: t('activity.report_removed', { place }), detail: reason, tone: 'neutral' };
-            case 'community.space_deleted':
-                return { text: t('activity.deleted', { place }), detail: null, tone: 'negative' };
-            case 'community.space_restored':
-                return { text: t('activity.restored', { place }), detail: null, tone: 'positive' };
-            default:
-                return { text: place, detail: null, tone: 'neutral' };
-        }
-    };
-}
-
-/** Recent events as a compact list: a coloured dot for the outcome, the sentence and when. */
-function ActivityList({ events }: { events: ActivityEvent[] }) {
-    const { t } = useTranslation('backend/dashboard');
-    const ago = useAgo();
-    const describe = useEventText();
-
-    if (events.length === 0) {
-        return <p className="border-t py-4 text-sm text-muted-foreground">{t('activity.empty')}</p>;
-    }
-
-    return (
-        <ol>
-            {events.map((event) => {
-                const { text, detail, tone } = describe(event);
-                const sentence = <span className={cn('text-sm', event.unread && 'font-medium')}>{text}</span>;
-
-                return (
-                    <li key={event.key} className="grid grid-cols-[0.5rem_minmax(0,1fr)] gap-3 border-t py-2.5">
-                        <span className={cn('mt-1.5 size-2 rounded-full', TONES[tone])} aria-hidden />
-                        <span className="flex min-w-0 flex-col">
-                            {event.url ? (
-                                <a href={event.url} className="hover:underline hover:underline-offset-4">
-                                    {sentence}
-                                </a>
-                            ) : (
-                                sentence
-                            )}
-                            <span className="text-xs text-muted-foreground">{[detail, ago(event.at)].filter(Boolean).join(' · ')}</span>
-                        </span>
-                    </li>
-                );
-            })}
-        </ol>
-    );
-}
-
-function FavoriteList({ favorites }: { favorites: Favorite[] }) {
-    const { t } = useTranslation('backend/dashboard');
-
-    if (favorites.length === 0) {
-        return <p className="border-t py-4 text-sm text-muted-foreground">{t('favorites.empty')}</p>;
-    }
-
-    return (
-        <ul>
-            {favorites.map((favorite) => (
-                <li key={favorite.favorite_id} className="flex items-baseline justify-between gap-3 border-t py-2.5 text-sm">
-                    <span className="min-w-0 truncate">
-                        <span className="font-medium">{favorite.title || t('favorites.untitled')}</span>
-                        {(favorite.city ?? favorite.municipality?.name) && (
-                            <span className="text-muted-foreground"> · {favorite.city ?? favorite.municipality?.name}</span>
-                        )}
-                    </span>
-                    {favorite.map_url ? (
-                        <a href={favorite.map_url} className="shrink-0 text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                            {t('favorites.view_on_map')}
-                        </a>
-                    ) : (
-                        <span className="shrink-0 text-muted-foreground">{t('favorites.unavailable')}</span>
-                    )}
-                </li>
-            ))}
-        </ul>
     );
 }

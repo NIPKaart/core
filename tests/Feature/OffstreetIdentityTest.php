@@ -53,6 +53,8 @@ it('retains facility IDs and favorites through repeated complete source ID repla
     identityPublish(identityCatalog([identityRecord('100'), identityRecord('101', 'Garage B', [4.94, 52.32])], $user), $user);
     $garage = ParkingOffstreet::where('name', 'Garage A')->sole();
     $favorite = Favorite::create(['user_id' => $user->id, 'favoritable_type' => $garage->getMorphClass(), 'favoritable_id' => $garage->id]);
+    $visibleGarage = ParkingOffstreet::where('name', 'Garage B')->sole();
+    $visibleFavorite = Favorite::create(['user_id' => $user->id, 'favoritable_type' => $visibleGarage->getMorphClass(), 'favoritable_id' => $visibleGarage->id]);
     $garage->forceFill(['visibility' => false, 'capacity' => 400, 'free_space' => 12])->save();
 
     $this->travel(5)->minutes();
@@ -65,7 +67,8 @@ it('retains facility IDs and favorites through repeated complete source ID repla
 
     $this->assertDatabaseCount('parking_offstreet_spaces', 2);
     expect($garage->fresh())->source_record->external_id->toBe('300')->visibility->toBeFalse()->capacity->toBe(400)->free_space->toBe(12);
-    expect($favorite->fresh()->favoritable_id)->toBe($garage->id);
+    $this->assertModelMissing($favorite);
+    expect($visibleFavorite->fresh()->favoritable_id)->toBe($visibleGarage->id);
     expect($source->fresh()->requires_identity_context)->toBeTrue();
     expect($import->fresh()->identity_resolution[0])->toMatchArray(['facility_id' => $garage->id, 'method' => 'name_type_location']);
 });

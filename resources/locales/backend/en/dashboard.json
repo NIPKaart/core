@@ -1,5 +1,5 @@
 {
-    "title": "Dashboard",
+    "title": "My NIPKaart",
     "greeting": {
         "morning": "Good morning, {{name}}",
         "afternoon": "Good afternoon, {{name}}",
@@ -124,5 +124,37 @@
         "nothing": "Nothing is waiting for you",
         "contributed_one": "You shared {{count}} parking space, {{published}} on the map",
         "contributed_other": "You shared {{count}} parking spaces, {{published}} on the map"
+    },
+    "continuity_intro": "Your destinations, favorite parking spaces and contributions.",
+    "contributions": {
+        "title": "My contributions",
+        "empty": "No contributions yet. Add a parking space or propose an improvement on the map.",
+        "kinds": {
+            "submission": "Parking space added",
+            "improvement": "Improvement proposed",
+            "report": "Disappearance reported"
+        },
+        "status": {
+            "pending": "Awaiting review",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "kept": "Reviewed: parking space kept",
+            "removed": "Reviewed: parking space removed",
+            "unavailable": "No longer available"
+        },
+        "actions": {
+            "edit": "Edit",
+            "map": "View on map"
+        },
+        "pagination": "Contribution pages",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {{page}}",
+        "withdraw": {
+            "label": "Withdraw",
+            "title": "Withdraw submission?",
+            "description": "Your pending submission will be removed.",
+            "cancel": "Cancel"
+        }
     }
 }

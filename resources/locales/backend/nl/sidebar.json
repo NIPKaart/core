@@ -1,9 +1,9 @@
 {
-    "dashboard": "Dashboard",
+    "dashboard": "Mijn NIPKaart",
     "map": "Kaart",
     "personal": "Persoonlijk",
     "my_locations": "Mijn Locaties",
-    "my_favorites": "Mijn Favorieten",
+    "my_favorites": "Favorieten",
     "moderation": "Moderatie",
     "community_spaces": "Community-locaties",
     "offstreet": "Off-street Parkeren",
@@ -20,5 +20,7 @@
     "municipal_data": "Databronnen",
     "search": "Zoeken",
     "search_placeholder": "Zoek parkeerlocaties…",
-    "parking_data": "Parkeerdata"
+    "parking_data": "Parkeerdata",
+    "destinations": "Bestemmingen",
+    "my_contributions": "Mijn bijdragen"
 }

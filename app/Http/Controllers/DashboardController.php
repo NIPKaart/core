@@ -2,17 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
-use App\Http\Resources\FavoriteResource;
-use App\Models\Favorite;
-use App\Models\ParkingMunicipal;
-use App\Models\ParkingOffstreet;
-use App\Models\ParkingSpace;
 use App\Services\ModerationQueue;
 use App\Services\SourceOverview;
 use App\Services\UserActivity;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,11 +16,7 @@ use Inertia\Response;
  */
 class DashboardController extends Controller
 {
-    private const int FAVORITES = 5;
-
     private const int QUEUE_PREVIEW = 5;
-
-    private const int MAP_PLACES = 500;
 
     public function __invoke(Request $request, ModerationQueue $queue, SourceOverview $sources, UserActivity $activity): Response
     {
@@ -36,14 +25,13 @@ class DashboardController extends Controller
         $managesSources = $user->hasRole(UserRole::ADMIN);
         $hasTodo = $moderates || $managesSources;
 
-        $role = UserRole::tryFrom((string) $user->getRoleNames()->first());
+        $validated = $request->validate([
+            'section' => ['sometimes', 'in:destinations,favorites,contributions'],
+            'contributions_page' => ['sometimes', 'integer', 'min:1', 'max:10000'],
+        ]);
 
         return Inertia::render('dashboard', [
-            'profile' => [
-                'name' => $user->name,
-                'role' => $role?->label(),
-                'member_since' => $user->created_at?->toIso8601String(),
-            ],
+            'section' => $validated['section'] ?? 'destinations',
             'hasTodo' => $hasTodo,
             'todo' => Inertia::defer(function () use ($queue, $sources, $user, $moderates, $managesSources) {
                 $attention = $managesSources ? $sources->rows()->whereIn('status', SourceOverview::ATTENTION)->values() : collect();
@@ -73,77 +61,7 @@ class DashboardController extends Controller
                     ],
                 ];
             }),
-            'activity' => Inertia::defer(fn () => $activity->recent($user)),
-            ...($hasTodo ? [] : ['map' => Inertia::defer(fn () => $this->map($request))]),
-            'stats' => $this->stats($request),
-            'favorites' => $user->favorites()
-                ->with(['favoritable' => fn (MorphTo $favoritable) => $favoritable->morphWith([
-                    ParkingSpace::class => ['country:id,name', 'municipality:id,name'],
-                    ParkingMunicipal::class => ['country:id,name', 'municipality:id,name'],
-                    ParkingOffstreet::class => ['country:id,name', 'municipality:id,name'],
-                ])])
-                ->latest()->latest('id')->limit(self::FAVORITES)->get()
-                ->filter(fn (Favorite $favorite) => $favorite->favoritable !== null)
-                ->map(function (Favorite $favorite) use ($request) {
-                    $row = (new FavoriteResource($favorite))->toArray($request);
-
-                    return [...$row, 'map_url' => $row['available'] ? UserActivity::mapUrl($favorite->favoritable) : null];
-                })
-                ->values(),
+            'contributions' => Inertia::defer(fn () => $activity->contributions($user, (int) ($validated['contributions_page'] ?? 1))),
         ]);
-    }
-
-    /**
-     * The person's own parking spaces and the places they saved, for their map; hidden places are left out.
-     *
-     * @return array{spaces: list<array<string, mixed>>, favorites: list<array<string, mixed>>}
-     */
-    private function map(Request $request): array
-    {
-        $user = $request->user();
-
-        return [
-            'spaces' => $user->parkingSpaces()->latest()->limit(self::MAP_PLACES)
-                ->get(['id', 'latitude', 'longitude', 'status', 'street'])
-                ->map(fn (ParkingSpace $space) => [
-                    'id' => $space->id,
-                    'latitude' => $space->latitude,
-                    'longitude' => $space->longitude,
-                    'status' => $space->status->value,
-                    'label' => $space->street,
-                    'url' => route('profile.parking-spaces.show', ['id' => $space->id]),
-                ])->all(),
-            'favorites' => $user->favorites()->with('favoritable')->latest()->limit(self::MAP_PLACES)->get()
-                ->filter(fn (Favorite $favorite) => $favorite->favoritable !== null && UserActivity::isPublic($favorite->favoritable))
-                ->map(fn (Favorite $favorite) => [
-                    'id' => $favorite->id,
-                    'latitude' => $favorite->favoritable->latitude,
-                    'longitude' => $favorite->favoritable->longitude,
-                    'label' => $favorite->favoritable->street ?? $favorite->favoritable->name ?? null,
-                    'url' => UserActivity::mapUrl($favorite->favoritable),
-                ])->values()->all(),
-        ];
-    }
-
-    /**
-     * The person's own contribution figures.
-     *
-     * @return array{added: int, published: int, pending: int, confirmed: int}
-     */
-    private function stats(Request $request): array
-    {
-        $spaces = $request->user()->parkingSpaces()
-            ->selectRaw('count(*) as added, count(*) filter (where status = ?) as published, count(*) filter (where status = ?) as pending', [
-                ParkingStatus::APPROVED->value,
-                ParkingStatus::PENDING->value,
-            ])
-            ->toBase()->first();
-
-        return [
-            'added' => (int) $spaces->added,
-            'published' => (int) $spaces->published,
-            'pending' => (int) $spaces->pending,
-            'confirmed' => $request->user()->confirmations()->count(),
-        ];
     }
 }

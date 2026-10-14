@@ -80,6 +80,19 @@ class ParkingSpace extends Model
         'created_at' => 'datetime',
     ];
 
+    /** Remove shortcuts only when their target is explicitly unpublished or deleted. */
+    protected static function booted(): void
+    {
+        static::deleted(function (self $place): void {
+            Favorite::whereMorphedTo('favoritable', $place)->delete();
+        });
+        static::updated(function (self $place): void {
+            if ($place->wasChanged('status') && $place->status !== ParkingStatus::APPROVED) {
+                Favorite::whereMorphedTo('favoritable', $place)->delete();
+            }
+        });
+    }
+
     /**
      * Get the user that owns the ParkingSpace
      */

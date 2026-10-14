@@ -1,5 +1,5 @@
 {
-    "title": "Dashboard",
+    "title": "Mijn NIPKaart",
     "greeting": {
         "morning": "Goedemorgen, {{name}}",
         "afternoon": "Goedemiddag, {{name}}",
@@ -124,5 +124,37 @@
         "nothing": "Er wacht niets op je",
         "contributed_one": "Je deelde {{count}} parkeerplaats, {{published}} op de kaart",
         "contributed_other": "Je deelde {{count}} parkeerplaatsen, {{published}} op de kaart"
+    },
+    "continuity_intro": "Je bestemmingen, favoriete parkeerplaatsen en eigen bijdragen.",
+    "contributions": {
+        "title": "Mijn bijdragen",
+        "empty": "Nog geen bijdragen. Voeg een parkeerplaats toe of stel een verbetering voor via de kaart.",
+        "kinds": {
+            "submission": "Parkeerplaats toegevoegd",
+            "improvement": "Verbetering voorgesteld",
+            "report": "Verdwijning gemeld"
+        },
+        "status": {
+            "pending": "In behandeling",
+            "approved": "Goedgekeurd",
+            "rejected": "Afgewezen",
+            "kept": "Beoordeeld: parkeerplaats blijft",
+            "removed": "Beoordeeld: parkeerplaats verwijderd",
+            "unavailable": "Niet meer beschikbaar"
+        },
+        "actions": {
+            "edit": "Bewerken",
+            "map": "Op de kaart"
+        },
+        "pagination": "Pagina’s met bijdragen",
+        "previous": "Vorige",
+        "next": "Volgende",
+        "page": "Pagina {{page}}",
+        "withdraw": {
+            "label": "Intrekken",
+            "title": "Inzending intrekken?",
+            "description": "Je wachtende inzending wordt verwijderd.",
+            "cancel": "Annuleren"
+        }
     }
 }

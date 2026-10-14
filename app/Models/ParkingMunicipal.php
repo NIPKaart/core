@@ -59,6 +59,19 @@ class ParkingMunicipal extends Model
         'number' => 'integer',
     ];
 
+    /** Remove shortcuts only when their target is explicitly unpublished or deleted. */
+    protected static function booted(): void
+    {
+        static::deleted(function (self $place): void {
+            Favorite::whereMorphedTo('favoritable', $place)->delete();
+        });
+        static::updated(function (self $place): void {
+            if ($place->wasChanged('visibility') && ! $place->visibility) {
+                Favorite::whereMorphedTo('favoritable', $place)->delete();
+            }
+        });
+    }
+
     public function publishedImport(): BelongsTo
     {
         return $this->belongsTo(DatasetImport::class, 'published_import_id');

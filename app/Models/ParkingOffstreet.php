@@ -62,6 +62,19 @@ class ParkingOffstreet extends Model
         'updated_at' => 'datetime',
     ];
 
+    /** Remove shortcuts only when their target is explicitly unpublished or deleted. */
+    protected static function booted(): void
+    {
+        static::deleted(function (self $place): void {
+            Favorite::whereMorphedTo('favoritable', $place)->delete();
+        });
+        static::updated(function (self $place): void {
+            if ($place->wasChanged('visibility') && ! $place->visibility) {
+                Favorite::whereMorphedTo('favoritable', $place)->delete();
+            }
+        });
+    }
+
     /**
      * Whether the latest measurement may be shown as current (#1221). `current` needs a recent measurement with feed state
      * `ok` and either a count or an open/full status; `closed` is its own state, because a closed site also reports zero free.

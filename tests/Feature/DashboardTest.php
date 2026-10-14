@@ -29,7 +29,7 @@ test('guests are redirected to the login page', function () {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
 });
 
-test('a contributor sees their own figures and no work to do', function () {
+test('a contributor sees personal continuity without figures or work to do', function () {
     $user = User::factory()->create();
     ParkingSpace::factory()->for($user)->create(['status' => ParkingStatus::APPROVED]);
     ParkingSpace::factory()->for($user)->create(['status' => ParkingStatus::PENDING]);
@@ -40,7 +40,7 @@ test('a contributor sees their own figures and no work to do', function () {
     $this->actingAs($user)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
-            ->where('stats', ['added' => 2, 'published' => 1, 'pending' => 1, 'confirmed' => 2])
+            ->missing('stats')->missing('map')->missing('activity')
             ->where('hasTodo', false)
             ->missing('todo')
             ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'queue' => [], 'sources' => ['total' => 0, 'items' => []]])));
@@ -62,7 +62,7 @@ test('a moderator is pointed to the moderation queue', function () {
             ->where('todo.sources.total', 0)));
 });
 
-test('recent activity merges outcomes and own actions, newest first and only the person\'s own', function () {
+test('contributions exclude saved favorites and duplicate notification outcomes', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
     $this->travelTo('2026-10-01 09:00:00');
@@ -75,15 +75,11 @@ test('recent activity merges outcomes and own actions, newest first and only the
 
     $this->actingAs($user)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->has('activity', 3)
-            ->where('activity.0.kind', 'community.space_status_changed')
-            ->where('activity.0.unread', true)
-            ->where('activity.0.params.new_status', 'approved')
-            ->where('activity.1.kind', 'saved')
-            ->where('activity.1.params.space_label', fn (string $label) => str_starts_with($label, 'Coolsingel'))
-            ->where('activity.2.kind', 'added')
-            ->where('activity.2.params.status', 'pending')
-            ->where('activity.2.url', route('profile.parking-spaces.show', ['id' => $space->id]))));
+            ->has('contributions.data', 1)
+            ->where('contributions.data.0.kind', 'submission')
+            ->where('contributions.data.0.status', 'pending')
+            ->where('contributions.data.0.url', route('location-map.edit', ['parking_space' => $space->id]))));
+
 });
 
 test('favorites open on the map', function () {
@@ -91,12 +87,11 @@ test('favorites open on the map', function () {
     $place = ParkingSpace::factory()->for(User::factory())->create(['status' => ParkingStatus::APPROVED, 'street' => 'Stationsplein', 'latitude' => 52.5, 'longitude' => 6.09]);
     Favorite::factory()->for($user)->for($place, 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->has('favorites', 1)
-            ->where('favorites.0.title', 'Stationsplein')
-            ->where('favorites.0.type', 'Community')
-            ->where('favorites.0.map_url', route('location-map', ['place' => "community:{$place->id}", 'at' => '52.50000,6.09000'])));
+    $this->actingAs($user)->get(route('profile.favorites.index'))->assertRedirect(route('dashboard', ['section' => 'favorites']));
+    $this->getJson(route('profile.favorites.list'))->assertOk()
+        ->assertJsonPath('favorites.0.title', 'Stationsplein')->assertJsonPath('favorites.0.type', 'Community')
+        ->assertJsonPath('favorites.0.latitude', 52.5)->assertJsonPath('favorites.0.longitude', 6.09);
+
 });
 
 test('an empty queue still tells a moderator there is nothing to review', function () {
@@ -129,18 +124,11 @@ test('a saved place the map no longer shows is not named or located', function (
     $hidden = ParkingMunicipal::factory()->create(['visibility' => false, 'street' => 'Verborgen 1']);
     Favorite::factory()->for($user)->for($hidden, 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('favorites.0.available', false)
-            ->where('favorites.0.title', '')
-            ->where('favorites.0.map_url', null)
-            ->loadDeferredProps(fn (Assert $reload) => $reload
-                ->where('activity.0.kind', 'saved')
-                ->where('activity.0.params.space_label', null)
-                ->where('activity.0.url', null)));
+    $this->actingAs($user)->getJson(route('profile.favorites.list'))->assertOk()->assertJsonCount(0, 'favorites');
+
 });
 
-test('only the five newest favorites of the person are listed', function () {
+test('all favorites of the person remain reachable', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
     $places = ParkingSpace::factory()->for($other)->count(6)->create(['status' => ParkingStatus::APPROVED]);
@@ -150,13 +138,11 @@ test('only the five newest favorites of the person are listed', function () {
     });
     Favorite::factory()->for($other)->for($places->first(), 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->has('favorites', 5)
-            ->where('favorites.0.id', $places->last()->id));
+    $this->actingAs($user)->getJson(route('profile.favorites.list'))->assertOk()->assertJsonCount(6, 'favorites');
+
 });
 
-test('outcomes stay visible behind many operational notifications, and others\' notifications never show', function () {
+test('notifications stay in the existing inbox without a second inbox on the dashboard', function () {
     $admin = tap(User::factory()->create())->assignRole(UserRole::ADMIN);
     notifyAbout($admin, 'community.improvement_approved', ['space_label' => 'Kerkstraat 8', 'changes' => ['orientation']], '2026-10-01 09:00:00');
     foreach (range(0, 59) as $minute) {
@@ -165,10 +151,10 @@ test('outcomes stay visible behind many operational notifications, and others\' 
     notifyAbout(User::factory()->create(), 'community.improvement_rejected', ['space_label' => 'Elders'], '2026-10-03 09:00:00');
 
     $this->actingAs($admin)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->has('activity', 1)
-            ->where('activity.0.kind', 'community.improvement_approved')
-            ->where('activity.0.params.changes', ['orientation'])));
+        ->assertInertia(fn (Assert $page) => $page->missing('activity')->loadDeferredProps(fn (Assert $reload) => $reload
+            ->has('contributions.data', 0)));
+    expect($admin->notifications()->count())->toBe(61);
+
 });
 
 test('the dashboard names the person and their role', function () {
@@ -177,9 +163,8 @@ test('the dashboard names the person and their role', function () {
 
     $this->actingAs($moderator)->get(route('dashboard'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('profile.name', 'Klaas Schoute')
-            ->where('profile.role', UserRole::MODERATOR->label())
-            ->where('profile.member_since', '2025-03-12T09:00:00+00:00'));
+            ->where('auth.user.name', 'Klaas Schoute')->where('auth.roles.0', 'moderator')->missing('profile')->missing('stats'));
+
 });
 
 test('a moderator sees the first five items of the queue, each opening its review', function () {
@@ -198,7 +183,7 @@ test('a moderator sees the first five items of the queue, each opening its revie
             ->where('todo.queue.0.url', route('app.moderation.submissions.show', ['parking_space' => $spaces->first()->id]))));
 });
 
-test('the map shows the person\'s own spaces and only the saved places that are still public', function () {
+test('own pending contributions link directly to their editable form', function () {
     $user = User::factory()->create();
     $own = ParkingSpace::factory()->for($user)->create(['status' => ParkingStatus::PENDING, 'street' => 'Eigen straat']);
     ParkingSpace::factory()->for(User::factory())->create();
@@ -207,14 +192,10 @@ test('the map shows the person\'s own spaces and only the saved places that are 
     Favorite::factory()->for($user)->for(ParkingMunicipal::factory()->create(['visibility' => false]), 'favoritable')->create();
 
     $this->actingAs($user)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->missing('map')
-            ->loadDeferredProps(fn (Assert $reload) => $reload
-                ->has('map.spaces', 1)
-                ->where('map.spaces.0.status', 'pending')
-                ->where('map.spaces.0.url', route('profile.parking-spaces.show', ['id' => $own->id]))
-                ->has('map.favorites', 1)
-                ->where('map.favorites.0.label', 'Stationsplein')));
+        ->assertInertia(fn (Assert $page) => $page->missing('map')->loadDeferredProps(fn (Assert $reload) => $reload
+            ->has('contributions.data', 1)->where('contributions.data.0.status', 'pending')
+            ->where('contributions.data.0.url', route('location-map.edit', ['parking_space' => $own->id]))));
+
 });
 
 test('people with moderation work get no map, so it is not loaded for them', function () {

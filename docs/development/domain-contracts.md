@@ -12,7 +12,7 @@ Confirmations are source-independent (#1311): a signed-in, eligible user confirm
 
 The limit of one confirmation per user/place/calendar day in the configured application timezone (`UTC` by default) remains. The writer locks the place inside a transaction before checking and inserting, serializing simultaneous requests. Public community and municipal details expose `confirmations_count.confirmed`, `last_confirmed_at` and the viewer's `confirmed_today`; no reliability score is derived. Legacy `moved`/`unavailable` rows remain for moderators but are not counted. Bulk confirmation deletion validates and deletes through the space from the route.
 
-Existing database retention remains: soft deletion retains confirmations and favorites; permanent community deletion cascades confirmations; deleting a user nulls community ownership and cascades that user's confirmations/favorites. No purge scheduler or new retention period is introduced. #1175/#276 still own durable moderation history, report/correction semantics and any change to evidence retention or anonymization.
+Existing database retention remains: soft deletion retains confirmations but removes unusable favorites; permanent community deletion cascades confirmations; deleting a user nulls community ownership and cascades that user's confirmations/favorites. No purge scheduler or new retention period is introduced. #1175/#276 still own durable moderation history, report/correction semantics and any change to evidence retention or anonymization.
 
 ## Reports of disappeared places
 
@@ -21,7 +21,7 @@ Reports (#1313) follow the same place identity as confirmations: `POST map/place
 Moderators (`parking-place-report.view_any` and `.resolve`) work from the queue at `app/reports`. Each reported place appears once, with its open reports and notes, and the existence confirmations given since the first open report. They either keep the place, also when existence stays uncertain, which closes its reports, or remove it with a required `RemovalReason`:
 
 - a community place is deleted permanently, together with its confirmations, reviews, reports and favorites;
-- a municipal place is hidden through `visibility`, which later imports preserve; its confirmations, favorites and resolved reports remain.
+- a municipal place is hidden through `visibility`, which later imports preserve; its confirmations and resolved reports remain; unusable favorites are removed.
 
 Each reporter with an open report hears the decision in a notification: kept (with a link back to the place) or removed (with the reason). Every removal writes a `ParkingPlaceRemoval` with source, identity, label, action, reason, note, open report count and moderator. There is no report threshold and no resurrection state: re-adding a place later is a new contribution. After deploying, run `php artisan db:seed --class=PermissionsTableSeeder --force` so moderators receive the new permissions.
 
@@ -48,7 +48,9 @@ Both the profile list and map dialog now consume:
 - `available`: true only for a published community space or visible municipal/offstreet record that still exists.
 - `latitude`/`longitude`: numbers when available, otherwise null. Unavailable targets expose an empty title and no address/geographic metadata.
 
-Unavailable references remain saved until the user removes them, and become available again if their target is restored and published. Both UIs label unavailable entries, omit/disable map navigation and offer removal. This nullable-coordinate response must be deployed together with the updated frontend; consumers must check `available` before constructing a map link.
+#1179 supersedes the earlier unavailable-favorite lifecycle: explicit unpublication or deletion of a parking record removes its favorites. Republishing does not resurrect them. Personal lists include only public, existing targets, retaining the nullable-coordinate resource contract as a defensive boundary. Page views never delete records.
+
+Existing stale references from bulk writes can be inspected with `php artisan nipkaart:prune-unavailable-favorites`; this only counts and changes no records. An operator may explicitly remove them with `--execute`. This maintenance command is not scheduled. It does not remove saved destinations or parking records.
 
 The existing DELETE endpoint accepts either `{favorite_id}` or the legacy `{type, id}` body, scoped to the current user's favorites. It no longer requires a resolvable target. POST still accepts `{type, id}`, rejects unpublished/invisible targets and uses Eloquent's race-safe `firstOrCreate` with the existing unique tuple. Target-type strings stored in the database are unchanged.
 
