@@ -75,6 +75,8 @@
     },
     "controls": {
         "layers": "Kaartlagen",
+        "nearby_spaces": "Parkeerplaatsen in de buurt",
+        "municipal_spaces": "Gemeentelijke parkeerplaatsen",
         "legend": "Legenda",
         "streets": "Kaart",
         "satellite": "Satelliet",

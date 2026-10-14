@@ -1,11 +1,12 @@
 import '../css/app.css';
 import '../css/leaflet-legend.css';
 
+import LocalizedToaster from '@/components/localized-toaster';
 import type { SharedData } from '@/types';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ComponentType } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { initializeTheme } from './hooks/use-appearance';
 import i18n from './i18n';
 import { configureLocalization, registerLocaleSynchronization } from './locale-sync';
@@ -51,7 +52,7 @@ void createInertiaApp<SharedData>({
         return (
             <QueryClientProvider client={queryClient}>
                 {app}
-                <Toaster position="top-right" />
+                <LocalizedToaster />
             </QueryClientProvider>
         );
     },

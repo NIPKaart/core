@@ -62,10 +62,41 @@ function load(path, i18n) {
     const context = {
         exports: {},
         require: (name) => {
+            if (name === 'react') return { ...React, default: React };
         if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === '@/utils/translation') return load('utils/translation.ts', i18n);
             if (name === '@/i18n') return { default: i18n };
+            if (name === '@/components/input-error') return load('components/input-error.tsx', i18n);
+            if (name === '@/components/map/parking-detail/utils') return { getOrientationIllustration: () => '' };
+            if (name === '@/components/ui/input') return { Input: element('input') };
+            if (name === '@/components/ui/label') return { Label: element('label') };
+            if (name === '@/components/ui/textarea') return { Textarea: element('textarea') };
+            if (name === '@/lib/icon-factory') return { getBlueMarkerIcon: () => ({}), getParkingStatusIcon: () => ({}), getVioletMarkerIcon: () => ({}) };
+            if (name === './zoom-control') return { default: () => null };
+            if (name === 'react-leaflet') {
+                const Layer = ({ name, children }) => React.createElement('fieldset', { 'aria-label': name }, children);
+                const LayersControl = ({ children }) => React.createElement('div', null, children);
+                LayersControl.BaseLayer = Layer;
+                LayersControl.Overlay = Layer;
+                return {
+                    LayersControl,
+                    MapContainer: ({ children }) => React.createElement('div', null, children),
+                    FeatureGroup: ({ children }) => React.createElement('div', null, children),
+                    TileLayer: () => null,
+                    Marker: ({ alt, title }) => React.createElement('img', { alt, title }),
+                };
+            }
             if (name === 'react-i18next') return { useTranslation: (ns) => ({ t: i18n.getFixedT(i18n.language, ns), i18n }) };
+            if (name === 'sonner') {
+                return {
+                    Toaster: ({ containerAriaLabel, toastOptions }) =>
+                        React.createElement(
+                            'section',
+                            { 'aria-label': containerAriaLabel },
+                            React.createElement('button', { 'aria-label': toastOptions.closeButtonAriaLabel }),
+                        ),
+                };
+            }
             if (name === '@/hooks/use-appearance') return { useAppearance: () => ({ appearance: 'light', updateAppearance: () => {} }) };
             if (name === '@/hooks/use-search-hotkey') return { useSearchHotkey: () => {} };
             if (name === './search-store') return { openSearch: () => {} };
@@ -80,6 +111,65 @@ function load(path, i18n) {
     return context.exports;
 }
 const render = (component, props = {}) => renderToStaticMarkup(React.createElement(component, props));
+
+test('toast accessibility labels follow language changes without fallback', async () => {
+    const i18n = i18next.createInstance();
+    await i18n.init({ resources, lng: 'nl', fallbackLng: false });
+    const LocalizedToaster = load('components/localized-toaster.tsx', i18n).default;
+
+    const dutch = render(LocalizedToaster);
+    assert.ok(dutch.includes('aria-label="Meldingen"'));
+    assert.ok(dutch.includes('aria-label="Sluiten"'));
+
+    await i18n.changeLanguage('en');
+    const english = render(LocalizedToaster);
+    assert.ok(english.includes('aria-label="Notifications"'));
+    assert.ok(english.includes('aria-label="Close"'));
+});
+
+test('existing local contribution errors follow a language change while server messages remain intact', async () => {
+    const i18n = i18next.createInstance();
+    await i18n.init({ resources, lng: 'nl', fallbackLng: false });
+    const DetailsStep = load('components/contribute/details-step.tsx', i18n).default;
+    const props = {
+        data: { orientation: '', under_sign: '', restriction_days: [], description: '', parking_hours: '', parking_minutes: '', latitude: null, longitude: null },
+        errors: { orientation: 'details.orientation.required', under_sign: 'details.under_sign.required', description: 'Server validation message' },
+        orientationOptions: [], restrictionDays: [], setData() {},
+    };
+
+    const dutch = render(DetailsStep, props);
+    assert.ok(dutch.includes('Kies hoe het vak ligt.'));
+    assert.ok(dutch.includes('Geef aan of er een onderbord hangt.'));
+
+    await i18n.changeLanguage('en');
+    const english = render(DetailsStep, props);
+    assert.ok(english.includes('Choose how the bay is laid out.'));
+    assert.ok(english.includes('Say whether there is a sub-sign.'));
+    assert.ok(english.includes('Server validation message'));
+    assert.ok(!english.includes('Kies hoe het vak ligt.'));
+});
+
+for (const [language, labels] of Object.entries({
+    en: ['Satellite', 'Map', 'Nearby parking spaces', 'Municipal parking spaces', 'Selected location'],
+    nl: ['Satelliet', 'Kaart', 'Parkeerplaatsen in de buurt', 'Gemeentelijke parkeerplaatsen', 'Geselecteerde locatie'],
+})) {
+    test(`detail maps name their layers and selected marker in ${language}`, async () => {
+        const i18n = i18next.createInstance();
+        await i18n.init({ resources, lng: language, fallbackLng: false });
+        const LocationMarkerCard = load('components/map/card-location-marker.tsx', i18n).default;
+
+        const html = render(LocationMarkerCard, {
+            latitude: 52.37, longitude: 4.9,
+            nearbySpaces: [{ id: 'community', latitude: 52.37, longitude: 4.91, status: 'published' }],
+            nearbyMunicipalSpaces: [{ id: 'municipal', latitude: 52.37, longitude: 4.92 }],
+        });
+
+        for (const label of labels.slice(0, 4)) assert.ok(html.includes(`aria-label="${label}"`));
+        assert.ok(html.includes(`alt="${labels[4]}"`));
+        assert.equal((html.match(/alt=""/g) ?? []).length, 2);
+        assert.ok(!html.includes('Google Hybrid'));
+    });
+}
 
 for (const [language, expected] of Object.entries({
     en: {

@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\Country;
+use App\Models\DatasetSource;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Mail;
@@ -144,3 +145,22 @@ it('rejects an unsupported language without changing the account', function () {
 it('uses a supported mail locale for legacy account preferences', function () {
     expect(User::factory()->make(['locale' => 'xx'])->preferredLocale())->toBe('en');
 });
+
+it('localizes existing source registration problems and failed approval without rewriting the stored diagnostic', function (string $locale, string $message) {
+    $admin = User::factory()->create(['locale' => $locale]);
+    $admin->assignRole(UserRole::ADMIN);
+    $source = DatasetSource::factory()->pending()->create(['municipality_id' => null]);
+    $stored = 'Land NL of provincie NL-NH is niet bekend in NIPKaart.';
+    $source->forceFill(['registration_error' => $stored])->save();
+
+    $this->actingAs($admin)->get(route('app.imports.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('sources.data.0.registration_error', $message));
+    $this->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])
+        ->assertSessionHasErrors(['source' => $message]);
+
+    expect($source->refresh())->registration_error->toBe($stored)->approval_state->toBe('pending')->municipality_id->toBeNull();
+    $this->assertDatabaseCount('municipalities', 0);
+})->with([
+    ['nl', 'Land NL of provincie NL-NH is niet bekend in NIPKaart.'],
+    ['en', 'Country NL or subdivision NL-NH is not known in NIPKaart.'],
+]);
