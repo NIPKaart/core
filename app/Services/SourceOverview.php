@@ -72,6 +72,9 @@ class SourceOverview
         return [
             ...Arr::except($source->toArray(), ['visible_municipal_count', 'visible_offstreet_count', 'pending_deliveries_count']),
             'status' => $status,
+            'registration_error' => $source->registration_error === null ? null : __('Country :country or subdivision :subdivision is not known in NIPKaart.', [
+                'country' => $area['country'] ?? '', 'subdivision' => $area['subdivision'] ?? '',
+            ]),
             'country' => $area['country'] ?? null,
             'subdivision' => $area['subdivision'] ?? null,
             'subdivision_name' => $provinces->get($area['subdivision'] ?? ''),

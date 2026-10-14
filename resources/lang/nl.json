@@ -1,4 +1,5 @@
 {
+    "Country :country or subdivision :subdivision is not known in NIPKaart.": "Land :country of provincie :subdivision is niet bekend in NIPKaart.",
     "If you did not create an account, no further action is required.": "Als je geen account hebt aangemaakt hoef je verder niets te doen.",
     "If you did not request a password reset, no further action is required.": "Als je geen wachtwoordherstel hebt aangevraagd, hoef je verder niets te doen.",
     "Invalid credential format.": "Ongeldig formaat van inloggegevens.",

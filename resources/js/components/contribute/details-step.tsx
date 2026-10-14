@@ -76,7 +76,9 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                         </label>
                     ))}
                 </div>
-                <InputError message={errors.orientation} />
+                <InputError
+                    message={errors.orientation === 'details.orientation.required' ? t('details.orientation.required') : errors.orientation}
+                />
                 {data.latitude !== null && data.longitude !== null && (
                     <a
                         href={`https://maps.google.com/maps?q=&layer=c&cbll=${data.latitude},${data.longitude}`}
@@ -114,7 +116,7 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                         </label>
                     ))}
                 </div>
-                <InputError message={errors.under_sign} />
+                <InputError message={errors.under_sign === 'details.under_sign.required' ? t('details.under_sign.required') : errors.under_sign} />
 
                 {data.under_sign === 'yes' && (
                     <div className="flex flex-col gap-4 border-t pt-3">

@@ -75,6 +75,8 @@
     },
     "controls": {
         "layers": "Map layers",
+        "nearby_spaces": "Nearby parking spaces",
+        "municipal_spaces": "Municipal parking spaces",
         "legend": "Legend",
         "streets": "Map",
         "satellite": "Satellite",

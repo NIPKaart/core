@@ -76,7 +76,9 @@ class SourceRegistrar
             $area = $source->description['area'];
             [$municipality, $error] = $this->findMunicipality($area);
             if ($error !== null) {
-                throw ValidationException::withMessages(['source' => $error]);
+                throw ValidationException::withMessages(['source' => __('Country :country or subdivision :subdivision is not known in NIPKaart.', [
+                    'country' => $area['country'], 'subdivision' => $area['subdivision'],
+                ])]);
             }
             // A municipality is only added to the reference data once an administrator accepts the source.
             $municipality ??= Municipality::create([

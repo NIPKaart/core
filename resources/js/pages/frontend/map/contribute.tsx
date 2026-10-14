@@ -238,9 +238,9 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
     const toReview = () => {
         form.clearErrors();
         const missing: Partial<Record<keyof ContributionForm, string>> = {};
-        if (!form.data.orientation) missing.orientation = t('details.orientation.required');
+        if (!form.data.orientation) missing.orientation = 'details.orientation.required';
         // An improvement may leave an unknown under-sign unknown rather than force a guess.
-        if (!form.data.under_sign && !improving) missing.under_sign = t('details.under_sign.required');
+        if (!form.data.under_sign && !improving) missing.under_sign = 'details.under_sign.required';
         if (Object.keys(missing).length) {
             form.setError(missing);
             return;
