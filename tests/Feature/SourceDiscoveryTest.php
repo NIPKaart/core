@@ -506,3 +506,78 @@ it('accepts a complete live Stockholm delivery through isolated approval publica
     $this->assertDatabaseCount('parking_municipal_spaces', $count);
     expect($first->fresh())->id->toBe($first->id)->published_import_id->toBe($import->id);
 })->skip(fn () => ! getenv('STOCKHOLM_ACCEPTANCE_FILE'), 'Provide a live collector export for isolated acceptance.');
+
+it('accepts Köln through discovery approval publication and repeated intake preserving source claims', function () {
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $admin = discoveryAdmin();
+    Province::factory()->state(['geocode' => 'DE-NW'])->for(Country::factory()->state(['code' => 'DE']))->create();
+    $handler = discoveryBucket();
+    $file = getenv('KOELN_ACCEPTANCE_FILE');
+    if ($file) {
+        $json = file_get_contents($file);
+    } else {
+        $data = json_decode(discoveryDelivery(), true, flags: JSON_THROW_ON_ERROR);
+        $data['dataset'] = 'de-koeln';
+        $data['selection'] = 'general-disabled-all';
+        $data['source'] = [...$data['source'],
+            'name' => 'Köln allgemeine Behindertenparkplätze', 'publisher' => 'Stadt Köln, Amt für Verkehrsmanagement',
+            'source_url' => 'https://www.offenedaten-koeln.de/api/1/metastore/schemas/dataset/items/b69bcbd9-f6b2-4bc2-a763-118a471f59c9',
+            'licence' => 'DL-DE-ZERO-2.0', 'terms_url' => 'https://www.govdata.de/dl-de/zero-2-0', 'attribution' => 'Stadt Köln',
+            'area' => ['country' => 'DE', 'subdivision' => 'DE-NW', 'municipality' => ['scheme' => 'de-ags', 'code' => '05315000', 'name' => 'Köln']],
+            'bounds' => [6.75, 50.80, 7.20, 51.10],
+        ];
+        $data['source_count'] = 3;
+        $data['records'] = [];
+        foreach ([null, 0, 2] as $index => $number) {
+            $data['records'][] = [
+                'external_id' => (string) ($index + 1), 'geometry' => ['type' => 'Point', 'coordinates' => [6.95 + $index * 0.001, 50.94]],
+                'number' => $number, 'street' => null, 'access_category' => 'general', 'orientation' => null,
+                'source_attributes' => ['id' => $index + 1, 'anzahl' => $number, 'bezeichnung' => 'Straße 23', 'bemerkung' => 'Mo-Fr 9-17 Uhr, 2 Stunden'],
+                'source_updated_at' => null,
+            ];
+        }
+        $json = json_encode($data, JSON_THROW_ON_ERROR);
+    }
+    $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+    $count = $data['source_count'];
+    expect($data['dataset'])->toBe('de-koeln');
+    expect($count)->toBeGreaterThan(0);
+
+    discoverFolder($handler, [objectFor($json, now()->toIso8601String())], $json, 'de-koeln');
+
+    $source = DatasetSource::sole();
+    expect($source)->approval_state->toBe('pending')->registration_error->toBeNull();
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $this->assertDatabaseCount('dataset_imports', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors();
+    expect(Municipality::sole())->code_scheme->toBe('de-ags')->code->toBe('05315000');
+    Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === DatasetDelivery::sole()->id);
+    $handler->append(objectResult($json));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
+    $service = app(MunicipalImportService::class);
+    $import = DatasetImport::sole();
+    expect($service->review($import)['counts']['new'])->toBe($count);
+    $this->assertDatabaseCount('parking_municipal_spaces', 0);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+    $this->assertDatabaseCount('parking_municipal_spaces', $count);
+    $spaces = ParkingMunicipal::all()->keyBy('external_id');
+    foreach ($data['records'] as $record) {
+        $space = $spaces[$record['external_id']];
+        expect($space)->source_record->toEqual($record)->number->toBe($record['number'])->orientation->toBeNull()->street->toBeNull();
+    }
+    $identities = $spaces->map->id->all();
+
+    $this->travel(2)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s\Z');
+    $repeat = json_encode($data, JSON_THROW_ON_ERROR);
+    discoverFolder($handler, [objectFor($repeat, now()->toIso8601String())], null, 'de-koeln');
+    $handler->append(objectResult($repeat));
+    app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
+    $import = DatasetImport::latest('id')->firstOrFail();
+    expect($service->review($import)['counts']['unchanged'])->toBe($count);
+    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+
+    $this->assertDatabaseCount('parking_municipal_spaces', $count);
+    expect(ParkingMunicipal::all()->keyBy('external_id')->map->id->all())->toEqual($identities);
+});
