@@ -86,6 +86,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(ParkingSpaceImprovement::class);
     }
 
+    public function destinations(): HasMany
+    {
+        return $this->hasMany(Destination::class);
+    }
+
     /**
      * Get the favorites for the user.
      */

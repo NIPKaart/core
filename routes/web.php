@@ -30,6 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
         Route::delete('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
 
+        // Destination routes
+        Route::resource('destinations', Profile\DestinationController::class)->only(['index', 'store', 'update', 'destroy']);
+
         // Favorites routes
         Route::get('favorites', [Profile\FavoriteController::class, 'index'])->name('favorites.index');
         Route::get('favorites/list', [Profile\FavoriteController::class, 'list'])->name('favorites.list');

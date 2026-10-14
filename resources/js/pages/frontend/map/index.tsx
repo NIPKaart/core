@@ -196,8 +196,22 @@ export default function ParkingMap() {
         setModalOpen(true);
     }, []);
 
+    const selectDestination = (value: DestinationResult) => {
+        window.history.replaceState(window.history.state, '', discoveryDestinationUrl(new URL(window.location.href), value));
+        setDestination(value);
+        setPage(1);
+        setSelectedResult(null);
+        setModalOpen(false);
+        setViewportResults([]);
+        setStatus('loading');
+    };
+
     return (
-        <MapLayout showSearch={false} mapSearch>
+        <MapLayout
+            showSearch={false}
+            mapSearch
+            savedMapContext={{ destination, onDestinationSelect: selectDestination, onFavoriteSelect: selectParkingResult }}
+        >
             <Head title={t('head.title')} />
             <main className="map-discovery relative flex min-h-0 flex-1 flex-col" data-search-open={searchOpen}>
                 <h1 className="sr-only" ref={resultsHeading} tabIndex={-1}>
@@ -219,16 +233,12 @@ export default function ParkingMap() {
                                 setStatus('loading');
                                 window.history.replaceState(window.history.state, '', clearDiscoveryDestinationUrl(new URL(window.location.href)));
                             }}
-                            onSelect={(value) => {
-                                const next = { ...value, label: value.type === 'street' && value.sub ? `${value.label}, ${value.sub}` : value.label };
-                                window.history.replaceState(window.history.state, '', discoveryDestinationUrl(new URL(window.location.href), next));
-                                setDestination(next);
-                                setPage(1);
-                                setSelectedResult(null);
-                                setModalOpen(false);
-                                setViewportResults([]);
-                                setStatus('loading');
-                            }}
+                            onSelect={(value) =>
+                                selectDestination({
+                                    ...value,
+                                    label: value.type === 'street' && value.sub ? `${value.label}, ${value.sub}` : value.label,
+                                })
+                            }
                         />
                         <div className="pointer-events-auto hidden lg:block">
                             <DiscoveryFilters value={filters} onChange={changeFilters} disabled={!destination} />
@@ -237,7 +247,7 @@ export default function ParkingMap() {
                     <div className={`pointer-events-auto lg:hidden ${searchOpen ? 'hidden' : ''}`}>
                         <DiscoveryFilters value={filters} onChange={changeFilters} disabled={!destination} />
                     </div>
-                    <div className={`shrink-0 lg:block ${searchOpen ? 'hidden' : ''}`}>
+                    <div className={`flex shrink-0 gap-2 ${searchOpen ? 'hidden lg:flex' : ''}`}>
                         <MapDisplayControls value={mapStyle} onChange={setMapStyle} />
                     </div>
                 </div>
