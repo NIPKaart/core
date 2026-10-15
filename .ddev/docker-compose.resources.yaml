@@ -1,0 +1,5 @@
+services:
+  web:
+    cpus: 2
+  db:
+    cpus: 1
