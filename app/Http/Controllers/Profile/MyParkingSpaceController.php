@@ -2,38 +2,27 @@
 
 namespace App\Http\Controllers\Profile;
 
-use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ParkingSpace;
+use App\Services\UserActivity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class MyParkingSpaceController extends Controller
 {
     /**
      * Display a list of cards with the user's parking spaces.
      */
-    public function index(Request $request)
+    public function index(Request $request): RedirectResponse
     {
-        $user = $request->user();
-
-        $parkingSpaces = ParkingSpace::where('user_id', $user->id)
-            ->latest()
-            ->get();
-
-        return Inertia::render('backend/profile/parking/index', [
-            'parkingSpaces' => $parkingSpaces,
-            'selectOptions' => [
-                'statuses' => ParkingStatus::mapped(),
-            ],
-        ]);
+        return redirect()->route('dashboard', ['section' => 'contributions']);
     }
 
     /**
      * Display the specified location.
      */
-    public function show(string $id)
+    public function show(string $id): RedirectResponse
     {
         $parkingSpace = ParkingSpace::with(['province', 'country', 'municipality'])->withTrashed()->findOrFail($id);
 
@@ -41,17 +30,13 @@ class MyParkingSpaceController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $rejection = $parkingSpace->status === ParkingStatus::REJECTED ? $parkingSpace->latestReview : null;
+        if ($parkingSpace->status === ParkingStatus::APPROVED && ! $parkingSpace->trashed()) {
+            return redirect(UserActivity::mapUrl($parkingSpace));
+        }
 
-        return Inertia::render('backend/profile/parking/show', [
-            'parkingSpace' => $parkingSpace,
-            'rejectionReason' => $rejection?->reason?->label(),
-            'canWithdraw' => $parkingSpace->status === ParkingStatus::PENDING && ! $parkingSpace->trashed(),
-            'selectOptions' => [
-                'statuses' => ParkingStatus::mapped(),
-                'orientations' => ParkingOrientation::mapped(),
-            ],
-        ]);
+        return $parkingSpace->status === ParkingStatus::PENDING && ! $parkingSpace->trashed()
+            ? redirect()->route('location-map.edit', ['parking_space' => $parkingSpace->id])
+            : redirect()->route('dashboard', ['section' => 'contributions']);
     }
 
     /**

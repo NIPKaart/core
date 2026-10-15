@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ParkingStatus;
+use App\Models\ParkingSpace;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -83,3 +85,11 @@ test('users are rate limited', function () {
 
     $this->assertStringContainsString('Too many login attempts', $errors->first('email'));
 });
+
+test('signing in after a protected contribution action returns to that exact action', function (string $action) {
+    $user = User::factory()->create();
+    $place = ParkingSpace::factory()->for(User::factory())->create(['status' => ParkingStatus::APPROVED]);
+    $path = $action === 'add' ? route('location-map.add') : route('map.places.improve.create', ['parking_space' => $place->id]);
+    $this->get($path)->assertRedirect(route('login'));
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])->assertRedirect($path);
+})->with(['add', 'improve']);

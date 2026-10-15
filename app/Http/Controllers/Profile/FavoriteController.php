@@ -8,35 +8,18 @@ use App\Http\Resources\FavoriteResource;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 class FavoriteController extends Controller
 {
     /**
      * Display a listing of the user's favorites.
      */
-    public function index(Request $request)
+    public function index(Request $request): RedirectResponse
     {
-        $user = $request->user();
-
-        $favorites = $user->favorites()
-            ->with([
-                'favoritable' => function ($morphTo) {
-                    $morphTo
-                        ->morphWith([
-                            ParkingSpace::class => ['country'],
-                            ParkingMunicipal::class => [],
-                            ParkingOffstreet::class => [],
-                        ]);
-                },
-            ])
-            ->get();
-
-        return Inertia::render('backend/profile/favorites/index', [
-            'favorites' => FavoriteResource::collection($favorites)->toArray($request),
-        ]);
+        return redirect()->route('dashboard', ['section' => 'favorites']);
     }
 
     /**
@@ -45,7 +28,7 @@ class FavoriteController extends Controller
     public function list(Request $request)
     {
         $user = $request->user();
-        $favorites = $user->favorites()
+        $favorites = $user->favorites()->available()
             ->with([
                 'favoritable' => function ($morphTo) {
                     $morphTo->morphWith([

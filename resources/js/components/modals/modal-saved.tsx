@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { discoveryDestinationUrl } from '@/lib/discovery-filters';
-import { locationMap } from '@/routes';
+import { destinationMapUrl, favoriteMapUrl, favoriteParkingResult } from '@/lib/saved-places';
 import type { Favorite } from '@/types';
 import type { DestinationResult, ParkingResult } from '@/types/destination';
 import { router } from '@inertiajs/react';
@@ -36,28 +35,17 @@ export default function SavedDialog({ open, onClose, onReturnFocus, mapContext }
     const selectDestination = (destination: DestinationResult) => {
         onClose();
         if (mapContext) mapContext.onDestinationSelect(destination);
-        else router.visit(discoveryDestinationUrl(new URL(locationMap.url(), window.location.origin), destination), { preserveState: false });
+        else router.visit(destinationMapUrl(destination), { preserveState: false });
     };
 
     const selectFavorite = (favorite: Favorite) => {
-        if (!favorite.available || favorite.latitude === null || favorite.longitude === null) return;
-        const sources = { Community: 'community', Municipal: 'municipal', Offstreet: 'offstreet' } as const;
-        const source = favorite.type === 'Unknown' ? null : sources[favorite.type];
-        if (!source) return;
-        const place: ParkingResult = {
-            key: `${source}:${favorite.id}`,
-            id: favorite.id,
-            source,
-            title: favorite.title,
-            latitude: favorite.latitude,
-            longitude: favorite.longitude,
-            distance_metres: null,
-        };
+        const place = favoriteParkingResult(favorite);
+        if (!place) return;
         onClose();
         if (mapContext) {
             openingDetail.current = true;
             mapContext.onFavoriteSelect(place);
-        } else router.visit(locationMap.url({ query: { place: place.key, at: `${place.latitude},${place.longitude}` } }), { preserveState: false });
+        } else router.visit(favoriteMapUrl(place), { preserveState: false });
     };
 
     const content = (

@@ -9,6 +9,7 @@ use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\ParkingSpaceReview;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
@@ -60,6 +61,40 @@ final class ModerationHistory
         $page->setCollection($rows);
 
         return $page;
+    }
+
+    /**
+     * How many decisions the user took since a moment, by outcome: submissions and improvements are approved or
+     * rejected, a reported place is kept or removed once however many reports it had.
+     *
+     * @return array{total: int, approved: int, rejected: int, reports: int}
+     */
+    public function countsBy(User $user, CarbonInterface $since): array
+    {
+        $types = $this->queue->typesFor($user);
+        $handles = fn (string $type) => in_array($type, $types, true);
+        $submissions = $handles(ModerationQueue::SUBMISSION)
+            ? DB::table('parking_space_reviews')->where('from_status', ParkingStatus::PENDING->value)
+                ->whereIn('to_status', [ParkingStatus::APPROVED->value, ParkingStatus::REJECTED->value])
+                ->where('reviewed_by', $user->id)->where('reviewed_at', '>=', $since)
+                ->selectRaw('to_status as outcome, count(*) as total')->groupBy('to_status')->pluck('total', 'outcome')
+            : collect();
+        $improvements = $handles(ModerationQueue::IMPROVEMENT)
+            ? DB::table('parking_space_improvements')->whereIn('status', [ParkingStatus::APPROVED->value, ParkingStatus::REJECTED->value])
+                ->where('reviewed_by', $user->id)->where('reviewed_at', '>=', $since)
+                ->selectRaw('status as outcome, count(*) as total')->groupBy('status')->pluck('total', 'outcome')
+            : collect();
+        $reports = $handles(ModerationQueue::REPORT)
+            ? DB::table('parking_place_removals')->where('removed_by', $user->id)->where('removed_at', '>=', $since)->count()
+                + DB::query()->fromSub(DB::table('parking_place_reports')->selectRaw('1')
+                    ->where('resolution', ReportResolution::KEPT->value)->where('resolved_by', $user->id)->where('resolved_at', '>=', $since)
+                    ->groupByRaw('coalesce(parking_space_id::text, parking_municipal_id), resolved_at'), 'kept')->count()
+            : 0;
+        $sum = fn (string $outcome) => (int) ($submissions[$outcome] ?? 0) + (int) ($improvements[$outcome] ?? 0);
+        $approved = $sum(ParkingStatus::APPROVED->value);
+        $rejected = $sum(ParkingStatus::REJECTED->value);
+
+        return ['total' => $approved + $rejected + $reports, 'approved' => $approved, 'rejected' => $rejected, 'reports' => $reports];
     }
 
     private function submissionDecisions(): Builder

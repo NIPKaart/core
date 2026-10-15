@@ -1,23 +1,46 @@
 {
-    "title": "Dashboard",
+    "title": "My NIPKaart",
     "greeting": {
         "morning": "Good morning, {{name}}",
         "afternoon": "Good afternoon, {{name}}",
         "evening": "Good evening, {{name}}"
     },
     "add_location": "Add parking space",
-    "todo": {
-        "moderation_done": "Nothing to review in moderation",
-        "oldest": "oldest {{ago}}",
-        "check": "Check",
-        "types": {
-            "submission_one": "{{count}} new",
-            "submission_other": "{{count}} new",
-            "improvement_one": "{{count}} improvement",
-            "improvement_other": "{{count}} improvements",
-            "report_one": "{{count}} gone",
-            "report_other": "{{count}} gone"
+    "activity": {
+        "unknown_place": "A parking space"
+    },
+    "contributions": {
+        "title": "My contributions",
+        "empty": "No contributions yet. Add a parking space or propose an improvement on the map.",
+        "kinds": {
+            "submission": "Parking space added",
+            "improvement": "Improvement proposed",
+            "report": "Disappearance reported"
         },
+        "status": {
+            "pending": "Awaiting review",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "kept": "Reviewed: parking space kept",
+            "removed": "Reviewed: parking space removed",
+            "unavailable": "No longer available"
+        },
+        "actions": {
+            "edit": "Edit",
+            "map": "View on map"
+        },
+        "pagination": "Contribution pages",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {{page}}",
+        "withdraw": {
+            "label": "Withdraw",
+            "title": "Withdraw submission?",
+            "description": "Your pending submission will be removed.",
+            "cancel": "Cancel"
+        }
+    },
+    "todo": {
         "source": {
             "awaiting_review": "New delivery waits for review",
             "awaiting_approval": "New source waits for approval",
@@ -26,19 +49,6 @@
             "overdue": "Delivery is overdue",
             "live_stale": "Live occupancy no longer arrives"
         },
-        "more_sources_one": "And {{count}} more data source",
-        "more_sources_other": "And {{count}} more data sources",
-        "queue_title": "Waiting for you in moderation",
-        "queue_count_one": "{{count}} item",
-        "queue_count_other": "{{count}} items",
-        "review_all": "Review all",
-        "more_items_one": "{{count}} more item",
-        "more_items_other": "{{count}} more items",
-        "sources_title": "Data sources that need attention",
-        "high": "High priority",
-        "by": "by {{name}}",
-        "in_total": "{{types}} in total",
-        "sources_hint": "Only visible to administrators",
         "source_tag": {
             "awaiting_review": "Delivery",
             "awaiting_approval": "Approval",
@@ -48,81 +58,147 @@
             "live_stale": "Live"
         }
     },
-    "activity": {
-        "title": "Recent activity",
-        "all": "All notifications",
-        "empty": "No activity yet. Add a parking space or save a favorite to see what happens with it here.",
-        "unknown_place": "A parking space",
-        "added": "You added {{place}}",
-        "status": {
-            "pending": "Waiting for a moderator.",
-            "approved": "On the map.",
-            "rejected": "Rejected."
-        },
-        "proposed": "You proposed an improvement to {{place}}",
-        "saved": "You saved {{place}}",
-        "published": "{{place}} is on the map",
-        "published_detail": "Your submission was approved.",
-        "rejected": "Your submission {{place}} was rejected",
-        "status_changed": "The status of {{place}} changed",
-        "improvement_approved": "Your improvement to {{place}} was applied",
-        "improvement_rejected": "Your improvement to {{place}} was rejected",
-        "report_kept": "Your report about {{place}} was reviewed",
-        "report_kept_detail": "The parking space stays on the map.",
-        "report_removed": "{{place}} was taken off the map after your report",
-        "deleted": "{{place}} was deleted",
-        "restored": "{{place}} was restored",
-        "changed": "Changed: {{fields}}."
+    "view": {
+        "label": "View",
+        "personal": "My overview",
+        "work": "Tasks"
+    },
+    "hero": {
+        "title": "Where are you going?",
+        "search_label": "Search for a destination",
+        "search_placeholder": "Address, town or building",
+        "search_submit": "Search",
+        "destinations": "Your destinations",
+        "manage": "Manage",
+        "no_destinations": "Search for a destination and save it. You will then see right here which parking spaces are nearby."
+    },
+    "nearby": {
+        "at": "At {{label}}",
+        "count_one": "{{count}} parking space within {{metres}} m",
+        "count_other": "{{count}} parking spaces within {{metres}} m",
+        "more": "{{count}} or more parking spaces within {{metres}} m",
+        "none": "No parking spaces known within {{metres}} m.",
+        "on_map": "View on the map",
+        "free": "{{count}} free",
+        "max_time": "Max. {{time}}",
+        "untitled": "Parking space without an address"
+    },
+    "sources": {
+        "community": "Community",
+        "municipal": "Municipal data",
+        "offstreet": "Car park"
+    },
+    "places_title": "Your parking spaces",
+    "garage": {
+        "eyebrow": "Favourite car park",
+        "empty_title": "No favourite car park yet",
+        "empty_text": "Save a car park or P+R as a favourite to see here how many spaces are free.",
+        "empty_action": "View car parks and P+R"
+    },
+    "pending": {
+        "eyebrow": "Your submission",
+        "progress": "Progress",
+        "submitted": "Submitted · {{date}}",
+        "with_moderator": "With a moderator",
+        "on_map": "On the map",
+        "edit": "Edit",
+        "withdraw": "Withdraw",
+        "empty_title": "No submission in review",
+        "empty_text": "When you add a parking space, you can follow here how it gets onto the map."
+    },
+    "impact": {
+        "eyebrow": "Your contribution",
+        "text_one": "parking space of yours is on the map, findable for everyone.",
+        "text_other": "parking spaces of yours are on the map, findable for everyone.",
+        "none": "None of your parking spaces are on the map yet."
+    },
+    "rules": {
+        "eyebrow": "Parking rules for your favourites",
+        "title": "What does your disabled parking card allow?",
+        "open": "View rules",
+        "nationwide": "National rules",
+        "municipality": "Municipal rules",
+        "note": "Links to the official rules, which open in a new tab.",
+        "open_label": "View the parking rules for {{name}} (opens in a new tab)",
+        "empty": "Save a parking space as a favourite to see the official rules of that municipality here."
     },
     "favorites": {
-        "title": "Favorites",
+        "eyebrow": "Favourites",
         "all": "View all",
-        "empty": "No favorites yet. Save a parking space on the map to find it here.",
+        "empty": "No favourites yet. Save a parking space on the map to find it here again.",
+        "view_on_map": "View {{title}} on the map",
         "untitled": "Parking space without an address",
-        "view_on_map": "View on map",
-        "sources": {
-            "Community": "Community",
-            "Municipal": "Municipal data",
-            "Offstreet": "Parking garage",
-            "Unknown": "Unknown"
-        },
-        "unavailable": "No longer on the map"
+        "max_time": "Max. {{time}}",
+        "open_map": "Open the map"
     },
-    "stats": {
-        "title": "Your contributions",
-        "added": "Added",
-        "published": "On the map",
-        "pending": "Pending",
-        "confirmed": "Confirmed",
-        "my_locations": "My locations",
-        "hint": {
-            "added": "parking spaces you shared",
-            "published": "visible to everyone",
-            "pending": "waiting for a moderator",
-            "confirmed": "times you confirmed a place is still there"
-        }
+    "add": {
+        "title": "Is a parking space missing from the map?",
+        "text": "Drop the pin on the place and tell us what you see."
     },
-    "profile": {
-        "since": "member since {{date}}"
+    "history": {
+        "eyebrow": "Reviewed earlier",
+        "all": "All contributions",
+        "empty": "Nothing reviewed yet. Once a moderator looks at your contribution, you will see the outcome here."
     },
-    "map": {
-        "title": "Your map",
-        "open": "Open the map",
-        "legend": {
-            "published": "On the map",
-            "pending": "Pending",
-            "favorites": "Favorite"
-        }
-    },
-    "summary": {
-        "items_one": "{{count}} item",
-        "items_other": "{{count}} items",
-        "sources_one": "{{count}} data source",
-        "sources_other": "{{count}} data sources",
-        "waiting_one": "{{what}} is waiting for you",
-        "waiting_other": "{{what}} are waiting for you",
+    "work": {
+        "title_one": "{{count}} item is waiting for you",
+        "title_other": "{{count}} items are waiting for you",
         "nothing": "Nothing is waiting for you",
-        "contributed_one": "You shared {{count}} parking space, {{published}} on the map",
-        "contributed_other": "You shared {{count}} parking spaces, {{published}} on the map"
+        "strip": {
+            "label": "My overview",
+            "pending": "{{label}} is waiting for a moderator",
+            "garage": "free at {{name}}",
+            "open": "Go to my overview",
+            "empty": "Your destinations, favourites and contributions"
+        },
+        "next": {
+            "eyebrow": "Next in line · 1 of {{total}}",
+            "high": "High priority",
+            "reports_one": "{{count}} report",
+            "reports_other": "{{count}} reports",
+            "by": "by {{name}}",
+            "waiting": "waiting {{ago}}",
+            "start": "Start reviewing",
+            "queue": "Whole queue",
+            "done": "Nothing to review in moderation",
+            "no_address": "No address"
+        },
+        "queue": {
+            "eyebrow": "Queue",
+            "oldest": "Oldest {{ago}}",
+            "review_all": "Review all",
+            "types": {
+                "submission": "New",
+                "improvement": "Improvements",
+                "report": "Gone"
+            }
+        },
+        "decisions": {
+            "eyebrow": "Your decisions",
+            "week": "this week",
+            "split": "{{approved}} approved · {{rejected}} rejected",
+            "reports_one": "{{count}} reported parking space handled",
+            "reports_other": "{{count}} reported parking spaces handled",
+            "none": "No decisions yet this week.",
+            "history": "View history"
+        },
+        "attention": {
+            "eyebrow": "Needs attention",
+            "admins": "Administrators only",
+            "source": "Data source",
+            "rule": "Parking rules",
+            "rule_broken": "Link broken since {{date}}",
+            "rule_broken_unknown": "Link no longer works",
+            "nationwide": "National",
+            "check": "Check",
+            "more_sources_one": "And {{count}} more data source",
+            "more_sources_other": "And {{count}} more data sources",
+            "more_rules_one": "And {{count}} more broken link",
+            "more_rules_other": "And {{count}} more broken links",
+            "none": "All data sources and links are working."
+        }
+    },
+    "sections": {
+        "back": "Back to My NIPKaart"
     }
 }

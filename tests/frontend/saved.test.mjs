@@ -31,6 +31,11 @@ function mount({ desktop = true, mapContext } = {}) {
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@inertiajs/react') return { router: { visit: (...args) => visits.push(args) } };
             if (name === '@/hooks/use-media-query') return { useMediaQuery: () => desktop };
+            if (name === '@/lib/saved-places') {
+                const library = { exports: {}, URL, window: context.window, require: context.require };
+                vm.runInNewContext(compile('lib/saved-places.ts'), library);
+                return library.exports;
+            }
             if (name === '@/lib/discovery-filters') return filters.exports;
             if (name === '@/routes') return { locationMap: { url: ({ query } = {}) => '/map' + (query ? '?' + new URLSearchParams(query) : '') } };
             if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });

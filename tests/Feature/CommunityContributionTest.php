@@ -149,9 +149,12 @@ describe('withdrawing a submission', function () {
         $space->reviews()->create(['to_status' => ParkingStatus::REJECTED, 'reason' => RejectionReason::DUPLICATE, 'reviewed_at' => now()]);
 
         $this->actingAs($user)->get(route('profile.parking-spaces.show', $space->id))
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('rejectionReason', RejectionReason::DUPLICATE->label())
-                ->where('canWithdraw', false));
+            ->assertRedirect(route('dashboard', ['section' => 'contributions']));
+        $this->get(route('dashboard', ['section' => 'contributions']))
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+                ->where('contributions.data.0.reason', RejectionReason::DUPLICATE->label())
+                ->where('contributions.data.0.action', null)));
+
     });
 });
 

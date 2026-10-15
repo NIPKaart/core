@@ -82,7 +82,7 @@ Implementation for [#1209](https://github.com/NIPKaart/core/issues/1209).
 - deletes the user's favorites, confirmations, passkeys, suspension history and notifications;
 - keeps review and suspension records the user made about others, without their identity.
 
-Saved destinations (#1316) and contributor reliability (#1256) do not exist yet; they must be removed with the account when they are built.
+Saved destinations (#1316) are removed with the account by their foreign key. Contributor reliability (#1256) must follow the same account lifecycle when it is built.
 
 ## Deployment and recovery
 
@@ -137,3 +137,8 @@ php artisan db:seed --class=PermissionsTableSeeder
 ```
 
 Production seeding may require Laravel's confirmation or `--force` when running non-interactively. The administrator command does not seed or overwrite role permissions automatically. User creation and role assignment run in one transaction, so a failed assignment leaves no partial bootstrap account.
+
+
+## Personal continuity (#1179)
+
+`/dashboard` is Mijn NIPKaart: destinations, favorite parking options and one paginated stream of the person's submissions, improvement proposals and disappearance reports. Each contribution shows its current status and a rejection reason where applicable. Published parking opens on the normal map; pending submissions open the existing edit form. Old profile-list URLs redirect to the corresponding section, and old submission-detail URLs hand off to the current map/edit/status context. Account settings and the existing notification inbox remain separate. No confirmation counters, search history, second notification inbox or permanent contribution archive are introduced. Moderators and administrators retain the actionable moderation/source work above the personal sections.

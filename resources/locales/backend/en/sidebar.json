@@ -1,9 +1,9 @@
 {
-    "dashboard": "Dashboard",
+    "dashboard": "My NIPKaart",
     "map": "Map",
     "personal": "Personal",
     "my_locations": "My Locations",
-    "my_favorites": "My Favorites",
+    "my_favorites": "Favorites",
     "moderation": "Moderation",
     "community_spaces": "Community Spaces",
     "offstreet": "Off-Street Parking",
@@ -20,5 +20,7 @@
     "municipal_data": "Data sources",
     "search": "Search",
     "search_placeholder": "Search parking locations…",
-    "parking_data": "Parking data"
+    "parking_data": "Parking data",
+    "destinations": "Destinations",
+    "my_contributions": "My contributions"
 }
