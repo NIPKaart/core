@@ -50,7 +50,7 @@ export function AppSidebar() {
     };
 
     const currentUrl = new URL(url, 'https://navigation.local');
-    const personalSection = currentUrl.pathname === dashboard.url() ? (currentUrl.searchParams.get('section') ?? 'destinations') : null;
+    const personalSection = currentUrl.pathname === dashboard.url() ? currentUrl.searchParams.get('section') : null;
 
     const personalNavGroup: NavGroup = {
         title: t('personal'),

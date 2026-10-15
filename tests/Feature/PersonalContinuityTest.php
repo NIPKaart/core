@@ -55,7 +55,7 @@ test('hidden report targets expose status but no hidden name location or map act
         'parking_municipal_id' => ParkingMunicipal::factory()->create(['visibility' => false, 'street' => 'Private address'])->id,
         'resolution' => ReportResolution::REMOVED, 'resolved_at' => now(),
     ]);
-    $this->actingAs($user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('contributions.data.0.status', 'removed')->where('contributions.data.0.label', null)
         ->where('contributions.data.0.url', null)->where('contributions.data.0.action', null)));
 });
@@ -76,7 +76,7 @@ test('legacy personal lists lead to the matching Mijn NIPKaart section', functio
 test('personal section and pagination inputs are validated', function (array $query, string $field) {
     $this->actingAs(User::factory()->create())->getJson(route('dashboard', $query))->assertUnprocessable()->assertJsonValidationErrors($field);
 })->with([
-    [['section' => 'other'], 'section'], [['contributions_page' => 0], 'contributions_page'],
+    [['section' => 'other'], 'section'], [['view' => 'other'], 'view'], [['destination' => 0], 'destination'], [['contributions_page' => 0], 'contributions_page'],
     [['contributions_page' => 10001], 'contributions_page'], [['contributions_page' => 'abc'], 'contributions_page'],
 ]);
 

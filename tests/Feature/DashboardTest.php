@@ -41,9 +41,12 @@ test('a contributor sees personal continuity without figures or work to do', fun
         ->assertInertia(fn (Assert $page) => $page
             ->component('dashboard')
             ->missing('stats')->missing('map')->missing('activity')
-            ->where('hasTodo', false)
+            ->where('hasTodo', false)->where('view', 'personal')
             ->missing('todo')
-            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', ['moderation' => null, 'queue' => [], 'sources' => ['total' => 0, 'items' => []]])));
+            ->loadDeferredProps(fn (Assert $reload) => $reload->where('todo', [
+                'moderation' => null, 'next' => null, 'decisions' => null,
+                'sources' => ['total' => 0, 'items' => []], 'rules' => ['total' => 0, 'items' => []], 'attention' => false,
+            ])));
 });
 
 test('a moderator is pointed to the moderation queue', function () {
@@ -73,7 +76,7 @@ test('contributions exclude saved favorites and duplicate notification outcomes'
     notifyAbout($user, 'dataset.import_ready_for_review', ['source_name' => 'Utrecht'], '2026-10-03 10:00:00');
     ParkingSpace::factory()->for($other)->create(['street' => 'Someone else']);
 
-    $this->actingAs($user)->get(route('dashboard'))
+    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 1)
             ->where('contributions.data.0.kind', 'submission')
@@ -150,7 +153,7 @@ test('notifications stay in the existing inbox without a second inbox on the das
     }
     notifyAbout(User::factory()->create(), 'community.improvement_rejected', ['space_label' => 'Elders'], '2026-10-03 09:00:00');
 
-    $this->actingAs($admin)->get(route('dashboard'))
+    $this->actingAs($admin)->get(route('dashboard', ['section' => 'contributions']))
         ->assertInertia(fn (Assert $page) => $page->missing('activity')->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 0)));
     expect($admin->notifications()->count())->toBe(61);
@@ -167,20 +170,20 @@ test('the dashboard names the person and their role', function () {
 
 });
 
-test('a moderator sees the first five items of the queue, each opening its review', function () {
+test('a moderator lands on the workplace with the first queue item opening its review', function () {
     $moderator = tap(User::factory()->create())->assignRole(UserRole::MODERATOR);
-    $spaces = collect(range(1, 6))->map(function (int $day) {
+    $spaces = collect(range(1, 3))->map(function (int $day) {
         $this->travelTo("2026-10-0{$day} 09:00:00");
 
         return ParkingSpace::factory()->create(['status' => ParkingStatus::PENDING, 'street' => "Straat {$day}"]);
     });
 
     $this->actingAs($moderator)->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->has('todo.queue', 5)
-            ->where('todo.queue.0.type', 'submission')
-            ->where('todo.queue.0.street', 'Straat 1')
-            ->where('todo.queue.0.url', route('app.moderation.submissions.show', ['parking_space' => $spaces->first()->id]))));
+        ->assertInertia(fn (Assert $page) => $page->where('view', 'work')->loadDeferredProps(fn (Assert $reload) => $reload
+            ->where('todo.next.type', 'submission')
+            ->where('todo.next.street', 'Straat 1')
+            ->where('todo.next.url', route('app.moderation.submissions.show', ['parking_space' => $spaces->first()->id]))));
+    $this->get(route('dashboard', ['view' => 'personal']))->assertInertia(fn (Assert $page) => $page->where('view', 'personal'));
 });
 
 test('own pending contributions link directly to their editable form', function () {
@@ -191,7 +194,7 @@ test('own pending contributions link directly to their editable form', function 
     Favorite::factory()->for($user)->for($public, 'favoritable')->create();
     Favorite::factory()->for($user)->for(ParkingMunicipal::factory()->create(['visibility' => false]), 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('dashboard'))
+    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
         ->assertInertia(fn (Assert $page) => $page->missing('map')->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 1)->where('contributions.data.0.status', 'pending')
             ->where('contributions.data.0.url', route('location-map.edit', ['parking_space' => $own->id]))));

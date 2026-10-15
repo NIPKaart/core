@@ -36,7 +36,7 @@ test('Mijn NIPKaart sidebar highlights only the selected personal section includ
     const sidebarSource = ts.transpileModule(readFileSync(new URL('../../resources/js/components/app-sidebar.tsx', import.meta.url), 'utf8'), {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
     }).outputText;
-    for (const [url, selected] of [['/dashboard', 'destinations'], ['/dashboard?section=favorites', 'favorites'], ['/dashboard?section=contributions&contributions_page=2', 'contributions'], ['/app/users', null]]) {
+    for (const [url, selected] of [['/dashboard', null], ['/dashboard?section=favorites', 'favorites'], ['/dashboard?section=contributions&contributions_page=2', 'contributions'], ['/app/users', null]]) {
         const groups = [];
         const route = Object.assign((options) => ({ url: '/dashboard' + (options ? '?' + new URLSearchParams(options.query) : '') }), { url: () => '/dashboard' });
         const routeTree = new Proxy(route, { get: (_, key) => key === 'url' ? route.url : routeTree });

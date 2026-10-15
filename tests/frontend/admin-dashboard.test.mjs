@@ -12,137 +12,270 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 
-const stats = { added: 4, published: 3, pending: 1, confirmed: 0 };
-const props = {
-    section: 'destinations',
-    contributions: { data: [], current_page: 1, prev_page_url: null, next_page_url: null },
-    profile: { name: 'Klaas Schoute', role: 'Beheerder', member_since: '2024-03-12T09:00:00+00:00' },
-    stats,
-    favorites: [],
-    activity: [],
+const overview = {
+    destinations: [
+        { id: 1, label: 'Werk', destination: { key: 'd:1', label: 'Stationsplein 1', sub: null, type: 'address', latitude: 52.09, longitude: 5.11 } },
+        { id: 2, label: 'Mama', destination: { key: 'd:2', label: 'Dorpsstraat 14', sub: null, type: 'address', latitude: 52.03, longitude: 5.17 } },
+    ],
+    destination_id: 1,
+    nearby: {
+        total: 8,
+        more: false,
+        items: [
+            {
+                key: 'community:7',
+                source: 'community',
+                title: 'Jaarbeursplein 3',
+                distance_metres: 120,
+                parking_time: 180,
+                free_space: null,
+                map_url: '/map?place=community:7',
+            },
+        ],
+    },
+    garage: null,
+    pending: null,
+    published: 0,
+    favorites: { total: 0, items: [] },
+    rules: [],
+    history: [],
 };
 
 function render(pageProps) {
-    const route = (name) => Object.assign(() => ({ url: `/${name}` }), { url: () => `/${name}` });
+    const route = (name) =>
+        Object.assign((options) => ({ url: `/${name}${options?.query ? '?' + new URLSearchParams(options.query) : ''}` }), {
+            url: (options) => `/${name}${options?.query ? '?' + new URLSearchParams(options.query) : ''}`,
+        });
     const context = {
         exports: {},
         Intl,
         require: (name) => {
             if (name === '@/components/confirm-dialog') return { ConfirmDialog: () => null };
-            if (name === '@/routes/profile/parking-spaces') return { destroy: route('withdraw') };
-            if (name === '@/lib/saved-places') return {};
+            if (name === '@/components/frontend/garage-table') return { useMeasuredTime: () => () => '14:32' };
             if (name === '@/components/map/destinations') return { default: () => React.createElement('div', { 'data-destinations': true }) };
             if (name === '@/components/map/favorites') return { default: () => React.createElement('div', { 'data-favorites': true }) };
-            if (name === '@/components/ui/tabs') return {
-                Tabs: ({ children }) => React.createElement('div', null, children),
-                TabsList: ({ children }) => React.createElement('div', { role: 'tablist' }, children),
-                TabsTrigger: ({ children }) => React.createElement('button', { role: 'tab' }, children),
-                TabsContent: ({ children, value }) => value === (pageProps.section ?? 'destinations') ? children : null,
-            };
-            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
-            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
+            if (name === '@/components/map/parking-detail/navigation-handoff') return { navigationUrl: () => 'https://maps.example/route' };
+            if (name === '@/components/map/parking-detail/parts') return { Chip: ({ children }) => React.createElement('span', null, children) };
+            if (name === '@/components/map/parking-detail/utils')
+                return { formatDistance: (metres) => `${metres} m`, formatShortDate: (value) => value.slice(0, 10) };
+            if (name === '@/components/search/search-store') return { openSearch: () => {}, setSearchQuery: () => {}, useSearchQuery: () => '' };
+            if (name === '@/components/ui/button')
+                return { Button: ({ children, asChild, disabled }) => (asChild ? children : React.createElement('button', { disabled }, children)) };
+            if (name === '@/components/ui/progress') return { Progress: () => React.createElement('div', { role: 'progressbar' }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
-            if (name === '@/components/ui/button') return { Button: ({ children, asChild, disabled }) => asChild ? children : React.createElement('button', { disabled }, children) };
-            if (name === '@/components/map/contributions-map') return { default: () => React.createElement('div', { 'data-map': true }) };
+            if (name === '@/lib/garage-occupancy') return {};
+            if (name === '@/lib/garage-overview')
+                return {
+                    garageLiveState: (garage) => ({
+                        status: 'free',
+                        tone: 'green',
+                        free: garage.free_space,
+                        total: garage.capacity,
+                        percent: 76,
+                        bar: 'green',
+                    }),
+                };
+            if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg></svg>' };
+            if (name === '@/lib/saved-places') return { destinationMapUrl: (destination) => `/map?destination=${destination.key}` };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
+            if (name === '@/routes') return { dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
+            if (name === '@/routes/app') return { default: { moderation: { index: route('moderation') } } };
+            if (name === '@/routes/app/parking-rules') return { default: { index: route('parking-rules') } };
+            if (name === '@/routes/location-map') return { default: { add: route('add') } };
+            if (name === '@/routes/profile/parking-spaces') return { destroy: route('withdraw') };
+            if (name.startsWith('@/actions/'))
+                return { index: route('imports'), show: Object.assign((id) => ({ url: `/imports/${id}` }), { url: (id) => `/imports/${id}` }) };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
             if (name === '@inertiajs/react')
                 return {
                     Head: () => null,
                     Deferred: ({ children }) => children,
+                    router: {},
                     usePage: () => ({ props: { auth: { user: { name: 'Klaas Schoute' } } } }),
-                    Link: ({ children, href }) => React.createElement('a', { href: typeof href === 'string' ? href : href.url }, children),
+                    Link: ({ children, href, className }) =>
+                        React.createElement('a', { href: typeof href === 'string' ? href : href.url, className }, children),
                 };
-            if (name === '@/routes') return { dashboard: route('dashboard'), locationMap: route('map') };
-            if (name === '@/routes/app') return { default: { moderation: { index: route('moderation') } } };
-            if (name === '@/routes/location-map') return { default: { add: route('add') } };
-            if (name === '@/routes/notifications') return { default: { index: route('notifications') } };
-            if (name === '@/routes/profile') return { default: { favorites: { index: route('favorites') } } };
-            if (name.startsWith('@/actions/')) return { index: route('imports'), show: (id) => ({ url: `/imports/${id}` }) };
             return require(name);
         },
     };
     vm.runInNewContext(source, context);
-    return renderToStaticMarkup(React.createElement(context.exports.default, { ...props, ...pageProps }));
+    return renderToStaticMarkup(
+        React.createElement(context.exports.default, {
+            section: null,
+            view: 'personal',
+            hasTodo: false,
+            overview,
+            contributions: null,
+            ...pageProps,
+        }),
+    );
 }
 
-test('people without moderation work start from destinations favorites and contributions without counters', () => {
-    const html = render({ hasTodo: false, map: { spaces: [], favorites: [] } });
-    assert.match(html, /data-destinations/);
-    assert.match(html, /contributions\.title/);
-    assert.doesNotMatch(html, /stats\.|data-map|notifications/);
-    assert.doesNotMatch(html, /href="\/(moderation|imports)/);
+const todo = {
+    moderation: { total: 8, high: 1, types: { submission: 7, report: 1 }, oldest: '2026-10-01T09:00:00+00:00' },
+    next: {
+        key: 'report:community:7',
+        type: 'report',
+        priority: 'high',
+        street: 'Biltstraat 88',
+        municipality: 'Utrecht',
+        contributor: null,
+        reports: 3,
+        waiting_since: '2026-10-01T09:00:00+00:00',
+        url: '/app/moderation/reports/community/7',
+    },
+    decisions: { total: 4, approved: 3, rejected: 1, reports: 0 },
+    sources: { total: 0, items: [] },
+    rules: { total: 0, items: [] },
+    attention: false,
+};
+
+test('people without moderation work start from their destinations with the parking nearby and no workplace', () => {
+    const html = render({});
+    assert.match(html, /hero\.title/);
+    assert.match(html, /Werk/);
+    assert.match(html, /href="\/dashboard\?view=personal&amp;destination=2"/);
+    assert.match(html, /Jaarbeursplein 3/);
+    assert.match(html, /href="\/map\?place=community:7"/);
+    assert.match(html, /href="\/map\?destination=d:1"/);
+    assert.doesNotMatch(html, /href="\/(moderation|imports|parking-rules)/);
+    assert.doesNotMatch(html, /view\.label/);
 });
 
-test('moderators land on the queue, each item opening its review, without a map', () => {
+test('every tile keeps its place with an empty state that offers the next step when there is no data yet', () => {
+    const html = render({});
+    assert.match(html, /garage\.empty_title/);
+    assert.match(html, /href="\/garages"/);
+    assert.match(html, /pending\.empty_title/);
+    assert.match(html, /rules\.empty/);
+    assert.match(html, /favorites\.empty/);
+    assert.match(html, /href="\/map"/);
+    assert.match(html, /history\.empty/);
+    assert.match(html, /impact\.none/);
+    assert.match(html, /href="\/add"/);
+});
+
+test('a saved garage, a waiting submission and official rules each get their own tile with direct actions', () => {
     const html = render({
-        hasTodo: true,
-        todo: {
-            moderation: { total: 8, high: 1, types: { submission: 8 }, oldest: '2026-10-01T09:00:00+00:00' },
-            queue: [
-                {
-                    key: 'submission:7',
-                    type: 'submission',
-                    priority: 'high',
-                    street: 'Oudegracht 7',
-                    municipality: 'Utrecht',
-                    contributor: 'Jan Bakker',
-                    reports: null,
-                    waiting_since: '2026-10-01T09:00:00+00:00',
-                    url: '/app/moderation/submissions/7',
-                },
-            ],
-            sources: { total: 0, items: [] },
+        overview: {
+            ...overview,
+            garage: {
+                id: 'OFST_1',
+                name: 'P+R Science Park',
+                type: 'parkandride',
+                latitude: 52.08,
+                longitude: 5.17,
+                availability: 'current',
+                occupancy_status: 'counting',
+                observed_at: '2026-10-15T14:32:00+00:00',
+                capacity: 600,
+                free_space: 142,
+                municipality: 'Utrecht',
+                map_url: '/map?place=offstreet:OFST_1',
+            },
+            pending: {
+                label: 'Lange Nieuwstraat 42, Utrecht',
+                submitted_at: '2026-10-12T09:00:00+00:00',
+                edit_url: '/map/add/9/edit',
+                withdraw_id: '9',
+            },
+            published: 12,
+            rules: [{ id: 3, name: 'Utrecht', nationwide: false, url: 'https://utrecht.example/regels' }],
         },
     });
-    assert.match(html, /Oudegracht 7/);
-    assert.match(html, /href="\/app\/moderation\/submissions\/7"/);
-    assert.match(html, /href="\/moderation"/);
-    assert.match(html, /todo\.high/);
-    assert.doesNotMatch(html, /data-map/);
-    assert.doesNotMatch(html, /href="\/imports/);
+    assert.match(html, /P\+R Science Park/);
+    assert.match(html, /142/);
+    assert.match(html, /href="https:\/\/maps\.example\/route"/);
+    assert.match(html, /Lange Nieuwstraat 42/);
+    assert.match(html, /href="\/map\/add\/9\/edit"/);
+    assert.match(html, /aria-current="step"/);
+    assert.match(html, /href="https:\/\/utrecht\.example\/regels"[^>]*target="_blank"/);
+    assert.match(html, /impact\.text/);
 });
 
-test('administrators get each data source that needs attention with its own action', () => {
+test('moderators land on the workplace with the next item opening its review and a way back to personal', () => {
+    const html = render({ hasTodo: true, view: 'work', todo });
+    assert.match(html, /work\.title/);
+    assert.match(html, /Biltstraat 88/);
+    assert.match(html, /href="\/app\/moderation\/reports\/community\/7"/);
+    assert.match(html, /href="\/moderation"/);
+    assert.match(html, /href="\/dashboard\?view=personal"/);
+    assert.match(html, /work\.decisions\.split/);
+    assert.doesNotMatch(html, /hero\.title|work\.attention\.eyebrow/);
+});
+
+test('administrators keep the attention tile with a reassuring empty state when nothing needs attention', () => {
+    const html = render({ hasTodo: true, view: 'work', todo: { ...todo, attention: true } });
+    assert.match(html, /work\.attention\.eyebrow/);
+    assert.match(html, /work\.attention\.none/);
+});
+
+test('administrators see data sources and broken rule links that need attention, each with its own action', () => {
     const html = render({
         hasTodo: true,
+        view: 'work',
         todo: {
-            moderation: null,
-            queue: [],
+            ...todo,
             sources: {
                 total: 1,
                 items: [{ id: 3, name: 'Gemeente Utrecht', status: 'awaiting_review', import_id: 12, since: '2026-10-04T09:00:00+00:00' }],
             },
+            rules: { total: 2, items: [{ id: 5, name: 'Houten', failing_since: '2026-10-11T03:00:00+00:00' }] },
+            attention: true,
         },
     });
     assert.match(html, /Gemeente Utrecht/);
     assert.match(html, /href="\/imports\/12"/);
-    assert.match(html, /todo\.source_tag\.awaiting_review/);
+    assert.match(html, /Houten/);
+    assert.match(html, /work\.attention\.rule_broken/);
+    assert.match(html, /href="\/parking-rules"/);
+    assert.match(html, /work\.attention\.more_rules/);
 });
 
-
-test('the contributions tab shows current statuses reasons and map or edit actions instead of a notification inbox', () => {
-    const html = render({ hasTodo: false, section: 'contributions', contributions: {
-        data: [
-            { key: 'submission:1', kind: 'submission', label: 'Museumstraat', at: '2026-10-01T09:00:00Z', status: 'pending', withdraw_id: '1', reason: null, url: '/map/add/1/edit', action: 'edit' },
-            { key: 'improvement:2', kind: 'improvement', label: 'Kerkstraat', at: '2026-10-02T09:00:00Z', status: 'rejected', reason: '<rejection>', url: '/map?place=community:2', action: 'map' },
-        ], current_page: 1, prev_page_url: null, next_page_url: null,
-    } });
+test('the contributions section shows current statuses reasons and map or edit actions', () => {
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [
+                {
+                    key: 'submission:1',
+                    kind: 'submission',
+                    label: 'Museumstraat',
+                    at: '2026-10-01T09:00:00Z',
+                    status: 'pending',
+                    withdraw_id: '1',
+                    reason: null,
+                    url: '/map/add/1/edit',
+                    action: 'edit',
+                },
+                {
+                    key: 'improvement:2',
+                    kind: 'improvement',
+                    label: 'Kerkstraat',
+                    at: '2026-10-02T09:00:00Z',
+                    status: 'rejected',
+                    withdraw_id: null,
+                    reason: '<rejection>',
+                    url: '/map?place=community:2',
+                    action: 'map',
+                },
+            ],
+            current_page: 1,
+            prev_page_url: null,
+            next_page_url: '/dashboard?section=contributions&contributions_page=2',
+        },
+    });
+    assert.match(html, /sections\.back/);
     assert.match(html, /Museumstraat/);
     assert.match(html, /contributions\.withdraw\.label/);
-    assert.match(html, /contributions\.status\.pending/);
     assert.match(html, /href="\/map\/add\/1\/edit"/);
     assert.match(html, /&lt;rejection&gt;/);
-    assert.match(html, /contributions\.actions\.map/);
-    assert.doesNotMatch(html, /notifications|stats\.hint/);
+    assert.match(html, /contributions_page=2/);
+    assert.match(html, /disabled/);
+    assert.doesNotMatch(html, /hero\.title/);
 });
 
-test('contribution pagination keeps unavailable directions disabled and the next page reachable', () => {
-    const html = render({ hasTodo: false, section: 'contributions', contributions: {
-        data: [{ key: 'report:1', kind: 'report', label: null, at: '2026-10-01T09:00:00Z', status: 'removed', reason: null, url: null, action: null }],
-        current_page: 1, prev_page_url: null, next_page_url: '/dashboard?section=contributions&contributions_page=2',
-    } });
-    assert.match(html, /disabled/);
-    assert.match(html, /contributions_page=2/);
-    assert.match(html, /contributions\.status\.removed/);
-    assert.doesNotMatch(html, /contributions\.actions\./);
+test('the destinations and favorites sections keep their full management lists', () => {
+    assert.match(render({ section: 'destinations' }), /data-destinations/);
+    assert.match(render({ section: 'favorites' }), /data-favorites/);
 });

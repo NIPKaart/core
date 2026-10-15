@@ -6,126 +6,9 @@
         "evening": "Goedenavond, {{name}}"
     },
     "add_location": "Parkeerplaats toevoegen",
-    "todo": {
-        "moderation_done": "Niets te beoordelen in moderatie",
-        "oldest": "oudste {{ago}}",
-        "check": "Controleren",
-        "types": {
-            "submission_one": "{{count}} nieuwe",
-            "submission_other": "{{count}} nieuwe",
-            "improvement_one": "{{count}} verbetering",
-            "improvement_other": "{{count}} verbeteringen",
-            "report_one": "{{count}} verdwenen",
-            "report_other": "{{count}} verdwenen"
-        },
-        "source": {
-            "awaiting_review": "Nieuwe levering wacht op controle",
-            "awaiting_approval": "Nieuwe bron wacht op goedkeuring",
-            "reapproval": "Gewijzigde bron wacht op goedkeuring",
-            "intake_problem": "Levering kon niet worden verwerkt",
-            "overdue": "Levering is te laat",
-            "live_stale": "Live bezetting komt niet meer binnen"
-        },
-        "more_sources_one": "En nog {{count}} databron",
-        "more_sources_other": "En nog {{count}} databronnen",
-        "queue_title": "Wacht op jou in moderatie",
-        "queue_count_one": "{{count}} item",
-        "queue_count_other": "{{count}} items",
-        "review_all": "Alles beoordelen",
-        "more_items_one": "Nog {{count}} item",
-        "more_items_other": "Nog {{count}} items",
-        "sources_title": "Databronnen die aandacht vragen",
-        "high": "Hoge prioriteit",
-        "by": "door {{name}}",
-        "in_total": "in totaal {{types}}",
-        "sources_hint": "Alleen zichtbaar voor beheerders",
-        "source_tag": {
-            "awaiting_review": "Levering",
-            "awaiting_approval": "Goedkeuring",
-            "reapproval": "Goedkeuring",
-            "intake_problem": "Probleem",
-            "overdue": "Te laat",
-            "live_stale": "Live"
-        }
-    },
     "activity": {
-        "title": "Recente activiteit",
-        "all": "Alle notificaties",
-        "empty": "Nog geen activiteit. Voeg een parkeerplaats toe of bewaar een favoriet, dan zie je hier wat ermee gebeurt.",
-        "unknown_place": "Een parkeerplaats",
-        "added": "Je voegde {{place}} toe",
-        "status": {
-            "pending": "Wacht op een moderator.",
-            "approved": "Staat op de kaart.",
-            "rejected": "Afgewezen."
-        },
-        "proposed": "Je stelde een verbetering voor bij {{place}}",
-        "saved": "Je bewaarde {{place}}",
-        "published": "{{place}} staat op de kaart",
-        "published_detail": "Je inzending is goedgekeurd.",
-        "rejected": "Je inzending {{place}} is afgewezen",
-        "status_changed": "De status van {{place}} is gewijzigd",
-        "improvement_approved": "Je verbetering bij {{place}} is overgenomen",
-        "improvement_rejected": "Je verbetering bij {{place}} is afgewezen",
-        "report_kept": "Je melding over {{place}} is bekeken",
-        "report_kept_detail": "De parkeerplaats blijft op de kaart.",
-        "report_removed": "{{place}} is van de kaart gehaald na je melding",
-        "deleted": "{{place}} is verwijderd",
-        "restored": "{{place}} is teruggezet",
-        "changed": "Gewijzigd: {{fields}}."
+        "unknown_place": "Een parkeerplaats"
     },
-    "favorites": {
-        "title": "Favorieten",
-        "all": "Alles bekijken",
-        "empty": "Nog geen favorieten. Bewaar een parkeerplaats op de kaart om hem hier terug te vinden.",
-        "untitled": "Parkeerplaats zonder adres",
-        "view_on_map": "Bekijk op kaart",
-        "sources": {
-            "Community": "Community",
-            "Municipal": "Gemeentelijke data",
-            "Offstreet": "Parkeergarage",
-            "Unknown": "Onbekend"
-        },
-        "unavailable": "Niet meer op de kaart"
-    },
-    "stats": {
-        "title": "Jouw bijdragen",
-        "added": "Toegevoegd",
-        "published": "Op de kaart",
-        "pending": "In afwachting",
-        "confirmed": "Bevestigd",
-        "my_locations": "Mijn locaties",
-        "hint": {
-            "added": "parkeerplaatsen die je deelde",
-            "published": "zichtbaar voor iedereen",
-            "pending": "wachten op een moderator",
-            "confirmed": "keer liet je weten dat een plek er nog is"
-        }
-    },
-    "profile": {
-        "since": "lid sinds {{date}}"
-    },
-    "map": {
-        "title": "Jouw kaart",
-        "open": "Open de kaart",
-        "legend": {
-            "published": "Op de kaart",
-            "pending": "In afwachting",
-            "favorites": "Favoriet"
-        }
-    },
-    "summary": {
-        "items_one": "{{count}} item",
-        "items_other": "{{count}} items",
-        "sources_one": "{{count}} databron",
-        "sources_other": "{{count}} databronnen",
-        "waiting_one": "{{what}} wacht op je",
-        "waiting_other": "{{what}} wachten op je",
-        "nothing": "Er wacht niets op je",
-        "contributed_one": "Je deelde {{count}} parkeerplaats, {{published}} op de kaart",
-        "contributed_other": "Je deelde {{count}} parkeerplaatsen, {{published}} op de kaart"
-    },
-    "continuity_intro": "Je bestemmingen, favoriete parkeerplaatsen en eigen bijdragen.",
     "contributions": {
         "title": "Mijn bijdragen",
         "empty": "Nog geen bijdragen. Voeg een parkeerplaats toe of stel een verbetering voor via de kaart.",
@@ -156,5 +39,166 @@
             "description": "Je wachtende inzending wordt verwijderd.",
             "cancel": "Annuleren"
         }
+    },
+    "todo": {
+        "source": {
+            "awaiting_review": "Nieuwe levering wacht op controle",
+            "awaiting_approval": "Nieuwe bron wacht op goedkeuring",
+            "reapproval": "Gewijzigde bron wacht op goedkeuring",
+            "intake_problem": "Levering kon niet worden verwerkt",
+            "overdue": "Levering is te laat",
+            "live_stale": "Live bezetting komt niet meer binnen"
+        },
+        "source_tag": {
+            "awaiting_review": "Levering",
+            "awaiting_approval": "Goedkeuring",
+            "reapproval": "Goedkeuring",
+            "intake_problem": "Probleem",
+            "overdue": "Te laat",
+            "live_stale": "Live"
+        }
+    },
+    "view": {
+        "label": "Weergave",
+        "personal": "Mijn overzicht",
+        "work": "Taken"
+    },
+    "hero": {
+        "title": "Waar ga je naartoe?",
+        "search_label": "Zoek een bestemming",
+        "search_placeholder": "Adres, plaats of gebouw",
+        "search_submit": "Zoek",
+        "destinations": "Je bestemmingen",
+        "manage": "Beheren",
+        "no_destinations": "Zoek een bestemming en bewaar die. Dan zie je hier meteen welke parkeerplaatsen in de buurt liggen."
+    },
+    "nearby": {
+        "at": "Bij {{label}}",
+        "count_one": "{{count}} parkeerplaats binnen {{metres}} m",
+        "count_other": "{{count}} parkeerplaatsen binnen {{metres}} m",
+        "more": "{{count}} of meer parkeerplaatsen binnen {{metres}} m",
+        "none": "Geen parkeerplaatsen bekend binnen {{metres}} m.",
+        "on_map": "Bekijk op de kaart",
+        "free": "{{count}} vrij",
+        "max_time": "Max. {{time}}",
+        "untitled": "Parkeerplaats zonder adres"
+    },
+    "sources": {
+        "community": "Community",
+        "municipal": "Gemeentelijke data",
+        "offstreet": "Parkeergarage"
+    },
+    "places_title": "Je parkeerplaatsen",
+    "garage": {
+        "eyebrow": "Favoriete garage",
+        "empty_title": "Nog geen favoriete garage",
+        "empty_text": "Bewaar een parkeergarage of P+R als favoriet, dan zie je hier hoeveel plaatsen er vrij zijn.",
+        "empty_action": "Bekijk garages en P+R"
+    },
+    "pending": {
+        "eyebrow": "Je inzending",
+        "progress": "Voortgang",
+        "submitted": "Ingediend · {{date}}",
+        "with_moderator": "Bij een moderator",
+        "on_map": "Op de kaart",
+        "edit": "Bewerken",
+        "withdraw": "Intrekken",
+        "empty_title": "Geen inzending in behandeling",
+        "empty_text": "Voeg je een parkeerplaats toe, dan volg je hier hoe hij op de kaart komt."
+    },
+    "impact": {
+        "eyebrow": "Jouw bijdrage",
+        "text_one": "parkeerplaats van jou staat op de kaart, vindbaar voor iedereen.",
+        "text_other": "parkeerplaatsen van jou staan op de kaart, vindbaar voor iedereen.",
+        "none": "Nog geen parkeerplaatsen van jou op de kaart."
+    },
+    "rules": {
+        "eyebrow": "Parkeerregels bij je favorieten",
+        "title": "Wat mag je met je gehandicaptenparkeerkaart?",
+        "open": "Regels bekijken",
+        "nationwide": "Landelijke regels",
+        "municipality": "Regels van de gemeente",
+        "note": "Links naar de officiële regels, die openen in een nieuw tabblad.",
+        "open_label": "Bekijk de parkeerregels voor {{name}} (opent in een nieuw tabblad)",
+        "empty": "Bewaar een parkeerplaats als favoriet, dan zie je hier de officiële regels van die gemeente."
+    },
+    "favorites": {
+        "eyebrow": "Favorieten",
+        "all": "Alles bekijken",
+        "empty": "Nog geen favorieten. Bewaar een parkeerplaats op de kaart om hem hier terug te vinden.",
+        "view_on_map": "Bekijk {{title}} op de kaart",
+        "untitled": "Parkeerplaats zonder adres",
+        "max_time": "Max. {{time}}",
+        "open_map": "Open de kaart"
+    },
+    "add": {
+        "title": "Mis je een parkeerplaats op de kaart?",
+        "text": "Zet de pin op de plek en vertel wat je ziet."
+    },
+    "history": {
+        "eyebrow": "Eerder beoordeeld",
+        "all": "Alle bijdragen",
+        "empty": "Nog niets beoordeeld. Zodra een moderator naar je bijdrage kijkt, zie je hier de uitkomst."
+    },
+    "work": {
+        "title_one": "{{count}} item wacht op je",
+        "title_other": "{{count}} items wachten op je",
+        "nothing": "Er wacht niets op je",
+        "strip": {
+            "label": "Mijn overzicht",
+            "pending": "{{label}} wacht op een moderator",
+            "garage": "vrij bij {{name}}",
+            "open": "Naar mijn overzicht",
+            "empty": "Je bestemmingen, favorieten en bijdragen"
+        },
+        "next": {
+            "eyebrow": "Volgende in de rij · 1 van {{total}}",
+            "high": "Hoge prioriteit",
+            "reports_one": "{{count}} melding",
+            "reports_other": "{{count}} meldingen",
+            "by": "door {{name}}",
+            "waiting": "wacht {{ago}}",
+            "start": "Start beoordelen",
+            "queue": "Hele wachtrij",
+            "done": "Niets te beoordelen in moderatie",
+            "no_address": "Zonder adres"
+        },
+        "queue": {
+            "eyebrow": "Wachtrij",
+            "oldest": "Oudste {{ago}}",
+            "review_all": "Alles beoordelen",
+            "types": {
+                "submission": "Nieuw",
+                "improvement": "Verbeteringen",
+                "report": "Verdwenen"
+            }
+        },
+        "decisions": {
+            "eyebrow": "Jouw beslissingen",
+            "week": "deze week",
+            "split": "{{approved}} goedgekeurd · {{rejected}} afgewezen",
+            "reports_one": "{{count}} gemelde parkeerplaats afgehandeld",
+            "reports_other": "{{count}} gemelde parkeerplaatsen afgehandeld",
+            "none": "Deze week nog geen beslissingen.",
+            "history": "Bekijk de geschiedenis"
+        },
+        "attention": {
+            "eyebrow": "Vraagt aandacht",
+            "admins": "Alleen voor beheerders",
+            "source": "Databron",
+            "rule": "Parkeerregels",
+            "rule_broken": "Link werkt niet meer sinds {{date}}",
+            "rule_broken_unknown": "Link werkt niet meer",
+            "nationwide": "Landelijk",
+            "check": "Controleren",
+            "more_sources_one": "En nog {{count}} databron",
+            "more_sources_other": "En nog {{count}} databronnen",
+            "more_rules_one": "En nog {{count}} kapotte link",
+            "more_rules_other": "En nog {{count}} kapotte links",
+            "none": "Alle databronnen en links werken."
+        }
+    },
+    "sections": {
+        "back": "Terug naar Mijn NIPKaart"
     }
 }
