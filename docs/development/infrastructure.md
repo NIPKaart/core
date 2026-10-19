@@ -67,9 +67,9 @@ Before deploying with `APP_ENV=production`:
 4. Run Laravel's scheduler every minute and use a shared supported cache for its single-server/overlap locks (database cache is supported).
 5. Run `backup:run-encrypted`, download the bucket archive and complete an isolated restore. Verify monitoring and cleanup.
 
-Production schedules always run backup at 01:30 UTC, monitor at 03:00 UTC and cleanup at 03:30 UTC. DDS retention defaults: all backups for 7 days, daily for 30 days, weekly for 8 weeks, monthly for 12 months, yearly for 3 years. A configurable 10 GiB cleanup ceiling can shorten that history. These are initial defaults, not agreed RPO/RTO. Daily scheduling implies roughly one day of potential loss only when jobs succeed; confirm recovery objectives and storage capacity before launch.
+By default, production schedules run backup at 01:30 UTC, monitor at 03:00 UTC and cleanup at 03:30 UTC. DDS retention defaults: all backups for 7 days, daily for 30 days, weekly for 8 weeks, monthly for 12 months, yearly for 3 years. A configurable 10 GiB cleanup ceiling can shorten that history. These are initial defaults, not agreed RPO/RTO. Daily scheduling implies roughly one day of potential loss only when jobs succeed; confirm recovery objectives and storage capacity before launch.
 
-No separate backup enablement flag is required. Existing `BACKUP_ENABLED` entries can be removed from deployment environments. Local, testing and staging environments do not execute these scheduled tasks.
+`BACKUP_ENABLED` defaults to `true`; it can be omitted from deployment environments. Set `BACKUP_ENABLED=false` to disable scheduled backup, monitoring and cleanup explicitly. Local, testing and staging environments do not execute these scheduled tasks.
 
 Use `backup:run-encrypted`: it refuses a missing password and runs Spatie with `--only-db`. Raw `backup:run` bypasses the wrapper's password guard. Archive verification alone is not a restore test.
 
