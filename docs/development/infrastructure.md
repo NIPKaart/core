@@ -11,7 +11,7 @@ Audit date: 2026-09-07. NIPKaart is not yet in production. Laravel 13/PHP 8.4 co
 | Reverb/Echo | Keep and connect with owner approval. Five community-space notifications use database and broadcast channels. The previously unused hook now runs in app/frontend/map layouts, once per layout instead of in each responsive bell. |
 | Log Viewer | Keep. UI/API require a non-suspended administrator. Tests cover guests, ordinary users and suspended administrators. Set `LOG_VIEWER_ENABLED=false` to disable all access. |
 | Clockwork | Explicit local opt-in via `CLOCKWORK_ENABLE=true`. Other environments disable collection, API and UI even with debug and collect-always environment flags enabled. |
-| Spatie Backup | Keep; prepare the DDS-style encrypted database/S3 pattern below. Scheduling is disabled by default. |
+| Spatie Backup | Keep; prepare the DDS-style encrypted database/S3 pattern below. Backup, monitoring and cleanup are scheduled automatically in production. |
 | Redis | Optional backing service for cache/queue/session or multi-server Reverb scaling. Current defaults use database cache/queue/session; Reverb scaling is off. No direct application Redis use was found. DDEV Redis/RedisInsight are optional tooling, not an application prerequisite. |
 
 ## Parking search audit and replacement (#1195)
@@ -59,7 +59,7 @@ Monitoring, alert destinations, backup coverage, recovery expectations and the r
 
 Reference: the current DDS Platform repository's `routes/console.php`, `config/backup.php` and `config/filesystems.php`; production execution was not inspected. NIPKaart adopts a separate S3-compatible backups disk, required archive password, database-only job, monitoring, cleanup and retention defaults. No current upload workflow was found. Future uploads/object storage need their own backup contract. Git, `.env` and application keys are excluded; preserve deployment secrets and the original `APP_KEY` separately for encrypted fields.
 
-Before enabling `BACKUP_ENABLED=true` in production:
+Before deploying with `APP_ENV=production`:
 
 1. Provision a private bucket and scoped `BACKUP_AWS_*` credentials/endpoint. Store `BACKUP_ARCHIVE_PASSWORD` separately from the backup destination.
 2. Set `BACKUP_NOTIFICATION_EMAIL` to the operator and verify mail delivery.
@@ -67,7 +67,9 @@ Before enabling `BACKUP_ENABLED=true` in production:
 4. Run Laravel's scheduler every minute and use a shared supported cache for its single-server/overlap locks (database cache is supported).
 5. Run `backup:run-encrypted`, download the bucket archive and complete an isolated restore. Verify monitoring and cleanup.
 
-Enabled production schedules run backup at 01:30 UTC, monitor at 03:00 UTC and cleanup at 03:30 UTC. DDS retention defaults: all backups for 7 days, daily for 30 days, weekly for 8 weeks, monthly for 12 months, yearly for 3 years. A configurable 10 GiB cleanup ceiling can shorten that history. These are initial defaults, not agreed RPO/RTO. Daily scheduling implies roughly one day of potential loss only when jobs succeed; confirm recovery objectives and storage capacity before launch.
+Production schedules always run backup at 01:30 UTC, monitor at 03:00 UTC and cleanup at 03:30 UTC. DDS retention defaults: all backups for 7 days, daily for 30 days, weekly for 8 weeks, monthly for 12 months, yearly for 3 years. A configurable 10 GiB cleanup ceiling can shorten that history. These are initial defaults, not agreed RPO/RTO. Daily scheduling implies roughly one day of potential loss only when jobs succeed; confirm recovery objectives and storage capacity before launch.
+
+No separate backup enablement flag is required. Existing `BACKUP_ENABLED` entries can be removed from deployment environments. Local, testing and staging environments do not execute these scheduled tasks.
 
 Use `backup:run-encrypted`: it refuses a missing password and runs Spatie with `--only-db`. Raw `backup:run` bypasses the wrapper's password guard. Archive verification alone is not a restore test.
 

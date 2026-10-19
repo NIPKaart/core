@@ -34,6 +34,33 @@ test('encrypted backups refuse to run without an archive password', function () 
         ->assertFailed();
 });
 
+test('backup tasks are due at their UTC times only in production', function (string $environment, bool $expected) {
+    $process = new Process([PHP_BINARY, '-r', <<<'PHP'
+        require 'vendor/autoload.php';
+        $app = require 'bootstrap/app.php';
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        \Illuminate\Support\Facades\Artisan::all();
+        $schedule = $app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        $due = [];
+        foreach (['backup:run-encrypted' => '01:30', 'backup:monitor' => '03:00', 'backup:clean' => '03:30'] as $command => $time) {
+            \Illuminate\Support\Carbon::setTestNow("2026-10-19 {$time}:00 UTC");
+            $due[] = collect($schedule->dueEvents($app))->contains(
+                fn ($event) => str_contains($event->command ?? '', $command),
+            );
+        }
+        echo json_encode($due);
+        PHP,
+    ], base_path(), ['APP_ENV' => $environment]);
+    $process->mustRun();
+
+    expect(json_decode($process->getOutput(), true))->toBe([$expected, $expected, $expected]);
+})->with([
+    'production' => ['production', true],
+    'local' => ['local', false],
+    'testing' => ['testing', false],
+    'staging' => ['staging', false],
+]);
+
 test('clockwork cannot collect or register routes in production even with debug overrides', function () {
     $process = new Process([PHP_BINARY, '-r', <<<'PHP'
         require 'vendor/autoload.php';
