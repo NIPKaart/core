@@ -82,7 +82,9 @@ function render(pageProps) {
             if (name === '@/routes/app') return { default: { moderation: { index: route('moderation') } } };
             if (name === '@/routes/app/parking-rules') return { default: { index: route('parking-rules') } };
             if (name === '@/routes/location-map') return { default: { add: route('add') } };
-            if (name === '@/routes/profile/parking-spaces') return { destroy: route('withdraw') };
+            if (name === '@/routes/profile/parking-spaces') return { index: route('profile/parking-spaces'), destroy: route('withdraw') };
+            if (name === '@/routes/profile/destinations') return { index: route('profile/destinations') };
+            if (name === '@/routes/profile/favorites') return { index: route('profile/favorites') };
             if (name.startsWith('@/actions/'))
                 return { index: route('imports'), show: Object.assign((id) => ({ url: `/imports/${id}` }), { url: (id) => `/imports/${id}` }) };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
@@ -122,7 +124,7 @@ const todo = {
         contributor: null,
         reports: 3,
         waiting_since: '2026-10-01T09:00:00+00:00',
-        url: '/app/moderation/reports/community/7',
+        url: '/admin/moderation/reports/community/7',
     },
     decisions: { total: 4, approved: 3, rejected: 1, reports: 0 },
     sources: { total: 0, items: [] },
@@ -197,7 +199,7 @@ test('moderators land on the workplace with the next item opening its review and
     const html = render({ hasTodo: true, view: 'work', todo });
     assert.match(html, /work\.title/);
     assert.match(html, /Biltstraat 88/);
-    assert.match(html, /href="\/app\/moderation\/reports\/community\/7"/);
+    assert.match(html, /href="\/admin\/moderation\/reports\/community\/7"/);
     assert.match(html, /href="\/moderation"/);
     assert.match(html, /href="\/dashboard\?view=personal"/);
     assert.match(html, /work\.decisions\.split/);
@@ -262,7 +264,7 @@ test('the contributions section shows current statuses reasons and map or edit a
             ],
             current_page: 1,
             prev_page_url: null,
-            next_page_url: '/dashboard?section=contributions&contributions_page=2',
+            next_page_url: '/profile/parking-spaces?contributions_page=2',
         },
     });
     assert.match(html, /sections\.back/);

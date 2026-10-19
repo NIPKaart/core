@@ -8,20 +8,11 @@ use App\Http\Resources\FavoriteResource;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingSpace;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class FavoriteController extends Controller
 {
-    /**
-     * Display a listing of the user's favorites.
-     */
-    public function index(Request $request): RedirectResponse
-    {
-        return redirect()->route('dashboard', ['section' => 'favorites']);
-    }
-
     /**
      * List the user's favorites as JSON.
      */

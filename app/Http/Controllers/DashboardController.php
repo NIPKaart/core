@@ -44,7 +44,12 @@ class DashboardController extends Controller
             'destination' => ['sometimes', 'integer', 'min:1'],
             'contributions_page' => ['sometimes', 'integer', 'min:1', 'max:10000'],
         ]);
-        $section = $validated['section'] ?? null;
+        $section = match ($request->route()->getName()) {
+            'profile.destinations.index' => 'destinations',
+            'profile.favorites.index' => 'favorites',
+            'profile.parking-spaces.index' => 'contributions',
+            default => $validated['section'] ?? null,
+        };
 
         return Inertia::render('dashboard', [
             'section' => $section,

@@ -76,7 +76,7 @@ test('contributions exclude saved favorites and duplicate notification outcomes'
     notifyAbout($user, 'dataset.import_ready_for_review', ['source_name' => 'Utrecht'], '2026-10-03 10:00:00');
     ParkingSpace::factory()->for($other)->create(['street' => 'Someone else']);
 
-    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
+    $this->actingAs($user)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 1)
             ->where('contributions.data.0.kind', 'submission')
@@ -90,7 +90,7 @@ test('favorites open on the map', function () {
     $place = ParkingSpace::factory()->for(User::factory())->create(['status' => ParkingStatus::APPROVED, 'street' => 'Stationsplein', 'latitude' => 52.5, 'longitude' => 6.09]);
     Favorite::factory()->for($user)->for($place, 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('profile.favorites.index'))->assertRedirect(route('dashboard', ['section' => 'favorites']));
+    $this->actingAs($user)->get(route('profile.favorites.index'))->assertInertia(fn (Assert $page) => $page->where('section', 'favorites'));
     $this->getJson(route('profile.favorites.list'))->assertOk()
         ->assertJsonPath('favorites.0.title', 'Stationsplein')->assertJsonPath('favorites.0.type', 'Community')
         ->assertJsonPath('favorites.0.latitude', 52.5)->assertJsonPath('favorites.0.longitude', 6.09);
@@ -153,7 +153,7 @@ test('notifications stay in the existing inbox without a second inbox on the das
     }
     notifyAbout(User::factory()->create(), 'community.improvement_rejected', ['space_label' => 'Elders'], '2026-10-03 09:00:00');
 
-    $this->actingAs($admin)->get(route('dashboard', ['section' => 'contributions']))
+    $this->actingAs($admin)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->missing('activity')->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 0)));
     expect($admin->notifications()->count())->toBe(61);
@@ -194,7 +194,7 @@ test('own pending contributions link directly to their editable form', function 
     Favorite::factory()->for($user)->for($public, 'favoritable')->create();
     Favorite::factory()->for($user)->for(ParkingMunicipal::factory()->create(['visibility' => false]), 'favoritable')->create();
 
-    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
+    $this->actingAs($user)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->missing('map')->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 1)->where('contributions.data.0.status', 'pending')
             ->where('contributions.data.0.url', route('location-map.edit', ['parking_space' => $own->id]))));

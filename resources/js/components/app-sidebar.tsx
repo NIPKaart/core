@@ -12,6 +12,9 @@ import parkingSpaces from '@/routes/app/parking-spaces';
 import roles from '@/routes/app/roles';
 import users from '@/routes/app/users';
 import logViewer from '@/routes/log-viewer';
+import { index as destinations } from '@/routes/profile/destinations';
+import { index as favorites } from '@/routes/profile/favorites';
+import { index as contributions } from '@/routes/profile/parking-spaces';
 import { NavGroup, SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { icons } from 'lucide-react';
@@ -49,29 +52,23 @@ export function AppSidebar() {
         ].filter(Boolean) as NavItem[],
     };
 
-    const currentUrl = new URL(url, 'https://navigation.local');
-    const personalSection = currentUrl.pathname === dashboard.url() ? currentUrl.searchParams.get('section') : null;
-
     const personalNavGroup: NavGroup = {
         title: t('personal'),
         items: [
             {
                 title: t('destinations'),
-                href: dashboard({ query: { section: 'destinations' } }),
+                href: destinations(),
                 icon: icons.Bookmark,
-                isActive: personalSection === 'destinations',
             },
             {
                 title: t('my_favorites'),
-                href: dashboard({ query: { section: 'favorites' } }),
+                href: favorites(),
                 icon: icons.Heart,
-                isActive: personalSection === 'favorites',
             },
             {
                 title: t('my_contributions'),
-                href: dashboard({ query: { section: 'contributions' } }),
+                href: contributions(),
                 icon: icons.MapPin,
-                isActive: personalSection === 'contributions',
             },
         ],
     };

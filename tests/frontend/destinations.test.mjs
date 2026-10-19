@@ -56,7 +56,7 @@ function mount({ user = { id: 1 }, failure = false, items = [item] } = {}) {
             };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
-            if (name === '@/routes/profile/destinations') return Object.fromEntries(['index', 'store', 'update', 'destroy'].map((key) => [key, { url: (id) => `/destinations/${key}/${id ?? ''}` }]));
+            if (name === '@/routes/profile/destinations') return Object.fromEntries(['list', 'store', 'update', 'destroy'].map((key) => [key, { url: (id) => `/destinations/${key}/${id ?? ''}` }]));
             return require(name);
         },
     };

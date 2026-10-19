@@ -7,18 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ParkingSpace;
 use App\Services\UserActivity;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class MyParkingSpaceController extends Controller
 {
-    /**
-     * Display a list of cards with the user's parking spaces.
-     */
-    public function index(Request $request): RedirectResponse
-    {
-        return redirect()->route('dashboard', ['section' => 'contributions']);
-    }
-
     /**
      * Display the specified location.
      */
@@ -36,7 +27,7 @@ class MyParkingSpaceController extends Controller
 
         return $parkingSpace->status === ParkingStatus::PENDING && ! $parkingSpace->trashed()
             ? redirect()->route('location-map.edit', ['parking_space' => $parkingSpace->id])
-            : redirect()->route('dashboard', ['section' => 'contributions']);
+            : redirect()->route('profile.parking-spaces.index');
     }
 
     /**

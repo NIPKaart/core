@@ -45,7 +45,7 @@ test('the saved destination list is private and ordered by label then identity',
     $second = Destination::factory()->for($user)->create(['label' => 'Alpha']);
     Destination::factory()->create(['label' => 'Another user']);
 
-    $response = $this->actingAs($user)->getJson(route('profile.destinations.index'))
+    $response = $this->actingAs($user)->getJson(route('profile.destinations.list'))
         ->assertOk()->assertJsonCount(3, 'data');
     expect(array_column($response->json('data'), 'id'))->toBe([$first->id, $second->id, $last->id]);
     expect($response->headers->get('Cache-Control'))->toContain('private', 'no-store');
@@ -78,7 +78,7 @@ test('saved destination endpoints require a signed in verified account', functio
             $this->actingAs($user);
         }
         $status = $user ? 403 : 401;
-        $this->getJson(route('profile.destinations.index'))->assertStatus($status);
+        $this->getJson(route('profile.destinations.list'))->assertStatus($status);
         $this->postJson(route('profile.destinations.store'), destinationPayload())->assertStatus($status);
         $this->patchJson(route('profile.destinations.update', $saved), ['label' => 'Changed'])->assertStatus($status);
         $this->deleteJson(route('profile.destinations.destroy', $saved))->assertStatus($status);
@@ -112,7 +112,7 @@ test('a coordinate destination without provider details can be saved and reopene
         'label' => 'Grandma', 'key' => 'url:destination', 'name' => 'A selected location',
         'type' => 'destination', 'latitude' => -33.9, 'longitude' => 18.4,
     ])->assertCreated();
-    $this->getJson(route('profile.destinations.index'))->assertOk()
+    $this->getJson(route('profile.destinations.list'))->assertOk()
         ->assertJsonPath('data.0.destination.latitude', -33.9)
         ->assertJsonPath('data.0.destination.longitude', 18.4)
         ->assertJsonPath('data.0.destination.sub', null)

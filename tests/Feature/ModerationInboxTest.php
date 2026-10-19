@@ -150,9 +150,9 @@ describe('queue', function () {
         $improvement = ParkingSpaceImprovement::factory()->create();
 
         $this->actingAs($this->moderator);
-        $this->get('/app/improvements')->assertRedirect(route('app.moderation.index', ['type' => 'improvement']));
-        $this->get("/app/improvements/{$improvement->id}")->assertRedirect(route('app.moderation.improvements.show', $improvement));
-        $this->get('/app/reports')->assertRedirect(route('app.moderation.index', ['type' => 'report']));
+        $this->get('/admin/improvements')->assertRedirect(route('app.moderation.index', ['type' => 'improvement']));
+        $this->get("/admin/improvements/{$improvement->id}")->assertRedirect(route('app.moderation.improvements.show', $improvement));
+        $this->get('/admin/reports')->assertRedirect(route('app.moderation.index', ['type' => 'report']));
     });
 });
 

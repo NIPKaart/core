@@ -37,7 +37,7 @@ final class UserActivity
         $placeReports = ParkingPlaceReport::whereBelongsTo($user)->with(['parkingSpace.municipality:id,name', 'parkingMunicipal.municipality:id,name'])
             ->whereIn('id', $ids->get('report', collect())->pluck('id'))->get()->keyBy('id');
 
-        return $rows->appends(['section' => 'contributions'])->through(function (object $row) use ($spaces, $proposals, $placeReports, $user): array {
+        return $rows->withPath(route('profile.parking-spaces.index'))->through(function (object $row) use ($spaces, $proposals, $placeReports, $user): array {
             $entry = match ($row->kind) {
                 'submission' => $spaces->get($row->id),
                 'improvement' => $proposals->get($row->id),

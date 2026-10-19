@@ -64,7 +64,7 @@ function loadParkingDetail({ data = null, allowed = false, desktop = true } = {}
         if (name === '@inertiajs/react') return { Link: 'Link' };
         if (name === '@/hooks/use-authorization') return { useAuthorization: () => ({ user: null, can: (ability) => allowed && ability === 'parking-space.view' }) };
         if (name === '@/hooks/use-media-query') return { useMediaQuery: () => desktop };
-        if (name === '@/routes/app') return { __esModule: true, default: { parkingSpaces: { show: ({ parking_space }) => ({ url: `/app/parking-spaces/${parking_space}`, method: 'get' }) } } };
+        if (name === '@/routes/app') return { __esModule: true, default: { parkingSpaces: { show: ({ parking_space }) => ({ url: `/admin/parking-spaces/${parking_space}`, method: 'get' }) } } };
         if (name.startsWith('@/routes/map/')) return { show: { url: () => '/detail' } };
         if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
         if (name.startsWith('@/') || name.startsWith('./')) return new Proxy({}, { get: (_, key) => key });
@@ -98,7 +98,7 @@ for (const desktop of [true, false]) {
         const header = find(tree, (node) => node.type === (desktop ? 'DialogHeader' : 'DrawerHeader'));
         const link = find(header, (node) => node.type === 'Link' && node.props['aria-label'] === 'detail.admin');
         assert.ok(link);
-        assert.equal(link.props.href.url, '/app/parking-spaces/a');
+        assert.equal(link.props.href.url, '/admin/parking-spaces/a');
         assert.equal(link.props.target, '_blank');
         assert.equal(find(tree, (node) => node.type === 'DialogFooter' || node.type === 'DrawerFooter'), null);
         assert.ok(find(header, (node) => node.type === 'TooltipContent' && node.props.children === 'detail.admin'));

@@ -154,7 +154,7 @@ Manual backend uploads validate the file and archive the original bytes in the s
 
 ## Offstreet catalog intake (#1250)
 
-Offstreet catalogs use the same delivery and review chain as municipal data: bucket discovery, source approval, receipts, staging, the review screen under `/app/imports` and explicit publication. The bucket folder determines the type (`offstreet/<dataset>/`).
+Offstreet catalogs use the same delivery and review chain as municipal data: bucket discovery, source approval, receipts, staging, the review screen under `/admin/imports` and explicit publication. The bucket folder determines the type (`offstreet/<dataset>/`).
 
 A catalog (`nipkaart-offstreet-catalog-3`, produced by offstreet-parking) carries the same `source` block and holds only what defines a facility: `external_id`, `name`, `source_name`, `facility_type` (`garage`, `park_and_ride` or `parking_lot`) and a WGS84 `Point` inside the dataset bounds. Capacity is not a catalog claim: operators change it during the day (P4 Villa Arena went from 1046 to 1087 spaces within hours on 2026-09-28), so it arrives with the observations. Core rejects the whole delivery for extra or missing fields, other geometries or duplicate IDs. Publication writes name, facility type and location to `ParkingOffstreet`, keyed by dataset and `external_id`; it never touches capacity, free spaces or statuses. As for municipal records, a manually corrected field is kept, and a delivery that changes that field differently blocks publication. Facilities missing from a delivery keep their visibility; publication links every delivered facility to its import (`published_import_id`).
 
