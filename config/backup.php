@@ -13,7 +13,7 @@ use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
 
 return [
 
-    'enabled' => env('BACKUP_ENABLED', false),
+    'enabled' => env('BACKUP_ENABLED', true),
 
     'backup' => [
         /*
