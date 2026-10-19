@@ -53,8 +53,8 @@ test('users without the overview permission are forbidden', function () {
 test('roles can no longer be created, edited or deleted through the application', function (string $method, string $uri, int $status) {
     $this->actingAs(roleOverviewAdmin())->{$method}($uri)->assertStatus($status);
 })->with([
-    'create form' => ['get', '/app/roles/create', 404],
-    'store' => ['post', '/app/roles', 405],
-    'update' => ['put', '/app/roles/1', 404],
-    'delete' => ['delete', '/app/roles/1', 404],
+    'create form' => ['get', '/admin/roles/create', 404],
+    'store' => ['post', '/admin/roles', 405],
+    'update' => ['put', '/admin/roles/1', 404],
+    'delete' => ['delete', '/admin/roles/1', 404],
 ]);

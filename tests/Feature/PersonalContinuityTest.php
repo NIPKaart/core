@@ -26,7 +26,7 @@ test('the personal contribution stream mixes current submissions improvements an
     ParkingSpaceImprovement::factory()->for($other)->create(['parking_space_id' => ParkingSpace::factory()->for($other)->create(['status' => ParkingStatus::APPROVED])->id]);
     ParkingSpace::factory()->for($other)->create();
 
-    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
+    $this->actingAs($user)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 3)->where('contributions.data.0.key', "report:{$report->id}")
             ->where('contributions.data.0.status', 'kept')->where('contributions.data.0.action', 'map')
@@ -40,11 +40,11 @@ test('the personal contribution stream mixes current submissions improvements an
 test('all contribution pages remain reachable and links retain the contributions tab', function () {
     $user = User::factory()->create();
     ParkingSpace::factory()->for($user)->count(17)->create(['status' => ParkingStatus::PENDING]);
-    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))
+    $this->actingAs($user)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 15)->where('contributions.total', 17)->where('contributions.current_page', 1)
-            ->where('contributions.next_page_url', fn (string $url) => str_contains($url, 'section=contributions') && str_contains($url, 'contributions_page=2'))));
-    $this->get(route('dashboard', ['section' => 'contributions', 'contributions_page' => 2]))
+            ->where('contributions.next_page_url', fn (string $url) => str_contains($url, '/profile/parking-spaces?') && str_contains($url, 'contributions_page=2'))));
+    $this->get(route('profile.parking-spaces.index', ['contributions_page' => 2]))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
             ->has('contributions.data', 2)->where('contributions.current_page', 2)));
 });
@@ -55,7 +55,7 @@ test('hidden report targets expose status but no hidden name location or map act
         'parking_municipal_id' => ParkingMunicipal::factory()->create(['visibility' => false, 'street' => 'Private address'])->id,
         'resolution' => ReportResolution::REMOVED, 'resolved_at' => now(),
     ]);
-    $this->actingAs($user)->get(route('dashboard', ['section' => 'contributions']))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+    $this->actingAs($user)->get(route('profile.parking-spaces.index'))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->where('contributions.data.0.status', 'removed')->where('contributions.data.0.label', null)
         ->where('contributions.data.0.url', null)->where('contributions.data.0.action', null)));
 });
@@ -68,9 +68,10 @@ test('a pending submission opens editing and another account cannot reopen it', 
     $this->actingAs(User::factory()->create())->get(route('profile.parking-spaces.show', $space))->assertForbidden();
 });
 
-test('legacy personal lists lead to the matching Mijn NIPKaart section', function () {
-    $this->actingAs(User::factory()->create())->get(route('profile.parking-spaces.index'))->assertRedirect(route('dashboard', ['section' => 'contributions']));
-    $this->get(route('profile.favorites.index'))->assertRedirect(route('dashboard', ['section' => 'favorites']));
+test('personal lists render their matching section without redirecting', function () {
+    $this->actingAs(User::factory()->create())->get(route('profile.parking-spaces.index'))->assertInertia(fn (Assert $page) => $page->where('section', 'contributions'));
+    $this->get(route('profile.favorites.index'))->assertInertia(fn (Assert $page) => $page->where('section', 'favorites'));
+    $this->get(route('profile.destinations.index'))->assertInertia(fn (Assert $page) => $page->where('section', 'destinations'));
 });
 
 test('personal section and pagination inputs are validated', function (array $query, string $field) {

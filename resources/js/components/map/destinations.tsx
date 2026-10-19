@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { destroy, index, store, update } from '@/routes/profile/destinations';
+import { destroy, list, store, update } from '@/routes/profile/destinations';
 import type { SharedData } from '@/types';
 import type { DestinationResult } from '@/types/destination';
 import { useHttp, usePage } from '@inertiajs/react';
@@ -169,7 +169,7 @@ export default function Destinations({
         if (!open || !userId) return;
         const request = new AbortController();
         setStatus('loading');
-        fetch(index.url(), { headers: { Accept: 'application/json' }, cache: 'no-store', signal: request.signal })
+        fetch(list.url(), { headers: { Accept: 'application/json' }, cache: 'no-store', signal: request.signal })
             .then(async (response) => {
                 if (!response.ok) throw new Error('Saved destinations unavailable');
                 const data = await response.json();

@@ -20,7 +20,9 @@ import { dashboard, garages as garageOverview, locationMap as mapPage } from '@/
 import app from '@/routes/app';
 import parkingRules from '@/routes/app/parking-rules';
 import locationMap from '@/routes/location-map';
-import { destroy as withdrawSubmission } from '@/routes/profile/parking-spaces';
+import { index as destinationsIndex } from '@/routes/profile/destinations';
+import { index as favoritesIndex } from '@/routes/profile/favorites';
+import { index as contributionsIndex, destroy as withdrawSubmission } from '@/routes/profile/parking-spaces';
 import type { SharedData } from '@/types';
 import type { DestinationResult } from '@/types/destination';
 import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
@@ -365,7 +367,7 @@ function Hero({ overview }: { overview: Overview }) {
                     <div className="flex flex-col gap-2.5">
                         <div className="flex items-center justify-between gap-3">
                             <h2 className="text-[15px] font-semibold">{t('hero.destinations')}</h2>
-                            <Link href={dashboard.url({ query: { section: 'destinations' } })} className={cn(textLink, 'min-h-0 text-sm')}>
+                            <Link href={destinationsIndex.url()} className={cn(textLink, 'min-h-0 text-sm')}>
                                 {t('hero.manage')}
                             </Link>
                         </div>
@@ -693,7 +695,7 @@ function ImpactTile({ published }: { published: number }) {
                     {t('impact.none')}
                 </h3>
             )}
-            <Link href={dashboard.url({ query: { section: 'contributions' } })} className={cn(textLink, 'mt-auto min-h-0 text-sm')}>
+            <Link href={contributionsIndex.url()} className={cn(textLink, 'mt-auto min-h-0 text-sm')}>
                 {t('history.all')}
             </Link>
         </article>
@@ -767,7 +769,7 @@ function FavoritesTile({ favorites }: { favorites: Overview['favorites'] }) {
                     {t('favorites.eyebrow')}
                 </h3>
                 {favorites.total > 0 && (
-                    <Link href={dashboard.url({ query: { section: 'favorites' } })} className={cn(textLink, 'min-h-0 text-sm')}>
+                    <Link href={favoritesIndex.url()} className={cn(textLink, 'min-h-0 text-sm')}>
                         {t('favorites.all')}
                     </Link>
                 )}
@@ -863,7 +865,7 @@ function HistoryTile({ history }: { history: Contribution[] }) {
                 <h3 id="dashboard-history" className={eyebrow}>
                     {t('history.eyebrow')}
                 </h3>
-                <Link href={dashboard.url({ query: { section: 'contributions' } })} className={cn(textLink, 'min-h-0 text-sm')}>
+                <Link href={contributionsIndex.url()} className={cn(textLink, 'min-h-0 text-sm')}>
                     {t('history.all')}
                 </Link>
             </div>

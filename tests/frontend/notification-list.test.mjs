@@ -51,7 +51,7 @@ const notification = (type, params) => ({
     type,
     read_at: null,
     created_at: new Date().toISOString(),
-    data: { type, params, url: '/app/imports', meta: {} },
+    data: { type, params, url: '/admin/imports', meta: {} },
 });
 const render = (items) => renderToStaticMarkup(React.createElement(NotificationsList, { items, onMarkOne: () => {} }));
 

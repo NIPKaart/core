@@ -41,6 +41,6 @@ test('monitoring knows users by id only and keeps locations, searches and keys o
 });
 
 test('an address without a query string stays as it is', function () {
-    expect(ObservabilityPrivacy::withoutQuery('https://nipkaart.nl/app/parking-spaces'))->toBe('https://nipkaart.nl/app/parking-spaces')
+    expect(ObservabilityPrivacy::withoutQuery('https://nipkaart.nl/admin/parking-spaces'))->toBe('https://nipkaart.nl/admin/parking-spaces')
         ->and(ObservabilityPrivacy::withoutQuery('https://nipkaart.nl/over#contact'))->toBe('https://nipkaart.nl/over');
 });

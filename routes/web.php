@@ -26,22 +26,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile routes
     Route::prefix('profile')->as('profile.')->group(function () {
         // Profile routes
-        Route::get('parking-spaces', [Profile\MyParkingSpaceController::class, 'index'])->name('parking-spaces.index');
+        Route::get('parking-spaces', DashboardController::class)->name('parking-spaces.index');
         Route::get('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'show'])->name('parking-spaces.show');
         Route::delete('parking-spaces/{id}', [Profile\MyParkingSpaceController::class, 'destroy'])->name('parking-spaces.destroy');
 
         // Destination routes
-        Route::resource('destinations', Profile\DestinationController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::get('destinations', DashboardController::class)->name('destinations.index');
+        Route::get('destinations/list', [Profile\DestinationController::class, 'list'])->name('destinations.list');
+        Route::resource('destinations', Profile\DestinationController::class)->only(['store', 'update', 'destroy']);
 
         // Favorites routes
-        Route::get('favorites', [Profile\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::get('favorites', DashboardController::class)->name('favorites.index');
         Route::get('favorites/list', [Profile\FavoriteController::class, 'list'])->name('favorites.list');
         Route::post('favorites', [Profile\FavoriteController::class, 'store'])->name('favorites.store');
         Route::delete('favorites', [Profile\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
-    // App routes
-    Route::prefix('app')->as('app.')->group(function () {
+    // Management routes
+    Route::prefix('admin')->as('app.')->group(function () {
         // ParkingSpace routes
         Route::prefix('parking-spaces')->as('parking-spaces.')->group(function () {
             // Confirmations routes

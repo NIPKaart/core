@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Gate;
 
 class DestinationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         return DestinationResource::collection($request->user()->destinations()->orderBy('label')->orderBy('id')->get())
             ->response()->header('Cache-Control', 'private, no-store');
