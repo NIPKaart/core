@@ -1,25 +1,15 @@
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getSortedRowModel,
-    Header,
-    OnChangeFn,
-    Row,
-    RowSelectionState,
-    SortingState,
-    useReactTable,
-} from '@tanstack/react-table';
+import { ColumnDef, flexRender, Header, OnChangeFn, Row, RowData, RowSelectionState, SortingState, useTable } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ColumnsSelector } from './columns-selector';
+import { dataTableFeatures } from './features';
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData extends RowData> {
+    columns: ColumnDef<DataTableFeatures, TData>[];
     data: TData[];
     filters?: React.ReactNode;
     emptyState?: React.ReactNode;
@@ -36,7 +26,7 @@ interface DataTableProps<TData, TValue> {
     };
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends RowData>({
     columns,
     data,
     filters,
@@ -48,13 +38,14 @@ export function DataTable<TData, TValue>({
     rowSelection,
     onRowSelectionChange,
     initialState,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
     const { t } = useTranslation('global/common');
     const [sorting, setSorting] = useState<SortingState>(initialState?.sorting ?? []);
     const [globalFilter, setGlobalFilter] = useState(initialState?.globalFilter ?? '');
     const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(initialState?.columnVisibility ?? {});
 
-    const table = useReactTable({
+    const table = useTable({
+        features: dataTableFeatures,
         data,
         columns,
         state: {
@@ -67,10 +58,8 @@ export function DataTable<TData, TValue>({
         onGlobalFilterChange: setGlobalFilter,
         onRowSelectionChange,
         onColumnVisibilityChange: setColumnVisibility,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         enableRowSelection: true,
+        enableRowRangeSelection: false,
         enableSorting,
         globalFilterFn: customGlobalFilterFn,
     });
@@ -177,7 +166,7 @@ export function DataTable<TData, TValue>({
     );
 }
 
-function TableHeadWrapper<TData, TValue>({ header }: { header: Header<TData, TValue> }) {
+function TableHeadWrapper<TData extends RowData, TValue>({ header }: { header: Header<DataTableFeatures, TData, TValue> }) {
     const isSortable = header.column.getCanSort();
     const isSorted = header.column.getIsSorted();
     const alignment = getAlignment(header.column.columnDef.meta);
@@ -227,7 +216,7 @@ function getCellAlignment(meta?: { align?: 'left' | 'center' | 'right' }) {
     }
 }
 
-function customGlobalFilterFn<TData>(row: Row<TData>, _columnId: string, filterValue: string) {
+function customGlobalFilterFn<TData extends RowData>(row: Row<DataTableFeatures, TData>, _columnId: string, filterValue: string) {
     const search = filterValue.toLowerCase();
 
     return row.getAllCells().some((cell) => {

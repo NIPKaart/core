@@ -1,4 +1,5 @@
 import LocalizedDateTime from '@/components/localized-date-time';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import parkingMunicipal from '@/routes/app/parking-municipal';
@@ -12,7 +13,7 @@ export function getParkingMunicipalColumns(
     can: (permission: string) => boolean,
     orientations: Record<ParkingOrientation, string>,
     { t, tGlobal }: Translations,
-): ColumnDef<ParkingMunicipal>[] {
+): ColumnDef<DataTableFeatures, ParkingMunicipal>[] {
     return [
         {
             accessorKey: 'id',

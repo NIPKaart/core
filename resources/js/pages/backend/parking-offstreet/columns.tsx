@@ -1,4 +1,5 @@
 import LocalizedDateTime from '@/components/localized-date-time';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -35,7 +36,10 @@ function ParkingProgressBar({ value, label }: { value: number; label: string }) 
 }
 
 // Function to get the columns for the parking offstreet data table
-export function getParkingOffstreetColumns(can: (permission: string) => boolean, { t, tGlobal }: Translations): ColumnDef<ParkingOffstreet>[] {
+export function getParkingOffstreetColumns(
+    can: (permission: string) => boolean,
+    { t, tGlobal }: Translations,
+): ColumnDef<DataTableFeatures, ParkingOffstreet>[] {
     return [
         {
             id: 'select',

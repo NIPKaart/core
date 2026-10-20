@@ -1,4 +1,5 @@
 import LocalizedDateTime from '@/components/localized-date-time';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,7 +44,7 @@ const resolveTitleForRow = (n: NotificationItem, tBackend: Translations['t']) =>
     return fallbackSpace || tBackend('table.untitled');
 };
 
-export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<NotificationItem>[] {
+export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<DataTableFeatures, NotificationItem>[] {
     return [
         {
             id: 'select',

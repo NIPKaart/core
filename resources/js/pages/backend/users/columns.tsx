@@ -1,4 +1,5 @@
 import LocalizedDateTime from '@/components/localized-date-time';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +27,7 @@ export function getUserColumns(
     authUser: { id: number } | undefined,
     openDialog: OpenDialogFn,
     { t, tGlobal }: Translations,
-): ColumnDef<UserWithRoles>[] {
+): ColumnDef<DataTableFeatures, UserWithRoles>[] {
     return [
         {
             accessorKey: 'name',

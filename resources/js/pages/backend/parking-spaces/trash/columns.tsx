@@ -1,3 +1,4 @@
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -18,7 +19,7 @@ type Options = {
 export function getParkingTrashColumns(
     { can, openDialog, when, rejectionReasons }: Options,
     { t, tGlobal }: Translations,
-): ColumnDef<TrashedSpace>[] {
+): ColumnDef<DataTableFeatures, TrashedSpace>[] {
     return [
         {
             id: 'select',

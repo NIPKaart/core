@@ -2,6 +2,7 @@ import { index } from '@/actions/App/Http/Controllers/Admin/DatasetImportControl
 import MunicipalDateTime from '@/components/municipal-date-time';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +54,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
             { preserveState: true, preserveScroll: true },
         );
 
-    const columns: ColumnDef<SourceRow>[] = [
+    const columns: ColumnDef<DataTableFeatures, SourceRow>[] = [
         {
             id: 'source',
             header: t('sources_table.source'),

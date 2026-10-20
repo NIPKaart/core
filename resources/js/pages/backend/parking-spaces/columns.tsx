@@ -1,3 +1,4 @@
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -30,7 +31,10 @@ type Options = {
     rejectionReasons: { value: string; label: string }[];
 };
 
-export function getParkingSpaceColumns({ can, openDialog, when, rejectionReasons }: Options, { t, tGlobal }: Translations): ColumnDef<SpaceRow>[] {
+export function getParkingSpaceColumns(
+    { can, openDialog, when, rejectionReasons }: Options,
+    { t, tGlobal }: Translations,
+): ColumnDef<DataTableFeatures, SpaceRow>[] {
     return [
         {
             id: 'select',

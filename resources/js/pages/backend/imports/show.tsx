@@ -3,6 +3,7 @@ import InputError from '@/components/input-error';
 import LocationMarkerCard from '@/components/map/card-location-marker';
 import MunicipalDateTime from '@/components/municipal-date-time';
 import { DataTable } from '@/components/tables/data-table';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -96,7 +97,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
     const selectedIndex = review.rows.findIndex((row) => row.external_id === selectedRecord?.external_id);
     const recordTrigger = useRef<HTMLElement | null>(null);
     const facilities = dataset.target_type === 'offstreet';
-    const columns: ColumnDef<Row>[] = [
+    const columns: ColumnDef<DataTableFeatures, Row>[] = [
         {
             id: 'street',
             header: t(facilities ? 'fields.name' : 'fields.street'),
@@ -119,7 +120,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                       header: t('capacity'),
                       cell: ({ getValue }) => getValue<number | null>() ?? t('unknown'),
                   },
-              ] satisfies ColumnDef<Row>[])),
+              ] satisfies ColumnDef<DataTableFeatures, Row>[])),
         {
             accessorKey: 'status',
             header: t('status'),
@@ -212,7 +213,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                               '—'
                           ),
                   },
-              ] satisfies ColumnDef<Row>[])
+              ] satisfies ColumnDef<DataTableFeatures, Row>[])
             : []),
         {
             id: 'geometry',

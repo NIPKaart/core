@@ -4,6 +4,7 @@ import MunicipalDateTime from '@/components/municipal-date-time';
 import MunicipalNavigation from '@/components/municipal-navigation';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -51,7 +52,7 @@ type Props = {
 export default function Index({ datasets, sources, summary, countries, imports, filters }: Props) {
     const { t } = useTranslation('backend/imports');
     useImportUpdates(['sources', 'summary', 'countries', 'imports'], summary.processing);
-    const columns: ColumnDef<Import>[] = [
+    const columns: ColumnDef<DataTableFeatures, Import>[] = [
         {
             id: 'delivery',
             header: t('source'),

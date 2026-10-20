@@ -2,6 +2,7 @@ import Heading from '@/components/heading';
 import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -402,7 +403,7 @@ function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; 
     const { t } = useTranslation('backend/moderation');
     const ago = useAgo();
 
-    const columns: ColumnDef<HistoryRow>[] = [
+    const columns: ColumnDef<DataTableFeatures, HistoryRow>[] = [
         { id: 'type', header: t('columns.type'), cell: ({ row }) => <TypeBadge type={row.original.type} /> },
         {
             id: 'place',

@@ -1,4 +1,5 @@
 import LocalizedDateTime from '@/components/localized-date-time';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,7 +20,7 @@ type Options = {
 export function getConfirmationColumns(
     { statuses, can, openDialog, when }: Options,
     { t, tGlobal }: Translations,
-): ColumnDef<ParkingSpaceConfirmation>[] {
+): ColumnDef<DataTableFeatures, ParkingSpaceConfirmation>[] {
     return [
         {
             id: 'select',

@@ -29,6 +29,7 @@ function load(path) {
             if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === '@inertiajs/react') return { router: {} };
             if (name.startsWith('@/routes')) return {};
+            if (name === './features') return load('components/tables/features.ts');
             if (name === './columns-selector') return { ColumnsSelector: () => null };
             if (name === '@/components/ui/input') return { Input: element('input') };
             if (name === '@/components/ui/table')
@@ -57,7 +58,7 @@ function load(path) {
             return require(name);
         },
     };
-    vm.runInNewContext(source, context);
+    vm.runInThisContext(`(function (exports, require) {\n${source}\n})`)(context.exports, context.require);
     return context.exports;
 }
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
@@ -79,6 +80,47 @@ test('table exposes scoped search, keyboard sorting and restrained initial colum
     assert.doesNotMatch(html, /technical-id/);
     const empty = render(DataTable, { data: [], columns: [{ accessorKey: 'name' }], initialState: { globalFilter: 'Absent' } });
     assert.match(empty, /No matches on this page/);
+});
+
+test('table sorts the complete server page without adding client pagination', () => {
+    const { DataTable } = load('components/tables/data-table.tsx');
+    const html = render(DataTable, {
+        data: Array.from({ length: 15 }, (_, index) => ({ name: `Bay ${15 - index}` })),
+        columns: [{ accessorKey: 'name', header: 'Location' }],
+        initialState: { sorting: [{ id: 'name', desc: false }] },
+    });
+
+    assert.deepEqual([...html.matchAll(/<td[^>]*>(Bay \d+)<\/td>/g)].map((match) => match[1]),
+        Array.from({ length: 15 }, (_, index) => `Bay ${index + 1}`));
+});
+
+test('table search still matches nested text and numbers in hidden columns', () => {
+    const { DataTable } = load('components/tables/data-table.tsx');
+    const props = {
+        data: [
+            { name: 'Amsterdam', municipality: { name: 'Noord-Holland' }, capacity: 42 },
+            { name: 'Utrecht', municipality: { name: 'Utrecht' }, capacity: 8 },
+        ],
+        columns: [{ accessorKey: 'name' }, { accessorKey: 'municipality' }, { accessorKey: 'capacity' }],
+    };
+
+    for (const globalFilter of ['NOORD', '42']) {
+        const html = render(DataTable, { ...props, initialState: { globalFilter, columnVisibility: { municipality: false, capacity: false } } });
+        assert.match(html, /Amsterdam/);
+        assert.doesNotMatch(html, />Utrecht<|Noord-Holland|>42</);
+    }
+});
+
+test('table keeps externally controlled selection on the matching row', () => {
+    const { DataTable } = load('components/tables/data-table.tsx');
+    const html = render(DataTable, {
+        data: [{ name: 'Unselected' }, { name: 'Selected' }],
+        columns: [{ accessorKey: 'name' }],
+        rowSelection: { 1: true },
+    });
+
+    assert.equal((html.match(/data-state="selected"/g) ?? []).length, 1);
+    assert.match(html, /<tr data-state="selected"><td[^>]*>Selected<\/td><\/tr>/);
 });
 
 test('pagination has a clear empty state and genuinely disabled unavailable navigation', () => {
