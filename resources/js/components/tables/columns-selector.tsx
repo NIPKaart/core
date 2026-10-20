@@ -1,18 +1,19 @@
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import type { Table } from '@tanstack/react-table';
+import type { RowData, Table } from '@tanstack/react-table';
 import { SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '../ui/drawer';
 
-interface ColumnsSelectorProps<TData> {
-    table: Table<TData>;
+interface ColumnsSelectorProps<TData extends RowData> {
+    table: Table<DataTableFeatures, TData>;
     mobileBreakpoint?: number;
 }
 
-export function ColumnsSelector<TData>({ table, mobileBreakpoint = 768 }: ColumnsSelectorProps<TData>) {
+export function ColumnsSelector<TData extends RowData>({ table, mobileBreakpoint = 768 }: ColumnsSelectorProps<TData>) {
     const { t } = useTranslation('global/common');
     const isMobile = useMediaQuery(mobileBreakpoint);
     const columns = table.getAllLeafColumns().filter((col) => col.getCanHide());
