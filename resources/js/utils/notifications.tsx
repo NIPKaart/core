@@ -25,7 +25,7 @@ export function getNotificationLabel(tGlobal: TFunction<'global/notification'>, 
 export function resolveNotificationTitleBackend(
     tBackend: TFunction<'backend/notifications'>,
     type: string,
-    params?: Record<string, unknown>,
+    params: Record<string, unknown> = {},
 ): string {
     const cat = splitCategory(type);
 
