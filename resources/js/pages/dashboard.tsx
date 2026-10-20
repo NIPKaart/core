@@ -204,7 +204,7 @@ function SectionView({ title, children }: { title: string; children: ReactNode }
     const { t } = useTranslation('backend/dashboard');
 
     return (
-        <section aria-labelledby="dashboard-section" className="flex max-w-3xl flex-col gap-6">
+        <section aria-labelledby="dashboard-section" className="flex w-full flex-col gap-6">
             <Link href={dashboard()} className={cn(textLink, 'gap-2 self-start')}>
                 <ArrowLeft className="size-4" aria-hidden />
                 {t('sections.back')}

@@ -281,3 +281,13 @@ test('the destinations and favorites sections keep their full management lists',
     assert.match(render({ section: 'destinations' }), /data-destinations/);
     assert.match(render({ section: 'favorites' }), /data-favorites/);
 });
+
+test('personal sections use the available workspace width for their headings and content', () => {
+    for (const section of ['destinations', 'favorites', 'contributions']) {
+        const html = render({ section, contributions: { data: [], current_page: 1, prev_page_url: null, next_page_url: null } });
+        const classes = html.match(/<section aria-labelledby="dashboard-section" class="([^"]+)"/)[1].split(' ');
+
+        assert.ok(classes.includes('w-full'), section);
+        assert.equal(classes.some((value) => value.startsWith('max-w-')), false, section);
+    }
+});
