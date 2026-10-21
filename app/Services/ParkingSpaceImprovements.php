@@ -140,7 +140,7 @@ final class ParkingSpaceImprovements
                 'reviewed_at' => now(),
             ]);
 
-            app(ContributorReputation::class)->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id,
+            app(CommunityPoints::class)->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id,
                 'improvement.approved');
 
             return $space;
@@ -170,8 +170,8 @@ final class ParkingSpaceImprovements
             ]);
 
             foreach ($improvements as $improvement) {
-                $reputation = app(ContributorReputation::class);
-                $reputation->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id, $reputation->rejection($reason->value), $reason->value);
+                $communityPoints = app(CommunityPoints::class);
+                $communityPoints->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id, $communityPoints->rejection($reason->value), $reason->value);
             }
 
             return $improvements;

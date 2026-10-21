@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Marker, Polyline } from 'react-leaflet';
 import { DecisionPopover } from './decision-popover';
 import { GroupEditor } from './group-editor';
-import { ContributorName, Flag, ReputationContext, useAgo } from './parts';
+import { CommunityPointsContext, ContributorName, Flag, useAgo } from './parts';
 import { TypeBadge } from './type-badge';
 import {
     type ImprovementDetails,
@@ -650,7 +650,7 @@ function ReportReview({ details, options, query }: { details: ReportDetails; opt
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 {report.reporter ?? t('unknown_user')} · {ago(report.reported_at)}
                             </p>
-                            <ReputationContext reputation={report.reputation} name={report.reporter} />
+                            <CommunityPointsContext community_points={report.community_points} name={report.reporter} />
                         </li>
                     ))}
                 </ul>
@@ -674,5 +674,5 @@ function ReportReview({ details, options, query }: { details: ReportDetails; opt
 function ContributorContext({ item }: { item: SelectedItem }) {
     if (!item.contributor) return null;
 
-    return <ReputationContext reputation={item.contributor.reputation} name={item.contributor.name} />;
+    return <CommunityPointsContext community_points={item.contributor.community_points} name={item.contributor.name} />;
 }

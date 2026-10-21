@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Minimal reviewed outcomes survive removal of parking data. Account deletion removes the personal ledger.
- * One current outcome per contribution prevents retries or re-review from multiplying reputation.
+ * One current outcome per contribution prevents retries or re-review from multiplying community points.
  */
-final class ContributorReputation
+final class CommunityPoints
 {
     public function record(?int $userId, int $reviewerId, string $kind, string $subjectId, string $outcome, ?string $reason = null): void
     {
@@ -17,7 +17,7 @@ final class ContributorReputation
             return;
         }
 
-        DB::table('contributor_reputation_events')->upsert([[
+        DB::table('community_point_events')->upsert([[
             'user_id' => $userId,
             'reviewed_by' => $reviewerId,
             'kind' => $kind,
@@ -51,7 +51,7 @@ final class ContributorReputation
             $profiles[$id] = ['score' => 0, 'reviewed' => 0, 'outcomes' => [], 'first_recorded_at' => null, 'recent' => []];
         }
 
-        $groups = DB::table('contributor_reputation_events')->whereIn('user_id', $userIds)
+        $groups = DB::table('community_point_events')->whereIn('user_id', $userIds)
             ->select('user_id', 'kind', 'outcome', 'reason')
             ->selectRaw('count(*) as total, min(recorded_at) as first_recorded_at')
             ->groupBy('user_id', 'kind', 'outcome', 'reason')->orderBy('kind')->orderBy('outcome')->orderBy('reason')->get();
@@ -66,7 +66,7 @@ final class ContributorReputation
             unset($profile);
         }
 
-        $ranked = DB::table('contributor_reputation_events')->whereIn('user_id', $userIds)
+        $ranked = DB::table('community_point_events')->whereIn('user_id', $userIds)
             ->select('user_id', 'kind', 'outcome', 'reason', 'decided_at')
             ->selectRaw('row_number() over (partition by user_id order by decided_at desc, id desc) as position');
         foreach (DB::query()->fromSub($ranked, 'recent')->where('position', '<=', 5)->orderBy('user_id')->orderBy('position')->get() as $event) {
@@ -88,8 +88,8 @@ final class ContributorReputation
      */
     private function score(array $outcomes): int
     {
-        $values = config('reputation.contribution_values');
-        $negativeWeights = config('reputation.negative_evidence');
+        $values = config('community-points.contribution_values');
+        $negativeWeights = config('community-points.negative_evidence');
         $value = 0;
         $positive = 0;
         $negative = 0;
@@ -102,7 +102,7 @@ final class ContributorReputation
             $negative += $outcome['count'] * max(0, (float) ($negativeWeights[$outcome['outcome']] ?? 0));
         }
 
-        $prior = max(0.01, (float) config('reputation.prior_evidence'));
+        $prior = max(0.01, (float) config('community-points.prior_evidence'));
         $quality = ($positive + $prior) / ($positive + $negative + 2 * $prior);
 
         return (int) round($value * $quality, 0, PHP_ROUND_HALF_UP);

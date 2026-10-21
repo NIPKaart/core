@@ -44,7 +44,7 @@ class ParkingPlaceModeration
             ->with('municipality:id,name')
             ->get();
 
-        $profiles = app(ContributorReputation::class)->profiles($community->concat($municipal)->flatMap(fn ($place) => $place->reports->pluck('user_id'))->filter()->unique()->values()->all());
+        $profiles = app(CommunityPoints::class)->profiles($community->concat($municipal)->flatMap(fn ($place) => $place->reports->pluck('user_id'))->filter()->unique()->values()->all());
 
         return $community->map(fn (ParkingSpace $space) => $this->row('community', $space, $space->status === ParkingStatus::APPROVED, $profiles))
             ->concat($municipal->map(fn (ParkingMunicipal $space) => $this->row('municipal', $space, $space->visibility, $profiles)))
@@ -137,7 +137,7 @@ class ParkingPlaceModeration
     private function recordOutcomes(ParkingSpace|ParkingMunicipal $place, User $moderator, string $outcome, ?string $reason = null): void
     {
         foreach ($place->reports()->open()->orderBy('id')->get() as $report) {
-            app(ContributorReputation::class)->record($report->user_id, $moderator->id, 'report', (string) $report->id, $outcome, $reason);
+            app(CommunityPoints::class)->record($report->user_id, $moderator->id, 'report', (string) $report->id, $outcome, $reason);
         }
     }
 
@@ -211,7 +211,7 @@ class ParkingPlaceModeration
             'reports' => $place->reports->map(fn (ParkingPlaceReport $report) => [
                 'id' => $report->id,
                 'reporter' => $report->user?->name,
-                'reputation' => $profiles[$report->user_id] ?? null,
+                'community_points' => $profiles[$report->user_id] ?? null,
                 'reason' => $report->reason?->label(),
                 'note' => $report->note,
                 'reported_at' => $report->created_at,

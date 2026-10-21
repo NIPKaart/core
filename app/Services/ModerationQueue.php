@@ -69,10 +69,10 @@ final class ModerationQueue
             ->concat(in_array(self::IMPROVEMENT, $types, true) ? $this->improvementItems() : [])
             ->concat(in_array(self::REPORT, $types, true) ? $this->reportItems() : []);
 
-        $profiles = app(ContributorReputation::class)->profiles($items->pluck('contributor.id')->filter()->unique()->values()->all());
+        $profiles = app(CommunityPoints::class)->profiles($items->pluck('contributor.id')->filter()->unique()->values()->all());
         $items = $items->map(function (array $item) use ($profiles): array {
             if ($item['contributor'] !== null) {
-                $item['contributor']['reputation'] = $profiles[$item['contributor']['id']] ?? null;
+                $item['contributor']['community_points'] = $profiles[$item['contributor']['id']] ?? null;
                 unset($item['contributor']['id']);
             }
 

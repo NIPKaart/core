@@ -172,7 +172,7 @@
     "unknown_user": "Onbekende gebruiker",
     "select": "Selecteren",
     "select_all": "Alles op deze pagina selecteren",
-    "reputation": {
+    "community_points": {
         "title": "Communitypunten",
         "score": "{{score}} communitypunten",
         "context": "Opgebouwde bijdragewaarde; geen garantie op juistheid en geen automatische bevoegdheden.",

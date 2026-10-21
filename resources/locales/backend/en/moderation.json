@@ -172,7 +172,7 @@
     "unknown_user": "Unknown user",
     "select": "Select",
     "select_all": "Select all on this page",
-    "reputation": {
+    "community_points": {
         "title": "Community points",
         "score": "{{score}} community points",
         "context": "Accumulated contribution value; no guarantee of correctness and no automatic privileges.",

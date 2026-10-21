@@ -41,11 +41,11 @@ vm.runInNewContext(
     }).outputText,
     context,
 );
-const { ReputationContext, ContributorName } = context.exports;
+const { CommunityPointsContext, ContributorName } = context.exports;
 
-test('new contributors have zero reputation and no implied negative reliability', () => {
-    const reputation = { score: 0, reviewed: 0, first_recorded_at: null, outcomes: [], recent: [] };
-    const html = renderToStaticMarkup(React.createElement(ReputationContext, { reputation }));
+test('new contributors have zero community points and no implied negative reliability', () => {
+    const community_points = { score: 0, reviewed: 0, first_recorded_at: null, outcomes: [], recent: [] };
+    const html = renderToStaticMarkup(React.createElement(CommunityPointsContext, { community_points }));
     assert.match(html, /community points/);
     assert.match(html, />0<\/p>/);
     assert.match(html, /No recorded reviewed contributions yet/);
@@ -55,7 +55,7 @@ test('new contributors have zero reputation and no implied negative reliability'
 });
 
 test('moderator context explains outcome reasons and incomplete history without weights', () => {
-    const reputation = {
+    const community_points = {
         score: 125,
         reviewed: 3,
         first_recorded_at: '2026-01-01T10:00:00Z',
@@ -66,7 +66,7 @@ test('moderator context explains outcome reasons and incomplete history without 
         recent: [{ kind: 'submission', outcome: 'neutral', reason: 'duplicate', decided_at: '2026-01-02T10:00:00Z' }],
     };
     expanded = true;
-    const html = renderToStaticMarkup(React.createElement(ReputationContext, { reputation, name: 'Jan Bakker' }));
+    const html = renderToStaticMarkup(React.createElement(CommunityPointsContext, { community_points, name: 'Jan Bakker' }));
     expanded = false;
     assert.match(html, /community points/);
     assert.match(html, />125<\/p>/);
@@ -76,20 +76,20 @@ test('moderator context explains outcome reasons and incomplete history without 
     assert.match(html, /Duplicate/);
     assert.match(html, /Recent contributions/);
     assert.match(html, /not a complete lifetime history/);
-    assert.doesNotMatch(html, /reputation\.outcomes|weight|formula/);
-    const name = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: '<script>', approved: 2, rejected: 0, is_new: false, reputation } }));
+    assert.doesNotMatch(html, /community_points\.outcomes|weight|formula/);
+    const name = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: '<script>', approved: 2, rejected: 0, is_new: false, community_points } }));
     assert.match(name, /&lt;script&gt;/);
     assert.match(name, /125 community points/);
 });
 
-test('an anonymized contributor has no reputation profile to display', () => {
-    assert.equal(renderToStaticMarkup(React.createElement(ReputationContext, { reputation: null })), '');
+test('an anonymized contributor has no community points profile to display', () => {
+    assert.equal(renderToStaticMarkup(React.createElement(CommunityPointsContext, { community_points: null })), '');
 });
 
 
-test('neutral rejection history is not rendered as a reliability warning when reviewed reputation is available', () => {
-    const reputation = { score: 0, reviewed: 10, first_recorded_at: null, outcomes: [], recent: [] };
-    const html = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: 'Contributor', approved: 0, rejected: 10, is_new: false, reputation } }));
+test('neutral rejection history is not rendered as a reliability warning when reviewed community points is available', () => {
+    const community_points = { score: 0, reviewed: 10, first_recorded_at: null, outcomes: [], recent: [] };
+    const html = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: 'Contributor', approved: 0, rejected: 10, is_new: false, community_points } }));
     assert.match(html, /community points/);
     assert.match(html, /0 community points/);
     assert.doesNotMatch(html, /contributor.rejected|rejected contributions/);

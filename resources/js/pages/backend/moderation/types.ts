@@ -1,6 +1,6 @@
 import app from '@/routes/app';
 import type { ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
-import type { Contributor, Reputation } from './parts';
+import type { CommunityPointsProfile, Contributor } from './parts';
 import type { ChangeGroup, EnumOption, ImprovementValues } from './values';
 
 export type ItemType = 'submission' | 'improvement' | 'report';
@@ -63,7 +63,7 @@ export type ReportDetails = {
         reason: string | null;
         note: string | null;
         reported_at: string;
-        reputation?: Reputation | null;
+        community_points?: CommunityPointsProfile | null;
     }[];
     confirmations_since_report: number;
     last_confirmed_at: string | null;
