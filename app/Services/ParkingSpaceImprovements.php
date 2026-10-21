@@ -140,6 +140,9 @@ final class ParkingSpaceImprovements
                 'reviewed_at' => now(),
             ]);
 
+            app(CommunityPoints::class)->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id,
+                'improvement.approved');
+
             return $space;
         });
 
@@ -165,6 +168,11 @@ final class ParkingSpaceImprovements
                 'reviewed_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            foreach ($improvements as $improvement) {
+                $communityPoints = app(CommunityPoints::class);
+                $communityPoints->record($improvement->user_id, $moderator->id, 'improvement', (string) $improvement->id, $communityPoints->rejection($reason->value), $reason->value);
+            }
 
             return $improvements;
         });
@@ -356,6 +364,7 @@ final class ParkingSpaceImprovements
         $user = $improvement->user;
 
         return [
+            'id' => $user?->id,
             'name' => $user?->name,
             'approved' => (int) ($user->approved_improvements ?? 0),
             'rejected' => (int) ($user->rejected_improvements ?? 0),

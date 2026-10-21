@@ -171,5 +171,47 @@
     "no_address": "Parking space without an address",
     "unknown_user": "Unknown user",
     "select": "Select",
-    "select_all": "Select all on this page"
+    "select_all": "Select all on this page",
+    "community_points": {
+        "title": "Community points",
+        "score": "{{score}} community points",
+        "context": "Accumulated contribution value; no guarantee of correctness and no automatic privileges.",
+        "empty": "No recorded reviewed contributions yet.",
+        "reviewed": "{{count}} reviewed contributions",
+        "coverage": "First recorded outcome {{ago}}. Older contributions may be missing; this is not a complete lifetime history.",
+        "outcomes": {
+            "submission": {
+                "approved": "Approved"
+            },
+            "improvement": {
+                "approved": "Approved"
+            },
+            "report": {
+                "confirmed": "Disappearance established"
+            },
+            "neutral": "Neutral outcome",
+            "incorrect": "Incorrect contribution",
+            "spam": "Spam"
+        },
+        "reasons": {
+            "duplicate": "Duplicate",
+            "not_a_disabled_bay": "Not a disabled parking space",
+            "wrong_location": "Wrong location",
+            "insufficient_information": "Insufficient information",
+            "spam": "Spam",
+            "other": "Other",
+            "incorrect": "Incorrect",
+            "no_longer_exists": "No longer exists"
+        },
+        "recent": "Recent contributions",
+        "points": "community points",
+        "contributor": "Contributor",
+        "show_details": "View reviewed outcomes",
+        "hide_details": "Hide reviewed outcomes",
+        "totals": {
+            "approved": "Approved",
+            "neutral": "Neutral",
+            "incorrect": "Incorrect"
+        }
+    }
 }
