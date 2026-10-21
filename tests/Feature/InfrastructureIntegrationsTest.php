@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Queue;
 use Symfony\Component\Process\Process;
 
 test('log viewer denies guests and non administrators', function (string $route) {
+    expect(parse_url(route($route), PHP_URL_PATH))->toStartWith('/admin/logs');
+
     $this->getJson(route($route))->assertForbidden();
     $this->actingAs(User::factory()->create())->getJson(route($route))->assertForbidden();
 })->with(['log-viewer.index', 'log-viewer.hosts', 'log-viewer.files']);
@@ -17,6 +19,7 @@ test('log viewer denies guests and non administrators', function (string $route)
 test('log viewer allows administrators but rejects suspended administrators', function () {
     $admin = User::factory()->create();
     $admin->assignRole(UserRole::ADMIN);
+    $this->actingAs($admin)->get(route('log-viewer.index'))->assertOk()->assertSee('Log Viewer');
     $this->actingAs($admin)->getJson(route('log-viewer.hosts'))->assertOk();
 
     $admin->update(['suspended_at' => now()]);
