@@ -22,7 +22,7 @@ export function ParkingSpaceTabs({ current, counts }: { current: SpaceTab; count
             href={href}
             aria-current={current === key ? 'page' : undefined}
             className={cn(
-                '-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-2.5 text-sm',
+                'inline-flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-2.5 text-sm',
                 current === key ? 'border-foreground font-medium' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
         >
