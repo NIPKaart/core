@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -63,3 +64,60 @@ test('facet counts show how many users match each option', function () {
             ->where('facets.status', ['active' => 1, 'suspended' => 1])
             ->where('facets.login', ['recent' => 1, 'none' => 1]));
 });
+
+test('creating a user opens a sheet over the filtered user list', function () {
+    $this->actingAs($this->admin)->get(route('app.users.create', ['role' => 'admin']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('backend/users/index')
+            ->where('creatingUser', true)
+            ->where('filters.role', ['admin'])
+            ->has('users.data', 1)
+            ->has('roles', 3));
+
+    $this->get(route('app.users.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('creatingUser', false));
+});
+
+test('a viewer cannot open or submit the create user sheet', function () {
+    $viewer = User::factory()->create();
+    $viewer->givePermissionTo('user.view_any');
+
+    $this->actingAs($viewer)->get(route('app.users.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('roles', []));
+    $this->get(route('app.users.create'))->assertForbidden();
+    $this->post(route('app.users.store'), [])->assertForbidden();
+});
+
+test('the sheet creates a user with a hashed password and selected role', function () {
+    $this->actingAs($this->admin)->post(route('app.users.store'), [
+        'name' => 'Sheet User',
+        'email' => 'sheet@example.com',
+        'password' => 'a-secure-password',
+        'password_confirmation' => 'a-secure-password',
+        'role' => UserRole::MODERATOR->value,
+    ])->assertRedirectToRoute('app.users.index');
+
+    $user = User::where('email', 'sheet@example.com')->sole();
+    expect($user->hasRole(UserRole::MODERATOR))->toBeTrue()
+        ->and(Hash::check('a-secure-password', $user->password))->toBeTrue();
+});
+
+test('invalid sheet submissions return errors without creating a user', function (array $invalid, string $field) {
+    $count = User::count();
+    $this->actingAs($this->admin)->from(route('app.users.create'))->post(route('app.users.store'), array_replace([
+        'name' => 'Sheet User',
+        'email' => 'sheet@example.com',
+        'password' => 'a-secure-password',
+        'password_confirmation' => 'a-secure-password',
+        'role' => UserRole::USER->value,
+    ], $invalid))
+        ->assertRedirectToRoute('app.users.create')
+        ->assertSessionHasErrors($field);
+
+    expect(User::count())->toBe($count);
+})->with([
+    'password mismatch' => [['password_confirmation' => 'different-password'], 'password'],
+    'missing role' => [['role' => ''], 'role'],
+    'unknown role' => [['role' => 'unknown-role'], 'role'],
+    'invalid email' => [['email' => 'not-an-email'], 'email'],
+]);

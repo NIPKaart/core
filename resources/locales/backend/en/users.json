@@ -79,5 +79,12 @@
         "verification": "Email verification",
         "login": "Last signed in",
         "login_recent": "Last 30 days"
+    },
+    "sheet": {
+        "description": "Enter the account details and assign a role.",
+        "access": "Access",
+        "cancel": "Cancel",
+        "create": "Create user",
+        "creating": "Creating user…"
     }
 }
