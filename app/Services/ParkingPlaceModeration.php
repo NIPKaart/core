@@ -38,15 +38,17 @@ class ParkingPlaceModeration
     {
         $community = $this->withEvidence(ParkingSpace::query(), 'parking_spaces', 'parking_space_id')
             ->with('municipality:id,name')
-            ->get()
-            ->map(fn (ParkingSpace $space) => $this->row('community', $space, $space->status === ParkingStatus::APPROVED));
+            ->get();
 
         $municipal = $this->withEvidence(ParkingMunicipal::query(), 'parking_municipal_spaces', 'parking_municipal_id')
             ->with('municipality:id,name')
-            ->get()
-            ->map(fn (ParkingMunicipal $space) => $this->row('municipal', $space, $space->visibility));
+            ->get();
 
-        return $community->concat($municipal)->sortByDesc('last_reported_at')->values();
+        $profiles = app(ContributorReputation::class)->profiles($community->concat($municipal)->flatMap(fn ($place) => $place->reports->pluck('user_id'))->filter()->unique()->values()->all());
+
+        return $community->map(fn (ParkingSpace $space) => $this->row('community', $space, $space->status === ParkingStatus::APPROVED, $profiles))
+            ->concat($municipal->map(fn (ParkingMunicipal $space) => $this->row('municipal', $space, $space->visibility, $profiles)))
+            ->sortByDesc('last_reported_at')->values();
     }
 
     /**
@@ -68,6 +70,7 @@ class ParkingPlaceModeration
         $reporters = DB::transaction(function () use ($place, $moderator) {
             $place = $this->lock($place);
             $reporters = $this->openReporters($place);
+            $this->recordOutcomes($place, $moderator, 'neutral');
             $this->resolveOpenReports($place, $moderator, ReportResolution::KEPT);
 
             return $reporters;
@@ -106,6 +109,8 @@ class ParkingPlaceModeration
                 'removed_at' => now(),
             ]);
 
+            $this->recordOutcomes($place, $moderator, $reason === RemovalReason::NO_LONGER_EXISTS ? 'report.confirmed' : 'neutral', $reason->value);
+
             if ($community) {
                 // Favorites have no foreign key; confirmations, reviews and reports cascade with the place.
                 $place->favoritedByUsers()->detach();
@@ -127,6 +132,13 @@ class ParkingPlaceModeration
         ));
 
         return $removal;
+    }
+
+    private function recordOutcomes(ParkingSpace|ParkingMunicipal $place, User $moderator, string $outcome, ?string $reason = null): void
+    {
+        foreach ($place->reports()->open()->orderBy('id')->get() as $report) {
+            app(ContributorReputation::class)->record($report->user_id, $moderator->id, 'report', (string) $report->id, $outcome, $reason);
+        }
     }
 
     /**
@@ -182,7 +194,7 @@ class ParkingPlaceModeration
     /**
      * @return array<string, mixed>
      */
-    private function row(string $source, ParkingSpace|ParkingMunicipal $place, bool $published): array
+    private function row(string $source, ParkingSpace|ParkingMunicipal $place, bool $published, array $profiles): array
     {
         return [
             'key' => "{$source}:{$place->getKey()}",
@@ -199,6 +211,7 @@ class ParkingPlaceModeration
             'reports' => $place->reports->map(fn (ParkingPlaceReport $report) => [
                 'id' => $report->id,
                 'reporter' => $report->user?->name,
+                'reputation' => $profiles[$report->user_id] ?? null,
                 'reason' => $report->reason?->label(),
                 'note' => $report->note,
                 'reported_at' => $report->created_at,

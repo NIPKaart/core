@@ -171,5 +171,47 @@
     "no_address": "Parkeerplaats zonder adres",
     "unknown_user": "Onbekende gebruiker",
     "select": "Selecteren",
-    "select_all": "Alles op deze pagina selecteren"
+    "select_all": "Alles op deze pagina selecteren",
+    "reputation": {
+        "title": "Communitypunten",
+        "score": "{{score}} communitypunten",
+        "context": "Opgebouwde bijdragewaarde; geen garantie op juistheid en geen automatische bevoegdheden.",
+        "empty": "Nog geen vastgelegde beoordeelde bijdragen.",
+        "reviewed": "{{count}} beoordeelde bijdragen",
+        "coverage": "Eerste vastgelegde uitkomst {{ago}}. Oudere bijdragen kunnen ontbreken; dit is geen volledige levenslange historie.",
+        "outcomes": {
+            "submission": {
+                "approved": "Goedgekeurd"
+            },
+            "improvement": {
+                "approved": "Goedgekeurd"
+            },
+            "report": {
+                "confirmed": "Verdwijning vastgesteld"
+            },
+            "neutral": "Neutrale uitkomst",
+            "incorrect": "Onjuiste bijdrage",
+            "spam": "Spam"
+        },
+        "reasons": {
+            "duplicate": "Dubbele melding",
+            "not_a_disabled_bay": "Geen gehandicaptenparkeerplaats",
+            "wrong_location": "Onjuiste locatie",
+            "insufficient_information": "Onvoldoende informatie",
+            "spam": "Spam",
+            "other": "Anders",
+            "incorrect": "Onjuist",
+            "no_longer_exists": "Bestaat niet meer"
+        },
+        "recent": "Recente bijdragen",
+        "points": "communitypunten",
+        "contributor": "Bijdrager",
+        "show_details": "Beoordelingen bekijken",
+        "hide_details": "Beoordelingen verbergen",
+        "totals": {
+            "approved": "Goedgekeurd",
+            "neutral": "Neutraal",
+            "incorrect": "Onjuist"
+        }
+    }
 }

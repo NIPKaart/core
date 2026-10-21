@@ -69,6 +69,16 @@ final class ModerationQueue
             ->concat(in_array(self::IMPROVEMENT, $types, true) ? $this->improvementItems() : [])
             ->concat(in_array(self::REPORT, $types, true) ? $this->reportItems() : []);
 
+        $profiles = app(ContributorReputation::class)->profiles($items->pluck('contributor.id')->filter()->unique()->values()->all());
+        $items = $items->map(function (array $item) use ($profiles): array {
+            if ($item['contributor'] !== null) {
+                $item['contributor']['reputation'] = $profiles[$item['contributor']['id']] ?? null;
+                unset($item['contributor']['id']);
+            }
+
+            return $item;
+        });
+
         return $this->filter($items, $filters)
             ->sort(fn (array $a, array $b) => [$a['priority'] === 'high' ? 0 : 1, $a['waiting_since'], $a['key']]
                 <=> [$b['priority'] === 'high' ? 0 : 1, $b['waiting_since'], $b['key']])
@@ -193,6 +203,7 @@ final class ModerationQueue
                 'municipality' => $space->municipality?->name,
                 'municipality_id' => $space->municipality_id,
                 'contributor' => [
+                    'id' => $space->user?->id,
                     'name' => $space->user?->name,
                     'approved' => (int) ($space->user->approved_spaces ?? 0),
                     'rejected' => (int) ($space->user->rejected_spaces ?? 0),

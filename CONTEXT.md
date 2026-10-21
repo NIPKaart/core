@@ -28,6 +28,9 @@ _Avoid_: edit, revision
 **Moderation queue**: The one queue of community decisions a moderator works through: pending ParkingSpace submissions, pending ParkingSpaceImprovements and places with open ParkingPlaceReports (one item per place). Reports have high priority because they concern information the map already shows; everything else is normal. Within a priority the item that has waited longest comes first. What is known about a contributor is shown as context and never changes the order. Approving happens one item at a time; submissions and improvements may be rejected in bulk with one shared reason. Dataset and import work is not part of it.
 _Avoid_: inbox items as a stored entity, moderation dashboard
 
+**Community points**: Called "communitypunten" in Dutch. The accumulated value of a person's reviewed community contributions, calculated internally from minimal moderation outcomes. It starts at zero and is shown only to authorized moderators alongside reviewed-outcome context. It does not imply that a new contribution is correct and never changes queue priority, permissions or publication. Achievements and rewards are separate future systems.
+_Avoid_: karma, contributor reputation, reliability percentage
+
 **ParkingMunicipal**: A municipal/open-data parking record. Its source and meaning remain distinct from a community contribution.
 
 **ParkingOffstreet**: A garage or park-and-ride facility with facility information and potentially live general occupancy. General occupancy does not establish accessible-space availability.

@@ -6,6 +6,7 @@ use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
 use App\Enums\UnderSign;
+use App\Services\ContributorReputation;
 use App\Traits\Confirmable;
 use App\Traits\Favoritable;
 use App\Traits\HasParkingLocation;
@@ -140,7 +141,6 @@ class ParkingSpace extends Model
         DB::transaction(function () use ($reviewer, $reason, $note): void {
             $statusChanged = $this->isDirty('status');
             $previousStatus = $this->getOriginal('status');
-
             $this->save();
 
             if ($statusChanged) {
@@ -152,6 +152,19 @@ class ParkingSpace extends Model
                     'note' => $this->status === ParkingStatus::REJECTED ? $note : null,
                     'reviewed_at' => now(),
                 ]);
+
+                if ($this->status === ParkingStatus::PENDING) {
+                    DB::table('contributor_reputation_events')->where('kind', 'submission')->where('subject_id', $this->id)->delete();
+                }
+
+                if (in_array($this->status, [ParkingStatus::APPROVED, ParkingStatus::REJECTED], true)) {
+                    $reputation = app(ContributorReputation::class);
+                    $reputation->record($this->user_id, $reviewer->id, 'submission', (string) $this->id,
+                        $this->status === ParkingStatus::APPROVED
+                            ? 'submission.approved'
+                            : $reputation->rejection($reason?->value ?? 'other'),
+                        $this->status === ParkingStatus::REJECTED ? $reason?->value : null);
+                }
             }
         });
     }

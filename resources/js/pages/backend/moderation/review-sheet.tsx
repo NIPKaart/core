@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Marker, Polyline } from 'react-leaflet';
 import { DecisionPopover } from './decision-popover';
 import { GroupEditor } from './group-editor';
-import { ContributorName, Flag, useAgo } from './parts';
+import { ContributorName, Flag, ReputationContext, useAgo } from './parts';
 import { TypeBadge } from './type-badge';
 import {
     type ImprovementDetails,
@@ -650,6 +650,7 @@ function ReportReview({ details, options, query }: { details: ReportDetails; opt
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 {report.reporter ?? t('unknown_user')} · {ago(report.reported_at)}
                             </p>
+                            <ReputationContext reputation={report.reputation} name={report.reporter} />
                         </li>
                     ))}
                 </ul>
@@ -671,16 +672,7 @@ function ReportReview({ details, options, query }: { details: ReportDetails; opt
 
 /** The contributor's track record, shown as context only. */
 function ContributorContext({ item }: { item: SelectedItem }) {
-    const { t } = useTranslation('backend/moderation');
     if (!item.contributor) return null;
 
-    return (
-        <p className="text-sm text-muted-foreground">
-            {t('contributor.history', {
-                name: item.contributor.name ?? t('unknown_user'),
-                approved: item.contributor.approved,
-                rejected: item.contributor.rejected,
-            })}
-        </p>
-    );
+    return <ReputationContext reputation={item.contributor.reputation} name={item.contributor.name} />;
 }
