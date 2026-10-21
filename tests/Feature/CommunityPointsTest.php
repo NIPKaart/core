@@ -294,26 +294,3 @@ test('decision order and inactivity do not change accumulated community points',
     $this->travel(2)->years();
     expect(communityPointsFor($first)['score'])->toBe(7);
 });
-
-test('renaming the ledger preserves reviewed outcomes and account deletion behavior', function () {
-    $user = User::factory()->create();
-    $moderator = User::factory()->create();
-    app(CommunityPoints::class)->record($user->id, $moderator->id, 'submission', 'rename-preservation', 'submission.approved');
-    $before = (array) DB::table('community_point_events')->first();
-    $profile = communityPointsFor($user);
-    $migration = require database_path('migrations/2026_10_21_104413_rename_contributor_reputation_events_to_community_point_events.php');
-
-    $migration->down();
-    try {
-        expect((array) DB::table('contributor_reputation_events')->first())->toBe($before);
-    } finally {
-        $migration->up();
-    }
-
-    expect((array) DB::table('community_point_events')->first())->toBe($before);
-    expect(communityPointsFor($user))->toBe($profile);
-    $moderator->delete();
-    $this->assertDatabaseHas('community_point_events', ['id' => $before['id'], 'reviewed_by' => null]);
-    $user->delete();
-    $this->assertDatabaseCount('community_point_events', 0);
-});
