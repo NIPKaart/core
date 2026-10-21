@@ -46,6 +46,8 @@ class UserController extends Controller
 
         return Inertia::render('backend/users/index', [
             'users' => $users,
+            'creatingUser' => false,
+            'roles' => Gate::allows('create', User::class) ? Role::select('id', 'name')->get() : [],
             'filters' => $filters,
             'facets' => $this->facets(),
             'roleOptions' => collect(UserRole::cases())->map(fn (UserRole $role): array => ['value' => $role->value, 'label' => $role->label()]),
@@ -55,13 +57,11 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         Gate::authorize('create', User::class);
 
-        return Inertia::render('backend/users/create', [
-            'roles' => Role::select('id', 'name')->get(),
-        ]);
+        return $this->index($request)->with('creatingUser', true);
     }
 
     /**

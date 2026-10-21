@@ -1,7 +1,7 @@
 import Heading from '@/components/heading';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -13,8 +13,9 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
-import { BreadcrumbItem, PaginatedResponse, SharedData, User } from '@/types';
+import { BreadcrumbItem, PaginatedResponse, Role, SharedData, User } from '@/types';
 import { getUserColumns } from './columns';
+import { CreateUserSheet } from './create-sheet';
 import { SuspendDialog } from './suspend-dialog';
 
 type UserWithRoles = User & {
@@ -26,17 +27,21 @@ type FilterKey = 'role' | 'status' | 'verification' | 'login';
 
 type PageProps = {
     users: PaginatedResponse<UserWithRoles>;
+    creatingUser: boolean;
+    roles: Role[];
     filters: Record<FilterKey, string[]>;
     facets: Record<FilterKey, Record<string, number>>;
     roleOptions: { value: string; label: string }[];
 };
 
-export default function Index({ users, filters, facets, roleOptions }: PageProps) {
+export default function Index({ users, creatingUser, roles, filters, facets, roleOptions }: PageProps) {
     const { t, tGlobal } = useResourceTranslation('backend/users');
     const page = usePage<SharedData>();
     const { auth } = page.props;
+    const query = Object.fromEntries(new URLSearchParams(page.url.split('?')[1]));
     const { can } = useAuthorization();
 
+    const createButton = useRef<HTMLAnchorElement>(null);
     const [dialogUser, setDialogUser] = useState<UserWithRoles | null>(null);
     const [dialogType, setDialogType] = useState<'delete' | 'suspend' | null>(null);
 
@@ -126,7 +131,7 @@ export default function Index({ users, filters, facets, roleOptions }: PageProps
                         <Heading level={1} title={t('head.index')} description={t('head.description')} />
                         {can('user.create') && (
                             <Button variant="outline" asChild>
-                                <Link href={app.users.create()}>
+                                <Link ref={createButton} href={app.users.create({ query })} preserveState preserveScroll>
                                     <Plus className="h-4 w-4" />
                                     {t('buttons.add')}
                                 </Link>
@@ -156,6 +161,24 @@ export default function Index({ users, filters, facets, roleOptions }: PageProps
                     <DataTablePagination pagination={users} />
                 </div>
             </div>
+
+            {creatingUser && (
+                <CreateUserSheet
+                    open={creatingUser}
+                    roles={roles}
+                    onClose={() =>
+                        router.get(
+                            app.users.index({ query }),
+                            {},
+                            {
+                                preserveScroll: true,
+                                preserveState: true,
+                                onSuccess: () => createButton.current?.focus(),
+                            },
+                        )
+                    }
+                />
+            )}
 
             {dialogUser && dialogType === 'delete' && (
                 <ConfirmDialog

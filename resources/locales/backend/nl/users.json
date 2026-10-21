@@ -79,5 +79,12 @@
         "verification": "E-mailverificatie",
         "login": "Laatst ingelogd",
         "login_recent": "Afgelopen 30 dagen"
+    },
+    "sheet": {
+        "description": "Vul de accountgegevens in en wijs een rol toe.",
+        "access": "Toegang",
+        "cancel": "Annuleren",
+        "create": "Gebruiker aanmaken",
+        "creating": "Bezig met aanmaken…"
     }
 }
