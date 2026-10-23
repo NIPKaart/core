@@ -30,7 +30,19 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @isset($bioMeta)
+            <title data-inertia="">{{ $bioMeta['title'] }}</title>
+            <meta data-inertia="description" name="description" content="{{ $bioMeta['description'] }}">
+            <link data-inertia="canonical" rel="canonical" href="{{ $bioMeta['canonical'] }}">
+            <meta data-inertia="og:title" property="og:title" content="{{ $bioMeta['title'] }}">
+            <meta data-inertia="og:description" property="og:description" content="{{ $bioMeta['description'] }}">
+            <meta data-inertia="og:type" property="og:type" content="website">
+            <meta data-inertia="og:url" property="og:url" content="{{ $bioMeta['canonical'] }}">
+            <meta data-inertia="og:image" property="og:image" content="{{ $bioMeta['image'] }}">
+            <meta data-inertia="twitter:card" name="twitter:card" content="summary_large_image">
+        @else
+            <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @endisset
 
         <link rel="icon" href="{{ asset('assets/images/favicon.ico') }}" type="image/x-icon" />
         <link rel="icon" href="{{ asset('assets/images/logo-icon.svg') }}" type="image/svg+xml">

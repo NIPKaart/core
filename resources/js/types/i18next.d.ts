@@ -25,6 +25,7 @@ declare module 'i18next' {
             'backend/sidebar': typeof import('../../locales/backend/en/sidebar.json');
             'backend/users': typeof import('../../locales/backend/en/users.json');
             'frontend/about': typeof import('../../locales/frontend/en/about.json');
+            'frontend/bio': typeof import('../../locales/frontend/en/bio.json');
             'frontend/contact': typeof import('../../locales/frontend/en/contact.json');
             'frontend/footer': typeof import('../../locales/frontend/en/footer.json');
             'frontend/garages': typeof import('../../locales/frontend/en/garages.json');
