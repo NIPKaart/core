@@ -60,6 +60,7 @@ Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,de
 });
 
 // Other frontend routes
+Route::get('bio', [Frontend\BioController::class, 'index'])->name('bio');
 Route::get('garages', [Frontend\GarageController::class, 'index'])->name('garages');
 Route::get('about', [Frontend\AboutController::class, 'index'])->name('about');
 Route::get('contact', [Frontend\ContactController::class, 'index'])->name('contact');
