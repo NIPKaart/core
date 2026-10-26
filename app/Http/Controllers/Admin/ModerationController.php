@@ -15,6 +15,7 @@ use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
+use App\Services\ModerationEvidence;
 use App\Services\ModerationHistory;
 use App\Services\ModerationQueue;
 use App\Services\NearbyMunicipalPlaces;
@@ -44,6 +45,11 @@ class ModerationController extends Controller
 {
     private const int PER_PAGE = 50;
 
+    /**
+     * "Today" in the moderation inbox follows the moderators' day, not UTC.
+     */
+    private const string LOCAL_TIMEZONE = 'Europe/Amsterdam';
+
     public function __construct(
         private ModerationQueue $queue,
         private ModerationHistory $history,
@@ -57,7 +63,7 @@ class ModerationController extends Controller
         return $this->page($request);
     }
 
-    public function submission(Request $request, ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces): Response|RedirectResponse
+    public function submission(Request $request, ParkingSpace $parkingSpace, NearbyMunicipalPlaces $nearbyMunicipalPlaces, ModerationEvidence $evidence): Response|RedirectResponse
     {
         Gate::authorize('viewAny', ParkingSpace::class);
 
@@ -70,10 +76,11 @@ class ModerationController extends Controller
             'current' => [...$this->improvements->current($parkingSpace), 'municipality' => $parkingSpace->municipality?->name],
             'nearbySpaces' => $this->nearbySpaces($parkingSpace->latitude, $parkingSpace->longitude, $parkingSpace->id),
             'nearbyMunicipalSpaces' => $nearbyMunicipalPlaces->around(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude)),
+            'nearestMunicipal' => $evidence->nearestMunicipal(new GeoPoint($parkingSpace->latitude, $parkingSpace->longitude)),
         ]);
     }
 
-    public function improvement(Request $request, ParkingSpaceImprovement $improvement): Response|RedirectResponse
+    public function improvement(Request $request, ParkingSpaceImprovement $improvement, ModerationEvidence $evidence): Response|RedirectResponse
     {
         Gate::authorize('viewAny', ParkingSpaceImprovement::class);
 
@@ -81,17 +88,18 @@ class ModerationController extends Controller
             return $this->toQueue($request);
         }
 
-        return $this->page($request, ModerationQueue::improvementKey($improvement->id), function () use ($improvement) {
+        return $this->page($request, ModerationQueue::improvementKey($improvement->id), function () use ($improvement, $evidence) {
             $review = $this->improvements->review($improvement);
 
             return [
                 ...$review,
+                'evidence' => $evidence->forPlace($improvement->parkingSpace),
                 'nearbySpaces' => $this->nearbySpaces($improvement->parkingSpace->latitude, $improvement->parkingSpace->longitude, $improvement->parking_space_id),
             ];
         });
     }
 
-    public function report(Request $request, string $source, string $id): Response|RedirectResponse
+    public function report(Request $request, string $source, string $id, ModerationEvidence $evidence): Response|RedirectResponse
     {
         Gate::authorize('viewAny', ParkingPlaceReport::class);
 
@@ -102,6 +110,7 @@ class ModerationController extends Controller
 
         return $this->page($request, ModerationQueue::reportKey($source, $id), fn () => [
             ...$place,
+            'evidence' => $evidence->forPlace($this->places->place($source, $id)->firstOrFail()),
             'nearbySpaces' => $this->nearbySpaces($place['latitude'], $place['longitude'], $source === 'community' ? $id : null),
         ]);
     }
@@ -337,6 +346,7 @@ class ModerationController extends Controller
                 'details' => $details(),
             ],
             'position' => fn () => $selectedKey === null ? null : $this->position($items($filters), $selectedKey),
+            'decidedToday' => fn () => $this->history->countsBy($user, now(self::LOCAL_TIMEZONE)->startOfDay()->utc())['total'],
             'options' => fn () => [
                 'types' => $types,
                 'municipalities' => Municipality::whereIn('id', $items()->pluck('municipality_id')->filter()->unique())
@@ -381,7 +391,7 @@ class ModerationController extends Controller
     private function position(Collection $items, string $key): array
     {
         $position = $this->queue->position($items, $key);
-        $link = fn (?array $item) => $item === null ? null : ['key' => $item['key'], 'type' => $item['type'], 'route' => $item['route']];
+        $link = fn (?array $item) => $item === null ? null : ['key' => $item['key'], 'type' => $item['type'], 'route' => $item['route'], 'street' => $item['street']];
 
         return [...$position, 'previous' => $link($position['previous']), 'next' => $link($position['next'])];
     }

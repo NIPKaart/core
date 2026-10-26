@@ -64,14 +64,45 @@
     "empty": {
         "open": "Nothing to review. New submissions, improvements and reports appear here.",
         "filtered": "No items for these filters.",
-        "decided": "Nothing decided yet."
+        "decided": "Nothing decided yet.",
+        "pane_title_one": "{{count}} item is waiting for you",
+        "pane_title_other": "{{count}} items are waiting for you",
+        "pane_hint": "Pick an item from the queue, or press J to start with the first.",
+        "pane_done": "Everything is reviewed"
     },
     "bulk": {
         "selected": "selected",
         "clear": "Clear selection",
         "reason": "Reason",
         "reject_one": "Reject {{count}}",
-        "reject_other": "Reject {{count}}"
+        "reject_other": "Reject {{count}}",
+        "title": {
+            "submission_one": "{{count}} new submission",
+            "submission_other": "{{count}} new submissions",
+            "improvement_one": "{{count}} improvement",
+            "improvement_other": "{{count}} improvements",
+            "mixed_one": "{{count}} item",
+            "mixed_other": "{{count}} items",
+            "submission_in_one": "{{count}} new submission in {{municipality}}",
+            "submission_in_other": "{{count}} new submissions in {{municipality}}",
+            "improvement_in_one": "{{count}} improvement in {{municipality}}",
+            "improvement_in_other": "{{count}} improvements in {{municipality}}"
+        },
+        "selected_count_one": "{{count}} selected",
+        "selected_count_other": "{{count}} selected",
+        "description": "You can reject together, for example as spam. Approving always happens one item at a time.",
+        "map_one": "Map · {{count}} selected",
+        "map_other": "Map · {{count}} selected",
+        "legend": "Selected",
+        "no_signals": "Nothing notable",
+        "columns": {
+            "place": "Address",
+            "details": "Details",
+            "check": "Check",
+            "age": "Age"
+        },
+        "hint": "Unsure about an item? Untick it and open it on its own.",
+        "label": "Selection"
     },
     "history": {
         "submitted_was": "Submitted was {{value}}",
@@ -105,16 +136,42 @@
             "description": "When this submission describes the same parking space, reject it as a duplicate."
         },
         "legend": {
-            "current": "Blue: now",
-            "proposed": "Orange: proposal",
+            "current": "Current",
+            "proposed": "Proposed",
             "submitted": "Blue: submission",
             "reported": "Blue: reported parking space",
             "nearby": "Green: other parking spaces",
-            "municipal": "Purple: municipal"
+            "municipal": "Municipal",
+            "this_place": "This parking space",
+            "community": "Community",
+            "submission": "Submission"
         },
         "skip": "Skip",
         "reject": "Reject",
-        "approve": "Approve"
+        "approve": "Approve",
+        "back": "Back to the queue",
+        "next_up": "then {{place}}",
+        "edit_place": "Edit",
+        "on_map": "On the map",
+        "views": {
+            "map": "Map",
+            "aerial": "Aerial photo",
+            "street_view": "Street View",
+            "label": "View"
+        },
+        "contributor": "Contributor",
+        "contributions": "{{approved}} approved, {{rejected}} rejected",
+        "confirmed_total_one": "confirmed {{count}} time",
+        "confirmed_total_other": "confirmed {{count}} times",
+        "reject_with_reason": "Reject…",
+        "first_contribution": "First contribution",
+        "submitted_ago": "Submitted {{ago}}",
+        "proposed_ago": "Proposed {{ago}}",
+        "change_count_one": "{{count}} change",
+        "change_count_other": "{{count}} changes",
+        "apply": "Apply",
+        "take_over": "Take over {{field}}",
+        "label": "Item"
     },
     "decide": {
         "reason": "Reason",
@@ -139,7 +196,11 @@
             "title": "Why hide?",
             "description": "The parking space disappears from the map and stays hidden after later imports. Reporters are notified.",
             "confirm": "Hide"
-        }
+        },
+        "mentioned_one": "mentioned {{count}}×",
+        "mentioned_other": "mentioned {{count}}×",
+        "municipal_nearby": "municipal at {{distance}} m",
+        "note_placeholder": "Optional: a note for the contributor or reporters"
     },
     "reports": {
         "sources": {
@@ -165,7 +226,9 @@
         "remove": {
             "community": "Delete",
             "municipal": "Hide"
-        }
+        },
+        "trusted_one": "{{count}} of {{total}} right before",
+        "trusted_other": "{{count}} of {{total}} right before"
     },
     "not_public": "Not public",
     "no_address": "Parking space without an address",
@@ -213,5 +276,151 @@
             "neutral": "Neutral",
             "incorrect": "Incorrect"
         }
+    },
+    "age": {
+        "minutes_one": "{{count}}m",
+        "minutes_other": "{{count}}m",
+        "hours_one": "{{count}}h",
+        "hours_other": "{{count}}h",
+        "days_one": "{{count}}d",
+        "days_other": "{{count}}d"
+    },
+    "queue": {
+        "label": "Queue",
+        "oldest_first": "Oldest first",
+        "first_submission": "First submission by this contributor",
+        "submission": "New submission",
+        "all_types": "All types",
+        "types_count_one": "{{count}} type",
+        "types_count_other": "{{count}} types",
+        "all_municipalities": "All municipalities",
+        "municipalities_count_one": "{{count}} municipality",
+        "municipalities_count_other": "{{count}} municipalities",
+        "clear_filters": "Clear filters",
+        "clear_filter": "Clear",
+        "clear_search": "Clear search",
+        "decided_today_one": "{{count}} decided today",
+        "decided_today_other": "{{count}} decided today",
+        "page": "{{from}}–{{to}} of {{total}}",
+        "previous_page": "Previous page",
+        "next_page": "Next page"
+    },
+    "select_item": "Select {{place}}",
+    "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "description": "Work without a mouse. Shortcuts are off while you type.",
+        "next": "Next item",
+        "previous": "Previous item",
+        "open": "Open the first item",
+        "select": "Select item for bulk",
+        "approve": "Approve or apply",
+        "reject": "Reject with a reason",
+        "keep": "Keep",
+        "remove": "Remove with a reason",
+        "close": "Close item",
+        "short": {
+            "next": "next",
+            "open": "open",
+            "select": "select",
+            "more": "more"
+        }
+    },
+    "checks": {
+        "title": "Checks",
+        "tones": {
+            "gone": "Points to gone",
+            "present": "Points to present",
+            "ok": "Fine",
+            "attention": "Look closer",
+            "neutral": "Neutral"
+        },
+        "municipal": {
+            "title": "Municipal data",
+            "near": "Municipal parking space at {{distance}} m",
+            "none": "No municipal parking space nearby",
+            "duplicate": "Municipal parking space at {{distance}} m. Possibly the same parking space.",
+            "clear": "No municipal parking space within {{distance}} m"
+        },
+        "municipal_source": {
+            "title": "Source",
+            "detail": "Municipal data; removing keeps the parking space hidden after later imports"
+        },
+        "confirmed": {
+            "title": "Last confirmation",
+            "since_report_one": "Confirmed {{count}} time since the first report",
+            "since_report_other": "Confirmed {{count}} times since the first report",
+            "last_one": "{{ago}} · confirmed {{count}} time in total",
+            "last_other": "{{ago}} · confirmed {{count}} times in total",
+            "never": "Never confirmed",
+            "last_current": "{{ago}}, at the current location"
+        },
+        "unavailable": {
+            "title": "When confirming",
+            "detail_one": "Reported ‘not available’ {{count}} time since",
+            "detail_other": "Reported ‘not available’ {{count}} times since"
+        },
+        "community": {
+            "title": "Community parking spaces nearby",
+            "none": "No others nearby",
+            "nearest": "Nearest at {{distance}} m",
+            "duplicate": "Community parking space at {{distance}} m. Possibly a duplicate.",
+            "nearest_clear": "Nearest at {{distance}} m, no duplicate"
+        },
+        "moved": {
+            "title": "Distance moved",
+            "near": "Moved {{distance}} m",
+            "far": "Moved {{distance}} m, check it is the same parking space"
+        },
+        "other_municipality": {
+            "title": "Other municipality",
+            "detail": "The new location lies in another municipality"
+        },
+        "competing": {
+            "title": "More proposals",
+            "detail": "Another proposal for this parking space is waiting"
+        },
+        "contributor": {
+            "title": "Contributor",
+            "detail_one": "{{right}} of {{count}} earlier improvement was right",
+            "detail_other": "{{right}} of {{count}} earlier improvements were right"
+        }
+    },
+    "track": {
+        "first": {
+            "submission": "first contribution, no history yet",
+            "improvement": "first improvement",
+            "report": "first report"
+        },
+        "earlier": {
+            "submission_one": "{{count}} earlier submission · {{right}} approved",
+            "submission_other": "{{count}} earlier submissions · {{right}} approved",
+            "improvement_one": "{{count}} earlier improvement · {{right}} applied",
+            "improvement_other": "{{count}} earlier improvements · {{right}} applied",
+            "report_one": "{{count}} earlier report · {{right}} right",
+            "report_other": "{{count}} earlier reports · {{right}} right"
+        }
+    },
+    "timeline": {
+        "title": "Parking space timeline",
+        "added": "Added",
+        "approved": "Approved",
+        "confirmed": "Confirmed",
+        "moved": "Reported ‘moved’",
+        "unavailable": "‘Not available’",
+        "reported": "Reported gone",
+        "improvement": "Improvement proposed",
+        "improved": "Improved",
+        "confirmed_count_one": "confirmation {{count}}",
+        "confirmed_count_other": "confirmation {{count}}"
+    },
+    "compare": {
+        "title": "Compare with municipal parking space",
+        "summary": "{{equal}} of {{total}} equal · {{distance}} m",
+        "field": "Field",
+        "street": "Street",
+        "orientation": "Orientation",
+        "number": "Number of bays",
+        "submission": "Submission",
+        "municipal": "Municipal"
     }
 }
