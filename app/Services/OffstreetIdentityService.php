@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DatasetImport;
 use App\Models\ParkingOffstreet;
+use App\Support\MunicipalSnapshot;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -37,11 +38,15 @@ class OffstreetIdentityService
             }
             $known = collect($options)->firstWhere('id', $knownId);
             $strong = array_values(array_filter($options, fn (array $option): bool => $option['same_name'] && $option['same_type'] && $option['distance_metres'] <= 30));
+            $exact = array_values(array_filter($strong, fn (array $option): bool => $option['same_geometry']));
             $facilityId = null;
             $method = 'new';
             if ($known !== null && $known['same_type'] && ($known['same_name'] || $known['same_source_name']) && $known['distance_metres'] <= 200) {
                 $facilityId = $knownId;
                 $method = 'source_id';
+            } elseif ($knownId === null && count($exact) === 1) {
+                $facilityId = $exact[0]['id'];
+                $method = 'geometry_name_type';
             } elseif ($knownId === null && count(array_filter($options, fn (array $option): bool => $option['distance_metres'] <= 200)) === 1 && count($strong) === 1) {
                 $facilityId = $strong[0]['id'];
                 $method = 'name_type_location';
@@ -84,6 +89,7 @@ class OffstreetIdentityService
         $records = array_map(fn (array $record): array => [
             'external_id' => $record['source']['external_id'], 'name' => $record['source']['name'],
             'source_name' => $record['source']['source_name'], 'type' => $record['values']['parking_type'],
+            'geometry' => $record['source']['geometry'],
             'longitude' => $record['values']['longitude'], 'latitude' => $record['values']['latitude'],
         ], $import->records);
         $rows = DB::select(<<<'SQL'
@@ -97,8 +103,9 @@ class OffstreetIdentityService
                     ), 4326)::geography
                 ) AS distance_metres,
                 incoming.name AS incoming_name, incoming.source_name AS incoming_source_name,
+                incoming.geometry AS incoming_geometry,
                 incoming.type AS incoming_type
-            FROM jsonb_to_recordset(?::jsonb) AS incoming(external_id text, name text, source_name text, type text, longitude double precision, latitude double precision)
+            FROM jsonb_to_recordset(?::jsonb) AS incoming(external_id text, name text, source_name text, type text, geometry jsonb, longitude double precision, latitude double precision)
             JOIN parking_offstreet_spaces facility ON facility.dataset_source_id = ?
             WHERE facility.external_id = incoming.external_id
                 OR lower(facility.source_record->>'name') = lower(incoming.name)
@@ -114,6 +121,7 @@ class OffstreetIdentityService
                 'id' => $row->id, 'name' => $source['name'] ?? $row->name,
                 'source_external_id' => $source['external_id'] ?? null,
                 'distance_metres' => (float) $row->distance_metres,
+                'same_geometry' => isset($source['geometry']) && MunicipalSnapshot::fingerprint($source['geometry']) === MunicipalSnapshot::fingerprint(json_decode($row->incoming_geometry, true, flags: JSON_THROW_ON_ERROR)),
                 'same_name' => $sameName, 'same_source_name' => $this->normalize($source['source_name'] ?? $row->name) === $this->normalize($row->incoming_source_name), 'same_type' => $row->parking_type === $row->incoming_type,
             ];
         }

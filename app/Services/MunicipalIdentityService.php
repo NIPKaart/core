@@ -34,15 +34,19 @@ class MunicipalIdentityService
                 $knownId = $legacy->count() === 1 ? $legacy->first()->id : null;
             }
             $exact = array_values(array_filter($options, fn (array $option): bool => $option['same_geometry'] && $option['same_name'] && $option['same_type']));
+            $context = array_values(array_filter($exact, fn (array $option): bool => $option['same_source_context']));
             $known = collect($options)->firstWhere('id', $knownId);
             $id = null;
             $method = 'new';
-            if ($known !== null && $known['same_geometry']) {
+            if ($known !== null && $known['same_geometry'] && (count($context) !== 1 || $context[0]['id'] === $knownId)) {
                 $id = $knownId;
                 $method = 'source_id';
             } elseif (count($exact) === 1) {
                 $id = $exact[0]['id'];
                 $method = 'geometry';
+            } elseif (count($context) === 1) {
+                $id = $context[0]['id'];
+                $method = 'source_context';
             } elseif ($knownId !== null || $options !== []) {
                 $method = 'review';
             }
@@ -90,15 +94,37 @@ class MunicipalIdentityService
         foreach ($rows as $row) {
             $source = json_decode($row->source, true, flags: JSON_THROW_ON_ERROR);
             $old = json_decode($row->source_record, true, flags: JSON_THROW_ON_ERROR);
+            $context = $this->sourceContext($source);
             $result[$row->external_id][] = [
                 'id' => $row->id, 'name' => $old['street'] ?? $old['external_id'],
                 'distance_metres' => (float) $row->distance_metres,
                 'same_geometry' => MunicipalSnapshot::fingerprint($old['geometry']) === MunicipalSnapshot::fingerprint($source['geometry']),
                 'same_name' => ($old['street'] ?? null) === ($source['street'] ?? null),
                 'same_type' => $old['access_category'] === $source['access_category'],
+                'same_source_context' => $context !== [] && MunicipalSnapshot::fingerprint($this->sourceContext($old)) === MunicipalSnapshot::fingerprint($context),
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Compare original claims without GeoJSON feature IDs that merely repeat the rotating source ID.
+     *
+     * @param  array<string, mixed>  $record
+     * @return array<string, mixed>
+     */
+    private function sourceContext(array $record): array
+    {
+        $attributes = $record['source_attributes'] ?? [];
+        if (($attributes['type'] ?? null) === 'Feature' && ($attributes['id'] ?? null) === $record['external_id']) {
+            unset($attributes['id']);
+            $featureId = $attributes['properties']['FID'] ?? null;
+            if (is_int($featureId) && str_ends_with($record['external_id'], '.'.$featureId)) {
+                unset($attributes['properties']['FID']);
+            }
+        }
+
+        return $attributes;
     }
 }

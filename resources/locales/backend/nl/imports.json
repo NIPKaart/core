@@ -278,10 +278,32 @@
             "new": "Nieuw",
             "source_id": "Bekende bron-ID",
             "geometry": "Geometrie, straat en toegang komen overeen",
+            "geometry_name_type": "Exacte brongeometrie, naam en type komen overeen",
+            "source_context": "Geometrie, straat, toegang en broncontext komen overeen",
             "name_type_location": "Naam, type en locatie komen overeen",
             "review": "Beoordeling nodig",
             "manual": "Handmatig beoordeeld"
         },
         "observation_reference": "Deze bron heeft veranderende locatie-ID’s. Bezettingsleveringen moeten kenmerken uit dezelfde bronophaling of een exacte catalogusverwijzing meesturen. Nieuwe of twijfelachtige locaties krijgen nog geen bezetting."
+    },
+    "automatic": {
+        "published": "Automatisch gepubliceerd",
+        "review_required": "Deze levering moet worden beoordeeld",
+        "reasons": {
+            "disabled": "Automatische publicatie is uitgeschakeld.",
+            "source_unapproved": "Keur de bron eerst goed.",
+            "first_publication": "De eerste publicatie van een dataset vereist handmatige goedkeuring.",
+            "review_blocked": "Los de onderstaande validatie-, koppelings- of correctieconflicten op.",
+            "geometry_review": "Nieuwe of gewijzigde afgeleide geometrieën moeten worden beoordeeld.",
+            "conflicts": "Sommige bronrecords hebben een onzekere koppeling of conflicteren met handmatige correcties.",
+            "empty": "De levering is leeg, terwijl de vorige publicatie records bevatte.",
+            "many_missing": "Het aantal ontbrekende records overschrijdt de afgesproken grens.",
+            "rapid_growth": "Het aantal nieuwe records overschrijdt de afgesproken grens.",
+            "large_movement": "Een bestaande bronlocatie is meer dan 100 meter verplaatst.",
+            "late_delivery": "De levering is ouder dan de verwachte leveringstermijn.",
+            "gradual_decline": "De opgetelde afname sinds de laatste handmatige goedkeuring overschrijdt de grens.",
+            "gradual_growth": "De opgetelde toename sinds de laatste handmatige goedkeuring overschrijdt de grens.",
+            "persistent_missing": "Records ontbreken al bij minstens drie geaccepteerde leveringen verspreid over zeven dagen. Beoordeel ze; bestaande locaties blijven beschikbaar."
+        }
     }
 }

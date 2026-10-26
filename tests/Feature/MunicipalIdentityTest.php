@@ -136,3 +136,83 @@ it('requires administrator authorization and a reason for municipal identity dec
     expect($import->fresh()->identity_decisions)->toBeNull();
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
 });
+
+/** Minimal GeoJSON evidence retaining Stockholm's regulation context and rotating feature identifiers. */
+function identityMunicipalFeatureRecord(int $featureId, string $citation): array
+{
+    $record = identityMunicipalRecord('LTFR_P_RORELSEHINDRADE.'.$featureId);
+    $record['source_attributes'] = [
+        'type' => 'Feature', 'id' => $record['external_id'], 'geometry' => $record['geometry'],
+        'properties' => ['FID' => $featureId, 'EXTENT_NO' => 8499, 'CITATION' => $citation],
+    ];
+
+    return $record;
+}
+
+it('retains distinct municipal identities when coincident regulations swap and replace their feature IDs', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $service = app(MunicipalImportService::class);
+    $first = $service->intake(json_encode(identityMunicipalDelivery([
+        identityMunicipalFeatureRecord(1, '0180 2019-04459'), identityMunicipalFeatureRecord(2, '0180 2020-01573'),
+    ]), JSON_THROW_ON_ERROR), $user);
+    $service->decide($first, $user, 'publish', null, $service->review($first)['token']);
+    $original = ParkingMunicipal::where('external_id', 'LTFR_P_RORELSEHINDRADE.1')->sole();
+    $other = ParkingMunicipal::where('external_id', 'LTFR_P_RORELSEHINDRADE.2')->sole();
+    $original->update(['visibility' => false]);
+    $favorite = Favorite::factory()->for($user)->create(['favoritable_type' => $original->getMorphClass(), 'favoritable_id' => $original->id]);
+
+    foreach ([[2, 1], [100, 101]] as [$firstId, $secondId]) {
+        $this->travel(5)->minutes();
+        $import = $service->intake(json_encode(identityMunicipalDelivery([
+            identityMunicipalFeatureRecord($firstId, '0180 2019-04459'), identityMunicipalFeatureRecord($secondId, '0180 2020-01573'),
+        ]), JSON_THROW_ON_ERROR), $user);
+        $review = $service->review($import);
+
+        expect($review['counts'])->toMatchArray(['new' => 0, 'missing' => 0, 'conflict' => 0]);
+        expect($review['identities'][0])->toMatchArray(['facility_id' => $original->id, 'method' => 'source_context']);
+        expect($review['identities'][1])->toMatchArray(['facility_id' => $other->id, 'method' => 'source_context']);
+        $service->decide($import, $user, 'publish', null, $review['token']);
+    }
+
+    $this->assertDatabaseCount('parking_municipal_spaces', 2);
+    expect($original->fresh())->visibility->toBeFalse()->source_record->external_id->toBe('LTFR_P_RORELSEHINDRADE.100');
+    expect($other->fresh()->source_record['source_attributes']['properties']['CITATION'])->toBe('0180 2020-01573');
+    expect($favorite->fresh()->favoritable_id)->toBe($original->id);
+    expect($first->fresh()->identity_resolution[0]['external_id'])->toBe('LTFR_P_RORELSEHINDRADE.1');
+});
+
+it('requires municipal review when coincident claims have no unique verified source context', function (string $case) {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $service = app(MunicipalImportService::class);
+    $records = [
+        identityMunicipalFeatureRecord(1, '0180 2019-04459'),
+        identityMunicipalFeatureRecord(2, $case === 'duplicate claims' ? '0180 2019-04459' : '0180 2020-01573'),
+    ];
+    if ($case === 'missing context') {
+        $records[0]['source_attributes'] = new stdClass;
+    }
+    $first = $service->intake(json_encode(identityMunicipalDelivery($records), JSON_THROW_ON_ERROR), $user);
+    $service->decide($first, $user, 'publish', null, $service->review($first)['token']);
+    $this->travel(5)->minutes();
+    $record = identityMunicipalFeatureRecord(3, '0180 2019-04459');
+    if ($case === 'changed context') {
+        $record['source_attributes']['properties']['CITATION'] = '0180 2025-01234';
+    } elseif ($case === 'unverified feature ID') {
+        $record['source_attributes']['id'] = 'another-feature';
+    } elseif ($case === 'unverified FID') {
+        $record['source_attributes']['properties']['FID'] = 999;
+    } elseif ($case === 'missing context') {
+        $record['source_attributes'] = new stdClass;
+    }
+    $import = $service->intake(json_encode(identityMunicipalDelivery([$record]), JSON_THROW_ON_ERROR), $user);
+    $review = $service->review($import);
+
+    expect($review['identities'][0]['method'])->toBe('review');
+    expect(fn () => $service->decide($import, $user, 'publish', null, $review['token']))->toThrow(ValidationException::class);
+    $this->assertDatabaseCount('parking_municipal_spaces', 2);
+    expect($import->fresh()->state)->toBe('pending');
+})->with(['duplicate claims', 'changed context', 'unverified feature ID', 'unverified FID', 'missing context']);

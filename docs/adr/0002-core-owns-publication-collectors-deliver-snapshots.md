@@ -14,7 +14,7 @@ Collectors do not write the core database and do not decide what becomes publicl
 - Source-specific credentials, pagination and protocol behavior stay outside core.
 - Collector output follows a strict, versioned NIPKaart delivery contract rather than leaking provider-specific structures into core.
 - A failed fetch never deletes existing published data.
-- Core may automate review/publication later, but the publication policy remains a core responsibility.
+- Core automates routine updates only after initial manual acceptance and the configured publication checks; exceptional updates remain reviewable. The publication policy remains a core responsibility.
 - `offstreet-parking` should converge on the same delivery boundary already used by `disabled-parking`, while retaining an offstreet-specific contract where semantics differ.
 - Reusable source packages remain independently usable and contain no NIPKaart publication state.
 

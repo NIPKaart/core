@@ -57,7 +57,7 @@ function hamburgIdentityRows(): array
 JSON, true, flags: JSON_THROW_ON_ERROR);
 }
 
-it('reconciles the two real Hamburg catalogs without manufacturing new facilities after explicit ambiguity review', function () {
+it('reconciles all facilities in the two real Hamburg catalogs without manual identity decisions', function () {
     $this->freezeTime();
     $description = json_decode(<<<'SOURCE'
 {"name": "Hamburg Park + Ride Anlagen", "publisher": "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende", "source_url": "https://api.hamburg.de/datasets/v1/p_und_r/collections/p_und_r/items", "licence": "DL-DE-BY-2.0", "terms_url": "https://suche.transparenz.hamburg.de/dataset/park-ride-anlagen-hamburg32", "attribution": "Freie und Hansestadt Hamburg, Behörde für Verkehr und Mobilitätswende (BVM); Park + Ride Anlagen Hamburg; Datenlizenz Deutschland - Namensnennung - Version 2.0; durch NIPKaart normalisiert.", "area": {"country": "DE", "subdivision": "DE-HH", "municipality": {"scheme": "de-ags", "code": "02000000", "name": "Hamburg"}}, "bounds": [9.7, 53.35, 10.35, 53.8], "expected_interval_hours": 24}
@@ -87,17 +87,12 @@ SOURCE, true, flags: JSON_THROW_ON_ERROR);
     $second = $service->intake(json_encode($catalog(true), JSON_THROW_ON_ERROR), $user);
     $review = $service->review($second);
     expect($review['counts']['new'])->toBe(0);
-    expect(collect($review['identities'])->where('method', 'name_type_location')->count())->toBeGreaterThan(20);
-    foreach ($review['identities'] as $identity) {
-        if ($identity['method'] === 'review') {
-            $evidence = collect(hamburgIdentityRows())->first(fn (array $row): bool => $row[1] === $identity['external_id']);
-            $service->resolveIdentity($second->fresh(), $user, $identity['external_id'], $original->get($evidence[0])->id,
-                'Acceptance fixture: explicitly reviewed original facility and alternate source position.', $service->review($second->fresh())['token']);
-        }
-    }
-    $review = $service->review($second->fresh());
+    expect(collect($review['identities'])->where('method', 'geometry_name_type')->count())->toBe(38);
+    expect($review['blockers'])->toBeEmpty();
     expect($review['counts'])->toMatchArray(['new' => 0, 'missing' => 0, 'conflict' => 0]);
     $service->decide($second->fresh(), $user, 'publish', null, $review['token']);
+
+    expect($second->fresh()->identity_decisions)->toBeNull();
 
     $this->assertDatabaseCount('parking_offstreet_spaces', 38);
     foreach (hamburgIdentityRows() as $row) {

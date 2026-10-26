@@ -41,11 +41,11 @@ trait StagesDatasetImports
         return $this->decodeSnapshot($json);
     }
 
-    public function intake(string $json, User $actor): DatasetImport
+    public function intake(string $json, User $actor, bool $automatic = false): DatasetImport
     {
         Gate::forUser($actor)->authorize('create', DatasetImport::class);
 
-        return $this->stage($json, $actor, $this->decodeSnapshot($json));
+        return $this->stage($json, $actor, $this->decodeSnapshot($json), $automatic);
     }
 
     public function intakeFromStorage(string $json, string $dataset, string $deliveryId): DatasetImport
@@ -55,7 +55,7 @@ trait StagesDatasetImports
             throw ValidationException::withMessages(['file' => 'Object identity does not match its contents.']);
         }
 
-        return $this->stage($json, null, $data);
+        return $this->stage($json, null, $data, true);
     }
 
     public function decide(DatasetImport $import, User $actor, string $decision, ?string $reason, string $reviewToken, bool $geometryReviewed = false): void
@@ -69,6 +69,9 @@ trait StagesDatasetImports
                 throw ValidationException::withMessages(['decision' => 'Deze levering is al beoordeeld.']);
             }
             if ($decision === 'publish') {
+                if (! $source->isApproved()) {
+                    throw ValidationException::withMessages(['decision' => 'Keur de bron eerst goed.']);
+                }
                 $review = $this->review($import, true);
                 if ($review['blockers'] || ! hash_equals($review['token'], $reviewToken)) {
                     throw ValidationException::withMessages(['decision' => $review['blockers'] ?: ['De gegevens zijn veranderd. Bekijk de verschillen opnieuw.']]);
@@ -76,19 +79,24 @@ trait StagesDatasetImports
                 if ($review['derivations'] > 0 && ! $geometryReviewed) {
                     throw ValidationException::withMessages(['geometry_reviewed' => 'Bevestig dat je de afgeleide geometrieën hebt beoordeeld.']);
                 }
-                $this->publish($import, $source);
-                $source->last_published_retrieved_at = $import->retrieved_at;
-                $source->save();
+                $import->publication_checks = [
+                    ...($import->publication_checks ?? $this->publicationPolicy->assess($import, $source, $review)),
+                    'acknowledged_missing_ids' => array_values(array_map(fn (array $row): string => $row['current']['id'],
+                        array_filter($review['rows'], fn (array $row): bool => $row['status'] === 'missing'))),
+                ];
+                $this->publishAccepted($import, $source, $actor, $reason);
             } elseif ($decision !== 'reject') {
                 throw ValidationException::withMessages(['decision' => 'Ongeldige beslissing.']);
             }
-            $import->forceFill(['state' => $decision === 'publish' ? 'published' : 'rejected', 'reviewed_by' => $actor->id, 'review_reason' => $reason, 'reviewed_at' => now()])->save();
+            if ($decision === 'reject') {
+                $import->forceFill(['state' => 'rejected', 'reviewed_by' => $actor->id, 'review_reason' => $reason, 'reviewed_at' => now()])->save();
+            }
             DatasetDataChanged::dispatch('imports', $source->target_type);
         });
     }
 
     /** @param array<string, mixed> $data */
-    private function stage(string $json, ?User $actor, array $data): DatasetImport
+    private function stage(string $json, ?User $actor, array $data, bool $automatic): DatasetImport
     {
         $source = DatasetSource::where('code', $data['dataset'])->first();
         if (! $source || ! $source->isApproved()) {
@@ -105,8 +113,11 @@ trait StagesDatasetImports
         $configuration = $source->configuration();
         $records = $this->validateRecords($data, $source);
 
-        return DB::transaction(function () use ($source, $configuration, $records, $data, $fingerprint, $actor) {
+        return DB::transaction(function () use ($source, $configuration, $records, $data, $fingerprint, $actor, $automatic) {
             $source = DatasetSource::whereKey($source->id)->lockForUpdate()->firstOrFail();
+            if (! $source->isApproved()) {
+                throw ValidationException::withMessages(['dataset' => 'Deze bron is nog niet goedgekeurd.']);
+            }
             $existing = DatasetImport::where('dataset_source_id', $source->id)->where('delivery_id', $data['delivery_id'])->first();
             if ($existing) {
                 return $this->existingDelivery($existing, $fingerprint);
@@ -120,11 +131,37 @@ trait StagesDatasetImports
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
                 'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor?->id,
             ])->refresh();
+            $import->setRelation('datasetSource', $source);
 
-            Notification::send(User::role(UserRole::ADMIN)->get(), (new ReadyForReview($import->id, $source->name))->afterCommit());
+            if ($automatic) {
+                $review = $this->review($import, true);
+                $checks = $this->publicationPolicy->assess($import, $source, $review);
+                $import->forceFill(['publication_checks' => $checks])->save();
+                if ($checks['reasons'] === []) {
+                    $this->publishAccepted($import, $source);
+                    DatasetDataChanged::dispatch('imports', $source->target_type);
 
-            return $import;
+                    return $import->unsetRelation('datasetSource');
+                }
+            }
+
+            if (! $source->last_published_retrieved_at || $import->retrieved_at->gt($source->last_published_retrieved_at)) {
+                Notification::send(User::role(UserRole::ADMIN)->get(), (new ReadyForReview($import->id, $source->name))->afterCommit());
+            }
+
+            return $import->unsetRelation('datasetSource');
         });
+    }
+
+    private function publishAccepted(DatasetImport $import, DatasetSource $source, ?User $actor = null, ?string $reason = null): void
+    {
+        $this->publish($import, $source);
+        $source->last_published_retrieved_at = $import->retrieved_at;
+        $source->save();
+        $import->forceFill([
+            'state' => 'published', 'publication_method' => $actor ? 'manual' : 'automatic',
+            'reviewed_by' => $actor?->id, 'review_reason' => $reason, 'reviewed_at' => now(),
+        ])->save();
     }
 
     private function existingDelivery(DatasetImport $import, string $fingerprint): DatasetImport

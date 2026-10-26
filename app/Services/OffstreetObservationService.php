@@ -108,7 +108,7 @@ class OffstreetObservationService
                 $candidate = new DatasetImport(['dataset_source_id' => $source->id, 'records' => $delivery['identity_records']]);
                 $candidate->state = 'pending';
                 foreach ($this->identity->resolve($candidate, $spaces, false) as $resolution) {
-                    if (in_array($resolution['method'], ['source_id', 'name_type_location'], true)) {
+                    if (in_array($resolution['method'], ['source_id', 'name_type_location', 'geometry_name_type'], true)) {
                         $bindings[$resolution['external_id']] = $resolution['facility_id'];
                     }
                 }

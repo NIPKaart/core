@@ -19,7 +19,7 @@ class MunicipalImportService implements DatasetImporter
 {
     use StagesDatasetImports;
 
-    public function __construct(private MunicipalSnapshot $snapshot, private MunicipalIdentityService $identity) {}
+    public function __construct(private MunicipalSnapshot $snapshot, private MunicipalIdentityService $identity, private DatasetPublicationPolicy $publicationPolicy) {}
 
     /** @return array<string, mixed> */
     protected function decodeSnapshot(string $json): array

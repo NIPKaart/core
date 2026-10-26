@@ -17,7 +17,7 @@ interface DatasetImporter
      */
     public function decodeDelivery(string $json): array;
 
-    public function intake(string $json, User $actor): DatasetImport;
+    public function intake(string $json, User $actor, bool $automatic = false): DatasetImport;
 
     public function intakeFromStorage(string $json, string $dataset, string $deliveryId): DatasetImport;
 

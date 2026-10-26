@@ -278,10 +278,32 @@
             "new": "New",
             "source_id": "Known source ID",
             "geometry": "Geometry, street and access match",
+            "geometry_name_type": "Exact source geometry, name and type match",
+            "source_context": "Geometry, street, access and source context match",
             "name_type_location": "Matching name, type and location",
             "review": "Review required",
             "manual": "Manually reviewed"
         },
         "observation_reference": "This source has changing facility IDs. Occupancy deliveries must include same-fetch identity claims or an exact catalog reference. New or ambiguous facilities do not receive occupancy updates."
+    },
+    "automatic": {
+        "published": "Automatically published",
+        "review_required": "This delivery needs review",
+        "reasons": {
+            "disabled": "Automatic publication is disabled.",
+            "source_unapproved": "Approve the source before publication.",
+            "first_publication": "The first publication of a dataset needs manual approval.",
+            "review_blocked": "Resolve the validation, identity or correction conflicts shown below.",
+            "geometry_review": "New or changed derived geometries need review.",
+            "conflicts": "Some source records have uncertain identities or conflict with manual corrections.",
+            "empty": "The delivery is empty although the previous publication contained records.",
+            "many_missing": "The number of missing records exceeds the agreed limit.",
+            "rapid_growth": "The number of new records exceeds the agreed limit.",
+            "large_movement": "An existing source location moved more than 100 metres.",
+            "late_delivery": "The delivery is older than the expected delivery window.",
+            "gradual_decline": "The accumulated decrease since the last manual approval exceeds the limit.",
+            "gradual_growth": "The accumulated increase since the last manual approval exceeds the limit.",
+            "persistent_missing": "Records have been missing for at least three accepted deliveries across seven days. Review them; existing locations remain available."
+        }
     }
 }
