@@ -8,7 +8,6 @@ return [
     // Live garage observations older than this are shown as stale, never as current availability (#1221).
     'observation_stale_after_minutes' => 10,
     'automatic_publication' => [
-        'enabled' => env('DATASET_AUTOMATIC_PUBLICATION_ENABLED', true),
         'limits' => [
             'missing_fraction' => 0.05, 'missing_minimum' => 3, 'missing_absolute' => 50,
             'growth_fraction' => 0.20, 'growth_minimum' => 10, 'growth_absolute' => 200,

@@ -142,7 +142,7 @@ it('does not publish empty offstreet catalogs and flags movements beyond one hun
     $this->assertDatabaseCount('parking_offstreet_spaces', 25);
 });
 
-it('requires review for uncertain links new geometry derivations stale arrivals and a disabled automation', function (string $case) {
+it('requires review for uncertain links new geometry derivations and stale arrivals', function (string $case) {
     $this->freezeTime();
     [$source, $admin, $records, $previous] = manuallyEstablishDataset('municipal');
     $this->travel(1)->days();
@@ -150,8 +150,6 @@ it('requires review for uncertain links new geometry derivations stale arrivals 
         $records[0]['geometry']['coordinates'][0] += 0.00001;
     } elseif ($case === 'geometry_review') {
         $records[0]['geometry'] = ['type' => 'Polygon', 'coordinates' => [[[4.8, 52.3], [4.8001, 52.3001], [4.8, 52.3001], [4.8001, 52.3], [4.8, 52.3]]]];
-    } elseif ($case === 'disabled') {
-        config(['dataset-deliveries.automatic_publication.enabled' => false]);
     }
     $data = automaticDelivery($source, $records);
     if ($case === 'late_delivery') {
@@ -162,7 +160,7 @@ it('requires review for uncertain links new geometry derivations stale arrivals 
     expect($import->state)->toBe('pending');
     expect($import->publication_checks['reasons'])->toContain($case);
     expect($source->fresh()->last_published_retrieved_at->equalTo($previous->retrieved_at))->toBeTrue();
-})->with(['conflicts', 'geometry_review', 'late_delivery', 'disabled']);
+})->with(['conflicts', 'geometry_review', 'late_delivery']);
 
 it('holds accumulated decline relative to the last manual acceptance', function () {
     $this->freezeTime();

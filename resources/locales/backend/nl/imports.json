@@ -290,7 +290,6 @@
         "published": "Automatisch gepubliceerd",
         "review_required": "Deze levering moet worden beoordeeld",
         "reasons": {
-            "disabled": "Automatische publicatie is uitgeschakeld.",
             "source_unapproved": "Keur de bron eerst goed.",
             "first_publication": "De eerste publicatie van een dataset vereist handmatige goedkeuring.",
             "review_blocked": "Los de onderstaande validatie-, koppelings- of correctieconflicten op.",

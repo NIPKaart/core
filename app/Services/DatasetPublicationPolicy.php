@@ -22,9 +22,6 @@ class DatasetPublicationPolicy
     {
         $limits = config('dataset-deliveries.automatic_publication.limits');
         $reasons = [];
-        if (! config('dataset-deliveries.automatic_publication.enabled')) {
-            $reasons[] = 'disabled';
-        }
         if (! $source->isApproved()) {
             $reasons[] = 'source_unapproved';
         }

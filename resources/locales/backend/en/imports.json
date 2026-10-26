@@ -290,7 +290,6 @@
         "published": "Automatically published",
         "review_required": "This delivery needs review",
         "reasons": {
-            "disabled": "Automatic publication is disabled.",
             "source_unapproved": "Approve the source before publication.",
             "first_publication": "The first publication of a dataset needs manual approval.",
             "review_blocked": "Resolve the validation, identity or correction conflicts shown below.",
