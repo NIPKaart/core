@@ -202,6 +202,8 @@ final class ModerationQueue
                 'street' => $space->street,
                 'municipality' => $space->municipality?->name,
                 'municipality_id' => $space->municipality_id,
+                'latitude' => $space->latitude,
+                'longitude' => $space->longitude,
                 'contributor' => [
                     'id' => $space->user?->id,
                     'name' => $space->user?->name,
@@ -224,6 +226,8 @@ final class ModerationQueue
             'street' => $row['space']['street'],
             'municipality' => $row['space']['municipality'],
             'municipality_id' => $row['space']['municipality_id'],
+            'latitude' => $row['space']['latitude'],
+            'longitude' => $row['space']['longitude'],
             'contributor' => $row['proposer'],
             'changes' => $row['changes'],
             'distance_metres' => $row['distance_metres'],
@@ -245,9 +249,24 @@ final class ModerationQueue
             'street' => $row['street'],
             'municipality' => $row['municipality'],
             'municipality_id' => $row['municipality_id'],
+            'latitude' => $row['latitude'],
+            'longitude' => $row['longitude'],
+            'preview' => $this->reportPreview($row['reports']),
             'contributor' => null,
             'flags' => ['reports' => count($row['reports'])],
         ]);
+    }
+
+    /**
+     * What the place's reporters said, for the queue row: the latest note, else the latest reason.
+     *
+     * @param  iterable<array{reason: ?string, note: ?string}>  $reports
+     */
+    private function reportPreview(iterable $reports): ?string
+    {
+        $reports = collect($reports)->reverse();
+
+        return $reports->pluck('note')->filter()->first() ?? $reports->pluck('reason')->filter()->first();
     }
 
     /**

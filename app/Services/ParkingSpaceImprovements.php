@@ -309,7 +309,14 @@ final class ParkingSpaceImprovements
 
         return [
             'id' => $improvement->id,
-            'space' => ['id' => $space->id, 'street' => $space->street, 'municipality' => $space->municipality?->name, 'municipality_id' => $space->municipality_id],
+            'space' => [
+                'id' => $space->id,
+                'street' => $space->street,
+                'municipality' => $space->municipality?->name,
+                'municipality_id' => $space->municipality_id,
+                'latitude' => $space->latitude,
+                'longitude' => $space->longitude,
+            ],
             'changes' => $this->changeGroups($submitted),
             'distance_metres' => $this->distance(['latitude' => $space->latitude, 'longitude' => $space->longitude], $submitted),
             'flags' => [

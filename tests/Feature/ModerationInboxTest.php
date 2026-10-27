@@ -1,13 +1,16 @@
 <?php
 
+use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
+use App\Enums\ReportReason;
 use App\Enums\UserRole;
 use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
+use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\User;
 use App\Notifications\CommunitySpace\StatusChanged;
@@ -326,5 +329,99 @@ describe('history', function () {
                 ->where('history.data.2.decision', 'rejected')
                 ->where('history.data.2.reason', RejectionReason::DUPLICATE->label())
                 ->where('history.data.2.contributor', $this->contributor->name));
+    });
+});
+
+describe('evidence', function () {
+    test('queue rows carry their location, and a reported place what its reporters said last', function () {
+        $reported = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'latitude' => 52.0918, 'longitude' => 5.118]);
+        $this->travelTo('2026-10-01 09:00:00');
+        openReportOn($reported, ['reason' => ReportReason::SIGN_REMOVED, 'note' => 'Er staat nu een laadpaal.']);
+        $this->travelTo('2026-10-02 09:00:00');
+        openReportOn($reported, ['reason' => ReportReason::NOW_REGULAR_BAY, 'note' => null]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('items.data.0.latitude', 52.0918)
+                ->where('items.data.0.longitude', 5.118)
+                ->where('items.data.0.preview', 'Er staat nu een laadpaal.'));
+    });
+
+    test('a reported place shows its timeline, confirmations and the nearest municipal place', function () {
+        $this->travelTo('2026-01-10 09:00:00');
+        $place = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'latitude' => 52.0918, 'longitude' => 5.118]);
+        ParkingMunicipal::factory()->create(['visibility' => true, 'latitude' => 52.09185, 'longitude' => 5.118, 'street' => 'Oudegracht', 'number' => 2]);
+        ParkingSpaceConfirmation::factory()->for($place)->create(['confirmed_at' => '2026-03-01 10:00:00']);
+        ParkingSpaceConfirmation::factory()->for($place)->create(['confirmed_at' => '2026-03-15 10:00:00']);
+        ParkingSpaceConfirmation::factory()->for($place)->create(['confirmed_at' => '2026-09-01 10:00:00', 'status' => ParkingConfirmationStatus::UNAVAILABLE]);
+        $this->travelTo('2026-10-01 09:00:00');
+        openReportOn($place, ['reason' => ReportReason::SIGN_REMOVED]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.reports.show', ['source' => 'community', 'id' => $place->id]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('selected.details.reports.0.reason_key', 'sign_removed')
+                ->where('selected.details.evidence.confirmed_total', 2)
+                ->where('selected.details.evidence.unavailable_since_confirmation', 1)
+                ->where('selected.details.evidence.last_confirmed_at', '2026-03-15T10:00:00+00:00')
+                ->where('selected.details.evidence.nearest_municipal.street', 'Oudegracht')
+                ->where('selected.details.evidence.nearest_municipal.number', 2)
+                ->where('selected.details.evidence.nearest_municipal.distance_metres', 6)
+                ->where('selected.details.evidence.timeline', [
+                    ['kind' => 'added', 'at' => '2026-01-10T09:00:00+00:00'],
+                    ['kind' => 'confirmed', 'at' => '2026-03-01T10:00:00+00:00'],
+                    ['kind' => 'confirmed', 'at' => '2026-03-15T10:00:00+00:00'],
+                    ['kind' => 'unavailable', 'at' => '2026-09-01T10:00:00+00:00'],
+                    ['kind' => 'reported', 'at' => '2026-10-01T09:00:00+00:00'],
+                ]));
+    });
+
+    test('a municipal place far away is not offered as the nearest one', function () {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        ParkingMunicipal::factory()->create(['visibility' => true, 'latitude' => 52.1, 'longitude' => 5.118]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.submissions.show', $space))
+            ->assertInertia(fn (Assert $page) => $page->where('selected.details.nearestMunicipal', null));
+    });
+
+    test('a submission is compared with the municipal place beside it', function () {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        ParkingMunicipal::factory()->create([
+            'visibility' => true, 'latitude' => 52.09185, 'longitude' => 5.118, 'street' => 'Biltstraat', 'orientation' => ParkingOrientation::PARALLEL, 'number' => 1,
+        ]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.submissions.show', $space))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('selected.details.nearestMunicipal.street', 'Biltstraat')
+                ->where('selected.details.nearestMunicipal.orientation', 'parallel')
+                ->where('selected.details.nearestMunicipal.distance_metres', 6));
+    });
+
+    test('a hidden municipal place is never the nearest one', function () {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        ParkingMunicipal::factory()->create(['visibility' => false, 'latitude' => 52.09185, 'longitude' => 5.118]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.submissions.show', $space))
+            ->assertInertia(fn (Assert $page) => $page->where('selected.details.nearestMunicipal', null));
+    });
+
+    test('the inbox counts the decisions the moderator took today, in Dutch time', function () {
+        $yesterday = pendingSubmission($this->contributor);
+        $afterMidnight = pendingSubmission($this->contributor);
+        $today = pendingSubmission($this->contributor);
+        $others = pendingSubmission($this->contributor);
+        pendingSubmission($this->contributor);
+
+        // 21:30 UTC is 23:30 in Amsterdam on 1 October; 22:30 UTC is already 00:30 on 2 October.
+        $this->travelTo('2026-10-01 21:30:00');
+        $this->actingAs($this->moderator)->post(route('app.moderation.submissions.reject', $yesterday), ['reason' => RejectionReason::SPAM->value]);
+        $this->travelTo('2026-10-01 22:30:00');
+        $this->post(route('app.moderation.submissions.reject', $afterMidnight), ['reason' => RejectionReason::SPAM->value]);
+        $this->travelTo('2026-10-02 09:00:00');
+        $this->post(route('app.moderation.submissions.reject', $today), ['reason' => RejectionReason::SPAM->value]);
+        $colleague = tap(User::factory()->create())->assignRole(UserRole::MODERATOR);
+        $this->actingAs($colleague)->post(route('app.moderation.submissions.reject', $others), ['reason' => RejectionReason::SPAM->value]);
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.index'))
+            ->assertInertia(fn (Assert $page) => $page->where('decidedToday', 2));
     });
 });

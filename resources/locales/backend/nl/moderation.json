@@ -64,14 +64,45 @@
     "empty": {
         "open": "Niets te beoordelen. Nieuwe inzendingen, verbeteringen en meldingen verschijnen hier vanzelf.",
         "filtered": "Geen items voor deze filters.",
-        "decided": "Nog niets afgehandeld."
+        "decided": "Nog niets afgehandeld.",
+        "pane_title_one": "{{count}} item wacht op je",
+        "pane_title_other": "{{count}} items wachten op je",
+        "pane_hint": "Kies een item uit de wachtrij, of druk op J om bij het eerste te beginnen.",
+        "pane_done": "Alles is beoordeeld"
     },
     "bulk": {
         "selected": "geselecteerd",
         "clear": "Selectie wissen",
         "reason": "Reden",
         "reject_one": "{{count}} afwijzen",
-        "reject_other": "{{count}} afwijzen"
+        "reject_other": "{{count}} afwijzen",
+        "title": {
+            "submission_one": "{{count}} nieuwe inzending",
+            "submission_other": "{{count}} nieuwe inzendingen",
+            "improvement_one": "{{count}} verbetering",
+            "improvement_other": "{{count}} verbeteringen",
+            "mixed_one": "{{count}} item",
+            "mixed_other": "{{count}} items",
+            "submission_in_one": "{{count}} nieuwe inzending in {{municipality}}",
+            "submission_in_other": "{{count}} nieuwe inzendingen in {{municipality}}",
+            "improvement_in_one": "{{count}} verbetering in {{municipality}}",
+            "improvement_in_other": "{{count}} verbeteringen in {{municipality}}"
+        },
+        "selected_count_one": "{{count}} geselecteerd",
+        "selected_count_other": "{{count}} geselecteerd",
+        "description": "Samen afwijzen kan, bijvoorbeeld als spam. Goedkeuren gaat altijd per item.",
+        "map_one": "Kaart · {{count}} geselecteerd",
+        "map_other": "Kaart · {{count}} geselecteerd",
+        "legend": "Geselecteerd",
+        "no_signals": "Geen bijzonderheden",
+        "columns": {
+            "place": "Adres",
+            "details": "Gegevens",
+            "check": "Controle",
+            "age": "Oud"
+        },
+        "hint": "Twijfel je bij een item? Haal het vinkje weg en open het los.",
+        "label": "Selectie"
     },
     "history": {
         "submitted_was": "Ingediend was {{value}}",
@@ -105,16 +136,42 @@
             "description": "Beschrijft deze inzending dezelfde parkeerplaats, wijs haar dan af als Dubbele melding."
         },
         "legend": {
-            "current": "Blauw: nu",
-            "proposed": "Oranje: voorstel",
+            "current": "Huidig",
+            "proposed": "Voorgesteld",
             "submitted": "Blauw: inzending",
             "reported": "Blauw: gemelde parkeerplaats",
             "nearby": "Groen: andere parkeerplaatsen",
-            "municipal": "Paars: gemeentelijk"
+            "municipal": "Gemeentelijk",
+            "this_place": "Deze parkeerplaats",
+            "community": "Community",
+            "submission": "Inzending"
         },
         "skip": "Overslaan",
         "reject": "Afwijzen",
-        "approve": "Goedkeuren"
+        "approve": "Goedkeuren",
+        "back": "Terug naar de wachtrij",
+        "next_up": "daarna {{place}}",
+        "edit_place": "Bewerken",
+        "on_map": "Op de kaart",
+        "views": {
+            "map": "Kaart",
+            "aerial": "Luchtfoto",
+            "street_view": "Street View",
+            "label": "Weergave"
+        },
+        "contributor": "Bijdrager",
+        "contributions": "{{approved}} goedgekeurd, {{rejected}} afgewezen",
+        "confirmed_total_one": "{{count}}× bevestigd",
+        "confirmed_total_other": "{{count}}× bevestigd",
+        "reject_with_reason": "Afwijzen…",
+        "first_contribution": "Eerste bijdrage",
+        "submitted_ago": "Ingezonden {{ago}}",
+        "proposed_ago": "Voorgesteld {{ago}}",
+        "change_count_one": "{{count}} wijziging",
+        "change_count_other": "{{count}} wijzigingen",
+        "apply": "Doorvoeren",
+        "take_over": "{{field}} overnemen",
+        "label": "Item"
     },
     "decide": {
         "reason": "Reden",
@@ -139,7 +196,11 @@
             "title": "Waarom verbergen?",
             "description": "De parkeerplaats verdwijnt van de kaart en blijft ook na volgende imports verborgen. Melders krijgen bericht.",
             "confirm": "Verbergen"
-        }
+        },
+        "mentioned_one": "{{count}}× genoemd",
+        "mentioned_other": "{{count}}× genoemd",
+        "municipal_nearby": "gemeentelijk op {{distance}} m",
+        "note_placeholder": "Optioneel: toelichting voor de indiener of melders"
     },
     "reports": {
         "sources": {
@@ -165,7 +226,9 @@
         "remove": {
             "community": "Verwijderen",
             "municipal": "Verbergen"
-        }
+        },
+        "trusted_one": "{{count}} van {{total}} eerder terecht",
+        "trusted_other": "{{count}} van {{total}} eerder terecht"
     },
     "not_public": "Niet openbaar",
     "no_address": "Parkeerplaats zonder adres",
@@ -213,5 +276,151 @@
             "neutral": "Neutraal",
             "incorrect": "Onjuist"
         }
+    },
+    "age": {
+        "minutes_one": "{{count}}m",
+        "minutes_other": "{{count}}m",
+        "hours_one": "{{count}}u",
+        "hours_other": "{{count}}u",
+        "days_one": "{{count}}d",
+        "days_other": "{{count}}d"
+    },
+    "queue": {
+        "label": "Wachtrij",
+        "oldest_first": "Oudste eerst",
+        "first_submission": "Eerste inzending van deze indiener",
+        "submission": "Nieuwe inzending",
+        "all_types": "Alle typen",
+        "types_count_one": "{{count}} type",
+        "types_count_other": "{{count}} typen",
+        "all_municipalities": "Alle gemeenten",
+        "municipalities_count_one": "{{count}} gemeente",
+        "municipalities_count_other": "{{count}} gemeenten",
+        "clear_filters": "Filters wissen",
+        "clear_filter": "Wissen",
+        "clear_search": "Zoekopdracht wissen",
+        "decided_today_one": "Vandaag {{count}} afgehandeld",
+        "decided_today_other": "Vandaag {{count}} afgehandeld",
+        "page": "{{from}}–{{to}} van {{total}}",
+        "previous_page": "Vorige pagina",
+        "next_page": "Volgende pagina"
+    },
+    "select_item": "{{place}} selecteren",
+    "shortcuts": {
+        "title": "Sneltoetsen",
+        "description": "Werken zonder muis. Sneltoetsen werken niet terwijl je typt.",
+        "next": "Volgend item",
+        "previous": "Vorig item",
+        "open": "Eerste item openen",
+        "select": "Item selecteren voor bulk",
+        "approve": "Goedkeuren of doorvoeren",
+        "reject": "Afwijzen met reden",
+        "keep": "Laten staan",
+        "remove": "Verwijderen met reden",
+        "close": "Item sluiten",
+        "short": {
+            "next": "volgende",
+            "open": "openen",
+            "select": "selecteren",
+            "more": "meer"
+        }
+    },
+    "checks": {
+        "title": "Controles",
+        "tones": {
+            "gone": "Wijst op weg",
+            "present": "Wijst op aanwezig",
+            "ok": "In orde",
+            "attention": "Let op",
+            "neutral": "Neutraal"
+        },
+        "municipal": {
+            "title": "Gemeentelijke data",
+            "near": "Gemeentelijke parkeerplaats op {{distance}} m",
+            "none": "Geen gemeentelijke parkeerplaats in de buurt",
+            "duplicate": "Gemeentelijke parkeerplaats op {{distance}} m. Mogelijk dezelfde parkeerplaats.",
+            "clear": "Geen gemeentelijke parkeerplaats binnen {{distance}} m"
+        },
+        "municipal_source": {
+            "title": "Bron",
+            "detail": "Gemeentelijke data; verwijderen verbergt de parkeerplaats ook na volgende imports"
+        },
+        "confirmed": {
+            "title": "Laatste bevestiging",
+            "since_report_one": "Na de eerste melding nog {{count}}× bevestigd",
+            "since_report_other": "Na de eerste melding nog {{count}}× bevestigd",
+            "last_one": "{{ago}} · {{count}}× bevestigd in totaal",
+            "last_other": "{{ago}} · {{count}}× bevestigd in totaal",
+            "never": "Nooit bevestigd",
+            "last_current": "{{ago}}, op de huidige locatie"
+        },
+        "unavailable": {
+            "title": "Bij bevestigen",
+            "detail_one": "Daarna {{count}}× ‘niet beschikbaar’ gemeld",
+            "detail_other": "Daarna {{count}}× ‘niet beschikbaar’ gemeld"
+        },
+        "community": {
+            "title": "Community-parkeerplaatsen in de buurt",
+            "none": "Geen andere in de buurt",
+            "nearest": "Dichtstbijzijnde op {{distance}} m",
+            "duplicate": "Community-parkeerplaats op {{distance}} m. Mogelijk dubbel.",
+            "nearest_clear": "Dichtstbijzijnde op {{distance}} m, geen dubbele"
+        },
+        "moved": {
+            "title": "Verschuiving",
+            "near": "{{distance}} m verplaatst",
+            "far": "{{distance}} m verplaatst, controleer of het dezelfde parkeerplaats is"
+        },
+        "other_municipality": {
+            "title": "Andere gemeente",
+            "detail": "De nieuwe locatie ligt in een andere gemeente"
+        },
+        "competing": {
+            "title": "Meer voorstellen",
+            "detail": "Er wacht nog een voorstel voor deze parkeerplaats"
+        },
+        "contributor": {
+            "title": "Bijdrager",
+            "detail_one": "{{right}} van {{count}} eerdere verbetering klopte",
+            "detail_other": "{{right}} van {{count}} eerdere verbeteringen klopten"
+        }
+    },
+    "track": {
+        "first": {
+            "submission": "eerste bijdrage, nog geen geschiedenis",
+            "improvement": "eerste verbetering",
+            "report": "eerste melding"
+        },
+        "earlier": {
+            "submission_one": "{{count}} eerdere inzending · {{right}} goedgekeurd",
+            "submission_other": "{{count}} eerdere inzendingen · {{right}} goedgekeurd",
+            "improvement_one": "{{count}} eerdere verbetering · {{right}} doorgevoerd",
+            "improvement_other": "{{count}} eerdere verbeteringen · {{right}} doorgevoerd",
+            "report_one": "{{count}} eerdere melding · {{right}} terecht",
+            "report_other": "{{count}} eerdere meldingen · {{right}} terecht"
+        }
+    },
+    "timeline": {
+        "title": "Tijdlijn van de parkeerplaats",
+        "added": "Toegevoegd",
+        "approved": "Goedgekeurd",
+        "confirmed": "Bevestigd",
+        "moved": "‘Verplaatst’ gemeld",
+        "unavailable": "‘Niet beschikbaar’",
+        "reported": "Gemeld als weg",
+        "improvement": "Verbetering voorgesteld",
+        "improved": "Verbeterd",
+        "confirmed_count_one": "{{count}}e bevestiging",
+        "confirmed_count_other": "{{count}}e bevestiging"
+    },
+    "compare": {
+        "title": "Vergelijk met gemeentelijke parkeerplaats",
+        "summary": "{{equal}} van {{total}} gelijk · {{distance}} m",
+        "field": "Veld",
+        "street": "Straat",
+        "orientation": "Ligging",
+        "number": "Aantal parkeervakken",
+        "submission": "Inzending",
+        "municipal": "Gemeentelijk"
     }
 }

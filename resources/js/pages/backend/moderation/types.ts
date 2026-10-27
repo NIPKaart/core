@@ -16,6 +16,10 @@ export type QueueItem = {
     route: RouteParams;
     street: string | null;
     municipality: string | null;
+    latitude: number;
+    longitude: number;
+    /** For a reported place: the latest note or reason its reporters gave. */
+    preview?: string | null;
     contributor: Contributor | null;
     source?: 'community' | 'municipal';
     changes?: ChangeGroup[];
@@ -29,11 +33,26 @@ export type QueueItem = {
     };
 };
 
+/** The nearest visible municipal place, to compare a submission or reported place with. */
+export type NearestMunicipal = { id: string; street: string | null; orientation: string | null; number: number | null; distance_metres: number };
+
+export type TimelineKind = 'added' | 'approved' | 'confirmed' | 'moved' | 'unavailable' | 'reported' | 'improvement' | 'improved';
+
+/** What a moderator can check about a published or reported place. */
+export type Evidence = {
+    timeline: { kind: TimelineKind; at: string }[];
+    confirmed_total: number;
+    last_confirmed_at: string | null;
+    unavailable_since_confirmation: number;
+    nearest_municipal: NearestMunicipal | null;
+};
+
 export type SubmissionDetails = {
     space: { id: string; street: string | null; municipality: string | null };
     current: ImprovementValues;
     nearbySpaces: ParkingSpace[];
     nearbyMunicipalSpaces: Pick<ParkingMunicipal, 'id' | 'latitude' | 'longitude'>[];
+    nearestMunicipal: NearestMunicipal | null;
 };
 
 export type ImprovementDetails = {
@@ -45,6 +64,7 @@ export type ImprovementDetails = {
     changes: ChangeGroup[];
     distance_metres: number | null;
     nearbySpaces: ParkingSpace[];
+    evidence: Evidence;
 };
 
 export type ReportDetails = {
@@ -61,6 +81,7 @@ export type ReportDetails = {
         id: number;
         reporter: string | null;
         reason: string | null;
+        reason_key: 'sign_removed' | 'now_regular_bay' | 'other' | null;
         note: string | null;
         reported_at: string;
         community_points?: CommunityPointsProfile | null;
@@ -68,6 +89,7 @@ export type ReportDetails = {
     confirmations_since_report: number;
     last_confirmed_at: string | null;
     nearbySpaces: ParkingSpace[];
+    evidence: Evidence;
 };
 
 export type SelectedItem =
@@ -75,7 +97,7 @@ export type SelectedItem =
     | (QueueItem & { type: 'improvement'; details: ImprovementDetails })
     | (QueueItem & { type: 'report'; details: ReportDetails });
 
-export type ItemLink = { key?: string; type: ItemType; route: RouteParams };
+export type ItemLink = { key?: string; type: ItemType; route: RouteParams; street?: string | null };
 
 export type Position = { index: number; total: number; previous: ItemLink | null; next: ItemLink | null };
 

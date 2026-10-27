@@ -213,6 +213,7 @@ class ParkingPlaceModeration
                 'reporter' => $report->user?->name,
                 'community_points' => $profiles[$report->user_id] ?? null,
                 'reason' => $report->reason?->label(),
+                'reason_key' => $report->reason?->value,
                 'note' => $report->note,
                 'reported_at' => $report->created_at,
             ])->values(),
