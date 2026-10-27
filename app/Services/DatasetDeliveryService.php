@@ -26,7 +26,7 @@ class DatasetDeliveryService
     public function upload(string $json, User $actor): DatasetImport
     {
         return DB::transaction(function () use ($json, $actor): DatasetImport {
-            $import = $this->imports->forUpload($json)->intake($json, $actor);
+            $import = $this->imports->forUpload($json)->intake($json, $actor, automatic: true);
             $source = $import->datasetSource;
             $this->storage->archive($json, $source->target_type, $source->code, $import->delivery_id);
 

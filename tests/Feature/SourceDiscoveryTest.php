@@ -298,7 +298,7 @@ it('discovers approves publishes and repeats a Belgian source without inventing 
     app(DatasetDeliveryService::class)->process($delivery->id);
     $import = DatasetImport::latest('id')->firstOrFail();
     expect($service->review($import)['counts']['unchanged'])->toBe(1);
-    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+    expect($import)->state->toBe('published')->publication_method->toBe('automatic');
 
     $this->assertDatabaseCount('parking_municipal_spaces', 1);
     expect($space->fresh())->id->toBe($space->id)->source_record->toEqual($repeat['records'][0])->published_import_id->toBe($import->id);
@@ -372,7 +372,7 @@ it('discovers approves publishes and repeats the Hamburg P+R catalog with German
     app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
     $repeat = DatasetImport::latest('id')->firstOrFail();
     expect($service->review($repeat)['counts']['unchanged'])->toBe(1);
-    $service->decide($repeat, $admin, 'publish', null, $service->review($repeat)['token']);
+    expect($repeat)->state->toBe('published')->publication_method->toBe('automatic');
     $this->assertDatabaseCount('parking_offstreet_spaces', 1);
     expect($facility->fresh())->id->toBe($facility->id)->published_import_id->toBe($repeat->id);
 });
@@ -442,7 +442,7 @@ it('discovers approves publishes and repeats a Swedish source without inventing 
     app(DatasetDeliveryService::class)->process($delivery->id);
     $import = DatasetImport::latest('id')->firstOrFail();
     expect($service->review($import)['counts']['unchanged'])->toBe(1);
-    $service->decide($import, $admin, 'publish', null, $service->review($import)['token']);
+    expect($import)->state->toBe('published')->publication_method->toBe('automatic');
 
     $this->assertDatabaseCount('parking_municipal_spaces', 1);
     expect($space->fresh())->id->toBe($space->id)->source_record->toEqual($repeat['records'][0])->published_import_id->toBe($import->id);
@@ -501,7 +501,7 @@ it('accepts a complete live Stockholm delivery through isolated approval publica
     app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
     $import = DatasetImport::latest('id')->firstOrFail();
     expect($service->review($import)['counts']['unchanged'])->toBe($count);
-    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+    expect($import)->state->toBe('published')->publication_method->toBe('automatic');
 
     $this->assertDatabaseCount('parking_municipal_spaces', $count);
     expect($first->fresh())->id->toBe($first->id)->published_import_id->toBe($import->id);
@@ -576,7 +576,7 @@ it('accepts Köln through discovery approval publication and repeated intake pre
     app(DatasetDeliveryService::class)->process(DatasetDelivery::latest('id')->firstOrFail()->id);
     $import = DatasetImport::latest('id')->firstOrFail();
     expect($service->review($import)['counts']['unchanged'])->toBe($count);
-    $service->decide($import, $admin, 'publish', null, $service->review($import)['token'], true);
+    expect($import)->state->toBe('published')->publication_method->toBe('automatic');
 
     $this->assertDatabaseCount('parking_municipal_spaces', $count);
     expect(ParkingMunicipal::all()->keyBy('external_id')->map->id->all())->toEqual($identities);

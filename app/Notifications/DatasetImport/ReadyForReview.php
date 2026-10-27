@@ -4,6 +4,7 @@ namespace App\Notifications\DatasetImport;
 
 use App\Enums\NotificationType;
 use App\Enums\UserRole;
+use App\Models\DatasetImport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -24,7 +25,9 @@ class ReadyForReview extends Notification implements ShouldQueue
 
     public function shouldSend(object $notifiable, string $channel): bool
     {
-        return $notifiable->hasRole(UserRole::ADMIN);
+        $import = DatasetImport::find($this->importId);
+
+        return $notifiable->hasRole(UserRole::ADMIN) && $import?->state === 'pending' && ! $import->isSuperseded();
     }
 
     public function toDatabase(object $notifiable): DatabaseMessage

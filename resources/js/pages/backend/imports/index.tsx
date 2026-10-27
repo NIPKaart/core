@@ -37,6 +37,8 @@ export type Import = {
     retrieved_at: string;
     reviewed_at: string | null;
     review_reason: string | null;
+    publication_method?: 'manual' | 'automatic' | null;
+    publication_checks?: { version: number; reasons: string[]; counts: Record<string, number> } | null;
     dataset_source?: Dataset;
 };
 
@@ -83,7 +85,9 @@ export default function Index({ datasets, sources, summary, countries, imports, 
             header: t('status'),
             cell: ({ row: { original: item } }) => (
                 <Badge variant={item.state === 'pending' && !item.superseded ? 'secondary' : 'outline'}>
-                    {t(`states.${item.superseded ? 'superseded' : item.state}` as const)}
+                    {item.publication_method === 'automatic' && item.state === 'published'
+                        ? t('automatic.published')
+                        : t(`states.${item.superseded ? 'superseded' : item.state}` as const)}
                 </Badge>
             ),
         },

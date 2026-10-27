@@ -96,7 +96,7 @@ it('discovers every listing page and resumes registered but undispatched work', 
     Queue::assertPushed(ProcessDatasetDelivery::class, 2);
 });
 
-it('intakes retained bytes without a user and never publishes automatically', function () {
+it('intakes a first retained delivery without a user and keeps it pending for manual publication', function () {
     [$handler] = bucketClient();
     $json = bucketPayload();
     $delivery = bucketReceipt($json);

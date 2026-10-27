@@ -308,3 +308,32 @@ for (const language of ['en', 'nl']) {
         assert.ok(!html.includes('facility_types.garage'));
     });
 }
+
+for (const language of ['en', 'nl']) {
+    test(`automatic publication explains pending checks in ${language} without leaking unknown reason codes`, async () => {
+        const i18n = i18next.createInstance();
+        await i18n.init({ resources, lng: language, fallbackLng: false });
+        const Notice = load('pages/backend/imports/automatic-publication-notice.tsx', i18n).default;
+        const html = render(Notice, {
+            delivery: { state: 'pending', publication_checks: { version: 1, counts: {}, reasons: ['many_missing', 'unknown_future_reason'] } },
+        });
+
+        assert.ok(html.includes(language === 'en' ? 'The number of missing records exceeds the agreed limit.' : 'Het aantal ontbrekende records overschrijdt de afgesproken grens.'));
+        assert.ok(html.includes(language === 'en' ? 'This delivery needs review' : 'Deze levering moet worden beoordeeld'));
+        assert.ok(!html.includes('unknown_future_reason'));
+        assert.ok(!html.includes('automatic.reasons.'));
+    });
+
+    test(`automatic publication hides obsolete review warnings in ${language}`, async () => {
+        const i18n = i18next.createInstance();
+        await i18n.init({ resources, lng: language, fallbackLng: false });
+        const Notice = load('pages/backend/imports/automatic-publication-notice.tsx', i18n).default;
+        for (const delivery of [
+            { state: 'published', publication_checks: { version: 1, counts: {}, reasons: ['many_missing'] } },
+            { state: 'pending', superseded: true, publication_checks: { version: 1, counts: {}, reasons: ['many_missing'] } },
+            { state: 'pending', publication_checks: { version: 1, counts: {}, reasons: [] } },
+        ]) {
+            assert.equal(render(Notice, { delivery }), '');
+        }
+    });
+}

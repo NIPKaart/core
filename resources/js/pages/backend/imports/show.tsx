@@ -22,6 +22,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Search, TriangleAle
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GeoJSON, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import AutomaticPublicationNotice from './automatic-publication-notice';
 import type { Dataset, Import } from './index';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
 
@@ -250,7 +251,9 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                             <div className="flex flex-wrap items-center gap-3">
                                 <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
                                 <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
-                                    {t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
+                                    {delivery.publication_method === 'automatic' && delivery.state === 'published'
+                                        ? t('automatic.published')
+                                        : t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
                                 </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
@@ -363,6 +366,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         </div>
                     </div>
                 </header>
+                <AutomaticPublicationNotice delivery={delivery} />
                 {delivery.superseded ? (
                     <section role="status" className="rounded-xl border bg-muted/30 p-5">
                         <h2 className="font-semibold">{t('superseded_title')}</h2>

@@ -70,7 +70,7 @@ it('retains facility IDs and favorites through repeated complete source ID repla
     $this->assertModelMissing($favorite);
     expect($visibleFavorite->fresh()->favoritable_id)->toBe($visibleGarage->id);
     expect($source->fresh()->requires_identity_context)->toBeTrue();
-    expect($import->fresh()->identity_resolution[0])->toMatchArray(['facility_id' => $garage->id, 'method' => 'name_type_location']);
+    expect($import->fresh()->identity_resolution[0])->toMatchArray(['facility_id' => $garage->id, 'method' => 'geometry_name_type']);
 });
 
 it('registers missing deliveries without removing facilities and recognizes a returning facility', function () {
@@ -99,7 +99,7 @@ it('requires attributable review for ambiguous nearby candidates and rejects sta
     identityPublish(identityCatalog([identityRecord('100'), identityRecord('101', 'Garage B', [4.8801, 52.36])], $user), $user);
     $garage = ParkingOffstreet::where('name', 'Garage A')->sole();
     $this->travel(5)->minutes();
-    $import = identityCatalog([identityRecord('200')], $user);
+    $import = identityCatalog([identityRecord('200', point: [4.88001, 52.36])], $user);
     $service = app(OffstreetImportService::class);
     $review = $service->review($import);
     expect($review['rows'][0]['identity']['method'])->toBe('review');
@@ -287,7 +287,7 @@ it('does not attach unknown or ambiguous live claims and never creates facilitie
     identityPublish(identityCatalog([identityRecord('100'), identityRecord('101', 'Garage B', [4.8801, 52.36])], $user), $user);
     $this->travel(5)->minutes();
 
-    expect(identityObservations(['identity_records' => [identityRecord('100')]]))->toBe(['nl-amsterdam-garages' => ['applied' => 0, 'unknown' => 1]]);
+    expect(identityObservations(['identity_records' => [identityRecord('100', point: [4.88001, 52.36])]]))->toBe(['nl-amsterdam-garages' => ['applied' => 0, 'unknown' => 1]]);
     expect(identityObservations(['identity_records' => [identityRecord('100', 'New site', [4.94, 52.32])]]))->toBe(['nl-amsterdam-garages' => ['applied' => 0, 'unknown' => 1]]);
     $this->assertDatabaseCount('dataset_imports', 1);
     $this->assertDatabaseCount('parking_offstreet_spaces', 2);
@@ -308,3 +308,69 @@ it('rejects mismatched or invalid live identity claims before applying occupancy
     'outside bounds' => [[identityRecord('100', point: [10, 60])]],
     'duplicate claim' => [[identityRecord('100'), identityRecord('100')]],
 ]);
+
+it('keeps neighboring facilities with identical names separate through rotating IDs using original geometry', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->offstreet()->create();
+    $user = identityReviewer();
+    identityPublish(identityCatalog([
+        identityRecord('100'), identityRecord('101', point: [4.880002, 52.360004]),
+    ], $user), $user);
+    $first = ParkingOffstreet::where('external_id', '100')->sole();
+    $second = ParkingOffstreet::where('external_id', '101')->sole();
+    $first->forceFill(['longitude' => 4.9, 'latitude' => 52.4, 'visibility' => false])->save();
+    $this->travel(5)->minutes();
+    $import = identityCatalog([
+        identityRecord('201', point: [4.880002, 52.360004]), identityRecord('200'),
+    ], $user);
+    $service = app(OffstreetImportService::class);
+    $review = $service->review($import);
+
+    expect($review['counts'])->toMatchArray(['new' => 0, 'missing' => 0, 'conflict' => 0]);
+    expect(collect($review['identities'])->keyBy('external_id')->get('200'))->toMatchArray(['facility_id' => $first->id, 'method' => 'geometry_name_type']);
+    expect(collect($review['identities'])->keyBy('external_id')->get('201'))->toMatchArray(['facility_id' => $second->id, 'method' => 'geometry_name_type']);
+    identityPublish($import, $user);
+
+    $this->assertDatabaseCount('parking_offstreet_spaces', 2);
+    expect($first->fresh())->longitude->toBe(4.9)->latitude->toBe(52.4)->visibility->toBeFalse();
+    expect($second->fresh()->source_record['external_id'])->toBe('201');
+});
+
+it('does not infer a unique offstreet identity from identical geometry when source claims differ or are duplicated', function (array $original, array $incoming) {
+    $this->freezeTime();
+    DatasetSource::factory()->offstreet()->create();
+    $user = identityReviewer();
+    identityPublish(identityCatalog($original, $user), $user);
+    $this->travel(5)->minutes();
+    $import = identityCatalog([$incoming], $user);
+    $service = app(OffstreetImportService::class);
+
+    expect($service->review($import)['identities'][0]['method'])->toBe('review');
+    expect(fn () => identityPublish($import, $user))->toThrow(ValidationException::class);
+    expect($import->fresh()->state)->toBe('pending');
+})->with([
+    'duplicate original claims' => [[identityRecord('100'), identityRecord('101')], identityRecord('200')],
+    'different name' => [[identityRecord('100')], identityRecord('200', 'Different garage')],
+    'different type' => [[identityRecord('100')], [...identityRecord('200'), 'facility_type' => 'parking_lot']],
+]);
+
+it('attaches rotating live claims to an exact facility without confusing its nearby namesake', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->offstreet()->create();
+    $user = identityReviewer();
+    identityPublish(identityCatalog([
+        identityRecord('100'), identityRecord('101', point: [4.880002, 52.360004]),
+    ], $user), $user);
+    $garage = ParkingOffstreet::where('external_id', '100')->sole();
+    $neighbor = ParkingOffstreet::where('external_id', '101')->sole();
+    $this->travel(5)->minutes();
+    $record = ['external_id' => '200', 'observed_at' => now()->subSeconds(30)->utc()->format('Y-m-d\TH:i:s\Z'),
+        'source_state' => 'ok', 'status' => 'counting', 'capacity' => 400, 'available' => 17];
+
+    expect(identityObservations(['identity_records' => [identityRecord('200')], 'records' => [$record]]))->toBe(['nl-amsterdam-garages' => ['applied' => 1, 'unknown' => 0]]);
+
+    expect($garage->fresh())->free_space->toBe(17)->observation_identity->source_record->external_id->toBe('200');
+    expect($neighbor->fresh()->free_space)->toBeNull();
+    $this->assertDatabaseCount('dataset_imports', 1);
+    $this->assertDatabaseCount('parking_offstreet_spaces', 2);
+});

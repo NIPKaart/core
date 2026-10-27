@@ -26,7 +26,7 @@ class OffstreetImportService implements DatasetImporter
     /** Fields a catalog may set; manual changes to any of them are protected like municipal corrections. */
     private const array VALUES = ['name', 'parking_type', 'latitude', 'longitude'];
 
-    public function __construct(private OffstreetSnapshot $snapshot, private OffstreetIdentityService $identity) {}
+    public function __construct(private OffstreetSnapshot $snapshot, private OffstreetIdentityService $identity, private DatasetPublicationPolicy $publicationPolicy) {}
 
     /** @return array<string, mixed> */
     protected function decodeSnapshot(string $json): array
