@@ -1,6 +1,5 @@
 {
     "title": "Moderatie",
-    "description": "Beoordeel wat de community instuurt. Hoge prioriteit eerst, daarbinnen het oudste item.",
     "search": "Zoek op straat, gemeente of indiener",
     "tabs": {
         "label": "Status",
@@ -280,7 +279,7 @@
     "select_item": "{{place}} selecteren",
     "shortcuts": {
         "title": "Sneltoetsen",
-        "description": "Werken zonder muis. Sneltoetsen werken niet terwijl je typt.",
+        "description": "Sneltoetsen werken niet terwijl je typt.",
         "next": "Volgend item",
         "previous": "Vorig item",
         "open": "Eerste item openen",

@@ -6,8 +6,7 @@
         "security": "Beveiliging"
     },
     "meta": {
-        "title": "Instellingen",
-        "description": "Beheer je profiel- en accountinstellingen."
+        "title": "Instellingen"
     },
     "profile": {
         "email_password_help": "Bevestig je huidige wachtwoord om je e-mailadres te wijzigen.",
@@ -59,7 +58,6 @@
             "title": "Uiterlijk instellingen"
         },
         "title": "Uiterlijk instellingen",
-        "description": "Werk de uiterlijk instellingen van je account bij",
         "light": "Licht",
         "dark": "Donker",
         "system": "Systeem"

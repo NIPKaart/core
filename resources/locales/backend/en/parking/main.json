@@ -137,7 +137,6 @@
                 "maxTime": "Maximum parking time"
             },
             "hints": {
-                "parkingTime": "Maximum parking duration allowed at this location.",
                 "underSign": "The details below only apply when the answer is \"Yes\".",
                 "underSignUnknown": "Not known",
                 "restriction": "Leave empty when the sub-sign mentions no days or times.",

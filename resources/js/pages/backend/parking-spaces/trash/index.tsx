@@ -47,7 +47,6 @@ export default function Index({ spaces, tabCounts, options }: PageProps) {
             <div className="flex flex-col gap-6 px-4 py-6 pb-24 sm:px-8 sm:py-8 lg:px-10">
                 <header className="space-y-1">
                     <h1 className="text-2xl font-semibold tracking-tight">{tMain('head.title')}</h1>
-                    <p className="text-sm text-muted-foreground">{t('head.description')}</p>
                 </header>
 
                 <ParkingSpaceTabs current="trash" counts={tabCounts} />

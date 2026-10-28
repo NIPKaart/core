@@ -22,8 +22,7 @@
         "markAll": "Alles markeren als gelezen"
     },
     "empty": {
-        "title": "Nog geen meldingen",
-        "subtitle": "Alle meldingen verschijnen hier wanneer er iets te melden is."
+        "title": "Nog geen meldingen"
     },
     "relative": {
         "today": "Vandaag",

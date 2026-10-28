@@ -1,7 +1,6 @@
 {
     "head": {
-        "title": "Trashed Parking Spaces",
-        "description": "Parking spaces that were moved to the trash."
+        "title": "Trashed Parking Spaces"
     },
     "breadcrumbs": {
         "index": "Parking Spaces",

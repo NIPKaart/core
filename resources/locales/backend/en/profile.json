@@ -7,7 +7,6 @@
             "index": "My Favorites"
         },
         "heading": "My favorite locations",
-        "subheading": "All your favorite parking locations and garages at a glance.",
         "types": {
             "community": "Community",
             "municipal": "Municipal",
@@ -36,10 +35,8 @@
             "index": "My parking locations",
             "show": "Parking Space ({{id}})"
         },
-        "subheading": "Here you can manage your added parking spaces and view their details. You can also delete a parking space if needed.",
         "table": {
             "title": "Details",
-            "subtitle": "Information about the parking space.",
             "added_at": "Added At",
             "country": "Country",
             "province": "Province",
@@ -51,8 +48,7 @@
             "orientation": "Orientation"
         },
         "location": {
-            "title": "Location",
-            "subtitle": "Where the parking space is located."
+            "title": "Location"
         },
         "actions": {
             "delete": {
@@ -68,8 +64,7 @@
             "error": "Failed to update parking space"
         },
         "empty": {
-            "title": "You haven't added any parking spaces yet.",
-            "subtitle": "Start contributing and help others by adding your first location!"
+            "title": "You haven't added any parking spaces yet."
         },
         "search": {
             "placeholder": "Search parking spaces by street, city, or postcode..."

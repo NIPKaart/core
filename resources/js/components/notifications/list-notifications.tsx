@@ -257,7 +257,6 @@ export function NotificationsList({ items, loading = false, onMarkOne, onOpen }:
                 <Inbox className="h-5 w-5" />
             </div>
             <div className="text-base font-medium text-foreground">{t('empty.title')}</div>
-            <div className="max-w-xs text-xs">{t('empty.subtitle')}</div>
         </div>
     );
 

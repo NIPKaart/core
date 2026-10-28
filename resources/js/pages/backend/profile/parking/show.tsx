@@ -161,7 +161,7 @@ export default function UserParkingShow({ parkingSpace, rejectionReason, canWith
                 {/* Details Card */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('parking_spaces.table.title')} description={t('parking_spaces.table.subtitle')} />
+                        <HeadingSmall title={t('parking_spaces.table.title')} />
                     </div>
                     <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
                         <dl>
@@ -184,7 +184,7 @@ export default function UserParkingShow({ parkingSpace, rejectionReason, canWith
                 {/* Location Card */}
                 <div>
                     <div className="mb-4 space-y-1">
-                        <HeadingSmall title={t('parking_spaces.location.title')} description={t('parking_spaces.location.subtitle')} />
+                        <HeadingSmall title={t('parking_spaces.location.title')} />
                     </div>
                     <LocationMarkerCard latitude={parkingSpace.latitude} longitude={parkingSpace.longitude} />
                 </div>

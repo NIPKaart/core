@@ -137,7 +137,6 @@
                 "maxTime": "Maximale parkeertijd"
             },
             "hints": {
-                "parkingTime": "Maximale toegestane parkeertijd op deze locatie.",
                 "underSign": "Alleen bij \"Ja\" zijn de details hieronder van toepassing.",
                 "underSignUnknown": "Niet bekend",
                 "restriction": "Laat leeg als het onderbord geen dagen of tijden noemt.",

@@ -6,8 +6,7 @@
         "security": "Security"
     },
     "meta": {
-        "title": "Settings",
-        "description": "Manage your profile and account settings."
+        "title": "Settings"
     },
     "profile": {
         "email_password_help": "Confirm your current password to change your email address.",
@@ -59,7 +58,6 @@
             "title": "Appearance settings"
         },
         "title": "Appearance settings",
-        "description": "Update your account's appearance settings",
         "light": "Light",
         "dark": "Dark",
         "system": "System"

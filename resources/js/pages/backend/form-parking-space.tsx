@@ -273,7 +273,6 @@ export default function ParkingSpaceForm({
                                                 />
                                             ))}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">{t('edit.form.hints.parkingTime')}</p>
                                     </div>
 
                                     <div className="space-y-2">

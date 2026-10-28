@@ -23,7 +23,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     const { t } = useTranslation('backend/auth');
 
     return (
-        <AuthLayout title={t('login.title')} description={t('login.description')}>
+        <AuthLayout title={t('login.title')}>
             <Head title={t('login.title')} />
 
             <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="flex flex-col gap-6">

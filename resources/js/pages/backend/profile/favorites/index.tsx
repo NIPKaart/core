@@ -51,7 +51,7 @@ export default function FavoritesPage({ favorites = [] }: PageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('favorites.title.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('favorites.heading')} description={t('favorites.subheading')} />
+                <Heading title={t('favorites.heading')} />
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input

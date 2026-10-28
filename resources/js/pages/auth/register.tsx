@@ -15,7 +15,7 @@ export default function Register() {
     const { t } = useTranslation('backend/auth');
 
     return (
-        <AuthLayout title={t('register.title')} description={t('register.description')}>
+        <AuthLayout title={t('register.title')}>
             <Head title={t('register.title')} />
 
             <Form
