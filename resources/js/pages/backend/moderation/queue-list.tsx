@@ -132,7 +132,7 @@ export function QueueList({
 
     return (
         <>
-            {selection ?? (
+            {selection || (
                 <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
                     <div className="flex items-baseline justify-between gap-3">
                         <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
@@ -312,7 +312,7 @@ export function QueueList({
                 )}
             </div>
 
-            {footer ?? (
+            {footer || (
                 <div className="flex h-10 shrink-0 items-center gap-3.5 overflow-hidden border-t px-4.5 text-xs whitespace-nowrap text-muted-foreground">
                     <span className="flex items-center gap-1">
                         <Kbd>J</Kbd>

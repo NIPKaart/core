@@ -148,7 +148,7 @@ function Frame({
                 <PanelNav back={t('queue.label')} onBack={nav.onBack} position={position} loading={nav.loading} onNavigate={nav.onNavigate} />
             )}
             {header}
-            {decision ?? (
+            {decision || (
                 <>
                     {actions && (
                         <div ref={actionRow} className="flex shrink-0 gap-2 px-5 pb-4">
