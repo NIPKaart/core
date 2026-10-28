@@ -3,12 +3,12 @@ import { Flag, MapPinPlus, PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ItemType } from './types';
 
-const ICONS = { submission: MapPinPlus, improvement: PencilLine, report: Flag } satisfies Record<ItemType, unknown>;
+export const TYPE_ICONS = { submission: MapPinPlus, improvement: PencilLine, report: Flag } satisfies Record<ItemType, unknown>;
 
 /** The kind of moderation item, the same everywhere it is shown. */
 export function TypeBadge({ type }: { type: ItemType }) {
     const { t } = useTranslation('backend/moderation');
-    const Icon = ICONS[type];
+    const Icon = TYPE_ICONS[type];
 
     return (
         <Badge variant="outline">

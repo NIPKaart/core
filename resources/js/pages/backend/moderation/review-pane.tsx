@@ -1,9 +1,8 @@
-import { HeaderSlot } from '@/components/header-slot';
 import InputError from '@/components/input-error';
-import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { locationMap } from '@/routes';
@@ -11,27 +10,13 @@ import app from '@/routes/app';
 import { router } from '@inertiajs/react';
 import { format as formatDate, formatDistanceStrict, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
-import {
-    AlertCircle,
-    ArrowLeft,
-    Camera,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    Database,
-    ExternalLink,
-    Flag,
-    Pencil,
-    RotateCcw,
-    Ruler,
-    Users,
-    type LucideIcon,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { AlertCircle, Clock, Database, ExternalLink, Flag, Pencil, RotateCcw, Ruler, Users, type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DecisionPopover } from './decision-popover';
+import { DecisionForm } from './decision-form';
+import { metres, nearestWithin, type MapPoint } from './geo';
 import { GroupEditor } from './group-editor';
-import { MapChip, MapLegend, MapTag, ModerationMap, type MapPoint } from './moderation-map';
+import type { ModerationMap } from './moderation-map';
 import type { CommunityPointsProfile, Contributor } from './parts';
 import { useAgo } from './parts';
 import { Kbd, useShortcuts } from './shortcuts';
@@ -49,32 +34,22 @@ import type {
     SubmissionDetails,
 } from './types';
 import { CHANGE_GROUPS, GROUP_FIELDS, useValueFormatter, type ChangeGroup, type ImprovementValues } from './values';
+import { NextUp, PanelNav, Workspace } from './workspace';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
 /** A submission this close to another place may describe the same one. */
 const DUPLICATE_METRES = 30;
 
-/** Metres between two points, for the distances the moderator sees. */
-function metres(a: MapPoint, b: MapPoint): number {
-    const rad = Math.PI / 180;
-    const dLat = (b.latitude - a.latitude) * rad;
-    const dLon = (b.longitude - a.longitude) * rad;
-    const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLon / 2) ** 2;
-    return Math.round(6371000 * 2 * Math.asin(Math.sqrt(h)));
-}
-
 /** Other parking spaces count as nearby within this distance. */
 const NEARBY_METRES = 500;
 
-function nearestOf(point: MapPoint, points: MapPoint[]): number | null {
-    const distances = points.map((other) => metres(point, other)).filter((distance) => distance <= NEARBY_METRES);
-    return distances.length ? Math.min(...distances) : null;
-}
+const nearestOf = (point: MapPoint, points: MapPoint[]) => nearestWithin(point, points, NEARBY_METRES);
 
 /**
- * The item under review, beside the queue. Every kind of item has the same frame: a toolbar with its place in the
- * queue and the decision, a title, the map beside the aerial photo, and below them what this decision needs.
+ * The item under review, in the panel beside the map. Every kind of item has the same frame: back to the queue and
+ * its place in it, a title, the decision, what this decision needs, and which item follows. The map behind the panel
+ * shows the place, and for a submission or improvement its pin can be moved to correct the location.
  */
 export function ReviewPane({
     selected,
@@ -97,7 +72,17 @@ export function ReviewPane({
     if (!item) return null;
 
     const nav = { position: loading ? null : position, loading: loading !== null, onNavigate, onBack };
-    if (loading || !selected || !position) return <Frame nav={nav} actions={null} body={<BodySkeleton />} />;
+    if (loading || !selected || !position) {
+        return (
+            <Frame
+                nav={nav}
+                map={{ center: { latitude: item.latitude, longitude: item.longitude } }}
+                header={<BodySkeleton.Header />}
+                actions={null}
+                body={<BodySkeleton />}
+            />
+        );
+    }
 
     switch (selected.type) {
         case 'report':
@@ -110,99 +95,117 @@ export function ReviewPane({
 }
 
 type Nav = { position: Position | null; loading: boolean; onNavigate: (link: ItemLink) => void; onBack: () => void };
+type MapProps = Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'inset' | 'className' | 'children'>;
 
-/** The toolbar, the scrolling body and, on small screens, the decision at the bottom. */
-function Frame({ nav, actions, body, overlay }: { nav: Nav; actions: React.ReactNode; body: React.ReactNode; overlay?: React.ReactNode }) {
+/**
+ * The panel for one item. A decision that needs a reason replaces the item's content with a short form; going back
+ * returns to the item, and Esc closes the form before it leaves the item.
+ */
+function Frame({
+    nav,
+    map,
+    header,
+    actions,
+    body,
+    timeline,
+    decision,
+    onCancelDecision,
+}: {
+    nav: Nav;
+    map: MapProps;
+    header: React.ReactNode;
+    actions: React.ReactNode;
+    body: React.ReactNode;
+    timeline?: React.ReactNode;
+    decision?: React.ReactNode;
+    onCancelDecision?: () => void;
+}) {
     const { t } = useTranslation('backend/moderation');
     const { position } = nav;
     const next = position?.next ?? null;
     const previous = position?.previous ?? null;
     useShortcuts({
-        j: next && (() => nav.onNavigate(next)),
-        k: previous && (() => nav.onNavigate(previous)),
-        Escape: nav.onBack,
+        j: !decision && next && (() => nav.onNavigate(next)),
+        k: !decision && previous && (() => nav.onNavigate(previous)),
+        Escape: decision ? onCancelDecision : nav.onBack,
     });
+    const scroll = 'flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-4 pb-6';
+
+    // When a decision form closes, focus returns to the button that opened it.
+    const actionRow = useRef<HTMLDivElement>(null);
+    const deciding = Boolean(decision);
+    const wasDeciding = useRef(deciding);
+    useEffect(() => {
+        if (wasDeciding.current && !deciding) actionRow.current?.querySelector<HTMLElement>('[data-decides]')?.focus();
+        wasDeciding.current = deciding;
+    }, [deciding]);
 
     return (
-        <section aria-label={t('review.label')} className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-            <HeaderSlot side="start">
-                <nav
-                    aria-label={t('review.position_label')}
-                    className="flex min-w-0 items-center gap-1.5 lg:absolute lg:inset-y-0 lg:left-[359px] lg:border-l lg:pl-3"
-                >
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 cursor-pointer lg:hidden"
-                        aria-label={t('review.back')}
-                        onClick={nav.onBack}
-                    >
-                        <ArrowLeft className="size-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 cursor-pointer text-muted-foreground"
-                        disabled={!previous || nav.loading}
-                        aria-label={t('review.previous')}
-                        onClick={() => previous && nav.onNavigate(previous)}
-                    >
-                        <ChevronLeft className="size-[18px]" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 cursor-pointer text-muted-foreground"
-                        disabled={!next || nav.loading}
-                        aria-label={t('review.next')}
-                        onClick={() => next && nav.onNavigate(next)}
-                    >
-                        <ChevronRight className="size-[18px]" />
-                    </Button>
-                    {position && (
-                        <span className="ml-1 hidden truncate text-sm whitespace-nowrap text-muted-foreground sm:inline">
-                            {t('review.position', { index: position.index, total: position.total })}
-                            {position.next && (
-                                <span className="hidden text-[13px] text-neutral-400 xl:inline">
-                                    {' '}
-                                    · {t('review.next_up', { place: nextLabel(position) })}
-                                </span>
-                            )}
-                        </span>
-                    )}
-                </nav>
-            </HeaderSlot>
-            <div className="flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto px-4 py-5 lg:px-7">{body}</div>
-            {actions && (
-                <footer className="flex h-16 shrink-0 items-center justify-end gap-2 border-t bg-background px-4 pb-2 lg:px-7 lg:pb-0 max-lg:[&>*]:flex-1">
-                    {actions}
-                </footer>
+        <Workspace scope="item" map={map} streetView={map.proposed ?? map.center} label={t('review.label')}>
+            {decision ? (
+                <PanelNav back={t('review.back_to_item')} onBack={() => onCancelDecision?.()} />
+            ) : (
+                <PanelNav back={t('queue.label')} onBack={nav.onBack} position={position} loading={nav.loading} onNavigate={nav.onNavigate} />
             )}
-            {overlay}
-        </section>
+            {header}
+            {decision ?? (
+                <>
+                    {actions && (
+                        <div ref={actionRow} className="flex shrink-0 gap-2 px-5 pb-4">
+                            {actions}
+                        </div>
+                    )}
+                    {timeline ? (
+                        <Tabs defaultValue="review" className="flex min-h-0 flex-1 flex-col gap-0">
+                            <div className="shrink-0 px-5">
+                                <TabsList className="grid h-10 w-full grid-cols-2">
+                                    <TabsTrigger value="review" className="cursor-pointer">
+                                        {t('review.tabs.review')}
+                                    </TabsTrigger>
+                                    <TabsTrigger value="timeline" className="cursor-pointer">
+                                        {t('review.tabs.timeline')}
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
+                            <TabsContent value="review" className={scroll}>
+                                {body}
+                            </TabsContent>
+                            <TabsContent value="timeline" className={scroll}>
+                                {timeline}
+                            </TabsContent>
+                        </Tabs>
+                    ) : (
+                        <div className={cn(scroll, 'pt-0')}>{body}</div>
+                    )}
+                    <NextUp position={position} onNavigate={nav.onNavigate} />
+                </>
+            )}
+        </Workspace>
     );
-}
-
-function nextLabel(position: Position): string {
-    return position.next?.street ?? '…';
 }
 
 function BodySkeleton() {
     return (
-        <div className="flex flex-col gap-[18px]" aria-hidden>
-            <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-            <div className="h-8 w-80 animate-pulse rounded bg-muted" />
-            <div className="grid gap-4 md:grid-cols-2">
-                <div className="h-[220px] animate-pulse rounded-xl bg-muted" />
-                <div className="h-[220px] animate-pulse rounded-xl bg-muted" />
-            </div>
+        <div className="flex flex-col gap-4 px-5" aria-hidden>
+            <div className="h-10 animate-pulse rounded-lg bg-muted" />
+            <div className="h-24 animate-pulse rounded-xl bg-muted" />
             <div className="h-40 animate-pulse rounded-xl bg-muted" />
         </div>
     );
 }
 
+BodySkeleton.Header = function HeaderSkeleton() {
+    return (
+        <div className="flex flex-col gap-2 px-5 pt-4 pb-4" aria-hidden>
+            <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+            <div className="h-7 w-56 animate-pulse rounded bg-muted" />
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+        </div>
+    );
+};
+
 /** Badges, the place as a heading, one line of context and the links to the place itself. */
-function TitleRow({
+function PanelHeader({
     badges,
     title,
     meta,
@@ -216,23 +219,22 @@ function TitleRow({
     const { t } = useTranslation('backend/moderation');
 
     return (
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <header className="flex min-w-0 flex-col gap-1.5">
+        <header className="flex shrink-0 gap-3 px-5 pt-4 pb-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">{badges}</div>
-                <h2 className="mt-1.5 text-2xl leading-8 font-semibold tracking-[-0.6px]">{title}</h2>
+                <h2 className="mt-1 text-2xl leading-7 font-bold tracking-[-0.02em]">{title}</h2>
                 <p className="text-sm text-muted-foreground">{meta}</p>
-            </header>
+            </div>
             {place && (
-                <div className="hidden gap-2 md:flex">
+                <div className="flex shrink-0 gap-1.5">
                     {place.source === 'community' && (
-                        <Button variant="outline" size="sm" asChild>
-                            <a href={app.parkingSpaces.edit.url({ parking_space: place.id })}>
+                        <Button variant="outline" size="icon" asChild className="size-10 rounded-[10px]">
+                            <a href={app.parkingSpaces.edit.url({ parking_space: place.id })} aria-label={t('review.edit_place')}>
                                 <Pencil />
-                                {t('review.edit_place')}
                             </a>
                         </Button>
                     )}
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="icon" asChild className="size-10 rounded-[10px]">
                         <a
                             href={locationMap.url({
                                 query: {
@@ -242,14 +244,28 @@ function TitleRow({
                             })}
                             target="_blank"
                             rel="noreferrer"
+                            aria-label={t('review.on_map')}
                         >
                             <ExternalLink />
-                            {t('review.on_map')}
                         </a>
                     </Button>
                 </div>
             )}
-        </div>
+        </header>
+    );
+}
+
+/** The decision buttons at the top of the panel: the main one fills the row. */
+function Act({ children, primary = false, shortcut, ...props }: React.ComponentProps<typeof Button> & { primary?: boolean; shortcut?: string }) {
+    return (
+        <Button {...props} variant={primary ? 'default' : 'outline'} size="lg" className={cn('cursor-pointer', primary && 'flex-1')}>
+            {children}
+            {shortcut && (
+                <Kbd inverted={primary} aria-hidden>
+                    {shortcut}
+                </Kbd>
+            )}
+        </Button>
     );
 }
 
@@ -265,76 +281,6 @@ function Tint({ children, tone = 'orange' }: { children: React.ReactNode; tone?:
         >
             {children}
         </span>
-    );
-}
-
-/**
- * The map and the aerial photo side by side: the map shows what NIPKaart knows around the place, the photo what is
- * actually there. Street View opens in a new tab.
- */
-function Views({
-    at,
-    map,
-    legend,
-}: {
-    at: MapPoint;
-    map: Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'className'>;
-    legend: { label: string; color: string }[];
-}) {
-    const { t } = useTranslation('backend/moderation');
-    const streetView = streetViewUrl(at.latitude, at.longitude);
-    const [view, setView] = useState<'streets' | 'satellite'>('streets');
-
-    return (
-        <div className="flex flex-col gap-3">
-            <div role="group" aria-label={t('review.views.label')} className="flex rounded-[9px] bg-muted p-[3px] md:hidden">
-                {(['streets', 'satellite'] as const).map((layer) => (
-                    <button
-                        key={layer}
-                        type="button"
-                        aria-pressed={view === layer}
-                        onClick={() => setView(layer)}
-                        className={cn(
-                            'h-[30px] flex-1 cursor-pointer rounded-md text-[13px] font-medium',
-                            view === layer ? 'bg-background shadow-[0_1px_2px_rgba(0,0,0,0.08)]' : 'text-muted-foreground',
-                        )}
-                    >
-                        {t(layer === 'streets' ? 'review.views.map' : 'review.views.aerial')}
-                    </button>
-                ))}
-                {streetView && (
-                    <a
-                        href={streetView}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex h-[30px] flex-1 items-center justify-center rounded-md text-[13px] font-medium text-muted-foreground"
-                    >
-                        {t('review.views.street_view')}
-                    </a>
-                )}
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-                <ModerationMap {...map} layer="streets" className={cn('h-[220px]', view !== 'streets' && 'hidden md:block')}>
-                    <MapTag>{t('review.views.map')}</MapTag>
-                    <MapLegend items={legend} />
-                </ModerationMap>
-                <ModerationMap
-                    key={`${at.latitude},${at.longitude}`}
-                    center={at}
-                    proposed={map.proposed}
-                    layer="satellite"
-                    className={cn('h-[220px]', view !== 'satellite' && 'hidden md:block')}
-                >
-                    <MapTag>{t('review.views.aerial')}</MapTag>
-                    {streetView && (
-                        <MapChip href={streetView} target="_blank" rel="noreferrer" className="hidden md:flex">
-                            <Camera aria-hidden />
-                            {t('review.views.street_view')}
-                        </MapChip>
-                    )}
-                </ModerationMap>
-            </div>
-        </div>
     );
 }
 
@@ -517,10 +463,6 @@ function Timeline({ events, confirmed }: { events: Evidence['timeline']; confirm
     );
 }
 
-function TwoColumns({ children }: { children: React.ReactNode }) {
-    return <div className="grid gap-8 md:grid-cols-2">{children}</div>;
-}
-
 // ---------------------------------------------------------------- reports
 
 /** Report reasons and the removal reason they point to. */
@@ -542,7 +484,7 @@ function ReportReview({ details, nav, options, query }: { details: ReportDetails
             {},
             { preserveScroll: true, preserveState: true, onStart: () => setKeeping(true), onFinish: () => setKeeping(false) },
         );
-    useShortcuts({ l: options.can.report && !keeping && keep, v: options.can.report && (() => setRemoving(true)) });
+    useShortcuts({ l: options.can.report && !removing && !keeping && keep, v: options.can.report && (() => setRemoving(true)) });
 
     const suggested = useMemo(() => {
         const counts = new Map<string, number>();
@@ -600,85 +542,87 @@ function ReportReview({ details, nav, options, query }: { details: ReportDetails
         },
     ];
 
-    const actions = options.can.report && (
-        <>
-            <Button variant="outline" className="cursor-pointer" disabled={keeping} onClick={keep}>
-                {t('reports.keep')}
-                <Kbd aria-hidden>L</Kbd>
-            </Button>
-            <DecisionPopover
-                kind={details.source}
-                action={app.moderation.reports.remove.url(route, { query })}
-                reasons={options.reasons.report}
-                trigger={t(`reports.remove.${details.source}`)}
-                shortcut="V"
-                variant="default"
-                open={removing}
-                onOpenChange={setRemoving}
-                suggested={suggested}
-            />
-        </>
-    );
-
     return (
         <Frame
             nav={nav}
-            actions={actions}
+            map={{ center: at, nearby: details.nearbySpaces }}
+            header={
+                <PanelHeader
+                    badges={
+                        <>
+                            <TypeBadge type="report" />
+                            <Tint>{t('priority.high')}</Tint>
+                            {!details.published && <Tint tone="amber">{t('not_public')}</Tint>}
+                        </>
+                    }
+                    title={details.street || t('no_address')}
+                    meta={[
+                        details.municipality,
+                        t(`reports.sources.${details.source}`),
+                        t('review.confirmed_total', { count: evidence.confirmed_total }),
+                    ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    place={{ id: details.id, source: details.source, at }}
+                />
+            }
+            actions={
+                options.can.report && (
+                    <>
+                        <Act primary shortcut="V" data-decides onClick={() => setRemoving(true)}>
+                            {t(`reports.remove.${details.source}`)}
+                        </Act>
+                        <Act shortcut="L" disabled={keeping} onClick={keep}>
+                            {t('reports.keep')}
+                        </Act>
+                    </>
+                )
+            }
+            decision={
+                removing && (
+                    <DecisionForm
+                        kind={details.source}
+                        action={app.moderation.reports.remove.url(route, { query })}
+                        reasons={options.reasons.report}
+                        suggested={suggested}
+                        onCancel={() => setRemoving(false)}
+                    />
+                )
+            }
+            onCancelDecision={() => setRemoving(false)}
             body={
                 <>
-                    <TitleRow
-                        badges={
-                            <>
-                                <TypeBadge type="report" />
-                                <Tint>{t('priority.high')}</Tint>
-                                {!details.published && <Tint tone="amber">{t('not_public')}</Tint>}
-                            </>
-                        }
-                        title={[details.street, details.municipality].filter(Boolean).join(', ') || t('no_address')}
-                        meta={[t(`reports.sources.${details.source}`), t('review.confirmed_total', { count: evidence.confirmed_total })].join(' · ')}
-                        place={{ id: details.id, source: details.source, at }}
-                    />
-                    <Views
-                        at={at}
-                        map={{ center: at, nearby: details.nearbySpaces }}
-                        legend={[
-                            { label: t('review.legend.this_place'), color: '#1d4ed8' },
-                            { label: t('review.legend.community'), color: '#16a34a' },
-                        ]}
-                    />
-                    <Timeline events={evidence.timeline} confirmed={evidence.confirmed_total} />
-                    <TwoColumns>
-                        <Section title={t('reports.notes.title')} aside={t('reports.trusted', { count: trusted, total: details.reports.length })}>
-                            <ul className="flex flex-col gap-3.5">
-                                {details.reports.map((report) => (
-                                    <li key={report.id} className="flex gap-2.5">
-                                        <Avatar className="size-7">
-                                            <AvatarFallback className="text-[11px]">{initials(report.reporter ?? t('unknown_user'))}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex min-w-0 flex-col gap-0.5">
-                                            <span className="text-[13px] text-muted-foreground">
-                                                {report.reporter ?? t('unknown_user')} · {ago(report.reported_at)}
-                                            </span>
-                                            <span className="text-sm leading-5">
-                                                {report.reason && <span className="font-medium">{report.reason}</span>}
-                                                {report.reason && report.note && <span className="text-muted-foreground"> · </span>}
-                                                {report.note && (
-                                                    <span className={report.reason ? 'text-muted-foreground' : undefined}>“{report.note}”</span>
-                                                )}
-                                                {!report.reason && !report.note && (
-                                                    <span className="text-muted-foreground">{t('reports.notes.none')}</span>
-                                                )}
-                                            </span>
-                                            <TrackLine points={report.community_points} kind="report" />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </Section>
-                        <Checks checks={checks} />
-                    </TwoColumns>
+                    <Section title={t('reports.notes.title')} aside={t('reports.trusted', { count: trusted, total: details.reports.length })}>
+                        <ul className="flex flex-col gap-3.5">
+                            {details.reports.map((report) => (
+                                <li key={report.id} className="flex gap-2.5">
+                                    <Avatar className="size-7">
+                                        <AvatarFallback className="text-[11px]">{initials(report.reporter ?? t('unknown_user'))}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex min-w-0 flex-col gap-0.5">
+                                        <span className="text-[13px] text-muted-foreground">
+                                            {report.reporter ?? t('unknown_user')} · {ago(report.reported_at)}
+                                        </span>
+                                        <span className="text-sm leading-5">
+                                            {report.reason && <span className="font-medium">{report.reason}</span>}
+                                            {report.reason && report.note && <span className="text-muted-foreground"> · </span>}
+                                            {report.note && (
+                                                <span className={report.reason ? 'text-muted-foreground' : undefined}>“{report.note}”</span>
+                                            )}
+                                            {!report.reason && !report.note && (
+                                                <span className="text-muted-foreground">{t('reports.notes.none')}</span>
+                                            )}
+                                        </span>
+                                        <TrackLine points={report.community_points} kind="report" />
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </Section>
+                    <Checks checks={checks} />
                 </>
             }
+            timeline={evidence.timeline.length > 0 && <Timeline events={evidence.timeline} confirmed={evidence.confirmed_total} />}
         />
     );
 }
@@ -779,8 +723,10 @@ function SubmissionReview({
     const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
     const isEdited = (group: ChangeGroup) => GROUP_FIELDS[group].some((field) => !same(draft[field], details.current[field]));
     const at = { latitude: draft.latitude, longitude: draft.longitude };
+    const submittedAt = { latitude: details.current.latitude, longitude: details.current.longitude };
+    const moved = isEdited('location') ? metres(submittedAt, at) : null;
     const can = options.can.submission;
-    useShortcuts({ a: can && !processing && (() => approve(draft)), r: can && (() => setRejecting(true)) });
+    useShortcuts({ a: can && !rejecting && !processing && (() => approve(draft)), r: can && (() => setRejecting(true)) });
 
     const municipal = details.nearestMunicipal;
     const nearestCommunity = nearestOf(at, details.nearbySpaces);
@@ -810,112 +756,330 @@ function SubmissionReview({
               },
     ];
 
-    const actions = can && (
-        <>
-            <DecisionPopover
-                kind="submission"
-                action={app.moderation.submissions.reject.url({ parking_space: details.space.id }, { query })}
-                reasons={options.reasons.submission}
-                trigger={t('review.reject_with_reason')}
-                shortcut="R"
-                open={rejecting}
-                onOpenChange={setRejecting}
-                suggested={
-                    municipal && municipal.distance_metres <= DUPLICATE_METRES
-                        ? { value: 'duplicate', hint: t('decide.municipal_nearby', { distance: municipal.distance_metres }) }
-                        : null
-                }
-            />
-            <Button className="cursor-pointer" disabled={processing} onClick={() => approve(draft)}>
-                {t('review.approve')}
-                <Kbd inverted aria-hidden>
-                    A
-                </Kbd>
-            </Button>
-        </>
+    return (
+        <Frame
+            nav={nav}
+            map={{
+                center: submittedAt,
+                proposed: at,
+                current: moved !== null ? submittedAt : null,
+                movedLabel: moved !== null ? t('review.moved', { distance: moved }) : null,
+                nearby: details.nearbySpaces,
+                municipal: details.nearbyMunicipalSpaces,
+                onMove: can ? (point) => update(point) : undefined,
+            }}
+            header={
+                <PanelHeader
+                    badges={
+                        <>
+                            <TypeBadge type="submission" />
+                            {firstContribution && <Tint tone="amber">{t('review.first_contribution')}</Tint>}
+                        </>
+                    }
+                    title={draft.street ?? item.street ?? t('no_address')}
+                    meta={[draft.municipality ?? item.municipality, t('review.submitted_ago', { ago: ago(item.waiting_since) })]
+                        .filter(Boolean)
+                        .join(' · ')}
+                />
+            }
+            actions={
+                can && (
+                    <>
+                        <Act primary shortcut="A" disabled={processing} onClick={() => approve(draft)}>
+                            {t('review.approve')}
+                        </Act>
+                        <Act shortcut="R" data-decides onClick={() => setRejecting(true)}>
+                            {t('review.reject_with_reason')}
+                        </Act>
+                    </>
+                )
+            }
+            decision={
+                rejecting && (
+                    <DecisionForm
+                        kind="submission"
+                        action={app.moderation.submissions.reject.url({ parking_space: details.space.id }, { query })}
+                        reasons={options.reasons.submission}
+                        suggested={
+                            municipal && municipal.distance_metres <= DUPLICATE_METRES
+                                ? { value: 'duplicate', hint: t('decide.municipal_nearby', { distance: municipal.distance_metres }) }
+                                : null
+                        }
+                        onCancel={() => setRejecting(false)}
+                    />
+                )
+            }
+            onCancelDecision={() => setRejecting(false)}
+            body={
+                <>
+                    <Section title={t('review.submitted')} aside={can ? t('review.submitted_hint') : undefined} gap="gap-2">
+                        <InputError message={errors.general ?? Object.values(errors)[0]} />
+                        <ul className="border-t">
+                            {CHANGE_GROUPS.map((group) => (
+                                <li key={group} className="grid grid-cols-[96px_minmax(0,1fr)_28px] items-start gap-3 border-b py-2 text-sm">
+                                    <span className="flex items-center gap-1.5 pt-1 text-muted-foreground">
+                                        {t(`groups.${group}`)}
+                                        {isEdited(group) && <span className="size-1.5 rounded-full bg-orange-500" aria-hidden />}
+                                    </span>
+                                    <div className="flex min-w-0 flex-col gap-1 pt-1">
+                                        {editing === group ? (
+                                            <GroupEditor group={group} draft={draft} update={update} options={options} />
+                                        ) : (
+                                            <span>
+                                                {group === 'location' && moved !== null
+                                                    ? t('review.moved', { distance: moved })
+                                                    : format(group, draft)}
+                                            </span>
+                                        )}
+                                        {isEdited(group) && (
+                                            <span className="text-xs text-orange-700 dark:text-orange-400">
+                                                {group === 'location'
+                                                    ? t('review.location_moved')
+                                                    : t('review.edited', { value: format(group, details.current) })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {can && (
+                                        <EditButton
+                                            edited={isEdited(group)}
+                                            editing={editing === group}
+                                            label={t('review.edit', { field: t(`groups.${group}`) })}
+                                            onEdit={() => setEditing(editing === group ? null : group)}
+                                            onRestore={() => {
+                                                update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])));
+                                                setEditing(null);
+                                            }}
+                                        />
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                        {can && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
+                    </Section>
+                    <Checks checks={checks} />
+                    {municipal && <MunicipalComparison municipal={municipal} draft={draft} options={options} />}
+                    <ContributorCard contributor={item.contributor} kind="submission" />
+                </>
+            }
+        />
     );
+}
+
+// ---------------------------------------------------------------- improvements
+
+function ImprovementReview({
+    item,
+    details,
+    nav,
+    options,
+    query,
+}: {
+    item: SelectedItem;
+    details: ImprovementDetails;
+    nav: Nav;
+    options: Options;
+    query: Record<string, string>;
+}) {
+    const { t } = useTranslation('backend/moderation');
+    const ago = useAgo();
+    const format = useValueFormatter(options);
+    const { current, submitted, changes, evidence } = details;
+    const proposed = useMemo<ImprovementValues>(() => ({ ...current, ...submitted }), [current, submitted]);
+    const [draft, setDraft] = useState<ImprovementValues>(proposed);
+    const [accepted, setAccepted] = useState<Record<ChangeGroup, boolean>>(
+        () => Object.fromEntries(changes.map((group) => [group, true])) as Record<ChangeGroup, boolean>,
+    );
+    const [editing, setEditing] = useState<ChangeGroup | null>(null);
+    const [rejecting, setRejecting] = useState(false);
+    const { approve, errors, processing } = useApprove(app.moderation.improvements.approve.url({ improvement: details.id }, { query }));
+    const can = options.can.improvement;
+    const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
+    const isEdited = (group: ChangeGroup) => GROUP_FIELDS[group].some((field) => !same(draft[field], proposed[field]));
+    const takenOver = changes.filter((group) => accepted[group]);
+    const result = (): ImprovementValues => ({
+        ...current,
+        ...Object.fromEntries(
+            CHANGE_GROUPS.flatMap((group) => GROUP_FIELDS[group].map((field) => [field, (accepted[group] ? draft : current)[field]])),
+        ),
+    });
+    const apply = () => takenOver.length > 0 && !processing && approve(result());
+    useShortcuts({ a: can && !rejecting && apply, r: can && (() => setRejecting(true)) });
+
+    const here = { latitude: current.latitude, longitude: current.longitude };
+    const moved = changes.includes('location') && accepted.location;
+    const there = { latitude: draft.latitude, longitude: draft.longitude };
+    const distance = moved ? metres(here, there) : null;
+    const otherMunicipality = item.flags.other_municipality != null;
+    const record = track(item.contributor?.community_points, 'improvement');
+    const checks: Check[] = [
+        ...(moved
+            ? [
+                  distance !== null && distance > DUPLICATE_METRES
+                      ? { icon: Ruler, title: t('checks.moved.title'), detail: t('checks.moved.far', { distance }), tone: 'attention' as Tone }
+                      : {
+                            icon: Ruler,
+                            title: t('checks.moved.title'),
+                            detail: t('checks.moved.near', { distance: distance ?? 0 }),
+                            tone: 'ok' as Tone,
+                        },
+              ]
+            : []),
+        ...(otherMunicipality
+            ? [
+                  {
+                      icon: AlertCircle,
+                      title: t('checks.other_municipality.title'),
+                      detail: t('checks.other_municipality.detail'),
+                      tone: 'attention' as Tone,
+                  },
+              ]
+            : []),
+        ...(item.flags.competing
+            ? [{ icon: Flag, title: t('checks.competing.title'), detail: t('checks.competing.detail'), tone: 'attention' as Tone }]
+            : []),
+        evidence.last_confirmed_at
+            ? {
+                  icon: Clock,
+                  title: t('checks.confirmed.title'),
+                  detail: t('checks.confirmed.last_current', { ago: ago(evidence.last_confirmed_at) }),
+                  tone: 'neutral',
+              }
+            : { icon: Clock, title: t('checks.confirmed.title'), detail: t('checks.confirmed.never'), tone: 'neutral' },
+        {
+            icon: Users,
+            title: t('checks.contributor.title'),
+            detail: record.total === 0 ? t('track.first.improvement') : t('checks.contributor.detail', { right: record.right, count: record.total }),
+            tone: record.total === 0 ? 'neutral' : record.trusted ? 'ok' : 'attention',
+        },
+    ];
 
     return (
         <Frame
             nav={nav}
-            actions={actions}
+            map={{
+                center: here,
+                proposed: moved ? there : null,
+                current: moved ? here : null,
+                movedLabel: distance !== null ? t('review.moved', { distance }) : null,
+                nearby: details.nearbySpaces,
+                onMove: can && moved ? (point) => update(point) : undefined,
+            }}
+            header={
+                <PanelHeader
+                    badges={
+                        <>
+                            <TypeBadge type="improvement" />
+                            {!details.space.published && <Tint tone="amber">{t('not_public')}</Tint>}
+                        </>
+                    }
+                    title={details.space.street || t('no_address')}
+                    meta={[
+                        details.space.municipality,
+                        t('review.proposed_ago', { ago: ago(details.submitted_at) }),
+                        t('review.change_count', { count: changes.length }),
+                    ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    place={{ id: details.space.id, source: 'community', at: here }}
+                />
+            }
+            actions={
+                can && (
+                    <>
+                        <Act primary shortcut="A" disabled={processing || takenOver.length === 0} onClick={apply}>
+                            {t('review.apply')}
+                        </Act>
+                        <Act shortcut="R" data-decides onClick={() => setRejecting(true)}>
+                            {t('review.reject_with_reason')}
+                        </Act>
+                    </>
+                )
+            }
+            decision={
+                rejecting && (
+                    <DecisionForm
+                        kind="improvement"
+                        action={app.moderation.improvements.reject.url({ improvement: details.id }, { query })}
+                        reasons={options.reasons.improvement}
+                        onCancel={() => setRejecting(false)}
+                    />
+                )
+            }
+            onCancelDecision={() => setRejecting(false)}
             body={
                 <>
-                    <TitleRow
-                        badges={
-                            <>
-                                <TypeBadge type="submission" />
-                                {firstContribution && <Tint tone="amber">{t('review.first_contribution')}</Tint>}
-                            </>
-                        }
-                        title={[draft.street ?? item.street, draft.municipality ?? item.municipality].filter(Boolean).join(', ') || t('no_address')}
-                        meta={[t('review.submitted_ago', { ago: ago(item.waiting_since) }), format('orientation', draft)].join(' · ')}
-                    />
-                    <Views
-                        at={at}
-                        map={{
-                            center: { latitude: details.current.latitude, longitude: details.current.longitude },
-                            proposed: at,
-                            nearby: details.nearbySpaces,
-                            municipal: details.nearbyMunicipalSpaces,
-                        }}
-                        legend={[
-                            { label: t('review.legend.submission'), color: '#1d4ed8' },
-                            { label: t('review.legend.community'), color: '#16a34a' },
-                            { label: t('review.legend.municipal'), color: '#7c3aed' },
-                        ]}
-                    />
-                    <TwoColumns>
-                        <div className="flex flex-col gap-5">
-                            <Section title={t('review.submitted')} aside={can ? t('review.submitted_hint') : undefined} gap="gap-2">
-                                <InputError message={errors.general ?? Object.values(errors)[0]} />
-                                <ul className="border-t">
-                                    {CHANGE_GROUPS.map((group) => (
-                                        <li key={group} className="grid grid-cols-[110px_minmax(0,1fr)_28px] items-start gap-3 border-b py-2 text-sm">
-                                            <span className="pt-1 text-muted-foreground">{t(`groups.${group}`)}</span>
-                                            <div className="flex min-w-0 flex-col gap-1 pt-1">
-                                                {editing === group ? (
-                                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                                ) : (
-                                                    <span>
-                                                        {group === 'location' && isEdited('location')
-                                                            ? t('review.location_moved')
-                                                            : format(group, draft)}
-                                                    </span>
-                                                )}
-                                                {isEdited(group) && (
-                                                    <span className="text-xs text-orange-700 dark:text-orange-400">
-                                                        {t('review.edited', { value: format(group, details.current) })}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {can && (
-                                                <EditButton
-                                                    edited={isEdited(group)}
-                                                    editing={editing === group}
-                                                    label={t('review.edit', { field: t(`groups.${group}`) })}
-                                                    onEdit={() => setEditing(editing === group ? null : group)}
-                                                    onRestore={() => {
-                                                        update(
-                                                            Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])),
-                                                        );
-                                                        setEditing(null);
-                                                    }}
-                                                />
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </Section>
-                            <ContributorCard contributor={item.contributor} kind="submission" />
-                        </div>
-                        <div className="flex flex-col gap-5">
-                            <Checks checks={checks} />
-                            {municipal && <MunicipalComparison municipal={municipal} draft={draft} options={options} />}
-                        </div>
-                    </TwoColumns>
+                    <Section title={t('review.changes')} aside={can ? t('review.changes_hint') : undefined} gap="gap-2">
+                        <InputError message={errors.general ?? Object.values(errors)[0]} />
+                        <ul className="border-t">
+                            {changes.map((group) => (
+                                <li
+                                    key={group}
+                                    className={cn(
+                                        'grid grid-cols-[96px_minmax(0,1fr)_auto] items-start gap-3 border-b py-2.5 text-sm',
+                                        !accepted[group] && 'text-muted-foreground',
+                                    )}
+                                >
+                                    <span className="text-muted-foreground">{t(`groups.${group}`)}</span>
+                                    <div className="flex min-w-0 flex-col gap-1">
+                                        {editing === group && accepted[group] ? (
+                                            <GroupEditor group={group} draft={draft} update={update} options={options} />
+                                        ) : group === 'location' ? (
+                                            <span className={cn(!accepted[group] && 'line-through')}>
+                                                {distance !== null ? t('review.moved', { distance }) : format(group, draft)}
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                <span className="text-muted-foreground line-through">{format(group, current)}</span>
+                                                <span className="text-muted-foreground"> → </span>
+                                                <span
+                                                    className={cn(
+                                                        'rounded px-1 py-px',
+                                                        accepted[group]
+                                                            ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
+                                                            : 'line-through',
+                                                    )}
+                                                >
+                                                    {format(group, draft)}
+                                                </span>
+                                            </span>
+                                        )}
+                                        {isEdited(group) && accepted[group] && (
+                                            <span className="text-xs text-orange-700 dark:text-orange-400">
+                                                {t('review.edited', { value: format(group, proposed) })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="flex items-center gap-1">
+                                        {can && accepted[group] && (
+                                            <EditButton
+                                                edited={isEdited(group)}
+                                                editing={editing === group}
+                                                label={t('review.edit', { field: t(`groups.${group}`) })}
+                                                onEdit={() => setEditing(editing === group ? null : group)}
+                                                onRestore={() => {
+                                                    update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, proposed[field]])));
+                                                    setEditing(null);
+                                                }}
+                                            />
+                                        )}
+                                        <Checkbox
+                                            checked={accepted[group]}
+                                            disabled={!can}
+                                            aria-label={t('review.take_over', { field: t(`groups.${group}`) })}
+                                            onCheckedChange={(checked) => setAccepted((previous) => ({ ...previous, [group]: !!checked }))}
+                                            className="mt-0.5 cursor-pointer"
+                                        />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                        {can && moved && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
+                    </Section>
+                    <Checks checks={checks} />
+                    <ContributorCard contributor={item.contributor} kind="improvement" />
                 </>
             }
+            timeline={evidence.timeline.length > 0 && <Timeline events={evidence.timeline} confirmed={evidence.confirmed_total} />}
         />
     );
 }
@@ -970,240 +1134,5 @@ function MunicipalComparison({ municipal, draft, options }: { municipal: Nearest
                 </tbody>
             </table>
         </Section>
-    );
-}
-
-// ---------------------------------------------------------------- improvements
-
-function ImprovementReview({
-    item,
-    details,
-    nav,
-    options,
-    query,
-}: {
-    item: SelectedItem;
-    details: ImprovementDetails;
-    nav: Nav;
-    options: Options;
-    query: Record<string, string>;
-}) {
-    const { t } = useTranslation('backend/moderation');
-    const ago = useAgo();
-    const format = useValueFormatter(options);
-    const { current, submitted, changes, evidence } = details;
-    const proposed = useMemo<ImprovementValues>(() => ({ ...current, ...submitted }), [current, submitted]);
-    const [draft, setDraft] = useState<ImprovementValues>(proposed);
-    const [accepted, setAccepted] = useState<Record<ChangeGroup, boolean>>(
-        () => Object.fromEntries(changes.map((group) => [group, true])) as Record<ChangeGroup, boolean>,
-    );
-    const [editing, setEditing] = useState<ChangeGroup | null>(null);
-    const [rejecting, setRejecting] = useState(false);
-    const { approve, errors, processing } = useApprove(app.moderation.improvements.approve.url({ improvement: details.id }, { query }));
-    const can = options.can.improvement;
-    const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
-    const isEdited = (group: ChangeGroup) => GROUP_FIELDS[group].some((field) => !same(draft[field], proposed[field]));
-    const takenOver = changes.filter((group) => accepted[group]);
-    const result = (): ImprovementValues => ({
-        ...current,
-        ...Object.fromEntries(
-            CHANGE_GROUPS.flatMap((group) => GROUP_FIELDS[group].map((field) => [field, (accepted[group] ? draft : current)[field]])),
-        ),
-    });
-    const apply = () => takenOver.length > 0 && !processing && approve(result());
-    useShortcuts({ a: can && apply, r: can && (() => setRejecting(true)) });
-
-    const here = { latitude: current.latitude, longitude: current.longitude };
-    const moved = changes.includes('location') && accepted.location;
-    const there = { latitude: draft.latitude, longitude: draft.longitude };
-    const otherMunicipality = item.flags.other_municipality != null;
-    const checks: Check[] = [
-        ...(changes.includes('location')
-            ? [
-                  details.distance_metres !== null && details.distance_metres > DUPLICATE_METRES
-                      ? {
-                            icon: Ruler,
-                            title: t('checks.moved.title'),
-                            detail: t('checks.moved.far', { distance: details.distance_metres }),
-                            tone: 'attention' as Tone,
-                        }
-                      : {
-                            icon: Ruler,
-                            title: t('checks.moved.title'),
-                            detail: t('checks.moved.near', { distance: details.distance_metres ?? 0 }),
-                            tone: 'ok' as Tone,
-                        },
-              ]
-            : []),
-        ...(otherMunicipality
-            ? [
-                  {
-                      icon: AlertCircle,
-                      title: t('checks.other_municipality.title'),
-                      detail: t('checks.other_municipality.detail'),
-                      tone: 'attention' as Tone,
-                  },
-              ]
-            : []),
-        ...(item.flags.competing
-            ? [{ icon: Flag, title: t('checks.competing.title'), detail: t('checks.competing.detail'), tone: 'attention' as Tone }]
-            : []),
-        evidence.last_confirmed_at
-            ? {
-                  icon: Clock,
-                  title: t('checks.confirmed.title'),
-                  detail: t('checks.confirmed.last_current', { ago: ago(evidence.last_confirmed_at) }),
-                  tone: 'neutral',
-              }
-            : { icon: Clock, title: t('checks.confirmed.title'), detail: t('checks.confirmed.never'), tone: 'neutral' },
-        {
-            icon: Users,
-            title: t('checks.contributor.title'),
-            detail: (() => {
-                const record = track(item.contributor?.community_points, 'improvement');
-                return record.total === 0
-                    ? t('track.first.improvement')
-                    : t('checks.contributor.detail', { right: record.right, count: record.total });
-            })(),
-            tone:
-                track(item.contributor?.community_points, 'improvement').total === 0
-                    ? 'neutral'
-                    : track(item.contributor?.community_points, 'improvement').trusted
-                      ? 'ok'
-                      : 'attention',
-        },
-    ];
-
-    const actions = can && (
-        <>
-            <DecisionPopover
-                kind="improvement"
-                action={app.moderation.improvements.reject.url({ improvement: details.id }, { query })}
-                reasons={options.reasons.improvement}
-                trigger={t('review.reject_with_reason')}
-                shortcut="R"
-                open={rejecting}
-                onOpenChange={setRejecting}
-            />
-            <Button className="cursor-pointer" disabled={processing || takenOver.length === 0} onClick={apply}>
-                {t('review.apply')}
-                <Kbd inverted aria-hidden>
-                    A
-                </Kbd>
-            </Button>
-        </>
-    );
-
-    return (
-        <Frame
-            nav={nav}
-            actions={actions}
-            body={
-                <>
-                    <TitleRow
-                        badges={
-                            <>
-                                <TypeBadge type="improvement" />
-                                {!details.space.published && <Tint tone="amber">{t('not_public')}</Tint>}
-                            </>
-                        }
-                        title={[details.space.street, details.space.municipality].filter(Boolean).join(', ') || t('no_address')}
-                        meta={[
-                            t('review.proposed_ago', { ago: ago(details.submitted_at) }),
-                            t('review.change_count', { count: changes.length }),
-                        ].join(' · ')}
-                        place={{ id: details.space.id, source: 'community', at: here }}
-                    />
-                    <Views
-                        at={moved ? there : here}
-                        map={{ center: here, proposed: moved ? there : null, current: moved ? here : null, nearby: details.nearbySpaces }}
-                        legend={
-                            moved
-                                ? [
-                                      { label: t('review.legend.proposed'), color: '#1d4ed8' },
-                                      { label: t('review.legend.current'), color: '#a3a3a3' },
-                                  ]
-                                : [
-                                      { label: t('review.legend.this_place'), color: '#1d4ed8' },
-                                      { label: t('review.legend.community'), color: '#16a34a' },
-                                  ]
-                        }
-                    />
-                    <TwoColumns>
-                        <div className="flex flex-col gap-5">
-                            <Section title={t('review.changes')} aside={can ? t('review.changes_hint') : undefined} gap="gap-2">
-                                <InputError message={errors.general ?? Object.values(errors)[0]} />
-                                <ul className="border-t">
-                                    {changes.map((group) => (
-                                        <li
-                                            key={group}
-                                            className={cn(
-                                                'grid grid-cols-[110px_minmax(0,1fr)_auto] items-start gap-3 border-b py-2.5 text-sm',
-                                                !accepted[group] && 'text-muted-foreground',
-                                            )}
-                                        >
-                                            <span className="text-muted-foreground">{t(`groups.${group}`)}</span>
-                                            <div className="flex min-w-0 flex-col gap-1">
-                                                {editing === group && accepted[group] ? (
-                                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                                ) : (
-                                                    <span>
-                                                        <span className="text-muted-foreground line-through">{format(group, current)}</span>
-                                                        <span className="text-muted-foreground"> → </span>
-                                                        <span
-                                                            className={cn(
-                                                                'rounded px-1 py-px',
-                                                                accepted[group]
-                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
-                                                                    : 'line-through',
-                                                            )}
-                                                        >
-                                                            {group === 'location' && isEdited('location')
-                                                                ? t('review.location_moved')
-                                                                : group === 'location' && details.distance_metres !== null
-                                                                  ? `${format(group, draft)} · ${t('review.moved', { distance: details.distance_metres })}`
-                                                                  : format(group, draft)}
-                                                        </span>
-                                                    </span>
-                                                )}
-                                                {isEdited(group) && accepted[group] && (
-                                                    <span className="text-xs text-orange-700 dark:text-orange-400">
-                                                        {t('review.edited', { value: format(group, proposed) })}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <span className="flex items-center gap-1">
-                                                {can && accepted[group] && (
-                                                    <EditButton
-                                                        edited={isEdited(group)}
-                                                        editing={editing === group}
-                                                        label={t('review.edit', { field: t(`groups.${group}`) })}
-                                                        onEdit={() => setEditing(editing === group ? null : group)}
-                                                        onRestore={() => {
-                                                            update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, proposed[field]])));
-                                                            setEditing(null);
-                                                        }}
-                                                    />
-                                                )}
-                                                <Checkbox
-                                                    checked={accepted[group]}
-                                                    disabled={!can}
-                                                    aria-label={t('review.take_over', { field: t(`groups.${group}`) })}
-                                                    onCheckedChange={(checked) => setAccepted((previous) => ({ ...previous, [group]: !!checked }))}
-                                                    className="mt-0.5 cursor-pointer"
-                                                />
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </Section>
-                            <ContributorCard contributor={item.contributor} kind="improvement" />
-                        </div>
-                        <Checks checks={checks} />
-                    </TwoColumns>
-                    <Timeline events={evidence.timeline} confirmed={evidence.confirmed_total} />
-                </>
-            }
-        />
     );
 }

@@ -65,9 +65,6 @@
         "open": "Niets te beoordelen. Nieuwe inzendingen, verbeteringen en meldingen verschijnen hier vanzelf.",
         "filtered": "Geen items voor deze filters.",
         "decided": "Nog niets afgehandeld.",
-        "pane_title_one": "{{count}} item wacht op je",
-        "pane_title_other": "{{count}} items wachten op je",
-        "pane_hint": "Kies een item uit de wachtrij, of druk op J om bij het eerste te beginnen.",
         "pane_done": "Alles is beoordeeld"
     },
     "bulk": {
@@ -91,16 +88,6 @@
         "selected_count_one": "{{count}} geselecteerd",
         "selected_count_other": "{{count}} geselecteerd",
         "description": "Samen afwijzen kan, bijvoorbeeld als spam. Goedkeuren gaat altijd per item.",
-        "map_one": "Kaart · {{count}} geselecteerd",
-        "map_other": "Kaart · {{count}} geselecteerd",
-        "legend": "Geselecteerd",
-        "no_signals": "Geen bijzonderheden",
-        "columns": {
-            "place": "Adres",
-            "details": "Gegevens",
-            "check": "Controle",
-            "age": "Oud"
-        },
         "hint": "Twijfel je bij een item? Haal het vinkje weg en open het los.",
         "label": "Selectie"
     },
@@ -128,29 +115,16 @@
         "restore": "Herstellen",
         "latitude": "Breedtegraad",
         "longitude": "Lengtegraad",
-        "drag_hint": "Of sleep de oranje speld op de kaart.",
+        "drag_hint": "Of sleep de pin op de kaart naar het parkeervak, klik waar het ligt, of verschuif de pin met de pijltjestoetsen (Shift voor grotere stappen).",
         "show_unchanged": "Toon ongewijzigde velden",
         "hide_unchanged": "Verberg ongewijzigde velden",
         "nearby_municipal": {
             "title": "Gemeentelijke parkeerplaats op {{distance}} m",
             "description": "Beschrijft deze inzending dezelfde parkeerplaats, wijs haar dan af als Dubbele melding."
         },
-        "legend": {
-            "current": "Huidig",
-            "proposed": "Voorgesteld",
-            "submitted": "Blauw: inzending",
-            "reported": "Blauw: gemelde parkeerplaats",
-            "nearby": "Groen: andere parkeerplaatsen",
-            "municipal": "Gemeentelijk",
-            "this_place": "Deze parkeerplaats",
-            "community": "Community",
-            "submission": "Inzending"
-        },
         "skip": "Overslaan",
         "reject": "Afwijzen",
         "approve": "Goedkeuren",
-        "back": "Terug naar de wachtrij",
-        "next_up": "daarna {{place}}",
         "edit_place": "Bewerken",
         "on_map": "Op de kaart",
         "views": {
@@ -171,7 +145,13 @@
         "change_count_other": "{{count}} wijzigingen",
         "apply": "Doorvoeren",
         "take_over": "{{field}} overnemen",
-        "label": "Item"
+        "label": "Item",
+        "back_to_item": "Terug naar het item",
+        "then": "Daarna",
+        "tabs": {
+            "review": "Beoordelen",
+            "timeline": "Tijdlijn"
+        }
     },
     "decide": {
         "reason": "Reden",
@@ -422,5 +402,12 @@
         "number": "Aantal parkeervakken",
         "submission": "Inzending",
         "municipal": "Gemeentelijk"
+    },
+    "map": {
+        "pin": "Pin van de parkeerplaats; verschuif met de pijltjestoetsen",
+        "recenter": "Terug naar de parkeerplaats",
+        "zoom_in": "Inzoomen",
+        "zoom_out": "Uitzoomen",
+        "fit_all": "Alles in beeld"
     }
 }

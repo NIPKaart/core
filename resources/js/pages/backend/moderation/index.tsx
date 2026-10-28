@@ -12,9 +12,10 @@ import { Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BulkPane, EmptyPane } from './bulk-pane';
+import { SelectionBar, SelectionHeader } from './bulk-pane';
+import { panelMode } from './geo';
 import { useAgo } from './parts';
-import { QueueList } from './queue-list';
+import { QueueList, TYPE_COLORS } from './queue-list';
 import { ReviewPane } from './review-pane';
 import { ShortcutsDialog, useShortcuts } from './shortcuts';
 import { TypeBadge } from './type-badge';
@@ -31,6 +32,11 @@ import {
     type SelectedItem,
 } from './types';
 import { useValueFormatter } from './values';
+import { Workspace } from './workspace';
+
+/** Where the overview starts when the queue is empty. */
+const NETHERLANDS = { latitude: 52.2, longitude: 5.3 };
+const COUNTRY_ZOOM = 7;
 
 type PageProps = {
     status: 'open' | 'decided';
@@ -44,9 +50,9 @@ type PageProps = {
 };
 
 /**
- * The community moderation inbox. The queue stays on the left; the item under review fills the rest of the screen
- * with what the decision needs, and after a decision continues with the next item. Selected items are rejected
- * together; approving always happens one item at a time.
+ * The community moderation inbox. The map fills the screen and one panel beside it switches between the queue, the
+ * item under review and a selection, as on the public map. After a decision the inbox continues with the next item.
+ * Selected items are rejected together; approving always happens one item at a time.
  */
 export default function Index({ status, filters, items, history, selected, position, decidedToday, options }: PageProps) {
     const { t } = useTranslation('backend/moderation');
@@ -86,6 +92,9 @@ export default function Index({ status, filters, items, history, selected, posit
     const current = loading?.preview ?? selected;
     const checkedItems = (items?.data ?? []).filter((item) => checked.includes(item.key));
     const first = items?.data[0];
+    const mode = panelMode(current !== null, checkedItems.length);
+    const [hovered, setHovered] = useState<string | null>(null);
+    const overviewCenter = first ? { latitude: first.latitude, longitude: first.longitude } : NETHERLANDS;
     useShortcuts({
         j: !current && !checkedItems.length && first && (() => openItem(first)),
         Enter: !current && !checkedItems.length && first && (() => openItem(first)),
@@ -104,22 +113,7 @@ export default function Index({ status, filters, items, history, selected, posit
             <Head title={current?.street ? `${current.street} · ${t('title')}` : t('title')} />
             {open ? (
                 <div className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
-                    <QueueList
-                        status={status}
-                        items={items}
-                        filters={filters}
-                        options={options}
-                        selectedKey={current?.key ?? null}
-                        checked={checked}
-                        onCheck={setChecked}
-                        decidedToday={decidedToday}
-                        onOpen={openItem}
-                        onFilter={visit}
-                        hidden={current !== null || checkedItems.length > 0}
-                    />
-                    {checkedItems.length > 0 ? (
-                        <BulkPane items={checkedItems} options={options} onClear={() => setChecked([])} />
-                    ) : current ? (
+                    {mode === 'item' ? (
                         <ReviewPane
                             selected={selected}
                             position={position}
@@ -130,7 +124,51 @@ export default function Index({ status, filters, items, history, selected, posit
                             onBack={closeReview}
                         />
                     ) : (
-                        <EmptyPane total={items?.total ?? 0} />
+                        <Workspace
+                            scope="overview"
+                            label={mode === 'selection' ? t('bulk.label') : t('queue.label')}
+                            map={
+                                mode === 'selection'
+                                    ? {
+                                          center: { latitude: checkedItems[0].latitude, longitude: checkedItems[0].longitude },
+                                          numbered: checkedItems.map((item) => ({ latitude: item.latitude, longitude: item.longitude })),
+                                      }
+                                    : {
+                                          center: overviewCenter,
+                                          zoom: first ? undefined : COUNTRY_ZOOM,
+                                          queue: (items?.data ?? []).map((item) => ({
+                                              key: item.key,
+                                              point: { latitude: item.latitude, longitude: item.longitude },
+                                              color: TYPE_COLORS[item.type],
+                                              label: item.street ?? t('no_address'),
+                                          })),
+                                          highlighted: hovered,
+                                          onPick: (key) => {
+                                              const item = items?.data.find((candidate) => candidate.key === key);
+                                              if (item) openItem(item);
+                                          },
+                                      }
+                            }
+                        >
+                            <QueueList
+                                status={status}
+                                items={items}
+                                filters={filters}
+                                options={options}
+                                checked={checked}
+                                onCheck={setChecked}
+                                decidedToday={decidedToday}
+                                onOpen={openItem}
+                                onFilter={visit}
+                                onHover={setHovered}
+                                selection={mode === 'selection' ? <SelectionHeader items={checkedItems} onClear={() => setChecked([])} /> : undefined}
+                                footer={
+                                    mode === 'selection' ? (
+                                        <SelectionBar items={checkedItems} options={options} onClear={() => setChecked([])} />
+                                    ) : undefined
+                                }
+                            />
+                        </Workspace>
                     )}
                 </div>
             ) : (
