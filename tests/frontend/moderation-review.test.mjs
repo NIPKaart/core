@@ -151,6 +151,9 @@ test('an open submission shows its decision and details while no reason form is 
     );
     assert.equal(sections.length, 2);
 
+    // The details carry no helper sentence; the markers and buttons say enough.
+    assert.equal(find(panel, (node) => node.props?.title === 'review.submitted').props.aside, undefined);
+
     // The details read as on the public map: the orientation with its illustration, then the other details.
     assert.ok(
         find(panel, (node) => node.type === 'OrientationCard'),

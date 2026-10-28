@@ -62,7 +62,6 @@
         "none": "None"
     },
     "empty": {
-        "open": "Nothing to review. New submissions, improvements and reports appear here.",
         "filtered": "No items for these filters.",
         "decided": "Nothing decided yet.",
         "pane_done": "Everything is reviewed"
@@ -87,8 +86,6 @@
         },
         "selected_count_one": "{{count}} selected",
         "selected_count_other": "{{count}} selected",
-        "description": "You can reject together, for example as spam. Approving always happens one item at a time.",
-        "hint": "Unsure about an item? Untick it and open it on its own.",
         "label": "Selection"
     },
     "history": {
@@ -105,17 +102,13 @@
         "close": "Close",
         "view_space": "View parking space",
         "changes": "Proposed changes",
-        "changes_hint": "Untick what you do not take over",
         "submitted": "Submitted details",
-        "submitted_hint": "Correct what is wrong before you approve",
         "moved": "moved {{distance}} m",
-        "location_moved": "Moved by you, looked up on approval",
         "edited": "Adjusted · submitted was {{value}}",
         "edit": "Adjust {{field}}",
         "restore": "Restore",
         "latitude": "Latitude",
         "longitude": "Longitude",
-        "drag_hint": "Or drag the pin on the map onto the parking bay, click where it is, or move the pin with the arrow keys (Shift for bigger steps).",
         "show_unchanged": "Show unchanged fields",
         "hide_unchanged": "Hide unchanged fields",
         "nearby_municipal": {

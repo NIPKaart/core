@@ -62,7 +62,6 @@
         "none": "Geen"
     },
     "empty": {
-        "open": "Niets te beoordelen. Nieuwe inzendingen, verbeteringen en meldingen verschijnen hier vanzelf.",
         "filtered": "Geen items voor deze filters.",
         "decided": "Nog niets afgehandeld.",
         "pane_done": "Alles is beoordeeld"
@@ -87,8 +86,6 @@
         },
         "selected_count_one": "{{count}} geselecteerd",
         "selected_count_other": "{{count}} geselecteerd",
-        "description": "Samen afwijzen kan, bijvoorbeeld als spam. Goedkeuren gaat altijd per item.",
-        "hint": "Twijfel je bij een item? Haal het vinkje weg en open het los.",
         "label": "Selectie"
     },
     "history": {
@@ -105,17 +102,13 @@
         "close": "Sluiten",
         "view_space": "Parkeerplaats bekijken",
         "changes": "Voorgestelde wijzigingen",
-        "changes_hint": "Vink uit wat je niet overneemt",
         "submitted": "Ingediende gegevens",
-        "submitted_hint": "Pas aan wat niet klopt voor je goedkeurt",
         "moved": "{{distance}} m verplaatst",
-        "location_moved": "Door jou verplaatst, wordt opgezocht bij goedkeuren",
         "edited": "Aangepast · ingediend was {{value}}",
         "edit": "{{field}} aanpassen",
         "restore": "Herstellen",
         "latitude": "Breedtegraad",
         "longitude": "Lengtegraad",
-        "drag_hint": "Of sleep de pin op de kaart naar het parkeervak, klik waar het ligt, of verschuif de pin met de pijltjestoetsen (Shift voor grotere stappen).",
         "show_unchanged": "Toon ongewijzigde velden",
         "hide_unchanged": "Verberg ongewijzigde velden",
         "nearby_municipal": {
