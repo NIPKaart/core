@@ -228,7 +228,7 @@ export function QueueList({
                 </div>
             )}
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-2">
+            <div className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50">
                 {status === 'open' && rows.length === 0 && (
                     <p className="px-5 py-10 text-center text-sm text-muted-foreground">
                         {t(Object.keys(query).length ? 'empty.filtered' : 'empty.open')}
