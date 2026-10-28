@@ -147,7 +147,6 @@
         "take_over": "{{field}} overnemen",
         "label": "Item",
         "back_to_item": "Terug naar het item",
-        "then": "Daarna",
         "tabs": {
             "review": "Beoordelen",
             "timeline": "Tijdlijn"

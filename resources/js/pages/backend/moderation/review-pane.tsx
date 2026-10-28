@@ -19,6 +19,7 @@ import { GroupEditor } from './group-editor';
 import type { ModerationMap } from './moderation-map';
 import type { CommunityPointsProfile, Contributor } from './parts';
 import { useAgo } from './parts';
+import { DetailRows, OrientationCard } from './place-details';
 import { Kbd, useShortcuts } from './shortcuts';
 import { TypeBadge } from './type-badge';
 import type {
@@ -34,7 +35,7 @@ import type {
     SubmissionDetails,
 } from './types';
 import { CHANGE_GROUPS, GROUP_FIELDS, useValueFormatter, type ChangeGroup, type ImprovementValues } from './values';
-import { NextUp, PanelNav, Workspace } from './workspace';
+import { PanelNav, Workspace } from './workspace';
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 
@@ -150,11 +151,6 @@ function Frame({
             {header}
             {decision || (
                 <>
-                    {actions && (
-                        <div ref={actionRow} className="flex shrink-0 gap-2 px-5 pb-4">
-                            {actions}
-                        </div>
-                    )}
                     {timeline ? (
                         <Tabs defaultValue="review" className="flex min-h-0 flex-1 flex-col gap-0">
                             <div className="shrink-0 px-5">
@@ -177,7 +173,11 @@ function Frame({
                     ) : (
                         <div className={cn(scroll, 'pt-0')}>{body}</div>
                     )}
-                    <NextUp position={position} onNavigate={nav.onNavigate} />
+                    {actions && (
+                        <div ref={actionRow} className="flex shrink-0 gap-2 border-t px-5 py-4">
+                            {actions}
+                        </div>
+                    )}
                 </>
             )}
         </Workspace>
@@ -255,10 +255,10 @@ function PanelHeader({
     );
 }
 
-/** The decision buttons at the top of the panel: the main one fills the row. */
+/** The decision buttons at the bottom of the panel, each taking half the row. */
 function Act({ children, primary = false, shortcut, ...props }: React.ComponentProps<typeof Button> & { primary?: boolean; shortcut?: string }) {
     return (
-        <Button {...props} variant={primary ? 'default' : 'outline'} size="lg" className={cn('cursor-pointer', primary && 'flex-1')}>
+        <Button {...props} variant={primary ? 'default' : 'outline'} size="lg" className="flex-1 basis-0 cursor-pointer">
             {children}
             {shortcut && (
                 <Kbd inverted={primary} aria-hidden>
@@ -756,6 +756,20 @@ function SubmissionReview({
               },
     ];
 
+    const editAction = (group: ChangeGroup) =>
+        can && (
+            <EditButton
+                edited={isEdited(group)}
+                editing={editing === group}
+                label={t('review.edit', { field: t(`groups.${group}`) })}
+                onEdit={() => setEditing(editing === group ? null : group)}
+                onRestore={() => {
+                    update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])));
+                    setEditing(null);
+                }}
+            />
+        );
+
     return (
         <Frame
             nav={nav}
@@ -814,46 +828,26 @@ function SubmissionReview({
                 <>
                     <Section title={t('review.submitted')} aside={can ? t('review.submitted_hint') : undefined} gap="gap-2">
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
-                        <ul className="border-t">
-                            {CHANGE_GROUPS.map((group) => (
-                                <li key={group} className="grid grid-cols-[96px_minmax(0,1fr)_28px] items-start gap-3 border-b py-2 text-sm">
-                                    <span className="flex items-center gap-1.5 pt-1 text-muted-foreground">
-                                        {t(`groups.${group}`)}
-                                        {isEdited(group) && <span className="size-1.5 rounded-full bg-orange-500" aria-hidden />}
-                                    </span>
-                                    <div className="flex min-w-0 flex-col gap-1 pt-1">
-                                        {editing === group ? (
-                                            <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                        ) : (
-                                            <span>
-                                                {group === 'location' && moved !== null
-                                                    ? t('review.moved', { distance: moved })
-                                                    : format(group, draft)}
-                                            </span>
-                                        )}
-                                        {isEdited(group) && (
-                                            <span className="text-xs text-orange-700 dark:text-orange-400">
-                                                {group === 'location'
-                                                    ? t('review.location_moved')
-                                                    : t('review.edited', { value: format(group, details.current) })}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {can && (
-                                        <EditButton
-                                            edited={isEdited(group)}
-                                            editing={editing === group}
-                                            label={t('review.edit', { field: t(`groups.${group}`) })}
-                                            onEdit={() => setEditing(editing === group ? null : group)}
-                                            onRestore={() => {
-                                                update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])));
-                                                setEditing(null);
-                                            }}
-                                        />
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
+                        <OrientationCard
+                            orientation={options.orientations.find((option) => option.value === draft.orientation) ?? null}
+                            submitted={isEdited('orientation') ? format('orientation', details.current) : null}
+                            editor={editing === 'orientation' && <GroupEditor group="orientation" draft={draft} update={update} options={options} />}
+                            action={editAction('orientation')}
+                        />
+                        <DetailRows
+                            rows={(['location', 'under_sign', 'description'] as const).map((group) => ({
+                                key: group,
+                                label: t(`groups.${group}`),
+                                value: format(group, draft),
+                                note:
+                                    group === 'location' && moved !== null
+                                        ? `${t('review.moved', { distance: moved })} · ${t('review.location_moved')}`
+                                        : null,
+                                submitted: group !== 'location' && isEdited(group) ? format(group, details.current) : null,
+                                editor: editing === group && <GroupEditor group={group} draft={draft} update={update} options={options} />,
+                                action: editAction(group),
+                            }))}
+                        />
                         {can && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
                     </Section>
                     <Checks checks={checks} />
@@ -1010,45 +1004,36 @@ function ImprovementReview({
                 <>
                     <Section title={t('review.changes')} aside={can ? t('review.changes_hint') : undefined} gap="gap-2">
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
-                        <ul className="border-t">
-                            {changes.map((group) => (
-                                <li
-                                    key={group}
-                                    className={cn(
-                                        'grid grid-cols-[96px_minmax(0,1fr)_auto] items-start gap-3 border-b py-2.5 text-sm',
-                                        !accepted[group] && 'text-muted-foreground',
-                                    )}
-                                >
-                                    <span className="text-muted-foreground">{t(`groups.${group}`)}</span>
-                                    <div className="flex min-w-0 flex-col gap-1">
-                                        {editing === group && accepted[group] ? (
-                                            <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                        ) : group === 'location' ? (
-                                            <span className={cn(!accepted[group] && 'line-through')}>
-                                                {distance !== null ? t('review.moved', { distance }) : format(group, draft)}
+                        <DetailRows
+                            rows={changes.map((group) => ({
+                                key: group,
+                                label: t(`groups.${group}`),
+                                value:
+                                    group === 'location' ? (
+                                        <span className={cn(!accepted[group] && 'text-muted-foreground line-through')}>
+                                            {distance !== null ? t('review.moved', { distance }) : format(group, draft)}
+                                        </span>
+                                    ) : (
+                                        <span className="font-normal">
+                                            <span className="text-muted-foreground line-through">{format(group, current)}</span>
+                                            <span className="text-muted-foreground"> → </span>
+                                            <span
+                                                className={cn(
+                                                    'rounded px-1 py-px font-medium',
+                                                    accepted[group]
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
+                                                        : 'text-muted-foreground line-through',
+                                                )}
+                                            >
+                                                {format(group, draft)}
                                             </span>
-                                        ) : (
-                                            <span>
-                                                <span className="text-muted-foreground line-through">{format(group, current)}</span>
-                                                <span className="text-muted-foreground"> → </span>
-                                                <span
-                                                    className={cn(
-                                                        'rounded px-1 py-px',
-                                                        accepted[group]
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
-                                                            : 'line-through',
-                                                    )}
-                                                >
-                                                    {format(group, draft)}
-                                                </span>
-                                            </span>
-                                        )}
-                                        {isEdited(group) && accepted[group] && (
-                                            <span className="text-xs text-orange-700 dark:text-orange-400">
-                                                {t('review.edited', { value: format(group, proposed) })}
-                                            </span>
-                                        )}
-                                    </div>
+                                        </span>
+                                    ),
+                                submitted: isEdited(group) && accepted[group] ? format(group, proposed) : null,
+                                editor: editing === group && accepted[group] && (
+                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
+                                ),
+                                action: (
                                     <span className="flex items-center gap-1">
                                         {can && accepted[group] && (
                                             <EditButton
@@ -1067,12 +1052,12 @@ function ImprovementReview({
                                             disabled={!can}
                                             aria-label={t('review.take_over', { field: t(`groups.${group}`) })}
                                             onCheckedChange={(checked) => setAccepted((previous) => ({ ...previous, [group]: !!checked }))}
-                                            className="mt-0.5 cursor-pointer"
+                                            className="cursor-pointer"
                                         />
                                     </span>
-                                </li>
-                            ))}
-                        </ul>
+                                ),
+                            }))}
+                        />
                         {can && moved && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
                     </Section>
                     <Checks checks={checks} />
