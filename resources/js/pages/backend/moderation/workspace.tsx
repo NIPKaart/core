@@ -2,12 +2,10 @@ import { streetViewUrl } from '@/components/map/parking-detail/navigation-handof
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { cn } from '@/lib/utils';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ModerationMap, type MapLayer, type MapPoint } from './moderation-map';
-import { Kbd } from './shortcuts';
 import type { ItemLink, Position } from './types';
 
 /** The panel's width plus its margins, so the map keeps what the panel covers out of the way. */
@@ -159,24 +157,5 @@ export function PanelNav({
                 </>
             )}
         </nav>
-    );
-}
-
-/** The bottom of the panel: which item follows, opened with J. */
-export function NextUp({ position, onNavigate }: { position: Position | null; onNavigate: (link: ItemLink) => void }) {
-    const { t } = useTranslation('backend/moderation');
-    const next = position?.next;
-    if (!next) return null;
-
-    return (
-        <button
-            type="button"
-            onClick={() => onNavigate(next)}
-            className="flex h-12 shrink-0 cursor-pointer items-center gap-3 border-t px-5 text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-        >
-            <span className="text-xs text-muted-foreground">{t('review.then')}</span>
-            <span className={cn('min-w-0 flex-1 truncate text-sm font-medium')}>{next.street ?? t('no_address')}</span>
-            <Kbd aria-hidden>J</Kbd>
-        </button>
     );
 }

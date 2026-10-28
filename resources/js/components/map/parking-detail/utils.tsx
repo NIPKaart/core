@@ -8,7 +8,7 @@ export const GARAGE_ILLUSTRATION = '/assets/images/garage.svg';
  * Picks the orientation illustration: square for choice cards, wide (12:5) for the detail hero.
  * An unknown orientation falls back to a generic car illustration.
  */
-export function getOrientationIllustration(orientation: EnumOption | null | undefined, variant: 'square' | 'wide' = 'square'): string {
+export function getOrientationIllustration(orientation: Pick<EnumOption, 'value'> | null | undefined, variant: 'square' | 'wide' = 'square'): string {
     if (orientation?.value === 'perpendicular' || orientation?.value === 'parallel' || orientation?.value === 'angle') {
         return `/assets/images/orientation/${orientation.value}${variant === 'wide' ? '-wide' : ''}.svg`;
     }

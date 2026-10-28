@@ -147,7 +147,6 @@
         "take_over": "Take over {{field}}",
         "label": "Item",
         "back_to_item": "Back to the item",
-        "then": "Next",
         "tabs": {
             "review": "Review",
             "timeline": "Timeline"

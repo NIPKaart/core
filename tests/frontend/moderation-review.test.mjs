@@ -139,4 +139,24 @@ test('an open submission shows its decision and details while no reason form is 
         find(panel, (node) => node.props?.title === 'review.submitted'),
         'submitted details',
     );
+
+    // The decision closes the panel, below the details, and nothing follows it.
+    const content = [panel.props.children].flat(Infinity).filter(Boolean).at(-1);
+    const sections = [content.props.children].flat(Infinity).filter(Boolean);
+    const last = sections.at(-1);
+    assert.ok(find(last, (node) => node.props?.shortcut === 'A') && find(last, (node) => node.props?.shortcut === 'R'), 'buttons last');
+    assert.ok(
+        find(sections[0], (node) => node.props?.title === 'review.submitted'),
+        'details first',
+    );
+    assert.equal(sections.length, 2);
+
+    // The details read as on the public map: the orientation with its illustration, then the other details.
+    assert.ok(
+        find(panel, (node) => node.type === 'OrientationCard'),
+        'orientation card',
+    );
+    const details = find(panel, (node) => node.type === 'DetailRows');
+    // Rows come from another vm context, so compare their keys as text.
+    assert.equal(details.props.rows.map((row) => row.key).join(','), 'location,under_sign,description');
 });
