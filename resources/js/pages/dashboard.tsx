@@ -742,7 +742,6 @@ function RulesTile({ rules }: { rules: Overview['rules'] }) {
                     ))}
                 </ul>
             )}
-            {rules.length > 0 && <p className="text-[13px] text-stone-500">{t('rules.note')}</p>}
         </article>
     );
 }

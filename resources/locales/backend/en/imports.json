@@ -1,6 +1,5 @@
 {
     "title": "Data sources",
-    "intro": "Approve sources, review deliveries and follow each source's status.",
     "no_datasets": "Sources appear here automatically once a collector delivers data.",
     "source": "Municipal source",
     "terms": "Source terms",
@@ -130,7 +129,7 @@
     "publication_blocked": "This delivery cannot be published yet",
     "back_to_source_history": "Back to source history",
     "clear_filters": "Clear filters",
-    "history_no_matches": "No deliveries match these filters. Change your search or clear the filters.",
+    "history_no_matches": "No deliveries match these filters.",
     "no_changes_title": "No changes to review",
     "no_matching_records": "No locations found",
     "try_other_filter": "Try another search term or view all locations.",
@@ -148,7 +147,6 @@
     },
     "no_map_locations": "No locations to show on the map with these filters.",
     "changes_map": "Changes on the map",
-    "changes_map_hint": "Compare the locations on this page. Select a polygon or open its table row for details.",
     "missing_map_note": "Missing does not mean deleted. Nearby locations with different source IDs are not automatically merged.",
     "compare_on_map": "Compare on map",
     "open_street_view": "Open Street View",

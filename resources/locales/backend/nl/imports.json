@@ -1,6 +1,5 @@
 {
     "title": "Databronnen",
-    "intro": "Keur bronnen goed, beoordeel leveringen en volg de status van elke bron.",
     "no_datasets": "Bronnen verschijnen hier automatisch zodra een collector data levert.",
     "source": "Gemeentelijke bron",
     "terms": "Bronvoorwaarden",
@@ -130,7 +129,7 @@
     "publication_blocked": "Deze levering kan nog niet worden gepubliceerd",
     "back_to_source_history": "Terug naar bronhistorie",
     "clear_filters": "Filters wissen",
-    "history_no_matches": "Geen leveringen met deze filters. Pas je zoekopdracht aan of wis de filters.",
+    "history_no_matches": "Geen leveringen met deze filters.",
     "no_changes_title": "Geen wijzigingen om te beoordelen",
     "no_matching_records": "Geen locaties gevonden",
     "try_other_filter": "Probeer een andere zoekterm of bekijk alle locaties.",
@@ -148,7 +147,6 @@
     },
     "no_map_locations": "Geen locaties om op de kaart te tonen met deze filters.",
     "changes_map": "Wijzigingen op de kaart",
-    "changes_map_hint": "Vergelijk de locaties op deze pagina. Klik op een vlak of open de bijbehorende rij voor details.",
     "missing_map_note": "Ontbreekt betekent niet automatisch verwijderd. Nabije locaties met verschillende bron-ID’s worden niet automatisch samengevoegd.",
     "compare_on_map": "Vergelijk op kaart",
     "open_street_view": "Street View openen",

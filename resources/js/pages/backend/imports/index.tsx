@@ -99,7 +99,6 @@ export default function Index({ datasets, sources, summary, countries, imports, 
                 <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <div className="space-y-2">
                         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-                        <p className="text-sm text-muted-foreground">{t('intro')}</p>
                         <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
                             {summary.processing ? t('live.processing') : ''}
                         </p>

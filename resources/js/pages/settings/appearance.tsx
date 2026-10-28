@@ -25,7 +25,7 @@ export default function Appearance() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title={t('appearance.title')} description={t('appearance.description')} />
+                    <HeadingSmall title={t('appearance.title')} />
                     <AppearanceTabs />
                 </div>
             </SettingsLayout>

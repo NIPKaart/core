@@ -1,7 +1,6 @@
 {
     "head": {
-        "title": "Notifications",
-        "description": "If you have any notifications, they will be listed here. You can manage your notifications and their settings."
+        "title": "Notifications"
     },
     "breadcrumbs": {
         "index": "Notifications"

@@ -83,7 +83,6 @@ export default function Index({ roles, permissionGroups, synchronization }: Page
                             <h2 id="roles-title" className="text-lg font-semibold">
                                 {t('roles.title')}
                             </h2>
-                            <p className="text-sm text-muted-foreground">{t('roles.description')}</p>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -133,7 +132,6 @@ export default function Index({ roles, permissionGroups, synchronization }: Page
                             <h2 id="permission-matrix-title" className="text-lg font-semibold">
                                 {t('matrix.title')}
                             </h2>
-                            <p className="mt-1 text-sm text-muted-foreground">{t('matrix.description')}</p>
                         </div>
 
                         <Table className="min-w-2xl">

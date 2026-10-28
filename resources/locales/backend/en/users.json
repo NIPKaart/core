@@ -1,7 +1,6 @@
 {
     "head": {
         "index": "Users",
-        "description": "Manage users, suspend or delete them, and assign roles.",
         "edit": "Edit {{name}}",
         "create": "Create User"
     },

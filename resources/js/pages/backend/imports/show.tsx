@@ -777,7 +777,6 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
     return (
         <section className="mb-5 overflow-hidden rounded-xl border" aria-label={t('changes_map')}>
             <div className="space-y-2 p-4">
-                <p className="text-sm text-muted-foreground">{t('changes_map_hint')}</p>
                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
                     {Array.from(new Set(changes.map((row) => row.status))).map((status) => (
                         <span key={status} className="inline-flex items-center gap-2">

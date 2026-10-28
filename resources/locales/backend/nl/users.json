@@ -1,7 +1,6 @@
 {
     "head": {
         "index": "Gebruikers",
-        "description": "Beheer gebruikers, schors of verwijder ze en wijs rollen toe.",
         "edit": "Bewerk {{name}}",
         "create": "Gebruiker aanmaken"
     },

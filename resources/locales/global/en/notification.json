@@ -22,8 +22,7 @@
         "markAll": "Mark all as read"
     },
     "empty": {
-        "title": "No notifications yet",
-        "subtitle": "All notifications will appear here when there is something to tell."
+        "title": "No notifications yet"
     },
     "relative": {
         "today": "Today",

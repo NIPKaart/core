@@ -1,6 +1,5 @@
 {
     "title": "Moderation",
-    "description": "Review what the community sends in. High priority first, then the oldest item.",
     "search": "Search by street, municipality or contributor",
     "tabs": {
         "label": "Status",
@@ -287,7 +286,7 @@
     "select_item": "Select {{place}}",
     "shortcuts": {
         "title": "Keyboard shortcuts",
-        "description": "Work without a mouse. Shortcuts are off while you type.",
+        "description": "Shortcuts do not work while you type.",
         "next": "Next item",
         "previous": "Previous item",
         "open": "Open the first item",

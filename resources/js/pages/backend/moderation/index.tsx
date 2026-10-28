@@ -173,7 +173,7 @@ export default function Index({ status, filters, items, history, selected, posit
                 </div>
             ) : (
                 <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
-                    <Heading level={1} title={t('title')} description={t('description')} />
+                    <Heading level={1} title={t('title')} />
                     <div className="flex flex-wrap items-center gap-2">
                         <nav aria-label={t('tabs.label')} className="inline-flex rounded-lg bg-muted p-[3px]">
                             {(['open', 'decided'] as const).map((tab) => (

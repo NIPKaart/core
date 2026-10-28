@@ -40,7 +40,7 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={t('parking_spaces.title.index')} />
             <div className="space-y-6 px-4 py-6 sm:px-6">
-                <Heading title={t('parking_spaces.heading.index')} description={t('parking_spaces.subheading')} />
+                <Heading title={t('parking_spaces.heading.index')} />
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
@@ -58,7 +58,6 @@ export default function UserParkingSpacesPage({ parkingSpaces, selectOptions }: 
                         <div className="flex flex-col items-center gap-2">
                             <MapPin className="mb-2 h-10 w-10 text-primary" />
                             <span className="text-lg font-semibold text-muted-foreground">{t('parking_spaces.empty.title')}</span>
-                            <span className="text-sm text-muted-foreground">{t('parking_spaces.empty.subtitle')}</span>
                         </div>
                         <Button asChild size="lg" className="mt-2 bg-orange-600 hover:bg-orange-500">
                             <Link href={locationMap.add()}>

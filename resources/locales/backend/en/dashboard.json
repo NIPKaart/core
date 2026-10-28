@@ -118,7 +118,6 @@
         "open": "View rules",
         "nationwide": "National rules",
         "municipality": "Municipal rules",
-        "note": "Links to the official rules, which open in a new tab.",
         "open_label": "View the parking rules for {{name}} (opens in a new tab)",
         "empty": "Save a parking space as a favourite to see the official rules of that municipality here."
     },

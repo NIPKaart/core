@@ -11,7 +11,6 @@
     },
     "roles": {
         "title": "Roles",
-        "description": "This overview is intentionally read-only: roles and their permissions only change through code and the permission seeder.",
         "synchronized": "Synchronized",
         "needs_review": "Needs review",
         "users": "Users",
@@ -19,7 +18,6 @@
     },
     "matrix": {
         "title": "Permission matrix",
-        "description": "Each row is a permission declared in code; the check marks show the assignment currently stored in the database.",
         "permission": "Permission",
         "missing": "Missing",
         "assigned": "{{permission}} is assigned to {{role}}",

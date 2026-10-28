@@ -128,7 +128,7 @@ export default function Index({ users, creatingUser, roles, filters, facets, rol
             <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="space-y-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
-                        <Heading level={1} title={t('head.index')} description={t('head.description')} />
+                        <Heading level={1} title={t('head.index')} />
                         {can('user.create') && (
                             <Button variant="outline" asChild>
                                 <Link ref={createButton} href={app.users.create({ query })} preserveState preserveScroll>

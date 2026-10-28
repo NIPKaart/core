@@ -37,7 +37,7 @@ export default function AuthSplitLayout({ children, title, description }: PropsW
                     </Link>
                     <div className="flex flex-col items-center gap-2 text-center">
                         <h1 className="text-xl font-medium">{title}</h1>
-                        <p className="text-sm text-balance text-muted-foreground">{description}</p>
+                        {description && <p className="text-sm text-balance text-muted-foreground">{description}</p>}
                     </div>
                     {children}
                 </div>

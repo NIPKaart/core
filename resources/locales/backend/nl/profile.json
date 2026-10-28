@@ -7,7 +7,6 @@
             "index": "Mijn Favorieten"
         },
         "heading": "Mijn favoriete locaties",
-        "subheading": "Al je favoriete parkeerlocaties en garages in één oogopslag.",
         "types": {
             "community": "Gemeenschap",
             "municipal": "Gemeentelijk",
@@ -36,10 +35,8 @@
             "index": "Mijn parkeerlocaties",
             "show": "Parkeerplaats ({{id}})"
         },
-        "subheading": "Hier kun je je eigen toegevoegde parkeerplaatsen beheren en hun details bekijken. Je kunt ook een parkeerplaats verwijderen indien nodig.",
         "table": {
             "title": "Details",
-            "subtitle": "Informatie over de parkeerplaats.",
             "added_at": "Toegevoegd op",
             "country": "Land",
             "province": "Provincie",
@@ -51,8 +48,7 @@
             "orientation": "Oriëntatie"
         },
         "location": {
-            "title": "Locatie",
-            "subtitle": "Waar de parkeerplaats zich bevindt."
+            "title": "Locatie"
         },
         "actions": {
             "delete": {
@@ -68,8 +64,7 @@
             "error": "Bijwerken van parkeerplaats mislukt"
         },
         "empty": {
-            "title": "Je hebt nog geen parkeerplaatsen toegevoegd.",
-            "subtitle": "Begin met bijdragen en help anderen door je eerste locatie toe te voegen!"
+            "title": "Je hebt nog geen parkeerplaatsen toegevoegd."
         },
         "search": {
             "placeholder": "Zoeken op straat, stad, postcode..."

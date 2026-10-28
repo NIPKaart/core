@@ -85,7 +85,7 @@ export default function NotificationsIndex({ notificationList, filters, options 
             <Head title={t('head.title')} />
 
             <div className="space-y-6 px-4 py-6 sm:px-8 sm:py-8">
-                <Heading level={1} title={t('head.title')} description={t('head.description')} />
+                <Heading level={1} title={t('head.title')} />
 
                 {Object.keys(rowSelection).length > 0 && (
                     <div className="flex flex-col gap-3 rounded-md border bg-muted/70 p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between dark:border-muted/50">
