@@ -40,7 +40,6 @@ export function GroupEditor({
                         </div>
                     ))}
                 </div>
-                <span className="text-xs text-muted-foreground">{t('review.drag_hint')}</span>
             </div>
         );
     }

@@ -826,7 +826,7 @@ function SubmissionReview({
             onCancelDecision={() => setRejecting(false)}
             body={
                 <>
-                    <Section title={t('review.submitted')} aside={can ? t('review.submitted_hint') : undefined} gap="gap-2">
+                    <Section title={t('review.submitted')} gap="gap-2">
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
                         <OrientationCard
                             orientation={options.orientations.find((option) => option.value === draft.orientation) ?? null}
@@ -839,16 +839,12 @@ function SubmissionReview({
                                 key: group,
                                 label: t(`groups.${group}`),
                                 value: format(group, draft),
-                                note:
-                                    group === 'location' && moved !== null
-                                        ? `${t('review.moved', { distance: moved })} · ${t('review.location_moved')}`
-                                        : null,
+                                note: group === 'location' && moved !== null ? t('review.moved', { distance: moved }) : null,
                                 submitted: group !== 'location' && isEdited(group) ? format(group, details.current) : null,
                                 editor: editing === group && <GroupEditor group={group} draft={draft} update={update} options={options} />,
                                 action: editAction(group),
                             }))}
                         />
-                        {can && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
                     </Section>
                     <Checks checks={checks} />
                     {municipal && <MunicipalComparison municipal={municipal} draft={draft} options={options} />}
@@ -1002,7 +998,7 @@ function ImprovementReview({
             onCancelDecision={() => setRejecting(false)}
             body={
                 <>
-                    <Section title={t('review.changes')} aside={can ? t('review.changes_hint') : undefined} gap="gap-2">
+                    <Section title={t('review.changes')} gap="gap-2">
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
                         <DetailRows
                             rows={changes.map((group) => ({
@@ -1058,7 +1054,6 @@ function ImprovementReview({
                                 ),
                             }))}
                         />
-                        {can && moved && <p className="text-xs text-muted-foreground">{t('review.drag_hint')}</p>}
                     </Section>
                     <Checks checks={checks} />
                     <ContributorCard contributor={item.contributor} kind="improvement" />

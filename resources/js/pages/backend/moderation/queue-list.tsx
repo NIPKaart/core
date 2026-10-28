@@ -242,7 +242,6 @@ export function QueueList({
                             </span>
                         )}
                         <p className="text-base font-semibold">{t(filtered ? 'empty.filtered' : 'empty.pane_done')}</p>
-                        {!filtered && <p className="text-sm text-muted-foreground">{t('empty.open')}</p>}
                     </div>
                 )}
                 {groups.map((group) => (

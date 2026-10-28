@@ -44,9 +44,7 @@ export function SelectionHeader({ items, onClear }: { items: QueueItem[]; onClea
                     <Kbd aria-hidden>Esc</Kbd>
                 </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-                {title}. {t('bulk.description')}
-            </p>
+            <p className="text-sm text-muted-foreground">{title}</p>
         </div>
     );
 }
@@ -97,7 +95,6 @@ export function SelectionBar({ items, options, onClear }: { items: QueueItem[]; 
             <Button variant="destructive" size="lg" className="w-full cursor-pointer" disabled={processing || !reason} onClick={reject}>
                 {t('bulk.reject', { count: items.length })}
             </Button>
-            <p className="text-xs text-muted-foreground">{t('bulk.hint')}</p>
         </div>
     );
 }
