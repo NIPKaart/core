@@ -13,10 +13,11 @@ import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { PaginatedResponse } from '@/types';
 import { Link } from '@inertiajs/react';
-import { ChevronDown, ChevronLeft, ChevronRight, ListFilter, Search, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Kbd } from './shortcuts';
+import { TYPE_ICONS } from './type-badge';
 import { filterQuery, type Filters, type ItemType, type Options, type QueueItem } from './types';
 import { useChangeSummary } from './values';
 
@@ -24,7 +25,7 @@ import { useChangeSummary } from './values';
 export const TYPE_COLORS: Record<ItemType, string> = { report: '#dc2626', submission: '#d97706', improvement: '#2563eb' };
 
 /** A short age such as "9d" or "3u", so the queue reads at a glance. */
-export function useShortAge() {
+function useShortAge() {
     const { t } = useTranslation('backend/moderation');
 
     return (value: string) => {
@@ -36,7 +37,7 @@ export function useShortAge() {
 }
 
 /** The second line of a queue row: what this item is about, in one phrase. */
-export function useItemPreview() {
+function useItemPreview() {
     const { t } = useTranslation('backend/moderation');
     const summary = useChangeSummary();
 
@@ -55,31 +56,39 @@ export function useItemPreview() {
     };
 }
 
+/**
+ * The queue in the panel beside the map: open and decided, filters, and the open items with the oldest first and
+ * reports on top. Pointing at an item highlights it on the map. While items are selected the panel's top and bottom
+ * belong to the selection.
+ */
 export function QueueList({
     status,
     items,
     filters,
     options,
-    selectedKey,
     checked,
     onCheck,
     decidedToday,
     onOpen,
     onFilter,
-    hidden,
+    onHover,
+    selection,
+    footer,
 }: {
     status: 'open' | 'decided';
     items: PaginatedResponse<QueueItem> | null;
     filters: Filters;
     options: Options;
-    selectedKey: string | null;
     checked: string[];
     onCheck: (keys: string[]) => void;
     decidedToday: number;
     onOpen: (item: QueueItem) => void;
     onFilter: (next: Partial<Filters>) => void;
-    /** Hidden on small screens while an item is open there. */
-    hidden: boolean;
+    onHover?: (key: string | null) => void;
+    /** Replaces the heading and filters while items are selected. */
+    selection?: React.ReactNode;
+    /** Replaces the shortcut hints, for example with the selection's decision. */
+    footer?: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
     const query = filterQuery(filters);
@@ -106,7 +115,7 @@ export function QueueList({
     const selecting = checked.length > 0;
     const toggle = (key: string, on: boolean) => onCheck(on ? [...checked, key] : checked.filter((item) => item !== key));
     const total = items?.total ?? 0;
-    const progress = decidedToday + total > 0 ? Math.round((decidedToday / (decidedToday + total)) * 100) : 0;
+    const filtered = Object.keys(query).length > 0;
 
     const typeLabel =
         filters.types.length === 0
@@ -122,63 +131,50 @@ export function QueueList({
               : t('queue.municipalities_count', { count: filters.municipality_ids.length });
 
     return (
-        <section
-            aria-label={t('queue.label')}
-            className={cn('flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-r lg:w-[360px]', hidden && 'hidden lg:flex')}
-        >
-            <h1 className="sr-only">{t('title')}</h1>
-            <nav aria-label={t('tabs.label')} className="flex shrink-0 gap-5 border-b pr-3 pl-5">
-                {(['open', 'decided'] as const).map((tab) => (
-                    <Link
-                        key={tab}
-                        href={app.moderation.index({
-                            query: tab === 'decided' ? { ...(query.type ? { type: query.type } : {}), status: 'decided' } : query,
-                        })}
-                        aria-current={status === tab ? 'page' : undefined}
-                        className={cn(
-                            'flex h-10 items-center gap-1.5 border-b-2 text-sm',
-                            status === tab
-                                ? 'border-foreground font-semibold text-foreground'
-                                : 'border-transparent font-medium text-neutral-400 hover:text-foreground',
-                        )}
-                    >
-                        {t(`tabs.${tab}`)}
-                        {tab === 'open' && status === 'open' && <span className="font-medium text-neutral-400 tabular-nums">{total}</span>}
-                    </Link>
-                ))}
-                <span className="ml-auto flex items-center gap-0.5 self-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 cursor-pointer text-muted-foreground"
-                        aria-label={t('search')}
-                        aria-pressed={searching}
-                        onClick={() => {
-                            setSearching((value) => !value);
-                            setTimeout(() => searchInput.current?.focus());
-                        }}
-                    >
-                        <Search className="size-[18px]" />
-                    </Button>
-                    {(filters.types.length > 0 || filters.municipality_ids.length > 0 || filters.search) && (
+        <>
+            {selection ?? (
+                <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
+                        <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <nav aria-label={t('tabs.label')} className="flex flex-1 rounded-[10px] bg-muted p-1">
+                            {(['open', 'decided'] as const).map((tab) => (
+                                <Link
+                                    key={tab}
+                                    href={app.moderation.index({
+                                        query: tab === 'decided' ? { ...(query.type ? { type: query.type } : {}), status: 'decided' } : query,
+                                    })}
+                                    aria-current={status === tab ? 'page' : undefined}
+                                    className={cn(
+                                        'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm',
+                                        status === tab
+                                            ? 'bg-background font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.08)]'
+                                            : 'font-medium text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    {t(`tabs.${tab}`)}
+                                    {tab === 'open' && status === 'open' && (
+                                        <span className="font-medium text-muted-foreground tabular-nums">{total}</span>
+                                    )}
+                                </Link>
+                            ))}
+                        </nav>
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
-                            className="size-8 cursor-pointer text-muted-foreground"
-                            aria-label={t('queue.clear_filters')}
+                            className="size-[42px] cursor-pointer rounded-[10px]"
+                            aria-label={t('search')}
+                            aria-pressed={searching}
                             onClick={() => {
-                                setSearch('');
-                                onFilter({ types: [], municipality_ids: [], search: null });
+                                setSearching((value) => !value);
+                                setTimeout(() => searchInput.current?.focus());
                             }}
                         >
-                            <ListFilter className="size-[18px]" />
+                            <Search className="size-[18px]" />
                         </Button>
-                    )}
-                </span>
-            </nav>
-
-            {status === 'open' && (
-                <div className="flex shrink-0 flex-col gap-2.5 px-5 pt-3 pb-2">
+                    </div>
                     {searching && (
                         <div className="relative">
                             <Input
@@ -187,7 +183,7 @@ export function QueueList({
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder={t('search')}
                                 aria-label={t('search')}
-                                className="h-8 pr-8 text-sm"
+                                className="h-9 pr-8 text-sm"
                             />
                             {search && (
                                 <button
@@ -201,7 +197,7 @@ export function QueueList({
                             )}
                         </div>
                     )}
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
                         {options.types.length > 1 && (
                             <FilterMenu
                                 label={typeLabel}
@@ -218,25 +214,40 @@ export function QueueList({
                                 onChange={(municipality_ids) => onFilter({ municipality_ids })}
                             />
                         )}
-                    </div>
-                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                        <span className="h-1 flex-1 overflow-hidden rounded-full bg-muted" role="presentation">
-                            <span className="block h-full bg-green-600" style={{ width: `${progress}%` }} />
-                        </span>
-                        <span className="whitespace-nowrap">{t('queue.decided_today', { count: decidedToday })}</span>
+                        {filtered && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearch('');
+                                    onFilter({ types: [], municipality_ids: [], search: null });
+                                }}
+                                className="ml-auto cursor-pointer text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                            >
+                                {t('queue.clear_filters')}
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
 
-            <div className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50">
-                {status === 'open' && rows.length === 0 && (
-                    <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-                        {t(Object.keys(query).length ? 'empty.filtered' : 'empty.open')}
-                    </p>
+            <div
+                className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50"
+                onMouseLeave={() => onHover?.(null)}
+            >
+                {rows.length === 0 && (
+                    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
+                        {!filtered && (
+                            <span className="flex size-12 items-center justify-center rounded-full bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                <Check className="size-6" aria-hidden />
+                            </span>
+                        )}
+                        <p className="text-base font-semibold">{t(filtered ? 'empty.filtered' : 'empty.pane_done')}</p>
+                        {!filtered && <p className="text-sm text-muted-foreground">{t('empty.open')}</p>}
+                    </div>
                 )}
                 {groups.map((group) => (
                     <Fragment key={group.key}>
-                        <div className="flex justify-between px-5 pt-3 pb-1 text-xs font-medium text-neutral-400">
+                        <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
                             <span>{group.label}</span>
                             <span className="tabular-nums">{group.rows.length}</span>
                         </div>
@@ -244,45 +255,33 @@ export function QueueList({
                             {group.rows.map((item) => {
                                 const isChecked = checked.includes(item.key);
                                 return (
-                                    <li key={item.key} className="group/row relative mx-2">
+                                    <li key={item.key} className="group/row relative border-t border-muted" onMouseEnter={() => onHover?.(item.key)}>
                                         <button
                                             type="button"
                                             onClick={() => onOpen(item)}
-                                            aria-current={item.key === selectedKey ? 'true' : undefined}
+                                            onFocus={() => onHover?.(item.key)}
                                             className={cn(
-                                                'flex w-full cursor-pointer gap-3 rounded-[9px] px-3 py-2 text-left hover:bg-neutral-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
-                                                item.key === selectedKey && 'bg-neutral-100 hover:bg-neutral-100',
-                                                isChecked && item.key !== selectedKey && 'bg-neutral-50',
-                                                selecting && 'pl-[38px]',
+                                                'flex w-full cursor-pointer items-center gap-3 border-l-[3px] border-transparent py-2.5 pr-4 pl-[15px] text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                                                isChecked &&
+                                                    'border-blue-700 bg-blue-50 hover:bg-blue-50 dark:bg-blue-950/50 dark:hover:bg-blue-950/50',
+                                                selecting && 'pl-11',
                                             )}
                                         >
-                                            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                                                <span className="flex justify-between gap-2">
-                                                    <span className="truncate text-sm font-semibold">{item.street || t('no_address')}</span>
-                                                    <span
-                                                        className={cn(
-                                                            'shrink-0 text-xs text-neutral-400',
-                                                            !selecting && selectable(item) && 'group-hover/row:invisible',
-                                                        )}
-                                                    >
-                                                        {age(item.waiting_since)}
-                                                    </span>
+                                            <TypeTile type={item.type} />
+                                            <span className="flex min-w-0 flex-1 flex-col gap-px">
+                                                <span className="truncate text-[15px] font-medium">{item.street || t('no_address')}</span>
+                                                <span className="truncate text-[13px] text-muted-foreground">
+                                                    <span className="sr-only">{t(`types.${item.type}`)} · </span>
+                                                    {[item.municipality, preview(item)].filter(Boolean).join(' · ')}
                                                 </span>
-                                                <span className="flex items-center gap-1.5 overflow-hidden text-[13px] whitespace-nowrap text-muted-foreground">
-                                                    <span
-                                                        className="size-1.5 shrink-0 rounded-full"
-                                                        style={{ background: TYPE_COLORS[item.type] }}
-                                                        aria-hidden
-                                                    />
-                                                    <span className="sr-only">{t(`types.${item.type}`)}</span>
-                                                    {item.municipality && <span className="shrink-0">{item.municipality}</span>}
-                                                    {item.municipality && (
-                                                        <span className="text-neutral-400" aria-hidden>
-                                                            ·
-                                                        </span>
-                                                    )}
-                                                    <span className="truncate">{preview(item)}</span>
-                                                </span>
+                                            </span>
+                                            <span
+                                                className={cn(
+                                                    'shrink-0 text-[13px] text-muted-foreground tabular-nums',
+                                                    !selecting && selectable(item) && 'group-hover/row:invisible',
+                                                )}
+                                            >
+                                                {age(item.waiting_since)}
                                             </span>
                                         </button>
                                         {selectable(item) && (
@@ -291,8 +290,8 @@ export function QueueList({
                                                 onCheckedChange={(on) => toggle(item.key, !!on)}
                                                 aria-label={t('select_item', { place: item.street ?? t('no_address') })}
                                                 className={cn(
-                                                    'absolute top-[11px] cursor-pointer bg-background',
-                                                    selecting ? 'left-3' : 'right-3 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
+                                                    'absolute top-1/2 -translate-y-1/2 cursor-pointer bg-background',
+                                                    selecting ? 'left-4' : 'right-4 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
                                                 )}
                                             />
                                         )}
@@ -303,7 +302,7 @@ export function QueueList({
                     </Fragment>
                 ))}
                 {items && items.last_page > 1 && (
-                    <div className="mt-2 flex items-center justify-between px-5 text-xs text-muted-foreground">
+                    <div className="mt-2 flex items-center justify-between px-4.5 text-xs text-muted-foreground">
                         <span>{t('queue.page', { from: items.from, to: items.to, total: items.total })}</span>
                         <span className="flex gap-1">
                             <PageLink href={items.prev_page_url} label={t('queue.previous_page')} icon={ChevronLeft} />
@@ -313,8 +312,8 @@ export function QueueList({
                 )}
             </div>
 
-            {status === 'open' && (
-                <div className="mt-auto flex h-10 shrink-0 items-center gap-3.5 overflow-hidden border-t bg-neutral-50 px-4 text-xs whitespace-nowrap text-muted-foreground">
+            {footer ?? (
+                <div className="flex h-10 shrink-0 items-center gap-3.5 overflow-hidden border-t px-4.5 text-xs whitespace-nowrap text-muted-foreground">
                     <span className="flex items-center gap-1">
                         <Kbd>J</Kbd>
                         <Kbd>K</Kbd> {t('shortcuts.short.next')}
@@ -322,17 +321,30 @@ export function QueueList({
                     <span className="flex items-center gap-1">
                         <Kbd>↵</Kbd> {t('shortcuts.short.open')}
                     </span>
-                    {selecting && (
-                        <span className="flex items-center gap-1">
-                            <Kbd>X</Kbd> {t('shortcuts.short.select')}
-                        </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                        <Kbd>X</Kbd> {t('shortcuts.short.select')}
+                    </span>
                     <span className="flex items-center gap-1">
                         <Kbd>?</Kbd> {t('shortcuts.short.more')}
                     </span>
                 </div>
             )}
-        </section>
+        </>
+    );
+}
+
+/** The kind of an item as a tinted tile, in the same colour as its pin on the map. */
+function TypeTile({ type }: { type: ItemType }) {
+    const Icon = TYPE_ICONS[type];
+
+    return (
+        <span
+            className="flex size-9 shrink-0 items-center justify-center rounded-[10px]"
+            style={{ background: `color-mix(in srgb, ${TYPE_COLORS[type]} 12%, transparent)`, color: TYPE_COLORS[type] }}
+            aria-hidden
+        >
+            <Icon className="size-[18px]" />
+        </span>
     );
 }
 

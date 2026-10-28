@@ -65,9 +65,6 @@
         "open": "Nothing to review. New submissions, improvements and reports appear here.",
         "filtered": "No items for these filters.",
         "decided": "Nothing decided yet.",
-        "pane_title_one": "{{count}} item is waiting for you",
-        "pane_title_other": "{{count}} items are waiting for you",
-        "pane_hint": "Pick an item from the queue, or press J to start with the first.",
         "pane_done": "Everything is reviewed"
     },
     "bulk": {
@@ -91,16 +88,6 @@
         "selected_count_one": "{{count}} selected",
         "selected_count_other": "{{count}} selected",
         "description": "You can reject together, for example as spam. Approving always happens one item at a time.",
-        "map_one": "Map · {{count}} selected",
-        "map_other": "Map · {{count}} selected",
-        "legend": "Selected",
-        "no_signals": "Nothing notable",
-        "columns": {
-            "place": "Address",
-            "details": "Details",
-            "check": "Check",
-            "age": "Age"
-        },
         "hint": "Unsure about an item? Untick it and open it on its own.",
         "label": "Selection"
     },
@@ -128,29 +115,16 @@
         "restore": "Restore",
         "latitude": "Latitude",
         "longitude": "Longitude",
-        "drag_hint": "Or drag the orange pin on the map.",
+        "drag_hint": "Or drag the pin on the map onto the parking bay, click where it is, or move the pin with the arrow keys (Shift for bigger steps).",
         "show_unchanged": "Show unchanged fields",
         "hide_unchanged": "Hide unchanged fields",
         "nearby_municipal": {
             "title": "Municipal parking space at {{distance}} m",
             "description": "When this submission describes the same parking space, reject it as a duplicate."
         },
-        "legend": {
-            "current": "Current",
-            "proposed": "Proposed",
-            "submitted": "Blue: submission",
-            "reported": "Blue: reported parking space",
-            "nearby": "Green: other parking spaces",
-            "municipal": "Municipal",
-            "this_place": "This parking space",
-            "community": "Community",
-            "submission": "Submission"
-        },
         "skip": "Skip",
         "reject": "Reject",
         "approve": "Approve",
-        "back": "Back to the queue",
-        "next_up": "then {{place}}",
         "edit_place": "Edit",
         "on_map": "On the map",
         "views": {
@@ -171,7 +145,13 @@
         "change_count_other": "{{count}} changes",
         "apply": "Apply",
         "take_over": "Take over {{field}}",
-        "label": "Item"
+        "label": "Item",
+        "back_to_item": "Back to the item",
+        "then": "Next",
+        "tabs": {
+            "review": "Review",
+            "timeline": "Timeline"
+        }
     },
     "decide": {
         "reason": "Reason",
@@ -422,5 +402,12 @@
         "number": "Number of bays",
         "submission": "Submission",
         "municipal": "Municipal"
+    },
+    "map": {
+        "pin": "Pin of the parking space; move it with the arrow keys",
+        "recenter": "Back to the parking space",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out",
+        "fit_all": "Show everything"
     }
 }
