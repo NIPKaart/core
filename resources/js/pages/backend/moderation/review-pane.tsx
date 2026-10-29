@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { DecisionForm } from './decision-form';
 import { DetailEditor, EDITABLE, EditDetailsButton, useDetailEditor } from './detail-editor';
 import { metres, nearestWithin, type MapPoint } from './geo';
-import { GroupEditor } from './group-editor';
 import type { ModerationMap } from './moderation-map';
 import type { CommunityPointsProfile, Contributor } from './parts';
 import { useAgo } from './parts';
@@ -675,21 +674,9 @@ function useApprove(url: string) {
     return { approve, errors, processing };
 }
 
-function EditButton({
-    edited,
-    editing,
-    label,
-    onEdit,
-    onRestore,
-}: {
-    edited: boolean;
-    editing: boolean;
-    label: string;
-    onEdit: () => void;
-    onRestore: () => void;
-}) {
+function RestoreButton({ onRestore }: { onRestore: () => void }) {
     const { t } = useTranslation('backend/moderation');
-    return edited ? (
+    return (
         <Button
             variant="ghost"
             size="icon"
@@ -698,17 +685,6 @@ function EditButton({
             onClick={onRestore}
         >
             <RotateCcw className="size-[15px]" />
-        </Button>
-    ) : (
-        <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 cursor-pointer text-muted-foreground"
-            aria-pressed={editing}
-            aria-label={label}
-            onClick={onEdit}
-        >
-            <Pencil className="size-[15px]" />
         </Button>
     );
 }
@@ -732,7 +708,6 @@ function SubmissionReview({
     const ago = useAgo();
     const format = useValueFormatter(options);
     const [draft, setDraft] = useState<ImprovementValues>(details.current);
-    const [editing, setEditing] = useState<ChangeGroup | null>(null);
     const [rejecting, setRejecting] = useState(false);
     const { approve, errors, processing } = useApprove(app.moderation.submissions.approve.url({ parking_space: details.space.id }, { query }));
     const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
@@ -772,21 +747,11 @@ function SubmissionReview({
               },
     ];
 
-    const editAction = (group: ChangeGroup) =>
-        can && (
-            <EditButton
-                edited={isEdited(group)}
-                editing={editing === group}
-                label={t('review.edit', { field: t(`groups.${group}`) })}
-                onEdit={() => setEditing(editing === group ? null : group)}
-                onRestore={() => {
-                    update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])));
-                    setEditing(null);
-                }}
-            />
+    const restoreAction = (group: ChangeGroup) =>
+        can &&
+        isEdited(group) && (
+            <RestoreButton onRestore={() => update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, details.current[field]])))} />
         );
-    /** Groups edited in the editor only offer to put back what was submitted. */
-    const restoreAction = (group: ChangeGroup) => can && isEdited(group) && editAction(group);
 
     return (
         <Frame
@@ -871,10 +836,7 @@ function SubmissionReview({
                                 value: format(group, draft),
                                 note: group === 'location' && moved !== null ? t('review.moved', { distance: moved }) : null,
                                 submitted: group !== 'location' && isEdited(group) ? format(group, details.current) : null,
-                                editor: group === 'location' && editing === group && (
-                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                ),
-                                action: group === 'location' ? editAction(group) : restoreAction(group),
+                                action: restoreAction(group),
                             }))}
                         />
                     </Section>
@@ -911,7 +873,6 @@ function ImprovementReview({
     const [accepted, setAccepted] = useState<Record<ChangeGroup, boolean>>(
         () => Object.fromEntries(changes.map((group) => [group, true])) as Record<ChangeGroup, boolean>,
     );
-    const [editing, setEditing] = useState<ChangeGroup | null>(null);
     const [rejecting, setRejecting] = useState(false);
     const { approve, errors, processing } = useApprove(app.moderation.improvements.approve.url({ improvement: details.id }, { query }));
     const can = options.can.improvement;
@@ -1080,20 +1041,12 @@ function ImprovementReview({
                                         </span>
                                     ),
                                 submitted: isEdited(group) && accepted[group] ? format(group, proposed) : null,
-                                editor: group === 'location' && editing === group && accepted[group] && (
-                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
-                                ),
                                 action: (
                                     <span className="flex items-center gap-1">
-                                        {can && accepted[group] && (group === 'location' || isEdited(group)) && (
-                                            <EditButton
-                                                edited={isEdited(group)}
-                                                editing={editing === group}
-                                                label={t('review.edit', { field: t(`groups.${group}`) })}
-                                                onEdit={() => setEditing(editing === group ? null : group)}
+                                        {can && accepted[group] && isEdited(group) && (
+                                            <RestoreButton
                                                 onRestore={() => {
                                                     update(Object.fromEntries(GROUP_FIELDS[group].map((field) => [field, proposed[field]])));
-                                                    setEditing(null);
                                                 }}
                                             />
                                         )}
