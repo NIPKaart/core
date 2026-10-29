@@ -316,14 +316,20 @@ function Focus({
 }) {
     const map = useMap();
     const key = `${center.latitude},${center.longitude}`;
+    const previous = useRef<{ key: string; inset: number; focus: number } | null>(null);
 
     useEffect(() => {
+        const last = previous.current;
+        previous.current = { key, inset, focus };
+        const panelChanged = last !== null && last.key === key && last.focus === focus && last.inset !== inset;
+        const animate = panelChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (bounds) {
             map.fitBounds(bounds, { paddingTopLeft: [inset + 48, 64], paddingBottomRight: [72, 48], maxZoom: 17, animate: false });
             return;
         }
-        map.setView([center.latitude, center.longitude], zoom, { animate: false });
-        if (inset > 0) map.panBy([-inset / 2, 0], { animate: false });
+        const targetZoom = panelChanged ? map.getZoom() : zoom;
+        const target = map.unproject(map.project([center.latitude, center.longitude], targetZoom).subtract([inset / 2, 0]), targetZoom);
+        map.setView(target, targetZoom, { animate, duration: 0.3 });
         // The centre is compared by value, so a new object for the same place does not move the map.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [map, key, bounds, inset, focus]);

@@ -72,7 +72,7 @@ export default function Index({ status, filters, items, history, selected, posit
         );
     };
 
-    /** The pane opens at once with what the queue row already shows; the item's details follow. */
+    /** Keep the current view visible until the requested item's details arrive. */
     const [loading, setLoading] = useState<{ preview: QueueItem | null } | null>(null);
     const openItem = (link: ItemLink) => {
         setChecked([]);
@@ -89,7 +89,7 @@ export default function Index({ status, filters, items, history, selected, posit
         router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
     };
 
-    const current = loading?.preview ?? selected;
+    const current = selected;
     const checkedItems = (items?.data ?? []).filter((item) => checked.includes(item.key));
     const first = items?.data[0];
     const mode = panelMode(current !== null, checkedItems.length);

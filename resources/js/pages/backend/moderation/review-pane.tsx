@@ -70,11 +70,11 @@ export function ReviewPane({
     onNavigate: (link: ItemLink) => void;
     onBack: () => void;
 }) {
-    const item = loading?.preview ?? selected;
+    const item = selected ?? loading?.preview;
     if (!item) return null;
 
-    const nav = { position: loading ? null : position, loading: loading !== null, onNavigate, onBack };
-    if (loading || !selected || !position) {
+    const nav = { position, loading: loading !== null, onNavigate, onBack };
+    if (!selected || !position) {
         return (
             <Frame
                 nav={nav}
@@ -137,7 +137,8 @@ function Frame({
         k: !decision && !editor && previous && (() => nav.onNavigate(previous)),
         Escape: decision ? onCancelDecision : editor ? onCloseEditor : nav.onBack,
     });
-    const scroll = 'flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-4 pb-6';
+    const scroll =
+        'flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-5 pt-3 pb-4 [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin]';
 
     // When a decision form closes, focus returns to the button that opened it.
     const actionRow = useRef<HTMLDivElement>(null);
@@ -188,7 +189,7 @@ function Frame({
                         <div className={cn(scroll, 'pt-0')}>{body}</div>
                     )}
                     {actions && (
-                        <div ref={actionRow} className="flex shrink-0 gap-2 border-t px-5 py-4">
+                        <div ref={actionRow} className="flex shrink-0 gap-2 border-t px-5 py-3">
                             {actions}
                         </div>
                     )}
@@ -233,10 +234,10 @@ function PanelHeader({
     const { t } = useTranslation('backend/moderation');
 
     return (
-        <header className="flex shrink-0 gap-3 px-5 pt-4 pb-4">
+        <header className="flex shrink-0 gap-3 px-5 py-3">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex flex-wrap gap-1.5">{badges}</div>
-                <h2 className="mt-1 text-2xl leading-7 font-bold tracking-[-0.02em]">{title}</h2>
+                <h2 className="text-xl leading-6 font-bold tracking-[-0.02em]">{title}</h2>
                 <p className="text-sm text-muted-foreground">{meta}</p>
             </div>
             {place && (
@@ -272,7 +273,7 @@ function PanelHeader({
 /** The decision buttons at the bottom of the panel, each taking half the row. */
 function Act({ children, primary = false, shortcut, ...props }: React.ComponentProps<typeof Button> & { primary?: boolean; shortcut?: string }) {
     return (
-        <Button {...props} variant={primary ? 'default' : 'outline'} size="lg" className="flex-1 basis-0 cursor-pointer">
+        <Button {...props} variant={primary ? 'default' : 'outline'} className="flex-1 basis-0 cursor-pointer">
             {children}
             {shortcut && (
                 <Kbd inverted={primary} aria-hidden>
@@ -329,7 +330,7 @@ function Checks({ checks }: { checks: Check[] }) {
         <Section title={t('checks.title')} gap="gap-1.5">
             <ul className="border-t">
                 {checks.map((check) => (
-                    <li key={check.title} className="flex gap-3 border-b py-[11px]">
+                    <li key={check.title} className="flex gap-3 border-b py-2">
                         <span className={cn('flex size-[30px] shrink-0 items-center justify-center rounded-lg', TONES[check.tone])}>
                             <check.icon className="size-[15px]" aria-hidden />
                         </span>

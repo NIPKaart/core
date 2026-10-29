@@ -110,7 +110,11 @@ export function Workspace({
             </ModerationMap>
             <section
                 aria-label={label}
-                className="relative z-500 -mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-8px_28px_rgba(0,0,0,0.12)] lg:absolute lg:top-4 lg:bottom-4 lg:left-4 lg:mt-0 lg:w-[420px] lg:rounded-2xl lg:shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
+                className={cn(
+                    'relative z-500 -mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-8px_28px_rgba(0,0,0,0.12)] transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none lg:absolute lg:top-4 lg:bottom-4 lg:left-4 lg:mt-0 lg:w-[420px] lg:rounded-2xl lg:shadow-[0_8px_28px_rgba(0,0,0,0.16)] starting:opacity-0',
+                    scope === 'item' ? 'starting:translate-x-4' : 'starting:-translate-x-4',
+                    'motion-reduce:starting:translate-x-0',
+                )}
             >
                 {children}
             </section>
@@ -118,7 +122,7 @@ export function Workspace({
                 (wide ? (
                     <section
                         aria-label={asideLabel}
-                        className="absolute top-4 bottom-4 left-[452px] z-500 flex w-[380px] flex-col overflow-hidden rounded-2xl bg-background shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
+                        className="absolute top-4 bottom-4 left-[452px] z-500 flex w-[380px] flex-col overflow-hidden rounded-2xl bg-background shadow-[0_8px_28px_rgba(0,0,0,0.16)] transition-[opacity,translate] duration-300 ease-out motion-reduce:transition-none starting:-translate-x-5 starting:opacity-0 motion-reduce:starting:translate-x-0"
                     >
                         {aside}
                     </section>
@@ -147,7 +151,7 @@ function Sheet({ label, children }: { label?: string; children: React.ReactNode 
                 if ((event.target as HTMLElement).scrollTop > 0) setFull(true);
             }}
             className={cn(
-                'absolute inset-x-0 bottom-0 z-500 flex flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-10px_30px_rgba(0,0,0,0.18)] transition-[top] duration-200',
+                'absolute inset-x-0 bottom-0 z-500 flex flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-10px_30px_rgba(0,0,0,0.18)] transition-[top,opacity,translate] duration-300 ease-out motion-reduce:transition-none starting:translate-y-8 starting:opacity-0 motion-reduce:starting:translate-y-0',
                 full ? 'top-12' : 'top-[38svh]',
             )}
         >
