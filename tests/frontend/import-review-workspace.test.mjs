@@ -200,7 +200,7 @@ test('incoming and missing records with the same source ID can be inspected sepa
         onFinish() {},
     };
     let tree = app.render(app.exports.ReviewWorkspace, props);
-    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'navigation.locations').props.onClick();
+    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'workspace.to_review').props.onClick();
     tree = app.render(app.exports.ReviewWorkspace, props);
     const queue = find(tree, (node) => node.type === 'nav' && node.props['aria-label'] === 'workspace.queue');
     queue.props.children[1].props.onClick();
@@ -253,7 +253,7 @@ test('review framing includes the actual marker and selected candidate without z
 });
 
 test('identity selection submits the real candidate ID and maps the new-location option to an empty ID', () => {
-    const app = mount('review-workspace.tsx');
+    const app = mount('review-workspace.tsx', { './source-record': mount('source-record.ts').exports });
     const changes = [];
     const props = {
         row: {
@@ -266,14 +266,16 @@ test('identity selection submits the real candidate ID and maps the new-location
         onTargetChange: (id) => changes.push(id),
     };
     const render = (processing = false) => app.render(app.exports.IdentityDecision, props).props.children({ errors: {}, processing });
-    find(render(), (node) => node.type === 'Select').props.onValueChange('candidate');
+    find(render(), (node) => node.type === 'ToggleGroup').props.onValueChange('existing');
     assert.deepEqual(changes, ['candidate']);
     props.target = 'candidate';
     assert.equal(find(render(), (node) => node.props?.name === 'facility_id').props.value, 'candidate');
-    assert.ok(find(render(), (node) => node.type === 'dd' && node.props.children === 'old-id'));
-    find(render(), (node) => node.type === 'Select').props.onValueChange('new');
+    assert.ok(find(render(), (node) => node.type === 'td' && node.props.children === 'old-id'));
+    assert.ok(find(render(), (node) => node.type === 'td' && node.props.children === 'Nearby garage'));
+    assert.ok(find(render(), (node) => node.type === 'td' && node.props.children === 'Teststraat'));
+    find(render(), (node) => node.type === 'ToggleGroup').props.onValueChange('new');
     assert.deepEqual(changes, ['candidate', '']);
-    assert.equal(find(render(true), (node) => node.type === 'Select').props.disabled, true);
+    assert.equal(find(render(true), (node) => node.type === 'ToggleGroup').props.disabled, true);
 });
 
 test('geometry layers can be toggled and map style persists when moving to another record', () => {
@@ -302,7 +304,7 @@ test('geometry layers can be toggled and map style persists when moving to anoth
     assert.ok(find(tree, (node) => node.type === 'GeoJSON' && node.props.data === record.geometry_derivation.geometry));
 });
 
-test('the floating panel switches between a record and its queue without losing the selected record', () => {
+test('the review pane switches between a record and its queue without losing the selected record', () => {
     const app = mount('review-workspace.tsx', { './source-record': { claimTitle: (claim) => claim?.street, claimCapacity: () => 1 } });
     const props = {
         rows: [
@@ -323,7 +325,7 @@ test('the floating panel switches between a record and its queue without losing 
     );
     assert.equal(find(tree, (node) => node.type === app.exports.ReviewMap).props.workspace, true);
 
-    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'navigation.locations').props.onClick();
+    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'workspace.to_review').props.onClick();
     tree = app.render(app.exports.ReviewWorkspace, props);
     const overview = find(tree, (node) => typeof node.type === 'function' && node.type.name === 'OverviewMap');
     assert.equal(overview.props.points.length, 2);
@@ -334,4 +336,120 @@ test('the floating panel switches between a record and its queue without losing 
         null,
     );
     assert.equal(find(tree, (node) => node.type === app.exports.ReviewMap).props.row.external_id, 'b');
+});
+
+function identityWorkspace() {
+    const records = mount('source-record.ts').exports;
+    const app = mount('review-workspace.tsx', { './source-record': records });
+    const identityRow = (id) => ({
+        ...row(id),
+        geometry_review_required: false,
+        identity: {
+            method: 'review',
+            facility_id: null,
+            candidates: [{ id: `candidate-${id}`, name: 'Existing', distance_metres: 0, source: { external_id: `old-${id}` } }],
+        },
+    });
+    let finished = 0;
+    const props = {
+        rows: [identityRow('a'), identityRow('b')],
+        delivery: { id: 1, state: 'pending' },
+        token: 'first',
+        filter: 'identity',
+        reviewedIds: [],
+        page: 1,
+        pages: 1,
+        total: 2,
+        query: '',
+        summary: { type: 'Summary', props: {} },
+        onFinish: () => finished++,
+    };
+    const render = () => app.render(app.exports.ReviewWorkspace, props);
+    const decision = () => find(render(), (node) => node.type === app.exports.IdentityDecision);
+    return { app, props, render, decision, finished: () => finished };
+}
+
+test('saving an identity advances to the next remaining record and finishing the queue returns to the whole set', () => {
+    const workspace = identityWorkspace();
+    const current = workspace.decision();
+    assert.equal(current.props.target, 'candidate-a');
+    assert.equal(find(workspace.render(), (node) => node.type === 'Button' && node.props.type === 'submit').props.form, current.props.formId);
+    assert.ok(find(workspace.render(), (node) => node.type === 'Summary'));
+    assert.equal(workspace.finished(), 0);
+
+    current.props.onSaved({ props: { review: { rows: [workspace.props.rows[1]] } } });
+    workspace.props.rows = [workspace.props.rows[1]];
+    assert.equal(workspace.decision().props.row.external_id, 'b');
+    workspace.decision().props.onSaved({ props: { review: { rows: [] } } });
+    assert.equal(workspace.finished(), 1);
+});
+
+test('saving disables navigation and skip while validation errors keep the same record open', () => {
+    const workspace = identityWorkspace();
+    const decision = workspace.decision();
+    const form = workspace.app.exports.IdentityDecision(decision.props);
+    form.props.onStart();
+    const tree = workspace.render();
+    assert.equal(find(tree, (node) => node.type === 'Button' && node.props.form === decision.props.formId).props.disabled, true);
+    assert.equal(find(tree, (node) => node.type === 'Button' && node.props.children === 'workspace.skip').props.disabled, true);
+    assert.equal(find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'next').props.disabled, true);
+    const body = form.props.children({ errors: { reason: 'Required' }, processing: false });
+    assert.ok(find(body, (node) => node.props?.message === 'Required'));
+    assert.equal(
+        find(body, (node) => node.type === 'Button' && node.props.type === 'submit'),
+        null,
+    );
+    form.props.onFinish();
+    assert.equal(workspace.decision().props.row.external_id, 'a');
+    assert.equal(workspace.finished(), 0);
+    find(workspace.render(), (node) => node.type === workspace.app.exports.ReviewMap).props.onOverview();
+    assert.equal(workspace.finished(), 1);
+});
+
+test('skipping an uncertain link changes selection without saving or marking it reviewed', () => {
+    const workspace = identityWorkspace();
+    find(workspace.render(), (node) => node.type === 'Button' && node.props.children === 'workspace.skip').props.onClick();
+    assert.equal(workspace.decision().props.row.external_id, 'b');
+    assert.equal(workspace.app.visits.length, 0);
+    assert.deepEqual(workspace.props.reviewedIds, []);
+});
+
+test('overview change groups open only populated status queues', () => {
+    const app = mount('review-workspace.tsx');
+    const opened = [];
+    const tree = app.render(app.exports.DeliveryOverview, {
+        delivery: { state: 'pending' },
+        points: [],
+        derivations: 0,
+        identities: 0,
+        recordCount: 12,
+        completed: 0,
+        counts: { new: 8, changed: 3, missing: 1, conflict: 0 },
+        onStart: (filter) => opened.push(filter),
+    });
+    for (const status of ['new', 'changed', 'missing']) {
+        find(
+            tree,
+            (node) => node.type === 'Button' && find(node, (child) => child.type === 'span' && child.props.children === `counts.${status}`),
+        ).props.onClick();
+    }
+    assert.deepEqual(opened, ['new', 'changed', 'missing']);
+    assert.equal(
+        find(tree, (node) => node.type === 'span' && node.props.children === 'counts.conflict'),
+        null,
+    );
+});
+
+test('the delivery overview and full map remain available while a review filter is loading', () => {
+    const page = reviewPage();
+    find(page.render(), (node) => node.type === 'DeliveryOverview').props.onStart('identity');
+    const options = page.app.visits[0][2];
+    options.onStart();
+    assert.equal(find(page.render(), (node) => node.type === 'DeliveryOverview').props.loading, true);
+    assert.equal(
+        find(page.render(), (node) => node.type === 'ReviewWorkspace'),
+        null,
+    );
+    options.onFinish();
+    assert.ok(find(page.render(), (node) => node.type === 'ReviewWorkspace'));
 });

@@ -328,6 +328,18 @@
         "view": "Weergave van deze levering",
         "check_before_publish": "Controleer eerst ieder voorgesteld parkeervlak in de werklijst. De voortgang geldt voor deze beoordeling en wordt bij herladen of gewijzigde gegevens gewist.",
         "existing": "Bestaande locatie",
-        "loading": "Beoordeling laden…"
+        "loading": "Beoordeling laden…",
+        "whole_set": "Hele set",
+        "changes": "Wijzigingen",
+        "uncertain_link": "Onzekere koppeling",
+        "save_next": "Bewaren & volgende",
+        "skip": "Overslaan",
+        "source": "Bron",
+        "distance": "Afstand",
+        "new_location": "Nieuwe locatie",
+        "capacity": "Capaciteit",
+        "reason": "Reden",
+        "location": "Locatie",
+        "type_differs": "Afwijkend type"
     }
 }

@@ -328,6 +328,18 @@
         "view": "Delivery view",
         "check_before_publish": "Check each proposed parking geometry in the queue first. Progress applies to this review and resets when reloading or when data changes.",
         "existing": "Existing location",
-        "loading": "Loading review…"
+        "loading": "Loading review…",
+        "whole_set": "Whole dataset",
+        "changes": "Changes",
+        "uncertain_link": "Uncertain link",
+        "save_next": "Save & next",
+        "skip": "Skip",
+        "source": "Source",
+        "distance": "Distance",
+        "new_location": "New location",
+        "capacity": "Capacity",
+        "reason": "Reason",
+        "location": "Location",
+        "type_differs": "Different type"
     }
 }

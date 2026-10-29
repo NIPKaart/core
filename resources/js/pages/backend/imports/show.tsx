@@ -26,7 +26,16 @@ import { GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaf
 import AutomaticPublicationNotice from './automatic-publication-notice';
 import type { Dataset, Import } from './index';
 import ReviewTiles from './review-map-tiles';
-import { DeliveryOverview, IdentityReview, MapToolbar, PublishedNotice, ReviewMap, ReviewWorkspace, type MapPoint } from './review-workspace';
+import {
+    DeliveryOverview,
+    DeliverySummary,
+    IdentityReview,
+    MapToolbar,
+    PublishedNotice,
+    ReviewMap,
+    ReviewWorkspace,
+    type MapPoint,
+} from './review-workspace';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
 import { claimCapacity, claimTitle, isFacility, type Row } from './source-record';
 
@@ -213,7 +222,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
                         </div>
-                        <div className="hidden gap-2 sm:flex" role="group" aria-label={t('workspace.view')}>
+                        <div className={view === 'table' ? 'flex gap-2' : 'hidden gap-2 sm:flex'} role="group" aria-label={t('workspace.view')}>
                             <Button variant={view === 'overview' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('overview')}>
                                 {t('workspace.overview')}
                             </Button>
@@ -363,9 +372,11 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                             {t('automatic.reasons.late_delivery')}
                         </p>
                     )}
-                {view === 'overview' && (
+                {(view === 'overview' || (view === 'workspace' && loadingReview)) && (
                     <DeliveryOverview
+                        loading={loadingReview}
                         delivery={delivery}
+                        counts={review.counts}
                         points={review.map_points}
                         derivations={review.derivations}
                         identities={review.identity_count}
@@ -417,13 +428,15 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         )}
                     </>
                 )}
-                {view === 'workspace' && loadingReview && (
-                    <div role="status" className="h-96 animate-pulse rounded-lg border bg-muted/40 p-6 text-sm text-muted-foreground">
-                        {t('workspace.loading')}
-                    </div>
-                )}
                 {view === 'workspace' && !loadingReview && (
                     <ReviewWorkspace
+                        summary={
+                            <DeliverySummary
+                                recordCount={Object.values(review.counts).reduce((sum, count) => sum + count, 0)}
+                                derivations={review.derivations}
+                                identities={review.identity_count}
+                            />
+                        }
                         rows={review.rows}
                         delivery={delivery}
                         token={review.token}
