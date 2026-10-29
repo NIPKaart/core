@@ -54,6 +54,19 @@ const pane = load('review-pane.tsx', {
     './geo': geo,
     './parts': { useAgo: () => () => '8 dagen geleden' },
     './shortcuts': { Kbd: 'Kbd', useShortcuts: () => {} },
+    './detail-editor': {
+        DetailEditor: 'DetailEditor',
+        EditDetailsButton: 'EditDetailsButton',
+        EDITABLE: { orientation: 'orientation', under_sign: 'under_sign', description: 'note' },
+        useDetailEditor: () => ({
+            open: false,
+            sections: ['orientation', 'under_sign', 'note'],
+            start: () => {},
+            done: () => {},
+            cancel: () => {},
+            patch: () => {},
+        }),
+    },
 });
 
 /** Renders a component element one level, as React would call it. */
@@ -151,8 +164,11 @@ test('an open submission shows its decision and details while no reason form is 
     );
     assert.equal(sections.length, 2);
 
-    // The details carry no helper sentence; the markers and buttons say enough.
-    assert.equal(find(panel, (node) => node.props?.title === 'review.submitted').props.aside, undefined);
+    // The details carry no helper sentence; their heading offers one way into editing them, beside the item.
+    const submitted = find(panel, (node) => node.props?.title === 'review.submitted');
+    assert.equal(submitted.props.aside.type, 'EditDetailsButton');
+    assert.equal(find(panel, (node) => node.type === 'OrientationCard').props.editor, undefined, 'no inline editor in the card');
+    assert.equal(review.props.editor, false, 'editor closed until asked for');
 
     // The details read as on the public map: the orientation with its illustration, then the other details.
     assert.ok(

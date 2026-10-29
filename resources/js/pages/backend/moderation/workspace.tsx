@@ -2,6 +2,7 @@ import { streetViewUrl } from '@/components/map/parking-detail/navigation-handof
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,8 @@ import type { ItemLink, Position } from './types';
 
 /** The panel's width plus its margins, so the map keeps what the panel covers out of the way. */
 const PANEL_INSET = 452;
+/** With the editor open beside the panel: both panels and their margins. */
+const EDITOR_INSET = PANEL_INSET + 380 + 16;
 
 type MapProps = Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'inset' | 'className' | 'children'>;
 
@@ -49,6 +52,8 @@ export function Workspace({
     map,
     streetView,
     label,
+    aside,
+    asideLabel,
     children,
 }: {
     scope: 'item' | 'overview';
@@ -56,6 +61,9 @@ export function Workspace({
     /** Where Street View should open, for an item. */
     streetView?: MapPoint | null;
     label: string;
+    /** A second panel beside the first, such as the details editor; a sheet over the item on small screens. */
+    aside?: React.ReactNode;
+    asideLabel?: string;
     children: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
@@ -66,7 +74,12 @@ export function Workspace({
     return (
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col lg:block">
             <h1 className="sr-only">{t('title')}</h1>
-            <ModerationMap {...map} layer={layer} inset={wide ? PANEL_INSET : 0} className="h-[38svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
+            <ModerationMap
+                {...map}
+                layer={layer}
+                inset={wide ? (aside ? EDITOR_INSET : PANEL_INSET) : 0}
+                className="h-[38svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto"
+            >
                 <div className="absolute top-3 right-3 z-500 flex gap-2 lg:top-4 lg:right-4">
                     <ToggleGroup
                         type="single"
@@ -101,7 +114,54 @@ export function Workspace({
             >
                 {children}
             </section>
+            {aside &&
+                (wide ? (
+                    <section
+                        aria-label={asideLabel}
+                        className="absolute top-4 bottom-4 left-[452px] z-500 flex w-[380px] flex-col overflow-hidden rounded-2xl bg-background shadow-[0_8px_28px_rgba(0,0,0,0.16)]"
+                    >
+                        {aside}
+                    </section>
+                ) : (
+                    <Sheet label={asideLabel}>{aside}</Sheet>
+                ))}
         </div>
+    );
+}
+
+/**
+ * The editor on a small screen: a sheet over the item, half open so the aerial photo stays in view, and fully open
+ * once the moderator scrolls, types, or drags the grip up.
+ */
+function Sheet({ label, children }: { label?: string; children: React.ReactNode }) {
+    const { t } = useTranslation('backend/moderation');
+    const [full, setFull] = useState(false);
+
+    return (
+        <section
+            aria-label={label}
+            onFocus={(event) => {
+                if ((event.target as HTMLElement).matches('input:not([type=radio]), textarea')) setFull(true);
+            }}
+            onScrollCapture={(event) => {
+                if ((event.target as HTMLElement).scrollTop > 0) setFull(true);
+            }}
+            className={cn(
+                'absolute inset-x-0 bottom-0 z-500 flex flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-10px_30px_rgba(0,0,0,0.18)] transition-[top] duration-200',
+                full ? 'top-12' : 'top-[38svh]',
+            )}
+        >
+            <button
+                type="button"
+                aria-label={t(full ? 'edit.sheet_smaller' : 'edit.sheet_larger')}
+                aria-expanded={full}
+                onClick={() => setFull((value) => !value)}
+                className="flex h-6 shrink-0 cursor-pointer items-center justify-center"
+            >
+                <span className="h-1.5 w-10 rounded-full bg-muted-foreground/30" aria-hidden />
+            </button>
+            {children}
+        </section>
     );
 }
 

@@ -127,7 +127,8 @@ export type Filters = { types: ItemType[]; municipality_ids: string[]; search: s
 export type Options = {
     types: ItemType[];
     municipalities: { id: number; name: string }[];
-    orientations: EnumOption[];
+    /** With the description the add flow shows on its choice cards. */
+    orientations: (EnumOption & { description: string })[];
     underSign: EnumOption[];
     restrictionDays: RestrictionDay[];
     changes: ChangeGroup[];
