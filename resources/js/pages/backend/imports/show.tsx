@@ -16,7 +16,6 @@ import AppLayout from '@/layouts/app-layout';
 import { translateSourceValue } from '@/utils/translation';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { MultiPolygon, Point, Polygon } from 'geojson';
 import { geoJSON, latLngBounds } from 'leaflet';
 import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Search, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -24,53 +23,12 @@ import { useTranslation } from 'react-i18next';
 import { GeoJSON, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import AutomaticPublicationNotice from './automatic-publication-notice';
 import type { Dataset, Import } from './index';
+import { DeliveryOverview, PublishedNotice, ReviewWorkspace, type MapPoint } from './review-workspace';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
+import { claimCapacity, claimTitle, isFacility, type Row } from './source-record';
 
-export type Claim = {
-    source_updated_at?: string | null;
-    external_id: string;
-    street?: string | null;
-    number?: number | null;
-    geometry: Polygon | Point;
-    source_attributes?: Record<string, unknown>;
-    /** Offstreet catalog fields (`nipkaart-offstreet-catalog-3`); capacity is an observation, not a catalog claim. */
-    name?: string;
-    source_name?: string;
-    facility_type?: 'garage' | 'park_and_ride' | 'parking_lot';
-};
+export type { Claim, Row } from './source-record';
 
-/** Offstreet facilities are named; municipal spaces are identified by their street. */
-export function isFacility(claim: Claim | null | undefined): boolean {
-    return claim?.facility_type !== undefined;
-}
-
-export function claimTitle(claim: Claim | null | undefined): string | null {
-    return (isFacility(claim) ? claim?.name : claim?.street) ?? null;
-}
-
-export function claimCapacity(claim: Claim | null | undefined): number | null {
-    return claim?.number ?? null;
-}
-type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
-export type Row = {
-    identity?: {
-        method: string;
-        facility_id: string | null;
-        candidates: { id: string; name: string; distance_metres: number; same_name: boolean; same_type: boolean }[];
-        decision: { reason: string } | null;
-    };
-    external_id: string;
-    status: 'new' | 'changed' | 'missing' | 'conflict' | 'unchanged';
-    fields: string[];
-    conflicts: string[];
-    before: Claim | null;
-    after: Claim | null;
-    current: Record<string, unknown> | null;
-    geometry_derivation?: Derivation | null;
-    geometry_review_required?: boolean;
-    previous_geometry_derivation?: Derivation | null;
-    point?: { latitude: number; longitude: number };
-};
 type Props = {
     times: Record<'fetched_at' | 'received_at' | 'validated_at' | 'staged_at' | 'published_at', string | null>;
     import: Import;
@@ -79,6 +37,9 @@ type Props = {
     review: {
         observation_reference_required?: boolean;
         derivations: number;
+        geometry_ids: string[];
+        identity_count: number;
+        map_points: MapPoint[];
         counts: Record<Row['status'], number>;
         blockers: string[];
         rows: Row[];
@@ -90,12 +51,28 @@ type Props = {
     filters: { q: string; filter: string };
 };
 
-export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, filters, times }: Props) {
+export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, total, filters, times }: Props) {
     const { t, i18n } = useTranslation('backend/imports');
+    const [view, setView] = useState<'overview' | 'workspace' | 'table'>('overview');
+    const [checked, setChecked] = useState<{ token: string; ids: string[] }>({ token: review.token, ids: [] });
+    const reviewedIds = checked.token === review.token ? checked.ids : [];
+    const completed = review.geometry_ids.filter((id) => reviewedIds.includes(id)).length;
+    const allGeometryChecked = completed === review.geometry_ids.length;
+    const startReview = (filter: string, q = '') => {
+        setView('workspace');
+        if (filter === filters.filter && q === filters.q) return;
+        router.get(
+            show.url(delivery.id),
+            { filter, q },
+            { preserveState: true, preserveScroll: true, onStart: () => setLoadingReview(true), onFinish: () => setLoadingReview(false) },
+        );
+    };
+    const [loadingReview, setLoadingReview] = useState(false);
+    const [decisionOpen, setDecisionOpen] = useState(false);
     const [showComparisonMap, setShowComparisonMap] = useState(false);
     const [geometryReviewedForToken, setGeometryReviewedForToken] = useState<string | null>(null);
     const [selectedRecord, setSelectedRecord] = useState<Row | null>(null);
-    const selectedIndex = review.rows.findIndex((row) => row.external_id === selectedRecord?.external_id);
+    const selectedIndex = review.rows.findIndex((row) => row.external_id === selectedRecord?.external_id && row.status === selectedRecord?.status);
     const recordTrigger = useRef<HTMLElement | null>(null);
     const facilities = dataset.target_type === 'offstreet';
     const columns: ColumnDef<DataTableFeatures, Row>[] = [
@@ -249,13 +226,14 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0 flex-1 basis-64 space-y-2">
                             <div className="flex flex-wrap items-center gap-3">
-                                <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
+                                <h1 className="text-2xl font-semibold tracking-tight">{t('review')}</h1>
                                 <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
                                     {delivery.publication_method === 'automatic' && delivery.state === 'published'
                                         ? t('automatic.published')
                                         : t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
                                 </Badge>
                             </div>
+                            <p className="text-sm font-medium">{dataset.name}</p>
                             <p className="text-sm text-muted-foreground">
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
@@ -268,7 +246,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                 </Link>
                             </Button>
                             {delivery.state === 'pending' && !delivery.superseded && (
-                                <Dialog>
+                                <Dialog open={decisionOpen} onOpenChange={setDecisionOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant={review.blockers.length ? 'outline' : 'default'}>{t('make_decision')}</Button>
                                     </DialogTrigger>
@@ -277,6 +255,13 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                             <DialogTitle>{t('decision')}</DialogTitle>
                                             <DialogDescription>{t('decision_hint')}</DialogDescription>
                                         </DialogHeader>
+                                        <div className="space-y-3 border-y py-4 text-sm">
+                                            <p>{t('workspace.geometry_progress', { completed, total: review.derivations })}</p>
+                                            <p>{t('workspace.identity_remaining', { count: review.identity_count })}</p>
+                                            <p className="text-muted-foreground">
+                                                {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
+                                            </p>
+                                        </div>
                                         <div className="mb-5">
                                             <details className="text-sm text-muted-foreground">
                                                 <summary className="w-fit cursor-pointer font-medium">{t('review_guidance')}</summary>
@@ -301,6 +286,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                             key={review.token}
                                             {...update.form(delivery.id)}
                                             options={{ preserveScroll: 'errors' }}
+                                            onSuccess={() => setDecisionOpen(false)}
                                             className="flex max-w-2xl flex-col gap-4"
                                         >
                                             {({ errors, processing }) => (
@@ -325,7 +311,8 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                             <input
                                                                 type="checkbox"
                                                                 name="geometry_reviewed"
-                                                                checked={geometryReviewedForToken === review.token}
+                                                                checked={allGeometryChecked && geometryReviewedForToken === review.token}
+                                                                disabled={!allGeometryChecked}
                                                                 onChange={(event) =>
                                                                     setGeometryReviewedForToken(event.target.checked ? review.token : null)
                                                                 }
@@ -334,7 +321,14 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                                 aria-describedby={errors.geometry_reviewed ? 'geometry_reviewed-error' : undefined}
                                                                 className="mt-1 size-4 shrink-0 accent-primary"
                                                             />
-                                                            <span>{t('geometry_confirm', { count: review.derivations })}</span>
+                                                            <span>
+                                                                {t('geometry_confirm', { count: review.derivations })}
+                                                                {!allGeometryChecked && (
+                                                                    <span className="mt-2 block text-xs text-muted-foreground">
+                                                                        {t('workspace.check_before_publish')}
+                                                                    </span>
+                                                                )}
+                                                            </span>
                                                         </Label>
                                                     )}
                                                     {Object.entries(errors).map(([field, message]) => (
@@ -348,7 +342,8 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                             disabled={
                                                                 processing ||
                                                                 review.blockers.length > 0 ||
-                                                                (review.derivations > 0 && geometryReviewedForToken !== review.token)
+                                                                (review.derivations > 0 &&
+                                                                    (!allGeometryChecked || geometryReviewedForToken !== review.token))
                                                             }
                                                         >
                                                             {processing ? t('saving') : t('publish')}
@@ -366,7 +361,54 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         </div>
                     </div>
                 </header>
-                <AutomaticPublicationNotice delivery={delivery} />
+                <PublishedNotice delivery={delivery} />
+                {delivery.state === 'pending' && !delivery.superseded && delivery.publication_checks?.reasons.includes('late_delivery') && (
+                    <p
+                        role="status"
+                        className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50/60 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-950/20"
+                    >
+                        <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
+                        {t('automatic.reasons.late_delivery')}
+                    </p>
+                )}
+                <div className="flex gap-2" role="group" aria-label={t('workspace.view')}>
+                    <Button variant={view === 'overview' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('overview')}>
+                        {t('workspace.overview')}
+                    </Button>
+                    <Button
+                        variant={view === 'table' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => {
+                            setView('table');
+                            router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
+                        }}
+                    >
+                        {t('all_records')}
+                    </Button>
+                </div>
+                {view === 'overview' && (
+                    <DeliveryOverview
+                        delivery={delivery}
+                        points={review.map_points}
+                        derivations={review.derivations}
+                        identities={review.identity_count}
+                        recordCount={Object.values(review.counts).reduce((sum, count) => sum + count, 0)}
+                        completed={completed}
+                        onStart={startReview}
+                        onDecision={() => setDecisionOpen(true)}
+                        onSelect={(id) => startReview('all', id)}
+                        onRecords={() => {
+                            setView('table');
+                            router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
+                        }}
+                    />
+                )}
+                <details className="text-sm text-muted-foreground">
+                    <summary className="cursor-pointer">{t('review_guidance')}</summary>
+                    <div className="mt-3">
+                        <AutomaticPublicationNotice delivery={delivery} />
+                    </div>
+                </details>
                 {delivery.superseded ? (
                     <section role="status" className="rounded-xl border bg-muted/30 p-5">
                         <h2 className="font-semibold">{t('superseded_title')}</h2>
@@ -382,29 +424,6 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         </ul>
                     </section>
                 ) : null}
-                {delivery.state === 'pending' && review.derivations > 0 && (
-                    <div
-                        role="status"
-                        className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30"
-                    >
-                        <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
-                        <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 text-sm sm:flex-row sm:items-center">
-                            <div>
-                                <p className="font-semibold">{t('attention')}</p>
-                                <p className="mt-1 leading-relaxed">{t('derivations_notice', { count: review.derivations })}</p>
-                            </div>
-                            <Link
-                                className="inline-flex font-medium underline underline-offset-4"
-                                href={show(delivery.id, { query: { filter: 'geometry' } })}
-                                preserveState
-                                preserveScroll
-                            >
-                                {t('review_geometries')}
-                            </Link>
-                        </div>
-                    </div>
-                )}
-
                 {delivery.state !== 'pending' && <p className="text-sm text-muted-foreground">{t('current_comparison')}</p>}
                 {delivery.review_reason && (
                     <section className="space-y-2 rounded-xl border bg-muted/20 p-5">
@@ -417,182 +436,222 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         <p className="text-sm whitespace-pre-wrap">{delivery.review_reason}</p>
                     </section>
                 )}
-                <div>
-                    <div className="min-w-0 space-y-4">
-                        <section id="records" aria-labelledby="records-heading" className="min-w-0 scroll-mt-6">
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                    <h2 id="records-heading" className="text-lg font-semibold">
-                                        {t('navigation.locations')}
-                                    </h2>
-                                    <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                                        {(['new', 'changed', 'missing', 'conflict', 'unchanged'] as const)
-                                            .map((kind) => [kind, review.counts[kind]] as const)
-                                            .filter(([, count]) => count > 0)
-                                            .map(([kind, count]) => (
-                                                <span key={kind}>
-                                                    <span className="font-medium text-foreground tabular-nums">
-                                                        {count.toLocaleString(i18n.language)}
-                                                    </span>{' '}
-                                                    {t(`counts.${kind}` as const)}
-                                                </span>
-                                            ))}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="mb-4 flex flex-wrap items-center gap-2">
-                                <Form
-                                    action={show.url(delivery.id)}
-                                    method="get"
-                                    options={{ preserveState: true, preserveScroll: true }}
-                                    className="relative min-w-0 basis-full sm:max-w-md sm:flex-1 sm:basis-auto"
-                                >
-                                    <input type="hidden" name="filter" value={filters.filter} />
-                                    <Input
-                                        key={filters.q}
-                                        className="pl-9"
-                                        name="q"
-                                        defaultValue={filters.q}
-                                        placeholder={t('search_records')}
-                                        aria-label={t('search_records')}
-                                        maxLength={200}
-                                    />
-                                    <Search className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" aria-hidden="true" />
-                                </Form>
-                                <Select
-                                    value={filters.filter}
-                                    onValueChange={(filter) =>
-                                        router.get(show.url(delivery.id), { q: filters.q, filter }, { preserveState: true, preserveScroll: true })
-                                    }
-                                >
-                                    <SelectTrigger aria-label={t('filter_records')} className="w-full min-w-0 flex-1 sm:w-52 sm:flex-none">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="changes">{t('changes_only')}</SelectItem>
-                                        <SelectItem value="all">{t('all_records')}</SelectItem>
-                                        {!facilities && (
-                                            <SelectItem value="geometry">
-                                                {t('geometry_review')} ({review.derivations})
-                                            </SelectItem>
-                                        )}
-                                        {(Object.entries(review.counts) as [Row['status'], number][]).map(([status, count]) => (
-                                            <SelectItem key={status} value={status}>
-                                                {t(`counts.${status}` as const)} ({count})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {!facilities && (
-                                    <Button
-                                        variant="outline"
-                                        aria-expanded={showComparisonMap}
-                                        onClick={() => setShowComparisonMap(!showComparisonMap)}
-                                    >
-                                        {t(showComparisonMap ? 'hide_map' : 'compare_on_map')}
-                                    </Button>
-                                )}
-                            </div>
-                            {showComparisonMap && !facilities && <ChangesMap rows={review.rows} onSelect={setSelectedRecord} />}
-                            <DataTable
-                                key={`${delivery.id}-${page}`}
-                                columns={
-                                    review.rows.some((row) => row.geometry_derivation)
-                                        ? columns
-                                        : columns.filter((column) => column.id !== 'geometry')
-                                }
-                                enableSorting={false}
-                                toolbar={null}
-                                emptyState={
-                                    <div className="space-y-3 px-4 py-6">
-                                        <p className="font-medium">
-                                            {t(filters.filter === 'changes' && !filters.q ? 'no_changes_title' : 'no_matching_records')}
+                {view === 'workspace' && loadingReview && (
+                    <div role="status" className="h-96 animate-pulse rounded-lg border bg-muted/40 p-6 text-sm text-muted-foreground">
+                        {t('workspace.loading')}
+                    </div>
+                )}
+                {view === 'workspace' && !loadingReview && (
+                    <ReviewWorkspace
+                        rows={review.rows}
+                        delivery={delivery}
+                        token={review.token}
+                        filter={filters.filter}
+                        reviewedIds={reviewedIds}
+                        onReviewed={(id) =>
+                            setChecked((previous) => ({
+                                token: review.token,
+                                ids: [...new Set([...(previous.token === review.token ? previous.ids : []), id])],
+                            }))
+                        }
+                        onFinish={() => setView('overview')}
+                        page={page}
+                        pages={pages}
+                        total={total}
+                        query={filters.q}
+                    />
+                )}
+                {view === 'table' && (
+                    <div>
+                        <div className="min-w-0 space-y-4">
+                            <section id="records" aria-labelledby="records-heading" className="min-w-0 scroll-mt-6">
+                                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <h2 id="records-heading" className="text-lg font-semibold">
+                                            {t('navigation.locations')}
+                                        </h2>
+                                        <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                                            {(['new', 'changed', 'missing', 'conflict', 'unchanged'] as const)
+                                                .map((kind) => [kind, review.counts[kind]] as const)
+                                                .filter(([, count]) => count > 0)
+                                                .map(([kind, count]) => (
+                                                    <span key={kind}>
+                                                        <span className="font-medium text-foreground tabular-nums">
+                                                            {count.toLocaleString(i18n.language)}
+                                                        </span>{' '}
+                                                        {t(`counts.${kind}` as const)}
+                                                    </span>
+                                                ))}
                                         </p>
-                                        <p className="mx-auto max-w-lg text-sm text-muted-foreground">
-                                            {t(filters.filter === 'changes' && !filters.q ? 'no_changes' : 'try_other_filter')}
-                                        </p>
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={show(delivery.id, { query: { filter: 'all' } })} preserveScroll>
-                                                {t('all_records')}
-                                            </Link>
-                                        </Button>
                                     </div>
-                                }
-                                data={review.rows}
-                                onRowClick={(row) => {
-                                    recordTrigger.current = document.activeElement as HTMLElement;
-                                    setSelectedRecord(row);
-                                }}
-                            />
-                            <Dialog
-                                open={selectedRecord !== null}
-                                onOpenChange={(open) => {
-                                    if (!open) setSelectedRecord(null);
-                                }}
-                            >
-                                <DialogContent
-                                    className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[min(64rem,calc(100%-2rem))]"
-                                    onCloseAutoFocus={(event) => {
-                                        event.preventDefault();
-                                        recordTrigger.current?.focus();
+                                </div>
+                                <div className="mb-4 flex flex-wrap items-center gap-2">
+                                    <Form
+                                        action={show.url(delivery.id)}
+                                        method="get"
+                                        options={{ preserveState: true, preserveScroll: true }}
+                                        className="relative min-w-0 basis-full sm:max-w-md sm:flex-1 sm:basis-auto"
+                                    >
+                                        <input type="hidden" name="filter" value={filters.filter} />
+                                        <Input
+                                            key={filters.q}
+                                            className="pl-9"
+                                            name="q"
+                                            defaultValue={filters.q}
+                                            placeholder={t('search_records')}
+                                            aria-label={t('search_records')}
+                                            maxLength={200}
+                                        />
+                                        <Search
+                                            className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+                                            aria-hidden="true"
+                                        />
+                                    </Form>
+                                    <Select
+                                        value={filters.filter}
+                                        onValueChange={(filter) =>
+                                            router.get(show.url(delivery.id), { q: filters.q, filter }, { preserveState: true, preserveScroll: true })
+                                        }
+                                    >
+                                        <SelectTrigger aria-label={t('filter_records')} className="w-full min-w-0 flex-1 sm:w-52 sm:flex-none">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="changes">{t('changes_only')}</SelectItem>
+                                            <SelectItem value="all">{t('all_records')}</SelectItem>
+                                            {!facilities && (
+                                                <SelectItem value="geometry">
+                                                    {t('geometry_review')} ({review.derivations})
+                                                </SelectItem>
+                                            )}
+                                            <SelectItem value="identity">
+                                                {t('workspace.identity_tasks')} ({review.identity_count})
+                                            </SelectItem>
+                                            {(Object.entries(review.counts) as [Row['status'], number][]).map(([status, count]) => (
+                                                <SelectItem key={status} value={status}>
+                                                    {t(`counts.${status}` as const)} ({count})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {!facilities && (
+                                        <Button
+                                            variant="outline"
+                                            aria-expanded={showComparisonMap}
+                                            onClick={() => setShowComparisonMap(!showComparisonMap)}
+                                        >
+                                            {t(showComparisonMap ? 'hide_map' : 'compare_on_map')}
+                                        </Button>
+                                    )}
+                                </div>
+                                {showComparisonMap && !facilities && <ChangesMap rows={review.rows} onSelect={setSelectedRecord} />}
+                                <DataTable
+                                    key={`${delivery.id}-${page}`}
+                                    columns={
+                                        review.rows.some((row) => row.geometry_derivation)
+                                            ? columns
+                                            : columns.filter((column) => column.id !== 'geometry')
+                                    }
+                                    enableSorting={false}
+                                    toolbar={null}
+                                    emptyState={
+                                        <div className="space-y-3 px-4 py-6">
+                                            <p className="font-medium">
+                                                {t(filters.filter === 'changes' && !filters.q ? 'no_changes_title' : 'no_matching_records')}
+                                            </p>
+                                            <p className="mx-auto max-w-lg text-sm text-muted-foreground">
+                                                {t(filters.filter === 'changes' && !filters.q ? 'no_changes' : 'try_other_filter')}
+                                            </p>
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={show(delivery.id, { query: { filter: 'all' } })} preserveScroll>
+                                                    {t('all_records')}
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    }
+                                    data={review.rows}
+                                    onRowClick={(row) => {
+                                        recordTrigger.current = document.activeElement as HTMLElement;
+                                        setSelectedRecord(row);
+                                    }}
+                                />
+                                <Dialog
+                                    open={selectedRecord !== null}
+                                    onOpenChange={(open) => {
+                                        if (!open) setSelectedRecord(null);
                                     }}
                                 >
-                                    {selectedRecord && (
-                                        <>
-                                            <div key={selectedRecord.external_id} className="max-h-[calc(92dvh-4.5rem)] overflow-y-auto p-4 sm:p-6">
-                                                <RecordDetails key={selectedRecord.external_id} row={selectedRecord} />
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-4 py-3 sm:px-6">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    disabled={selectedIndex <= 0}
-                                                    onClick={() => setSelectedRecord(review.rows[selectedIndex - 1])}
+                                    <DialogContent
+                                        className="max-h-[92dvh] gap-0 overflow-hidden p-0 sm:max-w-[min(64rem,calc(100%-2rem))]"
+                                        onCloseAutoFocus={(event) => {
+                                            event.preventDefault();
+                                            recordTrigger.current?.focus();
+                                        }}
+                                    >
+                                        {selectedRecord && (
+                                            <>
+                                                <div
+                                                    key={selectedRecord.external_id}
+                                                    className="max-h-[calc(92dvh-4.5rem)] overflow-y-auto p-4 sm:p-6"
                                                 >
-                                                    <ChevronLeft aria-hidden="true" />
-                                                    {t('previous')}
-                                                </Button>
-                                                <span className="text-center text-xs text-muted-foreground">
-                                                    {t('record_position', { position: selectedIndex + 1, total: review.rows.length })}
-                                                </span>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    disabled={selectedIndex >= review.rows.length - 1}
-                                                    onClick={() => setSelectedRecord(review.rows[selectedIndex + 1])}
-                                                >
-                                                    {t('next')}
-                                                    <ChevronRight aria-hidden="true" />
-                                                </Button>
-                                            </div>
-                                        </>
-                                    )}
-                                </DialogContent>
-                            </Dialog>
-                        </section>
-                        {pages > 1 && (
-                            <nav className="flex items-center justify-between gap-4" aria-label={t('pages')}>
-                                <Button asChild={page > 1} variant="outline" disabled={page <= 1}>
-                                    {page > 1 ? (
-                                        <Link href={show(delivery.id, { query: { ...filters, page: page - 1 } })}>{t('previous')}</Link>
-                                    ) : (
-                                        t('previous')
-                                    )}
-                                </Button>
-                                <span>
-                                    {page} / {pages}
-                                </span>
-                                <Button asChild={page < pages} variant="outline" disabled={page >= pages}>
-                                    {page < pages ? (
-                                        <Link href={show(delivery.id, { query: { ...filters, page: page + 1 } })}>{t('next')}</Link>
-                                    ) : (
-                                        t('next')
-                                    )}
-                                </Button>
-                            </nav>
-                        )}
+                                                    <RecordDetails key={selectedRecord.external_id} row={selectedRecord} />
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-4 py-3 sm:px-6">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={selectedIndex <= 0}
+                                                        onClick={() => setSelectedRecord(review.rows[selectedIndex - 1])}
+                                                    >
+                                                        <ChevronLeft aria-hidden="true" />
+                                                        {t('previous')}
+                                                    </Button>
+                                                    <span className="text-center text-xs text-muted-foreground">
+                                                        {t('record_position', { position: selectedIndex + 1, total: review.rows.length })}
+                                                    </span>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={selectedIndex >= review.rows.length - 1}
+                                                        onClick={() => setSelectedRecord(review.rows[selectedIndex + 1])}
+                                                    >
+                                                        {t('next')}
+                                                        <ChevronRight aria-hidden="true" />
+                                                    </Button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </DialogContent>
+                                </Dialog>
+                            </section>
+                            {pages > 1 && (
+                                <nav className="flex items-center justify-between gap-4" aria-label={t('pages')}>
+                                    <Button asChild={page > 1} variant="outline" disabled={page <= 1}>
+                                        {page > 1 ? (
+                                            <Link href={show(delivery.id, { query: { ...filters, page: page - 1 } })} preserveState>
+                                                {t('previous')}
+                                            </Link>
+                                        ) : (
+                                            t('previous')
+                                        )}
+                                    </Button>
+                                    <span>
+                                        {page} / {pages}
+                                    </span>
+                                    <Button asChild={page < pages} variant="outline" disabled={page >= pages}>
+                                        {page < pages ? (
+                                            <Link href={show(delivery.id, { query: { ...filters, page: page + 1 } })} preserveState>
+                                                {t('next')}
+                                            </Link>
+                                        ) : (
+                                            t('next')
+                                        )}
+                                    </Button>
+                                </nav>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
                 <details className="text-sm text-muted-foreground">
                     <summary className="w-fit cursor-pointer hover:text-foreground">{t('timeline')}</summary>
                     <p className="mt-2 text-sm text-muted-foreground">{t('timeline_note')}</p>
@@ -800,7 +859,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                 <ChangesMapBounds rows={changes} />
                 {changes.map((row) => (
                     <GeoJSON
-                        key={row.external_id}
+                        key={`${row.status}:${row.external_id}`}
                         data={(row.after ?? row.before)!.geometry}
                         style={{
                             color: changeColor(row.status),

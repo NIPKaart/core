@@ -506,11 +506,12 @@ it('searches and filters the whole delivery without narrowing its publication re
     $token = app(MunicipalImportService::class)->review($import)['token'];
 
     $this->actingAs($user)->get(route('app.imports.show', $import))->assertInertia(fn (Assert $page) => $page
-        ->has('review.rows', 25)->where('total', 26)->where('pages', 2));
+        ->has('review.rows', 25)->where('total', 26)->where('pages', 2)
+        ->has('review.map_points', 26)->where('review.map_points.25.external_id', 'record-25'));
     $this->get(route('app.imports.show', [$import, 'q' => 'UNIEKE', 'filter' => 'new', 'page' => 2]))->assertInertia(fn (Assert $page) => $page
         ->has('review.rows', 1)->where('review.rows.0.external_id', 'record-25')
         ->where('total', 1)->where('page', 1)->where('pages', 1)
-        ->where('review.counts.new', 26)->where('review.token', $token));
+        ->where('review.counts.new', 26)->where('review.token', $token)->has('review.map_points', 26));
     $this->get(route('app.imports.show', [$import, 'q' => 'record-25']))->assertInertia(fn (Assert $page) => $page
         ->has('review.rows', 1)->where('review.rows.0.external_id', 'record-25'));
     $this->get(route('app.imports.show', [$import, 'filter' => 'changed']))->assertInertia(fn (Assert $page) => $page
@@ -527,7 +528,8 @@ it('filters derived geometries without changing the required review count', func
     $import = stageMunicipal($data, $user);
 
     $this->actingAs($user)->get(route('app.imports.show', [$import, 'filter' => 'geometry']))->assertInertia(fn (Assert $page) => $page
-        ->has('review.rows', 1)->where('review.rows.0.external_id', 'derived')->where('review.derivations', 1)->where('review.counts.new', 2));
+        ->has('review.rows', 1)->where('review.rows.0.external_id', 'derived')->where('review.derivations', 1)->where('review.counts.new', 2)
+        ->where('review.geometry_ids', ['derived'])->has('review.map_points', 2)->where('review.identity_count', 0));
 });
 
 it('filters the delivery overview by source name and review status', function () {

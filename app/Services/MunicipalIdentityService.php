@@ -74,19 +74,19 @@ class MunicipalIdentityService
             'external_id' => $record['source']['external_id'], 'source' => $record['source'],
         ], $import->records);
         $rows = DB::select(<<<'SQL'
-            WITH incoming AS (
+            WITH incoming AS MATERIALIZED (
                 SELECT external_id, source,
                     ST_Centroid(ST_MakeValid(ST_GeomFromGeoJSON(source->'geometry')))::geography AS position
                 FROM jsonb_to_recordset(?::jsonb) AS r(external_id text, source jsonb)
-            ), existing AS (
-                SELECT id, external_id, source_record,
+            ), existing AS MATERIALIZED (
+                SELECT id, external_id, source_record, source_record->>'external_id' AS source_external_id,
                     ST_Centroid(ST_MakeValid(ST_GeomFromGeoJSON(source_record->'geometry')))::geography AS position
                 FROM parking_municipal_spaces WHERE dataset_source_id = ?
             )
             SELECT incoming.external_id, existing.id, existing.source_record,
                 incoming.source, ST_Distance(incoming.position, existing.position) AS distance_metres
             FROM incoming JOIN existing ON existing.external_id = incoming.external_id
-                OR existing.source_record->>'external_id' = incoming.external_id
+                OR existing.source_external_id = incoming.external_id
                 OR ST_DWithin(incoming.position, existing.position, 20)
             ORDER BY incoming.external_id, distance_metres, existing.id
             SQL, [json_encode($records, JSON_THROW_ON_ERROR), $import->dataset_source_id]);

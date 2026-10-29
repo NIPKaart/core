@@ -9,6 +9,7 @@ use App\Services\MunicipalImportService;
 use Database\Factories\DatasetSourceFactory;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function identityMunicipalDelivery(array $records): array
 {
@@ -216,3 +217,22 @@ it('requires municipal review when coincident claims have no unique verified sou
     $this->assertDatabaseCount('parking_municipal_spaces', 2);
     expect($import->fresh()->state)->toBe('pending');
 })->with(['duplicate claims', 'changed context', 'unverified feature ID', 'unverified FID', 'missing context']);
+
+it('shows only uncertain identity tasks with source evidence from the same dataset', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $service = app(MunicipalImportService::class);
+    $first = $service->intake(json_encode(identityMunicipalDelivery([identityMunicipalRecord('a'), identityMunicipalRecord('b')]), JSON_THROW_ON_ERROR), $user);
+    $service->decide($first, $user, 'publish', null, $service->review($first)['token']);
+    $this->travel(5)->minutes();
+    $second = $service->intake(json_encode(identityMunicipalDelivery([identityMunicipalRecord('c')]), JSON_THROW_ON_ERROR), $user);
+
+    $this->actingAs($user)->get(route('app.imports.show', [$second, 'filter' => 'identity']))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.filter', 'identity')->where('review.identity_count', 1)->has('review.rows', 1)
+        ->where('review.rows.0.external_id', 'c')->has('review.rows.0.identity.candidates', 2)
+        ->where('review.rows.0.identity.candidates.0.source.geometry.type', 'Point')
+        ->where('review.rows.0.identity.candidates.0.source.street', 'Teststraat'));
+    $this->get(route('app.imports.show', [$second, 'filter' => 'identity', 'q' => 'no-match']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 0)->where('review.identity_count', 1));
+});
