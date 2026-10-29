@@ -14,6 +14,7 @@ use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\User;
 use App\Notifications\CommunitySpace\StatusChanged;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -160,6 +161,52 @@ describe('queue', function () {
 });
 
 describe('submissions', function () {
+    test('a submission can be approved after a small pin movement', function (float $latitude, ?string $postcode) {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        fakeReverseGeocoding($space->municipality, ['postcode' => $postcode]);
+
+        $this->actingAs($this->moderator)
+            ->post(route('app.moderation.submissions.approve', $space), [
+                'latitude' => $latitude,
+                'longitude' => 5.118,
+                'orientation' => ParkingOrientation::PARALLEL->value,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('app.moderation.index'));
+
+        expect($space->fresh())->status->toBe(ParkingStatus::APPROVED)
+            ->latitude->toBe($latitude)
+            ->postcode->toBe(str_replace(' ', '', $postcode ?? ''))
+            ->street->toBe('Teststraat');
+        Http::assertSentCount(1);
+        Notification::assertSentTo($this->contributor, StatusChanged::class);
+    })->with([
+        'half a metre' => [52.0918045, '1000 AA'],
+        'a few centimetres' => [52.0918002, '1000 AA'],
+        'address without a postcode' => [52.0918045, null],
+    ]);
+
+    test('an unavailable address provider leaves a moved submission pending with a validation error', function () {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        config(['services.geoapify.key' => 'test-key', 'services.nominatim.enabled' => false]);
+        Http::fake(['api.geoapify.com/v1/geocode/reverse*' => Http::response([], 503)]);
+
+        $this->actingAs($this->moderator)
+            ->from(route('app.moderation.submissions.show', $space))
+            ->post(route('app.moderation.submissions.approve', $space), [
+                'latitude' => 52.0918045,
+                'longitude' => 5.118,
+                'orientation' => ParkingOrientation::PARALLEL->value,
+            ])
+            ->assertSessionHasErrors('latitude')
+            ->assertRedirect(route('app.moderation.submissions.show', $space));
+
+        expect($space->fresh())->status->toBe(ParkingStatus::PENDING)->latitude->toBe(52.0918);
+        expect($space->reviews()->count())->toBe(0);
+        Http::assertSentCount(1);
+        Notification::assertNothingSent();
+    });
+
     test('a moderator reviews a submission with the places around it', function () {
         $space = pendingSubmission($this->contributor, ['street' => 'Lange Voorhout']);
 

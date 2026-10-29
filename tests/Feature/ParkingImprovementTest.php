@@ -216,9 +216,9 @@ describe('moderating', function () {
             ->reviewed_by->toBe($this->moderator->id);
     });
 
-    test('an approved location correction moves the space to its resolved municipality', function () {
+    test('an approved location correction moves the space to its resolved municipality', function (?string $postcode) {
         $elsewhere = Municipality::factory()->create();
-        fakeReverseGeocoding($elsewhere, ['street' => 'Nieuwe Weg']);
+        fakeReverseGeocoding($elsewhere, ['street' => 'Nieuwe Weg', 'postcode' => $postcode]);
 
         $this->actingAs($this->moderator)
             ->post(route('app.moderation.improvements.approve', $this->improvement), currentForm($this->space, ['latitude' => 52.38, 'longitude' => 4.91]))
@@ -228,8 +228,12 @@ describe('moderating', function () {
         expect($this->space->fresh())
             ->latitude->toBe(52.38)
             ->municipality_id->toBe($elsewhere->id)
+            ->postcode->toBe(str_replace(' ', '', $postcode ?? ''))
             ->street->toBe('Nieuwe Weg');
-    });
+        expect($this->improvement->fresh())->status->toBe(ParkingStatus::APPROVED)
+            ->approved->toMatchArray(['postcode' => str_replace(' ', '', $postcode ?? '')]);
+        Notification::assertSentTo($this->user, ImprovementDecided::class);
+    })->with(['with a postcode' => '1000 AA', 'without a postcode' => null]);
 
     test('a moderator rejects a proposal with a reason and the space stays as it is', function () {
         $this->actingAs($this->moderator)
