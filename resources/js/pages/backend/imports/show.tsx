@@ -180,33 +180,59 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
             ]}
         >
             <Head title={`${t('review')} · ${dataset.name}`} />
-            <div className="flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-6">
-                {facilities && review.observation_reference_required && (
+            <div
+                className={
+                    view === 'table'
+                        ? 'flex w-full min-w-0 flex-col gap-6 px-4 py-6 sm:px-6'
+                        : 'flex h-[calc(100svh-4rem)] min-h-0 min-w-0 flex-col overflow-hidden md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]'
+                }
+            >
+                {view === 'table' && facilities && review.observation_reference_required && (
                     <p role="status" className="rounded-lg border bg-muted p-4 text-sm">
                         {t('identity.observation_reference')}
                     </p>
                 )}
-                <header className="space-y-4">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div className="min-w-0 flex-1 basis-64 space-y-2">
+                <header className={view === 'table' ? 'space-y-4' : 'shrink-0 border-b bg-background px-4 py-3'}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-3">
-                                <h1 className="text-2xl font-semibold tracking-tight">{t('review')}</h1>
-                                <Badge variant={delivery.state === 'pending' ? 'secondary' : 'outline'}>
+                                <h1 className={view === 'table' ? 'text-2xl font-semibold tracking-tight' : 'text-sm font-semibold tracking-tight'}>
+                                    {t('review')}
+                                </h1>
+                                <Badge
+                                    className={view === 'table' ? undefined : 'hidden sm:inline-flex'}
+                                    variant={delivery.state === 'pending' ? 'secondary' : 'outline'}
+                                >
                                     {delivery.publication_method === 'automatic' && delivery.state === 'published'
                                         ? t('automatic.published')
                                         : t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
                                 </Badge>
                             </div>
-                            <p className="text-sm font-medium">{dataset.name}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="truncate text-xs text-muted-foreground">{dataset.name}</p>
+                            <p className={view === 'table' ? 'text-sm text-muted-foreground' : 'sr-only'}>
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
                         </div>
+                        <div className="hidden gap-2 sm:flex" role="group" aria-label={t('workspace.view')}>
+                            <Button variant={view === 'overview' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('overview')}>
+                                {t('workspace.overview')}
+                            </Button>
+                            <Button
+                                variant={view === 'table' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => {
+                                    setView('table');
+                                    router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
+                                }}
+                            >
+                                {t('all_records')}
+                            </Button>
+                        </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <Button asChild variant="outline">
-                                <Link href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>
+                            <Button asChild variant="outline" className="size-9 px-0 sm:w-auto sm:px-4">
+                                <Link aria-label={t('back_to_history')} href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>
                                     <ArrowLeft className="size-4" aria-hidden="true" />
-                                    {t('back_to_history')}
+                                    <span className="hidden sm:inline">{t('back_to_history')}</span>
                                 </Link>
                             </Button>
                             {delivery.state === 'pending' && !delivery.superseded && (
@@ -324,31 +350,19 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         </div>
                     </div>
                 </header>
-                <PublishedNotice delivery={delivery} />
-                {delivery.state === 'pending' && !delivery.superseded && delivery.publication_checks?.reasons.includes('late_delivery') && (
-                    <p
-                        role="status"
-                        className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50/60 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-950/20"
-                    >
-                        <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
-                        {t('automatic.reasons.late_delivery')}
-                    </p>
-                )}
-                <div className="flex gap-2" role="group" aria-label={t('workspace.view')}>
-                    <Button variant={view === 'overview' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('overview')}>
-                        {t('workspace.overview')}
-                    </Button>
-                    <Button
-                        variant={view === 'table' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        onClick={() => {
-                            setView('table');
-                            router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
-                        }}
-                    >
-                        {t('all_records')}
-                    </Button>
-                </div>
+                {view === 'table' && <PublishedNotice delivery={delivery} />}
+                {view === 'table' &&
+                    delivery.state === 'pending' &&
+                    !delivery.superseded &&
+                    delivery.publication_checks?.reasons.includes('late_delivery') && (
+                        <p
+                            role="status"
+                            className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50/60 px-4 py-3 text-sm dark:border-amber-800 dark:bg-amber-950/20"
+                        >
+                            <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
+                            {t('automatic.reasons.late_delivery')}
+                        </p>
+                    )}
                 {view === 'overview' && (
                     <DeliveryOverview
                         delivery={delivery}
@@ -366,38 +380,42 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         }}
                     />
                 )}
-                <details className="text-sm text-muted-foreground">
-                    <summary className="cursor-pointer">{t('review_guidance')}</summary>
-                    <div className="mt-3">
-                        <AutomaticPublicationNotice delivery={delivery} />
-                    </div>
-                </details>
-                {delivery.superseded ? (
-                    <section role="status" className="rounded-xl border bg-muted/30 p-5">
-                        <h2 className="font-semibold">{t('superseded_title')}</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">{t('superseded_hint')}</p>
-                    </section>
-                ) : delivery.state === 'pending' && review.blockers.length > 0 ? (
-                    <section role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
-                        <h2 className="font-semibold">{t('publication_blocked')}</h2>
-                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
-                            {review.blockers.map((message) => (
-                                <li key={message}>{message}</li>
-                            ))}
-                        </ul>
-                    </section>
-                ) : null}
-                {delivery.state !== 'pending' && <p className="text-sm text-muted-foreground">{t('current_comparison')}</p>}
-                {delivery.review_reason && (
-                    <section className="space-y-2 rounded-xl border bg-muted/20 p-5">
-                        <h2 className="font-semibold">{t('decision_reason')}</h2>
-                        {delivery.reviewed_at && (
-                            <p className="text-sm text-muted-foreground">
-                                <MunicipalDateTime value={delivery.reviewed_at} />
-                            </p>
+                {view === 'table' && (
+                    <>
+                        <details className="text-sm text-muted-foreground">
+                            <summary className="cursor-pointer">{t('review_guidance')}</summary>
+                            <div className="mt-3">
+                                <AutomaticPublicationNotice delivery={delivery} />
+                            </div>
+                        </details>
+                        {delivery.superseded ? (
+                            <section role="status" className="rounded-xl border bg-muted/30 p-5">
+                                <h2 className="font-semibold">{t('superseded_title')}</h2>
+                                <p className="mt-1 text-sm text-muted-foreground">{t('superseded_hint')}</p>
+                            </section>
+                        ) : delivery.state === 'pending' && review.blockers.length > 0 ? (
+                            <section role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+                                <h2 className="font-semibold">{t('publication_blocked')}</h2>
+                                <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+                                    {review.blockers.map((message) => (
+                                        <li key={message}>{message}</li>
+                                    ))}
+                                </ul>
+                            </section>
+                        ) : null}
+                        {delivery.state !== 'pending' && <p className="text-sm text-muted-foreground">{t('current_comparison')}</p>}
+                        {delivery.review_reason && (
+                            <section className="space-y-2 rounded-xl border bg-muted/20 p-5">
+                                <h2 className="font-semibold">{t('decision_reason')}</h2>
+                                {delivery.reviewed_at && (
+                                    <p className="text-sm text-muted-foreground">
+                                        <MunicipalDateTime value={delivery.reviewed_at} />
+                                    </p>
+                                )}
+                                <p className="text-sm whitespace-pre-wrap">{delivery.review_reason}</p>
+                            </section>
                         )}
-                        <p className="text-sm whitespace-pre-wrap">{delivery.review_reason}</p>
-                    </section>
+                    </>
                 )}
                 {view === 'workspace' && loadingReview && (
                     <div role="status" className="h-96 animate-pulse rounded-lg border bg-muted/40 p-6 text-sm text-muted-foreground">
@@ -615,18 +633,20 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         </div>
                     </div>
                 )}
-                <details className="text-sm text-muted-foreground">
-                    <summary className="w-fit cursor-pointer hover:text-foreground">{t('timeline')}</summary>
-                    <p className="mt-2 text-sm text-muted-foreground">{t('timeline_note')}</p>
-                    <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {(Object.keys(times) as (keyof Props['times'])[]).map((key) => (
-                            <div key={key}>
-                                <dt className="text-xs text-muted-foreground">{t(`times.${key}` as const)}</dt>
-                                <dd className="mt-1 text-sm">{times[key] ? <MunicipalDateTime value={times[key]} /> : t('unknown')}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                </details>
+                {view === 'table' && (
+                    <details className="text-sm text-muted-foreground">
+                        <summary className="w-fit cursor-pointer hover:text-foreground">{t('timeline')}</summary>
+                        <p className="mt-2 text-sm text-muted-foreground">{t('timeline_note')}</p>
+                        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {(Object.keys(times) as (keyof Props['times'])[]).map((key) => (
+                                <div key={key}>
+                                    <dt className="text-xs text-muted-foreground">{t(`times.${key}` as const)}</dt>
+                                    <dd className="mt-1 text-sm">{times[key] ? <MunicipalDateTime value={times[key]} /> : t('unknown')}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </details>
+                )}
             </div>
         </AppLayout>
     );
@@ -664,7 +684,6 @@ function RecordDetails({ row }: { row: Row }) {
                         <>
                             <ReviewMap row={row} candidateId={row.identity?.facility_id ?? ''} />
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                                <p className="text-xs leading-relaxed text-muted-foreground">{t('map_note')}</p>
                                 <Button asChild variant="outline" size="sm">
                                     <a
                                         href={`https://www.google.com/maps?q=&layer=c&cbll=${row.point.latitude},${row.point.longitude}`}
@@ -783,37 +802,39 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                     ))}
                 </div>
             </div>
-            <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
-            <MapContainer
-                center={[52.37, 4.9]}
-                zoom={13}
-                scrollWheelZoom={false}
-                zoomControl={false}
-                className="parking-discovery-map relative z-0 h-72 w-full sm:h-96"
-            >
-                <ReviewTiles style={style} />
-                <ZoomControl position="bottomright" />
-                <ScaleControl position="bottomleft" imperial={false} />
-                <ChangesMapBounds rows={changes} fit={fit} />
-                {changes.map((row) => (
-                    <GeoJSON
-                        key={`${row.status}:${row.external_id}`}
-                        data={(row.after ?? row.before)!.geometry}
-                        style={{
-                            color: changeColor(row.status),
-                            weight: 3,
-                            fillOpacity: 0.25,
-                            dashArray: row.status === 'missing' ? '6 5' : undefined,
-                        }}
-                        eventHandlers={{ click: () => onSelect(row) }}
-                    >
-                        <Tooltip permanent direction="top" className="max-w-40 text-center whitespace-normal">
-                            <span className="block font-medium">{t(`counts.${row.status}` as const)}</span>
-                            <span className="block text-xs">{row.external_id}</span>
-                        </Tooltip>
-                    </GeoJSON>
-                ))}
-            </MapContainer>
+            <div className="relative">
+                <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
+                <MapContainer
+                    center={[52.37, 4.9]}
+                    zoom={13}
+                    scrollWheelZoom={false}
+                    zoomControl={false}
+                    className="parking-discovery-map relative z-0 h-72 w-full sm:h-96"
+                >
+                    <ReviewTiles style={style} />
+                    <ZoomControl position="bottomright" />
+                    <ScaleControl position="bottomleft" imperial={false} />
+                    <ChangesMapBounds rows={changes} fit={fit} />
+                    {changes.map((row) => (
+                        <GeoJSON
+                            key={`${row.status}:${row.external_id}`}
+                            data={(row.after ?? row.before)!.geometry}
+                            style={{
+                                color: changeColor(row.status),
+                                weight: 3,
+                                fillOpacity: 0.25,
+                                dashArray: row.status === 'missing' ? '6 5' : undefined,
+                            }}
+                            eventHandlers={{ click: () => onSelect(row) }}
+                        >
+                            <Tooltip permanent direction="top" className="max-w-40 text-center whitespace-normal">
+                                <span className="block font-medium">{t(`counts.${row.status}` as const)}</span>
+                                <span className="block text-xs">{row.external_id}</span>
+                            </Tooltip>
+                        </GeoJSON>
+                    ))}
+                </MapContainer>
+            </div>
             <p className="px-4 py-3 text-sm text-muted-foreground">{t('missing_map_note')}</p>
         </section>
     );

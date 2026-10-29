@@ -322,7 +322,7 @@
         "check_next": "Checked and next",
         "finish": "Back to overview",
         "identity_reason": "Reason for this link",
-        "incoming": "Source location in this delivery",
+        "incoming": "Source location",
         "candidate_legend": "Orange: existing locations that may match. Distance alone does not prove a match.",
         "published": "Delivery published",
         "view": "Delivery view",

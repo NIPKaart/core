@@ -10,21 +10,28 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { pinSvg } from '@/lib/pin-svg';
 import { cn } from '@/lib/utils';
 import { Form, Link, router } from '@inertiajs/react';
 import type { Geometry } from 'geojson';
-import { geoJSON, latLngBounds } from 'leaflet';
+import { divIcon, geoJSON, latLngBounds } from 'leaflet';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Link2, LocateFixed, Map as MapIcon, MapPin, Satellite, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CircleMarker, GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaflet';
+import { CircleMarker, GeoJSON, MapContainer, Marker, ScaleControl, Tooltip, useMap } from 'react-leaflet';
 import type { Import } from './index';
 import ReviewTiles from './review-map-tiles';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
 import { claimCapacity, claimTitle, reviewGeometries, type Row } from './source-record';
 
+const PANEL =
+    'relative z-500 -mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-2xl bg-background shadow-[0_-8px_28px_rgba(0,0,0,0.12)] lg:absolute lg:top-4 lg:bottom-4 lg:left-4 lg:mt-0 lg:w-[420px] lg:rounded-2xl lg:shadow-[0_8px_28px_rgba(0,0,0,0.16)]';
+const FRAME = 'relative isolate flex min-h-0 min-w-0 flex-1 flex-col lg:block';
+
 export type MapPoint = {
     external_id: string;
+    selectionKey?: string;
     title: string;
     status: Row['status'];
     point: { latitude: number; longitude: number };
@@ -57,70 +64,74 @@ export function DeliveryOverview({
     const { t, i18n } = useTranslation('backend/imports');
     const pending = delivery.state === 'pending' && !delivery.superseded;
     return (
-        <section className="space-y-5" aria-label={t('workspace.overview')}>
-            <div className="grid divide-y rounded-lg border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 lg:overflow-hidden" aria-label={t('workspace.overview')}>
+            <div className="grid shrink-0 grid-cols-3 divide-x rounded-xl border bg-background">
                 {[
                     { icon: MapPin, count: recordCount, label: t('workspace.source_records') },
                     { icon: TriangleAlert, count: derivations, label: t('workspace.geometry_tasks') },
                     { icon: Link2, count: identities, label: t('workspace.identity_tasks') },
                 ].map(({ icon: Icon, count, label }) => (
-                    <div key={label} className="flex items-center gap-3 px-5 py-4">
-                        <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
+                    <div key={label} className="flex items-center gap-3 px-3 py-3 sm:px-5">
+                        <Icon className="hidden size-4 shrink-0 text-muted-foreground sm:block" aria-hidden />
                         <div>
                             <p className="text-xl font-semibold tabular-nums">{count.toLocaleString(i18n.language)}</p>
-                            <p className="text-sm text-muted-foreground">{label}</p>
+                            <p className="text-xs text-muted-foreground">{label}</p>
                         </div>
                     </div>
                 ))}
             </div>
-            <div className="grid overflow-hidden rounded-lg border lg:grid-cols-[minmax(0,1fr)_20rem]">
-                <div className="min-w-0 bg-muted/20">
-                    <OverviewMap points={points} onSelect={onSelect} />
+            <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border bg-background lg:grid-cols-[minmax(0,1fr)_20rem]">
+                <div className="h-[36svh] min-h-0 lg:h-auto">
+                    <OverviewMap points={points} onSelect={onSelect} inset={false} />
                 </div>
-                <aside className="flex flex-col gap-5 border-t p-5 lg:border-t-0 lg:border-l">
-                    <div>
+                <aside className="flex min-h-0 flex-col border-t lg:border-t-0 lg:border-l">
+                    <div className="shrink-0 border-b px-5 py-4">
                         <h2 className="font-semibold">{t(pending ? 'workspace.to_review' : 'workspace.overview')}</h2>
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t(pending ? 'workspace.intro' : 'current_comparison')}</p>
                     </div>
-                    {pending && (
-                        <div className="divide-y">
-                            <Button
-                                variant="ghost"
-                                onClick={() => onStart('geometry')}
-                                disabled={!derivations}
-                                className="h-auto w-full justify-start gap-3 rounded-none py-4 text-left whitespace-normal"
-                            >
-                                <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
-                                <span className="flex-1">{t('workspace.geometry_progress', { completed, total: derivations })}</span>
-                                <ChevronRight className="size-4" aria-hidden="true" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                onClick={() => onStart('identity')}
-                                disabled={!identities}
-                                className="h-auto w-full justify-start gap-3 rounded-none py-4 text-left whitespace-normal"
-                            >
-                                <Link2 className="size-4 shrink-0" aria-hidden="true" />
-                                <span className="flex-1">{t('workspace.identity_remaining', { count: identities })}</span>
-                                <ChevronRight className="size-4" aria-hidden="true" />
-                            </Button>
-                        </div>
-                    )}
-                    {pending && derivations > 0 && (
-                        <Progress
-                            value={(completed / derivations) * 100}
-                            aria-label={t('workspace.geometry_tasks')}
-                            aria-valuetext={t('workspace.geometry_progress', { completed, total: derivations })}
-                        />
-                    )}
-                    <div className="mt-auto space-y-3">
+                    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-2">
+                        {pending && (
+                            <div className="divide-y">
+                                {derivations > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => onStart('geometry')}
+                                        className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4 text-left whitespace-normal"
+                                    >
+                                        <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden />
+                                        <span className="flex-1">{t('workspace.geometry_progress', { completed, total: derivations })}</span>
+                                        <ChevronRight className="size-4 shrink-0" aria-hidden />
+                                    </Button>
+                                )}
+                                {identities > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => onStart('identity')}
+                                        className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4 text-left whitespace-normal"
+                                    >
+                                        <Link2 className="size-4 shrink-0" aria-hidden />
+                                        <span className="flex-1">{t('workspace.identity_remaining', { count: identities })}</span>
+                                        <ChevronRight className="size-4 shrink-0" aria-hidden />
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                        {pending && derivations > 0 && (
+                            <Progress
+                                value={(completed / derivations) * 100}
+                                aria-label={t('workspace.geometry_tasks')}
+                                aria-valuetext={t('workspace.geometry_progress', { completed, total: derivations })}
+                            />
+                        )}
+                        {delivery.review_reason && <p className="py-3 text-sm whitespace-pre-wrap">{delivery.review_reason}</p>}
+                    </div>
+                    <div className="shrink-0 space-y-2 border-t p-4">
                         {pending && (
                             <Button
                                 className="w-full"
                                 onClick={() => (derivations > completed ? onStart('geometry') : identities ? onStart('identity') : onDecision())}
                             >
                                 {t(derivations > completed || identities ? 'workspace.start' : 'make_decision')}
-                                <ArrowRight aria-hidden="true" />
+                                <ArrowRight aria-hidden />
                             </Button>
                         )}
                         <Button variant="outline" className="w-full" onClick={onRecords}>
@@ -133,7 +144,7 @@ export function DeliveryOverview({
     );
 }
 
-function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: string) => void }) {
+function OverviewMap({ points, onSelect, inset = true }: { points: MapPoint[]; onSelect: (id: string) => void; inset?: boolean }) {
     const { t } = useTranslation('backend/imports');
     const [style, setStyle] = useState<MapStyle>('streets');
     const [fit, setFit] = useState(0);
@@ -144,19 +155,19 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
             </p>
         );
     return (
-        <div className="relative">
+        <div className="relative h-full">
             <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
             <MapContainer
                 center={[points[0].point.latitude, points[0].point.longitude]}
                 zoom={12}
                 scrollWheelZoom={false}
                 zoomControl={false}
-                className="parking-discovery-map relative z-0 h-[28rem] w-full xl:h-[34rem]"
+                className={cn('parking-discovery-map relative z-0 h-full w-full', inset && 'lg:[&_.leaflet-bottom.leaflet-left]:left-[452px]!')}
             >
                 <ReviewTiles style={style} />
                 <ZoomControl position="bottomright" />
                 <ScaleControl position="bottomleft" imperial={false} />
-                <PointBounds points={points} fit={fit} />
+                <PointBounds points={points} fit={fit} inset={inset} />
                 {points.map((point) => (
                     <CircleMarker
                         key={`${point.status}:${point.external_id}`}
@@ -167,7 +178,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                             fillOpacity: 0.8,
                             weight: 1,
                         }}
-                        eventHandlers={{ click: () => onSelect(point.external_id) }}
+                        eventHandlers={{ click: () => onSelect(point.selectionKey ?? point.external_id) }}
                     >
                         <Tooltip>
                             {point.title} · {point.external_id}
@@ -175,7 +186,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                     </CircleMarker>
                 ))}
             </MapContainer>
-            <div className="flex flex-wrap gap-4 border-t bg-background px-4 py-3 text-xs">
+            <div className="absolute right-20 bottom-3 z-400 hidden max-w-sm flex-wrap gap-3 rounded-lg bg-background/95 px-3 py-2 text-xs lg:flex">
                 <span className="inline-flex items-center gap-2">
                     <MapPin className="size-3 text-blue-600" aria-hidden="true" />
                     {t('workspace.source_records')}
@@ -189,13 +200,14 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
     );
 }
 
-function PointBounds({ points, fit }: { points: MapPoint[]; fit: number }) {
+function PointBounds({ points, fit, inset }: { points: MapPoint[]; fit: number; inset: boolean }) {
     const map = useMap();
+    const wide = useMediaQuery('(min-width: 1024px)');
     useEffect(() => {
         const bounds = latLngBounds(points.map(({ point }) => [point.latitude, point.longitude]));
         map.invalidateSize();
-        if (bounds.isValid()) map.fitBounds(bounds, { padding: [32, 32], maxZoom: 18 });
-    }, [map, points, fit]);
+        if (bounds.isValid()) map.fitBounds(bounds, { paddingTopLeft: [wide && inset ? 484 : 32, 64], paddingBottomRight: [72, 48], maxZoom: 18 });
+    }, [map, points, fit, wide, inset]);
     return null;
 }
 
@@ -203,29 +215,39 @@ export function MapToolbar({ style, onStyleChange, onFit }: { style: MapStyle; o
     const { t: tMap } = useTranslation('frontend/map/main');
     const { t } = useTranslation('backend/imports');
     return (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-background px-3 py-2">
+        <div className="pointer-events-none absolute inset-0 z-500">
             <ToggleGroup
                 type="single"
                 value={style}
                 onValueChange={(value) => {
                     if (value === 'streets' || value === 'satellite') onStyleChange(value);
                 }}
-                variant="outline"
-                size="sm"
+                className="pointer-events-auto absolute top-3 right-3 gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:top-4 lg:right-4"
                 aria-label={tMap('controls.layers')}
             >
-                <ToggleGroupItem value="streets">
+                <ToggleGroupItem
+                    value="streets"
+                    className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
                     <MapIcon className="size-4" aria-hidden />
                     {tMap('controls.streets')}
                 </ToggleGroupItem>
-                <ToggleGroupItem value="satellite">
+                <ToggleGroupItem
+                    value="satellite"
+                    className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
                     <Satellite className="size-4" aria-hidden />
                     {tMap('controls.satellite')}
                 </ToggleGroupItem>
             </ToggleGroup>
-            <Button variant="ghost" size="sm" onClick={onFit}>
+            <Button
+                variant="outline"
+                size="icon"
+                className="pointer-events-auto absolute right-3 bottom-32 size-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-4"
+                aria-label={t('workspace.fit_map')}
+                onClick={onFit}
+            >
                 <LocateFixed className="size-4" aria-hidden />
-                {t('workspace.fit_map')}
             </Button>
         </div>
     );
@@ -261,6 +283,7 @@ export function ReviewWorkspace({
     const row = rows.find((item) => `${item.status}:${item.external_id}` === selectedId) ?? rows[0];
     const position = row ? rows.indexOf(row) : -1;
     const rowKey = row ? `${row.status}:${row.external_id}` : '';
+    const [queueOpen, setQueueOpen] = useState(false);
     const [candidateChoice, setCandidateChoice] = useState({ key: '', id: '' });
     const candidateId = candidateChoice.key === rowKey ? candidateChoice.id : (row?.identity?.facility_id ?? '');
     const editable = delivery.state === 'pending' && !delivery.superseded;
@@ -271,151 +294,194 @@ export function ReviewWorkspace({
     };
     const windowNext = () => routerVisit(show.url(delivery.id), { q: query, filter, page: page + 1 });
     return (
-        <section className="overflow-hidden rounded-lg border" aria-label={t('workspace.workspace')}>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
-                <h2 className="font-semibold">
-                    {t(
-                        filter === 'geometry'
-                            ? 'workspace.geometry_tasks'
-                            : filter === 'identity'
-                              ? 'workspace.identity_tasks'
-                              : 'navigation.locations',
-                    )}
-                </h2>
-                <span className="text-sm text-muted-foreground" aria-live="polite">
-                    {t('workspace.position', { position: row ? (page - 1) * 25 + position + 1 : 0, total })}
-                </span>
-            </div>
-            {row ? (
-                <div className="grid min-w-0 xl:grid-cols-[13rem_minmax(0,1fr)_21rem]">
-                    <nav className="max-h-48 overflow-y-auto border-b xl:max-h-[38rem] xl:border-r xl:border-b-0" aria-label={t('workspace.queue')}>
-                        {rows.map((item) => (
-                            <Button
-                                variant="ghost"
-                                key={`${item.status}:${item.external_id}`}
-                                aria-current={item === row ? 'true' : undefined}
-                                onClick={() => setSelectedId(`${item.status}:${item.external_id}`)}
-                                className={cn(
-                                    'h-auto w-full justify-start gap-2 rounded-none border-b px-4 py-3 text-left whitespace-normal',
-                                    item === row && 'bg-blue-50 dark:bg-blue-950/30',
-                                )}
-                            >
-                                <span className="min-w-0 flex-1">
-                                    <span className="block truncate font-medium">{claimTitle(item.after ?? item.before) ?? t('unknown_street')}</span>
-                                    <span className="mt-1 block truncate text-xs text-muted-foreground">{item.external_id}</span>
-                                </span>
-                                {reviewedIds.includes(item.external_id) && (
-                                    <Check className="size-4 shrink-0 text-green-600" aria-label={t('workspace.checked')} />
-                                )}
-                            </Button>
-                        ))}
-                    </nav>
-                    <div className="min-w-0 border-b xl:border-r xl:border-b-0">
-                        <ReviewMap row={row} candidateId={candidateId} />
+        <section className={FRAME} aria-label={t('workspace.workspace')}>
+            {row && (
+                <div className="h-[38svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
+                    <div className={queueOpen ? 'hidden' : 'h-full'}>
+                        <ReviewMap row={row} candidateId={candidateId} workspace />
                     </div>
-                    <aside className="flex min-w-0 flex-col p-5">
-                        <div className="space-y-4 xl:max-h-[29rem] xl:overflow-y-auto">
-                            <div>
-                                <h3 className="font-semibold">{claimTitle(row.after ?? row.before) ?? t('unknown_street')}</h3>
-                                <p className="mt-1 text-xs break-all text-muted-foreground">
-                                    {t('record_id')} · {row.external_id}
-                                </p>
-                            </div>
-                            <MissingSourceNotice row={row} />
-                            <dl className="grid grid-cols-2 gap-3 text-sm">
-                                <dt className="text-muted-foreground">{t('status')}</dt>
-                                <dd>{t(`counts.${row.status}`)}</dd>
-                                {!(row.after ?? row.before)?.facility_type && (
-                                    <>
-                                        <dt className="text-muted-foreground">{t('capacity')}</dt>
-                                        <dd>{claimCapacity(row.after ?? row.before) ?? t('unknown')}</dd>
-                                    </>
-                                )}
-                            </dl>
-                            {row.geometry_derivation && (
-                                <div className="space-y-2 border-t pt-4 text-sm">
-                                    <p>{t('geometry_help')}</p>
-                                    <p className="text-xs text-muted-foreground">{row.geometry_derivation.reason}</p>
-                                </div>
+                    {queueOpen && (
+                        <OverviewMap
+                            points={rows.flatMap((item) =>
+                                item.point
+                                    ? [
+                                          {
+                                              external_id: item.external_id,
+                                              selectionKey: `${item.status}:${item.external_id}`,
+                                              title: claimTitle(item.after ?? item.before) ?? t('unknown_street'),
+                                              status: item.status,
+                                              point: item.point,
+                                              review_required: !!item.geometry_review_required,
+                                          },
+                                      ]
+                                    : [],
                             )}
-                            {editable && row.identity && ['review', 'manual'].includes(row.identity.method) && (
-                                <IdentityDecision
-                                    key={`${row.external_id}-${token}`}
-                                    row={row}
-                                    delivery={delivery}
-                                    token={token}
-                                    target={candidateId}
-                                    onTargetChange={(id) => setCandidateChoice({ key: rowKey, id })}
-                                />
-                            )}
-                            <Accordion type="single" collapsible className="border-t text-sm">
-                                <AccordionItem value="source" className="border-0">
-                                    <AccordionTrigger>{t('source_tab')}</AccordionTrigger>
-                                    <AccordionContent>
-                                        <SourceComparison
-                                            row={row}
-                                            onShowMap={() =>
-                                                document.getElementById('review-map')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-                                            }
-                                        />
-                                    </AccordionContent>
-                                </AccordionItem>
-                            </Accordion>
-                        </div>
-                        <div className="mt-auto flex flex-col gap-2 pt-5">
-                            {editable && row.geometry_review_required && (
-                                <Button
-                                    onClick={() => {
-                                        onReviewed(row.external_id);
-                                        next();
-                                    }}
-                                >
-                                    <Check aria-hidden="true" />
-                                    {t('workspace.check_next')}
-                                </Button>
-                            )}
-                            {(!editable || !row.geometry_review_required) && (
-                                <Button onClick={next}>
-                                    {t(position === rows.length - 1 && page === pages ? 'workspace.finish' : 'next')}
-                                    <ChevronRight aria-hidden="true" />
-                                </Button>
-                            )}
-                            <Button
-                                variant="outline"
-                                disabled={position <= 0}
-                                onClick={() => setSelectedId(`${rows[position - 1].status}:${rows[position - 1].external_id}`)}
-                            >
-                                <ChevronLeft aria-hidden="true" />
-                                {t('previous')}
-                            </Button>
-                        </div>
-                    </aside>
+                            onSelect={(key) => {
+                                setSelectedId(key);
+                                setQueueOpen(false);
+                            }}
+                        />
+                    )}
                 </div>
-            ) : (
-                <p className="p-8 text-sm text-muted-foreground" role="status">
-                    {t('no_matching_records')}
-                </p>
             )}
-            <div className="flex items-center justify-between gap-3 border-t px-4 py-3">
-                <Button variant="ghost" size="sm" onClick={onFinish}>
-                    {t('workspace.overview')}
-                </Button>
-                <nav aria-label={t('pages')} className="flex items-center gap-3">
+            <div className={PANEL}>
+                <nav
+                    className="flex h-[52px] shrink-0 items-center gap-1 border-b pr-3 pl-2"
+                    aria-label={t('workspace.position', { position: row ? (page - 1) * 25 + position + 1 : 0, total })}
+                >
                     <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page <= 1}
-                        onClick={() => routerVisit(show.url(delivery.id), { q: query, filter, page: page - 1 })}
+                        variant="ghost"
+                        aria-label={t(queueOpen ? 'workspace.overview' : 'navigation.locations')}
+                        className="h-9 max-w-[55%] min-w-0 gap-1 px-2"
+                        onClick={() => (queueOpen ? onFinish() : setQueueOpen(true))}
                     >
-                        {t('previous')}
+                        <ChevronLeft className="size-4" />
+                        <span className="truncate">{t(queueOpen ? 'workspace.overview' : 'navigation.locations')}</span>
                     </Button>
-                    <span className="text-xs text-muted-foreground">
-                        {page} / {pages}
+                    <span className="flex-1 text-center text-xs whitespace-nowrap text-muted-foreground tabular-nums" aria-live="polite">
+                        {t('workspace.position', { position: row ? (page - 1) * 25 + position + 1 : 0, total })}
                     </span>
-                    <Button variant="outline" size="sm" disabled={page >= pages} onClick={windowNext}>
-                        {t('next')}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('previous')}
+                        disabled={position <= 0}
+                        onClick={() => setSelectedId(`${rows[position - 1].status}:${rows[position - 1].external_id}`)}
+                    >
+                        <ChevronLeft className="size-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label={t('next')} onClick={next}>
+                        <ChevronRight className="size-4" />
                     </Button>
                 </nav>
+                {row ? (
+                    queueOpen ? (
+                        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-label={t('workspace.queue')}>
+                            {rows.map((item) => (
+                                <Button
+                                    variant="ghost"
+                                    key={`${item.status}:${item.external_id}`}
+                                    aria-current={item === row ? 'true' : undefined}
+                                    onClick={() => {
+                                        setSelectedId(`${item.status}:${item.external_id}`);
+                                        setQueueOpen(false);
+                                    }}
+                                    className={cn(
+                                        'h-auto w-full justify-start gap-2 rounded-none border-b px-4 py-3 text-left whitespace-normal',
+                                        item === row && 'bg-blue-50 dark:bg-blue-950/30',
+                                    )}
+                                >
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate font-medium">
+                                            {claimTitle(item.after ?? item.before) ?? t('unknown_street')}
+                                        </span>
+                                        <span className="mt-1 block truncate text-xs text-muted-foreground">{item.external_id}</span>
+                                    </span>
+                                    {reviewedIds.includes(item.external_id) && (
+                                        <Check className="size-4 shrink-0 text-green-600" aria-label={t('workspace.checked')} />
+                                    )}
+                                </Button>
+                            ))}
+                        </nav>
+                    ) : (
+                        <div className="flex min-h-0 flex-1 flex-col">
+                            <div className="min-h-0 flex-1 [scrollbar-width:thin] space-y-4 overflow-y-auto overscroll-contain px-5 pt-4 pb-5">
+                                <div>
+                                    <h3 className="font-semibold">{claimTitle(row.after ?? row.before) ?? t('unknown_street')}</h3>
+                                    <p className="mt-1 text-xs break-all text-muted-foreground">
+                                        {t('record_id')} · {row.external_id}
+                                    </p>
+                                </div>
+                                <MissingSourceNotice row={row} />
+                                <dl className="grid grid-cols-2 gap-3 text-sm">
+                                    <dt className="text-muted-foreground">{t('status')}</dt>
+                                    <dd>{t(`counts.${row.status}`)}</dd>
+                                    {!(row.after ?? row.before)?.facility_type && (
+                                        <>
+                                            <dt className="text-muted-foreground">{t('capacity')}</dt>
+                                            <dd>{claimCapacity(row.after ?? row.before) ?? t('unknown')}</dd>
+                                        </>
+                                    )}
+                                </dl>
+                                {row.geometry_derivation && (
+                                    <div className="space-y-2 border-t pt-4 text-sm">
+                                        <p className="text-xs text-muted-foreground">{row.geometry_derivation.reason}</p>
+                                    </div>
+                                )}
+                                {editable && row.identity && ['review', 'manual'].includes(row.identity.method) && (
+                                    <IdentityDecision
+                                        key={`${row.external_id}-${token}`}
+                                        row={row}
+                                        delivery={delivery}
+                                        token={token}
+                                        target={candidateId}
+                                        onTargetChange={(id) => setCandidateChoice({ key: rowKey, id })}
+                                    />
+                                )}
+                                <Accordion type="single" collapsible className="border-t text-sm">
+                                    <AccordionItem value="source" className="border-0">
+                                        <AccordionTrigger>{t('source_tab')}</AccordionTrigger>
+                                        <AccordionContent>
+                                            {row.geometry_derivation && <p className="mb-3 text-xs text-muted-foreground">{t('geometry_help')}</p>}
+                                            <SourceComparison
+                                                row={row}
+                                                onShowMap={() =>
+                                                    document.getElementById('review-map')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                                                }
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </div>
+                            <div className="shrink-0 border-t p-4">
+                                {editable && row.geometry_review_required && (
+                                    <Button
+                                        onClick={() => {
+                                            onReviewed(row.external_id);
+                                            next();
+                                        }}
+                                    >
+                                        <Check aria-hidden="true" />
+                                        {t('workspace.check_next')}
+                                    </Button>
+                                )}
+                                {(!editable || !row.geometry_review_required) && (
+                                    <Button onClick={next}>
+                                        {t(position === rows.length - 1 && page === pages ? 'workspace.finish' : 'next')}
+                                        <ChevronRight aria-hidden="true" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )
+                ) : (
+                    <p className="p-8 text-sm text-muted-foreground" role="status">
+                        {t('no_matching_records')}
+                    </p>
+                )}
+                <div className="flex shrink-0 items-center justify-between gap-3 border-t px-4 py-2">
+                    <Button variant="ghost" size="sm" onClick={onFinish}>
+                        {t('workspace.overview')}
+                    </Button>
+                    {pages > 1 && (
+                        <nav aria-label={t('pages')} className="flex items-center gap-3">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={page <= 1}
+                                onClick={() => routerVisit(show.url(delivery.id), { q: query, filter, page: page - 1 })}
+                            >
+                                {t('previous')}
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                                {page} / {pages}
+                            </span>
+                            <Button variant="outline" size="sm" disabled={page >= pages} onClick={windowNext}>
+                                {t('next')}
+                            </Button>
+                        </nav>
+                    )}
+                </div>
             </div>
         </section>
     );
@@ -454,7 +520,6 @@ export function IdentityDecision({
                     <input type="hidden" name="external_id" value={row.external_id} />
                     <input type="hidden" name="review_token" value={token} />
                     <p className="font-medium">{t('identity.title')}</p>
-                    <p className="text-xs leading-relaxed text-muted-foreground">{t('identity.hint')}</p>
                     <div className="space-y-2">
                         <Label htmlFor="identity-target">{t('identity.target')}</Label>
                         <input type="hidden" name="facility_id" value={target} />
@@ -508,14 +573,24 @@ export function IdentityDecision({
     );
 }
 
-export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string }) {
+export function ReviewMap({ row, candidateId, workspace = false }: { row: Row; candidateId: string; workspace?: boolean }) {
     const { t } = useTranslation('backend/imports');
     const claim = row.after ?? row.before;
-    const [style, setStyle] = useState<MapStyle>('streets');
+    const [style, setStyle] = useState<MapStyle>(workspace ? 'satellite' : 'streets');
     const [fit, setFit] = useState(0);
     const [layers, setLayers] = useState(['source', 'proposed']);
     const geometries = useMemo(() => reviewGeometries(row, candidateId), [row, candidateId]);
     const candidate = row.identity?.candidates.find((item) => item.id === candidateId);
+    const icon = useMemo(
+        () =>
+            divIcon({
+                html: pinSvg(!!claim?.facility_type, null),
+                className: 'drop-shadow-[0_0_3px_white]',
+                iconSize: [36, 48],
+                iconAnchor: [18, 46],
+            }),
+        [claim?.facility_type],
+    );
     if (!claim || !row.point)
         return (
             <p role="status" className="p-6 text-sm text-muted-foreground">
@@ -523,7 +598,7 @@ export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string 
             </p>
         );
     return (
-        <div id="review-map" className="h-full">
+        <div id="review-map" className={cn('relative', workspace ? 'h-full' : 'h-96 lg:h-[34rem]')}>
             <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
             {row.geometry_derivation && (
                 <ToggleGroup
@@ -532,7 +607,7 @@ export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string 
                     onValueChange={setLayers}
                     variant="outline"
                     size="sm"
-                    className="justify-start rounded-none border-b p-2"
+                    className="absolute top-16 right-3 z-500 flex-wrap justify-end rounded-xl bg-background p-1 shadow-md lg:right-4"
                     aria-label={t('geometry_layers')}
                 >
                     <ToggleGroupItem value="source">{t('original_geometry')}</ToggleGroupItem>
@@ -544,12 +619,12 @@ export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string 
                 zoom={19}
                 scrollWheelZoom={false}
                 zoomControl={false}
-                className="parking-discovery-map relative z-0 h-96 w-full xl:h-[34rem]"
+                className={cn('parking-discovery-map relative z-0 h-full w-full', workspace && 'lg:[&_.leaflet-bottom.leaflet-left]:left-[452px]!')}
             >
                 <ReviewTiles style={style} />
                 <ZoomControl position="bottomright" focus={[row.point.latitude, row.point.longitude]} />
                 <ScaleControl position="bottomleft" imperial={false} />
-                <GeometryBounds geometries={geometries} fit={fit} />
+                <GeometryBounds geometries={geometries} fit={fit} workspace={workspace} />
                 {layers.includes('source') && claim.geometry.type !== 'Point' && (
                     <GeoJSON
                         key={`source-${JSON.stringify(claim.geometry)}`}
@@ -569,9 +644,14 @@ export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string 
                         style={{ color: '#2563eb', fillOpacity: 0.2, weight: 3 }}
                     />
                 )}
-                <CircleMarker center={[row.point.latitude, row.point.longitude]} radius={5} pathOptions={{ color: '#2563eb', fillOpacity: 1 }}>
+                <Marker
+                    position={[row.point.latitude, row.point.longitude]}
+                    icon={icon}
+                    title={t('workspace.incoming')}
+                    alt={t('workspace.incoming')}
+                >
                     <Tooltip>{t('workspace.incoming')}</Tooltip>
-                </CircleMarker>
+                </Marker>
                 {[candidate].map((candidate) => {
                     if (!candidate?.source) return null;
                     const geometry = candidate.source.geometry;
@@ -596,22 +676,32 @@ export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string 
                     );
                 })}
             </MapContainer>
-            <div className="space-y-2 border-t px-4 py-3 text-xs text-muted-foreground">
-                <p>{t(row.geometry_derivation ? 'geometry_legend' : 'map_note')}</p>
-                {!!candidate?.source && <p>{t('workspace.candidate_legend')}</p>}
-            </div>
+            {!!candidate?.source && (
+                <div className="absolute right-20 bottom-3 z-400 flex max-w-[calc(100%-6rem)] flex-wrap gap-3 rounded-lg bg-background/95 px-3 py-2 text-xs">
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-blue-600" />
+                        {t('workspace.incoming')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-amber-600" />
+                        {t('workspace.existing')}
+                    </span>
+                </div>
+            )}
         </div>
     );
 }
 
-function GeometryBounds({ geometries, fit }: { geometries: Geometry[]; fit: number }) {
+function GeometryBounds({ geometries, fit, workspace }: { geometries: Geometry[]; fit: number; workspace: boolean }) {
     const map = useMap();
+    const wide = useMediaQuery('(min-width: 1024px)');
     useEffect(() => {
         map.invalidateSize();
         const bounds = latLngBounds([]);
         for (const geometry of geometries) bounds.extend(geoJSON(geometry).getBounds());
-        if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 20 });
-    }, [map, geometries, fit]);
+        if (bounds.isValid())
+            map.fitBounds(bounds, { paddingTopLeft: [workspace && wide ? 484 : 40, 112], paddingBottomRight: [72, 64], maxZoom: 20 });
+    }, [map, geometries, fit, workspace, wide]);
     return null;
 }
 

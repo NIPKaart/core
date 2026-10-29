@@ -34,6 +34,8 @@ function mount(file, modules = {}) {
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
             if (name === '@inertiajs/react') return { Form: 'Form', Link: 'Link', Head: 'Head', router: { get: (...args) => visits.push(args) } };
             if (name === '@/actions/App/Http/Controllers/Admin/DatasetImportController') return { show: route, index: route, update: route };
+            if (name === 'leaflet') return { divIcon: (options) => options };
+            if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg />' };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             return tags;
@@ -150,7 +152,7 @@ test('checking the last geometry on a page records it and opens the next page wi
     const tree = app.render(app.exports.ReviewWorkspace, props);
     assert.equal(finished, 0);
     assert.equal(app.visits.length, 0);
-    find(tree, (node) => node.type === 'Button' && node.props.children?.includes('workspace.check_next')).props.onClick();
+    find(tree, (node) => node.type === 'Button' && node.props.children?.includes?.('workspace.check_next')).props.onClick();
     assert.deepEqual(checked, ['a']);
     assert.equal(app.visits[0][1].page, 2);
     assert.equal(app.visits[0][1].filter, 'geometry');
@@ -158,7 +160,7 @@ test('checking the last geometry on a page records it and opens the next page wi
     props.page = 2;
     find(
         app.render(app.exports.ReviewWorkspace, props),
-        (node) => node.type === 'Button' && node.props.children?.includes('workspace.check_next'),
+        (node) => node.type === 'Button' && node.props.children?.includes?.('workspace.check_next'),
     ).props.onClick();
     assert.equal(finished, 1);
 });
@@ -177,7 +179,7 @@ test('published and superseded deliveries offer inspection without geometry revi
             onFinish() {},
         });
         assert.equal(
-            find(tree, (node) => node.type === 'Button' && node.props.children?.includes('workspace.check_next')),
+            find(tree, (node) => node.type === 'Button' && node.props.children?.includes?.('workspace.check_next')),
             null,
         );
     }
@@ -198,12 +200,14 @@ test('incoming and missing records with the same source ID can be inspected sepa
         onFinish() {},
     };
     let tree = app.render(app.exports.ReviewWorkspace, props);
+    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'navigation.locations').props.onClick();
+    tree = app.render(app.exports.ReviewWorkspace, props);
     const queue = find(tree, (node) => node.type === 'nav' && node.props['aria-label'] === 'workspace.queue');
     queue.props.children[1].props.onClick();
     tree = app.render(app.exports.ReviewWorkspace, props);
     assert.equal(find(tree, (node) => node.type === 'h3').props.children, 'Previous street');
     assert.equal(
-        find(tree, (node) => node.type === 'Button' && node.props.children?.includes('workspace.check_next')),
+        find(tree, (node) => node.type === 'Button' && node.props.children?.includes?.('workspace.check_next')),
         null,
     );
 });
@@ -296,4 +300,38 @@ test('geometry layers can be toggled and map style persists when moving to anoth
         null,
     );
     assert.ok(find(tree, (node) => node.type === 'GeoJSON' && node.props.data === record.geometry_derivation.geometry));
+});
+
+test('the floating panel switches between a record and its queue without losing the selected record', () => {
+    const app = mount('review-workspace.tsx', { './source-record': { claimTitle: (claim) => claim?.street, claimCapacity: () => 1 } });
+    const props = {
+        rows: [
+            { ...row('a'), point: { latitude: 52, longitude: 4 } },
+            { ...row('b'), point: { latitude: 53, longitude: 5 } },
+        ],
+        delivery: { state: 'pending' },
+        reviewedIds: [],
+        page: 1,
+        pages: 1,
+        total: 2,
+        onFinish() {},
+    };
+    let tree = app.render(app.exports.ReviewWorkspace, props);
+    assert.equal(
+        find(tree, (node) => node.type === 'nav' && node.props['aria-label'] === 'workspace.queue'),
+        null,
+    );
+    assert.equal(find(tree, (node) => node.type === app.exports.ReviewMap).props.workspace, true);
+
+    find(tree, (node) => node.type === 'Button' && node.props['aria-label'] === 'navigation.locations').props.onClick();
+    tree = app.render(app.exports.ReviewWorkspace, props);
+    const overview = find(tree, (node) => typeof node.type === 'function' && node.type.name === 'OverviewMap');
+    assert.equal(overview.props.points.length, 2);
+    overview.props.onSelect('new:b');
+    tree = app.render(app.exports.ReviewWorkspace, props);
+    assert.equal(
+        find(tree, (node) => node.type === 'nav' && node.props['aria-label'] === 'workspace.queue'),
+        null,
+    );
+    assert.equal(find(tree, (node) => node.type === app.exports.ReviewMap).props.row.external_id, 'b');
 });
