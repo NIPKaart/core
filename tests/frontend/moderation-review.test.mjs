@@ -16,6 +16,8 @@ const tags = new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : St
 /** Route helpers: every property is callable and turns into a URL string. */
 const routes = () => new Proxy(() => '/url', { get: (_, key) => (key === '__esModule' ? false : routes()), apply: () => '/url' });
 
+let movedDraft = null;
+
 function load(path, modules) {
     const context = {
         exports: {},
@@ -29,7 +31,18 @@ function load(path, modules) {
             }
             if (name === 'react')
                 return {
-                    useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+                    useState: (initial) => {
+                        const value = typeof initial === 'function' ? initial() : initial;
+                        if (value && typeof value === 'object' && 'latitude' in value) {
+                            return [
+                                movedDraft ?? value,
+                                (update) => {
+                                    movedDraft = update(movedDraft ?? value);
+                                },
+                            ];
+                        }
+                        return [value, () => {}];
+                    },
                     useMemo: (build) => build(),
                     useRef: (value) => ({ current: value }),
                     useEffect: () => {},
@@ -193,5 +206,58 @@ test('loading the next item keeps the current details visible instead of flashin
         }),
     );
 
-    assert.ok(find(review, (node) => node.props?.title === 'review.submitted'), 'keep the loaded submission details during navigation');
+    assert.ok(
+        find(review, (node) => node.props?.title === 'review.submitted'),
+        'keep the loaded submission details during navigation',
+    );
+});
+
+test('location changes use the map and offer only restore after moving a submission or improvement', () => {
+    const improvement = {
+        ...selected,
+        type: 'improvement',
+        key: 'improvement:1',
+        details: {
+            id: 1,
+            current,
+            submitted: { latitude: 52.093 },
+            changes: ['location'],
+            space: { ...selected.details.space, confirmations: 0 },
+            nearbySpaces: [],
+            evidence: { last_confirmed_at: null, unavailable_since_confirmation: 0, nearest_municipal: null, timeline: [], confirmed_total: 0 },
+        },
+    };
+    for (const item of [selected, improvement]) {
+        const review = () =>
+            render(
+                pane.ReviewPane({
+                    selected: item,
+                    position: { index: 0, total: 1, previous: null, next: null },
+                    loading: null,
+                    options,
+                    query: {},
+                    onNavigate: () => {},
+                    onBack: () => {},
+                }),
+            );
+        const location = (frame) => find(frame, (node) => node.type === 'DetailRows').props.rows.find((row) => row.key === 'location');
+        const frame = review();
+        assert.equal(location(frame).editor, undefined);
+        assert.equal(
+            find(location(frame).action, (node) => typeof node.type === 'function'),
+            null,
+            'no coordinate edit action',
+        );
+
+        frame.props.map.onMove({ latitude: 52.094, longitude: 5.136 });
+        const moved = review();
+        assert.equal(moved.props.map.proposed.latitude, 52.094);
+        assert.equal(location(moved).editor, undefined);
+        const restore = find(location(moved).action, (node) => typeof node.type === 'function');
+        const button = render(restore);
+        assert.equal(button.props['aria-label'], 'review.restore');
+        button.props.onClick();
+        assert.equal(review().props.map.proposed.latitude, item.details.submitted?.latitude ?? current.latitude);
+        movedDraft = null;
+    }
 });
