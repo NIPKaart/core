@@ -79,7 +79,9 @@ final class ParkingSpaceImprovements
 
             $proposed = [
                 ...$proposed,
-                ...array_map($this->normalize(...), ['latitude' => $latitude, 'longitude' => $longitude, ...$this->resolver->attributesFor($location)]),
+                'latitude' => $this->normalize($latitude),
+                'longitude' => $this->normalize($longitude),
+                ...$this->resolver->attributesFor($location),
             ];
         }
 
