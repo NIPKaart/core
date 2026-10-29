@@ -369,7 +369,8 @@ export function ReviewWorkspace({
     const candidateId = candidateChoice.key === rowKey ? candidateChoice.id : (row?.identity?.facility_id ?? row?.identity?.candidates[0]?.id ?? '');
     const editable = delivery.state === 'pending' && !delivery.superseded;
     const identityFormId = `delivery-identity-${delivery.id}`;
-    const needsIdentity = editable && row?.identity && ['review', 'manual'].includes(row.identity.method);
+    const needsIdentity =
+        editable && row?.identity && (row.identity.method === 'review' || (row.identity.method === 'manual' && filter !== 'geometry'));
     const next = () => {
         if (saving) return;
         if (position < rows.length - 1) setSelectedId(`${rows[position + 1].status}:${rows[position + 1].external_id}`);

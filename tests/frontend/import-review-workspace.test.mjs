@@ -369,6 +369,31 @@ function identityWorkspace() {
     return { app, props, render, decision, finished: () => finished };
 }
 
+test('resolved identity decisions allow both remaining geometries to be checked without resubmitting the decisions', () => {
+    const workspace = identityWorkspace();
+    const checked = [];
+    workspace.props.filter = 'geometry';
+    workspace.props.onReviewed = (id) => checked.push(id);
+    workspace.props.rows = workspace.props.rows.map((record) => ({
+        ...record,
+        geometry_review_required: true,
+        identity: { ...record.identity, method: 'manual', facility_id: record.identity.candidates[0].id },
+    }));
+
+    for (const id of ['a', 'b']) {
+        const tree = workspace.render();
+        assert.equal(workspace.decision(), null);
+        assert.equal(find(tree, (node) => node.type === workspace.app.exports.ReviewMap).props.row.external_id, id);
+        const check = find(tree, (node) => node.type === 'Button' && node.props.children?.includes?.('workspace.check_next'));
+        assert.ok(check);
+        check.props.onClick();
+    }
+
+    assert.deepEqual(checked, ['a', 'b']);
+    assert.equal(workspace.finished(), 1);
+    assert.equal(workspace.app.visits.length, 0);
+});
+
 test('saving an identity advances to the next remaining record and finishing the queue returns to the whole set', () => {
     const workspace = identityWorkspace();
     const current = workspace.decision();
