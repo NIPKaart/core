@@ -14,6 +14,7 @@ import { AlertCircle, Clock, Database, ExternalLink, Flag, Pencil, RotateCcw, Ru
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DecisionForm } from './decision-form';
+import { DetailEditor, EDITABLE, EditDetailsButton, useDetailEditor } from './detail-editor';
 import { metres, nearestWithin, type MapPoint } from './geo';
 import { GroupEditor } from './group-editor';
 import type { ModerationMap } from './moderation-map';
@@ -111,6 +112,8 @@ function Frame({
     timeline,
     decision,
     onCancelDecision,
+    editor,
+    onCloseEditor,
 }: {
     nav: Nav;
     map: MapProps;
@@ -120,15 +123,19 @@ function Frame({
     timeline?: React.ReactNode;
     decision?: React.ReactNode;
     onCancelDecision?: () => void;
+    /** The details editor beside the panel, while it is open. */
+    editor?: React.ReactNode;
+    onCloseEditor?: () => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const { position } = nav;
     const next = position?.next ?? null;
     const previous = position?.previous ?? null;
     useShortcuts({
-        j: !decision && next && (() => nav.onNavigate(next)),
-        k: !decision && previous && (() => nav.onNavigate(previous)),
-        Escape: decision ? onCancelDecision : nav.onBack,
+        // While a form or the editor is open, J and K never move to another item.
+        j: !decision && !editor && next && (() => nav.onNavigate(next)),
+        k: !decision && !editor && previous && (() => nav.onNavigate(previous)),
+        Escape: decision ? onCancelDecision : editor ? onCloseEditor : nav.onBack,
     });
     const scroll = 'flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-4 pb-6';
 
@@ -142,7 +149,14 @@ function Frame({
     }, [deciding]);
 
     return (
-        <Workspace scope="item" map={map} streetView={map.proposed ?? map.center} label={t('review.label')}>
+        <Workspace
+            scope="item"
+            map={map}
+            streetView={map.proposed ?? map.center}
+            label={t('review.label')}
+            aside={!decision && editor ? editor : undefined}
+            asideLabel={t('edit.title')}
+        >
             {decision ? (
                 <PanelNav back={t('review.back_to_item')} onBack={() => onCancelDecision?.()} />
             ) : (
@@ -289,7 +303,7 @@ function Section({ title, aside, children, gap = 'gap-3' }: { title: string; asi
         <section className={cn('flex min-w-0 flex-col', gap)}>
             <div className="flex items-baseline justify-between gap-3">
                 <h3 className="shrink-0 text-sm font-semibold">{title}</h3>
-                {aside && <span className="min-w-0 truncate text-[13px] text-muted-foreground">{aside}</span>}
+                {typeof aside === 'string' ? <span className="min-w-0 truncate text-[13px] text-muted-foreground">{aside}</span> : aside}
             </div>
             {children}
         </section>
@@ -721,6 +735,7 @@ function SubmissionReview({
     const [rejecting, setRejecting] = useState(false);
     const { approve, errors, processing } = useApprove(app.moderation.submissions.approve.url({ parking_space: details.space.id }, { query }));
     const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
+    const editor = useDetailEditor(draft, setDraft, ['orientation', 'under_sign', 'description']);
     const isEdited = (group: ChangeGroup) => GROUP_FIELDS[group].some((field) => !same(draft[field], details.current[field]));
     const at = { latitude: draft.latitude, longitude: draft.longitude };
     const submittedAt = { latitude: details.current.latitude, longitude: details.current.longitude };
@@ -769,6 +784,8 @@ function SubmissionReview({
                 }}
             />
         );
+    /** Groups edited in the editor only offer to put back what was submitted. */
+    const restoreAction = (group: ChangeGroup) => can && isEdited(group) && editAction(group);
 
     return (
         <Frame
@@ -824,15 +841,27 @@ function SubmissionReview({
                 )
             }
             onCancelDecision={() => setRejecting(false)}
+            editor={
+                editor.open && (
+                    <DetailEditor
+                        values={draft}
+                        patch={editor.patch}
+                        options={options}
+                        sections={editor.sections}
+                        onCancel={editor.cancel}
+                        onDone={editor.done}
+                    />
+                )
+            }
+            onCloseEditor={editor.done}
             body={
                 <>
-                    <Section title={t('review.submitted')} gap="gap-2">
+                    <Section title={t('review.submitted')} aside={can && <EditDetailsButton editor={editor} />} gap="gap-2">
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
                         <OrientationCard
                             orientation={options.orientations.find((option) => option.value === draft.orientation) ?? null}
                             submitted={isEdited('orientation') ? format('orientation', details.current) : null}
-                            editor={editing === 'orientation' && <GroupEditor group="orientation" draft={draft} update={update} options={options} />}
-                            action={editAction('orientation')}
+                            action={restoreAction('orientation')}
                         />
                         <DetailRows
                             rows={(['location', 'under_sign', 'description'] as const).map((group) => ({
@@ -841,8 +870,10 @@ function SubmissionReview({
                                 value: format(group, draft),
                                 note: group === 'location' && moved !== null ? t('review.moved', { distance: moved }) : null,
                                 submitted: group !== 'location' && isEdited(group) ? format(group, details.current) : null,
-                                editor: editing === group && <GroupEditor group={group} draft={draft} update={update} options={options} />,
-                                action: editAction(group),
+                                editor: group === 'location' && editing === group && (
+                                    <GroupEditor group={group} draft={draft} update={update} options={options} />
+                                ),
+                                action: group === 'location' ? editAction(group) : restoreAction(group),
                             }))}
                         />
                     </Section>
@@ -884,6 +915,11 @@ function ImprovementReview({
     const { approve, errors, processing } = useApprove(app.moderation.improvements.approve.url({ improvement: details.id }, { query }));
     const can = options.can.improvement;
     const update = (values: Partial<ImprovementValues>) => setDraft((previous) => ({ ...previous, ...values }));
+    const editor = useDetailEditor(
+        draft,
+        setDraft,
+        changes.filter((group) => accepted[group] && EDITABLE[group]),
+    );
     const isEdited = (group: ChangeGroup) => GROUP_FIELDS[group].some((field) => !same(draft[field], proposed[field]));
     const takenOver = changes.filter((group) => accepted[group]);
     const result = (): ImprovementValues => ({
@@ -996,9 +1032,26 @@ function ImprovementReview({
                 )
             }
             onCancelDecision={() => setRejecting(false)}
+            editor={
+                editor.open && (
+                    <DetailEditor
+                        values={draft}
+                        patch={editor.patch}
+                        options={options}
+                        sections={editor.sections}
+                        onCancel={editor.cancel}
+                        onDone={editor.done}
+                    />
+                )
+            }
+            onCloseEditor={editor.done}
             body={
                 <>
-                    <Section title={t('review.changes')} gap="gap-2">
+                    <Section
+                        title={t('review.changes')}
+                        aside={can && editor.sections.length > 0 && <EditDetailsButton editor={editor} />}
+                        gap="gap-2"
+                    >
                         <InputError message={errors.general ?? Object.values(errors)[0]} />
                         <DetailRows
                             rows={changes.map((group) => ({
@@ -1026,12 +1079,12 @@ function ImprovementReview({
                                         </span>
                                     ),
                                 submitted: isEdited(group) && accepted[group] ? format(group, proposed) : null,
-                                editor: editing === group && accepted[group] && (
+                                editor: group === 'location' && editing === group && accepted[group] && (
                                     <GroupEditor group={group} draft={draft} update={update} options={options} />
                                 ),
                                 action: (
                                     <span className="flex items-center gap-1">
-                                        {can && accepted[group] && (
+                                        {can && accepted[group] && (group === 'location' || isEdited(group)) && (
                                             <EditButton
                                                 edited={isEdited(group)}
                                                 editing={editing === group}

@@ -14,12 +14,16 @@ const DURATION_PRESETS = [30, 60, 120, 180];
 const NOTE_MAX = 500;
 const WEEKDAYS: RestrictionDay[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
 
+export type DetailsSection = 'orientation' | 'under_sign' | 'note';
+
 type Props = {
     data: ContributionForm;
     setData: <K extends keyof ContributionForm>(key: K, value: ContributionForm[K]) => void;
     errors: Partial<Record<keyof ContributionForm | `restriction_days.${number}`, string>>;
     orientationOptions: OrientationOption[];
     restrictionDays: RestrictionDay[];
+    /** Which parts to show; all of them by default. Moderation shows only what it may change. */
+    sections?: DetailsSection[];
 };
 
 const choiceClass = (selected: boolean) =>
@@ -32,7 +36,14 @@ function minutesOf(data: ContributionForm): number {
     return Number(data.parking_hours || 0) * 60 + Number(data.parking_minutes || 0);
 }
 
-export default function DetailsStep({ data, setData, errors, orientationOptions, restrictionDays }: Props) {
+export default function DetailsStep({
+    data,
+    setData,
+    errors,
+    orientationOptions,
+    restrictionDays,
+    sections = ['orientation', 'under_sign', 'note'],
+}: Props) {
     const { t } = useTranslation('frontend/map/contribute');
     const duration = minutesOf(data);
     const [customDuration, setCustomDuration] = useState(duration > 0 && !DURATION_PRESETS.includes(duration));
@@ -54,127 +65,195 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
 
     return (
         <div className="flex flex-col gap-4">
-            <fieldset className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
-                <legend className="float-left w-full text-base font-semibold">{t('details.orientation.title')}</legend>
-                <p className="text-sm text-muted-foreground">{t('details.orientation.hint')}</p>
-                <div className="grid grid-cols-3 gap-2">
-                    {orientationOptions.map((option) => (
-                        <label
-                            key={option.value}
-                            className={cn(choiceClass(data.orientation === option.value), 'flex flex-col items-center gap-1.5 px-1.5 py-2.5 text-sm')}
+            {sections.includes('orientation') && (
+                <fieldset className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
+                    <legend className="float-left w-full text-base font-semibold">{t('details.orientation.title')}</legend>
+                    <p className="text-sm text-muted-foreground">{t('details.orientation.hint')}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                        {orientationOptions.map((option) => (
+                            <label
+                                key={option.value}
+                                className={cn(
+                                    choiceClass(data.orientation === option.value),
+                                    'flex flex-col items-center gap-1.5 px-1.5 py-2.5 text-sm',
+                                )}
+                            >
+                                <input
+                                    type="radio"
+                                    name="orientation"
+                                    value={option.value}
+                                    checked={data.orientation === option.value}
+                                    onChange={() => setData('orientation', option.value)}
+                                    className="sr-only"
+                                />
+                                <img src={getOrientationIllustration(option)} alt="" className="size-16 object-contain sm:size-20" />
+                                {option.label}
+                            </label>
+                        ))}
+                    </div>
+                    <InputError
+                        message={errors.orientation === 'details.orientation.required' ? t('details.orientation.required') : errors.orientation}
+                    />
+                    {data.latitude !== null && data.longitude !== null && (
+                        <a
+                            href={`https://maps.google.com/maps?q=&layer=c&cbll=${data.latitude},${data.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 self-start py-1 text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
                         >
-                            <input
-                                type="radio"
-                                name="orientation"
-                                value={option.value}
-                                checked={data.orientation === option.value}
-                                onChange={() => setData('orientation', option.value)}
-                                className="sr-only"
-                            />
-                            <img src={getOrientationIllustration(option)} alt="" className="size-16 object-contain sm:size-20" />
-                            {option.label}
-                        </label>
-                    ))}
-                </div>
-                <InputError
-                    message={errors.orientation === 'details.orientation.required' ? t('details.orientation.required') : errors.orientation}
-                />
-                {data.latitude !== null && data.longitude !== null && (
-                    <a
-                        href={`https://maps.google.com/maps?q=&layer=c&cbll=${data.latitude},${data.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 self-start py-1 text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                    >
-                        <ExternalLink className="size-4" aria-hidden />
-                        {t('details.streetview')}
-                    </a>
-                )}
-            </fieldset>
+                            <ExternalLink className="size-4" aria-hidden />
+                            {t('details.streetview')}
+                        </a>
+                    )}
+                </fieldset>
+            )}
 
-            <fieldset className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
-                <legend className="float-left w-full text-base font-semibold">{t('details.under_sign.title')}</legend>
-                <div className="flex items-center gap-3">
-                    <img src="/assets/images/boards/under-sign.svg" alt={t('details.under_sign.example')} className="h-16 w-13 shrink-0 rounded-lg" />
-                    <p className="text-sm text-muted-foreground">{t('details.under_sign.hint')}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    {(['yes', 'no'] as const).map((answer) => (
-                        <label
-                            key={answer}
-                            className={cn(choiceClass(data.under_sign === answer), 'flex h-12 items-center justify-center text-[15px]')}
-                        >
-                            <input
-                                type="radio"
-                                name="under_sign"
-                                value={answer}
-                                checked={data.under_sign === answer}
-                                onChange={() => setData('under_sign', answer)}
-                                className="sr-only"
-                            />
-                            {t(`details.under_sign.${answer}` as const)}
-                        </label>
-                    ))}
-                </div>
-                <InputError message={errors.under_sign === 'details.under_sign.required' ? t('details.under_sign.required') : errors.under_sign} />
+            {sections.includes('under_sign') && (
+                <fieldset className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
+                    <legend className="float-left w-full text-base font-semibold">{t('details.under_sign.title')}</legend>
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="/assets/images/boards/under-sign.svg"
+                            alt={t('details.under_sign.example')}
+                            className="h-16 w-13 shrink-0 rounded-lg"
+                        />
+                        <p className="text-sm text-muted-foreground">{t('details.under_sign.hint')}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        {(['yes', 'no'] as const).map((answer) => (
+                            <label
+                                key={answer}
+                                className={cn(choiceClass(data.under_sign === answer), 'flex h-12 items-center justify-center text-[15px]')}
+                            >
+                                <input
+                                    type="radio"
+                                    name="under_sign"
+                                    value={answer}
+                                    checked={data.under_sign === answer}
+                                    onChange={() => setData('under_sign', answer)}
+                                    className="sr-only"
+                                />
+                                {t(`details.under_sign.${answer}` as const)}
+                            </label>
+                        ))}
+                    </div>
+                    <InputError
+                        message={errors.under_sign === 'details.under_sign.required' ? t('details.under_sign.required') : errors.under_sign}
+                    />
 
-                {data.under_sign === 'yes' && (
-                    <div className="flex flex-col gap-4 border-t pt-3">
-                        <p className="text-sm text-muted-foreground">{t('details.under_sign.optional')}</p>
+                    {data.under_sign === 'yes' && (
+                        <div className="flex flex-col gap-4 border-t pt-3">
+                            <p className="text-sm text-muted-foreground">{t('details.under_sign.optional')}</p>
 
-                        <div className="grid gap-1.5">
-                            <Label htmlFor="under_sign_text">{t('details.under_sign.text_label')}</Label>
-                            <Input
-                                id="under_sign_text"
-                                value={data.under_sign_text}
-                                maxLength={255}
-                                placeholder={t('details.under_sign.text_placeholder')}
-                                onChange={(event) => setData('under_sign_text', event.target.value)}
-                                className="h-12"
-                            />
-                            <InputError message={errors.under_sign_text} />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <span className="text-sm font-medium" id="duration-label">
-                                {t('details.under_sign.duration')}
-                            </span>
-                            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="duration-label">
-                                {DURATION_PRESETS.map((minutes) => (
-                                    <button
-                                        key={minutes}
-                                        type="button"
-                                        aria-pressed={!customDuration && duration === minutes}
-                                        onClick={() => setDuration(minutes)}
-                                        className="h-11 rounded-full border px-4 text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
-                                    >
-                                        {minutes < 60
-                                            ? t('details.under_sign.duration_minutes', { count: minutes })
-                                            : t('details.under_sign.duration_hours', { count: minutes / 60 })}
-                                    </button>
-                                ))}
-                                <button
-                                    type="button"
-                                    aria-pressed={customDuration}
-                                    onClick={() => setCustomDuration((value) => !value)}
-                                    className="h-11 rounded-full border border-dashed px-4 text-sm aria-pressed:border-solid aria-pressed:border-foreground aria-pressed:font-semibold"
-                                >
-                                    {t('details.under_sign.duration_other')}
-                                </button>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="under_sign_text">{t('details.under_sign.text_label')}</Label>
+                                <Input
+                                    id="under_sign_text"
+                                    value={data.under_sign_text}
+                                    maxLength={255}
+                                    placeholder={t('details.under_sign.text_placeholder')}
+                                    onChange={(event) => setData('under_sign_text', event.target.value)}
+                                    className="h-12"
+                                />
+                                <InputError message={errors.under_sign_text} />
                             </div>
-                            {customDuration && (
+
+                            <div className="grid gap-2">
+                                <span className="text-sm font-medium" id="duration-label">
+                                    {t('details.under_sign.duration')}
+                                </span>
+                                <div className="flex flex-wrap gap-2" role="group" aria-labelledby="duration-label">
+                                    {DURATION_PRESETS.map((minutes) => (
+                                        <button
+                                            key={minutes}
+                                            type="button"
+                                            aria-pressed={!customDuration && duration === minutes}
+                                            onClick={() => setDuration(minutes)}
+                                            className="h-11 rounded-full border px-4 text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
+                                        >
+                                            {minutes < 60
+                                                ? t('details.under_sign.duration_minutes', { count: minutes })
+                                                : t('details.under_sign.duration_hours', { count: minutes / 60 })}
+                                        </button>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        aria-pressed={customDuration}
+                                        onClick={() => setCustomDuration((value) => !value)}
+                                        className="h-11 rounded-full border border-dashed px-4 text-sm aria-pressed:border-solid aria-pressed:border-foreground aria-pressed:font-semibold"
+                                    >
+                                        {t('details.under_sign.duration_other')}
+                                    </button>
+                                </div>
+                                {customDuration && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {(['parking_hours', 'parking_minutes'] as const).map((name) => (
+                                            <div key={name} className="grid gap-1">
+                                                <Label htmlFor={name} className="text-muted-foreground">
+                                                    {t(`details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}` as const)}
+                                                </Label>
+                                                <Input
+                                                    id={name}
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    min={0}
+                                                    max={name === 'parking_hours' ? 24 : 59}
+                                                    value={data[name]}
+                                                    onChange={(event) => setData(name, event.target.value)}
+                                                    className="h-12"
+                                                />
+                                                <InputError message={errors[name]} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid gap-2">
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-sm font-medium" id="days-label">
+                                        {t('details.under_sign.applies')}
+                                    </span>
+                                    <div className="flex gap-4">
+                                        <button
+                                            type="button"
+                                            className="py-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
+                                            onClick={() => setData('restriction_days', WEEKDAYS)}
+                                        >
+                                            {t('details.under_sign.weekdays')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="py-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
+                                            onClick={() => setData('restriction_days', restrictionDays)}
+                                        >
+                                            {t('details.under_sign.every_day')}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-7 gap-1.5" role="group" aria-labelledby="days-label">
+                                    {restrictionDays.map((day) => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            aria-pressed={data.restriction_days.includes(day)}
+                                            onClick={() => toggleDay(day)}
+                                            className="h-11 rounded-lg border text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
+                                        >
+                                            {t(`days.${day}` as const)}
+                                        </button>
+                                    ))}
+                                </div>
+                                <InputError message={dayError} />
                                 <div className="grid grid-cols-2 gap-2">
-                                    {(['parking_hours', 'parking_minutes'] as const).map((name) => (
+                                    {(['restriction_starts_at', 'restriction_ends_at'] as const).map((name) => (
                                         <div key={name} className="grid gap-1">
                                             <Label htmlFor={name} className="text-muted-foreground">
-                                                {t(`details.under_sign.${name === 'parking_hours' ? 'hours' : 'minutes'}` as const)}
+                                                {t(`details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}` as const)}
                                             </Label>
                                             <Input
                                                 id={name}
-                                                type="number"
-                                                inputMode="numeric"
-                                                min={0}
-                                                max={name === 'parking_hours' ? 24 : 59}
+                                                type="time"
                                                 value={data[name]}
                                                 onChange={(event) => setData(name, event.target.value)}
                                                 className="h-12"
@@ -183,86 +262,33 @@ export default function DetailsStep({ data, setData, errors, orientationOptions,
                                         </div>
                                     ))}
                                 </div>
-                            )}
+                            </div>
                         </div>
+                    )}
+                </fieldset>
+            )}
 
-                        <div className="grid gap-2">
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-sm font-medium" id="days-label">
-                                    {t('details.under_sign.applies')}
-                                </span>
-                                <div className="flex gap-4">
-                                    <button
-                                        type="button"
-                                        className="py-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
-                                        onClick={() => setData('restriction_days', WEEKDAYS)}
-                                    >
-                                        {t('details.under_sign.weekdays')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="py-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
-                                        onClick={() => setData('restriction_days', restrictionDays)}
-                                    >
-                                        {t('details.under_sign.every_day')}
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-7 gap-1.5" role="group" aria-labelledby="days-label">
-                                {restrictionDays.map((day) => (
-                                    <button
-                                        key={day}
-                                        type="button"
-                                        aria-pressed={data.restriction_days.includes(day)}
-                                        onClick={() => toggleDay(day)}
-                                        className="h-11 rounded-lg border text-sm aria-pressed:border-foreground aria-pressed:bg-foreground aria-pressed:font-semibold aria-pressed:text-background"
-                                    >
-                                        {t(`days.${day}` as const)}
-                                    </button>
-                                ))}
-                            </div>
-                            <InputError message={dayError} />
-                            <div className="grid grid-cols-2 gap-2">
-                                {(['restriction_starts_at', 'restriction_ends_at'] as const).map((name) => (
-                                    <div key={name} className="grid gap-1">
-                                        <Label htmlFor={name} className="text-muted-foreground">
-                                            {t(`details.under_sign.${name === 'restriction_starts_at' ? 'from' : 'until'}` as const)}
-                                        </Label>
-                                        <Input
-                                            id={name}
-                                            type="time"
-                                            value={data[name]}
-                                            onChange={(event) => setData(name, event.target.value)}
-                                            className="h-12"
-                                        />
-                                        <InputError message={errors[name]} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+            {sections.includes('note') && (
+                <div className="grid gap-2 rounded-2xl border bg-card p-4">
+                    <Label htmlFor="description" className="text-base font-semibold">
+                        {t('details.note.title')} <span className="text-sm font-normal text-muted-foreground">{t('details.note.optional')}</span>
+                    </Label>
+                    <Textarea
+                        id="description"
+                        rows={3}
+                        maxLength={NOTE_MAX}
+                        value={data.description}
+                        placeholder={t('details.note.placeholder')}
+                        onChange={(event) => setData('description', event.target.value)}
+                    />
+                    <div className="flex justify-between gap-2">
+                        <InputError message={errors.description} />
+                        <span className="ml-auto text-xs text-muted-foreground tabular-nums" aria-live="polite">
+                            {data.description.length} / {NOTE_MAX}
+                        </span>
                     </div>
-                )}
-            </fieldset>
-
-            <div className="grid gap-2 rounded-2xl border bg-card p-4">
-                <Label htmlFor="description" className="text-base font-semibold">
-                    {t('details.note.title')} <span className="text-sm font-normal text-muted-foreground">{t('details.note.optional')}</span>
-                </Label>
-                <Textarea
-                    id="description"
-                    rows={3}
-                    maxLength={NOTE_MAX}
-                    value={data.description}
-                    placeholder={t('details.note.placeholder')}
-                    onChange={(event) => setData('description', event.target.value)}
-                />
-                <div className="flex justify-between gap-2">
-                    <InputError message={errors.description} />
-                    <span className="ml-auto text-xs text-muted-foreground tabular-nums" aria-live="polite">
-                        {data.description.length} / {NOTE_MAX}
-                    </span>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

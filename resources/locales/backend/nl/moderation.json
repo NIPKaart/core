@@ -105,7 +105,7 @@
         "moved": "{{distance}} m verplaatst",
         "edited": "Aangepast · ingediend was {{value}}",
         "edit": "{{field}} aanpassen",
-        "restore": "Herstellen",
+        "restore": "Terugzetten",
         "latitude": "Breedtegraad",
         "longitude": "Lengtegraad",
         "show_unchanged": "Toon ongewijzigde velden",
@@ -400,5 +400,13 @@
         "zoom_in": "Inzoomen",
         "zoom_out": "Uitzoomen",
         "fit_all": "Alles in beeld"
+    },
+    "edit": {
+        "title": "Gegevens bewerken",
+        "open": "Bewerken",
+        "close": "Bewerken sluiten",
+        "done": "Klaar",
+        "sheet_larger": "Blad vergroten",
+        "sheet_smaller": "Blad verkleinen"
     }
 }

@@ -105,7 +105,7 @@
         "moved": "moved {{distance}} m",
         "edited": "Adjusted · submitted was {{value}}",
         "edit": "Adjust {{field}}",
-        "restore": "Restore",
+        "restore": "Revert",
         "latitude": "Latitude",
         "longitude": "Longitude",
         "show_unchanged": "Show unchanged fields",
@@ -400,5 +400,13 @@
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",
         "fit_all": "Show everything"
+    },
+    "edit": {
+        "title": "Edit details",
+        "open": "Edit",
+        "close": "Close editing",
+        "done": "Done",
+        "sheet_larger": "Enlarge sheet",
+        "sheet_smaller": "Shrink sheet"
     }
 }
