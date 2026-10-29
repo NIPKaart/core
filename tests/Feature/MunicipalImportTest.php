@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
 use Database\Factories\DatasetSourceFactory;
+use Illuminate\Database\Eloquent\Casts\Json;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,40 @@ function approveMunicipal(DatasetImport $import, User $user): void
     $service = app(MunicipalImportService::class);
     $service->decide($import, $user, 'publish', 'Bronregelingen beoordeeld.', $service->review($import)['token']);
 }
+
+it('decodes each stored source claim a bounded number of times when comparing a delivery', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = importReviewer();
+    $data = municipalDelivery();
+    $data['records'] = array_map(function (int $index) use ($data): array {
+        return [...$data['records'][0], 'external_id' => 'record-'.$index, 'geometry' => ['type' => 'Point', 'coordinates' => [4.9 + $index * 0.001, 52.3]]];
+    }, range(0, 3));
+    $data['source_count'] = count($data['records']);
+    approveMunicipal(stageMunicipal($data, $user), $user);
+    $this->travel(5)->minutes();
+    $data['delivery_id'] = (string) Str::uuid();
+    $data['retrieved_at'] = now()->subMinute()->utc()->format('Y-m-d\TH:i:s.u\Z');
+    $import = stageMunicipal($data, $user);
+    $sourceDecodes = 0;
+    Json::decodeUsing(function (mixed $value, ?bool $associative) use (&$sourceDecodes): mixed {
+        $decoded = json_decode($value, $associative);
+        if (is_array($decoded) && isset($decoded['geometry'], $decoded['external_id'])) {
+            $sourceDecodes++;
+        }
+
+        return $decoded;
+    });
+
+    try {
+        $review = app(MunicipalImportService::class)->review($import);
+    } finally {
+        Json::decodeUsing(null);
+    }
+
+    expect($review['counts'])->toMatchArray(['unchanged' => 4, 'new' => 0, 'missing' => 0, 'conflict' => 0]);
+    expect($sourceDecodes)->toBeLessThanOrEqual(count($data['records']) * 2);
+});
 
 it('stages an authorized upload and publishes only after review', function () {
     $source = DatasetSource::factory()->create();

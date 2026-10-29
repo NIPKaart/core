@@ -52,12 +52,15 @@ class MunicipalImportService implements DatasetImporter
             $id = $record['source']['external_id'];
             $identity = $identities[$index];
             $space = $existing->get($identity['facility_id']);
+            $before = $space?->source_record;
+            $previousValues = $space?->last_imported_values;
+            $previousDerivation = $space?->geometry_derivation;
             $fields = [];
             $conflicts = [];
             if ($space) {
-                foreach (array_unique([...array_keys($record['source']), ...array_keys($space->source_record ?? [])]) as $field) {
+                foreach (array_unique([...array_keys($record['source']), ...array_keys($before ?? [])]) as $field) {
                     $value = $record['source'][$field] ?? null;
-                    $previous = $space->source_record[$field] ?? null;
+                    $previous = $before[$field] ?? null;
                     if ($field === 'source_attributes') {
                         $value = $this->comparableSourceAttributes($value ?? []);
                         $previous = $this->comparableSourceAttributes($previous ?? []);
@@ -67,24 +70,24 @@ class MunicipalImportService implements DatasetImporter
                     }
                 }
                 foreach ($record['values'] as $field => $value) {
-                    if ($space->last_imported_values === null || (MunicipalSnapshot::fingerprint($this->value($space, $field)) !== MunicipalSnapshot::fingerprint($space->last_imported_values[$field]) && MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($space->last_imported_values[$field]) && MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($this->value($space, $field)))) {
+                    if ($previousValues === null || (MunicipalSnapshot::fingerprint($this->value($space, $field)) !== MunicipalSnapshot::fingerprint($previousValues[$field]) && MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($previousValues[$field]) && MunicipalSnapshot::fingerprint($value) !== MunicipalSnapshot::fingerprint($this->value($space, $field)))) {
                         $conflicts[] = $field;
                     }
                 }
             }
-            if ($space && MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null) !== MunicipalSnapshot::fingerprint($space->geometry_derivation)) {
+            if ($space && MunicipalSnapshot::fingerprint($record['geometry_derivation'] ?? null) !== MunicipalSnapshot::fingerprint($previousDerivation)) {
                 $fields[] = 'geometry_derivation';
             }
             $status = $identity['method'] === 'review' ? 'conflict' : (! $space ? 'new' : ($conflicts ? 'conflict' : ($fields ? 'changed' : 'unchanged')));
             $counts[$status]++;
             $rows[] = [
                 'external_id' => $id, 'identity' => $identity, 'status' => $status, 'fields' => $fields, 'conflicts' => $conflicts,
-                'before' => $space?->source_record, 'after' => $record['source'],
+                'before' => $before, 'after' => $record['source'],
                 'geometry_derivation' => $record['geometry_derivation'] ?? null,
                 'geometry_review_required' => ! empty($record['geometry_derivation']) && (! $space
-                    || MunicipalSnapshot::fingerprint($record['source']['geometry']) !== MunicipalSnapshot::fingerprint($space->source_record['geometry'] ?? null)
-                    || MunicipalSnapshot::fingerprint($record['geometry_derivation']) !== MunicipalSnapshot::fingerprint($space->geometry_derivation)),
-                'previous_geometry_derivation' => $space?->geometry_derivation,
+                    || MunicipalSnapshot::fingerprint($record['source']['geometry']) !== MunicipalSnapshot::fingerprint($before['geometry'] ?? null)
+                    || MunicipalSnapshot::fingerprint($record['geometry_derivation']) !== MunicipalSnapshot::fingerprint($previousDerivation)),
+                'previous_geometry_derivation' => $previousDerivation,
                 'point' => ['latitude' => $record['values']['latitude'], 'longitude' => $record['values']['longitude']],
                 'current' => $space?->only(['id', 'number', 'street', 'orientation', 'latitude', 'longitude', 'visibility']),
             ];
