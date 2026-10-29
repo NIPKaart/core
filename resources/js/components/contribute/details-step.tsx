@@ -24,8 +24,6 @@ type Props = {
     restrictionDays: RestrictionDay[];
     /** Which parts to show; all of them by default. Moderation shows only what it may change. */
     sections?: DetailsSection[];
-    /** Flat sections when embedded in the moderation editor. */
-    variant?: 'cards' | 'plain';
 };
 
 const choiceClass = (selected: boolean) =>
@@ -45,7 +43,6 @@ export default function DetailsStep({
     orientationOptions,
     restrictionDays,
     sections = ['orientation', 'under_sign', 'note'],
-    variant = 'cards',
 }: Props) {
     const { t } = useTranslation('frontend/map/contribute');
     const duration = minutesOf(data);
@@ -69,12 +66,7 @@ export default function DetailsStep({
     return (
         <div className="flex flex-col gap-4">
             {sections.includes('orientation') && (
-                <fieldset
-                    className={cn(
-                        'flex flex-col gap-3',
-                        variant === 'plain' ? 'border-b pb-4 last:border-0 last:pb-0' : 'rounded-2xl border bg-card p-4',
-                    )}
-                >
+                <fieldset className="flex flex-col gap-3 border-b pb-4 last:border-0 last:pb-0">
                     <legend className="float-left w-full text-base font-semibold">{t('details.orientation.title')}</legend>
                     <p className="text-sm text-muted-foreground">{t('details.orientation.hint')}</p>
                     <div className="grid grid-cols-3 gap-2">
@@ -94,11 +86,7 @@ export default function DetailsStep({
                                     onChange={() => setData('orientation', option.value)}
                                     className="sr-only"
                                 />
-                                <img
-                                    src={getOrientationIllustration(option)}
-                                    alt=""
-                                    className={cn('object-contain', variant === 'plain' ? 'size-12' : 'size-16 sm:size-20')}
-                                />
+                                <img src={getOrientationIllustration(option)} alt="" className="size-12 object-contain" />
                                 {option.label}
                             </label>
                         ))}
@@ -121,12 +109,7 @@ export default function DetailsStep({
             )}
 
             {sections.includes('under_sign') && (
-                <fieldset
-                    className={cn(
-                        'flex flex-col gap-3',
-                        variant === 'plain' ? 'border-b pb-4 last:border-0 last:pb-0' : 'rounded-2xl border bg-card p-4',
-                    )}
-                >
+                <fieldset className="flex flex-col gap-3 border-b pb-4 last:border-0 last:pb-0">
                     <legend className="float-left w-full text-base font-semibold">{t('details.under_sign.title')}</legend>
                     <div className="flex items-center gap-3">
                         <img
@@ -143,7 +126,7 @@ export default function DetailsStep({
                                 className={cn(
                                     choiceClass(data.under_sign === answer),
                                     'flex items-center justify-center text-[15px]',
-                                    variant === 'plain' ? 'h-11 lg:h-10' : 'h-12',
+                                    'h-11 lg:h-10',
                                 )}
                             >
                                 <input
@@ -174,7 +157,7 @@ export default function DetailsStep({
                                     maxLength={255}
                                     placeholder={t('details.under_sign.text_placeholder')}
                                     onChange={(event) => setData('under_sign_text', event.target.value)}
-                                    className={variant === 'plain' ? 'h-11 lg:h-10' : 'h-12'}
+                                    className="h-11 lg:h-10"
                                 />
                                 <InputError message={errors.under_sign_text} />
                             </div>
@@ -221,7 +204,7 @@ export default function DetailsStep({
                                                     max={name === 'parking_hours' ? 24 : 59}
                                                     value={data[name]}
                                                     onChange={(event) => setData(name, event.target.value)}
-                                                    className={variant === 'plain' ? 'h-11 lg:h-10' : 'h-12'}
+                                                    className="h-11 lg:h-10"
                                                 />
                                                 <InputError message={errors[name]} />
                                             </div>
@@ -277,7 +260,7 @@ export default function DetailsStep({
                                                 type="time"
                                                 value={data[name]}
                                                 onChange={(event) => setData(name, event.target.value)}
-                                                className={variant === 'plain' ? 'h-11 lg:h-10' : 'h-12'}
+                                                className="h-11 lg:h-10"
                                             />
                                             <InputError message={errors[name]} />
                                         </div>
@@ -290,7 +273,7 @@ export default function DetailsStep({
             )}
 
             {sections.includes('note') && (
-                <div className={cn('grid gap-2', variant === 'cards' && 'rounded-2xl border bg-card p-4')}>
+                <div className="grid gap-2">
                     <Label htmlFor="description" className="text-base font-semibold">
                         {t('details.note.title')} <span className="text-sm font-normal text-muted-foreground">{t('details.note.optional')}</span>
                     </Label>

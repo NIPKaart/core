@@ -64,7 +64,6 @@ export function DetailEditor({
                     orientationOptions={options.orientations}
                     restrictionDays={options.restrictionDays}
                     sections={sections}
-                    variant="plain"
                 />
             </div>
             <div className="flex shrink-0 gap-2 border-t px-5 py-3">
