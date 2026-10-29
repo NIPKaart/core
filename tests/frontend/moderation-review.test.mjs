@@ -179,3 +179,19 @@ test('an open submission shows its decision and details while no reason form is 
     // Rows come from another vm context, so compare their keys as text.
     assert.equal(details.props.rows.map((row) => row.key).join(','), 'location,under_sign,description');
 });
+
+test('loading the next item keeps the current details visible instead of flashing a skeleton', () => {
+    const review = render(
+        pane.ReviewPane({
+            selected,
+            position: { index: 3, total: 7, previous: null, next: null },
+            loading: { preview: { ...selected, key: 'submission:next' } },
+            options,
+            query: {},
+            onNavigate: () => {},
+            onBack: () => {},
+        }),
+    );
+
+    assert.ok(find(review, (node) => node.props?.title === 'review.submitted'), 'keep the loaded submission details during navigation');
+});

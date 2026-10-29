@@ -51,7 +51,10 @@ export function DetailEditor({
                     <X className="size-[18px]" />
                 </Button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4" data-editor-scroll>
+            <div
+                className="min-h-0 flex-1 [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent] overflow-y-auto overscroll-contain px-5 py-4"
+                data-editor-scroll
+            >
                 <DetailsStep
                     data={toForm(values)}
                     setData={<K extends keyof ContributionForm>(key: K, value: ContributionForm[K]) =>
@@ -63,11 +66,11 @@ export function DetailEditor({
                     sections={sections}
                 />
             </div>
-            <div className="flex shrink-0 gap-2 border-t px-5 py-4">
-                <Button variant="outline" size="lg" className="flex-1 basis-0 cursor-pointer" onClick={onCancel}>
+            <div className="flex shrink-0 gap-2 border-t px-5 py-3">
+                <Button variant="outline" className="flex-1 basis-0 cursor-pointer" onClick={onCancel}>
                     {t('decide.cancel')}
                 </Button>
-                <Button size="lg" className="flex-1 basis-0 cursor-pointer" onClick={onDone}>
+                <Button className="flex-1 basis-0 cursor-pointer" onClick={onDone}>
                     {t('edit.done')}
                     <Kbd inverted aria-hidden>
                         Esc
