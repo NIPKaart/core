@@ -89,11 +89,11 @@ function load(path, i18n) {
             if (name === 'react-i18next') return { useTranslation: (ns) => ({ t: i18n.getFixedT(i18n.language, ns), i18n }) };
             if (name === 'sonner') {
                 return {
-                    Toaster: ({ containerAriaLabel, toastOptions }) =>
+                    Toaster: ({ containerAriaLabel, position, closeButton, toastOptions }) =>
                         React.createElement(
                             'section',
-                            { 'aria-label': containerAriaLabel },
-                            React.createElement('button', { 'aria-label': toastOptions.closeButtonAriaLabel }),
+                            { 'aria-label': containerAriaLabel, 'data-position': position },
+                            closeButton && React.createElement('button', { 'aria-label': toastOptions.closeButtonAriaLabel }),
                         ),
                 };
             }
@@ -112,7 +112,7 @@ function load(path, i18n) {
 }
 const render = (component, props = {}) => renderToStaticMarkup(React.createElement(component, props));
 
-test('toast accessibility labels follow language changes without fallback', async () => {
+test('dismissible bottom-right toasts keep their accessibility labels when the language changes', async () => {
     const i18n = i18next.createInstance();
     await i18n.init({ resources, lng: 'nl', fallbackLng: false });
     const LocalizedToaster = load('components/localized-toaster.tsx', i18n).default;
@@ -120,11 +120,13 @@ test('toast accessibility labels follow language changes without fallback', asyn
     const dutch = render(LocalizedToaster);
     assert.ok(dutch.includes('aria-label="Meldingen"'));
     assert.ok(dutch.includes('aria-label="Sluiten"'));
+    assert.ok(dutch.includes('data-position="bottom-right"'));
 
     await i18n.changeLanguage('en');
     const english = render(LocalizedToaster);
     assert.ok(english.includes('aria-label="Notifications"'));
     assert.ok(english.includes('aria-label="Close"'));
+    assert.ok(english.includes('data-position="bottom-right"'));
 });
 
 test('existing local contribution errors follow a language change while server messages remain intact', async () => {
