@@ -72,7 +72,7 @@ export function Workspace({
     const street = streetView ? streetViewUrl(streetView.latitude, streetView.longitude) : null;
 
     return (
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col lg:block">
+        <div className="relative isolate flex min-h-0 min-w-0 flex-1 flex-col lg:block">
             <h1 className="sr-only">{t('title')}</h1>
             <ModerationMap
                 {...map}
