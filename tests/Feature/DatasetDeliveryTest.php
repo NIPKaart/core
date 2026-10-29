@@ -155,6 +155,54 @@ it('leaves missing or interrupted objects retryable after a failed attempt', fun
     expect($delivery->fresh())->state->toBe('validated');
 });
 
+it('stops redispatching a missing object after the queued attempts are exhausted', function () {
+    [$handler, $client] = bucketClient();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    $delivery = bucketReceipt(bucketPayload());
+    $job = new ProcessDatasetDelivery($delivery->id);
+    $exception = new S3Exception('Missing object', $client->getCommand('GetObject'), ['code' => 'NoSuchKey']);
+
+    for ($attempt = 1; $attempt <= $job->tries; $attempt++) {
+        $handler->append($exception);
+        expect(fn () => $job->handle(app(DatasetDeliveryService::class)))->toThrow(S3Exception::class);
+        expect($delivery->fresh())->state->toBe('pending');
+    }
+    $job->failed($exception);
+
+    expect($delivery->fresh())->state->toBe('rejected')->error_code->toBe('object_missing')->dataset_import_id->toBeNull();
+    $this->assertDatabaseCount('dataset_imports', 0);
+    bucketFolders($handler);
+    bucketNoOffstreetFolders($handler);
+    app(DatasetDeliveryService::class)->discover();
+    Queue::assertNothingPushed();
+});
+
+it('keeps other exhausted storage failures retryable', function (string $code, int $status) {
+    [, $client] = bucketClient();
+    $delivery = bucketReceipt(bucketPayload());
+    $exception = new S3Exception('Storage failed', $client->getCommand('GetObject'), [
+        'code' => $code, 'response' => new Response($status),
+    ]);
+
+    (new ProcessDatasetDelivery($delivery->id))->failed($exception);
+
+    expect($delivery->fresh())->state->toBe('pending')->error_code->toBeNull();
+})->with([['AccessDenied', 403], ['ServiceUnavailable', 503], ['NoSuchBucket', 404]]);
+
+it('does not replace a completed delivery with a stale missing-object failure', function () {
+    [$handler, $client] = bucketClient();
+    $json = bucketPayload();
+    $delivery = bucketReceipt($json);
+    $handler->append(bucketObject($json));
+    app(DatasetDeliveryService::class)->process($delivery->id);
+
+    (new ProcessDatasetDelivery($delivery->id))->failed(
+        new S3Exception('Missing object', $client->getCommand('GetObject'), ['code' => 'NoSuchKey']),
+    );
+
+    expect($delivery->fresh())->state->toBe('validated')->error_code->toBeNull()->dataset_import_id->toBe(DatasetImport::sole()->id);
+});
+
 it('does not fetch when disabled or when a stored object is outside its allowed source', function () {
     bucketClient();
     $delivery = DatasetDelivery::factory()->create(['object_key' => 'https://example.test/secret']);

@@ -126,6 +126,20 @@ class DatasetDeliveryService
         });
     }
 
+    public function rejectMissingObject(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $delivery = DatasetDelivery::whereKey($id)->lockForUpdate()->first();
+            if ($delivery === null || $delivery->state !== 'pending') {
+                return;
+            }
+
+            $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_missing'])->save();
+            $source = DatasetSource::findOrFail($delivery->dataset_source_id);
+            DatasetDataChanged::dispatch('deliveries', $source->target_type);
+        });
+    }
+
     /**
      * Registers a new source from the newest delivery in its folder. An unreadable or invalid newest
      * delivery registers nothing; the next discovery tries again.
