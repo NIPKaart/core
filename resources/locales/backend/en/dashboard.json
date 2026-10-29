@@ -38,6 +38,23 @@
             "title": "Withdraw submission?",
             "description": "Your pending submission will be removed.",
             "cancel": "Cancel"
+        },
+        "description": "Your contributions to better parking information.",
+        "count_one": "{{count}} contribution",
+        "count_other": "{{count}} contributions",
+        "search": "Search by location or town",
+        "search_submit": "Search contributions",
+        "filter_label": "Filter contributions by status",
+        "all": "All",
+        "no_results": "No contributions match this search or status.",
+        "reset": "Show all contributions",
+        "range": "{{from}}–{{to}} of {{total}} contributions",
+        "columns": {
+            "location": "Location",
+            "kind": "Contribution",
+            "status": "Status",
+            "date": "Date",
+            "actions": "Actions"
         }
     },
     "todo": {
