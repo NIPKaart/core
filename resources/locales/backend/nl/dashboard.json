@@ -38,6 +38,23 @@
             "title": "Inzending intrekken?",
             "description": "Je wachtende inzending wordt verwijderd.",
             "cancel": "Annuleren"
+        },
+        "description": "Je bijdragen aan betere parkeerinformatie.",
+        "count_one": "{{count}} bijdrage",
+        "count_other": "{{count}} bijdragen",
+        "search": "Zoek op locatie of plaats",
+        "search_submit": "Zoek bijdragen",
+        "filter_label": "Filter bijdragen op status",
+        "all": "Alle",
+        "no_results": "Geen bijdragen gevonden met deze zoekopdracht of status.",
+        "reset": "Toon alle bijdragen",
+        "range": "{{from}}–{{to}} van {{total}} bijdragen",
+        "columns": {
+            "location": "Locatie",
+            "kind": "Bijdrage",
+            "status": "Status",
+            "date": "Datum",
+            "actions": "Acties"
         }
     },
     "todo": {

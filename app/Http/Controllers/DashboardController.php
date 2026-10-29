@@ -42,6 +42,8 @@ class DashboardController extends Controller
             'section' => ['sometimes', 'in:destinations,favorites,contributions'],
             'view' => ['sometimes', 'in:personal,work'],
             'destination' => ['sometimes', 'integer', 'min:1'],
+            'contributions_search' => ['nullable', 'string', 'max:200'],
+            'contributions_status' => ['nullable', 'in:pending,approved,rejected,kept,removed,unavailable'],
             'contributions_page' => ['sometimes', 'integer', 'min:1', 'max:10000'],
         ]);
         $section = match ($request->route()->getName()) {
@@ -65,7 +67,16 @@ class DashboardController extends Controller
                 'attention' => $managesSources,
             ]),
             'contributions' => $section === 'contributions'
-                ? Inertia::defer(fn () => $activity->contributions($user, (int) ($validated['contributions_page'] ?? 1)))
+                ? Inertia::defer(function () use ($activity, $user, $validated): array {
+                    $search = trim($validated['contributions_search'] ?? '');
+                    $status = $validated['contributions_status'] ?? null;
+
+                    return [
+                        ...$activity->contributions($user, (int) ($validated['contributions_page'] ?? 1), $search, $status)->toArray(),
+                        'counts' => $activity->contributionCounts($user, $search),
+                        'filters' => ['search' => $search, 'status' => $status],
+                    ];
+                })
                 : null,
         ]);
     }

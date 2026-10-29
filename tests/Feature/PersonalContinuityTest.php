@@ -4,6 +4,7 @@ use App\Enums\ImprovementRejectionReason;
 use App\Enums\ParkingStatus;
 use App\Enums\ReportResolution;
 use App\Models\Favorite;
+use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
 use App\Models\ParkingPlaceReport;
@@ -42,11 +43,11 @@ test('all contribution pages remain reachable and links retain the contributions
     ParkingSpace::factory()->for($user)->count(17)->create(['status' => ParkingStatus::PENDING]);
     $this->actingAs($user)->get(route('profile.parking-spaces.index'))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->has('contributions.data', 15)->where('contributions.total', 17)->where('contributions.current_page', 1)
+            ->has('contributions.data', 10)->where('contributions.total', 17)->where('contributions.current_page', 1)
             ->where('contributions.next_page_url', fn (string $url) => str_contains($url, '/profile/parking-spaces?') && str_contains($url, 'contributions_page=2'))));
     $this->get(route('profile.parking-spaces.index', ['contributions_page' => 2]))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
-            ->has('contributions.data', 2)->where('contributions.current_page', 2)));
+            ->has('contributions.data', 7)->where('contributions.current_page', 2)));
 });
 
 test('hidden report targets expose status but no hidden name location or map action', function () {
@@ -79,7 +80,73 @@ test('personal section and pagination inputs are validated', function (array $qu
 })->with([
     [['section' => 'other'], 'section'], [['view' => 'other'], 'view'], [['destination' => 0], 'destination'], [['contributions_page' => 0], 'contributions_page'],
     [['contributions_page' => 10001], 'contributions_page'], [['contributions_page' => 'abc'], 'contributions_page'],
+    [['contributions_status' => 'other'], 'contributions_status'],
+    [['contributions_search' => ['invalid']], 'contributions_search'],
+    [['contributions_search' => str_repeat('x', 201)], 'contributions_search'],
 ]);
+
+test('contribution search and status filtering cover every page and only the current account', function () {
+    $user = User::factory()->create();
+    ParkingSpace::factory()->for($user)->count(11)->create(['street' => 'Stationsplein', 'status' => ParkingStatus::APPROVED]);
+    ParkingSpace::factory()->for($user)->create(['street' => 'Stationsplein', 'status' => ParkingStatus::PENDING]);
+    ParkingSpace::factory()->for($user)->create(['street' => 'Kerkstraat', 'status' => ParkingStatus::APPROVED]);
+    ParkingSpace::factory()->for(User::factory())->create(['street' => 'Stationsplein', 'status' => ParkingStatus::APPROVED]);
+
+    $this->actingAs($user)->get(route('profile.parking-spaces.index', [
+        'contributions_search' => 'stations', 'contributions_status' => 'approved', 'contributions_page' => 2,
+    ]))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+        ->has('contributions.data', 1)->where('contributions.total', 11)
+        ->where('contributions.counts', ['all' => 12, 'approved' => 11, 'pending' => 1])
+        ->where('contributions.filters', ['search' => 'stations', 'status' => 'approved'])
+        ->where('contributions.data.0.status', 'approved')
+        ->where('contributions.prev_page_url', fn (string $url) => str_contains($url, 'contributions_search=stations') && str_contains($url, 'contributions_status=approved'))));
+});
+
+test('contribution search matches towns and visible improvement and report targets without exposing hidden addresses', function () {
+    $user = User::factory()->create();
+    $town = Municipality::factory()->create(['name' => 'Veenendaal']);
+    $public = ParkingSpace::factory()->for(User::factory())->create(['municipality_id' => $town->id, 'street' => 'Stationsplein', 'status' => ParkingStatus::APPROVED]);
+    ParkingSpaceImprovement::factory()->for($user)->create(['parking_space_id' => $public->id]);
+    ParkingPlaceReport::factory()->for($user)->create(['parking_space_id' => $public->id]);
+    ParkingPlaceReport::factory()->for($user)->municipal()->create([
+        'parking_municipal_id' => ParkingMunicipal::factory()->create(['municipality_id' => $town->id, 'street' => 'Stationsplein', 'visibility' => true])->id,
+        'resolution' => ReportResolution::KEPT, 'resolved_at' => now(),
+    ]);
+    ParkingPlaceReport::factory()->for($user)->municipal()->create([
+        'parking_municipal_id' => ParkingMunicipal::factory()->create(['municipality_id' => $town->id, 'street' => 'Secret address', 'visibility' => false])->id,
+    ]);
+    ParkingSpaceImprovement::factory()->for($user)->create([
+        'parking_space_id' => ParkingSpace::factory()->for(User::factory())->create(['municipality_id' => $town->id, 'street' => 'Secret address', 'status' => ParkingStatus::REJECTED])->id,
+    ]);
+
+    $this->actingAs($user)->get(route('profile.parking-spaces.index', ['contributions_search' => 'veenendaal']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+            ->has('contributions.data', 3)->where('contributions.counts', ['all' => 3, 'kept' => 1, 'pending' => 2])));
+    $this->get(route('profile.parking-spaces.index', ['contributions_search' => 'Secret address']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->has('contributions.data', 0)->where('contributions.total', 0)));
+    $this->get(route('profile.parking-spaces.index', ['contributions_status' => 'kept']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->has('contributions.data', 1)->where('contributions.data.0.status', 'kept')));
+});
+
+test('contribution search treats wildcard characters as literal input and can return no matches', function () {
+    $user = User::factory()->create();
+    ParkingSpace::factory()->for($user)->create(['street' => '100%_straat']);
+    ParkingSpace::factory()->for($user)->create(['street' => '100 Andere straat']);
+    $this->actingAs($user)->get(route('profile.parking-spaces.index', ['contributions_search' => '%_']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->has('contributions.data', 1)));
+    $this->get(route('profile.parking-spaces.index', ['contributions_search' => "' OR 1=1 --"]))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload->has('contributions.data', 0)));
+});
+
+test('pagination retains a literal zero search term', function () {
+    $user = User::factory()->create();
+    ParkingSpace::factory()->for($user)->count(11)->create(['street' => 'Straat 0']);
+
+    $this->actingAs($user)->get(route('profile.parking-spaces.index', ['contributions_search' => '0']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+            ->where('contributions.total', 11)
+            ->where('contributions.next_page_url', fn (string $url) => str_contains($url, 'contributions_search=0'))));
+});
 
 test('favorites are removed on explicit unpublication for all sources and do not revive when restored', function (string $model, array $public, array $hidden) {
     $place = $model::factory()->create($public);

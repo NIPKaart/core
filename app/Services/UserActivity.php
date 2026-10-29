@@ -8,6 +8,8 @@ use App\Models\ParkingOffstreet;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +24,13 @@ final class UserActivity
      *
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function contributions(User $user, int $page = 1): LengthAwarePaginator
+    public function contributions(User $user, int $page = 1, string $search = '', ?string $status = null): LengthAwarePaginator
     {
-        $submissions = $user->parkingSpaces()->selectRaw("id::text as id, 'submission' as kind, updated_at as at")->toBase();
-        $improvements = $user->parkingSpaceImprovements()->selectRaw("id::text as id, 'improvement' as kind, COALESCE(reviewed_at, created_at) as at")->toBase();
-        $reports = ParkingPlaceReport::whereBelongsTo($user)->selectRaw("id::text as id, 'report' as kind, COALESCE(resolved_at, created_at) as at")->toBase();
-        $rows = DB::query()->fromSub($submissions->unionAll($improvements)->unionAll($reports), 'contributions')
-            ->orderByDesc('at')->orderBy('kind')->orderBy('id')->paginate(15, ['*'], 'contributions_page', $page);
+        $query = $this->contributionQuery($user, $search);
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+        $rows = $query->orderByDesc('at')->orderBy('kind')->orderBy('id')->paginate(10, ['*'], 'contributions_page', $page);
         $ids = $rows->getCollection()->groupBy('kind');
         $spaces = $user->parkingSpaces()->with(['municipality:id,name', 'latestReview'])
             ->whereIn('id', $ids->get('submission', collect())->pluck('id'))->get()->keyBy('id');
@@ -37,7 +39,9 @@ final class UserActivity
         $placeReports = ParkingPlaceReport::whereBelongsTo($user)->with(['parkingSpace.municipality:id,name', 'parkingMunicipal.municipality:id,name'])
             ->whereIn('id', $ids->get('report', collect())->pluck('id'))->get()->keyBy('id');
 
-        return $rows->withPath(route('profile.parking-spaces.index'))->through(function (object $row) use ($spaces, $proposals, $placeReports, $user): array {
+        return $rows->withPath(route('profile.parking-spaces.index'))->appends(array_filter([
+            'contributions_search' => $search, 'contributions_status' => $status,
+        ], fn (?string $value): bool => $value !== null && $value !== ''))->through(function (object $row) use ($spaces, $proposals, $placeReports, $user): array {
             $entry = match ($row->kind) {
                 'submission' => $spaces->get($row->id),
                 'improvement' => $proposals->get($row->id),
@@ -67,6 +71,39 @@ final class UserActivity
                 'withdraw_id' => $editable ? (string) $entry->id : null,
             ];
         });
+    }
+
+    /**
+     * Counts cover the search results across every page, independently of the selected status.
+     *
+     * @return array<string, int>
+     */
+    public function contributionCounts(User $user, string $search = ''): array
+    {
+        $counts = $this->contributionQuery($user, $search)->selectRaw('status, count(*) as total')->groupBy('status')
+            ->pluck('total', 'status')->map(fn ($total): int => (int) $total)->all();
+
+        return ['all' => array_sum($counts)] + $counts;
+    }
+
+    private function contributionQuery(User $user, string $search): Builder
+    {
+        $submissions = $user->parkingSpaces()->selectRaw("id::text as id, 'submission' as kind, updated_at as at, status::text as status");
+        $improvements = $user->parkingSpaceImprovements()->selectRaw("id::text as id, 'improvement' as kind, COALESCE(reviewed_at, created_at) as at, status::text as status");
+        $reports = ParkingPlaceReport::whereBelongsTo($user)->selectRaw("id::text as id, 'report' as kind, COALESCE(resolved_at, created_at) as at, COALESCE(resolution::text, 'pending') as status");
+
+        if ($search !== '') {
+            $pattern = '%'.addcslashes($search, '\\%_').'%';
+            $address = fn (EloquentBuilder $query) => $query->where(fn (EloquentBuilder $query) => $query
+                ->whereLike('street', $pattern)->orWhereHas('municipality', fn (EloquentBuilder $query) => $query->whereLike('name', $pattern)));
+            $publicCommunity = fn (EloquentBuilder $query) => $address($query->where('status', ParkingStatus::APPROVED));
+            $submissions->where($address);
+            $improvements->whereHas('parkingSpace', $publicCommunity);
+            $reports->where(fn (EloquentBuilder $query) => $query->whereHas('parkingSpace', $publicCommunity)
+                ->orWhereHas('parkingMunicipal', fn (EloquentBuilder $query) => $address($query->where('visibility', true))));
+        }
+
+        return DB::query()->fromSub($submissions->toBase()->unionAll($improvements->toBase())->unionAll($reports->toBase()), 'contributions');
     }
 
     /**
