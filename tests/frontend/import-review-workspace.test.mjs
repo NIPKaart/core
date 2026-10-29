@@ -116,7 +116,7 @@ test('publication stays disabled until every required geometry is checked and ex
     const checkbox = find(page.decision(), (node) => node.props?.name === 'geometry_reviewed');
     assert.equal(checkbox.props.disabled, false, JSON.stringify(page.app.state));
     assert.equal(publish().props.disabled, true);
-    checkbox.props.onChange({ target: { checked: true } });
+    checkbox.props.onCheckedChange(true);
     assert.equal(publish().props.disabled, false);
     page.props.review = { ...page.props.review, token: 'changed' };
     assert.equal(publish().props.disabled, true);
@@ -206,4 +206,94 @@ test('incoming and missing records with the same source ID can be inspected sepa
         find(tree, (node) => node.type === 'Button' && node.props.children?.includes('workspace.check_next')),
         null,
     );
+});
+
+test('review framing includes the actual marker and selected candidate without zooming out to unrelated candidates', () => {
+    const { reviewGeometries } = mount('source-record.ts').exports;
+    const source = {
+        type: 'Polygon',
+        coordinates: [
+            [
+                [4.8, 52.3],
+                [4.81, 52.3],
+                [4.8, 52.31],
+                [4.8, 52.3],
+            ],
+        ],
+    };
+    const proposed = { type: 'Point', coordinates: [4.805, 52.305] };
+    const selected = { type: 'Point', coordinates: [4.806, 52.306] };
+    const unrelated = { type: 'Point', coordinates: [5.5, 53.0] };
+    const record = {
+        ...row('a'),
+        after: { geometry: source },
+        point: { longitude: 4.807, latitude: 52.307 },
+        geometry_derivation: { geometry: proposed },
+        identity: {
+            candidates: [
+                { id: 'near', source: { geometry: selected } },
+                { id: 'far', source: { geometry: unrelated } },
+            ],
+        },
+    };
+    const geometries = reviewGeometries(record, 'near');
+    assert.deepEqual(JSON.parse(JSON.stringify(geometries)), [source, proposed, { type: 'Point', coordinates: [4.807, 52.307] }, selected]);
+    assert.equal(reviewGeometries(record, '').includes(unrelated), false);
+    assert.equal(reviewGeometries(record, '').length, 3);
+    assert.deepEqual(JSON.parse(JSON.stringify(reviewGeometries({ ...record, after: null, before: { geometry: source } }, 'near'))), [
+        source,
+        proposed,
+        { type: 'Point', coordinates: [4.807, 52.307] },
+        selected,
+    ]);
+});
+
+test('identity selection submits the real candidate ID and maps the new-location option to an empty ID', () => {
+    const app = mount('review-workspace.tsx');
+    const changes = [];
+    const props = {
+        row: {
+            ...row('a'),
+            identity: { candidates: [{ id: 'candidate', name: 'Nearby garage', distance_metres: 12, source: { external_id: 'old-id' } }] },
+        },
+        delivery: { id: 1 },
+        token: 'first',
+        target: '',
+        onTargetChange: (id) => changes.push(id),
+    };
+    const render = (processing = false) => app.render(app.exports.IdentityDecision, props).props.children({ errors: {}, processing });
+    find(render(), (node) => node.type === 'Select').props.onValueChange('candidate');
+    assert.deepEqual(changes, ['candidate']);
+    props.target = 'candidate';
+    assert.equal(find(render(), (node) => node.props?.name === 'facility_id').props.value, 'candidate');
+    assert.ok(find(render(), (node) => node.type === 'dd' && node.props.children === 'old-id'));
+    find(render(), (node) => node.type === 'Select').props.onValueChange('new');
+    assert.deepEqual(changes, ['candidate', '']);
+    assert.equal(find(render(true), (node) => node.type === 'Select').props.disabled, true);
+});
+
+test('geometry layers can be toggled and map style persists when moving to another record', () => {
+    const records = mount('source-record.ts').exports;
+    const app = mount('review-workspace.tsx', { './source-record': records });
+    const record = {
+        ...row('a'),
+        point: { longitude: 4.8, latitude: 52.3 },
+        after: { geometry: { type: 'Polygon', coordinates: [] } },
+        geometry_derivation: { geometry: { type: 'Polygon', coordinates: [] } },
+    };
+    const props = { row: record, candidateId: '' };
+    let tree = app.render(app.exports.ReviewMap, props);
+    const toolbar = find(tree, (node) => typeof node.type === 'function' && node.type.name === 'MapToolbar');
+    toolbar.props.onStyleChange('satellite');
+    find(tree, (node) => node.type === 'ToggleGroup').props.onValueChange(['proposed']);
+    props.row = { ...record, external_id: 'b' };
+    tree = app.render(app.exports.ReviewMap, props);
+    assert.equal(find(tree, (node) => typeof node.type === 'function' && node.type.name === 'MapToolbar').props.style, 'satellite');
+    const map = find(tree, (node) => node.type === 'MapContainer');
+    assert.equal(map.props.zoomControl, false);
+    assert.equal(
+        find(tree, (node) => node.type === 'GeoJSON' && node.props.style.dashArray === '6 5'),
+        null,
+    );
+    assert.ok(find(tree, (node) => node.type === 'GeoJSON' && node.props.data === record.geometry_derivation.geometry));
 });

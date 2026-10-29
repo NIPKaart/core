@@ -1,20 +1,27 @@
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
+import type { MapStyle } from '@/components/map/map-display-controls';
+import ZoomControl from '@/components/map/zoom-control';
 import MunicipalDateTime from '@/components/municipal-date-time';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { Form, Link } from '@inertiajs/react';
+import { Form, Link, router } from '@inertiajs/react';
 import type { Geometry } from 'geojson';
 import { geoJSON, latLngBounds } from 'leaflet';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, Link2, MapPin, TriangleAlert } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Link2, LocateFixed, Map as MapIcon, MapPin, Satellite, TriangleAlert } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CircleMarker, GeoJSON, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { CircleMarker, GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaflet';
 import type { Import } from './index';
+import ReviewTiles from './review-map-tiles';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
-import { claimCapacity, claimTitle, type Row } from './source-record';
+import { claimCapacity, claimTitle, reviewGeometries, type Row } from './source-record';
 
 export type MapPoint = {
     external_id: string;
@@ -77,25 +84,34 @@ export function DeliveryOverview({
                     </div>
                     {pending && (
                         <div className="divide-y">
-                            <button
+                            <Button
+                                variant="ghost"
                                 onClick={() => onStart('geometry')}
                                 disabled={!derivations}
-                                className="flex w-full items-center gap-3 py-4 text-left text-sm outline-offset-4 hover:text-primary disabled:opacity-50"
+                                className="h-auto w-full justify-start gap-3 rounded-none py-4 text-left whitespace-normal"
                             >
                                 <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
                                 <span className="flex-1">{t('workspace.geometry_progress', { completed, total: derivations })}</span>
                                 <ChevronRight className="size-4" aria-hidden="true" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
                                 onClick={() => onStart('identity')}
                                 disabled={!identities}
-                                className="flex w-full items-center gap-3 py-4 text-left text-sm outline-offset-4 hover:text-primary disabled:opacity-50"
+                                className="h-auto w-full justify-start gap-3 rounded-none py-4 text-left whitespace-normal"
                             >
                                 <Link2 className="size-4 shrink-0" aria-hidden="true" />
                                 <span className="flex-1">{t('workspace.identity_remaining', { count: identities })}</span>
                                 <ChevronRight className="size-4" aria-hidden="true" />
-                            </button>
+                            </Button>
                         </div>
+                    )}
+                    {pending && derivations > 0 && (
+                        <Progress
+                            value={(completed / derivations) * 100}
+                            aria-label={t('workspace.geometry_tasks')}
+                            aria-valuetext={t('workspace.geometry_progress', { completed, total: derivations })}
+                        />
                     )}
                     <div className="mt-auto space-y-3">
                         {pending && (
@@ -119,6 +135,8 @@ export function DeliveryOverview({
 
 function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: string) => void }) {
     const { t } = useTranslation('backend/imports');
+    const [style, setStyle] = useState<MapStyle>('streets');
+    const [fit, setFit] = useState(0);
     if (!points.length)
         return (
             <p className="p-6 text-sm text-muted-foreground" role="status">
@@ -127,14 +145,18 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
         );
     return (
         <div className="relative">
+            <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
             <MapContainer
                 center={[points[0].point.latitude, points[0].point.longitude]}
                 zoom={12}
                 scrollWheelZoom={false}
-                className="relative z-0 h-[28rem] w-full xl:h-[34rem]"
+                zoomControl={false}
+                className="parking-discovery-map relative z-0 h-[28rem] w-full xl:h-[34rem]"
             >
-                <StreetTiles />
-                <PointBounds points={points} />
+                <ReviewTiles style={style} />
+                <ZoomControl position="bottomright" />
+                <ScaleControl position="bottomleft" imperial={false} />
+                <PointBounds points={points} fit={fit} />
                 {points.map((point) => (
                     <CircleMarker
                         key={`${point.status}:${point.external_id}`}
@@ -167,23 +189,45 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
     );
 }
 
-function PointBounds({ points }: { points: MapPoint[] }) {
+function PointBounds({ points, fit }: { points: MapPoint[]; fit: number }) {
     const map = useMap();
     useEffect(() => {
         const bounds = latLngBounds(points.map(({ point }) => [point.latitude, point.longitude]));
+        map.invalidateSize();
         if (bounds.isValid()) map.fitBounds(bounds, { padding: [32, 32], maxZoom: 18 });
-    }, [map, points]);
+    }, [map, points, fit]);
     return null;
 }
 
-function StreetTiles() {
+export function MapToolbar({ style, onStyleChange, onFit }: { style: MapStyle; onStyleChange: (style: MapStyle) => void; onFit: () => void }) {
+    const { t: tMap } = useTranslation('frontend/map/main');
+    const { t } = useTranslation('backend/imports');
     return (
-        <TileLayer
-            attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-            url="https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-            subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-            maxZoom={22}
-        />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-background px-3 py-2">
+            <ToggleGroup
+                type="single"
+                value={style}
+                onValueChange={(value) => {
+                    if (value === 'streets' || value === 'satellite') onStyleChange(value);
+                }}
+                variant="outline"
+                size="sm"
+                aria-label={tMap('controls.layers')}
+            >
+                <ToggleGroupItem value="streets">
+                    <MapIcon className="size-4" aria-hidden />
+                    {tMap('controls.streets')}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="satellite">
+                    <Satellite className="size-4" aria-hidden />
+                    {tMap('controls.satellite')}
+                </ToggleGroupItem>
+            </ToggleGroup>
+            <Button variant="ghost" size="sm" onClick={onFit}>
+                <LocateFixed className="size-4" aria-hidden />
+                {t('workspace.fit_map')}
+            </Button>
+        </div>
     );
 }
 
@@ -216,6 +260,9 @@ export function ReviewWorkspace({
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const row = rows.find((item) => `${item.status}:${item.external_id}` === selectedId) ?? rows[0];
     const position = row ? rows.indexOf(row) : -1;
+    const rowKey = row ? `${row.status}:${row.external_id}` : '';
+    const [candidateChoice, setCandidateChoice] = useState({ key: '', id: '' });
+    const candidateId = candidateChoice.key === rowKey ? candidateChoice.id : (row?.identity?.facility_id ?? '');
     const editable = delivery.state === 'pending' && !delivery.superseded;
     const next = () => {
         if (position < rows.length - 1) setSelectedId(`${rows[position + 1].status}:${rows[position + 1].external_id}`);
@@ -243,12 +290,13 @@ export function ReviewWorkspace({
                 <div className="grid min-w-0 xl:grid-cols-[13rem_minmax(0,1fr)_21rem]">
                     <nav className="max-h-48 overflow-y-auto border-b xl:max-h-[38rem] xl:border-r xl:border-b-0" aria-label={t('workspace.queue')}>
                         {rows.map((item) => (
-                            <button
+                            <Button
+                                variant="ghost"
                                 key={`${item.status}:${item.external_id}`}
                                 aria-current={item === row ? 'true' : undefined}
                                 onClick={() => setSelectedId(`${item.status}:${item.external_id}`)}
                                 className={cn(
-                                    'flex w-full items-center gap-2 border-b px-4 py-3 text-left text-sm transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                                    'h-auto w-full justify-start gap-2 rounded-none border-b px-4 py-3 text-left whitespace-normal',
                                     item === row && 'bg-blue-50 dark:bg-blue-950/30',
                                 )}
                             >
@@ -259,11 +307,11 @@ export function ReviewWorkspace({
                                 {reviewedIds.includes(item.external_id) && (
                                     <Check className="size-4 shrink-0 text-green-600" aria-label={t('workspace.checked')} />
                                 )}
-                            </button>
+                            </Button>
                         ))}
                     </nav>
                     <div className="min-w-0 border-b xl:border-r xl:border-b-0">
-                        <ReviewMap key={`${row.status}:${row.external_id}`} row={row} />
+                        <ReviewMap row={row} candidateId={candidateId} />
                     </div>
                     <aside className="flex min-w-0 flex-col p-5">
                         <div className="space-y-4 xl:max-h-[29rem] xl:overflow-y-auto">
@@ -291,19 +339,28 @@ export function ReviewWorkspace({
                                 </div>
                             )}
                             {editable && row.identity && ['review', 'manual'].includes(row.identity.method) && (
-                                <IdentityDecision key={`${row.external_id}-${token}`} row={row} delivery={delivery} token={token} />
+                                <IdentityDecision
+                                    key={`${row.external_id}-${token}`}
+                                    row={row}
+                                    delivery={delivery}
+                                    token={token}
+                                    target={candidateId}
+                                    onTargetChange={(id) => setCandidateChoice({ key: rowKey, id })}
+                                />
                             )}
-                            <details className="border-t pt-4 text-sm">
-                                <summary className="cursor-pointer font-medium">{t('source_tab')}</summary>
-                                <div className="mt-4">
-                                    <SourceComparison
-                                        row={row}
-                                        onShowMap={() =>
-                                            document.getElementById('review-map')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-                                        }
-                                    />
-                                </div>
-                            </details>
+                            <Accordion type="single" collapsible className="border-t text-sm">
+                                <AccordionItem value="source" className="border-0">
+                                    <AccordionTrigger>{t('source_tab')}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <SourceComparison
+                                            row={row}
+                                            onShowMap={() =>
+                                                document.getElementById('review-map')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+                                            }
+                                        />
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
                         </div>
                         <div className="mt-auto flex flex-col gap-2 pt-5">
                             {editable && row.geometry_review_required && (
@@ -364,15 +421,30 @@ export function ReviewWorkspace({
     );
 }
 
-import { router } from '@inertiajs/react';
 function routerVisit(url: string, data: Record<string, string | number>) {
     router.get(url, data, { preserveState: true, preserveScroll: true });
 }
 
-function IdentityDecision({ row, delivery, token }: { row: Row; delivery: Import; token: string }) {
+export function IdentityReview({ row, delivery, token }: { row: Row; delivery: Import; token: string }) {
+    const [target, setTarget] = useState(row.identity?.facility_id ?? '');
+    return <IdentityDecision row={row} delivery={delivery} token={token} target={target} onTargetChange={setTarget} />;
+}
+
+export function IdentityDecision({
+    row,
+    delivery,
+    token,
+    target,
+    onTargetChange,
+}: {
+    row: Row;
+    delivery: Import;
+    token: string;
+    target: string;
+    onTargetChange: (id: string) => void;
+}) {
     const { t } = useTranslation('backend/imports');
     const identity = row.identity!;
-    const [target, setTarget] = useState(identity.facility_id ?? '');
     const candidate = identity.candidates.find((item) => item.id === target);
     return (
         <Form {...update.form(delivery.id)} options={{ preserveScroll: true }} className="space-y-3 border-t pt-4 text-sm">
@@ -383,22 +455,27 @@ function IdentityDecision({ row, delivery, token }: { row: Row; delivery: Import
                     <input type="hidden" name="review_token" value={token} />
                     <p className="font-medium">{t('identity.title')}</p>
                     <p className="text-xs leading-relaxed text-muted-foreground">{t('identity.hint')}</p>
-                    <Label className="flex-col items-start gap-2">
-                        {t('identity.target')}
-                        <select
-                            name="facility_id"
-                            value={target}
-                            onChange={(event) => setTarget(event.target.value)}
-                            className="w-full rounded-md border bg-background p-2 text-sm"
-                        >
-                            <option value="">{t('identity.new')}</option>
-                            {identity.candidates.map((candidate) => (
-                                <option key={candidate.id} value={candidate.id}>
-                                    {candidate.name} · {Math.round(candidate.distance_metres)} m · {candidate.id}
-                                </option>
-                            ))}
-                        </select>
-                    </Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="identity-target">{t('identity.target')}</Label>
+                        <input type="hidden" name="facility_id" value={target} />
+                        <Select value={target || 'new'} onValueChange={(value) => onTargetChange(value === 'new' ? '' : value)} disabled={processing}>
+                            <SelectTrigger
+                                id="identity-target"
+                                aria-invalid={!!errors.facility_id}
+                                className="text-left [&>span]:block [&>span]:min-w-0 [&>span]:truncate"
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="new">{t('identity.new')}</SelectItem>
+                                {identity.candidates.map((candidate) => (
+                                    <SelectItem key={candidate.id} value={candidate.id}>
+                                        {candidate.name} · {Math.round(candidate.distance_metres)} m
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     {candidate?.source && (
                         <dl className="space-y-2 rounded-md bg-muted/40 p-3 text-xs">
                             <dt className="font-medium">{t('workspace.existing')}</dt>
@@ -431,14 +508,14 @@ function IdentityDecision({ row, delivery, token }: { row: Row; delivery: Import
     );
 }
 
-function ReviewMap({ row }: { row: Row }) {
+export function ReviewMap({ row, candidateId }: { row: Row; candidateId: string }) {
     const { t } = useTranslation('backend/imports');
     const claim = row.after ?? row.before;
-    const geometries = [
-        claim?.geometry,
-        row.geometry_derivation?.geometry,
-        ...(row.identity?.candidates.map((candidate) => candidate.source?.geometry) ?? []),
-    ].filter((item) => item !== undefined);
+    const [style, setStyle] = useState<MapStyle>('streets');
+    const [fit, setFit] = useState(0);
+    const [layers, setLayers] = useState(['source', 'proposed']);
+    const geometries = useMemo(() => reviewGeometries(row, candidateId), [row, candidateId]);
+    const candidate = row.identity?.candidates.find((item) => item.id === candidateId);
     if (!claim || !row.point)
         return (
             <p role="status" className="p-6 text-sm text-muted-foreground">
@@ -447,16 +524,35 @@ function ReviewMap({ row }: { row: Row }) {
         );
     return (
         <div id="review-map" className="h-full">
+            <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
+            {row.geometry_derivation && (
+                <ToggleGroup
+                    type="multiple"
+                    value={layers}
+                    onValueChange={setLayers}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start rounded-none border-b p-2"
+                    aria-label={t('geometry_layers')}
+                >
+                    <ToggleGroupItem value="source">{t('original_geometry')}</ToggleGroupItem>
+                    <ToggleGroupItem value="proposed">{t('proposed_geometry')}</ToggleGroupItem>
+                </ToggleGroup>
+            )}
             <MapContainer
                 center={[row.point.latitude, row.point.longitude]}
                 zoom={19}
                 scrollWheelZoom={false}
-                className="relative z-0 h-96 w-full xl:h-[38rem]"
+                zoomControl={false}
+                className="parking-discovery-map relative z-0 h-96 w-full xl:h-[34rem]"
             >
-                <StreetTiles />
-                <GeometryBounds geometries={geometries} />
-                {claim.geometry.type !== 'Point' && (
+                <ReviewTiles style={style} />
+                <ZoomControl position="bottomright" focus={[row.point.latitude, row.point.longitude]} />
+                <ScaleControl position="bottomleft" imperial={false} />
+                <GeometryBounds geometries={geometries} fit={fit} />
+                {layers.includes('source') && claim.geometry.type !== 'Point' && (
                     <GeoJSON
+                        key={`source-${JSON.stringify(claim.geometry)}`}
                         data={claim.geometry}
                         style={{
                             color: row.geometry_derivation ? '#f97316' : '#2563eb',
@@ -466,14 +562,18 @@ function ReviewMap({ row }: { row: Row }) {
                         }}
                     />
                 )}
-                {row.geometry_derivation && (
-                    <GeoJSON data={row.geometry_derivation.geometry} style={{ color: '#2563eb', fillOpacity: 0.2, weight: 3 }} />
+                {layers.includes('proposed') && row.geometry_derivation && (
+                    <GeoJSON
+                        key={`proposed-${JSON.stringify(row.geometry_derivation.geometry)}`}
+                        data={row.geometry_derivation.geometry}
+                        style={{ color: '#2563eb', fillOpacity: 0.2, weight: 3 }}
+                    />
                 )}
                 <CircleMarker center={[row.point.latitude, row.point.longitude]} radius={5} pathOptions={{ color: '#2563eb', fillOpacity: 1 }}>
                     <Tooltip>{t('workspace.incoming')}</Tooltip>
                 </CircleMarker>
-                {row.identity?.candidates.map((candidate) => {
-                    if (!candidate.source) return null;
+                {[candidate].map((candidate) => {
+                    if (!candidate?.source) return null;
                     const geometry = candidate.source.geometry;
                     const label = (
                         <Tooltip>
@@ -498,19 +598,20 @@ function ReviewMap({ row }: { row: Row }) {
             </MapContainer>
             <div className="space-y-2 border-t px-4 py-3 text-xs text-muted-foreground">
                 <p>{t(row.geometry_derivation ? 'geometry_legend' : 'map_note')}</p>
-                {!!row.identity?.candidates.length && <p>{t('workspace.candidate_legend')}</p>}
+                {!!candidate?.source && <p>{t('workspace.candidate_legend')}</p>}
             </div>
         </div>
     );
 }
 
-function GeometryBounds({ geometries }: { geometries: Geometry[] }) {
+function GeometryBounds({ geometries, fit }: { geometries: Geometry[]; fit: number }) {
     const map = useMap();
     useEffect(() => {
+        map.invalidateSize();
         const bounds = latLngBounds([]);
         for (const geometry of geometries) bounds.extend(geoJSON(geometry).getBounds());
         if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 20 });
-    }, [map, geometries]);
+    }, [map, geometries, fit]);
     return null;
 }
 

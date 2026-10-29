@@ -304,6 +304,7 @@
         }
     },
     "workspace": {
+        "fit_map": "Fit to view",
         "overview": "Delivery overview",
         "source_records": "Source locations",
         "geometry_tasks": "Check parking geometries",

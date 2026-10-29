@@ -1,4 +1,4 @@
-import type { MultiPolygon, Point, Polygon } from 'geojson';
+import type { Geometry, MultiPolygon, Point, Polygon } from 'geojson';
 
 export type Claim = {
     source_updated_at?: string | null;
@@ -45,3 +45,14 @@ export type Row = {
     previous_geometry_derivation?: Derivation | null;
     point?: { latitude: number; longitude: number };
 };
+
+/** Frame the source, proposed geometry and actual display marker, plus only the explicitly selected identity candidate. */
+export function reviewGeometries(row: Row, candidateId: string): Geometry[] {
+    const candidate = row.identity?.candidates.find((item) => item.id === candidateId);
+    return [
+        (row.after ?? row.before)?.geometry,
+        row.geometry_derivation?.geometry,
+        row.point ? { type: 'Point' as const, coordinates: [row.point.longitude, row.point.latitude] } : undefined,
+        candidate?.source?.geometry,
+    ].filter((geometry): geometry is NonNullable<typeof geometry> => geometry !== undefined);
+}

@@ -1,11 +1,13 @@
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
-import LocationMarkerCard from '@/components/map/card-location-marker';
+import type { MapStyle } from '@/components/map/map-display-controls';
+import ZoomControl from '@/components/map/zoom-control';
 import MunicipalDateTime from '@/components/municipal-date-time';
 import { DataTable } from '@/components/tables/data-table';
 import type { DataTableFeatures } from '@/components/tables/features';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,10 +22,11 @@ import { geoJSON, latLngBounds } from 'leaflet';
 import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Search, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GeoJSON, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaflet';
 import AutomaticPublicationNotice from './automatic-publication-notice';
 import type { Dataset, Import } from './index';
-import { DeliveryOverview, PublishedNotice, ReviewWorkspace, type MapPoint } from './review-workspace';
+import ReviewTiles from './review-map-tiles';
+import { DeliveryOverview, IdentityReview, MapToolbar, PublishedNotice, ReviewMap, ReviewWorkspace, type MapPoint } from './review-workspace';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
 import { claimCapacity, claimTitle, isFacility, type Row } from './source-record';
 
@@ -143,46 +146,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                   </DialogTitle>
                                                   <DialogDescription>{t('identity.hint')}</DialogDescription>
                                               </DialogHeader>
-                                              <Form {...update.form(delivery.id)} options={{ preserveScroll: true }} className="space-y-4">
-                                                  {({ errors, processing }) => (
-                                                      <>
-                                                          <input type="hidden" name="decision" value="resolve_identity" />
-                                                          <input type="hidden" name="external_id" value={row.external_id} />
-                                                          <input type="hidden" name="review_token" value={review.token} />
-                                                          <Label className="flex flex-col items-start gap-2">
-                                                              {t('identity.target')}
-                                                              <select
-                                                                  name="facility_id"
-                                                                  defaultValue={row.identity?.facility_id ?? ''}
-                                                                  className="w-full rounded-md border bg-background p-2"
-                                                              >
-                                                                  <option value="">{t('identity.new')}</option>
-                                                                  {row.identity?.candidates.map((candidate) => (
-                                                                      <option key={candidate.id} value={candidate.id}>
-                                                                          {candidate.name} · {Math.round(candidate.distance_metres)} m ·{' '}
-                                                                          {candidate.id}
-                                                                      </option>
-                                                                  ))}
-                                                              </select>
-                                                          </Label>
-                                                          <Label className="flex flex-col items-start gap-2">
-                                                              {t('reason')}
-                                                              <Textarea
-                                                                  name="reason"
-                                                                  required
-                                                                  maxLength={2000}
-                                                                  defaultValue={row.identity?.decision?.reason ?? ''}
-                                                              />
-                                                          </Label>
-                                                          {Object.entries(errors).map(([field, message]) => (
-                                                              <InputError key={field} message={message} />
-                                                          ))}
-                                                          <Button type="submit" disabled={processing}>
-                                                              {t('identity.save')}
-                                                          </Button>
-                                                      </>
-                                                  )}
-                                              </Form>
+                                              <IdentityReview row={row} delivery={delivery} token={review.token} />
                                           </DialogContent>
                                       </Dialog>
                                   )}
@@ -292,8 +256,8 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                             {({ errors, processing }) => (
                                                 <>
                                                     <input type="hidden" name="review_token" value={review.token} />
-                                                    <details>
-                                                        <summary className="cursor-pointer text-sm font-medium">{t('reason')}</summary>
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="reason">{t('reason')}</Label>
                                                         <Textarea
                                                             className="mt-3"
                                                             aria-label={t('reason')}
@@ -305,21 +269,20 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                                             aria-invalid={!!errors.reason}
                                                             aria-describedby={errors.reason ? 'reason-error' : undefined}
                                                         />
-                                                    </details>
+                                                    </div>
                                                     {review.derivations > 0 && (
                                                         <Label className="flex items-start gap-3 rounded-lg border bg-background p-4 leading-relaxed">
-                                                            <input
-                                                                type="checkbox"
+                                                            <Checkbox
                                                                 name="geometry_reviewed"
                                                                 checked={allGeometryChecked && geometryReviewedForToken === review.token}
                                                                 disabled={!allGeometryChecked}
-                                                                onChange={(event) =>
-                                                                    setGeometryReviewedForToken(event.target.checked ? review.token : null)
+                                                                onCheckedChange={(checked) =>
+                                                                    setGeometryReviewedForToken(checked === true ? review.token : null)
                                                                 }
                                                                 value="1"
                                                                 aria-invalid={!!errors.geometry_reviewed}
                                                                 aria-describedby={errors.geometry_reviewed ? 'geometry_reviewed-error' : undefined}
-                                                                className="mt-1 size-4 shrink-0 accent-primary"
+                                                                className="mt-1 shrink-0"
                                                             />
                                                             <span>
                                                                 {t('geometry_confirm', { count: review.derivations })}
@@ -671,8 +634,6 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
 
 function RecordDetails({ row }: { row: Row }) {
     const { t } = useTranslation('backend/imports');
-    const [showOriginal, setShowOriginal] = useState(true);
-    const [showDerived, setShowDerived] = useState(true);
     const mapSource = row.after ?? row.before;
     const hasMap = Boolean(row.point && mapSource);
     const [activeTab, setActiveTab] = useState(
@@ -701,36 +662,7 @@ function RecordDetails({ row }: { row: Row }) {
                 <TabsContent value="map" className="space-y-4">
                     {row.point && mapSource && (
                         <>
-                            {row.geometry_derivation && (
-                                <div className="flex flex-wrap items-center gap-2" aria-label={t('geometry_layers')}>
-                                    <Button
-                                        variant={showOriginal ? 'secondary' : 'outline'}
-                                        size="sm"
-                                        aria-pressed={showOriginal}
-                                        onClick={() => setShowOriginal(!showOriginal)}
-                                    >
-                                        <span className="w-5 border-t-2 border-dashed border-orange-500" aria-hidden="true" />
-                                        {t('original_geometry')}
-                                    </Button>
-                                    <Button
-                                        variant={showDerived ? 'secondary' : 'outline'}
-                                        size="sm"
-                                        aria-pressed={showDerived}
-                                        onClick={() => setShowDerived(!showDerived)}
-                                    >
-                                        <span className="size-3 rounded-sm border border-sky-500 bg-sky-500/30" aria-hidden="true" />
-                                        {t('proposed_geometry')}
-                                    </Button>
-                                </div>
-                            )}
-                            <LocationMarkerCard {...row.point} draggable={false} scrollWheelZoom={false}>
-                                {showDerived && row.geometry_derivation && (
-                                    <GeoJSON data={row.geometry_derivation.geometry} style={{ color: '#38bdf8' }} />
-                                )}
-                                {showOriginal && mapSource.geometry.type !== 'Point' && (
-                                    <GeoJSON data={mapSource.geometry} style={{ color: '#f97316', dashArray: '8 6', fill: false }} />
-                                )}
-                            </LocationMarkerCard>
+                            <ReviewMap row={row} candidateId={row.identity?.facility_id ?? ''} />
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-xs leading-relaxed text-muted-foreground">{t('map_note')}</p>
                                 <Button asChild variant="outline" size="sm">
@@ -825,6 +757,8 @@ function RecordDetails({ row }: { row: Row }) {
 export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Row) => void }) {
     const { t } = useTranslation('backend/imports');
     const changes = useMemo(() => rows.filter((row) => (row.after ?? row.before)?.geometry), [rows]);
+    const [style, setStyle] = useState<MapStyle>('streets');
+    const [fit, setFit] = useState(0);
     if (changes.length === 0) {
         return (
             <p role="status" className="mb-4 rounded-md border p-4 text-sm text-muted-foreground">
@@ -849,14 +783,18 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                     ))}
                 </div>
             </div>
-            <MapContainer center={[52.37, 4.9]} zoom={13} scrollWheelZoom={false} className="relative z-0 h-72 w-full sm:h-96">
-                <TileLayer
-                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-                    url="https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
-                    subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-                    maxZoom={22}
-                />
-                <ChangesMapBounds rows={changes} />
+            <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
+            <MapContainer
+                center={[52.37, 4.9]}
+                zoom={13}
+                scrollWheelZoom={false}
+                zoomControl={false}
+                className="parking-discovery-map relative z-0 h-72 w-full sm:h-96"
+            >
+                <ReviewTiles style={style} />
+                <ZoomControl position="bottomright" />
+                <ScaleControl position="bottomleft" imperial={false} />
+                <ChangesMapBounds rows={changes} fit={fit} />
                 {changes.map((row) => (
                     <GeoJSON
                         key={`${row.status}:${row.external_id}`}
@@ -885,14 +823,15 @@ function changeColor(status: string): string {
     return status === 'unchanged' ? '#64748b' : status === 'new' ? '#15803d' : status === 'missing' ? '#c2410c' : '#2563eb';
 }
 
-function ChangesMapBounds({ rows }: { rows: Row[] }) {
+function ChangesMapBounds({ rows, fit }: { rows: Row[]; fit: number }) {
     const map = useMap();
     useEffect(() => {
+        map.invalidateSize();
         const bounds = latLngBounds([]);
         for (const row of rows) {
             bounds.extend(geoJSON((row.after ?? row.before)!.geometry).getBounds());
         }
         if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 20 });
-    }, [map, rows]);
+    }, [map, rows, fit]);
     return null;
 }

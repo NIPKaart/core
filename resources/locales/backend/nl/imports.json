@@ -304,6 +304,7 @@
         }
     },
     "workspace": {
+        "fit_map": "Alles in beeld",
         "overview": "Leveringsoverzicht",
         "source_records": "Bronlocaties",
         "geometry_tasks": "Parkeervlakken controleren",
