@@ -19,7 +19,10 @@ const context = {
         if (name === 'react' || name === 'react/jsx-runtime') return require(name);
         if (name === 'react-i18next')
             return { useTranslation: () => ({ t: (key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key }) };
-        if (name === 'react-leaflet') return { MapContainer: wrapper, GeoJSON: wrapper, TileLayer: () => null, Tooltip: wrapper, useMap: () => ({}) };
+        if (name === './review-workspace') return { MapToolbar: () => null };
+        if (name === './review-map-tiles' || name === '@/components/map/zoom-control') return { __esModule: true, default: () => null };
+        if (name === 'react-leaflet')
+            return { MapContainer: wrapper, GeoJSON: wrapper, TileLayer: () => null, ScaleControl: () => null, Tooltip: wrapper, useMap: () => ({}) };
         return {};
     },
 };

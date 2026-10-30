@@ -21,17 +21,20 @@ class MunicipalIdentityService
             return $import->identity_resolution;
         }
         $previous = DatasetImport::where('dataset_source_id', $import->dataset_source_id)
-            ->where('state', 'published')->orderByDesc('retrieved_at')->first();
-        $aliases = collect($previous?->identity_resolution ?? [])->keyBy('external_id');
+            ->where('state', 'published')->orderByDesc('retrieved_at')->first(['id', 'identity_resolution']);
+        $previousResolution = $previous?->identity_resolution;
+        $aliases = collect($previousResolution ?? [])->keyBy('external_id');
+        $legacyIds = $previousResolution === null ? $spaces->groupBy('external_id') : collect();
+        $decisions = $import->identity_decisions ?? [];
         $candidates = $this->candidates($import);
         $rows = [];
         foreach ($import->records as $record) {
             $externalId = $record['source']['external_id'];
             $options = $candidates[$externalId] ?? [];
             $knownId = $aliases->get($externalId)['facility_id'] ?? null;
-            if ($previous?->identity_resolution === null) {
-                $legacy = $spaces->where('external_id', $externalId);
-                $knownId = $legacy->count() === 1 ? $legacy->first()->id : null;
+            if ($previousResolution === null) {
+                $legacy = $legacyIds->get($externalId);
+                $knownId = $legacy?->count() === 1 ? $legacy->first()->id : null;
             }
             $exact = array_values(array_filter($options, fn (array $option): bool => $option['same_geometry'] && $option['same_name'] && $option['same_type']));
             $context = array_values(array_filter($exact, fn (array $option): bool => $option['same_source_context']));
@@ -50,7 +53,7 @@ class MunicipalIdentityService
             } elseif ($knownId !== null || $options !== []) {
                 $method = 'review';
             }
-            $decision = $import->identity_decisions[hash('sha256', $externalId)] ?? null;
+            $decision = $decisions[hash('sha256', $externalId)] ?? null;
             if ($decision !== null) {
                 $id = $decision['facility_id'];
                 $method = $id === null || $spaces->has($id) ? 'manual' : 'review';
@@ -74,20 +77,28 @@ class MunicipalIdentityService
             'external_id' => $record['source']['external_id'], 'source' => $record['source'],
         ], $import->records);
         $rows = DB::select(<<<'SQL'
-            WITH incoming AS (
+            WITH incoming AS MATERIALIZED (
                 SELECT external_id, source,
                     ST_Centroid(ST_MakeValid(ST_GeomFromGeoJSON(source->'geometry')))::geography AS position
                 FROM jsonb_to_recordset(?::jsonb) AS r(external_id text, source jsonb)
-            ), existing AS (
-                SELECT id, external_id, source_record,
+            ), existing AS MATERIALIZED (
+                SELECT id, external_id, source_record, source_record->>'external_id' AS source_external_id,
                     ST_Centroid(ST_MakeValid(ST_GeomFromGeoJSON(source_record->'geometry')))::geography AS position
                 FROM parking_municipal_spaces WHERE dataset_source_id = ?
+            ), pairs AS (
+                SELECT incoming.external_id, existing.id FROM incoming JOIN existing ON existing.external_id = incoming.external_id
+                UNION
+                SELECT incoming.external_id, existing.id FROM incoming JOIN existing ON existing.source_external_id = incoming.external_id
+                UNION
+                SELECT incoming.external_id, existing.id FROM incoming
+                CROSS JOIN generate_series(-1, 1) AS bands(offset_value)
+                -- A 0.001-degree latitude band exceeds 110 metres; neighbouring bands cover every 20-metre match.
+                JOIN existing ON floor(ST_Y(existing.position::geometry) * 1000) = floor(ST_Y(incoming.position::geometry) * 1000) + bands.offset_value
+                    AND ST_DWithin(incoming.position, existing.position, 20)
             )
             SELECT incoming.external_id, existing.id, existing.source_record,
                 incoming.source, ST_Distance(incoming.position, existing.position) AS distance_metres
-            FROM incoming JOIN existing ON existing.external_id = incoming.external_id
-                OR existing.source_record->>'external_id' = incoming.external_id
-                OR ST_DWithin(incoming.position, existing.position, 20)
+            FROM pairs JOIN incoming ON incoming.external_id = pairs.external_id JOIN existing ON existing.id = pairs.id
             ORDER BY incoming.external_id, distance_metres, existing.id
             SQL, [json_encode($records, JSON_THROW_ON_ERROR), $import->dataset_source_id]);
         $result = [];

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { translateSourceValue } from '@/utils/translation';
 import { useTranslation } from 'react-i18next';
-import type { Claim, Row } from './show';
+import type { Claim, Row } from './source-record';
 
 export default function SourceComparison({ row, onShowMap }: { row: Row; onShowMap: () => void }) {
     const { t } = useTranslation('backend/imports');

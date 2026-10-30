@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\App\StoreDatasetImportRequest;
 use App\Models\DatasetImport;
+use App\Models\ParkingMunicipal;
+use App\Models\ParkingOffstreet;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetImports;
 use App\Services\MunicipalImportService;
@@ -118,16 +120,23 @@ class DatasetImportController extends Controller
         $review = $imports->forSource($datasetImport->datasetSource)->review($datasetImport);
         $request->validate([
             'q' => ['nullable', 'string', 'max:200'],
-            'filter' => ['nullable', 'in:all,changes,geometry,new,changed,unchanged,missing,conflict'],
+            'filter' => ['nullable', 'in:all,changes,geometry,identity,new,changed,unchanged,missing,conflict'],
         ]);
         $query = trim($request->string('q')->toString());
         $defaultFilter = $datasetImport->state === 'pending' ? 'changes' : 'all';
         $filter = $request->string('filter', $defaultFilter)->toString() ?: $defaultFilter;
+        $review['geometry_ids'] = array_values(array_column(array_filter($review['rows'], fn (array $row): bool => $row['geometry_review_required'] ?? false), 'external_id'));
+        $review['identity_count'] = count(array_filter($review['rows'], fn (array $row): bool => ($row['identity']['method'] ?? null) === 'review'));
+        $review['map_points'] = array_values(array_map(fn (array $row): array => [
+            'external_id' => $row['external_id'], 'title' => $row['after']['street'] ?? $row['after']['name'] ?? $row['before']['street'] ?? $row['before']['name'] ?? $row['external_id'],
+            'status' => $row['status'], 'point' => $row['point'], 'review_required' => $row['geometry_review_required'] ?? false,
+        ], array_filter($review['rows'], fn (array $row): bool => isset($row['point']))));
         $rows = array_values(array_filter($review['rows'], function (array $row) use ($query, $filter): bool {
             $matchesFilter = match ($filter) {
                 'all' => true,
                 'changes' => $row['status'] !== 'unchanged',
                 'geometry' => $row['geometry_review_required'] ?? false,
+                'identity' => ($row['identity']['method'] ?? null) === 'review',
                 default => $row['status'] === $filter,
             };
             $searchable = implode(' ', [$row['external_id'], $row['after']['street'] ?? $row['after']['name'] ?? '', $row['before']['street'] ?? $row['before']['name'] ?? '']);
@@ -138,7 +147,18 @@ class DatasetImportController extends Controller
         $pages = max(1, (int) ceil($total / 25));
         $page = max(1, min((int) $request->query('page', 1), $pages));
         $review['rows'] = array_slice($rows, ($page - 1) * 25, 25);
-        unset($review['identities']);
+        $candidateIds = collect($review['rows'])->flatMap(fn (array $row): array => $row['identity']['candidates'] ?? [])->pluck('id')->unique();
+        $model = $datasetImport->datasetSource->target_type === 'offstreet' ? ParkingOffstreet::class : ParkingMunicipal::class;
+        $candidates = $model::query()->where('dataset_source_id', $datasetImport->dataset_source_id)->whereIn('id', $candidateIds)->get(['id', 'source_record'])->keyBy('id');
+        foreach ($review['rows'] as &$row) {
+            if (isset($row['identity'])) {
+                foreach ($row['identity']['candidates'] as &$candidate) {
+                    $candidate['source'] = $candidates->get($candidate['id'])?->source_record;
+                }
+                unset($candidate);
+            }
+        }
+        unset($row, $review['identities']);
 
         return Inertia::render('backend/imports/show', [
             'import' => [...$datasetImport->toArray(), 'superseded' => $datasetImport->isSuperseded()], 'dataset' => $datasetImport->datasetSource,

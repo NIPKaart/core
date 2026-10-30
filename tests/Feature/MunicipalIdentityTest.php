@@ -5,10 +5,12 @@ use App\Models\DatasetSource;
 use App\Models\Favorite;
 use App\Models\ParkingMunicipal;
 use App\Models\User;
+use App\Services\MunicipalIdentityService;
 use App\Services\MunicipalImportService;
 use Database\Factories\DatasetSourceFactory;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function identityMunicipalDelivery(array $records): array
 {
@@ -35,6 +37,67 @@ function identityMunicipalReviewer(): User
 
     return $user;
 }
+
+it('bounds legacy identity lookup work while preserving each retained location', function () {
+    $source = DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $records = array_map(fn (int $index): array => identityMunicipalRecord('legacy-'.$index, 4.9 + $index * 0.001), range(0, 3));
+    $spaces = collect($records)->map(function (array $record) use ($source): ParkingMunicipal {
+        $space = ParkingMunicipal::factory()->recycle($source->municipality)->create([
+            'dataset_source_id' => $source->id, 'external_id' => $record['external_id'], 'source_record' => $record,
+        ]);
+        $tracked = new class extends ParkingMunicipal
+        {
+            public int $sourceIdReads = 0;
+
+            public function getAttribute(mixed $key): mixed
+            {
+                if ($key === 'external_id') {
+                    $this->sourceIdReads++;
+                }
+
+                return parent::getAttribute($key);
+            }
+        };
+
+        return $tracked->setRawAttributes($space->getAttributes(), true);
+    })->keyBy('id');
+    $import = app(MunicipalImportService::class)->intake(json_encode(identityMunicipalDelivery($records), JSON_THROW_ON_ERROR), $user);
+
+    $identities = app(MunicipalIdentityService::class)->resolve($import, $spaces);
+
+    expect(array_column($identities, 'facility_id'))->toBe($spaces->keys()->all());
+    expect(array_column($identities, 'method'))->toBe(array_fill(0, 4, 'source_id'));
+    expect($spaces->sum('sourceIdReads'))->toBeLessThanOrEqual($spaces->count() * 2);
+});
+
+it('retains nearby candidates across latitude bands and distant source IDs without duplicate candidates', function () {
+    $source = DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $createSpace = function (string $externalId, string $claimId, float $longitude, float $latitude) use ($source): ParkingMunicipal {
+        $record = identityMunicipalRecord($claimId, $longitude);
+        $record['geometry']['coordinates'][1] = $latitude;
+
+        return ParkingMunicipal::factory()->recycle($source->municipality)->create([
+            'dataset_source_id' => $source->id, 'external_id' => $externalId, 'source_record' => $record,
+            'longitude' => $longitude, 'latitude' => $latitude,
+        ]);
+    };
+    $near = $createSpace('same', 'same', 4.9, 52.30099);
+    $distant = $createSpace('same', 'same', 4.92, 52.31);
+    $alias = $createSpace('old-id', 'same', 4.94, 52.4);
+    $createSpace('outside-radius', 'outside-radius', 4.9, 52.3025);
+    $incoming = identityMunicipalRecord('same');
+    $incoming['geometry']['coordinates'][1] = 52.30101;
+    $service = app(MunicipalImportService::class);
+    $import = $service->intake(json_encode(identityMunicipalDelivery([$incoming]), JSON_THROW_ON_ERROR), $user);
+
+    $identity = $service->review($import)['identities'][0];
+
+    expect($identity['method'])->toBe('review');
+    expect(array_column($identity['candidates'], 'id'))->toBe([$near->id, $distant->id, $alias->id]);
+    expect($identity['candidates'][0]['distance_metres'])->toBeLessThan(3);
+});
 
 it('retains municipal UUIDs favorites visibility and immutable resolutions across changing source IDs', function () {
     $this->freezeTime();
@@ -216,3 +279,22 @@ it('requires municipal review when coincident claims have no unique verified sou
     $this->assertDatabaseCount('parking_municipal_spaces', 2);
     expect($import->fresh()->state)->toBe('pending');
 })->with(['duplicate claims', 'changed context', 'unverified feature ID', 'unverified FID', 'missing context']);
+
+it('shows only uncertain identity tasks with source evidence from the same dataset', function () {
+    $this->freezeTime();
+    DatasetSource::factory()->create();
+    $user = identityMunicipalReviewer();
+    $service = app(MunicipalImportService::class);
+    $first = $service->intake(json_encode(identityMunicipalDelivery([identityMunicipalRecord('a'), identityMunicipalRecord('b')]), JSON_THROW_ON_ERROR), $user);
+    $service->decide($first, $user, 'publish', null, $service->review($first)['token']);
+    $this->travel(5)->minutes();
+    $second = $service->intake(json_encode(identityMunicipalDelivery([identityMunicipalRecord('c')]), JSON_THROW_ON_ERROR), $user);
+
+    $this->actingAs($user)->get(route('app.imports.show', [$second, 'filter' => 'identity']))->assertInertia(fn (Assert $page) => $page
+        ->where('filters.filter', 'identity')->where('review.identity_count', 1)->has('review.rows', 1)
+        ->where('review.rows.0.external_id', 'c')->has('review.rows.0.identity.candidates', 2)
+        ->where('review.rows.0.identity.candidates.0.source.geometry.type', 'Point')
+        ->where('review.rows.0.identity.candidates.0.source.street', 'Teststraat'));
+    $this->get(route('app.imports.show', [$second, 'filter' => 'identity', 'q' => 'no-match']))->assertInertia(fn (Assert $page) => $page
+        ->has('review.rows', 0)->where('review.identity_count', 1));
+});
