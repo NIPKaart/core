@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { about, contact, garages, home, locationMap } from '@/routes';
 import { add } from '@/routes/location-map';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, ChevronRight, Plus, SquareParking } from 'lucide-react';
+import { ArrowRight, ChevronRight, Plus, SquareLetterP } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -130,7 +130,7 @@ export default function Bio({ campaign, links, socials, canonical, socialImage }
                         <nav aria-label={t('links')}>
                             <ul className="divide-y divide-stone-200 dark:divide-neutral-800">
                                 {links.map((item) => {
-                                    const Icon = item.route === 'location-map.add' ? Plus : item.route === 'garages' ? SquareParking : null;
+                                    const Icon = item.route === 'location-map.add' ? Plus : item.route === 'garages' ? SquareLetterP : null;
 
                                     return (
                                         <li key={item.id}>
