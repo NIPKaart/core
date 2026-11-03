@@ -50,5 +50,8 @@
         "filter": "Filter {{title}}…",
         "clear_filters": "Clear filters",
         "no_page_results": "No matches on this page."
+    },
+    "imagery": {
+        "source": "Aerial photo source"
     }
 }

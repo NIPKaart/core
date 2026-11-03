@@ -15,6 +15,7 @@ use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
+use App\Services\AerialImagery;
 use App\Services\ModerationEvidence;
 use App\Services\ModerationHistory;
 use App\Services\ModerationQueue;
@@ -56,6 +57,7 @@ class ModerationController extends Controller
         private ParkingSpaceImprovements $improvements,
         private ParkingPlaceModeration $reports,
         private ParkingPlaces $places,
+        private AerialImagery $imagery,
     ) {}
 
     public function index(Request $request): Response
@@ -346,6 +348,10 @@ class ModerationController extends Controller
                 'details' => $details(),
             ],
             'position' => fn () => $selectedKey === null ? null : $this->position($items($filters), $selectedKey),
+            'imagery' => fn () => $this->imagery->forCountry(
+                ($selectedKey === null ? null : $this->countryOf(collect([$items($filters)->firstWhere('key', $selectedKey) ?? $items()->firstWhere('key', $selectedKey)])->filter()))
+                    ?? $this->countryOf($items($filters))
+            ),
             'decidedToday' => fn () => $this->history->countsBy($user, now(self::LOCAL_TIMEZONE)->startOfDay()->utc())['total'],
             'options' => fn () => [
                 'types' => $types,
@@ -380,6 +386,18 @@ class ModerationController extends Controller
         return (new LengthAwarePaginator($items->forPage($page, self::PER_PAGE)->values(), $items->count(), self::PER_PAGE, $page, [
             'path' => route('app.moderation.index'),
         ]))->withQueryString();
+    }
+
+    /**
+     * The country most of these items lie in, so the aerial photo matches where the moderator is looking.
+     */
+    private function countryOf(Collection $items): ?string
+    {
+        $municipalityIds = $items->pluck('municipality_id')->filter();
+        $codes = Municipality::query()->join('countries', 'countries.id', '=', 'municipalities.country_id')
+            ->whereIn('municipalities.id', $municipalityIds->unique())->pluck('countries.code', 'municipalities.id');
+
+        return $municipalityIds->map(fn (int|string $id): ?string => $codes[$id] ?? null)->filter()->countBy()->sortDesc()->keys()->first();
     }
 
     /**

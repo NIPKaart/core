@@ -1,3 +1,4 @@
+import { AerialPicker, useAerialImagery } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -68,6 +69,7 @@ export function Workspace({
 }) {
     const { t } = useTranslation('backend/moderation');
     const [layer, setLayer] = useLayer(scope);
+    const imagery = useAerialImagery();
     const wide = useMediaQuery('(min-width: 1024px)');
     const street = streetView ? streetViewUrl(streetView.latitude, streetView.longitude) : null;
 
@@ -77,27 +79,31 @@ export function Workspace({
             <ModerationMap
                 {...map}
                 layer={layer}
+                aerial={imagery.layer}
                 inset={wide ? (aside ? EDITOR_INSET : PANEL_INSET) : 0}
                 className="h-[38svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto"
             >
                 <div className="absolute top-3 right-3 z-500 flex gap-2 lg:top-4 lg:right-4">
-                    <ToggleGroup
-                        type="single"
-                        value={layer}
-                        onValueChange={(value) => value && setLayer(value as MapLayer)}
-                        aria-label={t('review.views.label')}
-                        className="gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)]"
-                    >
-                        {(['streets', 'satellite'] as const).map((option) => (
-                            <ToggleGroupItem
-                                key={option}
-                                value={option}
-                                className="h-9 cursor-pointer rounded-[9px] px-3.5 text-sm font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                            >
-                                {t(option === 'streets' ? 'review.views.map' : 'review.views.aerial')}
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
+                    <div className="flex gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
+                        <ToggleGroup
+                            type="single"
+                            value={layer}
+                            onValueChange={(value) => value && setLayer(value as MapLayer)}
+                            aria-label={t('review.views.label')}
+                            className="gap-1"
+                        >
+                            {(['streets', 'satellite'] as const).map((option) => (
+                                <ToggleGroupItem
+                                    key={option}
+                                    value={option}
+                                    className="h-9 cursor-pointer rounded-[9px] px-3.5 text-sm font-medium data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                                >
+                                    {t(option === 'streets' ? 'review.views.map' : 'review.views.aerial')}
+                                </ToggleGroupItem>
+                            ))}
+                        </ToggleGroup>
+                        {layer === 'satellite' && <AerialPicker layers={imagery.layers} layer={imagery.layer} onChoose={imagery.choose} />}
+                    </div>
                     {street && (
                         <Button variant="outline" asChild className="h-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
                             <a href={street} target="_blank" rel="noreferrer">

@@ -62,7 +62,17 @@ function render(pageProps) {
             if (name === '@/components/ui/button')
                 return { Button: ({ children, asChild, disabled }) => (asChild ? children : React.createElement('button', { disabled }, children)) };
             if (name === '@/components/ui/input') return { Input: (props) => React.createElement('input', props) };
-            if (name === '@/components/ui/table') return Object.fromEntries(Object.entries({Table: 'table', TableBody: 'tbody', TableCell: 'td', TableHead: 'th', TableHeader: 'thead', TableRow: 'tr'}).map(([component, tag]) => [component, (props) => React.createElement(tag, props)]));
+            if (name === '@/components/ui/table')
+                return Object.fromEntries(
+                    Object.entries({
+                        Table: 'table',
+                        TableBody: 'tbody',
+                        TableCell: 'td',
+                        TableHead: 'th',
+                        TableHeader: 'thead',
+                        TableRow: 'tr',
+                    }).map(([component, tag]) => [component, (props) => React.createElement(tag, props)]),
+                );
             if (name === '@/components/ui/progress') return { Progress: () => React.createElement('div', { role: 'progressbar' }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
             if (name === '@/lib/garage-occupancy') return {};
@@ -110,11 +120,17 @@ function render(pageProps) {
             hasTodo: false,
             overview,
             ...pageProps,
-            contributions: pageProps.contributions ? {
-                total: pageProps.contributions.data.length, last_page: 2, from: 1, to: pageProps.contributions.data.length,
-                counts: { all: pageProps.contributions.data.length }, filters: { search: '', status: null },
-                ...pageProps.contributions,
-            } : null,
+            contributions: pageProps.contributions
+                ? {
+                      total: pageProps.contributions.data.length,
+                      last_page: 2,
+                      from: 1,
+                      to: pageProps.contributions.data.length,
+                      counts: { all: pageProps.contributions.data.length },
+                      filters: { search: '', status: null },
+                      ...pageProps.contributions,
+                  }
+                : null,
         }),
     );
 }
@@ -294,18 +310,42 @@ test('personal sections use the available workspace width for their headings and
         const classes = html.match(/<section aria-labelledby="dashboard-section" class="([^"]+)"/)[1].split(' ');
 
         assert.ok(classes.includes('w-full'), section);
-        assert.equal(classes.some((value) => value.startsWith('max-w-')), false, section);
+        assert.equal(
+            classes.some((value) => value.startsWith('max-w-')),
+            false,
+            section,
+        );
     }
 });
 
-
 test('contributions expose a searchable status-filtered table and bounded pagination for a hundred entries', () => {
-    const html = render({ section: 'contributions', contributions: {
-        data: [{ key: 'submission:1', kind: 'submission', label: '<Stationsplein>', at: '2026-10-29T09:00:00Z', status: 'approved', reason: null, url: '/map?place=community:1', action: 'map', withdraw_id: null }],
-        current_page: 5, last_page: 10, total: 89, from: 41, to: 50,
-        counts: { all: 100, approved: 89, pending: 8, rejected: 3 }, filters: { search: 'Stations', status: 'approved' },
-        prev_page_url: '/profile/parking-spaces?contributions_page=4', next_page_url: '/profile/parking-spaces?contributions_page=6',
-    }});
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [
+                {
+                    key: 'submission:1',
+                    kind: 'submission',
+                    label: '<Stationsplein>',
+                    at: '2026-10-29T09:00:00Z',
+                    status: 'approved',
+                    reason: null,
+                    url: '/map?place=community:1',
+                    action: 'map',
+                    withdraw_id: null,
+                },
+            ],
+            current_page: 5,
+            last_page: 10,
+            total: 89,
+            from: 41,
+            to: 50,
+            counts: { all: 100, approved: 89, pending: 8, rejected: 3 },
+            filters: { search: 'Stations', status: 'approved' },
+            prev_page_url: '/profile/parking-spaces?contributions_page=4',
+            next_page_url: '/profile/parking-spaces?contributions_page=6',
+        },
+    });
     assert.match(html, /<table/);
     assert.match(html, /role="search"/);
     assert.match(html, /value="Stations"/);
@@ -317,10 +357,21 @@ test('contributions expose a searchable status-filtered table and bounded pagina
 });
 
 test('an empty contribution search keeps the controls available and offers to reset the filters', () => {
-    const html = render({ section: 'contributions', contributions: {
-        data: [], current_page: 1, last_page: 1, total: 0, from: null, to: null, prev_page_url: null, next_page_url: null,
-        counts: { all: 0 }, filters: { search: 'Missing', status: null },
-    }});
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [],
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            from: null,
+            to: null,
+            prev_page_url: null,
+            next_page_url: null,
+            counts: { all: 0 },
+            filters: { search: 'Missing', status: null },
+        },
+    });
     assert.match(html, /contributions\.no_results/);
     assert.match(html, /contributions\.reset/);
     assert.match(html, /role="search"/);

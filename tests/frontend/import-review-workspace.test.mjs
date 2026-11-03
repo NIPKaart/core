@@ -36,6 +36,12 @@ function mount(file, modules = {}) {
             if (name === '@/actions/App/Http/Controllers/Admin/DatasetImportController') return { show: route, index: route, update: route };
             if (name === 'leaflet') return { divIcon: (options) => options };
             if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg />' };
+            if (name === '@/components/map/aerial-imagery')
+                return {
+                    useAerialImagery: () => ({ layers: [], layer: undefined, choose() {} }),
+                    AerialTiles: 'AerialTiles',
+                    AerialPicker: 'AerialPicker',
+                };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
             return tags;
@@ -281,11 +287,17 @@ test('identity selection submits the real candidate ID and maps the new-location
 test('geometry layers can be toggled and map style persists when moving to another record', () => {
     const records = mount('source-record.ts').exports;
     const app = mount('review-workspace.tsx', { './source-record': records });
+    const ring = [
+        [4.8, 52.3],
+        [4.81, 52.3],
+        [4.81, 52.31],
+        [4.8, 52.3],
+    ];
     const record = {
         ...row('a'),
         point: { longitude: 4.8, latitude: 52.3 },
-        after: { geometry: { type: 'Polygon', coordinates: [] } },
-        geometry_derivation: { geometry: { type: 'Polygon', coordinates: [] } },
+        after: { street: 'Bok de Korverweg', geometry: { type: 'Polygon', coordinates: [ring] } },
+        geometry_derivation: { geometry: { type: 'Polygon', coordinates: [ring] }, reason: 'Self-intersection[4.81 52.3]' },
     };
     const props = { row: record, candidateId: '' };
     let tree = app.render(app.exports.ReviewMap, props);
@@ -302,6 +314,92 @@ test('geometry layers can be toggled and map style persists when moving to anoth
         null,
     );
     assert.ok(find(tree, (node) => node.type === 'GeoJSON' && node.props.data === record.geometry_derivation.geometry));
+});
+
+test('a shape is labelled above its top edge instead of pinned, and the reported fault is ringed on the map', () => {
+    const records = mount('source-record.ts').exports;
+    const app = mount('review-workspace.tsx', { './source-record': records });
+    const ring = [
+        [4.8, 52.3],
+        [4.81, 52.3],
+        [4.81, 52.31],
+        [4.8, 52.3],
+    ];
+    const tree = app.render(app.exports.ReviewMap, {
+        row: {
+            ...row('a'),
+            point: { longitude: 4.805, latitude: 52.305 },
+            after: { street: 'Bok <de> Korverweg', geometry: { type: 'Polygon', coordinates: [ring] } },
+            geometry_derivation: { geometry: { type: 'Polygon', coordinates: [ring] }, reason: 'Self-intersection[4.81 52.3]' },
+        },
+        candidateId: '',
+    });
+    const marker = find(tree, (node) => node.type === 'Marker');
+    assert.deepEqual([...marker.props.position], [52.31, 4.805]);
+    assert.equal(marker.props.interactive, false);
+    assert.match(marker.props.icon.html, /Bok &#60;de&#62; Korverweg/);
+    const fault = find(tree, (node) => node.type === 'CircleMarker');
+    assert.deepEqual([...fault.props.center], [52.3, 4.81]);
+});
+
+test('lines and multi-part shapes are labelled above their highest point without breaking the map', () => {
+    const app = mount('review-workspace.tsx', { './source-record': mount('source-record.ts').exports });
+    const label = (geometry) =>
+        find(
+            app.render(app.exports.ReviewMap, {
+                row: { ...row('a'), point: { longitude: 4.8, latitude: 52.3 }, after: { street: 'Weg', geometry } },
+                candidateId: '',
+            }),
+            (node) => node.type === 'Marker',
+        ).props.position.map((value) => Math.round(value * 1e6) / 1e6);
+    assert.deepEqual(
+        [
+            ...label({
+                type: 'LineString',
+                coordinates: [
+                    [4.8, 52.3],
+                    [4.82, 52.32],
+                ],
+            }),
+        ],
+        [52.32, 4.81],
+    );
+    assert.deepEqual(
+        [
+            ...label({
+                type: 'MultiPolygon',
+                coordinates: [
+                    [
+                        [
+                            [4.8, 52.3],
+                            [4.81, 52.3],
+                            [4.8, 52.31],
+                            [4.8, 52.3],
+                        ],
+                    ],
+                    [
+                        [
+                            [4.9, 52.4],
+                            [4.91, 52.4],
+                            [4.9, 52.4],
+                        ],
+                    ],
+                ],
+            }),
+        ],
+        [52.4, 4.855],
+    );
+});
+
+test('PostGIS validity reasons become a plain kind and the point where the shape goes wrong', () => {
+    const { geometryIssue } = mount('source-record.ts').exports;
+    const issue = geometryIssue('Self-intersection[4.78779810899658 52.3802229984221]');
+    assert.equal(issue.kind, 'self_intersection');
+    assert.deepEqual({ ...issue.point }, { longitude: 4.78779810899658, latitude: 52.3802229984221 });
+    assert.equal(geometryIssue('Ring Self-intersection[1 2]').kind, 'self_intersection');
+    assert.equal(geometryIssue('Too few points in geometry component[4.8 52.3]').kind, 'too_few_points');
+    assert.equal(geometryIssue('Something new').kind, 'other');
+    assert.equal(geometryIssue('Something new').point, null);
 });
 
 test('the review pane switches between a record and its queue without losing the selected record', () => {
@@ -361,7 +459,6 @@ function identityWorkspace() {
         pages: 1,
         total: 2,
         query: '',
-        summary: { type: 'Summary', props: {} },
         onFinish: () => finished++,
     };
     const render = () => app.render(app.exports.ReviewWorkspace, props);
@@ -399,7 +496,6 @@ test('saving an identity advances to the next remaining record and finishing the
     const current = workspace.decision();
     assert.equal(current.props.target, 'candidate-a');
     assert.equal(find(workspace.render(), (node) => node.type === 'Button' && node.props.type === 'submit').props.form, current.props.formId);
-    assert.ok(find(workspace.render(), (node) => node.type === 'Summary'));
     assert.equal(workspace.finished(), 0);
 
     current.props.onSaved({ props: { review: { rows: [workspace.props.rows[1]] } } });

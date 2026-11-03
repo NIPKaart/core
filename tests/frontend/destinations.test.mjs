@@ -23,50 +23,86 @@ const destination = { key: 'url:destination', label: 'Museumstraat, Amsterdam', 
 const item = { id: 7, label: 'Office', destination };
 function mount({ user = { id: 1 }, failure = false, items = [item] } = {}) {
     const instances = new Map();
-    let active, cursor, opened = false, effects = [];
-    const requests = [], selected = [];
+    let active,
+        cursor,
+        opened = false,
+        effects = [];
+    const requests = [],
+        selected = [];
     const context = {
-        exports: {}, AbortController,
-        fetch: async (url) => { requests.push({ method: 'get', url }); return { ok: true, json: async () => ({ data: items }) }; },
+        exports: {},
+        AbortController,
+        fetch: async (url) => {
+            requests.push({ method: 'get', url });
+            return { ok: true, json: async () => ({ data: items }) };
+        },
         require: (name) => {
-            if (name === 'react') return {
-                useId: () => 'label',
-                useEffect: (effect) => effects.push(effect),
-                useState: (initial) => {
-                    const key = cursor++;
-                    if (!(key in active)) active[key] = initial;
-                    const state = active;
-                    return [state[key], (next) => { state[key] = typeof next === 'function' ? next(state[key]) : next; }];
-                },
-            };
-            if (name === '@inertiajs/react') return {
-                usePage: () => ({ props: { auth: { user } } }),
-                useHttp: (initial) => {
-                    const key = cursor++;
-                    if (!active[key]) active[key] = { data: initial, processing: false, errors: {} };
-                    const form = active[key];
-                    form.setData = (field, value) => { form.data[field] = value; };
-                    form.transform = (callback) => { form.transformData = callback; };
-                    for (const method of ['post', 'patch', 'delete']) form[method] = async (url) => {
-                        requests.push({ method, url, data: form.transformData ? form.transformData(form.data) : form.data });
-                        if (failure) throw new Error('offline');
-                    };
-                    return form;
-                },
-            };
+            if (name === 'react')
+                return {
+                    useId: () => 'label',
+                    useEffect: (effect) => effects.push(effect),
+                    useState: (initial) => {
+                        const key = cursor++;
+                        if (!(key in active)) active[key] = initial;
+                        const state = active;
+                        return [
+                            state[key],
+                            (next) => {
+                                state[key] = typeof next === 'function' ? next(state[key]) : next;
+                            },
+                        ];
+                    },
+                };
+            if (name === '@inertiajs/react')
+                return {
+                    usePage: () => ({ props: { auth: { user } } }),
+                    useHttp: (initial) => {
+                        const key = cursor++;
+                        if (!active[key]) active[key] = { data: initial, processing: false, errors: {} };
+                        const form = active[key];
+                        form.setData = (field, value) => {
+                            form.data[field] = value;
+                        };
+                        form.transform = (callback) => {
+                            form.transformData = callback;
+                        };
+                        for (const method of ['post', 'patch', 'delete'])
+                            form[method] = async (url) => {
+                                requests.push({ method, url, data: form.transformData ? form.transformData(form.data) : form.data });
+                                if (failure) throw new Error('offline');
+                            };
+                        return form;
+                    },
+                };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
-            if (name === '@/routes/profile/destinations') return Object.fromEntries(['list', 'store', 'update', 'destroy'].map((key) => [key, { url: (id) => `/destinations/${key}/${id ?? ''}` }]));
+            if (name === '@/routes/profile/destinations')
+                return Object.fromEntries(
+                    ['list', 'store', 'update', 'destroy'].map((key) => [key, { url: (id) => `/destinations/${key}/${id ?? ''}` }]),
+                );
             return require(name);
         },
     };
     vm.runInNewContext(source, context);
     const render = (component = context.exports.default, props = { open: opened, destination, onSelect: (value) => selected.push(value) }) => {
         if (!instances.has(component)) instances.set(component, []);
-        active = instances.get(component); cursor = 0; effects = [];
+        active = instances.get(component);
+        cursor = 0;
+        effects = [];
         return component(props);
     };
-    return { render, requests, selected, open: () => { opened = true; }, effects: async () => { for (const effect of effects) effect(); await new Promise(setImmediate); } };
+    return {
+        render,
+        requests,
+        selected,
+        open: () => {
+            opened = true;
+        },
+        effects: async () => {
+            for (const effect of effects) effect();
+            await new Promise(setImmediate);
+        },
+    };
 }
 function open(view) {
     view.open();
@@ -94,7 +130,15 @@ test('saving is explicit and sends identity plus the edited personal label witho
     await tree.props.onSubmit({ preventDefault() {} });
     const request = view.requests.at(-1);
     assert.equal(request.method, 'post');
-    assert.deepEqual(JSON.parse(JSON.stringify(request.data)), { label: 'Hospital', key: destination.key, name: destination.label, sub: destination.sub, type: destination.type, latitude: 52.36, longitude: 4.88 });
+    assert.deepEqual(JSON.parse(JSON.stringify(request.data)), {
+        label: 'Hospital',
+        key: destination.key,
+        name: destination.label,
+        sub: destination.sub,
+        type: destination.type,
+        latitude: 52.36,
+        longitude: 4.88,
+    });
 });
 
 test('opening a saved destination passes its original identity to discovery', async () => {
@@ -116,7 +160,11 @@ test('renaming changes only the personal label and removal calls the selected de
     const tree = view.render(editor.type, editor.props);
     find(tree, (node) => node.type === 'Input').props.onChange({ target: { value: 'Grandma' } });
     await tree.props.onSubmit({ preventDefault() {} });
-    assert.deepEqual(JSON.parse(JSON.stringify(view.requests.at(-1))), { method: 'patch', url: '/destinations/update/7', data: { label: 'Grandma' } });
+    assert.deepEqual(JSON.parse(JSON.stringify(view.requests.at(-1))), {
+        method: 'patch',
+        url: '/destinations/update/7',
+        data: { label: 'Grandma' },
+    });
     await find(view.render(row.type, row.props), (node) => node.props['aria-label'] === 'remove').props.onClick();
     assert.equal(view.requests.at(-1).url, '/destinations/destroy/7');
     assert.equal(view.requests.at(-1).method, 'delete');
@@ -133,27 +181,48 @@ test('a failed save keeps the editor open and exposes an error', async () => {
 test('reopening on the map resets selection and pagination, keeps session filters and requests current results', () => {
     const state = [];
     let cursor = 0;
-    const window = { location: new URL('https://example.test/map?destination=Old&lat=52&lng=5&radius=500&source=municipal&sort=distance'), history: {
-        state: {}, replaceState: (_state, _title, path) => { window.location = new URL(path, window.location); },
-    } };
+    const window = {
+        location: new URL('https://example.test/map?destination=Old&lat=52&lng=5&radius=500&source=municipal&sort=distance'),
+        history: {
+            state: {},
+            replaceState: (_state, _title, path) => {
+                window.location = new URL(path, window.location);
+            },
+        },
+    };
     const loadLibrary = (name) => {
         const context = { exports: {} };
-        vm.runInNewContext(ts.transpileModule(readFileSync(new URL(`../../resources/js/lib/${name}.ts`, import.meta.url), 'utf8'), {
-            compilerOptions: { module: ts.ModuleKind.CommonJS },
-        }).outputText, context);
+        vm.runInNewContext(
+            ts.transpileModule(readFileSync(new URL(`../../resources/js/lib/${name}.ts`, import.meta.url), 'utf8'), {
+                compilerOptions: { module: ts.ModuleKind.CommonJS },
+            }).outputText,
+            context,
+        );
         return context.exports;
     };
     const context = {
-        exports: {}, window, URL, URLSearchParams,
+        exports: {},
+        window,
+        URL,
+        URLSearchParams,
         require: (name) => {
-            if (name === 'react') return {
-                useEffect() {}, useRef: () => ({ current: null }), useMemo: (fn) => fn(), useCallback: (fn) => fn,
-                useState: (initial) => {
-                    const key = cursor++;
-                    if (!(key in state)) state[key] = typeof initial === 'function' ? initial() : initial;
-                    return [state[key], (next) => { state[key] = typeof next === 'function' ? next(state[key]) : next; }];
-                },
-            };
+            if (name === 'react')
+                return {
+                    useEffect() {},
+                    useRef: () => ({ current: null }),
+                    useMemo: (fn) => fn(),
+                    useCallback: (fn) => fn,
+                    useState: (initial) => {
+                        const key = cursor++;
+                        if (!(key in state)) state[key] = typeof initial === 'function' ? initial() : initial;
+                        return [
+                            state[key],
+                            (next) => {
+                                state[key] = typeof next === 'function' ? next(state[key]) : next;
+                            },
+                        ];
+                    },
+                };
             if (name === '@inertiajs/react') return { usePage: () => ({ url: window.location.pathname + window.location.search }), Head: 'Head' };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@/components/search/search-store') return { useSearchOpen: () => false };
@@ -161,13 +230,23 @@ test('reopening on the map resets selection and pagination, keeps session filter
             if (name === '@/lib/place-link') return loadLibrary('place-link');
             if (name === '@/lib/destination-icon') return {};
             if (name === 'react/jsx-runtime') return require(name);
-            if (name.startsWith('@/') || name === 'react-leaflet') return new Proxy({}, { get: (_, key) => key === '__esModule' ? false : `${name}:${String(key)}` });
+            if (name.startsWith('@/') || name === 'react-leaflet')
+                return new Proxy({}, { get: (_, key) => (key === '__esModule' ? false : `${name}:${String(key)}`) });
             throw new Error(name);
         },
     };
-    const mapSource = readFileSync(new URL('../../resources/js/pages/frontend/map/index.tsx', import.meta.url), 'utf8').replace('import.meta.env.VITE_MAPBOX_ACCESS_TOKEN', "'token'");
-    vm.runInNewContext(ts.transpileModule(mapSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText, context);
-    const render = () => { cursor = 0; return context.exports.default(); };
+    const mapSource = readFileSync(new URL('../../resources/js/pages/frontend/map/index.tsx', import.meta.url), 'utf8').replace(
+        'import.meta.env.VITE_MAPBOX_ACCESS_TOKEN',
+        "'token'",
+    );
+    vm.runInNewContext(
+        ts.transpileModule(mapSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText,
+        context,
+    );
+    const render = () => {
+        cursor = 0;
+        return context.exports.default();
+    };
     const nearby = (tree) => find(tree, (node) => node.type === '@/components/map/nearby-discovery:default');
     const tree = render();
     nearby(tree).props.onResults([{ key: 'old', latitude: 52, longitude: 5 }]);
@@ -185,15 +264,20 @@ test('reopening on the map resets selection and pagination, keeps session filter
     assert.equal(window.location.searchParams.get('destination'), 'Museumstraat, Amsterdam');
 });
 
-
 test('an empty destination list shows an icon, title and guidance after loading', async () => {
     const view = mount({ items: [] });
-    assert.equal(find(view.render(), (node) => node.props.children === 'empty.title'), null);
+    assert.equal(
+        find(view.render(), (node) => node.props.children === 'empty.title'),
+        null,
+    );
     await open(view);
     const tree = view.render();
     const title = find(tree, (node) => node.props.children === 'empty.title');
     assert.ok(title);
     assert.ok(find(tree, (node) => node.props.children === 'empty.description'));
     assert.ok(find(tree, (node) => node.props['aria-hidden'] && node.props.className?.includes('size-10')));
-    assert.equal(find(tree, (node) => node.type === 'ul'), null);
+    assert.equal(
+        find(tree, (node) => node.type === 'ul'),
+        null,
+    );
 });

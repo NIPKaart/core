@@ -46,6 +46,13 @@ return [
         'providers' => array_values(array_filter(array_map('trim', explode(',', (string) env('GEOCODING_PROVIDERS', 'pdok,geoapify,nominatim'))))),
     ],
 
+    /*
+     * Aerial photo layers for checking locations, preferred in this order where they cover the country. See ADR 0014.
+     */
+    'imagery' => [
+        'providers' => array_values(array_filter(array_map('trim', explode(',', (string) env('IMAGERY_PROVIDERS', 'pdok,google'))))),
+    ],
+
     'nominatim' => [
         'enabled' => env('NOMINATIM_PUBLIC_ENABLED', true),
         'user_agent' => env('NOMINATIM_USER_AGENT', 'NIPKaart/1.0 (+https://nipkaart.nl)'),

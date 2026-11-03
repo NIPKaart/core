@@ -1,3 +1,4 @@
+import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
 import { pinSvg } from '@/lib/pin-svg';
 import { cn } from '@/lib/utils';
 import L from 'leaflet';
@@ -79,15 +80,9 @@ const TILES = {
     streets: {
         url: `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`,
         attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
-        subdomains: [] as string[],
         zoom: 17,
     },
-    satellite: {
-        url: 'https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
-        attribution: '&copy; <a href="https://www.google.com/maps">Google</a>',
-        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-        zoom: 19,
-    },
+    satellite: { zoom: 19 },
 };
 
 type QueuePin = { key: string; point: MapPoint; color: string; label: string };
@@ -100,6 +95,7 @@ type QueuePin = { key: string; point: MapPoint; color: string; label: string };
 export function ModerationMap({
     center,
     layer,
+    aerial,
     nearby = [],
     municipal = [],
     current,
@@ -117,6 +113,8 @@ export function ModerationMap({
 }: {
     center: MapPoint;
     layer: MapLayer;
+    /** The aerial photo shown on the satellite layer. */
+    aerial?: AerialLayer;
     nearby?: MapPoint[];
     municipal?: MapPoint[];
     /** Where the parking space is now or was submitted, shown as a ghost when the pin is elsewhere. */
@@ -164,7 +162,11 @@ export function ModerationMap({
                 className="absolute inset-0 z-0 size-full"
             >
                 <Focus center={center} zoom={startZoom} bounds={bounds} inset={inset} focus={focus} />
-                <TileLayer key={layer} url={tiles.url} attribution={tiles.attribution} subdomains={tiles.subdomains} maxZoom={21} />
+                {layer === 'streets' ? (
+                    <TileLayer key={layer} url={TILES.streets.url} attribution={TILES.streets.attribution} maxZoom={21} />
+                ) : (
+                    <AerialTiles layer={aerial} />
+                )}
                 {nearby.map((point, index) => (
                     <Marker key={`n${index}`} position={[point.latitude, point.longitude]} icon={nearbyIcon} interactive={false} />
                 ))}

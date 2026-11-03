@@ -101,9 +101,9 @@
     "all_deliveries": "All deliveries",
     "map_tab": "Map & geometry",
     "source_tab": "Source data",
-    "geometry_layers": "Visible geometry layers",
-    "original_geometry": "Original source",
-    "proposed_geometry": "Proposed geometry",
+    "geometry_layers": "Layers",
+    "original_geometry": "Shape from the source",
+    "proposed_geometry": "Proposed shape",
     "geometry_help": "Compare the repaired area with the original source. Check whether the marker still represents the parking location.",
     "record_position": "{{position}} of {{total}} on this page",
     "history": "Delivery history",
@@ -319,7 +319,7 @@
         "queue": "Locations in this review",
         "position": "{{position}} of {{total}} locations",
         "checked": "Checked",
-        "check_next": "Checked and next",
+        "check_next": "Looks right, next",
         "finish": "Back to overview",
         "identity_reason": "Reason for this link",
         "incoming": "Source location",
@@ -340,6 +340,47 @@
         "capacity": "Capacity",
         "reason": "Reason",
         "location": "Location",
-        "type_differs": "Different type"
+        "type_differs": "Different type",
+        "review_tab": "Review",
+        "geometry_remaining_one": "{{count}} parking bay left to check",
+        "geometry_remaining_other": "{{count}} parking bays left to check",
+        "issue": {
+            "self_intersection": {
+                "title": "The shape crosses itself",
+                "body": "An edge of the shape crosses itself, often because the source drew a corner the wrong way round. NIPKaart proposes a corrected shape."
+            },
+            "too_few_points": {
+                "title": "The shape has too few points",
+                "body": "Part of the shape has too few points to be an area. The proposed shape leaves that part out."
+            },
+            "hole_outside_shell": {
+                "title": "A hole lies outside the shape",
+                "body": "The source draws a hole outside the outer edge. NIPKaart proposes a shape without that error."
+            },
+            "nested_shells": {
+                "title": "Areas lie inside each other",
+                "body": "The source draws an area inside another area. NIPKaart proposes a merged shape."
+            },
+            "interior_disconnected": {
+                "title": "The shape falls apart",
+                "body": "Holes split the area into separate parts. The proposed shape consists of those parts."
+            },
+            "ring_not_closed": {
+                "title": "The edge is not closed",
+                "body": "The first and last point of the edge differ. The proposed shape closes the edge."
+            },
+            "other": {
+                "title": "The shape is invalid",
+                "body": "The shape from the source is not a valid area. NIPKaart proposes a corrected shape."
+            },
+            "check": "Check on the aerial photo",
+            "check_position": "The blue shape lies on the parking bay.",
+            "check_complete": "No part of the parking bay is missing.",
+            "technical": "Technical message"
+        }
+    },
+    "sheet": {
+        "about": "About the source",
+        "review_ready": "A new delivery is waiting for review."
     }
 }

@@ -15,7 +15,11 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages
 const context = {
     exports: {},
     require: (name) => {
-        if (name === '@/utils/translation') return { translateSourceValue: (_, key, options) => key.split('.').reduce((value, part) => value?.[part], translations) ?? options?.defaultValue ?? 'Unknown' };
+        if (name === '@/utils/translation')
+            return {
+                translateSourceValue: (_, key, options) =>
+                    key.split('.').reduce((value, part) => value?.[part], translations) ?? options?.defaultValue ?? 'Unknown',
+            };
         if (name === 'react-i18next')
             return { useTranslation: () => ({ t: (key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key }) };
         if (name === '@/components/ui/button') return { Button: ({ children, onClick }) => React.createElement('button', { onClick }, children) };

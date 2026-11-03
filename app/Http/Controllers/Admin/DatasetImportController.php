@@ -7,6 +7,7 @@ use App\Http\Requests\App\StoreDatasetImportRequest;
 use App\Models\DatasetImport;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
+use App\Services\AerialImagery;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetImports;
 use App\Services\MunicipalImportService;
@@ -114,7 +115,7 @@ class DatasetImportController extends Controller
         return to_route('app.imports.show', $import);
     }
 
-    public function show(Request $request, DatasetImport $datasetImport, DatasetImports $imports, MunicipalProvenance $provenance): Response
+    public function show(Request $request, DatasetImport $datasetImport, DatasetImports $imports, MunicipalProvenance $provenance, AerialImagery $imagery): Response
     {
         Gate::authorize('view', $datasetImport);
         $review = $imports->forSource($datasetImport->datasetSource)->review($datasetImport);
@@ -164,6 +165,7 @@ class DatasetImportController extends Controller
             'import' => [...$datasetImport->toArray(), 'superseded' => $datasetImport->isSuperseded()], 'dataset' => $datasetImport->datasetSource,
             'municipalityName' => $datasetImport->datasetSource->municipality->name,
             'times' => $provenance->importTimes($datasetImport),
+            'imagery' => $imagery->forCountry($datasetImport->datasetSource->municipality->country?->code),
             'review' => $review, 'page' => $page, 'pages' => $pages,
             'total' => $total, 'filters' => ['q' => $query, 'filter' => $filter],
         ]);

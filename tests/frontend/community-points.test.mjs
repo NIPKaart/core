@@ -18,7 +18,12 @@ const cache = new Map();
 function sourceModule(path) {
     if (cache.has(path)) return cache.get(path);
     const module = { exports: {}, require: moduleRequire };
-    vm.runInNewContext(ts.transpileModule(readFileSync(new URL(`../../resources/js/${path}.tsx`, import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText, module);
+    vm.runInNewContext(
+        ts.transpileModule(readFileSync(new URL(`../../resources/js/${path}.tsx`, import.meta.url), 'utf8'), {
+            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+        }).outputText,
+        module,
+    );
     cache.set(path, module.exports);
     return module.exports;
 }
@@ -31,7 +36,16 @@ const context = {
     exports: {},
     require: (name) => {
         if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
-        if (name === 'react') return { ...React, useState: () => [expanded, (value) => { expanded = value; }] };
+        if (name === 'react')
+            return {
+                ...React,
+                useState: () => [
+                    expanded,
+                    (value) => {
+                        expanded = value;
+                    },
+                ],
+            };
         return moduleRequire(name);
     },
 };
@@ -77,7 +91,9 @@ test('moderator context explains outcome reasons and incomplete history without 
     assert.match(html, /Recent contributions/);
     assert.match(html, /not a complete lifetime history/);
     assert.doesNotMatch(html, /community_points\.outcomes|weight|formula/);
-    const name = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: '<script>', approved: 2, rejected: 0, is_new: false, community_points } }));
+    const name = renderToStaticMarkup(
+        React.createElement(ContributorName, { contributor: { name: '<script>', approved: 2, rejected: 0, is_new: false, community_points } }),
+    );
     assert.match(name, /&lt;script&gt;/);
     assert.match(name, /125 community points/);
 });
@@ -86,10 +102,11 @@ test('an anonymized contributor has no community points profile to display', () 
     assert.equal(renderToStaticMarkup(React.createElement(CommunityPointsContext, { community_points: null })), '');
 });
 
-
 test('neutral rejection history is not rendered as a reliability warning when reviewed community points is available', () => {
     const community_points = { score: 0, reviewed: 10, first_recorded_at: null, outcomes: [], recent: [] };
-    const html = renderToStaticMarkup(React.createElement(ContributorName, { contributor: { name: 'Contributor', approved: 0, rejected: 10, is_new: false, community_points } }));
+    const html = renderToStaticMarkup(
+        React.createElement(ContributorName, { contributor: { name: 'Contributor', approved: 0, rejected: 10, is_new: false, community_points } }),
+    );
     assert.match(html, /community points/);
     assert.match(html, /0 community points/);
     assert.doesNotMatch(html, /contributor.rejected|rejected contributions/);

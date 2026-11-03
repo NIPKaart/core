@@ -80,13 +80,13 @@ export default function Index({ status, filters, items, history, selected, posit
         router.visit(itemUrl(link, query), {
             preserveState: true,
             preserveScroll: true,
-            only: ['selected', 'position'],
+            only: ['selected', 'position', 'imagery'],
             onFinish: () => setLoading(null),
         });
     };
     const closeReview = () => {
         setLoading(null);
-        router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position'] });
+        router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position', 'imagery'] });
     };
 
     const current = selected;
