@@ -14,35 +14,21 @@ function render({ processing = false, errors = {} } = {}) {
         exports: {},
         require: (name) => {
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
-            if (name === '@inertiajs/react')
-                return {
-                    useForm: () => ({
-                        data: { name: 'New User', email: 'new@example.com', password: '', password_confirmation: '', role: '' },
-                        errors,
-                        processing,
-                        setData: (...args) => changes.push(args),
-                        submit: (...args) => {
-                            submission = args;
-                        },
-                    }),
-                };
+            if (name === '@inertiajs/react') return { useForm: () => ({
+                data: { name: 'New User', email: 'new@example.com', password: '', password_confirmation: '', role: '' },
+                errors, processing,
+                setData: (...args) => changes.push(args),
+                submit: (...args) => { submission = args; },
+            }) };
             if (name === '@/routes/app') return { __esModule: true, default: { users: { store: () => ({ url: '/admin/users', method: 'post' }) } } };
             if (name.startsWith('@/')) return new Proxy({}, { get: (_, key) => key });
             return require(name);
         },
     };
-    vm.runInNewContext(
-        ts.transpileModule(readFileSync(new URL('../../resources/js/pages/backend/users/create-sheet.tsx', import.meta.url), 'utf8'), {
-            compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-        }).outputText,
-        context,
-    );
-    return {
-        tree: context.exports.CreateUserSheet({ open: true, roles: [{ id: 1, name: 'user' }], onClose: () => closed++ }),
-        changes,
-        closed: () => closed,
-        submission: () => submission,
-    };
+    vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../../resources/js/pages/backend/users/create-sheet.tsx', import.meta.url), 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+    }).outputText, context);
+    return { tree: context.exports.CreateUserSheet({ open: true, roles: [{ id: 1, name: 'user' }], onClose: () => closed++ }), changes, closed: () => closed, submission: () => submission };
 }
 function nodes(node) {
     if (!node || typeof node !== 'object') return [];
@@ -51,9 +37,7 @@ function nodes(node) {
 
 test('the sheet submits through the existing route and cancellation does not submit', () => {
     const view = render();
-    nodes(view.tree)
-        .find((node) => node.type === 'form')
-        .props.onSubmit({ preventDefault() {} });
+    nodes(view.tree).find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
     assert.equal(view.submission()[0].url, '/admin/users');
     assert.equal(view.submission()[0].method, 'post');
     assert.equal(view.submission()[1].preserveScroll, true);
@@ -71,11 +55,7 @@ test('processing prevents closing by overlay, Escape and both cancel controls', 
         button.props.onClick?.();
     }
     assert.equal(view.closed(), 0);
-    assert.ok(
-        nodes(view.tree)
-            .filter((node) => node.type === 'fieldset')
-            .every((node) => node.props.disabled),
-    );
+    assert.ok(nodes(view.tree).filter((node) => node.type === 'fieldset').every((node) => node.props.disabled));
 });
 
 test('validation errors are linked to fields and role selection updates the submitted data', () => {

@@ -7,10 +7,9 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-const compile = (file) =>
-    ts.transpileModule(readFileSync(new URL(`../../resources/js/${file}`, import.meta.url), 'utf8'), {
-        compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-    }).outputText;
+const compile = (file) => ts.transpileModule(readFileSync(new URL(`../../resources/js/${file}`, import.meta.url), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+}).outputText;
 function find(node, predicate) {
     if (!node || typeof node !== 'object') return null;
     if (predicate(node)) return node;
@@ -21,27 +20,14 @@ function find(node, predicate) {
     return null;
 }
 function mount({ desktop = true, mapContext } = {}) {
-    let tab = 'destinations',
-        closed = 0,
-        focused = 0;
+    let tab = 'destinations', closed = 0, focused = 0;
     const visits = [];
     const filters = { exports: {} };
     vm.runInNewContext(compile('lib/discovery-filters.ts'), filters);
     const context = {
-        exports: {},
-        URL,
-        window: { location: { origin: 'https://example.test' } },
+        exports: {}, URL, window: { location: { origin: 'https://example.test' } },
         require: (name) => {
-            if (name === 'react')
-                return {
-                    useRef: () => ({ current: false }),
-                    useState: () => [
-                        tab,
-                        (value) => {
-                            tab = value;
-                        },
-                    ],
-                };
+            if (name === 'react') return { useRef: () => ({ current: false }), useState: () => [tab, (value) => { tab = value; }] };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@inertiajs/react') return { router: { visit: (...args) => visits.push(args) } };
             if (name === '@/hooks/use-media-query') return { useMediaQuery: () => desktop };
@@ -58,22 +44,7 @@ function mount({ desktop = true, mapContext } = {}) {
         },
     };
     vm.runInNewContext(compile('components/modals/modal-saved.tsx'), context);
-    return {
-        visits,
-        closed: () => closed,
-        focused: () => focused,
-        render: () =>
-            context.exports.default({
-                open: true,
-                onClose: () => {
-                    closed++;
-                },
-                onReturnFocus: () => {
-                    focused++;
-                },
-                mapContext,
-            }),
-    };
+    return { visits, closed: () => closed, focused: () => focused, render: () => context.exports.default({ open: true, onClose: () => { closed++; }, onReturnFocus: () => { focused++; }, mapContext }) };
 }
 const destination = { key: 'geoapify:1', label: 'Museumstraat', type: 'street', latitude: 52.36, longitude: 4.88 };
 const favorite = { favorite_id: 10, id: 'same-id', type: 'Municipal', title: 'Museumstraat', latitude: 52.36, longitude: 4.88, available: true };
@@ -98,11 +69,8 @@ for (const desktop of [true, false]) {
 }
 
 test('opening either kind on the map closes Saved and invokes its own map interaction', () => {
-    const destinations = [],
-        places = [];
-    const view = mount({
-        mapContext: { destination, onDestinationSelect: (value) => destinations.push(value), onFavoriteSelect: (value) => places.push(value) },
-    });
+    const destinations = [], places = [];
+    const view = mount({ mapContext: { destination, onDestinationSelect: (value) => destinations.push(value), onFavoriteSelect: (value) => places.push(value) } });
     const tree = view.render();
     const list = find(tree, (node) => node.type === '@/components/map/destinations');
     assert.equal(list.props.destination, destination);
@@ -146,30 +114,19 @@ test('unavailable or unidentified favorites do not close Saved or navigate', () 
 
 function mountFavorites(fetch) {
     const state = [];
-    let cursor = 0,
-        effect;
+    let cursor = 0, effect;
     const selected = [];
     const context = {
-        exports: {},
-        fetch,
-        AbortController,
+        exports: {}, fetch, AbortController,
         require: (name) => {
-            if (name === 'react')
-                return {
-                    useEffect: (callback) => {
-                        effect = callback;
-                    },
-                    useState: (initial) => {
-                        const key = cursor++;
-                        if (!(key in state)) state[key] = initial;
-                        return [
-                            state[key],
-                            (next) => {
-                                state[key] = typeof next === 'function' ? next(state[key]) : next;
-                            },
-                        ];
-                    },
-                };
+            if (name === 'react') return {
+                useEffect: (callback) => { effect = callback; },
+                useState: (initial) => {
+                    const key = cursor++;
+                    if (!(key in state)) state[key] = initial;
+                    return [state[key], (next) => { state[key] = typeof next === 'function' ? next(state[key]) : next; }];
+                },
+            };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@/routes/profile') return { __esModule: true, default: { favorites: { list: { url: () => '/favorites' } } } };
             if (name.startsWith('@/components/')) return new Proxy({}, { get: (_, key) => key });
@@ -179,24 +136,14 @@ function mountFavorites(fetch) {
     vm.runInNewContext(compile('components/map/favorites.tsx'), context);
     return {
         selected,
-        render: (open = true) => {
-            cursor = 0;
-            return context.exports.default({ open, onSelect: (value) => selected.push(value) });
-        },
-        load: async () => {
-            const cleanup = effect();
-            await new Promise(setImmediate);
-            return cleanup;
-        },
+        render: (open = true) => { cursor = 0; return context.exports.default({ open, onSelect: (value) => selected.push(value) }); },
+        load: async () => { const cleanup = effect(); await new Promise(setImmediate); return cleanup; },
     };
 }
 
 test('favorites load only when active, and selecting a row preserves its source identity', async () => {
     const requests = [];
-    const view = mountFavorites(async (url) => {
-        requests.push(url);
-        return { ok: true, json: async () => ({ favorites: [favorite] }) };
-    });
+    const view = mountFavorites(async (url) => { requests.push(url); return { ok: true, json: async () => ({ favorites: [favorite] }) }; });
     view.render(false);
     await view.load();
     assert.equal(requests.length, 0);

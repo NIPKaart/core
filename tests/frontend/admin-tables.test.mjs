@@ -24,7 +24,7 @@ function load(path) {
     const context = {
         exports: {},
         require: (name) => {
-            if (name === '@/locale-sync') return { formatLocale: (language) => (language === 'en' ? 'en-GB' : language) };
+        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === '@/components/localized-date-time') return load('components/localized-date-time.tsx');
             if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'en' } }) };
             if (name === '@inertiajs/react') return { router: {} };
@@ -90,10 +90,8 @@ test('table sorts the complete server page without adding client pagination', ()
         initialState: { sorting: [{ id: 'name', desc: false }] },
     });
 
-    assert.deepEqual(
-        [...html.matchAll(/<td[^>]*>(Bay \d+)<\/td>/g)].map((match) => match[1]),
-        Array.from({ length: 15 }, (_, index) => `Bay ${index + 1}`),
-    );
+    assert.deepEqual([...html.matchAll(/<td[^>]*>(Bay \d+)<\/td>/g)].map((match) => match[1]),
+        Array.from({ length: 15 }, (_, index) => `Bay ${index + 1}`));
 });
 
 test('table search still matches nested text and numbers in hidden columns', () => {

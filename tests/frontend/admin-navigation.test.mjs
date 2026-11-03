@@ -36,54 +36,28 @@ test('Mijn NIPKaart sidebar highlights only the selected personal section includ
     const sidebarSource = ts.transpileModule(readFileSync(new URL('../../resources/js/components/app-sidebar.tsx', import.meta.url), 'utf8'), {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
     }).outputText;
-    for (const [url, selected] of [
-        ['/dashboard', null],
-        ['/profile/destinations', 'destinations'],
-        ['/profile/favorites', 'favorites'],
-        ['/profile/parking-spaces?contributions_page=2', 'parking-spaces'],
-        ['/admin/users', null],
-    ]) {
+    for (const [url, selected] of [['/dashboard', null], ['/profile/destinations', 'destinations'], ['/profile/favorites', 'favorites'], ['/profile/parking-spaces?contributions_page=2', 'parking-spaces'], ['/admin/users', null]]) {
         const groups = [];
-        const route = Object.assign((options) => ({ url: '/dashboard' + (options ? '?' + new URLSearchParams(options.query) : '') }), {
-            url: () => '/dashboard',
-        });
-        const routeTree = new Proxy(route, { get: (_, key) => (key === 'url' ? route.url : routeTree) });
-        const sidebarContext = {
-            exports: {},
-            URL,
-            require: (name) => {
-                if (name === 'react/jsx-runtime')
-                    return {
-                        jsx: (type, props) => {
-                            if (props.group) groups.push(props.group);
-                            return { type, props };
-                        },
-                        jsxs: (type, props) => ({ type, props }),
-                    };
-                if (name === '@inertiajs/react')
-                    return { usePage: () => ({ url, props: { counts: { moderation: { open: 0 }, dataSources: { attention: 0 } } } }) };
-                if (name === '@/hooks/use-authorization') return { useAuthorization: () => ({ can: () => false, hasRole: () => false }) };
-                if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
-                if (name === 'lucide-react') return { icons: {} };
-                if (name === '@/routes') return { dashboard: route, home: route, locationMap: route };
-                if (name.startsWith('@/routes/profile/')) return { index: () => ({ url: '/profile/' + name.split('/').at(-1) }) };
-                return { default: routeTree, index: route };
-            },
-        };
+        const route = Object.assign((options) => ({ url: '/dashboard' + (options ? '?' + new URLSearchParams(options.query) : '') }), { url: () => '/dashboard' });
+        const routeTree = new Proxy(route, { get: (_, key) => key === 'url' ? route.url : routeTree });
+        const sidebarContext = { exports: {}, URL, require: (name) => {
+            if (name === 'react/jsx-runtime') return { jsx: (type, props) => {
+                if (props.group) groups.push(props.group);
+                return { type, props };
+            }, jsxs: (type, props) => ({ type, props }) };
+            if (name === '@inertiajs/react') return { usePage: () => ({ url, props: { counts: { moderation: { open: 0 }, dataSources: { attention: 0 } } } }) };
+            if (name === '@/hooks/use-authorization') return { useAuthorization: () => ({ can: () => false, hasRole: () => false }) };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+            if (name === 'lucide-react') return { icons: {} };
+            if (name === '@/routes') return { dashboard: route, home: route, locationMap: route };
+            if (name.startsWith('@/routes/profile/')) return { index: () => ({ url: '/profile/' + name.split('/').at(-1) }) };
+            return { default: routeTree, index: route };
+        } };
         vm.runInNewContext(sidebarSource, sidebarContext);
         sidebarContext.exports.AppSidebar();
         const personal = groups.find((group) => group.title === 'personal');
         assert.ok(personal);
-        assert.deepEqual(
-            Array.from(personal.items, (item) => item.href.url),
-            ['/profile/destinations', '/profile/favorites', '/profile/parking-spaces'],
-        );
-        assert.deepEqual(
-            Array.from(
-                personal.items.filter((item) => isNavigationItemActive(item, url, personal.items)),
-                (item) => new URL(item.href.url, 'https://test.local').pathname.split('/').at(-1),
-            ),
-            selected ? [selected] : [],
-        );
+        assert.deepEqual(Array.from(personal.items, (item) => item.href.url), ['/profile/destinations', '/profile/favorites', '/profile/parking-spaces']);
+        assert.deepEqual(Array.from(personal.items.filter((item) => isNavigationItemActive(item, url, personal.items)), (item) => new URL(item.href.url, 'https://test.local').pathname.split('/').at(-1)), selected ? [selected] : []);
     }
 });

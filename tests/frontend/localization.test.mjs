@@ -63,7 +63,7 @@ function load(path, i18n) {
         exports: {},
         require: (name) => {
             if (name === 'react') return { ...React, default: React };
-            if (name === '@/locale-sync') return { formatLocale: (language) => (language === 'en' ? 'en-GB' : language) };
+        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
             if (name === '@/utils/translation') return load('utils/translation.ts', i18n);
             if (name === '@/i18n') return { default: i18n };
             if (name === '@/components/input-error') return load('components/input-error.tsx', i18n);
@@ -71,8 +71,7 @@ function load(path, i18n) {
             if (name === '@/components/ui/input') return { Input: element('input') };
             if (name === '@/components/ui/label') return { Label: element('label') };
             if (name === '@/components/ui/textarea') return { Textarea: element('textarea') };
-            if (name === '@/lib/icon-factory')
-                return { getBlueMarkerIcon: () => ({}), getParkingStatusIcon: () => ({}), getVioletMarkerIcon: () => ({}) };
+            if (name === '@/lib/icon-factory') return { getBlueMarkerIcon: () => ({}), getParkingStatusIcon: () => ({}), getVioletMarkerIcon: () => ({}) };
             if (name === './zoom-control') return { default: () => null };
             if (name === 'react-leaflet') {
                 const Layer = ({ name, children }) => React.createElement('fieldset', { 'aria-label': name }, children);
@@ -135,20 +134,9 @@ test('existing local contribution errors follow a language change while server m
     await i18n.init({ resources, lng: 'nl', fallbackLng: false });
     const DetailsStep = load('components/contribute/details-step.tsx', i18n).default;
     const props = {
-        data: {
-            orientation: '',
-            under_sign: '',
-            restriction_days: [],
-            description: '',
-            parking_hours: '',
-            parking_minutes: '',
-            latitude: null,
-            longitude: null,
-        },
+        data: { orientation: '', under_sign: '', restriction_days: [], description: '', parking_hours: '', parking_minutes: '', latitude: null, longitude: null },
         errors: { orientation: 'details.orientation.required', under_sign: 'details.under_sign.required', description: 'Server validation message' },
-        orientationOptions: [],
-        restrictionDays: [],
-        setData() {},
+        orientationOptions: [], restrictionDays: [], setData() {},
     };
 
     const dutch = render(DetailsStep, props);
@@ -173,8 +161,7 @@ for (const [language, labels] of Object.entries({
         const LocationMarkerCard = load('components/map/card-location-marker.tsx', i18n).default;
 
         const html = render(LocationMarkerCard, {
-            latitude: 52.37,
-            longitude: 4.9,
+            latitude: 52.37, longitude: 4.9,
             nearbySpaces: [{ id: 'community', latitude: 52.37, longitude: 4.91, status: 'published' }],
             nearbyMunicipalSpaces: [{ id: 'municipal', latitude: 52.37, longitude: 4.92 }],
         });
@@ -290,6 +277,7 @@ test('literal message lookups in known page namespaces resolve in both languages
     assert.ok(lookups > 2000);
 });
 
+
 for (const language of ['en', 'nl']) {
     test(`source values resolve in ${language} and unknown values cannot leak keys`, async () => {
         const i18n = i18next.createInstance();
@@ -302,10 +290,7 @@ for (const language of ['en', 'nl']) {
         assert.equal(translateSourceValue('backend/imports', 'result_count', { count: 2, total: 2 }), language === 'en' ? '2 records' : '2 records');
         const notifications = load('utils/notifications.tsx', i18n);
         const translate = i18n.getFixedT(language, 'backend/notifications');
-        assert.equal(
-            notifications.resolveNotificationTitleBackend(translate, 'system.announcement'),
-            language === 'en' ? 'System announcement' : 'Systeem aankondiging',
-        );
+        assert.equal(notifications.resolveNotificationTitleBackend(translate, 'system.announcement'), language === 'en' ? 'System announcement' : 'Systeem aankondiging');
         assert.equal(notifications.resolveNotificationTitleBackend(translate, 'unknown.future.type'), language === 'en' ? 'Notification' : 'Melding');
     });
 }
@@ -335,13 +320,7 @@ for (const language of ['en', 'nl']) {
             delivery: { state: 'pending', publication_checks: { version: 1, counts: {}, reasons: ['many_missing', 'unknown_future_reason'] } },
         });
 
-        assert.ok(
-            html.includes(
-                language === 'en'
-                    ? 'The number of missing records exceeds the agreed limit.'
-                    : 'Het aantal ontbrekende records overschrijdt de afgesproken grens.',
-            ),
-        );
+        assert.ok(html.includes(language === 'en' ? 'The number of missing records exceeds the agreed limit.' : 'Het aantal ontbrekende records overschrijdt de afgesproken grens.'));
         assert.ok(html.includes(language === 'en' ? 'This delivery needs review' : 'Deze levering moet worden beoordeeld'));
         assert.ok(!html.includes('unknown_future_reason'));
         assert.ok(!html.includes('automatic.reasons.'));
