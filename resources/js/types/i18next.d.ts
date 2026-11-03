@@ -18,7 +18,6 @@ declare module 'i18next' {
             'backend/parking/confirmations': typeof import('../../locales/backend/en/parking/confirmations.json');
             'backend/parking/main': typeof import('../../locales/backend/en/parking/main.json');
             'backend/parking/trash': typeof import('../../locales/backend/en/parking/trash.json');
-            'backend/profile': typeof import('../../locales/backend/en/profile.json');
             'backend/roles': typeof import('../../locales/backend/en/roles.json');
             'backend/security': typeof import('../../locales/backend/en/security.json');
             'backend/settings': typeof import('../../locales/backend/en/settings.json');
