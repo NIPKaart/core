@@ -176,7 +176,8 @@
             "waiting": "wacht {{ago}}",
             "start": "Start beoordelen",
             "queue": "Hele wachtrij",
-            "done": "Niets te beoordelen in moderatie",
+            "done": "Helemaal bij",
+            "done_description": "Er wachten geen nieuwe parkeerplaatsen, verbeteringen of meldingen op beoordeling.",
             "no_address": "Zonder adres"
         },
         "queue": {

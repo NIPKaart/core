@@ -993,8 +993,24 @@ function NextTile({ next, total }: { next: Todo['next']; total: number }) {
 
     if (!next) {
         return (
-            <article className={cn(tile, 'items-center justify-center text-center @min-[640px]:col-span-2 @min-[1100px]:row-span-2')}>
-                <p className="text-[17px] font-semibold">{t('work.next.done')}</p>
+            <article
+                aria-labelledby="dashboard-next"
+                className="flex min-h-80 min-w-0 flex-col items-center justify-center gap-6 rounded-xl border border-green-200 bg-green-50/60 px-6 py-12 text-center @min-[640px]:col-span-2 @min-[1100px]:row-span-2 dark:border-green-900 dark:bg-green-950/20"
+            >
+                <div
+                    aria-hidden
+                    className="flex size-24 items-center justify-center rounded-full border border-green-200/70 bg-green-100/60 dark:border-green-900 dark:bg-green-950/60"
+                >
+                    <div className="flex size-16 items-center justify-center rounded-2xl bg-white text-green-700 shadow-sm ring-1 ring-green-900/5 dark:bg-green-900 dark:text-green-300 dark:ring-green-300/10">
+                        <CheckCircle2 className="size-8" strokeWidth={1.5} />
+                    </div>
+                </div>
+                <div className="flex max-w-sm flex-col gap-3">
+                    <h2 id="dashboard-next" className="text-3xl leading-tight font-bold tracking-tight text-green-950 dark:text-green-50">
+                        {t('work.next.done')}
+                    </h2>
+                    <p className="text-[15px] leading-relaxed text-green-900/75 dark:text-green-200/80">{t('work.next.done_description')}</p>
+                </div>
             </article>
         );
     }

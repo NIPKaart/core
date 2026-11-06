@@ -176,7 +176,8 @@
             "waiting": "waiting {{ago}}",
             "start": "Start reviewing",
             "queue": "Whole queue",
-            "done": "Nothing to review in moderation",
+            "done": "All caught up",
+            "done_description": "There are no new parking spaces, improvements or reports waiting for review.",
             "no_address": "No address"
         },
         "queue": {
