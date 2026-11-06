@@ -218,6 +218,21 @@ test('administrators keep the attention tile with a reassuring empty state when 
     assert.match(html, /work\.attention\.none/);
 });
 
+test('an empty moderation queue shows a named completion card while keeping the queue accessible', () => {
+    const html = render({
+        hasTodo: true,
+        view: 'work',
+        todo: { ...todo, next: null, moderation: { total: 0, high: 0, types: {}, oldest: null } },
+    });
+
+    assert.match(html, /<article aria-labelledby="dashboard-next"/);
+    assert.match(html, /<h2 id="dashboard-next"[^>]*>work\.next\.done<\/h2>/);
+    assert.match(html, /work\.next\.done_description/);
+    assert.match(html, /href="\/moderation"/);
+    assert.doesNotMatch(html, /work\.next\.start|Biltstraat 88/);
+    assert.doesNotMatch(render({ hasTodo: true, view: 'work', todo }), /work\.next\.done_description/);
+});
+
 test('administrators see data sources and broken rule links that need attention, each with its own action', () => {
     const html = render({
         hasTodo: true,
