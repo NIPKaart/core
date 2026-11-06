@@ -226,9 +226,9 @@ export default function Dashboard({ section, view, hasTodo, overview, todo, cont
                                     <Deferred data="overview" fallback={<TilesSkeleton hero />}>
                                         {overview ? <Personal overview={overview} /> : <></>}
                                     </Deferred>
+                                    <NipkaartStatistics statistics={statistics} compact />
                                 </>
                             )}
-                            <NipkaartStatistics statistics={statistics} compact />
                         </>
                     )}
                 </div>

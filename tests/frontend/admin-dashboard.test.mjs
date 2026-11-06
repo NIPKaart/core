@@ -52,9 +52,12 @@ function render(pageProps) {
         require: (name) => {
             if (name === '@/components/nipkaart-statistics') {
                 const component = { ...context, exports: {} };
-                const compiled = ts.transpileModule(readFileSync(new URL('../../resources/js/components/nipkaart-statistics.tsx', import.meta.url), 'utf8'), {
-                    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
-                }).outputText;
+                const compiled = ts.transpileModule(
+                    readFileSync(new URL('../../resources/js/components/nipkaart-statistics.tsx', import.meta.url), 'utf8'),
+                    {
+                        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+                    },
+                ).outputText;
                 vm.runInNewContext(compiled, component);
                 return component.exports;
             }
@@ -102,7 +105,8 @@ function render(pageProps) {
                 };
             if (name === '@/lib/saved-places') return { destinationMapUrl: (destination) => `/map?destination=${destination.key}` };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
-            if (name === '@/routes') return { dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
+            if (name === '@/routes')
+                return { about: route('about'), dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
             if (name === '@/routes/app') return { default: { moderation: { index: route('moderation') } } };
             if (name === '@/routes/app/parking-rules') return { default: { index: route('parking-rules') } };
             if (name === '@/routes/location-map') return { default: { add: route('add') } };
@@ -518,5 +522,8 @@ test('global counters follow the personal overview and format numbers in the act
     assert.match(html, /municipalities/);
     assert.match(html, /countries/);
     assert.ok(html.indexOf('hero.title') < html.indexOf('parking_locations'));
+    assert.ok(html.includes('href="/about#cijfers"'));
+    assert.doesNotMatch(html, />note</);
     assert.doesNotMatch(render({ section: 'favorites' }), /parking_locations/);
+    assert.doesNotMatch(render({ hasTodo: true, view: 'work', todo }), /parking_locations/);
 });
