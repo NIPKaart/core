@@ -25,7 +25,7 @@
         "chosen": "Chosen location",
         "resolving": "Looking up the location…",
         "failed_title": "We can't place this spot",
-        "failed_text": "We couldn't find a municipality in a supported country here. Move the map to the bay on the street, or try again.",
+        "failed_text": "We couldn't look up this spot right now. Check your connection and try again.",
         "retry": "Try again",
         "nearby": "A known parking space is {{distance}} metres away. Only add this one if it is a different bay.",
         "use": "Use this location",

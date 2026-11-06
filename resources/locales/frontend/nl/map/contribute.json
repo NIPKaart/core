@@ -25,7 +25,7 @@
         "chosen": "Gekozen locatie",
         "resolving": "Locatie opzoeken…",
         "failed_title": "Deze plek kunnen we niet plaatsen",
-        "failed_text": "We konden hier geen gemeente in een ondersteund land vinden. Schuif de kaart naar het vak op straat, of probeer het opnieuw.",
+        "failed_text": "We konden deze plek nu niet opzoeken. Controleer je verbinding en probeer het opnieuw.",
         "retry": "Opnieuw proberen",
         "nearby": "Op {{distance}} meter staat al een bekende parkeerplaats. Voeg alleen toe als dit een ander vak is.",
         "use": "Deze locatie gebruiken",
