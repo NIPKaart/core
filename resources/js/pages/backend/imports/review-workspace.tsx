@@ -214,7 +214,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
             </p>
         );
     return (
-        <div className="relative h-full">
+        <div className="relative isolate h-full">
             <MapToolbar style={style} onStyleChange={setStyle} imagery={imagery} onFit={() => setFit((value) => value + 1)} />
             <MapContainer
                 center={[points[0].point.latitude, points[0].point.longitude]}
@@ -329,11 +329,11 @@ export function MapToolbar({
             <Button
                 variant="outline"
                 size="icon"
-                className="pointer-events-auto absolute right-3 bottom-32 size-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-4"
+                className="pointer-events-auto absolute right-3 bottom-32 size-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-5"
                 aria-label={t('workspace.fit_map')}
                 onClick={onFit}
             >
-                <LocateFixed className="size-4" aria-hidden />
+                <LocateFixed className="size-5" aria-hidden />
             </Button>
         </div>
     );
@@ -868,7 +868,7 @@ export function ReviewMap({
             </p>
         );
     return (
-        <div id="review-map" className={cn('relative', workspace ? 'h-full' : 'h-96 lg:h-[34rem]')}>
+        <div id="review-map" className={cn('relative isolate', workspace ? 'h-full' : 'h-96 lg:h-[34rem]')}>
             <MapToolbar
                 style={style}
                 onStyleChange={setStyle}

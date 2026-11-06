@@ -13,7 +13,7 @@ export default function MapDisplayControls({ value, onChange }: { value: MapStyl
     const [panel, setPanel] = useState<'layers' | 'legend' | null>(null);
 
     return (
-        <div className="map-display-controls pointer-events-auto flex rounded-xl border border-border/70 bg-background p-0.5 shadow-md">
+        <div className="map-display-controls pointer-events-auto flex rounded-xl bg-background shadow-md">
             {(['layers', 'legend'] as const).map((name) => (
                 <Popover key={name} open={panel === name} onOpenChange={(open) => setPanel(open ? name : null)}>
                     <PopoverTrigger asChild>
