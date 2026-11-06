@@ -19,7 +19,7 @@
         "empty": "There are no countries with municipalities yet.",
         "applies_to_one": "Applies to {{count}} municipality",
         "applies_to_other": "Applies to {{count}} municipalities",
-        "missing": "No national source, visitors see \"Not known\"."
+        "missing": "No national source, visitors see \"Unknown\"."
     },
     "municipal": {
         "title": "Municipal sources",
@@ -68,7 +68,7 @@
     },
     "confirm": {
         "title": "Delete source?",
-        "country": "Visitors in {{name}} then see \"Not known\", except in municipalities with a source of their own.",
+        "country": "Visitors in {{name}} then see \"Unknown\", except in municipalities with a source of their own.",
         "municipality": "Visitors in {{name}} then see the national source.",
         "confirm": "Delete"
     },

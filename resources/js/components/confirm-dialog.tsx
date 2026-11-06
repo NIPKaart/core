@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { buttonVariants } from './ui/button';
 
 type ConfirmDialogProps = {
@@ -29,13 +30,14 @@ export function ConfirmDialog({
     children,
     title = 'Are you sure?',
     description = 'This action cannot be undone.',
-    confirmText = 'Confirm',
-    cancelText = 'Cancel',
+    confirmText,
+    cancelText,
     onConfirm,
     onClose,
     disabled,
     variant = 'default',
 }: ConfirmDialogProps) {
+    const { t } = useTranslation('global/common');
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -57,7 +59,7 @@ export function ConfirmDialog({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel className="cursor-pointer" disabled={disabled}>
-                        {cancelText}
+                        {cancelText ?? t('common.cancel')}
                     </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={(e) => {
@@ -68,7 +70,7 @@ export function ConfirmDialog({
                         className={cn(buttonVariants({ variant })) + ' cursor-pointer'}
                         disabled={disabled}
                     >
-                        {confirmText}
+                        {confirmText ?? t('common.confirm')}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
