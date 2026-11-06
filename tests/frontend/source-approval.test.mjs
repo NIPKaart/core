@@ -64,6 +64,7 @@ test('a new source shows what the administrator approves, including a missing li
     assert.match(html, /New source awaiting approval/);
     assert.match(html, /No licence stated/);
     assert.match(html, /Eindhoven \(GM0772\) · NL-NB · NL/);
+    assert.match(html, /Catalog delivery interval/);
     assert.match(html, /Every 24 hours/);
     assert.match(html, /value="approve"/);
     assert.match(html, /value="reject"/);
