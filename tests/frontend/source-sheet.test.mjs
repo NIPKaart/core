@@ -11,12 +11,25 @@ const require = createRequire(import.meta.url);
 const source = ts.transpileModule(readFileSync(new URL('../../resources/js/pages/backend/imports/source-sheet.tsx', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
+let language = null;
+const translations = Object.fromEntries(
+    ['nl', 'en'].map((locale) => [
+        locale,
+        JSON.parse(readFileSync(new URL(`../../resources/locales/backend/${locale}/imports.json`, import.meta.url), 'utf8')),
+    ]),
+);
+const t = (key, params = {}) => {
+    if (!language) return key;
+    if ('count' in params) key += params.count === 1 ? '_one' : '_other';
+    const value = key.split('.').reduce((value, part) => value?.[part], translations[language]) ?? key;
+    return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{{${name}}}`, String(value)), value);
+};
 const passThrough = ({ children }) => React.createElement(React.Fragment, null, children);
 const context = {
     exports: {},
     require: (name) => {
         if (name === 'react' || name === 'react/jsx-runtime') return require(name);
-        if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
+        if (name === 'react-i18next') return { useTranslation: () => ({ t, i18n: { language: 'nl' } }) };
         if (name === '@/actions/App/Http/Controllers/Admin/DatasetImportController')
             return { index: () => '/admin/imports?tab=deliveries', show: (id) => `/admin/imports/${id}` };
         if (name === '@/routes/app/parking-municipal') return { __esModule: true, default: { municipality: (id) => `/admin/municipal/${id}` } };
@@ -99,3 +112,22 @@ test('a source without a licence says so and an unapproved source shows its appr
     assert.match(html, /approval\.no_licence/);
     assert.match(html, /<section>approval<\/section>/);
 });
+
+for (const [locale, catalog, hours, occupancy, interval] of [
+    ['nl', 'Leveringsritme catalogus', 'Elke 24 uur', 'Actuele bezetting', 'Elke 2 minuten opgehaald'],
+    ['en', 'Catalog delivery interval', 'Every 24 hours', 'Current occupancy', 'Fetched every 2 minutes'],
+]) {
+    test(`${locale}: offstreet details distinguish daily catalogs from two-minute occupancy retrieval`, () => {
+        language = locale;
+        try {
+            const html = render(sourceRow({ target_type: 'offstreet' }));
+            assert.ok(html.includes(catalog));
+            assert.ok(html.includes(hours));
+            assert.ok(html.includes(occupancy));
+            assert.ok(html.includes(interval));
+            assert.ok(!render(sourceRow()).includes(interval));
+        } finally {
+            language = null;
+        }
+    });
+}

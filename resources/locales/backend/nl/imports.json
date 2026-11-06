@@ -206,9 +206,11 @@
             "attribution": "Toeschrijving",
             "area": "Gebied",
             "bounds": "Grenzen (W, Z, O, N)",
-            "interval": "Leveringsritme",
+            "interval": "Leveringsritme catalogus",
+            "occupancy": "Actuele bezetting",
             "links": "Links"
         },
+        "occupancy_interval": "Elke 2 minuten opgehaald",
         "hours_one": "Elk {{count}} uur",
         "hours_other": "Elke {{count}} uur",
         "reason": "Reden",

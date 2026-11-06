@@ -114,6 +114,7 @@ export default function SourceSheet({ source, onClose }: Props) {
                             <section className="space-y-2">
                                 <h3 className="text-sm font-semibold">{t('sheet.about')}</h3>
                                 <dl className="divide-y rounded-xl border text-sm">
+                                    {source.target_type === 'offstreet' && row(t('approval.fields.occupancy'), t('approval.occupancy_interval'))}
                                     {row(t('approval.fields.publisher'), description.publisher)}
                                     {row(
                                         t('approval.fields.licence'),

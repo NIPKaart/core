@@ -206,9 +206,11 @@
             "attribution": "Attribution",
             "area": "Area",
             "bounds": "Bounds (W, S, E, N)",
-            "interval": "Delivery interval",
+            "interval": "Catalog delivery interval",
+            "occupancy": "Current occupancy",
             "links": "Links"
         },
+        "occupancy_interval": "Fetched every 2 minutes",
         "hours_one": "Every {{count}} hour",
         "hours_other": "Every {{count}} hours",
         "reason": "Reason",
