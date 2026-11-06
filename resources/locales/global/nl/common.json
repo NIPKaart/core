@@ -50,5 +50,8 @@
         "filter": "Filter op {{title}}…",
         "clear_filters": "Filters wissen",
         "no_page_results": "Geen overeenkomsten op deze pagina."
+    },
+    "imagery": {
+        "source": "Bron van de luchtfoto"
     }
 }

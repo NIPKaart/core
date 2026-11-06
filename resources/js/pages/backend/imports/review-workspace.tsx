@@ -1,5 +1,6 @@
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
+import { AerialPicker, useAerialImagery } from '@/components/map/aerial-imagery';
 import type { MapStyle } from '@/components/map/map-display-controls';
 import ZoomControl from '@/components/map/zoom-control';
 import MunicipalDateTime from '@/components/municipal-date-time';
@@ -26,19 +27,20 @@ import {
     CircleDot,
     Expand,
     Link2,
+    List,
     LocateFixed,
     Map as MapIcon,
     MapPin,
     Satellite,
     TriangleAlert,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CircleMarker, GeoJSON, MapContainer, Marker, ScaleControl, Tooltip, useMap } from 'react-leaflet';
 import type { Import } from './index';
 import ReviewTiles from './review-map-tiles';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
-import { claimCapacity, claimTitle, reviewGeometries, type Row } from './source-record';
+import { claimCapacity, claimTitle, geometryIssue, reviewGeometries, type Row } from './source-record';
 
 export type MapPoint = {
     external_id: string;
@@ -204,6 +206,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
     const { t } = useTranslation('backend/imports');
     const [style, setStyle] = useState<MapStyle>('streets');
     const [fit, setFit] = useState(0);
+    const imagery = useAerialImagery();
     if (!points.length)
         return (
             <p className="p-6 text-sm text-muted-foreground" role="status">
@@ -212,7 +215,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
         );
     return (
         <div className="relative h-full">
-            <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
+            <MapToolbar style={style} onStyleChange={setStyle} imagery={imagery} onFit={() => setFit((value) => value + 1)} />
             <MapContainer
                 center={[points[0].point.latitude, points[0].point.longitude]}
                 zoom={12}
@@ -220,7 +223,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                 zoomControl={false}
                 className="parking-discovery-map relative z-0 h-full w-full"
             >
-                <ReviewTiles style={style} />
+                <ReviewTiles style={style} aerial={imagery.layer} />
                 <ZoomControl position="bottomright" />
                 <ScaleControl position="bottomleft" imperial={false} />
                 <PointBounds points={points} fit={fit} />
@@ -269,12 +272,14 @@ function PointBounds({ points, fit }: { points: MapPoint[]; fit: number }) {
 export function MapToolbar({
     style,
     onStyleChange,
+    imagery,
     onFit,
     onOverview,
     disabled = false,
 }: {
     style: MapStyle;
     onStyleChange: (style: MapStyle) => void;
+    imagery: ReturnType<typeof useAerialImagery>;
     onFit: () => void;
     onOverview?: () => void;
     disabled?: boolean;
@@ -294,30 +299,33 @@ export function MapToolbar({
                     {t('workspace.whole_set')}
                 </Button>
             )}
-            <ToggleGroup
-                type="single"
-                value={style}
-                onValueChange={(value) => {
-                    if (value === 'streets' || value === 'satellite') onStyleChange(value);
-                }}
-                className="pointer-events-auto absolute top-3 right-3 gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:top-4 lg:right-4"
-                aria-label={tMap('controls.layers')}
-            >
-                <ToggleGroupItem
-                    value="streets"
-                    className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            <div className="pointer-events-auto absolute top-3 right-3 flex gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:top-4 lg:right-4">
+                <ToggleGroup
+                    type="single"
+                    value={style}
+                    onValueChange={(value) => {
+                        if (value === 'streets' || value === 'satellite') onStyleChange(value);
+                    }}
+                    className="gap-1"
+                    aria-label={tMap('controls.layers')}
                 >
-                    <MapIcon className="size-4" aria-hidden />
-                    {tMap('controls.streets')}
-                </ToggleGroupItem>
-                <ToggleGroupItem
-                    value="satellite"
-                    className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                >
-                    <Satellite className="size-4" aria-hidden />
-                    {tMap('controls.satellite')}
-                </ToggleGroupItem>
-            </ToggleGroup>
+                    <ToggleGroupItem
+                        value="streets"
+                        className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    >
+                        <MapIcon className="size-4" aria-hidden />
+                        {tMap('controls.streets')}
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                        value="satellite"
+                        className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    >
+                        <Satellite className="size-4" aria-hidden />
+                        {tMap('controls.satellite')}
+                    </ToggleGroupItem>
+                </ToggleGroup>
+                {style === 'satellite' && <AerialPicker layers={imagery.layers} layer={imagery.layer} onChoose={imagery.choose} />}
+            </div>
             <Button
                 variant="outline"
                 size="icon"
@@ -343,7 +351,7 @@ export function ReviewWorkspace({
     pages,
     total,
     query,
-    summary,
+    progress,
 }: {
     rows: Row[];
     delivery: Import;
@@ -356,7 +364,8 @@ export function ReviewWorkspace({
     pages: number;
     total: number;
     query: string;
-    summary?: ReactNode;
+    /** How many of the delivery's parking bays have been checked, shown while working through them. */
+    progress?: { completed: number; total: number };
 }) {
     const { t } = useTranslation('backend/imports');
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -392,7 +401,6 @@ export function ReviewWorkspace({
     };
     return (
         <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 lg:overflow-hidden" aria-label={t('workspace.workspace')}>
-            {summary}
             <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border bg-background lg:grid-cols-[minmax(0,1fr)_24rem]">
                 {row && (
                     <div className="h-[36svh] min-h-0 lg:h-auto">
@@ -435,7 +443,7 @@ export function ReviewWorkspace({
                             className="h-9 max-w-[55%] min-w-0 gap-1 px-2"
                             onClick={() => (queueOpen ? onFinish() : setQueueOpen(true))}
                         >
-                            <ChevronLeft className="size-4" />
+                            {queueOpen ? <ChevronLeft className="size-4" /> : <List className="size-4" />}
                             <span className="truncate">{t(queueOpen ? 'workspace.overview' : 'workspace.to_review')}</span>
                         </Button>
                         <span className="flex-1 text-center text-xs whitespace-nowrap text-muted-foreground tabular-nums" aria-live="polite">
@@ -454,6 +462,19 @@ export function ReviewWorkspace({
                             <ChevronRight className="size-4" />
                         </Button>
                     </nav>
+                    {editable && filter === 'geometry' && progress && progress.total > 0 && (
+                        <div className="shrink-0 space-y-2 border-b px-5 py-3">
+                            <p className="text-xs text-muted-foreground tabular-nums">
+                                {t('workspace.geometry_progress', { completed: progress.completed, total: progress.total })}
+                            </p>
+                            <Progress
+                                value={(progress.completed / progress.total) * 100}
+                                className="h-1"
+                                aria-label={t('workspace.geometry_tasks')}
+                                aria-valuetext={t('workspace.geometry_progress', { completed: progress.completed, total: progress.total })}
+                            />
+                        </div>
+                    )}
                     {row ? (
                         queueOpen ? (
                             <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-label={t('workspace.queue')}>
@@ -519,11 +540,7 @@ export function ReviewWorkspace({
                                             )}
                                         </dl>
                                     )}
-                                    {row.geometry_derivation && (
-                                        <div className="space-y-2 border-t pt-4 text-sm">
-                                            <p className="text-xs text-muted-foreground">{row.geometry_derivation.reason}</p>
-                                        </div>
-                                    )}
+                                    {row.geometry_derivation && <GeometryIssueNotice reason={row.geometry_derivation.reason} />}
                                     {needsIdentity && (
                                         <IdentityDecision
                                             formId={identityFormId}
@@ -568,15 +585,21 @@ export function ReviewWorkspace({
                                     )}
 
                                     {!needsIdentity && editable && row.geometry_review_required && (
-                                        <Button
-                                            onClick={() => {
-                                                onReviewed(row.external_id);
-                                                next();
-                                            }}
-                                        >
-                                            <Check aria-hidden="true" />
-                                            {t('workspace.check_next')}
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button variant="outline" onClick={next}>
+                                                {t('workspace.skip')}
+                                            </Button>
+                                            <Button
+                                                className="flex-1"
+                                                onClick={() => {
+                                                    onReviewed(row.external_id);
+                                                    next();
+                                                }}
+                                            >
+                                                <Check aria-hidden="true" />
+                                                {t('workspace.check_next')}
+                                            </Button>
+                                        </div>
                                     )}
                                     {!needsIdentity && (!editable || !row.geometry_review_required) && (
                                         <Button onClick={next}>
@@ -813,17 +836,30 @@ export function ReviewMap({
     const [style, setStyle] = useState<MapStyle>(workspace ? 'satellite' : 'streets');
     const [fit, setFit] = useState(0);
     const [layers, setLayers] = useState(['source', 'proposed']);
+    const imagery = useAerialImagery();
     const geometries = useMemo(() => reviewGeometries(row, candidateId), [row, candidateId]);
     const candidate = row.identity?.candidates.find((item) => item.id === candidateId);
+    const issue = row.geometry_derivation ? geometryIssue(row.geometry_derivation.reason) : null;
+    const title = claimTitle(claim) ?? t('unknown_street');
+    // A pin would cover the bay a reviewer has to judge, so a shape gets its name above it instead.
+    const labelAt = claim && claim.geometry.type !== 'Point' ? topCentre(positionsOf(claim.geometry.coordinates)) : null;
+    const shaped = labelAt !== null;
     const icon = useMemo(
         () =>
-            divIcon({
-                html: pinSvg(!!claim?.facility_type, null),
-                className: 'drop-shadow-[0_0_3px_white]',
-                iconSize: [36, 48],
-                iconAnchor: [18, 46],
-            }),
-        [claim?.facility_type],
+            shaped
+                ? divIcon({
+                      html: `<span class="absolute bottom-1.5 left-0 -translate-x-1/2 rounded-full bg-white px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-neutral-950 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.14)]">${escapeHtml(title)}</span>`,
+                      className: '',
+                      iconSize: [0, 0],
+                      iconAnchor: [0, 0],
+                  })
+                : divIcon({
+                      html: pinSvg(!!claim?.facility_type, null),
+                      className: 'drop-shadow-[0_0_3px_white]',
+                      iconSize: [36, 48],
+                      iconAnchor: [18, 46],
+                  }),
+        [shaped, title, claim?.facility_type],
     );
     if (!claim || !row.point)
         return (
@@ -836,23 +872,46 @@ export function ReviewMap({
             <MapToolbar
                 style={style}
                 onStyleChange={setStyle}
+                imagery={imagery}
                 onFit={() => setFit((value) => value + 1)}
                 onOverview={onOverview}
                 disabled={disabled}
             />
             {row.geometry_derivation && (
-                <ToggleGroup
-                    type="multiple"
-                    value={layers}
-                    onValueChange={setLayers}
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-16 right-3 z-500 flex-wrap justify-end rounded-xl bg-background p-1 shadow-md lg:right-4"
-                    aria-label={t('geometry_layers')}
+                <div
+                    className={cn(
+                        'absolute left-3 z-500 w-60 rounded-xl bg-background p-2 shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:left-4',
+                        onOverview ? 'top-16 lg:top-[4.25rem]' : 'top-16 lg:top-4',
+                    )}
                 >
-                    <ToggleGroupItem value="source">{t('original_geometry')}</ToggleGroupItem>
-                    <ToggleGroupItem value="proposed">{t('proposed_geometry')}</ToggleGroupItem>
-                </ToggleGroup>
+                    <p className="px-2 pt-1 pb-1.5 text-xs font-medium text-muted-foreground">{t('geometry_layers')}</p>
+                    <ToggleGroup
+                        type="multiple"
+                        value={layers}
+                        onValueChange={setLayers}
+                        className="flex w-full flex-col items-stretch gap-0.5"
+                        aria-label={t('geometry_layers')}
+                    >
+                        {(
+                            [
+                                ['proposed', t('proposed_geometry'), 'border-[3px] border-blue-600 bg-blue-600/20'],
+                                ['source', t('original_geometry'), 'border-2 border-dashed border-orange-500'],
+                            ] as const
+                        ).map(([value, name, swatch]) => (
+                            <ToggleGroupItem
+                                key={value}
+                                value={value}
+                                className="group h-10 w-full justify-start gap-2.5 rounded-lg px-2 text-sm font-medium data-[state=on]:bg-transparent"
+                            >
+                                <span className="flex size-4.5 shrink-0 items-center justify-center rounded-[5px] border border-input group-data-[state=on]:border-primary group-data-[state=on]:bg-primary">
+                                    <Check className="hidden size-3 text-primary-foreground group-data-[state=on]:block" aria-hidden />
+                                </span>
+                                <span className="flex-1 text-left">{name}</span>
+                                <span aria-hidden className={cn('h-4 w-6 shrink-0 rounded-[3px]', swatch)} />
+                            </ToggleGroupItem>
+                        ))}
+                    </ToggleGroup>
+                </div>
             )}
             <MapContainer
                 center={[row.point.latitude, row.point.longitude]}
@@ -861,22 +920,10 @@ export function ReviewMap({
                 zoomControl={false}
                 className="parking-discovery-map relative z-0 h-full w-full"
             >
-                <ReviewTiles style={style} />
+                <ReviewTiles style={style} aerial={imagery.layer} />
                 <ZoomControl position="bottomright" focus={[row.point.latitude, row.point.longitude]} />
                 <ScaleControl position="bottomleft" imperial={false} />
                 <GeometryBounds geometries={geometries} fit={fit} />
-                {layers.includes('source') && claim.geometry.type !== 'Point' && (
-                    <GeoJSON
-                        key={`source-${JSON.stringify(claim.geometry)}`}
-                        data={claim.geometry}
-                        style={{
-                            color: row.geometry_derivation ? '#f97316' : '#2563eb',
-                            dashArray: row.geometry_derivation ? '6 5' : undefined,
-                            fillOpacity: 0.1,
-                            weight: 3,
-                        }}
-                    />
-                )}
                 {layers.includes('proposed') && row.geometry_derivation && (
                     <GeoJSON
                         key={`proposed-${JSON.stringify(row.geometry_derivation.geometry)}`}
@@ -884,13 +931,39 @@ export function ReviewMap({
                         style={{ color: '#2563eb', fillOpacity: 0.2, weight: 3 }}
                     />
                 )}
+                {layers.includes('source') && claim.geometry.type !== 'Point' && (
+                    <GeoJSON
+                        key={`source-${JSON.stringify(claim.geometry)}`}
+                        data={claim.geometry}
+                        style={{
+                            color: row.geometry_derivation ? '#f97316' : '#2563eb',
+                            dashArray: row.geometry_derivation ? '6 5' : undefined,
+                            fillOpacity: row.geometry_derivation ? 0 : 0.1,
+                            weight: row.geometry_derivation ? 2 : 3,
+                        }}
+                    />
+                )}
+                {issue?.point && (
+                    <CircleMarker
+                        center={[issue.point.latitude, issue.point.longitude]}
+                        radius={11}
+                        interactive={false}
+                        pathOptions={{ color: '#dc2626', weight: 2.5, fill: false }}
+                    >
+                        <Tooltip permanent direction="right" offset={[12, 0]}>
+                            {t(`workspace.issue.${issue.kind}.title`)}
+                        </Tooltip>
+                    </CircleMarker>
+                )}
                 <Marker
-                    position={[row.point.latitude, row.point.longitude]}
+                    key={`${shaped ? 'label' : 'pin'}:${row.status}:${row.external_id}`}
+                    position={labelAt ? [labelAt.latitude, labelAt.longitude] : [row.point.latitude, row.point.longitude]}
                     icon={icon}
-                    title={t('workspace.incoming')}
-                    alt={t('workspace.incoming')}
+                    title={labelAt ? title : t('workspace.incoming')}
+                    alt={labelAt ? title : t('workspace.incoming')}
+                    interactive={!labelAt}
                 >
-                    <Tooltip>{t('workspace.incoming')}</Tooltip>
+                    {!labelAt && <Tooltip>{t('workspace.incoming')}</Tooltip>}
                 </Marker>
                 {[candidate].map((candidate) => {
                     if (!candidate?.source) return null;
@@ -928,6 +1001,53 @@ export function ReviewMap({
                     </span>
                 </div>
             )}
+        </div>
+    );
+}
+
+/** Every position in GeoJSON coordinates, however deeply lines, rings and parts nest them. */
+function positionsOf(coordinates: unknown): number[][] {
+    if (!Array.isArray(coordinates)) return [];
+    if (typeof coordinates[0] === 'number') return [coordinates as number[]];
+    return coordinates.flatMap(positionsOf);
+}
+
+/** The middle of a shape's top edge, where its name sits without covering it. */
+function topCentre(positions: number[][]): { latitude: number; longitude: number } | null {
+    const longitudes = positions.map(([longitude]) => longitude);
+    const latitude = Math.max(...positions.map(([, latitude]) => latitude));
+    const longitude = (Math.min(...longitudes) + Math.max(...longitudes)) / 2;
+    return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+}
+
+function escapeHtml(text: string): string {
+    return text.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+}
+
+/** Explains in plain words what is wrong with a source shape and what to check, keeping PostGIS' own reason at hand. */
+function GeometryIssueNotice({ reason }: { reason: string }) {
+    const { t } = useTranslation('backend/imports');
+    const { kind } = geometryIssue(reason);
+    return (
+        <div role="note" className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-900 dark:bg-amber-950/30">
+            <div className="flex gap-3">
+                <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
+                <div className="space-y-1">
+                    <p className="font-semibold">{t(`workspace.issue.${kind}.title`)}</p>
+                    <p className="text-foreground/80">{t(`workspace.issue.${kind}.body`)}</p>
+                </div>
+            </div>
+            <div className="space-y-1.5 pl-7 text-xs">
+                <p className="font-semibold">{t('workspace.issue.check')}</p>
+                <ul className="list-disc space-y-1 pl-4 text-foreground/80">
+                    <li>{t('workspace.issue.check_position')}</li>
+                    <li>{t('workspace.issue.check_complete')}</li>
+                </ul>
+            </div>
+            <details className="pl-7 text-xs text-foreground/70">
+                <summary className="cursor-pointer font-medium">{t('workspace.issue.technical')}</summary>
+                <code className="mt-1.5 block font-mono break-all">{reason}</code>
+            </details>
         </div>
     );
 }

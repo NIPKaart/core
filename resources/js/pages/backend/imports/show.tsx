@@ -1,5 +1,6 @@
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/DatasetImportController';
 import InputError from '@/components/input-error';
+import { useAerialImagery } from '@/components/map/aerial-imagery';
 import type { MapStyle } from '@/components/map/map-display-controls';
 import ZoomControl from '@/components/map/zoom-control';
 import MunicipalDateTime from '@/components/municipal-date-time';
@@ -26,16 +27,7 @@ import { GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaf
 import AutomaticPublicationNotice from './automatic-publication-notice';
 import type { Dataset, Import } from './index';
 import ReviewTiles from './review-map-tiles';
-import {
-    DeliveryOverview,
-    DeliverySummary,
-    IdentityReview,
-    MapToolbar,
-    PublishedNotice,
-    ReviewMap,
-    ReviewWorkspace,
-    type MapPoint,
-} from './review-workspace';
+import { DeliveryOverview, IdentityReview, MapToolbar, PublishedNotice, ReviewMap, ReviewWorkspace, type MapPoint } from './review-workspace';
 import SourceComparison, { MissingSourceNotice } from './source-comparison';
 import { claimCapacity, claimTitle, isFacility, type Row } from './source-record';
 
@@ -63,13 +55,18 @@ type Props = {
     filters: { q: string; filter: string };
 };
 
-export default function Show({ import: delivery, dataset, municipalityName, review, page, pages, total, filters, times }: Props) {
+export default function Show({ import: delivery, dataset, review, page, pages, total, filters, times }: Props) {
     const { t, i18n } = useTranslation('backend/imports');
     const [view, setView] = useState<'overview' | 'workspace' | 'table'>('overview');
     const [checked, setChecked] = useState<{ token: string; ids: string[] }>({ token: review.token, ids: [] });
     const reviewedIds = checked.token === review.token ? checked.ids : [];
     const completed = review.geometry_ids.filter((id) => reviewedIds.includes(id)).length;
     const allGeometryChecked = completed === review.geometry_ids.length;
+    const pending = delivery.state === 'pending' && !delivery.superseded;
+    const remainingGeometry = review.geometry_ids.length - completed;
+    const remainingTasks = remainingGeometry + review.identity_count;
+    const nextTask = remainingGeometry > 0 ? 'geometry' : review.identity_count > 0 ? 'identity' : 'changes';
+    const recordCount = Object.values(review.counts).reduce((sum, count) => sum + count, 0);
     const startReview = (filter: string, q = '') => {
         setView('workspace');
         if (filter === filters.filter && q === filters.q) return;
@@ -185,7 +182,8 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
         <AppLayout
             breadcrumbs={[
                 { title: t('title'), href: index() },
-                { title: `${municipalityName} · ${t('review')}`, href: show(delivery.id) },
+                { title: dataset.name, href: index({ query: { tab: 'deliveries', dataset: dataset.id } }) },
+                { title: t('review'), href: show(delivery.id) },
             ]}
         >
             <Head title={`${t('review')} · ${dataset.name}`} />
@@ -205,6 +203,12 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex flex-wrap items-center gap-3">
+                                {/* Breadcrumbs hide the parent below md, so phones keep a way back to the history. */}
+                                <Button asChild variant="outline" size="icon" className="size-9 md:hidden">
+                                    <Link aria-label={t('back_to_history')} href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>
+                                        <ArrowLeft className="size-4" aria-hidden="true" />
+                                    </Link>
+                                </Button>
                                 <h1 className={view === 'table' ? 'text-2xl font-semibold tracking-tight' : 'text-sm font-semibold tracking-tight'}>
                                     {t('review')}
                                 </h1>
@@ -222,32 +226,54 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
                         </div>
-                        <div className={view === 'table' ? 'flex gap-2' : 'hidden gap-2 sm:flex'} role="group" aria-label={t('workspace.view')}>
-                            <Button variant={view === 'overview' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('overview')}>
-                                {t('workspace.overview')}
-                            </Button>
-                            <Button
-                                variant={view === 'table' ? 'secondary' : 'ghost'}
-                                size="sm"
-                                onClick={() => {
-                                    setView('table');
-                                    router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
-                                }}
-                            >
-                                {t('all_records')}
-                            </Button>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button asChild variant="outline" className="size-9 px-0 sm:w-auto sm:px-4">
-                                <Link aria-label={t('back_to_history')} href={index({ query: { tab: 'deliveries', dataset: dataset.id } })}>
-                                    <ArrowLeft className="size-4" aria-hidden="true" />
-                                    <span className="hidden sm:inline">{t('back_to_history')}</span>
-                                </Link>
-                            </Button>
+                        <nav aria-label={t('workspace.view')} className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
+                            {(
+                                [
+                                    ['overview', t('workspace.overview'), null, () => setView('overview')],
+                                    [
+                                        'workspace',
+                                        t('workspace.review_tab'),
+                                        pending ? remainingTasks : null,
+                                        () => view !== 'workspace' && startReview(nextTask),
+                                    ],
+                                    [
+                                        'table',
+                                        t('all_records'),
+                                        recordCount,
+                                        () => {
+                                            setView('table');
+                                            router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
+                                        },
+                                    ],
+                                ] as const
+                            ).map(([name, label, count, open]) => (
+                                <Button
+                                    key={name}
+                                    variant="ghost"
+                                    size="sm"
+                                    aria-pressed={view === name}
+                                    onClick={open}
+                                    className="h-[30px] gap-1.5 rounded-lg px-3 text-muted-foreground hover:bg-background/60 aria-pressed:bg-background aria-pressed:text-foreground aria-pressed:shadow-xs"
+                                >
+                                    {label}
+                                    {!!count && (
+                                        <span className="text-xs text-muted-foreground tabular-nums">{count.toLocaleString(i18n.language)}</span>
+                                    )}
+                                </Button>
+                            ))}
+                        </nav>
+                        <div className="flex flex-wrap items-center gap-3">
+                            {pending && remainingGeometry > 0 && (
+                                <span className="hidden text-sm text-muted-foreground lg:inline">
+                                    {t('workspace.geometry_remaining', { count: remainingGeometry })}
+                                </span>
+                            )}
                             {delivery.state === 'pending' && !delivery.superseded && (
                                 <Dialog open={decisionOpen} onOpenChange={setDecisionOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant={review.blockers.length ? 'outline' : 'default'}>{t('make_decision')}</Button>
+                                        <Button variant={review.blockers.length || remainingGeometry > 0 ? 'outline' : 'default'}>
+                                            {t('make_decision')}
+                                        </Button>
                                     </DialogTrigger>
                                     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
                                         <DialogHeader>
@@ -380,7 +406,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                         points={review.map_points}
                         derivations={review.derivations}
                         identities={review.identity_count}
-                        recordCount={Object.values(review.counts).reduce((sum, count) => sum + count, 0)}
+                        recordCount={recordCount}
                         completed={completed}
                         onStart={startReview}
                         onDecision={() => setDecisionOpen(true)}
@@ -430,13 +456,7 @@ export default function Show({ import: delivery, dataset, municipalityName, revi
                 )}
                 {view === 'workspace' && !loadingReview && (
                     <ReviewWorkspace
-                        summary={
-                            <DeliverySummary
-                                recordCount={Object.values(review.counts).reduce((sum, count) => sum + count, 0)}
-                                derivations={review.derivations}
-                                identities={review.identity_count}
-                            />
-                        }
+                        progress={{ completed, total: review.geometry_ids.length }}
                         rows={review.rows}
                         delivery={delivery}
                         token={review.token}
@@ -791,6 +811,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
     const changes = useMemo(() => rows.filter((row) => (row.after ?? row.before)?.geometry), [rows]);
     const [style, setStyle] = useState<MapStyle>('streets');
     const [fit, setFit] = useState(0);
+    const imagery = useAerialImagery();
     if (changes.length === 0) {
         return (
             <p role="status" className="mb-4 rounded-md border p-4 text-sm text-muted-foreground">
@@ -816,7 +837,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                 </div>
             </div>
             <div className="relative">
-                <MapToolbar style={style} onStyleChange={setStyle} onFit={() => setFit((value) => value + 1)} />
+                <MapToolbar style={style} onStyleChange={setStyle} imagery={imagery} onFit={() => setFit((value) => value + 1)} />
                 <MapContainer
                     center={[52.37, 4.9]}
                     zoom={13}
@@ -824,7 +845,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                     zoomControl={false}
                     className="parking-discovery-map relative z-0 h-72 w-full sm:h-96"
                 >
-                    <ReviewTiles style={style} />
+                    <ReviewTiles style={style} aerial={imagery.layer} />
                     <ZoomControl position="bottomright" />
                     <ScaleControl position="bottomleft" imperial={false} />
                     <ChangesMapBounds rows={changes} fit={fit} />

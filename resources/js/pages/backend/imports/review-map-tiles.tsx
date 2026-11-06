@@ -1,7 +1,8 @@
+import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
 import type { MapStyle } from '@/components/map/map-display-controls';
 import { TileLayer } from 'react-leaflet';
 
-export default function ReviewTiles({ style }: { style: MapStyle }) {
+export default function ReviewTiles({ style, aerial }: { style: MapStyle; aerial: AerialLayer | undefined }) {
     return style === 'streets' ? (
         <TileLayer
             key="streets"
@@ -11,13 +12,6 @@ export default function ReviewTiles({ style }: { style: MapStyle }) {
             keepBuffer={4}
         />
     ) : (
-        <TileLayer
-            key="satellite"
-            attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
-            url="https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-            subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
-            maxZoom={20}
-            keepBuffer={4}
-        />
+        <AerialTiles layer={aerial} />
     );
 }

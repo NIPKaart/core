@@ -101,9 +101,9 @@
     "all_deliveries": "Alle leveringen",
     "map_tab": "Kaart en geometrie",
     "source_tab": "Brongegevens",
-    "geometry_layers": "Zichtbare geometrieën",
-    "original_geometry": "Oorspronkelijke bron",
-    "proposed_geometry": "Voorgestelde geometrie",
+    "geometry_layers": "Lagen",
+    "original_geometry": "Vorm uit de bron",
+    "proposed_geometry": "Voorgestelde vorm",
     "geometry_help": "Vergelijk het herstelde vlak met de oorspronkelijke bron. Controleer of de marker de parkeerlocatie nog goed weergeeft.",
     "record_position": "{{position}} van {{total}} op deze pagina",
     "history": "Leveringshistorie",
@@ -319,7 +319,7 @@
         "queue": "Locaties in deze beoordeling",
         "position": "{{position}} van {{total}} locaties",
         "checked": "Gecontroleerd",
-        "check_next": "Gecontroleerd en volgende",
+        "check_next": "Klopt, volgende",
         "finish": "Terug naar overzicht",
         "identity_reason": "Reden voor deze koppeling",
         "incoming": "Bronlocatie",
@@ -340,6 +340,47 @@
         "capacity": "Capaciteit",
         "reason": "Reden",
         "location": "Locatie",
-        "type_differs": "Afwijkend type"
+        "type_differs": "Afwijkend type",
+        "review_tab": "Beoordelen",
+        "geometry_remaining_one": "Nog {{count}} parkeervak te controleren",
+        "geometry_remaining_other": "Nog {{count}} parkeervakken te controleren",
+        "issue": {
+            "self_intersection": {
+                "title": "De vorm kruist zichzelf",
+                "body": "Een rand van de vorm snijdt zichzelf, vaak doordat een hoek in de bron verkeerd om is getekend. NIPKaart stelt een gecorrigeerde vorm voor."
+            },
+            "too_few_points": {
+                "title": "De vorm heeft te weinig punten",
+                "body": "Een deel van de vorm heeft te weinig punten om een vlak te zijn. De voorgestelde vorm laat dat deel weg."
+            },
+            "hole_outside_shell": {
+                "title": "Een uitsparing ligt buiten de vorm",
+                "body": "De bron tekent een uitsparing buiten de buitenrand. NIPKaart stelt een vorm voor zonder die fout."
+            },
+            "nested_shells": {
+                "title": "Vlakken liggen in elkaar",
+                "body": "De bron tekent een vlak binnen een ander vlak. NIPKaart stelt een samengevoegde vorm voor."
+            },
+            "interior_disconnected": {
+                "title": "De vorm valt in delen uiteen",
+                "body": "Uitsparingen splitsen het vlak in losse delen. De voorgestelde vorm bestaat uit die delen."
+            },
+            "ring_not_closed": {
+                "title": "De rand is niet gesloten",
+                "body": "Begin- en eindpunt van de rand vallen niet samen. De voorgestelde vorm sluit de rand."
+            },
+            "other": {
+                "title": "De vorm is ongeldig",
+                "body": "De vorm uit de bron is geen geldig vlak. NIPKaart stelt een gecorrigeerde vorm voor."
+            },
+            "check": "Controleer op de luchtfoto",
+            "check_position": "De blauwe vorm ligt op het parkeervak.",
+            "check_complete": "Er is geen deel van het parkeervak weggevallen.",
+            "technical": "Technische melding"
+        }
+    },
+    "sheet": {
+        "about": "Over de bron",
+        "review_ready": "Er staat een nieuwe levering klaar om te beoordelen."
     }
 }

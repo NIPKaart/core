@@ -440,6 +440,8 @@ it('keeps the original geometry and requires explicit review before publishing i
 
     $this->actingAs($user)->get(route('app.imports.show', $import))->assertInertia(fn (Assert $page) => $page
         ->where('municipalityName', 'Amsterdam')
+        ->where('imagery.0.key', 'pdok')
+        ->where('imagery.1.key', 'google')
         ->where('review.derivations', 1)
         ->where('review.rows.0.after.geometry', $data['records'][0]['geometry'])
         ->where('review.rows.0.geometry_derivation.geometry.type', 'MultiPolygon'));

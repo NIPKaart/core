@@ -20,6 +20,7 @@ const context = {
         if (name === 'react-i18next')
             return { useTranslation: () => ({ t: (key) => key.split('.').reduce((value, part) => value?.[part], translations) ?? key }) };
         if (name === './review-workspace') return { MapToolbar: () => null };
+        if (name === '@/components/map/aerial-imagery') return { useAerialImagery: () => ({ layers: [], layer: undefined, choose() {} }) };
         if (name === './review-map-tiles' || name === '@/components/map/zoom-control') return { __esModule: true, default: () => null };
         if (name === 'react-leaflet')
             return { MapContainer: wrapper, GeoJSON: wrapper, TileLayer: () => null, ScaleControl: () => null, Tooltip: wrapper, useMap: () => ({}) };

@@ -6,12 +6,14 @@ use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
 use App\Enums\ReportReason;
 use App\Enums\UserRole;
+use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceImprovement;
+use App\Models\Province;
 use App\Models\User;
 use App\Notifications\CommunitySpace\StatusChanged;
 use Illuminate\Support\Facades\Http;
@@ -471,4 +473,19 @@ describe('evidence', function () {
         $this->actingAs($this->moderator)->get(route('app.moderation.index'))
             ->assertInertia(fn (Assert $page) => $page->where('decidedToday', 2));
     });
+});
+
+test('the aerial photo follows the country of the item under review, national photo first', function () {
+    config(['services.imagery.providers' => ['pdok', 'google']]);
+    $inCountry = fn (string $code) => Municipality::factory()->for(Province::factory()->for(Country::firstOrCreate(['code' => $code], ['name' => $code])))->create();
+    $netherlands = $inCountry('NL');
+    pendingSubmission($this->contributor, ['municipality_id' => $netherlands->id]);
+    pendingSubmission($this->contributor, ['municipality_id' => $netherlands->id]);
+    $belgian = pendingSubmission($this->contributor, ['municipality_id' => $inCountry('BE')->id]);
+    $keys = fn (array $layers): array => array_column($layers, 'key');
+
+    $this->actingAs($this->moderator)->get(route('app.moderation.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('imagery', fn ($layers) => $keys($layers->all()) === ['pdok', 'google']));
+    $this->get(route('app.moderation.submissions.show', $belgian))
+        ->assertInertia(fn (Assert $page) => $page->where('imagery', fn ($layers) => $keys($layers->all()) === ['google']));
 });
