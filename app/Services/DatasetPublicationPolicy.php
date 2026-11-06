@@ -31,7 +31,7 @@ class DatasetPublicationPolicy
         if (! $previous || ! $source->last_published_retrieved_at) {
             $reasons[] = 'first_publication';
         }
-        if ($review['blockers'] !== []) {
+        if ($review['blockers'] !== [] || $import->isSuperseded()) {
             $reasons[] = 'review_blocked';
         }
         if ($review['derivations'] > 0) {

@@ -11,6 +11,9 @@ use App\Services\DatasetDeliveryService;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\DatasetImports;
 use App\Services\DatasetPublicationPolicy;
+use Illuminate\Notifications\Events\BroadcastNotificationCreated;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -55,6 +58,199 @@ function manuallyEstablishDataset(string $type, int $count = 25): array
 
     return [$source->fresh(), $admin, $records, $first->fresh()];
 }
+
+it('keeps one review notification for a source while equivalent deliveries refresh its task', function (string $type) {
+    $this->freezeTime();
+    Event::fake([BroadcastNotificationCreated::class]);
+    $source = ($type === 'offstreet' ? DatasetSource::factory()->offstreet() : DatasetSource::factory())->create();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $records = automaticRecords($type, 3);
+    $first = receiveAutomatic($source, $records);
+    Notification::sendNow($admin, new ReadyForReview($first->id, $source->name));
+    $notice = $admin->notifications()->sole();
+    $notice->markAsRead();
+    $this->travel(1)->days();
+
+    $second = receiveAutomatic($source, array_reverse($records));
+    Notification::sendNow($admin, new ReadyForReview($second->id, $source->name));
+
+    expect($admin->notifications()->count())->toBe(1);
+    expect($notice->fresh()->data['meta']['import_id'])->toBe($second->id);
+    expect($notice->fresh()->read_at)->not->toBeNull();
+    expect($first->fresh()->isSuperseded())->toBeTrue();
+    expect($second->fresh()->isSuperseded())->toBeFalse();
+    expect(DatasetImport::superseded(false)->pluck('id')->all())->toBe([$second->id]);
+    expect($source->fresh()->latestImport->retrieved_at->equalTo($second->retrieved_at))->toBeTrue();
+    $this->assertDatabaseCount('dataset_imports', 2);
+})->with(['municipal', 'offstreet']);
+
+it('reuses validated geometry and identity decisions only for equivalent contents', function () {
+    $this->freezeTime();
+    Notification::fake();
+    $source = DatasetSource::factory()->create();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $records = automaticRecords('municipal', 3);
+    $first = receiveAutomatic($source, $records);
+    $service = app(DatasetImports::class)->forSource($source);
+    $service->resolveIdentity($first, $admin, 'record-1', null, 'A separate location.', $service->review($first)['token']);
+    $this->travel(1)->days();
+    DB::enableQueryLog();
+    DB::flushQueryLog();
+
+    try {
+        $same = receiveAutomatic($source, array_reverse($records));
+        $geometryQueries = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'ST_IsValidReason(shape)'));
+        expect($geometryQueries)->toBeEmpty();
+        expect($same->identity_decisions)->toBe($first->fresh()->identity_decisions);
+        $this->travel(1)->days();
+        $records[0]['geometry']['coordinates'][0] += 0.001;
+        DB::flushQueryLog();
+
+        $changed = receiveAutomatic($source, $records);
+
+        expect(collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'ST_IsValidReason(shape)')))->toHaveCount(1);
+        expect($changed->identity_decisions)->toBeNull();
+        $changed->forceFill(['publication_checks' => [...$changed->publication_checks, 'intake_validation_version' => 0]])->save();
+        $this->travel(1)->days();
+        DB::flushQueryLog();
+
+        receiveAutomatic($source, $records);
+
+        expect(collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'ST_IsValidReason(shape)')))->toHaveCount(1);
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
+});
+
+it('refreshes a source alert for real changes and starts a new alert after a decision', function () {
+    $this->freezeTime();
+    Event::fake([BroadcastNotificationCreated::class]);
+    $source = DatasetSource::factory()->create();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $records = automaticRecords('municipal', 3);
+    $first = receiveAutomatic($source, $records);
+    Notification::sendNow($admin, new ReadyForReview($first->id, $source->name));
+    $notice = $admin->notifications()->sole();
+    $notice->markAsRead();
+    $this->travel(1)->days();
+    $records[0]['street'] = 'A changed street';
+
+    $changed = receiveAutomatic($source, $records);
+    Notification::sendNow($admin, new ReadyForReview($changed->id, $source->name));
+
+    expect($admin->notifications()->count())->toBe(1);
+    expect($notice->fresh()->read_at)->toBeNull();
+    expect($notice->fresh()->data['url'])->toBe(route('app.imports.index', ['source' => $source->id, 'search' => $source->code]));
+    $service = app(DatasetImports::class)->forSource($source);
+    expect(fn () => $service->decide($first, $admin, 'publish', null, $service->review($first)['token']))->toThrow(ValidationException::class);
+    $service->decide($changed, $admin, 'reject', 'Reviewed.', $service->review($changed)['token']);
+    expect($notice->fresh()->data['meta']['resolved'])->toBeTrue();
+    expect($notice->fresh()->read_at)->not->toBeNull();
+    $this->travel(1)->days();
+    $records[0]['street'] = 'Another changed street';
+
+    $next = receiveAutomatic($source, $records);
+    Notification::sendNow($admin, new ReadyForReview($next->id, $source->name));
+
+    expect($admin->notifications()->count())->toBe(2);
+    expect($admin->unreadNotifications()->count())->toBe(1);
+});
+
+it('consolidates legacy duplicates per reviewer without touching another source', function () {
+    $this->freezeTime();
+    Event::fake([BroadcastNotificationCreated::class]);
+    $source = DatasetSource::factory()->create();
+    $otherSource = DatasetSource::factory()->offstreet()->for($source->municipality)->create();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $otherAdmin = User::factory()->create();
+    $otherAdmin->assignRole(UserRole::ADMIN);
+    $first = receiveAutomatic($source, automaticRecords('municipal', 3));
+    Notification::sendNow([$admin, $otherAdmin], new ReadyForReview($first->id, $source->name));
+    $admin->notifications()->create([
+        'id' => (string) Str::uuid(), 'type' => ReadyForReview::class,
+        'data' => (new ReadyForReview($first->id, $source->name))->toDatabase($admin)->data, 'read_at' => null,
+    ]);
+    $other = receiveAutomatic($otherSource, automaticRecords('offstreet', 3));
+    Notification::sendNow($admin, new ReadyForReview($other->id, $otherSource->name));
+    $otherNotice = $admin->notifications()->get()->first(fn ($notice): bool => $notice->data['meta']['import_id'] === $other->id);
+    $this->travel(1)->days();
+
+    $latest = receiveAutomatic($source, automaticRecords('municipal', 3));
+    Notification::sendNow([$admin, $otherAdmin], new ReadyForReview($latest->id, $source->name));
+    Notification::sendNow($admin, new ReadyForReview($first->id, $source->name));
+
+    expect($admin->unreadNotifications()->count())->toBe(2);
+    expect($otherAdmin->unreadNotifications()->count())->toBe(2);
+    expect($admin->notifications()->get()->where('data.meta.import_id', $latest->id))->toHaveCount(1);
+    expect($otherNotice->fresh()->read_at)->toBeNull();
+    expect($admin->notifications()->get()->filter(fn ($notice): bool => $notice->data['meta']['resolved'] ?? false))->toHaveCount(1);
+});
+
+it('still validates the selection when a delivery repeats known records', function () {
+    Notification::fake();
+    $source = DatasetSource::factory()->create();
+    $records = automaticRecords('municipal', 3);
+    receiveAutomatic($source, $records);
+    $data = automaticDelivery($source, $records);
+    $data['selection'] = 'another-selection';
+
+    expect(fn () => app(DatasetImports::class)->forSource($source)->intakeFromStorage(json_encode($data, JSON_THROW_ON_ERROR), $source->code, $data['delivery_id']))
+        ->toThrow(ValidationException::class);
+
+    $this->assertDatabaseCount('dataset_imports', 1);
+});
+
+it('retains out of order deliveries as history while a newer review is open', function () {
+    $this->freezeTime();
+    [$source, $admin, $records, $published] = manuallyEstablishDataset('municipal');
+    $this->travel(2)->days();
+    $newer = receiveAutomatic($source, automaticRecords('municipal', 40));
+    Notification::fake();
+    $older = automaticDelivery($source, $records);
+    $older['retrieved_at'] = now()->subDay()->utc()->format('Y-m-d\TH:i:s.u\Z');
+
+    $history = app(DatasetImports::class)->forSource($source)->intakeFromStorage(json_encode($older, JSON_THROW_ON_ERROR), $source->code, $older['delivery_id']);
+
+    expect($history->state)->toBe('pending');
+    expect($history->isSuperseded())->toBeTrue();
+    expect($newer->fresh()->isSuperseded())->toBeFalse();
+    expect($source->fresh()->last_published_retrieved_at->equalTo($published->retrieved_at))->toBeTrue();
+    Notification::assertNothingSent();
+});
+
+it('does not ask again for identical rejected contents but retains the delivery history', function () {
+    $this->freezeTime();
+    Notification::fake();
+    $source = DatasetSource::factory()->create();
+    $admin = User::factory()->create();
+    $admin->assignRole(UserRole::ADMIN);
+    $records = automaticRecords('municipal', 3);
+    $first = receiveAutomatic($source, $records);
+    $service = app(DatasetImports::class)->forSource($source);
+    $service->decide($first, $admin, 'reject', 'These source claims are incorrect.', $service->review($first)['token']);
+    Notification::fake();
+    $this->travel(1)->days();
+
+    $repeat = receiveAutomatic($source, array_reverse($records));
+
+    expect($repeat->state)->toBe('rejected');
+    expect($repeat->reviewed_by)->toBeNull();
+    expect($repeat->publication_checks['reused_rejection_import_id'])->toBe($first->id);
+    expect($repeat->retrieved_at->gt($first->retrieved_at))->toBeTrue();
+    $this->assertDatabaseCount('dataset_imports', 2);
+    Notification::assertNothingSent();
+
+    $this->travel(1)->days();
+    $manual = $service->intake(json_encode(automaticDelivery($source, $records), JSON_THROW_ON_ERROR), $admin, automatic: true);
+
+    expect($manual->state)->toBe('pending');
+    Notification::assertSentToTimes($admin, ReadyForReview::class, 1);
+});
 
 it('keeps first deliveries pending and publishes only subsequent safe updates without notifications', function (string $type) {
     $this->freezeTime();

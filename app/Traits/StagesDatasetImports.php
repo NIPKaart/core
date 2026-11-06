@@ -8,7 +8,9 @@ use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\User;
 use App\Notifications\DatasetImport\ReadyForReview;
+use App\Notifications\DatasetImport\ReviewNotificationChannel;
 use App\Support\MunicipalSnapshot;
+use App\Support\OffstreetSnapshot;
 use App\Support\SourceDescription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,9 @@ use Illuminate\Validation\ValidationException;
  */
 trait StagesDatasetImports
 {
+    /** Bump when record validation or geometry derivation changes. */
+    private const int RECORD_VALIDATION_VERSION = 1;
+
     /** @return array<string, mixed> */
     abstract protected function decodeSnapshot(string $json): array;
 
@@ -68,6 +73,9 @@ trait StagesDatasetImports
             if ($import->state !== 'pending') {
                 throw ValidationException::withMessages(['decision' => 'Deze levering is al beoordeeld.']);
             }
+            if ($import->isSuperseded()) {
+                throw ValidationException::withMessages(['decision' => 'Deze levering is vervangen door een nieuwere levering.']);
+            }
             if ($decision === 'publish') {
                 if (! $source->isApproved()) {
                     throw ValidationException::withMessages(['decision' => 'Keur de bron eerst goed.']);
@@ -90,6 +98,7 @@ trait StagesDatasetImports
             }
             if ($decision === 'reject') {
                 $import->forceFill(['state' => 'rejected', 'reviewed_by' => $actor->id, 'review_reason' => $reason, 'reviewed_at' => now()])->save();
+                ReviewNotificationChannel::resolveSource($source);
             }
             DatasetDataChanged::dispatch('imports', $source->target_type);
         });
@@ -111,9 +120,8 @@ trait StagesDatasetImports
             return $this->existingDelivery($existing, $fingerprint);
         }
         $configuration = $source->configuration();
-        $records = $this->validateRecords($data, $source);
 
-        return DB::transaction(function () use ($source, $configuration, $records, $data, $fingerprint, $actor, $automatic) {
+        return DB::transaction(function () use ($source, $configuration, $data, $fingerprint, $actor, $automatic) {
             $source = DatasetSource::whereKey($source->id)->lockForUpdate()->firstOrFail();
             if (! $source->isApproved()) {
                 throw ValidationException::withMessages(['dataset' => 'Deze bron is nog niet goedgekeurd.']);
@@ -126,16 +134,46 @@ trait StagesDatasetImports
                 throw ValidationException::withMessages(['dataset' => 'De datasetconfiguratie is gewijzigd. Lees het bestand opnieuw in.']);
             }
 
+            $previous = $source->latestImport()->first([
+                'dataset_imports.id', 'dataset_imports.state', 'dataset_imports.retrieved_at', 'dataset_imports.dataset_config',
+                'dataset_imports.records', 'dataset_imports.identity_decisions', 'dataset_imports.publication_checks', 'dataset_imports.review_reason',
+            ]);
+            $sameContents = $previous !== null && $source->selection === $data['selection']
+                && $data['format'] === ($source->target_type === 'municipal' ? MunicipalSnapshot::FORMAT : OffstreetSnapshot::FORMAT)
+                && MunicipalSnapshot::fingerprint($previous->dataset_config) === MunicipalSnapshot::fingerprint($configuration)
+                && $this->recordFingerprint(array_column($previous->records, 'source')) === $this->recordFingerprint($data['records']);
+            if (! $sameContents) {
+                $previous = null;
+            }
+            $reuseValidated = $sameContents && ($previous->publication_checks['intake_validation_version'] ?? null) === self::RECORD_VALIDATION_VERSION;
+            $records = $reuseValidated ? $previous->records : $this->validateRecords($data, $source);
+
             $import = DatasetImport::create([
                 'dataset_source_id' => $source->id, 'delivery_id' => $data['delivery_id'],
                 'fingerprint' => $fingerprint, 'retrieved_at' => $data['retrieved_at'],
                 'dataset_config' => $configuration, 'records' => $records, 'submitted_by' => $actor?->id,
             ])->refresh();
             $import->setRelation('datasetSource', $source);
+            if ($sameContents && $previous->state === 'rejected' && $actor === null) {
+                $import->forceFill([
+                    'state' => 'rejected', 'reviewed_at' => now(), 'review_reason' => $previous->review_reason,
+                    'publication_checks' => [
+                        'reused_rejection_import_id' => $previous->publication_checks['reused_rejection_import_id'] ?? $previous->id,
+                        'intake_validation_version' => self::RECORD_VALIDATION_VERSION,
+                    ],
+                ])->save();
+                DatasetDataChanged::dispatch('imports', $source->target_type);
+
+                return $import->unsetRelation('datasetSource');
+            }
+            if ($sameContents && $previous->state === 'pending' && $previous->identity_decisions !== null && $import->retrieved_at->gte($previous->retrieved_at)) {
+                $import->forceFill(['identity_decisions' => $previous->identity_decisions])->save();
+            }
 
             if ($automatic) {
                 $review = $this->review($import, true);
                 $checks = $this->publicationPolicy->assess($import, $source, $review);
+                $checks['intake_validation_version'] = self::RECORD_VALIDATION_VERSION;
                 $import->forceFill(['publication_checks' => $checks])->save();
                 if ($checks['reasons'] === []) {
                     $this->publishAccepted($import, $source);
@@ -145,7 +183,7 @@ trait StagesDatasetImports
                 }
             }
 
-            if (! $source->last_published_retrieved_at || $import->retrieved_at->gt($source->last_published_retrieved_at)) {
+            if (! $import->isSuperseded()) {
                 Notification::send(User::role(UserRole::ADMIN)->get(), (new ReadyForReview($import->id, $source->name))->afterCommit());
             }
 
@@ -162,6 +200,15 @@ trait StagesDatasetImports
             'state' => 'published', 'publication_method' => $actor ? 'manual' : 'automatic',
             'reviewed_by' => $actor?->id, 'review_reason' => $reason, 'reviewed_at' => now(),
         ])->save();
+        ReviewNotificationChannel::resolveSource($source);
+    }
+
+    /** @param list<array<string, mixed>> $records */
+    private function recordFingerprint(array $records): string
+    {
+        usort($records, fn (array $left, array $right): int => strcmp($left['external_id'], $right['external_id']));
+
+        return MunicipalSnapshot::fingerprint($records);
     }
 
     private function existingDelivery(DatasetImport $import, string $fingerprint): DatasetImport

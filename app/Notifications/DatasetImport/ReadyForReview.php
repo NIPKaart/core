@@ -20,7 +20,7 @@ class ReadyForReview extends Notification implements ShouldQueue
     /** @return array<int, string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return [ReviewNotificationChannel::class];
     }
 
     public function shouldSend(object $notifiable, string $channel): bool
@@ -40,14 +40,16 @@ class ReadyForReview extends Notification implements ShouldQueue
         return new BroadcastMessage($this->payload());
     }
 
-    /** @return array{type: string, params: array{source_name: string}, url: string, meta: array{import_id: int}} */
+    /** @return array{type: string, params: array{source_name: string}, url: string, meta: array{import_id: int, source_id: int}} */
     private function payload(): array
     {
+        $source = DatasetImport::findOrFail($this->importId)->datasetSource;
+
         return [
             'type' => NotificationType::DatasetImportReadyForReview->value,
             'params' => ['source_name' => $this->sourceName],
-            'url' => route('app.imports.show', $this->importId),
-            'meta' => ['import_id' => $this->importId],
+            'url' => route('app.imports.index', ['source' => $source->id, 'search' => $source->code]),
+            'meta' => ['import_id' => $this->importId, 'source_id' => $source->id],
         ];
     }
 }
