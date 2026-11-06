@@ -66,10 +66,12 @@ export default function NotificationsIndex({ notificationList, filters, options 
             { ids, action: selectedAction },
             {
                 preserveState: true,
+                preserveScroll: true,
+                showProgress: false,
+                only: ['notifications', 'notificationList', 'options'],
                 onSuccess: () => {
                     setRowSelection({});
                     setSelectedAction('');
-                    router.reload({ only: ['notifications'] });
                 },
                 onError: () => {
                     toast.error(t('toast.error'));

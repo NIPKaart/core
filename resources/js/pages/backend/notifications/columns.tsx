@@ -141,14 +141,14 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                     router.get(
                         notifications.read({ id: n.id }),
                         {},
-                        { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
+                        { preserveState: true, preserveScroll: true, showProgress: false, only: ['notifications', 'notificationList', 'options'] },
                     );
 
                 const markUnread = () =>
                     router.get(
                         notifications.unread({ id: n.id }),
                         {},
-                        { preserveState: true, onSuccess: () => router.reload({ only: ['notifications'] }) },
+                        { preserveState: true, preserveScroll: true, showProgress: false, only: ['notifications', 'notificationList', 'options'] },
                     );
 
                 const toggleRead = () => (isUnread ? markRead() : markUnread());
@@ -194,7 +194,9 @@ export function getNotificationColumns({ t, tGlobal }: Translations): ColumnDef<
                                         e.preventDefault();
                                         router.delete(notifications.remove({ id: n.id }), {
                                             preserveState: true,
-                                            onSuccess: () => router.reload({ only: ['notifications'] }),
+                                            preserveScroll: true,
+                                            showProgress: false,
+                                            only: ['notifications', 'notificationList', 'options'],
                                         });
                                     }}
                                 >

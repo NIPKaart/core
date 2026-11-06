@@ -7,6 +7,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useDatasetChanges } from '@/hooks/use-dataset-changes';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import { scheduleLiveReload } from '@/lib/live-reload';
 import app from '@/routes/app';
 import parkingMunicipal from '@/routes/app/parking-municipal';
 import type { BreadcrumbItem, Municipality, PaginatedResponse, ParkingMunicipal } from '@/types';
@@ -30,7 +31,7 @@ export default function Index({ municipality, spaces, filters, options }: PagePr
     // A published delivery appears without a refresh.
     useDatasetChanges((change) => {
         if (change.target_type === 'municipal' && change.scope === 'imports') {
-            router.reload({ only: ['spaces', 'municipality'] });
+            scheduleLiveReload(['spaces', 'municipality']);
         }
     });
     const [orientationFilter, setOrientationFilter] = useState<string[]>(filters.orientation ? [filters.orientation] : []);

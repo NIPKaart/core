@@ -1,7 +1,8 @@
 import { getEcho } from '@/echo';
 import { DATASET_EVENT, type DatasetChange } from '@/hooks/use-dataset-changes';
 import { NOTIFICATION_EVENT } from '@/hooks/use-notifications';
-import { router, usePoll } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
+import { usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 /** Import notifications (a source awaiting approval, a delivery ready for review) share this prefix. */
@@ -15,20 +16,27 @@ export function isImportNotification(detail: unknown): boolean {
  * Keeps an import page current without a full refresh: reloads the given props when data changes live
  * (dataset changes and import notifications). Without a live connection it polls while `inProgress`.
  */
-export function useImportUpdates(only: string[], inProgress: boolean, intervalMs = 10000): void {
+export function useImportUpdates(
+    only: string[],
+    inProgress: boolean,
+    { intervalMs = 10000, observationProps = [] }: { intervalMs?: number; observationProps?: string[] } = {},
+): void {
     const key = only.join(',');
-    const { start, stop } = usePoll(intervalMs, { only }, { autoStart: false, mode: 'rest' });
+    const observationKey = observationProps.join(',');
+    const { start, stop } = usePoll(intervalMs, { only, showProgress: false }, { autoStart: false, mode: 'rest' });
 
     useEffect(() => {
         const reload = (event: Event) => {
             if (isImportNotification((event as CustomEvent).detail)) {
-                router.reload({ only: key.split(',') });
+                scheduleLiveReload(key.split(','));
             }
         };
-        // Live occupancy arrives every few minutes and is not shown on import pages.
         const reloadAll = (event: Event) => {
-            if ((event as CustomEvent<DatasetChange>).detail?.scope !== 'observations') {
-                router.reload({ only: key.split(',') });
+            if ((event as CustomEvent<DatasetChange>).detail?.scope === 'observations') {
+                // Source health and measurement times change; the delivery history does not.
+                if (observationKey) scheduleLiveReload(observationKey.split(','));
+            } else {
+                scheduleLiveReload(key.split(','));
             }
         };
         window.addEventListener(NOTIFICATION_EVENT, reload);
@@ -38,16 +46,25 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
             window.removeEventListener(NOTIFICATION_EVENT, reload);
             window.removeEventListener(DATASET_EVENT, reloadAll);
         };
-    }, [key]);
+    }, [key, observationKey]);
 
     useEffect(() => {
-        // Live changes cover processing; polling is the fallback when the live connection is not configured.
-        if (inProgress && !getEcho()) {
-            start();
-        } else {
-            stop();
-        }
+        const connection = getEcho()?.connector.pusher.connection;
+        const update = (change?: { previous: string; current: string }) => {
+            if (inProgress && connection?.state !== 'connected') {
+                start();
+            } else {
+                stop();
+            }
+            // Catch up with broadcasts missed during a disconnection.
+            if (change?.current === 'connected') scheduleLiveReload(key.split(','));
+        };
+        update();
+        connection?.bind('state_change', update);
 
-        return stop;
-    }, [inProgress, start, stop]);
+        return () => {
+            connection?.unbind('state_change', update);
+            stop();
+        };
+    }, [inProgress, key, start, stop]);
 }

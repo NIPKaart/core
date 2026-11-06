@@ -53,7 +53,10 @@ type Props = {
 
 export default function Index({ datasets, sources, summary, countries, imports, filters }: Props) {
     const { t } = useTranslation('backend/imports');
-    useImportUpdates(['sources', 'summary', 'countries', 'imports'], summary.processing);
+    const showingSources = filters.tab !== 'deliveries';
+    useImportUpdates(showingSources ? ['datasets', 'sources', 'summary', 'countries'] : ['datasets', 'summary', 'imports'], summary.processing, {
+        observationProps: showingSources ? ['sources', 'summary', 'counts'] : ['summary', 'counts'],
+    });
     const columns: ColumnDef<DataTableFeatures, Import>[] = [
         {
             id: 'delivery',

@@ -9,6 +9,7 @@ import { useAuthorization } from '@/hooks/use-authorization';
 import { useDatasetChanges } from '@/hooks/use-dataset-changes';
 import { useResourceTranslation } from '@/hooks/use-resource-translation';
 import AppLayout from '@/layouts/app-layout';
+import { scheduleLiveReload } from '@/lib/live-reload';
 import parkingOffstreet from '@/routes/app/parking-offstreet';
 import { BreadcrumbItem, PaginatedResponse, ParkingOffstreet } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -43,7 +44,7 @@ export default function Index({ spaces, filters, options }: PageProps) {
     // New occupancy or a published catalog appears without a refresh; a selection for a bulk update is never reset.
     useDatasetChanges((change) => {
         if (change.target_type === 'offstreet' && ['observations', 'imports'].includes(change.scope) && Object.keys(rowSelection).length === 0) {
-            router.reload({ only: ['spaces', 'options'] });
+            scheduleLiveReload(['spaces', 'options']);
         }
     });
 

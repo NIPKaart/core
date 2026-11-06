@@ -37,6 +37,7 @@ function mount(userId, configured = true) {
                 return configured ? echo : undefined;
             },
         },
+        '@/lib/live-reload': { scheduleLiveReload: (only) => calls.push(['reload', { only }]) },
         '@inertiajs/react': {
             usePage: () => ({ props: { auth: { user: userId ? { id: userId } : null } } }),
             router: { reload: (options) => calls.push(['reload', options]) },
@@ -75,7 +76,7 @@ test('authenticated notifications refresh the shared props, reach the page and r
     assert.deepEqual(JSON.parse(JSON.stringify(instance.calls)), [
         ['connect'],
         ['subscribe', 'App.Models.User.7'],
-        ['reload', { only: ['notifications'] }],
+        ['reload', { only: ['notifications', 'notificationList'] }],
         ['dispatch', 'nipkaart:notification', { id: 'notification' }],
         ['stop', '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'],
         ['leave', 'App.Models.User.7'],

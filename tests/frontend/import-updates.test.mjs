@@ -8,11 +8,21 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/hooks
     compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText;
 
-function mount(inProgress, live = false) {
+function mount(inProgress, live = false, options = {}) {
     const reloads = [];
     const poll = { started: 0, stopped: 0, options: null };
     const listeners = new Map();
     const cleanups = [];
+    const connection = {
+        state: live ? 'connected' : 'unavailable',
+        handler: null,
+        bind(name, handler) {
+            this.handler = handler;
+        },
+        unbind(name, handler) {
+            if (this.handler === handler) this.handler = null;
+        },
+    };
     const window = {
         addEventListener: (name, handler) => listeners.set(name, handler),
         removeEventListener: (name, handler) => listeners.get(name) === handler && listeners.delete(name),
@@ -32,16 +42,26 @@ function mount(inProgress, live = false) {
                 };
             if (name === '@/hooks/use-notifications') return { NOTIFICATION_EVENT: 'nipkaart:notification' };
             if (name === '@/hooks/use-dataset-changes') return { DATASET_EVENT: 'nipkaart:dataset-changed' };
-            if (name === '@/echo') return { getEcho: () => (live ? {} : undefined) };
+            if (name === '@/lib/live-reload') return { scheduleLiveReload: (only) => reloads.push({ only }) };
+            if (name === '@/echo') return { getEcho: () => (live ? { connector: { pusher: { connection } } } : undefined) };
             throw new Error(`Unexpected import: ${name}`);
         },
     };
     vm.runInNewContext(source, context);
-    context.exports.useImportUpdates(['datasets', 'imports'], inProgress);
+    context.exports.useImportUpdates(['datasets', 'imports'], inProgress, options);
     const notify = (type) => listeners.get('nipkaart:notification')?.({ detail: { type } });
     const change = (scope) => listeners.get('nipkaart:dataset-changed')?.({ detail: { scope, target_type: 'offstreet' } });
 
-    return { reloads, poll, notify, change, listeners, unmount: () => cleanups.forEach((cleanup) => cleanup?.()), exports: context.exports };
+    return {
+        connection,
+        reloads,
+        poll,
+        notify,
+        change,
+        listeners,
+        unmount: () => cleanups.forEach((cleanup) => cleanup?.()),
+        exports: context.exports,
+    };
 }
 
 test('import notifications reload the page data; other notifications leave it alone', () => {
@@ -89,4 +109,25 @@ test('unmounting removes the listener and stops polling', () => {
 
     assert.equal(page.listeners.size, 0);
     assert.ok(page.poll.stopped >= 1);
+});
+
+test('a disconnected configured connection resumes polling and reconnecting catches up once', () => {
+    const page = mount(true, true);
+    page.connection.state = 'unavailable';
+    page.connection.handler({ previous: 'connected', current: 'unavailable' });
+    assert.equal(page.poll.started, 1);
+    page.connection.state = 'connected';
+    page.connection.handler({ previous: 'connecting', current: 'connected' });
+    assert.ok(page.poll.stopped >= 2);
+    assert.equal(page.reloads.length, 1);
+    assert.deepEqual([...page.reloads[0].only], ['datasets', 'imports']);
+    page.unmount();
+    assert.equal(page.connection.handler, null);
+});
+
+test('source overview observation updates refresh status, detail data and counters without delivery history', () => {
+    const page = mount(false, true, { observationProps: ['sources', 'summary', 'counts'] });
+    page.change('observations');
+    assert.equal(page.reloads.length, 1);
+    assert.deepEqual([...page.reloads[0].only], ['sources', 'summary', 'counts']);
 });

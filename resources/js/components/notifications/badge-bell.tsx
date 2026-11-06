@@ -6,7 +6,7 @@ import notifications from '@/routes/notifications';
 import type { NotificationItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Check } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NotificationsList } from './list-notifications';
 
@@ -28,75 +28,49 @@ export default function BellBadge() {
     const firstOpenRef = useRef(false);
     const isDesktop = useMediaQuery('(min-width: 640px)');
 
-    // Local copy so we can optimistically mark items read
-    const [localRecent, setLocalRecent] = useState<NotificationItem[] | null>(null);
-    useEffect(() => {
-        setLocalRecent(recentFromProps);
-    }, [recentFromProps]);
-
     const ensureLoaded = () => {
-        const source = localRecent ?? recentFromProps;
-        if (!firstOpenRef.current && isLoggedIn && source.length === 0) {
+        if (!firstOpenRef.current && isLoggedIn && recentFromProps.length === 0) {
             firstOpenRef.current = true;
             setLoading(true);
-            router.reload({ only: ['notifications'], onFinish: () => setLoading(false) });
+            router.reload({ only: ['notifications'], showProgress: false, onFinish: () => setLoading(false) });
         }
     };
 
-    const itemsSource = localRecent ?? recentFromProps;
-    const quickItems = useMemo(() => itemsSource.filter((n) => !n.read_at).slice(0, 12), [itemsSource]);
+    const quickItems = useMemo(() => recentFromProps.filter((n) => !n.read_at).slice(0, 12), [recentFromProps]);
 
-    const markAll = () => {
-        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => ({ ...n, read_at: new Date().toISOString() })));
-
+    const markRead = (id?: string, url?: string) => {
         router.get(
-            notifications.readAll(),
+            id ? notifications.read(id) : notifications.readAll(),
             {},
             {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => router.reload({ only: ['notifications'] }),
+                showProgress: false,
+                only: ['notifications', 'notificationList'],
+                optimistic: (pageProps) => {
+                    const current = pageProps.notifications as PageProps['notifications'];
+                    if (!current) return {};
+                    const wasUnread = id ? current.recent.some((n) => n.id === id && !n.read_at) : true;
+                    return {
+                        notifications: {
+                            unread: id ? Math.max(0, current.unread - Number(wasUnread)) : 0,
+                            recent: current.recent.map((n) => (!n.read_at && (!id || n.id === id) ? { ...n, read_at: new Date().toISOString() } : n)),
+                        },
+                    };
+                },
+                onSuccess: () => {
+                    if (url) router.visit(url);
+                },
                 onError: () => {
-                    setLocalRecent(recentFromProps);
+                    if (url) router.visit(url);
                 },
             },
         );
     };
 
-    const markOne = (id: string) => {
-        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
-
-        router.get(
-            notifications.read(id),
-            {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => router.reload({ only: ['notifications'] }),
-                onError: () => {
-                    setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
-                },
-            },
-        );
-    };
-
-    const markAndOpen = (id: string, url: string) => {
-        setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
-
-        router.get(
-            notifications.read(id),
-            {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => router.visit(url),
-                onError: () => {
-                    setLocalRecent((prev) => (prev ?? recentFromProps).map((n) => (n.id === id ? { ...n, read_at: null } : n)));
-                    router.visit(url);
-                },
-            },
-        );
-    };
+    const markAll = () => markRead();
+    const markOne = (id: string) => markRead(id);
+    const markAndOpen = (id: string, url: string) => markRead(id, url);
 
     if (isDesktop) {
         return (
