@@ -1,5 +1,6 @@
 import { getEcho } from '@/echo';
-import { router, usePage } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
+import { usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 /** Browser event re-dispatching every live notification to the page. */
@@ -25,7 +26,7 @@ export function useNotifications(onNew?: (payload: unknown) => void) {
 
         const handler = (notification: unknown) => {
             onNew?.(notification);
-            router.reload({ only: ['notifications'] });
+            scheduleLiveReload(['notifications', 'notificationList']);
             // Pages can refresh their own data for relevant notifications without a second Echo listener.
             window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT, { detail: notification }));
         };

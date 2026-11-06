@@ -1,7 +1,8 @@
 import { getEcho } from '@/echo';
 import { DATASET_EVENT, type DatasetChange } from '@/hooks/use-dataset-changes';
 import { NOTIFICATION_EVENT } from '@/hooks/use-notifications';
-import { router, usePoll } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
+import { usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 /** Import notifications (a source awaiting approval, a delivery ready for review) share this prefix. */
@@ -17,18 +18,18 @@ export function isImportNotification(detail: unknown): boolean {
  */
 export function useImportUpdates(only: string[], inProgress: boolean, intervalMs = 10000): void {
     const key = only.join(',');
-    const { start, stop } = usePoll(intervalMs, { only }, { autoStart: false, mode: 'rest' });
+    const { start, stop } = usePoll(intervalMs, { only, showProgress: false }, { autoStart: false, mode: 'rest' });
 
     useEffect(() => {
         const reload = (event: Event) => {
             if (isImportNotification((event as CustomEvent).detail)) {
-                router.reload({ only: key.split(',') });
+                scheduleLiveReload(key.split(','));
             }
         };
         // Live occupancy arrives every few minutes and is not shown on import pages.
         const reloadAll = (event: Event) => {
             if ((event as CustomEvent<DatasetChange>).detail?.scope !== 'observations') {
-                router.reload({ only: key.split(',') });
+                scheduleLiveReload(key.split(','));
             }
         };
         window.addEventListener(NOTIFICATION_EVENT, reload);
@@ -41,13 +42,22 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
     }, [key]);
 
     useEffect(() => {
-        // Live changes cover processing; polling is the fallback when the live connection is not configured.
-        if (inProgress && !getEcho()) {
-            start();
-        } else {
-            stop();
-        }
+        const connection = getEcho()?.connector.pusher.connection;
+        const update = (change?: { previous: string; current: string }) => {
+            if (inProgress && connection?.state !== 'connected') {
+                start();
+            } else {
+                stop();
+            }
+            // Catch up with broadcasts missed during a disconnection.
+            if (change?.current === 'connected') scheduleLiveReload(key.split(','));
+        };
+        update();
+        connection?.bind('state_change', update);
 
-        return stop;
-    }, [inProgress, start, stop]);
+        return () => {
+            connection?.unbind('state_change', update);
+            stop();
+        };
+    }, [inProgress, key, start, stop]);
 }

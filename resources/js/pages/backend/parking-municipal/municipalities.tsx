@@ -1,6 +1,7 @@
 import MunicipalNavigation from '@/components/municipal-navigation';
 import { useDatasetChanges } from '@/hooks/use-dataset-changes';
-import { Head, Link, router } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
+import { Head, Link } from '@inertiajs/react';
 import { ArrowUpRight, Building2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +32,7 @@ export default function MunicipalitiesPage({ municipalities }: PageProps) {
     // Counts and dates change when a delivery is published or a source is approved.
     useDatasetChanges((change) => {
         if (change.target_type === 'municipal' && ['imports', 'sources'].includes(change.scope)) {
-            router.reload({ only: ['municipalities'] });
+            scheduleLiveReload(['municipalities']);
         }
     });
 

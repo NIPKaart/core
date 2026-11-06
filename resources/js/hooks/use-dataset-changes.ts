@@ -1,6 +1,6 @@
 import { getEcho } from '@/echo';
 import { useAuthorization } from '@/hooks/use-authorization';
-import { router } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
 import { useEffect, useRef } from 'react';
 
 /** Browser event re-dispatching every dataset change to the page. */
@@ -25,7 +25,7 @@ export function useDatasetChannel(): void {
         channel.listen('.dataset.changed', (change: DatasetChange) => {
             // The sidebar counts sources needing attention; live occupancy does not change it.
             if (change.scope !== 'observations') {
-                router.reload({ only: ['counts'] });
+                scheduleLiveReload(['counts']);
             }
             window.dispatchEvent(new CustomEvent(DATASET_EVENT, { detail: change }));
         });

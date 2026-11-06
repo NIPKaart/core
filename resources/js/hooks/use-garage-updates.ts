@@ -1,5 +1,6 @@
 import { getEcho } from '@/echo';
-import { router, usePoll } from '@inertiajs/react';
+import { scheduleLiveReload } from '@/lib/live-reload';
+import { usePoll } from '@inertiajs/react';
 import { useEffect } from 'react';
 
 /** Re-checked on this interval too, so a measurement that is no longer current stops looking live. */
@@ -9,10 +10,10 @@ const REFRESH_MS = 120_000;
 export function useGarageUpdates(only: string[]): void {
     const key = only.join(',');
 
-    usePoll(REFRESH_MS, { only });
+    usePoll(REFRESH_MS, { only, showProgress: false }, { mode: 'rest' });
 
     useEffect(() => {
-        const reload = () => router.reload({ only: key.split(',') });
+        const reload = () => scheduleLiveReload(key.split(','));
         const channel = getEcho()?.channel('parking-offstreet');
         channel?.listen('.observations.applied', reload);
 
