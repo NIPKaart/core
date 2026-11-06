@@ -1,0 +1,8 @@
+{
+    "title": "NIPKaart in numbers",
+    "parking_locations": "Disabled parking locations",
+    "garages": "Garages and P+R locations",
+    "municipalities": "Municipalities with parking locations",
+    "countries": "Countries covered",
+    "note": "We count published locations per source, not individual parking bays or available spaces. Sources may describe the same location. Counts refresh every five minutes."
+}

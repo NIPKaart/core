@@ -50,6 +50,14 @@ function render(pageProps) {
         exports: {},
         Intl,
         require: (name) => {
+            if (name === '@/components/nipkaart-statistics') {
+                const component = { ...context, exports: {} };
+                const compiled = ts.transpileModule(readFileSync(new URL('../../resources/js/components/nipkaart-statistics.tsx', import.meta.url), 'utf8'), {
+                    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+                }).outputText;
+                vm.runInNewContext(compiled, component);
+                return component.exports;
+            }
             if (name === '@/components/confirm-dialog') return { ConfirmDialog: () => null };
             if (name === '@/components/frontend/garage-table') return { useMeasuredTime: () => () => '14:32' };
             if (name === '@/components/map/destinations') return { default: () => React.createElement('div', { 'data-destinations': true }) };
@@ -125,6 +133,7 @@ function render(pageProps) {
     vm.runInNewContext(source, context);
     return renderToStaticMarkup(
         React.createElement(context.exports.default, {
+            statistics: { parking_locations: 12345, garages: 120, municipalities: 87, countries: 4 },
             section: null,
             view: 'personal',
             hasTodo: false,
@@ -499,4 +508,15 @@ test('the task count includes all moderation, source and rule work while moderat
     assert.match(html, /work\.title:14/);
     assert.match(html, /Biltstraat 88/);
     assert.match(html, /work\.next\.start/);
+});
+
+test('global counters follow the personal overview and format numbers in the active language', () => {
+    const html = render({});
+    assert.match(html, /12\.345/);
+    assert.match(html, /parking_locations/);
+    assert.match(html, /garages/);
+    assert.match(html, /municipalities/);
+    assert.match(html, /countries/);
+    assert.ok(html.indexOf('hero.title') < html.indexOf('parking_locations'));
+    assert.doesNotMatch(render({ section: 'favorites' }), /parking_locations/);
 });

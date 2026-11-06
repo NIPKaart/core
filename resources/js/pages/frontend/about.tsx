@@ -1,5 +1,6 @@
 import Footer from '@/components/frontend/footer';
 import HomeSearch from '@/components/frontend/home/home-search';
+import NipkaartStatistics, { type ParkingStatistics } from '@/components/nipkaart-statistics';
 import FrontendLayout from '@/layouts/frontend-layout';
 import { pinSvg } from '@/lib/pin-svg';
 import { Head } from '@inertiajs/react';
@@ -20,7 +21,7 @@ const heading = 'text-[1.625rem] leading-tight font-bold tracking-tight lg:text-
 const card = 'rounded-xl border border-stone-200 bg-white dark:border-neutral-800 dark:bg-neutral-900';
 const columns = 'lg:grid-cols-[17.5rem_minmax(0,1fr)_20rem]';
 
-export default function About() {
+export default function About({ statistics }: { statistics: ParkingStatistics }) {
     const { t } = useTranslation('frontend/about');
     const body = t('why.body', { returnObjects: true }) as string[];
 
@@ -38,6 +39,8 @@ export default function About() {
                         </h1>
                         <p className="max-w-3xl text-lg leading-relaxed text-stone-700 lg:text-[22px] dark:text-stone-300">{t('intro')}</p>
                     </header>
+
+                    <NipkaartStatistics statistics={statistics} />
 
                     <section aria-labelledby="about-sources" className="flex flex-col gap-4 lg:gap-6">
                         <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
