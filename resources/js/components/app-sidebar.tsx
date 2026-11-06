@@ -17,7 +17,7 @@ import { index as favorites } from '@/routes/profile/favorites';
 import { index as contributions } from '@/routes/profile/parking-spaces';
 import { NavGroup, SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import { icons, SquareParking } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AppLogoSwitcher from './app-logo-switcher';
 import { NavSection } from './nav/nav-section';
@@ -94,7 +94,7 @@ export function AppSidebar() {
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),
                 href: parkingOffstreet.index(),
-                icon: icons.SquareParking,
+                icon: SquareParking,
             },
             can('parking-rule.view_any') && {
                 title: t('rules'),
