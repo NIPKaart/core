@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Database\Factories\DatasetImportFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class DatasetImport extends Model
 {
@@ -23,9 +25,24 @@ class DatasetImport extends Model
 
     public function isSuperseded(): bool
     {
-        $publishedAt = $this->datasetSource->last_published_retrieved_at;
+        return $this->state === 'pending' && static::whereKey($this->id)->superseded()->exists();
+    }
 
-        return $this->state === 'pending' && $publishedAt !== null && $this->retrieved_at->lessThanOrEqualTo($publishedAt);
+    public function scopeSuperseded(Builder $query, bool $superseded = true): Builder
+    {
+        $replaced = fn (Builder $imports): Builder => $imports
+            ->whereHas('datasetSource', fn (Builder $source): Builder => $source
+                ->whereNotNull('last_published_retrieved_at')
+                ->whereColumn('dataset_imports.retrieved_at', '<=', 'dataset_sources.last_published_retrieved_at'))
+            ->orWhereExists(fn (QueryBuilder $newer): QueryBuilder => $newer->selectRaw('1')->from('dataset_imports as newer')
+                ->whereColumn('newer.dataset_source_id', 'dataset_imports.dataset_source_id')
+                ->where(fn (QueryBuilder $order): QueryBuilder => $order->whereColumn('newer.retrieved_at', '>', 'dataset_imports.retrieved_at')
+                    ->orWhere(fn (QueryBuilder $tie): QueryBuilder => $tie->whereColumn('newer.retrieved_at', 'dataset_imports.retrieved_at')
+                        ->whereColumn('newer.id', '>', 'dataset_imports.id'))));
+
+        return $query->where('state', 'pending')->when($superseded,
+            fn (Builder $query): Builder => $query->where($replaced),
+            fn (Builder $query): Builder => $query->whereNot($replaced));
     }
 
     public function datasetSource(): BelongsTo

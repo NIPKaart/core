@@ -7,6 +7,7 @@ use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\User;
 use App\Notifications\DatasetImport\ReadyForReview;
+use App\Notifications\DatasetImport\ReviewNotificationChannel;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
@@ -408,13 +409,13 @@ it('notifies only import reviewers once when a delivery is ready for review', fu
     Notification::assertSentToTimes($admin, ReadyForReview::class, 1);
     Notification::assertNotSentTo([$moderator, $user], ReadyForReview::class);
     Notification::assertSentTo($admin, ReadyForReview::class, function ($notification, $channels) use ($admin) {
-        expect($channels)->toBe(['database', 'broadcast']);
+        expect($channels)->toBe([ReviewNotificationChannel::class]);
         expect($notification->afterCommit)->toBeTrue();
         expect($notification->toDatabase($admin)->data)->toBe([
             'type' => 'dataset.import_ready_for_review',
             'params' => ['source_name' => DatasetSource::sole()->name],
-            'url' => route('app.imports.show', DatasetImport::sole()),
-            'meta' => ['import_id' => DatasetImport::sole()->id],
+            'url' => route('app.imports.index', ['source' => DatasetSource::sole()->id, 'search' => DatasetSource::sole()->code]),
+            'meta' => ['import_id' => DatasetImport::sole()->id, 'source_id' => DatasetSource::sole()->id],
         ]);
         expect($notification->toBroadcast($admin)->data)->toBe($notification->toDatabase($admin)->data);
         $admin->removeRole(UserRole::ADMIN);
