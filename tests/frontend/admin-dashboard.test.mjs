@@ -73,17 +73,54 @@ function render(pageProps) {
             if (name === '@/components/ui/button')
                 return { Button: ({ children, asChild, disabled }) => (asChild ? children : React.createElement('button', { disabled }, children)) };
             if (name === '@/components/ui/input') return { Input: (props) => React.createElement('input', props) };
-            if (name === '@/components/ui/table')
-                return Object.fromEntries(
-                    Object.entries({
-                        Table: 'table',
-                        TableBody: 'tbody',
-                        TableCell: 'td',
-                        TableHead: 'th',
-                        TableHeader: 'thead',
-                        TableRow: 'tr',
-                    }).map(([component, tag]) => [component, (props) => React.createElement(tag, props)]),
-                );
+            if (name === '@/components/tables/data-table')
+                return {
+                    DataTable: ({ columns, data, emptyState }) => {
+                        const header = (column) => (typeof column.header === 'function' ? column.header({}) : column.header);
+                        return React.createElement(
+                            'table',
+                            null,
+                            React.createElement(
+                                'thead',
+                                null,
+                                React.createElement(
+                                    'tr',
+                                    null,
+                                    columns.map((column) => React.createElement('th', { key: column.id }, header(column))),
+                                ),
+                            ),
+                            React.createElement(
+                                'tbody',
+                                null,
+                                data.length === 0
+                                    ? React.createElement('tr', null, React.createElement('td', null, emptyState))
+                                    : data.map((item, index) =>
+                                          React.createElement(
+                                              'tr',
+                                              { key: index },
+                                              columns.map((column) =>
+                                                  React.createElement('td', { key: column.id }, column.cell({ row: { original: item } })),
+                                              ),
+                                          ),
+                                      ),
+                            ),
+                        );
+                    },
+                };
+            if (name === '@/components/tables/data-table-facet-filter')
+                return {
+                    DataTableFacetFilter: ({ title, options, selected }) =>
+                        React.createElement(
+                            'div',
+                            { 'data-facet': title, 'data-selected': selected.join(',') },
+                            options.map((option) => React.createElement('span', { key: option.value }, `${option.label}:${option.count}`)),
+                        ),
+                };
+            if (name === '@/components/tables/data-paginate')
+                return {
+                    DataTablePagination: ({ pagination }) =>
+                        React.createElement('nav', { 'aria-label': 'table.pagination' }, `${pagination.current_page}/${pagination.last_page}`),
+                };
             if (name === '@/components/ui/progress') return { Progress: () => React.createElement('div', { role: 'progressbar' }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
             if (name === '@/lib/garage-occupancy') return {};
@@ -150,7 +187,7 @@ function render(pageProps) {
                       from: 1,
                       to: pageProps.contributions.data.length,
                       counts: { all: pageProps.contributions.data.length },
-                      filters: { search: '', status: null },
+                      filters: { search: '', status: null, sort: 'newest' },
                       ...pageProps.contributions,
                   }
                 : null,
@@ -332,8 +369,7 @@ test('the contributions section shows current statuses reasons and map or edit a
     assert.match(html, /contributions\.withdraw\.label/);
     assert.match(html, /href="\/map\/add\/1\/edit"/);
     assert.match(html, /&lt;rejection&gt;/);
-    assert.match(html, /contributions_page=2/);
-    assert.match(html, /disabled/);
+    assert.match(html, /aria-label="table.pagination"[^>]*>1\/2</);
     assert.doesNotMatch(html, /hero\.title/);
 });
 
@@ -356,7 +392,7 @@ test('personal sections use the available workspace width for their headings and
     }
 });
 
-test('contributions expose a searchable status-filtered table and bounded pagination for a hundred entries', () => {
+test('contributions are a data table with instant search, a counted status filter and server pagination', () => {
     const html = render({
         section: 'contributions',
         contributions: {
@@ -379,7 +415,7 @@ test('contributions expose a searchable status-filtered table and bounded pagina
             from: 41,
             to: 50,
             counts: { all: 100, approved: 89, pending: 8, rejected: 3 },
-            filters: { search: 'Stations', status: 'approved' },
+            filters: { search: 'Stations', status: 'approved,pending', sort: 'newest' },
             prev_page_url: '/profile/parking-spaces?contributions_page=4',
             next_page_url: '/profile/parking-spaces?contributions_page=6',
         },
@@ -387,11 +423,31 @@ test('contributions expose a searchable status-filtered table and bounded pagina
     assert.match(html, /<table/);
     assert.match(html, /role="search"/);
     assert.match(html, /value="Stations"/);
+    assert.doesNotMatch(html, /type="submit"/);
     assert.match(html, /&lt;Stationsplein&gt;/);
-    assert.match(html, /aria-current="page"[^>]*>5</);
-    assert.match(html, /contributions_search=Stations&amp;contributions_status=approved&amp;contributions_page=10/);
-    assert.match(html, /contributions\.status\.pending/);
-    assert.doesNotMatch(html, /contributions_page=8/);
+    assert.match(html, /data-selected="approved,pending"/);
+    assert.match(html, /contributions\.status\.approved:89/);
+    assert.match(html, /contributions\.status\.rejected:3/);
+    assert.doesNotMatch(html, /contributions\.status\.kept:/);
+    assert.match(html, /aria-label="contributions\.sort\.oldest"/);
+    assert.match(html, /aria-label="table.pagination"[^>]*>5\/10</);
+});
+
+test('the date column offers the opposite order and rare statuses appear once they occur', () => {
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [],
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            counts: { all: 0, kept: 1 },
+            filters: { search: '', status: null, sort: 'oldest' },
+        },
+    });
+    assert.match(html, /aria-label="contributions\.sort\.newest"/);
+    assert.match(html, /contributions\.status\.kept:1/);
+    assert.match(html, /contributions\.empty/);
 });
 
 test('an empty contribution search keeps the controls available and offers to reset the filters', () => {
@@ -407,13 +463,13 @@ test('an empty contribution search keeps the controls available and offers to re
             prev_page_url: null,
             next_page_url: null,
             counts: { all: 0 },
-            filters: { search: 'Missing', status: null },
+            filters: { search: 'Missing', status: null, sort: 'newest' },
         },
     });
     assert.match(html, /contributions\.no_results/);
     assert.match(html, /contributions\.reset/);
     assert.match(html, /role="search"/);
-    assert.doesNotMatch(html, /aria-label="contributions.pagination"/);
+    assert.doesNotMatch(html, /aria-label="table.pagination"/);
 });
 
 for (const [label, sources, rules, expectedHref, action] of [

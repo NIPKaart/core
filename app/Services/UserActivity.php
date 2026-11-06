@@ -20,17 +20,23 @@ use Illuminate\Support\Facades\DB;
 final class UserActivity
 {
     /**
+     * Every status an own contribution can have.
+     */
+    public const array STATUSES = ['pending', 'approved', 'rejected', 'kept', 'removed', 'unavailable'];
+
+    /**
      * One current status per own contribution; notifications stay in the existing inbox.
      *
+     * @param  list<string>  $statuses  Empty for every status.
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function contributions(User $user, int $page = 1, string $search = '', ?string $status = null): LengthAwarePaginator
+    public function contributions(User $user, int $page = 1, string $search = '', array $statuses = [], bool $oldestFirst = false): LengthAwarePaginator
     {
         $query = $this->contributionQuery($user, $search);
-        if ($status !== null) {
-            $query->where('status', $status);
+        if ($statuses !== []) {
+            $query->whereIn('status', $statuses);
         }
-        $rows = $query->orderByDesc('at')->orderBy('kind')->orderBy('id')->paginate(10, ['*'], 'contributions_page', $page);
+        $rows = $query->orderBy('at', $oldestFirst ? 'asc' : 'desc')->orderBy('kind')->orderBy('id')->paginate(10, ['*'], 'contributions_page', $page);
         $ids = $rows->getCollection()->groupBy('kind');
         $spaces = $user->parkingSpaces()->with(['municipality:id,name', 'latestReview'])
             ->whereIn('id', $ids->get('submission', collect())->pluck('id'))->get()->keyBy('id');
@@ -40,7 +46,7 @@ final class UserActivity
             ->whereIn('id', $ids->get('report', collect())->pluck('id'))->get()->keyBy('id');
 
         return $rows->withPath(route('profile.parking-spaces.index'))->appends(array_filter([
-            'contributions_search' => $search, 'contributions_status' => $status,
+            'contributions_search' => $search, 'contributions_status' => implode(',', $statuses), 'contributions_sort' => $oldestFirst ? 'oldest' : null,
         ], fn (?string $value): bool => $value !== null && $value !== ''))->through(function (object $row) use ($spaces, $proposals, $placeReports, $user): array {
             $entry = match ($row->kind) {
                 'submission' => $spaces->get($row->id),

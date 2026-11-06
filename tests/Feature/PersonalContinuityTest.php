@@ -81,6 +81,9 @@ test('personal section and pagination inputs are validated', function (array $qu
     [['section' => 'other'], 'section'], [['view' => 'other'], 'view'], [['destination' => 0], 'destination'], [['contributions_page' => 0], 'contributions_page'],
     [['contributions_page' => 10001], 'contributions_page'], [['contributions_page' => 'abc'], 'contributions_page'],
     [['contributions_status' => 'other'], 'contributions_status'],
+    [['contributions_status' => 'approved,other'], 'contributions_status'],
+    [['contributions_status' => ['approved']], 'contributions_status'],
+    [['contributions_sort' => 'name'], 'contributions_sort'],
     [['contributions_search' => ['invalid']], 'contributions_search'],
     [['contributions_search' => str_repeat('x', 201)], 'contributions_search'],
 ]);
@@ -97,9 +100,26 @@ test('contribution search and status filtering cover every page and only the cur
     ]))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
         ->has('contributions.data', 1)->where('contributions.total', 11)
         ->where('contributions.counts', ['all' => 12, 'approved' => 11, 'pending' => 1])
-        ->where('contributions.filters', ['search' => 'stations', 'status' => 'approved'])
+        ->where('contributions.filters', ['search' => 'stations', 'status' => 'approved', 'sort' => 'newest'])
         ->where('contributions.data.0.status', 'approved')
         ->where('contributions.prev_page_url', fn (string $url) => str_contains($url, 'contributions_search=stations') && str_contains($url, 'contributions_status=approved'))));
+});
+
+test('contributions filter on several statuses at once and sort oldest first across every page', function () {
+    $user = User::factory()->create();
+    $this->freezeTime();
+    $oldest = ParkingSpace::factory()->for($user)->create(['street' => 'Oudste', 'status' => ParkingStatus::REJECTED, 'updated_at' => now()->subDays(30)]);
+    ParkingSpace::factory()->for($user)->count(10)->create(['status' => ParkingStatus::APPROVED, 'updated_at' => now()->subDays(5)]);
+    ParkingSpace::factory()->for($user)->create(['street' => 'Nieuwste', 'status' => ParkingStatus::PENDING, 'updated_at' => now()]);
+
+    $this->actingAs($user)->get(route('profile.parking-spaces.index', ['contributions_status' => 'rejected,pending']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+            ->has('contributions.data', 2)->where('contributions.data.0.label', fn (string $label) => str_starts_with($label, 'Nieuwste'))
+            ->where('contributions.filters.status', 'rejected,pending')));
+    $this->get(route('profile.parking-spaces.index', ['contributions_sort' => 'oldest']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $reload) => $reload
+            ->where('contributions.data.0.key', "submission:{$oldest->id}")->where('contributions.filters.sort', 'oldest')
+            ->where('contributions.next_page_url', fn (string $url) => str_contains($url, 'contributions_sort=oldest'))));
 });
 
 test('contribution search matches towns and visible improvement and report targets without exposing hidden addresses', function () {
