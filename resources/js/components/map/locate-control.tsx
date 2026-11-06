@@ -27,7 +27,7 @@ export default function LocateControl({ position = 'topleft' }: Props) {
                 link.setAttribute('aria-label', t('toolbar.locate'));
                 const icon = document.createElement('span');
                 icon.className = 'discovery-locate-icon';
-                icon.innerHTML = renderToStaticMarkup(createElement(LocateFixed, { size: 22, 'aria-hidden': true }));
+                icon.innerHTML = renderToStaticMarkup(createElement(LocateFixed, { size: 20, 'aria-hidden': true }));
                 link.append(icon);
                 container.append(link);
                 return { link, icon };

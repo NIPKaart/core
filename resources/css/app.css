@@ -234,8 +234,8 @@
 /* Keep Leaflet's behavior, with the same surfaces and targets as the React controls. */
 .parking-discovery-map .leaflet-control-zoom,
 .parking-discovery-map .leaflet-control-locate {
-    padding: 2px;
-    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    padding: 0;
+    border: 0;
     border-radius: 12px;
     background: var(--background);
     box-shadow: 0 4px 12px rgb(0 0 0 / 12%);

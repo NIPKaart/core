@@ -329,7 +329,7 @@ export function MapToolbar({
             <Button
                 variant="outline"
                 size="icon"
-                className="pointer-events-auto absolute right-3 bottom-32 size-[50px] rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-5"
+                className="pointer-events-auto absolute right-3 bottom-32 size-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-5"
                 aria-label={t('workspace.fit_map')}
                 onClick={onFit}
             >
