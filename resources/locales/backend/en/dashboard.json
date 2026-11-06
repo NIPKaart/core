@@ -212,7 +212,7 @@
             "more_sources_other": "And {{count}} more data sources",
             "more_rules_one": "And {{count}} more broken link",
             "more_rules_other": "And {{count}} more broken links",
-            "none": "All data sources and links are working."
+            "none": "No data sources or parking rules need attention."
         }
     },
     "sections": {

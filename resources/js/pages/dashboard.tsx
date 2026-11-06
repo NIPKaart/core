@@ -37,6 +37,7 @@ import {
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
+    CircleAlert,
     CircleHelp,
     Clock3,
     ExternalLink,
@@ -933,7 +934,9 @@ function HistoryTile({ history }: { history: Contribution[] }) {
 function Workplace({ todo, overview }: { todo: Todo; overview?: Overview }) {
     const { t } = useTranslation('backend/dashboard');
     const greeting = useGreeting();
-    const total = todo.moderation?.total ?? 0;
+    const moderationTotal = todo.moderation?.total ?? 0;
+    const attentionTotal = todo.sources.total + todo.rules.total;
+    const total = moderationTotal + attentionTotal;
 
     return (
         <>
@@ -948,7 +951,11 @@ function Workplace({ todo, overview }: { todo: Todo; overview?: Overview }) {
             </header>
             {overview && <PersonalStrip overview={overview} />}
             <div className="grid grid-cols-1 gap-4 @min-[640px]:grid-cols-2 @min-[1100px]:grid-cols-4">
-                {todo.moderation && <NextTile next={todo.next} total={total} />}
+                {!todo.next && attentionTotal > 0 ? (
+                    <AttentionNextTile sources={todo.sources} rules={todo.rules} />
+                ) : (
+                    todo.moderation && <NextTile next={todo.next} total={moderationTotal} />
+                )}
                 {todo.moderation && <QueueTile moderation={todo.moderation} />}
                 {todo.decisions && <DecisionsTile decisions={todo.decisions} wide={!todo.attention} />}
                 {todo.attention && <AttentionTile sources={todo.sources} rules={todo.rules} wide={!todo.decisions} />}
@@ -984,6 +991,41 @@ function PersonalStrip({ overview }: { overview: Overview }) {
             {parts.length > 0 ? parts : <span className="text-sm text-stone-600 dark:text-stone-400">{t('work.strip.empty')}</span>}
             <span className="ml-auto text-[15px] font-semibold text-orange-700 dark:text-orange-400">{t('work.strip.open')}</span>
         </Link>
+    );
+}
+
+function sourceAttentionUrl(source: Todo['sources']['items'][number]): string {
+    return source.import_id ? importShow.url(source.import_id) : municipalImports.url({ query: { source: source.id } });
+}
+
+function AttentionNextTile({ sources, rules }: { sources: Todo['sources']; rules: Todo['rules'] }) {
+    const { t, i18n } = useTranslation('backend/dashboard');
+    const source = sources.items[0];
+    const rule = rules.items[0];
+
+    return (
+        <article
+            aria-labelledby="dashboard-next"
+            className="flex min-w-0 flex-col gap-5 rounded-xl border border-orange-200 bg-orange-50/60 p-6 @min-[640px]:col-span-2 @min-[1100px]:row-span-2 dark:border-orange-900 dark:bg-orange-950/20"
+        >
+            <CircleAlert className="size-10 text-orange-700 dark:text-orange-400" aria-hidden />
+            <span className={eyebrow}>{t('work.attention.eyebrow')}</span>
+            <span className="text-sm font-semibold">{t(source ? 'work.attention.source' : 'work.attention.rule')}</span>
+            <h2 id="dashboard-next" className="text-3xl leading-tight font-bold tracking-tight wrap-break-word">
+                {source?.name ?? rule?.name ?? t('work.attention.nationwide')}
+            </h2>
+            <p className="text-[15px] leading-relaxed text-stone-700 dark:text-stone-300">
+                {source
+                    ? t(`todo.source.${source.status}`)
+                    : rule?.failing_since
+                      ? t('work.attention.rule_broken', { date: formatShortDate(rule.failing_since, i18n.language) })
+                      : t('work.attention.rule_broken_unknown')}
+            </p>
+            <Link href={source ? sourceAttentionUrl(source) : parkingRules.index.url()} className={cn(darkButton, 'mt-auto self-start')}>
+                {t('work.attention.check')}
+                <ArrowRight className="size-4" aria-hidden />
+            </Link>
+        </article>
     );
 }
 
@@ -1171,7 +1213,7 @@ function AttentionTile({ sources, rules, wide }: { sources: Todo['sources']; rul
                         t('work.attention.source'),
                         source.name,
                         t(`todo.source.${source.status}`),
-                        source.import_id ? importShow.url(source.import_id) : municipalImports.url({ query: { status: 'attention' } }),
+                        sourceAttentionUrl(source),
                     ),
                 )}
                 {rules.items.map((rule) =>

@@ -212,7 +212,7 @@
             "more_sources_other": "En nog {{count}} databronnen",
             "more_rules_one": "En nog {{count}} kapotte link",
             "more_rules_other": "En nog {{count}} kapotte links",
-            "none": "Alle databronnen en links werken."
+            "none": "Geen databronnen of parkeerregels die aandacht vragen."
         }
     },
     "sections": {

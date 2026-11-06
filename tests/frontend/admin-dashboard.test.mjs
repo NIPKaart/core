@@ -89,7 +89,7 @@ function render(pageProps) {
             if (name === '@/routes/profile/favorites') return { index: route('profile/favorites') };
             if (name.startsWith('@/actions/'))
                 return { index: route('imports'), show: Object.assign((id) => ({ url: `/imports/${id}` }), { url: (id) => `/imports/${id}` }) };
-            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key, options) => key === 'work.title' ? `${key}:${options.count}` : key, i18n: { language: 'nl' } }) };
             if (name === '@inertiajs/react')
                 return {
                     Head: () => null,
@@ -340,4 +340,37 @@ test('an empty contribution search keeps the controls available and offers to re
     assert.match(html, /contributions\.reset/);
     assert.match(html, /role="search"/);
     assert.doesNotMatch(html, /aria-label="contributions.pagination"/);
+});
+
+for (const [label, sources, rules, expectedHref] of [
+    ['a source awaiting approval', { total: 4, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_approval', import_id: null }] }, { total: 0, items: [] }, '/imports?source=3'],
+    ['an import awaiting review', { total: 1, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_review', import_id: 12 }] }, { total: 0, items: [] }, '/imports/12'],
+    ['a broken parking rule link', { total: 0, items: [] }, { total: 4, items: [{ id: 5, name: 'Houten', failing_since: null }] }, '/parking-rules'],
+]) {
+    test(`an empty moderation queue prioritizes ${label} instead of claiming completion`, () => {
+        const html = render({
+            hasTodo: true,
+            view: 'work',
+            todo: { ...todo, next: null, moderation: { total: 0, high: 0, types: {}, oldest: null }, sources, rules, attention: true },
+        });
+
+        assert.match(html, new RegExp(`work\\.title:${sources.total + rules.total}`));
+        assert.match(html, /<h2 id="dashboard-next"[^>]*>(Utrecht|Houten)<\/h2>/);
+        assert.ok(html.includes(`href="${expectedHref}"`));
+        assert.match(html, /work\.attention\.check/);
+        assert.match(html, /href="\/moderation"/);
+        assert.doesNotMatch(html, /work\.nothing|work\.next\.done/);
+    });
+}
+
+test('the task count includes all moderation, source and rule work while moderation keeps its own queue count', () => {
+    const html = render({
+        hasTodo: true,
+        view: 'work',
+        todo: { ...todo, sources: { total: 4, items: [] }, rules: { total: 2, items: [] }, attention: true },
+    });
+
+    assert.match(html, /work\.title:14/);
+    assert.match(html, /Biltstraat 88/);
+    assert.match(html, /work\.next\.start/);
 });
