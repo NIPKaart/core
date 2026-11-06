@@ -160,6 +160,15 @@
         "title_one": "{{count}} item wacht op je",
         "title_other": "{{count}} items wachten op je",
         "nothing": "Er wacht niets op je",
+        "summary": {
+            "moderation_one": "{{count}} in moderatie",
+            "moderation_other": "{{count}} in moderatie",
+            "moderation_done": "Moderatie bij",
+            "sources_one": "{{count}} databron",
+            "sources_other": "{{count}} databronnen",
+            "rules_one": "{{count}} kapotte link",
+            "rules_other": "{{count}} kapotte links"
+        },
         "strip": {
             "label": "Mijn overzicht",
             "pending": "{{label}} wacht op een moderator",
@@ -182,6 +191,8 @@
         },
         "queue": {
             "eyebrow": "Wachtrij",
+            "moderation": "Moderatie",
+            "done": "Geen nieuwe parkeerplaatsen, verbeteringen of meldingen.",
             "oldest": "Oudste {{ago}}",
             "review_all": "Alles beoordelen",
             "types": {
@@ -207,12 +218,21 @@
             "rule_broken": "Link werkt niet meer sinds {{date}}",
             "rule_broken_unknown": "Link werkt niet meer",
             "nationwide": "Landelijk",
-            "check": "Controleren",
+            "next": "Volgende taak · 1 van {{total}}",
+            "also": "Ook nog",
+            "actions": {
+                "review": "Levering beoordelen",
+                "approve": "Bron goedkeuren",
+                "inspect": "Bron bekijken",
+                "rule": "Link bijwerken"
+            },
+            "all_sources": "Alle databronnen",
+            "all_rules": "Alle parkeerregels",
             "more_sources_one": "En nog {{count}} databron",
             "more_sources_other": "En nog {{count}} databronnen",
             "more_rules_one": "En nog {{count}} kapotte link",
             "more_rules_other": "En nog {{count}} kapotte links",
-            "none": "Alle databronnen en links werken."
+            "none": "Geen databronnen of parkeerregels die aandacht vragen."
         }
     },
     "sections": {

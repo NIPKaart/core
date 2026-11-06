@@ -160,6 +160,15 @@
         "title_one": "{{count}} item is waiting for you",
         "title_other": "{{count}} items are waiting for you",
         "nothing": "Nothing is waiting for you",
+        "summary": {
+            "moderation_one": "{{count}} in moderation",
+            "moderation_other": "{{count}} in moderation",
+            "moderation_done": "Moderation done",
+            "sources_one": "{{count}} data source",
+            "sources_other": "{{count}} data sources",
+            "rules_one": "{{count}} broken link",
+            "rules_other": "{{count}} broken links"
+        },
         "strip": {
             "label": "My overview",
             "pending": "{{label}} is waiting for a moderator",
@@ -182,6 +191,8 @@
         },
         "queue": {
             "eyebrow": "Queue",
+            "moderation": "Moderation",
+            "done": "No new parking spaces, improvements or reports.",
             "oldest": "Oldest {{ago}}",
             "review_all": "Review all",
             "types": {
@@ -207,12 +218,21 @@
             "rule_broken": "Link broken since {{date}}",
             "rule_broken_unknown": "Link no longer works",
             "nationwide": "National",
-            "check": "Check",
+            "next": "Next task · 1 of {{total}}",
+            "also": "Also waiting",
+            "actions": {
+                "review": "Review delivery",
+                "approve": "Approve source",
+                "inspect": "View source",
+                "rule": "Update link"
+            },
+            "all_sources": "All data sources",
+            "all_rules": "All parking rules",
             "more_sources_one": "And {{count}} more data source",
             "more_sources_other": "And {{count}} more data sources",
             "more_rules_one": "And {{count}} more broken link",
             "more_rules_other": "And {{count}} more broken links",
-            "none": "All data sources and links are working."
+            "none": "No data sources or parking rules need attention."
         }
     },
     "sections": {

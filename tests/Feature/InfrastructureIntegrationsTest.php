@@ -41,6 +41,8 @@ test('backup tasks are due at their UTC times only in production', function (str
     $process = new Process([PHP_BINARY, '-r', <<<'PHP'
         require 'vendor/autoload.php';
         $app = require 'bootstrap/app.php';
+        // Exercise configuration defaults without loading a developer's environment files.
+        $app->useEnvironmentPath(sys_get_temp_dir().'/nipkaart-backup-test-'.bin2hex(random_bytes(16)));
         $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
         \Illuminate\Support\Facades\Artisan::all();
         $schedule = $app->make(\Illuminate\Console\Scheduling\Schedule::class);
