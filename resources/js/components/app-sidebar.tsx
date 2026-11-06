@@ -94,7 +94,7 @@ export function AppSidebar() {
             can('parking-offstreet.view_any') && {
                 title: t('offstreet'),
                 href: parkingOffstreet.index(),
-                icon: icons.SquareLetterP,
+                icon: icons.SquareParking,
             },
             can('parking-rule.view_any') && {
                 title: t('rules'),
