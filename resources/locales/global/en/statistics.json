@@ -1,0 +1,15 @@
+{
+    "title": "NIPKaart in numbers",
+    "parking_locations": "Parking spaces",
+    "garages": "Garages and P+R",
+    "municipalities": "Municipalities",
+    "countries": "Countries",
+    "inline": {
+        "parking_locations": "parking spaces",
+        "garages": "garages and P+R",
+        "municipalities": "municipalities",
+        "countries": "countries"
+    },
+    "note": "Counted per source: the same parking space can appear in more than one source. These are not individual bays or available spaces.",
+    "how": "How we count"
+}

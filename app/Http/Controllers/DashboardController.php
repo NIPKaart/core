@@ -8,6 +8,7 @@ use App\Models\ParkingRule;
 use App\Models\User;
 use App\Services\ModerationHistory;
 use App\Services\ModerationQueue;
+use App\Services\ParkingDiscovery;
 use App\Services\PersonalOverview;
 use App\Services\SourceOverview;
 use App\Services\UserActivity;
@@ -30,6 +31,7 @@ class DashboardController extends Controller
         ModerationHistory $history,
         SourceOverview $sources,
         PersonalOverview $overview,
+        ParkingDiscovery $discovery,
         UserActivity $activity,
     ): Response {
         $user = $request->user();
@@ -54,6 +56,7 @@ class DashboardController extends Controller
         };
 
         return Inertia::render('dashboard', [
+            'statistics' => fn () => $discovery->statistics(),
             'section' => $section,
             'view' => $hasTodo ? ($validated['view'] ?? 'work') : 'personal',
             'hasTodo' => $hasTodo,

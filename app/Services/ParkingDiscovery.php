@@ -13,6 +13,7 @@ use App\Support\ParkingResult;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -22,6 +23,29 @@ final class ParkingDiscovery
     public const int AREA_ZOOM = 9;
 
     public const int AREA_POINT_LIMIT = 100000;
+
+    /**
+     * Public source records, not deduplicated physical places or individual bays.
+     *
+     * @return array{parking_locations: int, garages: int, municipalities: int, countries: int}
+     */
+    public function statistics(): array
+    {
+        return Cache::remember('parking.public-statistics.v1', 300, function (): array {
+            $counts = $this->publicParking(fn (Builder $query) => $query, false)
+                ->selectRaw("COUNT(*) FILTER (WHERE source != 'offstreet') AS parking_locations")
+                ->selectRaw("COUNT(*) FILTER (WHERE source = 'offstreet') AS garages")
+                ->selectRaw('COUNT(DISTINCT municipality_id) AS municipalities, COUNT(DISTINCT country_id) AS countries')
+                ->first();
+
+            return [
+                'parking_locations' => (int) $counts->parking_locations,
+                'garages' => (int) $counts->garages,
+                'municipalities' => (int) $counts->municipalities,
+                'countries' => (int) $counts->countries,
+            ];
+        });
+    }
 
     public function withinRadius(GeoPoint $origin, float $metres, int $limit = 100, int $offset = 0, string $source = 'all', string $sort = 'distance'): Collection
     {
@@ -130,6 +154,7 @@ final class ParkingDiscovery
         $union = null;
         foreach (['community' => ParkingSpace::class, 'municipal' => ParkingMunicipal::class, 'offstreet' => ParkingOffstreet::class] as $source => $model) {
             $query = $model::query()->selectRaw("id::text AS id, ?::text AS source, (? || ':' || id::text) AS key, latitude::double precision AS latitude, longitude::double precision AS longitude", [$source, $source]);
+            $query->addSelect(['municipality_id', 'country_id']);
             $query->selectRaw($source === 'offstreet' ? 'name AS title' : "COALESCE(street, '') AS title");
             $source === 'community' ? $query->where('status', ParkingStatus::APPROVED) : $query->where('visibility', true);
             $filter($query);

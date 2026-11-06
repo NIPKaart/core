@@ -40,6 +40,7 @@ declare module 'i18next' {
             'global/common': typeof import('../../locales/global/en/common.json');
             'global/notification': typeof import('../../locales/global/en/notification.json');
             'global/search': typeof import('../../locales/global/en/search.json');
+            'global/statistics': typeof import('../../locales/global/en/statistics.json');
         };
     }
 }

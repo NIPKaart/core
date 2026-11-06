@@ -1,0 +1,15 @@
+{
+    "title": "NIPKaart in cijfers",
+    "parking_locations": "Parkeerplaatsen",
+    "garages": "Garages en P+R",
+    "municipalities": "Gemeenten",
+    "countries": "Landen",
+    "inline": {
+        "parking_locations": "parkeerplaatsen",
+        "garages": "garages en P+R",
+        "municipalities": "gemeenten",
+        "countries": "landen"
+    },
+    "note": "Geteld per bron: dezelfde parkeerplaats kan in meer dan één bron staan. Het zijn geen losse parkeervakken of vrije plaatsen.",
+    "how": "Hoe we tellen"
+}

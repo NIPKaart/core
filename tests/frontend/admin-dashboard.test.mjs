@@ -50,6 +50,17 @@ function render(pageProps) {
         exports: {},
         Intl,
         require: (name) => {
+            if (name === '@/components/nipkaart-statistics') {
+                const component = { ...context, exports: {} };
+                const compiled = ts.transpileModule(
+                    readFileSync(new URL('../../resources/js/components/nipkaart-statistics.tsx', import.meta.url), 'utf8'),
+                    {
+                        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+                    },
+                ).outputText;
+                vm.runInNewContext(compiled, component);
+                return component.exports;
+            }
             if (name === '@/components/confirm-dialog') return { ConfirmDialog: () => null };
             if (name === '@/components/frontend/garage-table') return { useMeasuredTime: () => () => '14:32' };
             if (name === '@/components/map/destinations') return { default: () => React.createElement('div', { 'data-destinations': true }) };
@@ -94,7 +105,8 @@ function render(pageProps) {
                 };
             if (name === '@/lib/saved-places') return { destinationMapUrl: (destination) => `/map?destination=${destination.key}` };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
-            if (name === '@/routes') return { dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
+            if (name === '@/routes')
+                return { about: route('about'), dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
             if (name === '@/routes/app') return { default: { moderation: { index: route('moderation') } } };
             if (name === '@/routes/app/parking-rules') return { default: { index: route('parking-rules') } };
             if (name === '@/routes/location-map') return { default: { add: route('add') } };
@@ -125,6 +137,7 @@ function render(pageProps) {
     vm.runInNewContext(source, context);
     return renderToStaticMarkup(
         React.createElement(context.exports.default, {
+            statistics: { parking_locations: 12345, garages: 120, municipalities: 87, countries: 4 },
             section: null,
             view: 'personal',
             hasTodo: false,
@@ -499,4 +512,18 @@ test('the task count includes all moderation, source and rule work while moderat
     assert.match(html, /work\.title:14/);
     assert.match(html, /Biltstraat 88/);
     assert.match(html, /work\.next\.start/);
+});
+
+test('global counters follow the personal overview and format numbers in the active language', () => {
+    const html = render({});
+    assert.match(html, /12\.345/);
+    assert.match(html, /parking_locations/);
+    assert.match(html, /garages/);
+    assert.match(html, /municipalities/);
+    assert.match(html, /countries/);
+    assert.ok(html.indexOf('hero.title') < html.indexOf('parking_locations'));
+    assert.ok(html.includes('href="/about#cijfers"'));
+    assert.doesNotMatch(html, />note</);
+    assert.doesNotMatch(render({ section: 'favorites' }), /parking_locations/);
+    assert.doesNotMatch(render({ hasTodo: true, view: 'work', todo }), /parking_locations/);
 });

@@ -6,6 +6,7 @@ import Favorites from '@/components/map/favorites';
 import { navigationUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Chip } from '@/components/map/parking-detail/parts';
 import { formatDistance, formatShortDate } from '@/components/map/parking-detail/utils';
+import NipkaartStatistics, { type ParkingStatistics } from '@/components/nipkaart-statistics';
 import { openSearch, setSearchQuery, useSearchQuery } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,6 +147,7 @@ type Todo = {
 };
 
 type PageProps = {
+    statistics: ParkingStatistics;
     section: Section | null;
     view: 'personal' | 'work';
     hasTodo: boolean;
@@ -172,7 +174,7 @@ const statusChip: Record<Contribution['status'], { tone: 'zinc' | 'blue' | 'gree
     unavailable: { tone: 'zinc' },
 };
 
-export default function Dashboard({ section, view, hasTodo, overview, todo, contributions }: PageProps) {
+export default function Dashboard({ section, view, hasTodo, overview, todo, contributions, statistics }: PageProps) {
     const { t } = useTranslation('backend/dashboard');
     const { t: tSaved } = useTranslation('frontend/map/saved');
 
@@ -224,6 +226,7 @@ export default function Dashboard({ section, view, hasTodo, overview, todo, cont
                                     <Deferred data="overview" fallback={<TilesSkeleton hero />}>
                                         {overview ? <Personal overview={overview} /> : <></>}
                                     </Deferred>
+                                    <NipkaartStatistics statistics={statistics} compact />
                                 </>
                             )}
                         </>
