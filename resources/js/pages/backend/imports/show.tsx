@@ -836,7 +836,7 @@ export function ChangesMap({ rows, onSelect }: { rows: Row[]; onSelect: (row: Ro
                     ))}
                 </div>
             </div>
-            <div className="relative">
+            <div className="relative isolate">
                 <MapToolbar style={style} onStyleChange={setStyle} imagery={imagery} onFit={() => setFit((value) => value + 1)} />
                 <MapContainer
                     center={[52.37, 4.9]}
