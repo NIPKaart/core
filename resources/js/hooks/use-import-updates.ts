@@ -16,8 +16,13 @@ export function isImportNotification(detail: unknown): boolean {
  * Keeps an import page current without a full refresh: reloads the given props when data changes live
  * (dataset changes and import notifications). Without a live connection it polls while `inProgress`.
  */
-export function useImportUpdates(only: string[], inProgress: boolean, intervalMs = 10000): void {
+export function useImportUpdates(
+    only: string[],
+    inProgress: boolean,
+    { intervalMs = 10000, observationProps = [] }: { intervalMs?: number; observationProps?: string[] } = {},
+): void {
     const key = only.join(',');
+    const observationKey = observationProps.join(',');
     const { start, stop } = usePoll(intervalMs, { only, showProgress: false }, { autoStart: false, mode: 'rest' });
 
     useEffect(() => {
@@ -26,9 +31,11 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
                 scheduleLiveReload(key.split(','));
             }
         };
-        // Live occupancy arrives every few minutes and is not shown on import pages.
         const reloadAll = (event: Event) => {
-            if ((event as CustomEvent<DatasetChange>).detail?.scope !== 'observations') {
+            if ((event as CustomEvent<DatasetChange>).detail?.scope === 'observations') {
+                // Source health and measurement times change; the delivery history does not.
+                if (observationKey) scheduleLiveReload(observationKey.split(','));
+            } else {
                 scheduleLiveReload(key.split(','));
             }
         };
@@ -39,7 +46,7 @@ export function useImportUpdates(only: string[], inProgress: boolean, intervalMs
             window.removeEventListener(NOTIFICATION_EVENT, reload);
             window.removeEventListener(DATASET_EVENT, reloadAll);
         };
-    }, [key]);
+    }, [key, observationKey]);
 
     useEffect(() => {
         const connection = getEcho()?.connector.pusher.connection;

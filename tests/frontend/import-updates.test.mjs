@@ -8,7 +8,7 @@ const source = ts.transpileModule(readFileSync(new URL('../../resources/js/hooks
     compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText;
 
-function mount(inProgress, live = false) {
+function mount(inProgress, live = false, options = {}) {
     const reloads = [];
     const poll = { started: 0, stopped: 0, options: null };
     const listeners = new Map();
@@ -48,7 +48,7 @@ function mount(inProgress, live = false) {
         },
     };
     vm.runInNewContext(source, context);
-    context.exports.useImportUpdates(['datasets', 'imports'], inProgress);
+    context.exports.useImportUpdates(['datasets', 'imports'], inProgress, options);
     const notify = (type) => listeners.get('nipkaart:notification')?.({ detail: { type } });
     const change = (scope) => listeners.get('nipkaart:dataset-changed')?.({ detail: { scope, target_type: 'offstreet' } });
 
@@ -123,4 +123,11 @@ test('a disconnected configured connection resumes polling and reconnecting catc
     assert.deepEqual([...page.reloads[0].only], ['datasets', 'imports']);
     page.unmount();
     assert.equal(page.connection.handler, null);
+});
+
+test('source overview observation updates refresh status, detail data and counters without delivery history', () => {
+    const page = mount(false, true, { observationProps: ['sources', 'summary', 'counts'] });
+    page.change('observations');
+    assert.equal(page.reloads.length, 1);
+    assert.deepEqual([...page.reloads[0].only], ['sources', 'summary', 'counts']);
 });

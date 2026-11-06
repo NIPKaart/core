@@ -1,12 +1,14 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\ParkingOffstreet;
 use App\Models\User;
 use App\Services\SourceOverview;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -116,4 +118,28 @@ it('asks for attention when a garage source stops sending live measurements, wit
         ->and($statuses['Zonder live data'])->not->toBe('live_stale')
         ->and(SourceOverview::ATTENTION)->toContain('live_stale')
         ->and($place->fresh()->visibility)->toBeTrue();
+});
+
+it('refreshes source data without querying the hidden delivery history', function () {
+    overviewSources();
+    $this->actingAs($this->admin);
+    DB::enableQueryLog();
+
+    try {
+        $this->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Partial-Component' => 'backend/imports/index',
+            'X-Inertia-Partial-Data' => 'sources,summary,countries,datasets',
+        ])->get(route('app.imports.index'))
+            ->assertJsonCount(4, 'props.sources.data')->assertJsonCount(4, 'props.datasets')
+            ->assertJsonPath('props.summary.total', 4)->assertJsonMissingPath('props.imports');
+
+        $historyCounts = collect(DB::getQueryLog())
+            ->filter(fn (array $query): bool => str_starts_with($query['query'], 'select count(*)') && str_contains($query['query'], 'from "dataset_imports"'));
+        expect($historyCounts)->toBeEmpty();
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
 });

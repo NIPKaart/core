@@ -48,24 +48,28 @@ class DatasetImportController extends Controller
             'country' => $request->filled('country') ? strtoupper($request->string('country')->toString()) : null,
         ];
         $rows = $overview->rows();
-        $imports = DatasetImport::with('datasetSource:id,name,target_type,last_published_retrieved_at')
-            ->when($request->filled('dataset'), fn (Builder $builder) => $builder->where('dataset_source_id', $request->integer('dataset')))
-            ->when(in_array($state, ['published', 'rejected']), fn (Builder $builder) => $builder->where('state', $state))
-            ->when(in_array($state, ['pending', 'superseded']), fn (Builder $builder) => $builder->superseded($state === 'superseded'))
-            ->when($query !== '', fn (Builder $builder) => $builder->whereHas('datasetSource', fn (Builder $source) => $source->where('name', 'ilike', '%'.$query.'%')))
-            ->latest('id')->paginate(20)->withQueryString();
-        $superseded = DatasetImport::whereKey($imports->getCollection()->modelKeys())->superseded()->pluck('id')->flip();
+        $imports = function () use ($request, $state, $query): LengthAwarePaginator {
+            $imports = DatasetImport::with('datasetSource:id,name,target_type,last_published_retrieved_at')
+                ->when($request->filled('dataset'), fn (Builder $builder) => $builder->where('dataset_source_id', $request->integer('dataset')))
+                ->when(in_array($state, ['published', 'rejected']), fn (Builder $builder) => $builder->where('state', $state))
+                ->when(in_array($state, ['pending', 'superseded']), fn (Builder $builder) => $builder->superseded($state === 'superseded'))
+                ->when($query !== '', fn (Builder $builder) => $builder->whereHas('datasetSource', fn (Builder $source) => $source->where('name', 'ilike', '%'.$query.'%')))
+                ->latest('id')->paginate(20)->withQueryString();
+            $superseded = DatasetImport::whereKey($imports->getCollection()->modelKeys())->superseded()->pluck('id')->flip();
+
+            return $imports->through(fn (DatasetImport $import) => [...$import->toArray(), 'superseded' => $superseded->has($import->id)]);
+        };
 
         return Inertia::render('backend/imports/index', [
             'datasets' => $rows->map(fn (array $row) => Arr::only($row, ['id', 'name']))->values(),
-            'sources' => $this->paginateSources($request, $rows, $sourceFilters),
+            'sources' => fn () => $this->paginateSources($request, $rows, $sourceFilters),
             'summary' => [
                 ...collect(SourceOverview::STATUSES)->mapWithKeys(fn (string $status) => [$status => $rows->where('status', $status)->count()])->all(),
                 'total' => $rows->count(),
                 'processing' => $rows->contains('processing', true),
             ],
             'countries' => $rows->pluck('country')->filter()->unique()->sort()->values(),
-            'imports' => $imports->through(fn (DatasetImport $import) => [...$import->toArray(), 'superseded' => $superseded->has($import->id)]),
+            'imports' => $imports,
             'filters' => [
                 'q' => $query, 'state' => $state, 'dataset' => $request->filled('dataset') ? $request->integer('dataset') : null,
                 'tab' => $request->string('tab', 'sources')->toString(), ...$sourceFilters,
