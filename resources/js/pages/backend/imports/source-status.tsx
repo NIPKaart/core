@@ -62,7 +62,7 @@ export type SourceRow = {
     processing: boolean;
 };
 
-const appearance: Record<SourceStatusKey, { icon: LucideIcon; className: string }> = {
+export const sourceStatusAppearance: Record<SourceStatusKey, { icon: LucideIcon; className: string }> = {
     awaiting_approval: { icon: CircleAlert, className: 'text-amber-700 dark:text-amber-400' },
     reapproval: { icon: RefreshCw, className: 'text-amber-700 dark:text-amber-400' },
     intake_problem: { icon: CircleX, className: 'text-destructive' },
@@ -77,7 +77,9 @@ const appearance: Record<SourceStatusKey, { icon: LucideIcon; className: string 
 /** Icon plus text, so the status never depends on colour alone. */
 export function SourceStatus({ source, className }: { source: Pick<SourceRow, 'status' | 'processing'>; className?: string }) {
     const { t } = useTranslation('backend/imports');
-    const { icon: Icon, className: tone } = source.processing ? { icon: Loader2, className: 'text-muted-foreground' } : appearance[source.status];
+    const { icon: Icon, className: tone } = source.processing
+        ? { icon: Loader2, className: 'text-muted-foreground' }
+        : sourceStatusAppearance[source.status];
 
     return (
         <span className={cn('inline-flex items-center gap-1.5 text-sm font-medium whitespace-nowrap', tone, className)}>

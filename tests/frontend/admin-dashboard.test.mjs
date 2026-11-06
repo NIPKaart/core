@@ -62,7 +62,17 @@ function render(pageProps) {
             if (name === '@/components/ui/button')
                 return { Button: ({ children, asChild, disabled }) => (asChild ? children : React.createElement('button', { disabled }, children)) };
             if (name === '@/components/ui/input') return { Input: (props) => React.createElement('input', props) };
-            if (name === '@/components/ui/table') return Object.fromEntries(Object.entries({Table: 'table', TableBody: 'tbody', TableCell: 'td', TableHead: 'th', TableHeader: 'thead', TableRow: 'tr'}).map(([component, tag]) => [component, (props) => React.createElement(tag, props)]));
+            if (name === '@/components/ui/table')
+                return Object.fromEntries(
+                    Object.entries({
+                        Table: 'table',
+                        TableBody: 'tbody',
+                        TableCell: 'td',
+                        TableHead: 'th',
+                        TableHeader: 'thead',
+                        TableRow: 'tr',
+                    }).map(([component, tag]) => [component, (props) => React.createElement(tag, props)]),
+                );
             if (name === '@/components/ui/progress') return { Progress: () => React.createElement('div', { role: 'progressbar' }) };
             if (name === '@/layouts/app-layout') return { default: ({ children }) => React.createElement('main', null, children) };
             if (name === '@/lib/garage-occupancy') return {};
@@ -78,6 +88,10 @@ function render(pageProps) {
                     }),
                 };
             if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg></svg>' };
+            if (name === '@/pages/backend/imports/source-status')
+                return {
+                    sourceStatusAppearance: new Proxy({}, { get: (_, status) => ({ icon: () => null, className: `status-${String(status)}` }) }),
+                };
             if (name === '@/lib/saved-places') return { destinationMapUrl: (destination) => `/map?destination=${destination.key}` };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             if (name === '@/routes') return { dashboard: route('dashboard'), garages: route('garages'), locationMap: route('map') };
@@ -89,7 +103,13 @@ function render(pageProps) {
             if (name === '@/routes/profile/favorites') return { index: route('profile/favorites') };
             if (name.startsWith('@/actions/'))
                 return { index: route('imports'), show: Object.assign((id) => ({ url: `/imports/${id}` }), { url: (id) => `/imports/${id}` }) };
-            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key, options) => key === 'work.title' ? `${key}:${options.count}` : key, i18n: { language: 'nl' } }) };
+            if (name === 'react-i18next')
+                return {
+                    useTranslation: () => ({
+                        t: (key, options) => (key === 'work.title' ? `${key}:${options.count}` : key),
+                        i18n: { language: 'nl' },
+                    }),
+                };
             if (name === '@inertiajs/react')
                 return {
                     Head: () => null,
@@ -110,11 +130,17 @@ function render(pageProps) {
             hasTodo: false,
             overview,
             ...pageProps,
-            contributions: pageProps.contributions ? {
-                total: pageProps.contributions.data.length, last_page: 2, from: 1, to: pageProps.contributions.data.length,
-                counts: { all: pageProps.contributions.data.length }, filters: { search: '', status: null },
-                ...pageProps.contributions,
-            } : null,
+            contributions: pageProps.contributions
+                ? {
+                      total: pageProps.contributions.data.length,
+                      last_page: 2,
+                      from: 1,
+                      to: pageProps.contributions.data.length,
+                      counts: { all: pageProps.contributions.data.length },
+                      filters: { search: '', status: null },
+                      ...pageProps.contributions,
+                  }
+                : null,
         }),
     );
 }
@@ -309,18 +335,42 @@ test('personal sections use the available workspace width for their headings and
         const classes = html.match(/<section aria-labelledby="dashboard-section" class="([^"]+)"/)[1].split(' ');
 
         assert.ok(classes.includes('w-full'), section);
-        assert.equal(classes.some((value) => value.startsWith('max-w-')), false, section);
+        assert.equal(
+            classes.some((value) => value.startsWith('max-w-')),
+            false,
+            section,
+        );
     }
 });
 
-
 test('contributions expose a searchable status-filtered table and bounded pagination for a hundred entries', () => {
-    const html = render({ section: 'contributions', contributions: {
-        data: [{ key: 'submission:1', kind: 'submission', label: '<Stationsplein>', at: '2026-10-29T09:00:00Z', status: 'approved', reason: null, url: '/map?place=community:1', action: 'map', withdraw_id: null }],
-        current_page: 5, last_page: 10, total: 89, from: 41, to: 50,
-        counts: { all: 100, approved: 89, pending: 8, rejected: 3 }, filters: { search: 'Stations', status: 'approved' },
-        prev_page_url: '/profile/parking-spaces?contributions_page=4', next_page_url: '/profile/parking-spaces?contributions_page=6',
-    }});
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [
+                {
+                    key: 'submission:1',
+                    kind: 'submission',
+                    label: '<Stationsplein>',
+                    at: '2026-10-29T09:00:00Z',
+                    status: 'approved',
+                    reason: null,
+                    url: '/map?place=community:1',
+                    action: 'map',
+                    withdraw_id: null,
+                },
+            ],
+            current_page: 5,
+            last_page: 10,
+            total: 89,
+            from: 41,
+            to: 50,
+            counts: { all: 100, approved: 89, pending: 8, rejected: 3 },
+            filters: { search: 'Stations', status: 'approved' },
+            prev_page_url: '/profile/parking-spaces?contributions_page=4',
+            next_page_url: '/profile/parking-spaces?contributions_page=6',
+        },
+    });
     assert.match(html, /<table/);
     assert.match(html, /role="search"/);
     assert.match(html, /value="Stations"/);
@@ -332,22 +382,58 @@ test('contributions expose a searchable status-filtered table and bounded pagina
 });
 
 test('an empty contribution search keeps the controls available and offers to reset the filters', () => {
-    const html = render({ section: 'contributions', contributions: {
-        data: [], current_page: 1, last_page: 1, total: 0, from: null, to: null, prev_page_url: null, next_page_url: null,
-        counts: { all: 0 }, filters: { search: 'Missing', status: null },
-    }});
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [],
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            from: null,
+            to: null,
+            prev_page_url: null,
+            next_page_url: null,
+            counts: { all: 0 },
+            filters: { search: 'Missing', status: null },
+        },
+    });
     assert.match(html, /contributions\.no_results/);
     assert.match(html, /contributions\.reset/);
     assert.match(html, /role="search"/);
     assert.doesNotMatch(html, /aria-label="contributions.pagination"/);
 });
 
-for (const [label, sources, rules, expectedHref] of [
-    ['a source awaiting approval', { total: 4, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_approval', import_id: null }] }, { total: 0, items: [] }, '/imports?source=3'],
-    ['an import awaiting review', { total: 1, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_review', import_id: 12 }] }, { total: 0, items: [] }, '/imports/12'],
-    ['a broken parking rule link', { total: 0, items: [] }, { total: 4, items: [{ id: 5, name: 'Houten', failing_since: null }] }, '/parking-rules'],
+for (const [label, sources, rules, expectedHref, action] of [
+    [
+        'a source awaiting approval',
+        { total: 4, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_approval', import_id: null }] },
+        { total: 0, items: [] },
+        '/imports?source=3',
+        'approve',
+    ],
+    [
+        'an import awaiting review',
+        { total: 1, items: [{ id: 3, name: 'Utrecht', status: 'awaiting_review', import_id: 12 }] },
+        { total: 0, items: [] },
+        '/imports/12',
+        'review',
+    ],
+    [
+        'a stale live feed',
+        { total: 1, items: [{ id: 3, name: 'Utrecht', status: 'live_stale', import_id: null }] },
+        { total: 0, items: [] },
+        '/imports?source=3',
+        'inspect',
+    ],
+    [
+        'a broken parking rule link',
+        { total: 0, items: [] },
+        { total: 4, items: [{ id: 5, name: 'Houten', failing_since: null }] },
+        '/parking-rules',
+        'rule',
+    ],
 ]) {
-    test(`an empty moderation queue prioritizes ${label} instead of claiming completion`, () => {
+    test(`an empty moderation queue makes ${label} the next task with its own action`, () => {
         const html = render({
             hasTodo: true,
             view: 'work',
@@ -357,11 +443,51 @@ for (const [label, sources, rules, expectedHref] of [
         assert.match(html, new RegExp(`work\\.title:${sources.total + rules.total}`));
         assert.match(html, /<h2 id="dashboard-next"[^>]*>(Utrecht|Houten)<\/h2>/);
         assert.ok(html.includes(`href="${expectedHref}"`));
-        assert.match(html, /work\.attention\.check/);
+        assert.match(html, new RegExp(`work\\.attention\\.actions\\.${action}`));
+        assert.match(html, /work\.queue\.done/);
         assert.match(html, /href="\/moderation"/);
-        assert.doesNotMatch(html, /work\.nothing|work\.next\.done/);
+        assert.doesNotMatch(html, /work\.nothing|work\.next\.done_description|work\.queue\.review_all/);
     });
 }
+
+test('the attention list leaves out the item that already leads as the next task', () => {
+    const html = render({
+        hasTodo: true,
+        view: 'work',
+        todo: {
+            ...todo,
+            next: null,
+            moderation: { total: 0, high: 0, types: {}, oldest: null },
+            sources: {
+                total: 2,
+                items: [
+                    { id: 3, name: 'Utrecht', status: 'awaiting_review', import_id: 12 },
+                    { id: 4, name: 'Antwerpen', status: 'awaiting_approval', import_id: null },
+                ],
+            },
+            rules: { total: 0, items: [] },
+            attention: true,
+        },
+    });
+
+    assert.equal(html.match(/Utrecht/g).length, 1);
+    assert.match(html, /Antwerpen/);
+    assert.match(html, /status-awaiting_approval/);
+    assert.match(html, /work\.attention\.also/);
+});
+
+test('the heading explains which kinds of work make up the task count', () => {
+    const html = render({
+        hasTodo: true,
+        view: 'work',
+        todo: { ...todo, sources: { total: 4, items: [] }, rules: { total: 2, items: [] }, attention: true },
+    });
+
+    assert.match(html, /work\.summary\.moderation/);
+    assert.match(html, /work\.summary\.sources/);
+    assert.match(html, /work\.summary\.rules/);
+    assert.doesNotMatch(render({ hasTodo: true, view: 'work', todo }), /work\.summary/);
+});
 
 test('the task count includes all moderation, source and rule work while moderation keeps its own queue count', () => {
     const html = render({

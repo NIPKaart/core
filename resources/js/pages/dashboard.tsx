@@ -17,7 +17,7 @@ import { garageLiveState, type OverviewGarage } from '@/lib/garage-overview';
 import { pinSvg } from '@/lib/pin-svg';
 import { destinationMapUrl, favoriteMapUrl, favoriteParkingResult } from '@/lib/saved-places';
 import { cn } from '@/lib/utils';
-import type { SourceStatusKey } from '@/pages/backend/imports/source-status';
+import { sourceStatusAppearance, type SourceStatusKey } from '@/pages/backend/imports/source-status';
 import { dashboard, garages as garageOverview, locationMap as mapPage } from '@/routes';
 import app from '@/routes/app';
 import parkingRules from '@/routes/app/parking-rules';
@@ -37,15 +37,17 @@ import {
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
-    CircleAlert,
     CircleHelp,
     Clock3,
+    Database,
     ExternalLink,
+    Link2Off,
     MapPin,
     Navigation,
     Plus,
     Search,
     XCircle,
+    type LucideIcon,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -937,6 +939,17 @@ function Workplace({ todo, overview }: { todo: Todo; overview?: Overview }) {
     const moderationTotal = todo.moderation?.total ?? 0;
     const attentionTotal = todo.sources.total + todo.rules.total;
     const total = moderationTotal + attentionTotal;
+    // With an empty moderation queue, the first source or rule takes the main card and leaves the attention list.
+    const lead: AttentionItem | null = todo.next
+        ? null
+        : todo.sources.items[0]
+          ? { kind: 'source', source: todo.sources.items[0] }
+          : todo.rules.items[0]
+            ? { kind: 'rule', rule: todo.rules.items[0] }
+            : null;
+    const queueShown = moderationTotal > 0;
+    const doneShown = Boolean(lead && todo.moderation && !queueShown);
+    const attentionShown = todo.attention && (!lead || attentionTotal > 1);
 
     return (
         <>
@@ -946,21 +959,53 @@ function Workplace({ todo, overview }: { todo: Todo; overview?: Overview }) {
                     <h1 className="text-4xl leading-[1.04] font-bold tracking-[-0.035em] text-balance lg:text-[2.75rem]">
                         {total > 0 ? t('work.title', { count: total }) : t('work.nothing')}
                     </h1>
+                    {attentionTotal > 0 && <TaskSummary todo={todo} />}
                 </div>
                 <ViewSwitch view="work" />
             </header>
             {overview && <PersonalStrip overview={overview} />}
             <div className="grid grid-cols-1 gap-4 @min-[640px]:grid-cols-2 @min-[1100px]:grid-cols-4">
-                {!todo.next && attentionTotal > 0 ? (
-                    <AttentionNextTile sources={todo.sources} rules={todo.rules} />
-                ) : (
-                    todo.moderation && <NextTile next={todo.next} total={moderationTotal} />
-                )}
-                {todo.moderation && <QueueTile moderation={todo.moderation} />}
-                {todo.decisions && <DecisionsTile decisions={todo.decisions} wide={!todo.attention} />}
-                {todo.attention && <AttentionTile sources={todo.sources} rules={todo.rules} wide={!todo.decisions} />}
+                {lead ? <AttentionNextTile item={lead} total={total} /> : todo.moderation && <NextTile next={todo.next} total={moderationTotal} />}
+                {todo.moderation && queueShown && <QueueTile moderation={todo.moderation} />}
+                {doneShown && <ModerationDoneTile wide={!attentionShown} />}
+                {todo.decisions && <DecisionsTile decisions={todo.decisions} wide={queueShown ? !attentionShown : !doneShown || !attentionShown} />}
+                {attentionShown && <AttentionTile sources={todo.sources} rules={todo.rules} skip={lead} wide={!queueShown || !todo.decisions} />}
             </div>
         </>
+    );
+}
+
+type AttentionItem = { kind: 'source'; source: Todo['sources']['items'][number] } | { kind: 'rule'; rule: Todo['rules']['items'][number] };
+
+/** What the task count consists of, so the number above it is never a mystery. */
+function TaskSummary({ todo }: { todo: Todo }) {
+    const { t } = useTranslation('backend/dashboard');
+    const link = 'underline decoration-stone-300 underline-offset-4 hover:text-stone-900 dark:decoration-neutral-600 dark:hover:text-stone-100';
+
+    return (
+        <p className="flex flex-wrap gap-x-4.5 gap-y-1.5 text-sm text-stone-600 dark:text-stone-400">
+            {todo.moderation &&
+                (todo.moderation.total > 0 ? (
+                    <Link href={app.moderation.index()} className={link}>
+                        {t('work.summary.moderation', { count: todo.moderation.total })}
+                    </Link>
+                ) : (
+                    <Link href={app.moderation.index()} className={cn(link, 'inline-flex items-center gap-1.5')}>
+                        <Check className="size-3.5 text-green-700 dark:text-green-400" strokeWidth={2.5} aria-hidden />
+                        {t('work.summary.moderation_done')}
+                    </Link>
+                ))}
+            {todo.sources.total > 0 && (
+                <Link href={municipalImports.url({ query: { status: 'attention' } })} className={link}>
+                    {t('work.summary.sources', { count: todo.sources.total })}
+                </Link>
+            )}
+            {todo.rules.total > 0 && (
+                <Link href={parkingRules.index.url()} className={link}>
+                    {t('work.summary.rules', { count: todo.rules.total })}
+                </Link>
+            )}
+        </p>
     );
 }
 
@@ -998,33 +1043,89 @@ function sourceAttentionUrl(source: Todo['sources']['items'][number]): string {
     return source.import_id ? importShow.url(source.import_id) : municipalImports.url({ query: { source: source.id } });
 }
 
-function AttentionNextTile({ sources, rules }: { sources: Todo['sources']; rules: Todo['rules'] }) {
+function useRuleBrokenText() {
     const { t, i18n } = useTranslation('backend/dashboard');
-    const source = sources.items[0];
-    const rule = rules.items[0];
+
+    return (rule: Todo['rules']['items'][number]) =>
+        rule.failing_since
+            ? t('work.attention.rule_broken', { date: formatShortDate(rule.failing_since, i18n.language) })
+            : t('work.attention.rule_broken_unknown');
+}
+
+/** The verb on the button says what the next step is for this kind of attention. */
+function attentionAction(item: AttentionItem): 'review' | 'approve' | 'inspect' | 'rule' {
+    if (item.kind === 'rule') return 'rule';
+    if (item.source.status === 'awaiting_review') return 'review';
+
+    return item.source.status === 'awaiting_approval' || item.source.status === 'reapproval' ? 'approve' : 'inspect';
+}
+
+/** The same dark card as the next moderation item, so a source or rule reads as the next task rather than an alarm. */
+function AttentionNextTile({ item, total }: { item: AttentionItem; total: number }) {
+    const { t } = useTranslation('backend/dashboard');
+    const ruleBroken = useRuleBrokenText();
+    const Icon = item.kind === 'source' ? Database : Link2Off;
 
     return (
         <article
             aria-labelledby="dashboard-next"
-            className="flex min-w-0 flex-col gap-5 rounded-xl border border-orange-200 bg-orange-50/60 p-6 @min-[640px]:col-span-2 @min-[1100px]:row-span-2 dark:border-orange-900 dark:bg-orange-950/20"
+            className="flex min-w-0 flex-col gap-3.5 rounded-xl bg-stone-900 p-6 text-white @min-[640px]:col-span-2 @min-[1100px]:row-span-2 dark:bg-neutral-900"
         >
-            <CircleAlert className="size-10 text-orange-700 dark:text-orange-400" aria-hidden />
-            <span className={eyebrow}>{t('work.attention.eyebrow')}</span>
-            <span className="text-sm font-semibold">{t(source ? 'work.attention.source' : 'work.attention.rule')}</span>
+            <span aria-hidden className="flex size-14 items-center justify-center rounded-2xl bg-stone-800 text-orange-300">
+                <Icon className="size-6.5" strokeWidth={1.75} />
+            </span>
+            <span className="mt-2.5 text-sm font-semibold text-orange-300">{t('work.attention.next', { total })}</span>
+            <div className="flex flex-wrap gap-1.5">
+                <Chip tone="zinc">{t(item.kind === 'source' ? 'work.attention.source' : 'work.attention.rule')}</Chip>
+            </div>
             <h2 id="dashboard-next" className="text-3xl leading-tight font-bold tracking-tight wrap-break-word">
-                {source?.name ?? rule?.name ?? t('work.attention.nationwide')}
+                {item.kind === 'source' ? item.source.name : (item.rule.name ?? t('work.attention.nationwide'))}
             </h2>
-            <p className="text-[15px] leading-relaxed text-stone-700 dark:text-stone-300">
-                {source
-                    ? t(`todo.source.${source.status}`)
-                    : rule?.failing_since
-                      ? t('work.attention.rule_broken', { date: formatShortDate(rule.failing_since, i18n.language) })
-                      : t('work.attention.rule_broken_unknown')}
+            <p className="text-[15px] leading-relaxed text-stone-300">
+                {item.kind === 'source' ? t(`todo.source.${item.source.status}`) : ruleBroken(item.rule)}
             </p>
-            <Link href={source ? sourceAttentionUrl(source) : parkingRules.index.url()} className={cn(darkButton, 'mt-auto self-start')}>
-                {t('work.attention.check')}
-                <ArrowRight className="size-4" aria-hidden />
-            </Link>
+            <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2">
+                <Link
+                    href={item.kind === 'source' ? sourceAttentionUrl(item.source) : parkingRules.index.url()}
+                    className={cn(darkButton, 'bg-white text-stone-900 hover:bg-stone-200')}
+                >
+                    {t(`work.attention.actions.${attentionAction(item)}`)}
+                    <ArrowRight className="size-4" aria-hidden />
+                </Link>
+                <Link
+                    href={item.kind === 'source' ? municipalImports.url({ query: { status: 'attention' } }) : parkingRules.index.url()}
+                    className="inline-flex min-h-11 items-center font-semibold text-orange-300 hover:text-orange-200"
+                >
+                    {t(item.kind === 'source' ? 'work.attention.all_sources' : 'work.attention.all_rules')}
+                </Link>
+            </div>
+        </article>
+    );
+}
+
+/** An empty queue next to other work: a small confirmation instead of a tile full of zeros. */
+function ModerationDoneTile({ wide }: { wide: boolean }) {
+    const { t } = useTranslation('backend/dashboard');
+
+    return (
+        <article
+            aria-labelledby="dashboard-queue"
+            className={cn(
+                'flex min-w-0 flex-col gap-2.5 rounded-xl border border-green-200 bg-green-50/60 p-5.5 dark:border-green-900 dark:bg-green-950/20',
+                wide && '@min-[640px]:col-span-2',
+            )}
+        >
+            <span
+                aria-hidden
+                className="flex size-10 items-center justify-center rounded-xl bg-white text-green-700 shadow-sm ring-1 ring-green-900/5 dark:bg-green-900 dark:text-green-300 dark:ring-green-300/10"
+            >
+                <CheckCircle2 className="size-5.5" strokeWidth={1.75} />
+            </span>
+            <h3 id="dashboard-queue" className="mt-1.5 text-xs font-semibold tracking-wider text-green-800 uppercase dark:text-green-300">
+                {t('work.queue.moderation')}
+            </h3>
+            <p className="text-xl font-bold tracking-tight text-green-950 dark:text-green-50">{t('work.next.done')}</p>
+            <p className="text-sm leading-relaxed text-green-900/75 dark:text-green-200/80">{t('work.queue.done')}</p>
         </article>
     );
 }
@@ -1053,6 +1154,12 @@ function NextTile({ next, total }: { next: Todo['next']; total: number }) {
                     </h2>
                     <p className="text-[15px] leading-relaxed text-green-900/75 dark:text-green-200/80">{t('work.next.done_description')}</p>
                 </div>
+                <Link
+                    href={app.moderation.index()}
+                    className="inline-flex min-h-11 items-center text-sm font-semibold text-green-800 underline underline-offset-4 dark:text-green-300"
+                >
+                    {t('work.next.queue')}
+                </Link>
             </article>
         );
     }
@@ -1177,26 +1284,43 @@ function DecisionsTile({ decisions, wide }: { decisions: NonNullable<Todo['decis
     );
 }
 
-function AttentionTile({ sources, rules, wide }: { sources: Todo['sources']; rules: Todo['rules']; wide: boolean }) {
-    const { t, i18n } = useTranslation('backend/dashboard');
-    const item = (key: string, kind: string, name: string, text: string, href: string) => (
-        <li key={key}>
-            <Link href={href} className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-stone-500">{kind}</span>
-                <span className="flex items-center gap-2 text-[15px] font-semibold">
-                    <span className="size-2 shrink-0 rounded-full bg-red-600" aria-hidden />
-                    {name}
+function AttentionTile({
+    sources,
+    rules,
+    skip,
+    wide,
+}: {
+    sources: Todo['sources'];
+    rules: Todo['rules'];
+    skip: AttentionItem | null;
+    wide: boolean;
+}) {
+    const { t } = useTranslation('backend/dashboard');
+    const ruleBroken = useRuleBrokenText();
+    const item = (key: string, kind: string, name: string, status: ReactNode, href: string) => (
+        <li key={key} className="border-t border-stone-100 first:border-t-0 dark:border-neutral-800">
+            <Link href={href} className="flex items-center gap-3 py-3">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-xs font-semibold text-stone-500">{kind}</span>
+                    <span className="truncate text-[15px] font-semibold">{name}</span>
+                    {status}
                 </span>
-                <span className="text-[13px] text-stone-600 dark:text-stone-400">{text}</span>
+                <ChevronRight className="size-4.5 shrink-0 text-stone-400" aria-hidden />
             </Link>
         </li>
+    );
+    const status = (Icon: LucideIcon, className: string, text: string) => (
+        <span className={cn('inline-flex items-center gap-1.5 text-[13px] font-medium', className)}>
+            <Icon className="size-3.5 shrink-0" aria-hidden />
+            {text}
+        </span>
     );
 
     return (
         <article aria-labelledby="dashboard-attention" className={cn(tile, wide && '@min-[640px]:col-span-2')}>
             <div className="flex items-center justify-between gap-2">
                 <h3 id="dashboard-attention" className={eyebrow}>
-                    {t('work.attention.eyebrow')}
+                    {t(skip ? 'work.attention.also' : 'work.attention.eyebrow')}
                 </h3>
                 <span className="text-xs text-stone-500">{t('work.attention.admins')}</span>
             </div>
@@ -1206,27 +1330,33 @@ function AttentionTile({ sources, rules, wide }: { sources: Todo['sources']; rul
                     {t('work.attention.none')}
                 </p>
             )}
-            <ul className="flex flex-col gap-3">
-                {sources.items.map((source) =>
-                    item(
-                        `source-${source.id}`,
-                        t('work.attention.source'),
-                        source.name,
-                        t(`todo.source.${source.status}`),
-                        sourceAttentionUrl(source),
-                    ),
-                )}
-                {rules.items.map((rule) =>
-                    item(
-                        `rule-${rule.id}`,
-                        t('work.attention.rule'),
-                        rule.name ?? t('work.attention.nationwide'),
-                        rule.failing_since
-                            ? t('work.attention.rule_broken', { date: formatShortDate(rule.failing_since, i18n.language) })
-                            : t('work.attention.rule_broken_unknown'),
-                        parkingRules.index.url(),
-                    ),
-                )}
+            <ul className="-my-3 flex flex-col">
+                {sources.items
+                    .filter((source) => !(skip?.kind === 'source' && skip.source.id === source.id))
+                    .map((source) =>
+                        item(
+                            `source-${source.id}`,
+                            t('work.attention.source'),
+                            source.name,
+                            status(
+                                sourceStatusAppearance[source.status].icon,
+                                sourceStatusAppearance[source.status].className,
+                                t(`todo.source.${source.status}`),
+                            ),
+                            sourceAttentionUrl(source),
+                        ),
+                    )}
+                {rules.items
+                    .filter((rule) => !(skip?.kind === 'rule' && skip.rule.id === rule.id))
+                    .map((rule) =>
+                        item(
+                            `rule-${rule.id}`,
+                            t('work.attention.rule'),
+                            rule.name ?? t('work.attention.nationwide'),
+                            status(Link2Off, 'text-destructive', ruleBroken(rule)),
+                            parkingRules.index.url(),
+                        ),
+                    )}
             </ul>
             {(sources.total > sources.items.length || rules.total > rules.items.length) && (
                 <p className="mt-auto flex flex-col gap-1 text-[13px] text-stone-600 dark:text-stone-400">
