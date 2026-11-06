@@ -351,7 +351,7 @@ export default function Contribute({ orientationOptions, restrictionDays, parkin
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="absolute right-3 bottom-4 z-[600] size-12 rounded-xl border-0 bg-background shadow-md"
+                                className="absolute right-3 bottom-4 z-[600] size-11 rounded-xl border-0 bg-background shadow-md"
                                 aria-label={t('location.my_location')}
                                 title={t('location.my_location')}
                                 onClick={() => locateMe()}
