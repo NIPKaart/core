@@ -7,10 +7,13 @@ import { navigationUrl } from '@/components/map/parking-detail/navigation-handof
 import { Chip } from '@/components/map/parking-detail/parts';
 import { formatDistance, formatShortDate } from '@/components/map/parking-detail/utils';
 import { openSearch, setSearchQuery, useSearchQuery } from '@/components/search/search-store';
+import { DataTablePagination } from '@/components/tables/data-paginate';
+import { DataTable } from '@/components/tables/data-table';
+import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
+import type { DataTableFeatures } from '@/components/tables/features';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import type { GarageBadge } from '@/lib/garage-occupancy';
 import { garageLiveState, type OverviewGarage } from '@/lib/garage-overview';
@@ -25,17 +28,19 @@ import locationMap from '@/routes/location-map';
 import { index as destinationsIndex } from '@/routes/profile/destinations';
 import { index as favoritesIndex } from '@/routes/profile/favorites';
 import { index as contributionsIndex, destroy as withdrawSubmission } from '@/routes/profile/parking-spaces';
-import type { SharedData } from '@/types';
+import type { PaginatedResponse, SharedData } from '@/types';
 import type { DestinationResult } from '@/types/destination';
 import { Deferred, Head, Link, router, usePage } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { enUS, nl } from 'date-fns/locale';
 import {
+    ArrowDown,
     ArrowLeft,
     ArrowRight,
+    ArrowUp,
     Check,
     CheckCircle2,
-    ChevronLeft,
     ChevronRight,
     CircleHelp,
     Clock3,
@@ -49,7 +54,7 @@ import {
     XCircle,
     type LucideIcon,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Source = 'community' | 'municipal' | 'offstreet';
@@ -67,17 +72,10 @@ type Contribution = {
     action: 'edit' | 'map' | null;
     withdraw_id: string | null;
 };
-type Contributions = {
-    data: Contribution[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    from: number | null;
-    to: number | null;
-    prev_page_url: string | null;
-    next_page_url: string | null;
+type Contributions = PaginatedResponse<Contribution> & {
     counts: Partial<Record<Contribution['status'], number>> & { all: number };
-    filters: { search: string; status: Contribution['status'] | null };
+    /** `status` holds one or more statuses separated by commas. */
+    filters: { search: string; status: string | null; sort: 'newest' | 'oldest' };
 };
 
 type Overview = {
@@ -1400,31 +1398,40 @@ function ContributionStatus({ status }: { status: Contribution['status'] }) {
 
 function ContributionList({ contributions }: { contributions: Contributions }) {
     const { t, i18n } = useTranslation('backend/dashboard');
-    const [search, setSearch] = useState(contributions.filters.search);
+    const { filters, counts } = contributions;
+    const [search, setSearch] = useState(filters.search);
+    const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [withdrawId, setWithdrawId] = useState<string | null>(null);
     const [withdrawing, setWithdrawing] = useState(false);
-    const { filters, counts } = contributions;
-    const url = (status: Contribution['status'] | null, page = 1) =>
-        contributionsIndex.url({
-            query: {
-                contributions_search: filters.search || undefined,
-                contributions_status: status || undefined,
-                contributions_page: page > 1 ? page : undefined,
-            },
-        });
-    const statuses: (Contribution['status'] | 'all')[] = [
-        'all',
+    const selected = filters.status ? (filters.status.split(',') as Contribution['status'][]) : [];
+    const statuses: Contribution['status'][] = [
         'pending',
         'approved',
         'rejected',
-        ...(['kept', 'removed', 'unavailable'] as const).filter((status) => counts[status] || filters.status === status),
+        ...(['kept', 'removed', 'unavailable'] as const).filter((status) => counts[status] || selected.includes(status)),
     ];
-    const pages = [
-        ...new Set([1, contributions.current_page - 1, contributions.current_page, contributions.current_page + 1, contributions.last_page]),
-    ]
-        .filter((page) => page >= 1 && page <= contributions.last_page)
-        .sort((a, b) => a - b);
     const date = (at: string) => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(at));
+    const filtered = Boolean(filters.search || filters.status);
+
+    /** Reload only the list with one filter changed, keeping the others and starting at the first page. */
+    const visit = (changes: Partial<Contributions['filters']>) => {
+        const next = { ...filters, ...changes };
+        router.get(
+            contributionsIndex.url(),
+            {
+                contributions_search: next.search || undefined,
+                contributions_status: next.status || undefined,
+                contributions_sort: next.sort === 'oldest' ? 'oldest' : undefined,
+            },
+            { only: ['contributions'], preserveScroll: true, preserveState: true, replace: true },
+        );
+    };
+    /** Searching starts while typing; a short pause keeps one request per word instead of one per letter. */
+    const onSearch = (value: string) => {
+        setSearch(value);
+        clearTimeout(searchTimer.current);
+        searchTimer.current = setTimeout(() => visit({ search: value.trim() }), 300);
+    };
     const actions = (item: Contribution) => (
         <>
             {item.withdraw_id && (
@@ -1433,15 +1440,70 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
                 </Button>
             )}
             {item.url && item.action && (
-                <Button asChild variant="outline" size="sm" className="gap-2 rounded-lg shadow-none">
-                    <Link href={item.url}>
-                        {t(`contributions.actions.${item.action}`)}
-                        <ArrowRight className="size-3.5" aria-hidden />
-                    </Link>
+                <Button asChild variant="outline" size="sm" className="rounded-lg shadow-none">
+                    <Link href={item.url}>{t(`contributions.actions.${item.action}`)}</Link>
                 </Button>
             )}
         </>
     );
+    const empty = (
+        <div className="flex flex-col items-center gap-2 py-10 text-center">
+            <p className="text-sm text-muted-foreground">{filtered ? t('contributions.no_results') : t('contributions.empty')}</p>
+            {filtered && (
+                <Link href={contributionsIndex()} className={cn(textLink, 'text-sm')}>
+                    {t('contributions.reset')}
+                </Link>
+            )}
+        </div>
+    );
+    const SortIcon = filters.sort === 'oldest' ? ArrowUp : ArrowDown;
+    const columns: ColumnDef<DataTableFeatures, Contribution>[] = [
+        {
+            id: 'location',
+            header: t('contributions.columns.location'),
+            cell: ({ row }) => (
+                <div className="min-w-0 whitespace-normal">
+                    <p className="font-medium break-words">{row.original.label ?? t('activity.unknown_place')}</p>
+                    {row.original.reason && <p className="mt-1 text-xs text-muted-foreground">{row.original.reason}</p>}
+                </div>
+            ),
+        },
+        {
+            id: 'kind',
+            header: t('contributions.columns.kind'),
+            cell: ({ row }) => <span className="text-stone-600 dark:text-stone-300">{t(`contributions.kinds.${row.original.kind}`)}</span>,
+        },
+        {
+            id: 'status',
+            header: t('contributions.columns.status'),
+            cell: ({ row }) => <ContributionStatus status={row.original.status} />,
+        },
+        {
+            id: 'date',
+            header: () => (
+                <button
+                    type="button"
+                    onClick={() => visit({ sort: filters.sort === 'oldest' ? 'newest' : 'oldest' })}
+                    aria-label={t(filters.sort === 'oldest' ? 'contributions.sort.newest' : 'contributions.sort.oldest')}
+                    className="inline-flex items-center gap-1 rounded-sm py-2 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                    {t('contributions.columns.date')}
+                    <SortIcon className="size-4" aria-hidden />
+                </button>
+            ),
+            cell: ({ row }) => (
+                <time dateTime={row.original.at} className="text-muted-foreground tabular-nums">
+                    {date(row.original.at)}
+                </time>
+            ),
+        },
+        {
+            id: 'actions',
+            header: () => <span className="sr-only">{t('contributions.columns.actions')}</span>,
+            meta: { align: 'right' },
+            cell: ({ row }) => <div className="flex flex-wrap justify-end gap-1">{actions(row.original)}</div>,
+        },
+    ];
 
     return (
         <div className="flex flex-col gap-5">
@@ -1467,215 +1529,47 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
                     }}
                 />
             )}
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <form
-                    role="search"
-                    className="relative flex w-full items-center xl:max-w-md"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        router.get(
-                            contributionsIndex.url(),
-                            {
-                                contributions_search: search.trim() || undefined,
-                                contributions_status: filters.status || undefined,
-                            },
-                            { preserveScroll: true },
-                        );
-                    }}
-                >
+            <div className="flex flex-wrap items-center gap-2">
+                <label role="search" className="relative w-full sm:w-96">
+                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                     <Input
                         type="search"
-                        name="contributions_search"
-                        aria-label={t('contributions.search')}
-                        placeholder={t('contributions.search')}
                         value={search}
-                        onChange={(event) => setSearch(event.target.value)}
+                        onChange={(event) => onSearch(event.target.value)}
+                        placeholder={t('contributions.search')}
+                        aria-label={t('contributions.search')}
                         maxLength={200}
-                        className="h-11 rounded-xl bg-white pr-12 shadow-none dark:bg-neutral-900"
+                        className="h-11 rounded-xl bg-white pl-9 shadow-none dark:bg-neutral-900"
                     />
-                    <Button
-                        type="submit"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0.5 size-10"
-                        aria-label={t('contributions.search_submit')}
-                    >
-                        <Search className="size-4 text-muted-foreground" aria-hidden />
-                    </Button>
-                </form>
-                <nav aria-label={t('contributions.filter_label')} className="flex flex-wrap gap-2">
-                    {statuses.map((status) => {
-                        const selected = (filters.status ?? 'all') === status;
-                        return (
-                            <Link
-                                key={status}
-                                href={url(status === 'all' ? null : status)}
-                                preserveScroll
-                                aria-current={selected ? 'true' : undefined}
-                                className={cn(
-                                    'inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-                                    selected
-                                        ? 'border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950/50 dark:text-orange-300'
-                                        : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-stone-300 dark:hover:bg-neutral-800',
-                                )}
-                            >
-                                {status === 'all' ? t('contributions.all') : t(`contributions.status.${status}`)}
-                                <span className="rounded-md bg-black/5 px-1.5 py-0.5 text-xs tabular-nums dark:bg-white/10">
-                                    {counts[status] ?? 0}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </nav>
+                </label>
+                <DataTableFacetFilter
+                    title={t('contributions.columns.status')}
+                    selected={selected}
+                    options={statuses.map((status) => ({ value: status, label: t(`contributions.status.${status}`), count: counts[status] ?? 0 }))}
+                    onChange={(next) => visit({ status: next.join(',') || null })}
+                    onClear={() => visit({ status: null })}
+                />
             </div>
-            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-                <Table className="table-fixed" aria-labelledby="dashboard-section">
-                    <TableHeader className="hidden @3xl:table-header-group">
-                        <TableRow className="hover:bg-transparent">
-                            <TableHead className="w-[30%] px-5 text-xs tracking-wide text-muted-foreground uppercase">
-                                {t('contributions.columns.location')}
-                            </TableHead>
-                            <TableHead className="w-[22%] text-xs tracking-wide text-muted-foreground uppercase">
-                                {t('contributions.columns.kind')}
-                            </TableHead>
-                            <TableHead className="w-[20%] text-xs tracking-wide text-muted-foreground uppercase">
-                                {t('contributions.columns.status')}
-                            </TableHead>
-                            <TableHead className="w-[13%] text-xs tracking-wide text-muted-foreground uppercase">
-                                {t('contributions.columns.date')}
-                            </TableHead>
-                            <TableHead className="w-[15%]">
-                                <span className="sr-only">{t('contributions.columns.actions')}</span>
-                            </TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {contributions.data.map((item) => (
-                            <TableRow key={item.key} className="hover:bg-stone-50/70 dark:hover:bg-neutral-800/40">
-                                <TableCell className="px-5 py-4 whitespace-normal">
-                                    <div className="flex items-start gap-3">
-                                        <MapPin
-                                            className="mt-0.5 hidden size-4 shrink-0 text-orange-600 @4xl:block dark:text-orange-400"
-                                            aria-hidden
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="font-medium break-words">{item.label ?? t('activity.unknown_place')}</p>
-                                            <p className="mt-1 text-xs text-muted-foreground @3xl:hidden">
-                                                {t(`contributions.kinds.${item.kind}`)} · {date(item.at)}
-                                            </p>
-                                            {item.reason && <p className="mt-1 text-xs text-muted-foreground">{item.reason}</p>}
-                                            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 @3xl:hidden">
-                                                <ContributionStatus status={item.status} />
-                                                <div className="flex flex-wrap gap-1">{actions(item)}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="hidden py-4 whitespace-normal text-stone-600 @3xl:table-cell dark:text-stone-300">
-                                    {t(`contributions.kinds.${item.kind}`)}
-                                </TableCell>
-                                <TableCell className="hidden py-4 whitespace-normal @3xl:table-cell">
-                                    <ContributionStatus status={item.status} />
-                                </TableCell>
-                                <TableCell className="hidden py-4 whitespace-normal text-muted-foreground @3xl:table-cell">
-                                    <time dateTime={item.at}>{date(item.at)}</time>
-                                </TableCell>
-                                <TableCell className="hidden py-4 pr-5 whitespace-normal @3xl:table-cell">
-                                    <div className="flex flex-wrap justify-end gap-1">{actions(item)}</div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                        {!contributions.data.length && (
-                            <TableRow className="hover:bg-transparent">
-                                <TableCell colSpan={5} className="px-5 py-12 text-center whitespace-normal">
-                                    <MapPin className="mx-auto mb-3 size-6 text-muted-foreground" aria-hidden />
-                                    <p className="text-sm text-muted-foreground">
-                                        {filters.search || filters.status ? t('contributions.no_results') : t('contributions.empty')}
-                                    </p>
-                                    {(filters.search || filters.status) && (
-                                        <Link href={contributionsIndex()} className={cn(textLink, 'mt-2 text-sm')}>
-                                            {t('contributions.reset')}
-                                        </Link>
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-                {contributions.total > 0 && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-5 py-4 dark:border-neutral-800">
-                        <p className="text-xs text-muted-foreground tabular-nums" role="status">
-                            {t('contributions.range', { from: contributions.from ?? 0, to: contributions.to ?? 0, total: contributions.total })}
+            <div className="hidden md:block">
+                <DataTable columns={columns} data={contributions.data} toolbar={null} enableSorting={false} emptyState={empty} />
+            </div>
+            <ul className="border-t border-stone-200 md:hidden dark:border-neutral-800">
+                {contributions.data.length === 0 && <li>{empty}</li>}
+                {contributions.data.map((item) => (
+                    <li key={item.key} className="flex flex-col gap-2 border-b border-stone-200 py-4 dark:border-neutral-800">
+                        <p className="font-medium break-words">{item.label ?? t('activity.unknown_place')}</p>
+                        <p className="text-xs text-muted-foreground">
+                            {t(`contributions.kinds.${item.kind}`)} · {date(item.at)}
                         </p>
-                        {contributions.last_page > 1 && (
-                            <nav className="flex items-center gap-1" aria-label={t('contributions.pagination')}>
-                                {contributions.prev_page_url ? (
-                                    <Button asChild variant="outline" size="icon" className="size-9 shadow-none">
-                                        <Link href={contributions.prev_page_url} preserveScroll aria-label={t('contributions.previous')}>
-                                            <ChevronLeft className="size-4" aria-hidden />
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="size-9 shadow-none"
-                                        disabled
-                                        aria-label={t('contributions.previous')}
-                                    >
-                                        <ChevronLeft className="size-4" aria-hidden />
-                                    </Button>
-                                )}
-                                {pages.map((page, index) => (
-                                    <span key={page} className="inline-flex items-center gap-1">
-                                        {index > 0 && page - pages[index - 1] > 1 && (
-                                            <span className="px-1 text-muted-foreground" aria-hidden>
-                                                …
-                                            </span>
-                                        )}
-                                        <Button
-                                            asChild
-                                            variant="ghost"
-                                            size="icon"
-                                            className={cn(
-                                                'size-9 rounded-lg tabular-nums',
-                                                page === contributions.current_page &&
-                                                    'bg-orange-600 text-white hover:bg-orange-700 hover:text-white',
-                                            )}
-                                        >
-                                            <Link
-                                                href={url(filters.status, page)}
-                                                preserveScroll
-                                                aria-current={page === contributions.current_page ? 'page' : undefined}
-                                                aria-label={t('contributions.page', { page })}
-                                            >
-                                                {page}
-                                            </Link>
-                                        </Button>
-                                    </span>
-                                ))}
-                                {contributions.next_page_url ? (
-                                    <Button asChild variant="outline" size="icon" className="size-9 shadow-none">
-                                        <Link href={contributions.next_page_url} preserveScroll aria-label={t('contributions.next')}>
-                                            <ChevronRight className="size-4" aria-hidden />
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="size-9 shadow-none"
-                                        disabled
-                                        aria-label={t('contributions.next')}
-                                    >
-                                        <ChevronRight className="size-4" aria-hidden />
-                                    </Button>
-                                )}
-                            </nav>
-                        )}
-                    </div>
-                )}
-            </div>
+                        {item.reason && <p className="text-xs text-muted-foreground">{item.reason}</p>}
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <ContributionStatus status={item.status} />
+                            <div className="flex flex-wrap gap-1">{actions(item)}</div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+            {contributions.total > 0 && <DataTablePagination pagination={contributions} />}
         </div>
     );
 }

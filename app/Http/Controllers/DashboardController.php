@@ -43,7 +43,8 @@ class DashboardController extends Controller
             'view' => ['sometimes', 'in:personal,work'],
             'destination' => ['sometimes', 'integer', 'min:1'],
             'contributions_search' => ['nullable', 'string', 'max:200'],
-            'contributions_status' => ['nullable', 'in:pending,approved,rejected,kept,removed,unavailable'],
+            'contributions_status' => ['nullable', 'string', 'regex:/^('.implode('|', UserActivity::STATUSES).')(,('.implode('|', UserActivity::STATUSES).'))*$/'],
+            'contributions_sort' => ['nullable', 'in:newest,oldest'],
             'contributions_page' => ['sometimes', 'integer', 'min:1', 'max:10000'],
         ]);
         $section = match ($request->route()->getName()) {
@@ -69,12 +70,17 @@ class DashboardController extends Controller
             'contributions' => $section === 'contributions'
                 ? Inertia::defer(function () use ($activity, $user, $validated): array {
                     $search = trim($validated['contributions_search'] ?? '');
-                    $status = $validated['contributions_status'] ?? null;
+                    $statuses = array_values(array_unique(array_filter(explode(',', $validated['contributions_status'] ?? ''))));
+                    $oldestFirst = ($validated['contributions_sort'] ?? 'newest') === 'oldest';
 
                     return [
-                        ...$activity->contributions($user, (int) ($validated['contributions_page'] ?? 1), $search, $status)->toArray(),
+                        ...$activity->contributions($user, (int) ($validated['contributions_page'] ?? 1), $search, $statuses, $oldestFirst)->toArray(),
                         'counts' => $activity->contributionCounts($user, $search),
-                        'filters' => ['search' => $search, 'status' => $status],
+                        'filters' => [
+                            'search' => $search,
+                            'status' => $statuses === [] ? null : implode(',', $statuses),
+                            'sort' => $oldestFirst ? 'oldest' : 'newest',
+                        ],
                     ];
                 })
                 : null,
