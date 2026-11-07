@@ -189,6 +189,8 @@ class DatasetImportController extends Controller
         }
         $imports->forSource($datasetImport->datasetSource)->decide($datasetImport, $request->user(), $data['decision'], $data['reason'] ?? null, $data['review_token'], (bool) ($data['geometry_reviewed'] ?? false));
 
-        return to_route('app.imports.show', $datasetImport);
+        return $data['decision'] === 'publish'
+            ? to_route('app.imports.index')
+            : to_route('app.imports.show', $datasetImport);
     }
 }
