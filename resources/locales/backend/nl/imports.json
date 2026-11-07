@@ -307,8 +307,7 @@
     },
     "workspace": {
         "fit_map": "Alles in beeld",
-        "overview": "Leveringsoverzicht",
-        "source_records": "Bronlocaties",
+        "overview": "Overzicht",
         "geometry_tasks": "Parkeervlakken controleren",
         "identity_tasks": "Locatiekoppelingen beoordelen",
         "to_review": "Te controleren",
@@ -379,10 +378,23 @@
             "check_position": "De blauwe vorm ligt op het parkeervak.",
             "check_complete": "Er is geen deel van het parkeervak weggevallen.",
             "technical": "Technische melding"
+        },
+        "this_delivery": "Deze levering",
+        "nothing_to_check": "Niets te controleren",
+        "nothing_to_check_text": "Geen parkeervlakken of locatiekoppelingen die aandacht vragen. Je kunt een besluit nemen.",
+        "changes_on_map": "Wat er verandert op de kaart",
+        "ready": "Klaar om te besluiten",
+        "aerial": "Luchtfoto",
+        "legend": "Legenda",
+        "legend_items": {
+            "source": "Bronlocatie",
+            "review": "Te controleren",
+            "missing": "Verdwijnt van de kaart"
         }
     },
     "sheet": {
         "about": "Over de bron",
         "review_ready": "Er staat een nieuwe levering klaar om te beoordelen."
-    }
+    },
+    "breadcrumb_delivery": "Levering {{date}}"
 }

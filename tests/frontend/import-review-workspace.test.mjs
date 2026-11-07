@@ -574,3 +574,61 @@ test('the delivery overview and full map remain available while a review filter 
     options.onFinish();
     assert.ok(find(page.render(), (node) => node.type === 'ReviewWorkspace'));
 });
+
+test('an overview with nothing left to check says so and leaves the decision to the header', () => {
+    const app = mount('review-workspace.tsx');
+    const tree = app.render(app.exports.DeliveryOverview, {
+        delivery: { state: 'pending', retrieved_at: '2026-11-06T13:00:00Z' },
+        points: [],
+        derivations: 2,
+        identities: 0,
+        completed: 2,
+        counts: { new: 180 },
+        onStart() {},
+    });
+    const texts = JSON.stringify(tree);
+
+    assert.match(texts, /workspace\.nothing_to_check/);
+    assert.match(texts, /workspace\.this_delivery/);
+    assert.doesNotMatch(texts, /workspace\.start|make_decision|all_records|workspace\.source_records/);
+});
+
+test('an overview with work left lists the tasks and starts with the geometry that is still open', () => {
+    const app = mount('review-workspace.tsx');
+    const opened = [];
+    const tree = app.render(app.exports.DeliveryOverview, {
+        delivery: { state: 'pending' },
+        points: [],
+        derivations: 3,
+        identities: 1,
+        completed: 1,
+        counts: { new: 4 },
+        onStart: (filter) => opened.push(filter),
+    });
+
+    assert.doesNotMatch(JSON.stringify(tree), /workspace\.nothing_to_check/);
+    find(tree, (node) => node.type === 'Button' && [node.props.children].flat().includes('workspace.start')).props.onClick();
+    assert.deepEqual(opened, ['geometry']);
+});
+
+test('the overview legend shows the map dot for each kind of location that is on the map', () => {
+    const app = mount('review-workspace.tsx');
+    const tree = app.render(app.exports.DeliveryOverview, {
+        delivery: { state: 'published' },
+        points: [
+            { external_id: 'a', title: 'A', status: 'new', point: { latitude: 51.4, longitude: 5.4 }, review_required: false },
+            { external_id: 'b', title: 'B', status: 'missing', point: { latitude: 51.5, longitude: 5.5 }, review_required: false },
+        ],
+        derivations: 0,
+        identities: 0,
+        completed: 0,
+        onStart() {},
+    });
+    const map = find(tree, (node) => typeof node.type === 'function' && node.type.name === 'OverviewMap');
+    const legend = JSON.stringify(app.render(map.type, map.props));
+
+    assert.match(legend, /workspace\.legend_items\.source/);
+    assert.match(legend, /workspace\.legend_items\.missing/);
+    assert.doesNotMatch(legend, /workspace\.legend_items\.review/);
+    assert.match(legend, /#64748b/);
+});
