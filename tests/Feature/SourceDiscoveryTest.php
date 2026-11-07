@@ -21,7 +21,6 @@ use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
 use Database\Factories\DatasetSourceFactory;
-use Database\Seeders\StockholmReferenceSeeder;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -415,10 +414,10 @@ it('discovers approves publishes and repeats a Swedish source without inventing 
     $this->assertDatabaseCount('dataset_imports', 0);
     $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasErrors('source');
 
-    $this->seed(StockholmReferenceSeeder::class);
+    $this->artisan('nipkaart:sync-geographic-reference')->assertSuccessful();
     $province = $country->provinces()->where('geocode', 'SE-AB')->sole();
-    $this->seed(StockholmReferenceSeeder::class);
-    expect($country->provinces()->sole()->id)->toBe($province->id);
+    $this->artisan('nipkaart:sync-geographic-reference')->assertSuccessful();
+    expect($country->provinces()->sole())->id->toBe($province->id)->name->toBe('Stockholms län');
 
     $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors()->assertRedirect();
 
