@@ -20,8 +20,8 @@ All eleven models use `id` as primary key and normal `created_at`/`updated_at` t
 
 | Model / table | Key and source identity | Migration(s) | Factory / tracked seeder |
 | --- | --- | --- | --- |
-| `Country` / `countries` | Incrementing bigint; unique two-character country `code` | [countries](../../database/migrations/2025_05_03_002525_create_countries_table.php) | `CountryFactory`; `CountrySeeder` |
-| `Province` / `provinces` | Incrementing bigint; unique `(country_id, geocode)` | [provinces](../../database/migrations/2025_05_03_003204_create_provinces_table.php) | `ProvinceFactory`; `ProvinceSeeder` |
+| `Country` / `countries` | Incrementing bigint; unique two-character country `code` | [countries](../../database/migrations/2025_05_03_002525_create_countries_table.php) | `CountryFactory`; [geographic catalog](../../config/geographic-reference.php) |
+| `Province` / `provinces` | Incrementing bigint; unique `(country_id, geocode)` | [provinces](../../database/migrations/2025_05_03_003204_create_provinces_table.php) | `ProvinceFactory`; [geographic catalog](../../config/geographic-reference.php) |
 | `Municipality` / `municipalities` | Incrementing bigint; name, country and province; no unique geographic/source key | [municipalities](../../database/migrations/2025_05_03_111253_create_municipalities_table.php) | `MunicipalityFactory`; created by both sample parking seeders |
 | `Favorite` / `favorites` | Incrementing bigint; string morph target ID; unique `(user_id, favoritable_id, favoritable_type)` | [favorites](../../database/migrations/2025_05_26_174122_create_favorites_table.php) | No factory or dedicated seeder; no `HasFactory` |
 | `ParkingMunicipal` / `parking_municipal_spaces` | Nonincrementing string external ID; no provider/dataset namespace | [municipal](../../database/migrations/2025_05_04_220033_create_parking_municipal_table.php) | `ParkingMunicipalFactory`; `MunicipalityWithParkingSeeder` |

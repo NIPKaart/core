@@ -26,7 +26,7 @@ DDEV manages Laravel's local connection settings (`pgsql`, host `db`, port `5432
 
 `ddev test` creates the dedicated `nipkaart_test` database and clears cached configuration before running Pest. PHPUnit clears `DB_URL` and fixes the connection and database name to avoid accidentally selecting the application's database. For host execution, supply `DB_HOST`, `DB_PORT`, `DB_USERNAME` and `DB_PASSWORD` for the test server before running `vendor/bin/pest`.
 
-The default CountrySeeder/ProvinceSeeder are fresh-install seeders, not data transfer or recovery tools. They delete reference rows and ProvinceSeeder depends on the initial country IDs. Do not rerun them on a populated database. CI also exercises the existing municipal and offstreet sample seeders after the baseline seed. This repository currently contains no provider-specific dataset importer; CI exercises the available sample seeders.
+The default seeder installs permissions and synchronizes the [geographic reference catalog](../../config/geographic-reference.php). On a populated database, run `php artisan nipkaart:sync-geographic-reference --no-interaction` after migrations to add missing countries and provinces by code while preserving existing records and IDs. CI also exercises the municipal and offstreet sample seeders after the baseline seed.
 
 ## Database schema
 

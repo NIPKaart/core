@@ -13,7 +13,7 @@ class GeographicReferenceCatalog
             foreach (config('geographic-reference.countries') as $code => $entry) {
                 $country = Country::firstOrCreate(['code' => $code], ['name' => $entry['name']]);
 
-                foreach ($entry['subdivisions'] as $geocode => $name) {
+                foreach ($entry['subdivisions'] ?? [] as $geocode => $name) {
                     $country->provinces()->firstOrCreate(['geocode' => $geocode], ['name' => $name]);
                 }
             }
