@@ -265,7 +265,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
             {/* The legend uses the same dot as the map and only names what is on it. */}
             <ul
                 aria-label={t('workspace.legend')}
-                className="absolute bottom-3 left-28 z-400 hidden max-w-md flex-wrap gap-x-4 gap-y-1 rounded-lg bg-background/95 px-3 py-2 text-xs text-foreground shadow-sm lg:flex"
+                className="absolute top-16 left-3 z-400 flex max-w-[calc(100%-6rem)] flex-wrap gap-x-4 gap-y-1 rounded-lg bg-background/95 px-3 py-2 text-xs text-foreground shadow-sm lg:top-4 lg:left-4"
             >
                 {legend.map(([key, colour]) => (
                     <li key={key} className="inline-flex items-center gap-2">
@@ -897,42 +897,51 @@ export function ReviewMap({
                 onOverview={onOverview}
                 disabled={disabled}
             />
-            {row.geometry_derivation && (
-                <div
-                    className={cn(
-                        'absolute left-3 z-500 w-60 rounded-xl bg-background p-2 shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:left-4',
-                        onOverview ? 'top-16 lg:top-[4.25rem]' : 'top-16 lg:top-4',
-                    )}
-                >
-                    <p className="px-2 pt-1 pb-1.5 text-xs font-medium text-muted-foreground">{t('geometry_layers')}</p>
-                    <ToggleGroup
-                        type="multiple"
-                        value={layers}
-                        onValueChange={setLayers}
-                        className="flex w-full flex-col items-stretch gap-0.5"
-                        aria-label={t('geometry_layers')}
-                    >
-                        {(
-                            [
-                                ['proposed', t('proposed_geometry'), 'border-[3px] border-blue-600 bg-blue-600/20'],
-                                ['source', t('original_geometry'), 'border-2 border-dashed border-orange-500'],
-                            ] as const
-                        ).map(([value, name, swatch]) => (
-                            <ToggleGroupItem
-                                key={value}
-                                value={value}
-                                className="group h-10 w-full justify-start gap-2.5 rounded-lg px-2 text-sm font-medium data-[state=on]:bg-transparent"
-                            >
-                                <span className="flex size-4.5 shrink-0 items-center justify-center rounded-[5px] border border-input group-data-[state=on]:border-primary group-data-[state=on]:bg-primary">
-                                    <Check className="hidden size-3 text-primary-foreground group-data-[state=on]:block" aria-hidden />
-                                </span>
-                                <span className="flex-1 text-left">{name}</span>
-                                <span aria-hidden className={cn('h-4 w-6 shrink-0 rounded-[3px]', swatch)} />
-                            </ToggleGroupItem>
-                        ))}
-                    </ToggleGroup>
-                </div>
-            )}
+            <div className="absolute top-16 left-3 z-500 flex max-w-[calc(100%-6rem)] flex-col items-start gap-3 lg:left-4">
+                {!!candidate?.source && (
+                    <div className="flex flex-wrap gap-3 rounded-lg bg-background/95 px-3 py-2 text-xs">
+                        <span className="inline-flex items-center gap-1.5">
+                            <span className="size-2 rounded-full bg-blue-600" />
+                            {t('workspace.incoming')}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                            <span className="size-2 rounded-full bg-amber-600" />
+                            {t('workspace.existing')}
+                        </span>
+                    </div>
+                )}
+                {row.geometry_derivation && (
+                    <div className="w-60 max-w-full rounded-xl bg-background p-2 shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
+                        <p className="px-2 pt-1 pb-1.5 text-xs font-medium text-muted-foreground">{t('geometry_layers')}</p>
+                        <ToggleGroup
+                            type="multiple"
+                            value={layers}
+                            onValueChange={setLayers}
+                            className="flex w-full flex-col items-stretch gap-0.5"
+                            aria-label={t('geometry_layers')}
+                        >
+                            {(
+                                [
+                                    ['proposed', t('proposed_geometry'), 'border-[3px] border-blue-600 bg-blue-600/20'],
+                                    ['source', t('original_geometry'), 'border-2 border-dashed border-orange-500'],
+                                ] as const
+                            ).map(([value, name, swatch]) => (
+                                <ToggleGroupItem
+                                    key={value}
+                                    value={value}
+                                    className="group h-10 w-full justify-start gap-2.5 rounded-lg px-2 text-sm font-medium data-[state=on]:bg-transparent"
+                                >
+                                    <span className="flex size-4.5 shrink-0 items-center justify-center rounded-[5px] border border-input group-data-[state=on]:border-primary group-data-[state=on]:bg-primary">
+                                        <Check className="hidden size-3 text-primary-foreground group-data-[state=on]:block" aria-hidden />
+                                    </span>
+                                    <span className="flex-1 text-left">{name}</span>
+                                    <span aria-hidden className={cn('h-4 w-6 shrink-0 rounded-[3px]', swatch)} />
+                                </ToggleGroupItem>
+                            ))}
+                        </ToggleGroup>
+                    </div>
+                )}
+            </div>
             <MapContainer
                 center={[row.point.latitude, row.point.longitude]}
                 zoom={19}
@@ -1009,18 +1018,6 @@ export function ReviewMap({
                     );
                 })}
             </MapContainer>
-            {!!candidate?.source && (
-                <div className="absolute right-20 bottom-3 z-400 flex max-w-[calc(100%-6rem)] flex-wrap gap-3 rounded-lg bg-background/95 px-3 py-2 text-xs">
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="size-2 rounded-full bg-blue-600" />
-                        {t('workspace.incoming')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                        <span className="size-2 rounded-full bg-amber-600" />
-                        {t('workspace.existing')}
-                    </span>
-                </div>
-            )}
         </div>
     );
 }

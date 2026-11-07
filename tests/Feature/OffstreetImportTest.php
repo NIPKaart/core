@@ -75,7 +75,7 @@ it('stages an uploaded catalog through the shared import screens and publishes i
     $this->get(route('app.imports.show', $import))->assertInertia(fn (Assert $page) => $page
         ->component('backend/imports/show')->where('dataset.target_type', 'offstreet')->where('review.counts.new', 2)->has('review.rows', 2));
     $token = app(OffstreetImportService::class)->review($import)['token'];
-    $this->patch(route('app.imports.update', $import), ['decision' => 'publish', 'review_token' => $token])->assertRedirect();
+    $this->patch(route('app.imports.update', $import), ['decision' => 'publish', 'review_token' => $token])->assertRedirect(route('app.imports.index'));
 
     $garage = ParkingOffstreet::where('external_id', '06757815-834C-0E44-42B0-AE4FC4AF9CEF')->sole();
     expect($garage)->name->toBe('Byzantium')->parking_type->toBe('garage')

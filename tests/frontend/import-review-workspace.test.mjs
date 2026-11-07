@@ -427,6 +427,11 @@ test('the review pane switches between a record and its queue without losing the
     tree = app.render(app.exports.ReviewWorkspace, props);
     const overview = find(tree, (node) => typeof node.type === 'function' && node.type.name === 'OverviewMap');
     assert.equal(overview.props.points.length, 2);
+    const overviewMap = mount('review-workspace.tsx').render(overview.type, overview.props);
+    const legend = find(overviewMap, (node) => node.props?.className?.includes('bg-background/95'));
+    assert.match(legend.props.className, /top-16/);
+    assert.match(legend.props.className, /left-3/);
+    assert.doesNotMatch(legend.props.className, /bottom-3|right-20|hidden/);
     overview.props.onSelect('new:b');
     tree = app.render(app.exports.ReviewWorkspace, props);
     assert.equal(
@@ -631,4 +636,27 @@ test('the overview legend shows the map dot for each kind of location that is on
     assert.match(legend, /workspace\.legend_items\.missing/);
     assert.doesNotMatch(legend, /workspace\.legend_items\.review/);
     assert.match(legend, /#64748b/);
+});
+
+test('delivery map legends stay in the upper left beside the review controls', () => {
+    const records = mount('source-record.ts').exports;
+    const app = mount('review-workspace.tsx', { './source-record': records });
+    const tree = app.render(app.exports.ReviewMap, {
+        row: {
+            ...row('a'),
+            after: { street: 'Teststraat', geometry: { type: 'Point', coordinates: [4.8, 52.3] } },
+            point: { longitude: 4.8, latitude: 52.3 },
+            identity: { candidates: [{ id: 'existing', source: { street: 'Teststraat', geometry: { type: 'Point', coordinates: [4.8, 52.3] } } }] },
+        },
+        candidateId: 'existing',
+        onOverview() {},
+    });
+    const corner = find(
+        tree,
+        (node) => node.props?.className?.includes('absolute') && find(node, (child) => child.props?.className?.includes('bg-background/95')),
+    );
+    assert.ok(corner);
+    assert.match(corner.props.className, /top-16/);
+    assert.match(corner.props.className, /left-3/);
+    assert.doesNotMatch(corner.props.className, /bottom-3|right-20/);
 });

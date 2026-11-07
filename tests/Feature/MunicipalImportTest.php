@@ -119,7 +119,7 @@ it('records a decision with an optional note', function (string $decision, strin
 
     $this->actingAs($user)->patch(route('app.imports.update', $import), [
         'decision' => $decision, 'review_token' => $review['token'], ...$note,
-    ])->assertSessionHasNoErrors()->assertRedirect();
+    ])->assertSessionHasNoErrors()->assertRedirect(route($decision === 'publish' ? 'app.imports.index' : 'app.imports.show', $decision === 'publish' ? [] : $import));
 
     expect($import->fresh())->state->toBe($state)->review_reason->toBe($expectedNote)
         ->reviewed_by->toBe($user->id)->reviewed_at->not->toBeNull();
