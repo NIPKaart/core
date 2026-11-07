@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Enums\UnderSign;
+use App\Models\Municipality;
+use App\Models\Province;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
@@ -232,10 +234,24 @@ final class LegacyCommunityImport
             return $matches[0]['id'];
         }
         $attributes = [...$identity, ...$extra, 'created_at' => now(), 'updated_at' => now()];
-        $id = $write ? DB::table($table)->insertGetId($attributes) : -count($known) - 1;
+        $id = $write ? $this->insertReference($table, $attributes) : -count($known) - 1;
         $known[] = ['id' => $id, ...$attributes];
 
         return $id;
+    }
+
+    /**
+     * Provinces and municipalities go through their models, so they get the slug their area pages are addressed by.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function insertReference(string $table, array $attributes): int
+    {
+        return match ($table) {
+            'provinces' => Province::query()->forceCreate($attributes)->id,
+            'municipalities' => Municipality::query()->forceCreate($attributes)->id,
+            default => DB::table($table)->insertGetId($attributes),
+        };
     }
 
     /**
