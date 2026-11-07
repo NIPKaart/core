@@ -58,7 +58,7 @@ The existing DELETE endpoint accepts either `{favorite_id}` or the legacy `{type
 
 Country and Province expose municipalities; Municipality exposes country, province, offstreet spaces and parking rules. Favorite has an owner relationship instead of the erroneous target-style many-to-many relation. User confirmations have a typed relationship.
 
-Favorite, ParkingSpaceConfirmation and Role now have factories. ParkingRule has a `nationwide()` factory state. Sample municipal/offstreet seeders resolve the country by code and can supply a complete Noord-Holland province (`NL-NH`) without the baseline reference seeders. The existing CountrySeeder/ProvinceSeeder remain fresh-install-only tools.
+Favorite, ParkingSpaceConfirmation and Role now have factories. ParkingRule has a `nationwide()` factory state. Sample municipal/offstreet seeders resolve the country by code and can supply a complete Noord-Holland province (`NL-NH`) without the baseline geographic catalog. The default seeder and deployment synchronize the catalog by code.
 
 Parking booleans, numeric quantities, coordinates, nationwide rules and nullable ApiState now have explicit casts. Serialized backed enum values remain strings; unknown/null ApiState remains null in model JSON. ParkingOffstreet permits assignment of local `visibility` alongside geographic FKs; source-controlled facility/occupancy fields remain guarded.
 
