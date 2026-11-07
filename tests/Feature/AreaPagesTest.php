@@ -26,12 +26,13 @@ it('counts only what the public map shows, with garages and P+R apart', function
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::PENDING]);
     $municipal = ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
+    ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
     ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => false]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => true, 'parking_type' => 'garage', 'api_state' => ApiState::OK, 'occupancy_status' => 'counting', 'free_space' => 12, 'observed_at' => now()->subMinute()]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => true, 'parking_type' => 'parkandride', 'observed_at' => null, 'api_state' => null]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => false, 'parking_type' => 'garage']);
 
-    // Two confirmations of one place count it once; a legacy dispute is not a confirmation.
+    // The official source verifies both visible municipal records, even without a visitor confirmation.
     ParkingSpaceConfirmation::factory()->for($published)->count(2)->create();
     ParkingSpaceConfirmation::factory()->municipal()->create(['parking_municipal_id' => $municipal->id, 'confirmed_at' => now()->subDay()]);
     ParkingSpaceConfirmation::factory()->create(['parking_space_id' => ParkingSpace::query()->where('status', ParkingStatus::APPROVED)->whereKeyNot($published->id)->value('id'), 'status' => ParkingConfirmationStatus::MOVED]);
@@ -42,8 +43,8 @@ it('counts only what the public map shows, with garages and P+R apart', function
         ->assertInertia(fn (Assert $page) => $page
             ->component('frontend/areas/municipality')
             ->where('indexable', true)
-            ->where('totals.spaces', 3)
-            ->where('totals.confirmed', 2)
+            ->where('totals.spaces', 4)
+            ->where('totals.verified', 3)
             ->where('totals.garages', 1)
             ->where('totals.live_garages', 1)
             ->where('totals.park_and_ride', 1)
@@ -55,12 +56,12 @@ it('counts only what the public map shows, with garages and P+R apart', function
             ->where('breadcrumbs.2.href', null));
 });
 
-it('hands off to the map around the area through its destination parameters', function () {
+it('hands off to the map around the area without starting a search around the midpoint', function () {
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED, 'latitude' => 52.35, 'longitude' => 4.85]);
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED, 'latitude' => 52.39, 'longitude' => 4.95]);
 
     $this->get(route('areas.municipality', ['nl', 'amsterdam']))->assertInertia(fn (Assert $page) => $page
-        ->where('map_url', route('location-map', ['destination' => 'Amsterdam', 'destination_type' => 'municipality', 'lat' => 52.37, 'lng' => 4.9, 'south' => 52.35, 'north' => 52.39, 'west' => 4.85, 'east' => 4.95]))
+        ->where('map_url', route('location-map', ['view' => 'area', 'south' => 52.35, 'north' => 52.39, 'west' => 4.85, 'east' => 4.95]))
         ->where('preview.bounds', ['south' => 52.35, 'north' => 52.39, 'west' => 4.85, 'east' => 4.95])
         ->where('preview.clusters', fn ($clusters) => collect($clusters)->sum('count') === 2));
 });
@@ -100,6 +101,7 @@ it('links only municipalities with public parking from the region and country', 
         ->where('municipalities.0.municipal', false)
         ->where('municipalities.1.name', 'Haarlem')
         ->where('municipalities.1.municipal', true)
+        ->where('municipalities.1.verified', 1)
         ->where('totals.spaces', 3));
 
     $this->get(route('areas.country', 'nl'))->assertOk()->assertInertia(fn (Assert $page) => $page
@@ -107,6 +109,7 @@ it('links only municipalities with public parking from the region and country', 
         ->count('municipalities', 2)
         ->where('municipalities.0.name', 'Amsterdam')
         ->where('regions.0.municipalities', 2)
+        ->where('totals.verified', 1)
         ->where('without_open_data', 1)
         ->where('sources.open_data', 1));
 });

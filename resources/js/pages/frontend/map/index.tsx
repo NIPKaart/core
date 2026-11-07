@@ -15,7 +15,9 @@ import {
     discoveryDestinationUrl,
     discoveryFilterUrl,
     isApproximateDestination,
+    readAreaMapBounds,
     readDiscoveryFilters,
+    readMapBounds,
     type DiscoveryFilters as Filters,
 } from '@/lib/discovery-filters';
 import { readPlaceLink, withoutPlaceLink } from '@/lib/place-link';
@@ -50,26 +52,23 @@ function SelectedParking({ result }: { result: ParkingResult | null }) {
     return null;
 }
 
-function DestinationFocus({ destination }: { destination: DestinationResult | null }) {
+function MapFocus({ destination, areaBounds }: { destination: DestinationResult | null; areaBounds: DestinationResult['bounds'] }) {
     const map = useMap();
     const { t } = useTranslation('frontend/map/main');
     const approximate = destination ? isApproximateDestination(destination) : true;
     const label = t(approximate ? 'toolbar.search_area' : 'toolbar.destination', { name: destination?.label ?? '' });
     const icon = useMemo(() => destinationIcon(label, approximate), [label, approximate]);
-    const previous = useRef<DestinationResult | null>(destination);
+    const bounds = destination?.bounds ?? areaBounds;
     const initialized = useRef(false);
     useEffect(() => {
         const first = !initialized.current;
         initialized.current = true;
-        const changed = previous.current !== destination;
-        previous.current = destination;
-        if (!first && !changed) return;
         if (first && /^#\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?\/-?\d+(?:\.\d+)?$/.test(window.location.hash)) return;
-        if (destination?.bounds) {
+        if (bounds) {
             map.fitBounds(
                 [
-                    [destination.bounds.south, destination.bounds.west],
-                    [destination.bounds.north, destination.bounds.east],
+                    [bounds.south, bounds.west],
+                    [bounds.north, bounds.east],
                 ],
                 {
                     maxZoom: 17,
@@ -79,7 +78,7 @@ function DestinationFocus({ destination }: { destination: DestinationResult | nu
                 },
             );
         } else if (destination) map.setView([destination.latitude, destination.longitude], Math.max(map.getZoom(), 15));
-    }, [destination, map]);
+    }, [bounds, destination, map]);
     return destination ? (
         <Marker
             position={[destination.latitude, destination.longitude]}
@@ -122,17 +121,13 @@ export default function ParkingMap() {
     const [mapStyle, setMapStyle] = useState<MapStyle>('streets');
     const [modalOpen, setModalOpen] = useState(() => linkedPlace !== null);
     const searchOpen = useSearchOpen();
+    const [areaBounds, setAreaBounds] = useState(() => readAreaMapBounds(new URLSearchParams(window.location.search)));
     const [destination, setDestination] = useState<DestinationResult | null>(() => {
         const params = new URLSearchParams(window.location.search);
         const latitude = Number(params.get('lat'));
         const longitude = Number(params.get('lng'));
         const label = params.get('destination');
-        const boundsValues = ['south', 'north', 'west', 'east'].map((key) => (params.has(key) ? Number(params.get(key)) : NaN));
-        const [south, north, west, east] = boundsValues;
-        const bounds =
-            boundsValues.every(Number.isFinite) && south >= -90 && north <= 90 && south <= north && west >= -180 && east <= 180 && west <= east
-                ? { south, north, west, east }
-                : undefined;
+        const bounds = readMapBounds(params);
         return label &&
             params.has('lat') &&
             params.has('lng') &&
@@ -198,6 +193,7 @@ export default function ParkingMap() {
 
     const selectDestination = (value: DestinationResult) => {
         window.history.replaceState(window.history.state, '', discoveryDestinationUrl(new URL(window.location.href), value));
+        setAreaBounds(undefined);
         setDestination(value);
         setPage(1);
         setSelectedResult(null);
@@ -283,7 +279,7 @@ export default function ParkingMap() {
                     <section aria-label={t('results.map')} className="parking-discovery-map absolute inset-0">
                         <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
                             <HashSync />
-                            <DestinationFocus destination={destination} />
+                            <MapFocus destination={destination} areaBounds={areaBounds} />
                             {destination && (
                                 <NearbyDiscovery
                                     origin={destination}

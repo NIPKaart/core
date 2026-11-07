@@ -26,13 +26,14 @@
         "attribution": "© Mapbox © OpenStreetMap"
     },
     "status": {
-        "summary_one": "van de {{total}} parkeerplaats bevestigd",
-        "summary_other": "van de {{total}} parkeerplaatsen bevestigd",
-        "label": "{{confirmed}} van {{total}} parkeerplaatsen bevestigd",
+        "summary_one": "van de {{total}} parkeerplaats geverifieerd",
+        "summary_other": "van de {{total}} parkeerplaatsen geverifieerd",
+        "label": "{{verified}} van {{total}} parkeerplaatsen geverifieerd",
         "breakdown": "Verdeling per status",
-        "confirmed": "Bevestigd",
-        "unconfirmed": "Nog niet bevestigd",
-        "last": "Laatste bevestiging {{time}}"
+        "verified": "Geverifieerd",
+        "unverified": "Nog niet geverifieerd",
+        "explanation": "Een parkeerplaats telt mee als die uit officiële gemeentelijke gegevens komt of als een bezoeker heeft bevestigd dat die er is.",
+        "last": "Laatst bevestigd door een bezoeker: {{time}}"
     },
     "counts": {
         "title": "Wat je in {{name}} vindt",
@@ -75,22 +76,20 @@
         "live_count_other": "Actuele bezetting in {{count}} gemeenten"
     },
     "municipality_contact": {
-        "title": "Werk je bij de gemeente {{name}}?",
-        "update": "Geef een nieuwe levering of een wijziging in jullie open data door.",
-        "share": "Deel jullie gehandicaptenparkeerplaatsen als open data, dan staan ze met de gemeente als bron op de kaart.",
-        "share_empty": "Deel jullie gehandicaptenparkeerplaatsen als open data, dan staan ze met de gemeente als bron op de kaart en wordt deze pagina weer gevonden.",
-        "action": "Neem contact op als gemeente",
+        "title": "Samenwerken met de gemeente {{name}}",
+        "update": "NIPKaart werkt graag met de gemeente samen om de kaart actueel te houden. In een gesprek kunnen we afspraken maken over het bijwerken van locaties en parkeervoorwaarden.",
+        "share": "Samen kunnen de gemeente en NIPKaart gehandicaptenparkeerplaatsen beter vindbaar maken voor inwoners en bezoekers. We verkennen graag welke gegevens beschikbaar zijn en hoe we die met bronvermelding op de kaart kunnen tonen.",
+        "share_empty": "NIPKaart nodigt de gemeente {{name}} uit om samen gehandicaptenparkeerplaatsen in kaart te brengen. Een bestaande kaart of adressenlijst kan het startpunt zijn voor een gesprek over wat inwoners en bezoekers nodig hebben om hun reis te plannen.",
+        "action": "Neem contact op",
         "kicker": "Voor gemeenten"
     },
     "for_municipalities": {
         "kicker": "Voor gemeenten",
-        "country_title_one": "{{count}} gemeente deelt haar gehandicaptenparkeerplaatsen nog niet als open data",
-        "country_title_other": "{{count}} gemeenten delen hun gehandicaptenparkeerplaatsen nog niet als open data",
-        "country_text": "Deel ligging, aantal vakken en venstertijden, dan staan ze met de gemeente als bron op de kaart. Bezoekers bevestigen daarna of de parkeerplaatsen er nog zijn.",
-        "region_title": "{{count}} van de {{total}} gemeenten in {{name}} delen nog geen open data",
-        "region_text": "Daar komen alle parkeerplaatsen van de community. Werk je bij een van deze gemeenten? Deel jullie gehandicaptenparkeerplaatsen, dan staan ze met de gemeente als bron op de kaart.",
-        "action": "Neem contact op als gemeente",
-        "topic": "Onderwerp ‘Gemeente of dataleverancier’"
+        "country_title": "Samen gehandicaptenparkeerplaatsen beter vindbaar maken",
+        "country_text": "NIPKaart zoekt samenwerking met gemeenten om inwoners en bezoekers te helpen hun reis te plannen. Samen kunnen we locaties, het aantal parkeervakken en eventuele parkeervoorwaarden duidelijk op de kaart zetten. Een bestaande kaart, adressenlijst of open dataset is een goed vertrekpunt.",
+        "region_title": "Samen gehandicaptenparkeerplaatsen in kaart brengen in {{name}}",
+        "region_text": "NIPKaart nodigt gemeenten in de regio uit om samen de kaart aan te vullen. We bespreken graag welke informatie al beschikbaar is en hoe we die met de gemeente als bron kunnen tonen en actueel houden.",
+        "action": "Neem contact op"
     },
     "search": {
         "label": "Zoek een gemeente",
@@ -120,7 +119,7 @@
         "spaces": "Gehandicaptenplaatsen",
         "garages": "Garages",
         "park_and_ride": "P+R",
-        "confirmed": "Bevestigd",
+        "verified": "Geverifieerd",
         "data": "Gegevens",
         "municipal": "Gemeente en community",
         "community": "Community",
@@ -128,7 +127,7 @@
         "sort": "Sorteren",
         "sorts": {
             "count": "Meeste plaatsen",
-            "confirmed": "Meest bevestigd",
+            "verified": "Hoogste aandeel geverifieerd",
             "facilities": "Garages en P+R",
             "name": "A–Z"
         },

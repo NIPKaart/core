@@ -26,13 +26,14 @@
         "attribution": "© Mapbox © OpenStreetMap"
     },
     "status": {
-        "summary_one": "of the {{total}} parking space confirmed",
-        "summary_other": "of the {{total}} parking spaces confirmed",
-        "label": "{{confirmed}} of {{total}} parking spaces confirmed",
+        "summary_one": "of the {{total}} parking space verified",
+        "summary_other": "of the {{total}} parking spaces verified",
+        "label": "{{verified}} of {{total}} parking spaces verified",
         "breakdown": "By status",
-        "confirmed": "Confirmed",
-        "unconfirmed": "Not yet confirmed",
-        "last": "Last confirmed {{time}}"
+        "verified": "Verified",
+        "unverified": "Not yet verified",
+        "explanation": "A parking space counts as verified if it comes from official municipal data or a visitor has confirmed it exists.",
+        "last": "Last confirmed by a visitor: {{time}}"
     },
     "counts": {
         "title": "What you find in {{name}}",
@@ -75,22 +76,20 @@
         "live_count_other": "Current occupancy in {{count}} municipalities"
     },
     "municipality_contact": {
-        "title": "Do you work for the municipality of {{name}}?",
-        "update": "Let us know about a new delivery or a change in your open data.",
-        "share": "Share your disabled parking spaces as open data, and they appear on the map with the municipality as their source.",
-        "share_empty": "Share your disabled parking spaces as open data, and they appear on the map with the municipality as their source, and this page is found again.",
-        "action": "Get in touch as a municipality",
+        "title": "Partnering with the municipality of {{name}}",
+        "update": "NIPKaart would like to work with the municipality to keep the map up to date. We can discuss how to keep locations and parking conditions current.",
+        "share": "The municipality and NIPKaart can work together to make disabled parking spaces easier for residents and visitors to find. We can explore what information is available and how to show it on the map with credit to the municipality.",
+        "share_empty": "NIPKaart invites the municipality of {{name}} to work together to map disabled parking spaces. An existing map or address list can start a conversation about what residents and visitors need to plan their trips.",
+        "action": "Get in touch",
         "kicker": "For municipalities"
     },
     "for_municipalities": {
         "kicker": "For municipalities",
-        "country_title_one": "{{count}} municipality does not share its disabled parking spaces as open data yet",
-        "country_title_other": "{{count}} municipalities do not share their disabled parking spaces as open data yet",
-        "country_text": "Share their location, number of bays and time windows, and they appear on the map with the municipality as their source. Visitors then confirm whether the parking spaces are still there.",
-        "region_title": "{{count}} of the {{total}} municipalities in {{name}} do not share open data yet",
-        "region_text": "All their parking spaces come from the community. Do you work for one of these municipalities? Share your disabled parking spaces, and they appear on the map with the municipality as their source.",
-        "action": "Get in touch as a municipality",
-        "topic": "Topic ‘Municipality or data provider’"
+        "country_title": "Making disabled parking easier to find together",
+        "country_text": "NIPKaart welcomes partnerships with municipalities to help residents and visitors plan their trips. Together we can map locations, the number of bays and any parking conditions. An existing map, address list or open dataset is a good starting point.",
+        "region_title": "Working together to map disabled parking in {{name}}",
+        "region_text": "NIPKaart invites municipalities in the region to help improve the map. We can discuss what information is already available, how to keep it current and how to credit the municipality.",
+        "action": "Get in touch"
     },
     "search": {
         "label": "Find a municipality",
@@ -120,7 +119,7 @@
         "spaces": "Disabled spaces",
         "garages": "Car parks",
         "park_and_ride": "P+R",
-        "confirmed": "Confirmed",
+        "verified": "Verified",
         "data": "Data",
         "municipal": "Municipality and community",
         "community": "Community",
@@ -128,7 +127,7 @@
         "sort": "Sort",
         "sorts": {
             "count": "Most spaces",
-            "confirmed": "Most confirmed",
+            "verified": "Highest verified share",
             "facilities": "Car parks and P+R",
             "name": "A–Z"
         },

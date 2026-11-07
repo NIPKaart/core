@@ -11,7 +11,7 @@
         "topics": {
             "question": "Vraag of idee",
             "map_error": "Fout op de kaart",
-            "data": "Gemeente of data",
+            "data": "Samenwerken met NIPKaart",
             "other": "Iets anders"
         },
         "name": "Naam",
@@ -30,8 +30,8 @@
         "text": "Je kunt ons ook direct mailen. We antwoorden in het Nederlands of Engels."
     },
     "data": {
-        "title": "Gemeente of dataleverancier",
-        "text": "Deel je open data over gehandicaptenparkeerplaatsen of garagebezetting? Kies ‘Gemeente of data’ en vertel welke dataset het is, dan kijken we graag hoe we hem kunnen tonen."
+        "title": "Samenwerken met NIPKaart",
+        "text": "NIPKaart werkt graag samen met gemeenten en parkeerbeheerders om informatie over gehandicaptenparkeerplaatsen, garages en bezetting beter vindbaar te maken. We maken graag kennis om te bespreken hoe we kunnen samenwerken."
     },
     "code": {
         "title": "Een bug of technisch idee?",

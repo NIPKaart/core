@@ -4,7 +4,7 @@ export type AreaTotals = {
     spaces: number;
     garages: number;
     park_and_ride: number;
-    confirmed: number;
+    verified: number;
     live_garages: number;
     live_park_and_ride: number;
     municipalities?: number;
@@ -43,7 +43,7 @@ export type AreaCounts = {
     spaces: number;
     garages: number;
     park_and_ride: number;
-    confirmed: number;
+    verified: number;
     live_garages: number;
     live_park_and_ride: number;
 };

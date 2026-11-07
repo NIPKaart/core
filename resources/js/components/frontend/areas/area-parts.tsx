@@ -95,12 +95,12 @@ export function AreaTitle({ name }: { name: string }) {
     );
 }
 
-const CONFIRMED = '#1d4ed8';
+const VERIFIED = '#1d4ed8';
 
 /**
- * The share of street parking spaces with at least one existence confirmation, as one bar with a breakdown.
+ * The share of street parking spaces verified by an official source or confirmed by a visitor.
  */
-export function ConfirmationStatus({
+export function VerificationStatus({
     totals,
     className,
     showLast = true,
@@ -114,10 +114,10 @@ export function ConfirmationStatus({
 }) {
     const { t } = useTranslation('frontend/areas');
     const format = useAreaFormat();
-    const percentage = Math.round((totals.confirmed / totals.spaces) * 100);
+    const percentage = Math.round((totals.verified / totals.spaces) * 100);
     const rows = [
-        { key: 'confirmed', count: totals.confirmed, swatch: 'bg-blue-700' },
-        { key: 'unconfirmed', count: totals.spaces - totals.confirmed, swatch: 'bg-stone-200 shadow-[inset_0_0_0_1px_#a6a09b] dark:bg-neutral-700' },
+        { key: 'verified', count: totals.verified, swatch: 'bg-blue-700' },
+        { key: 'unverified', count: totals.spaces - totals.verified, swatch: 'bg-stone-200 shadow-[inset_0_0_0_1px_#a6a09b] dark:bg-neutral-700' },
     ] as const;
 
     return (
@@ -129,12 +129,12 @@ export function ConfirmationStatus({
                 </span>
                 <div
                     role="img"
-                    aria-label={t('status.label', { confirmed: format.number(totals.confirmed), total: format.number(totals.spaces) })}
+                    aria-label={t('status.label', { verified: format.number(totals.verified), total: format.number(totals.spaces) })}
                     className="flex h-3 overflow-hidden rounded-full bg-stone-200 dark:bg-neutral-700"
                 >
                     <span
                         className="block h-full"
-                        style={{ width: `${((totals.confirmed / totals.spaces) * 100).toFixed(1)}%`, background: CONFIRMED }}
+                        style={{ width: `${((totals.verified / totals.spaces) * 100).toFixed(1)}%`, background: VERIFIED }}
                     />
                 </div>
             </div>
@@ -153,6 +153,7 @@ export function ConfirmationStatus({
                     ))}
                 </ul>
             </div>
+            <p className={muted}>{t('status.explanation')}</p>
             {showLast && totals.last_confirmed_at && (
                 <span className={cn('text-sm', muted)}>{t('status.last', { time: format.relative(totals.last_confirmed_at) })}</span>
             )}
@@ -292,9 +293,9 @@ export function PillLink({ href, children }: { href: string; children: ReactNode
     );
 }
 
-/** A bar with the confirmed share, as used in the area tables. */
-export function ConfirmedBar({ confirmed, spaces }: { confirmed: number; spaces: number }) {
-    const percentage = spaces > 0 ? Math.round((confirmed / spaces) * 100) : 0;
+/** A bar with the verified share, as used in the area tables. */
+export function VerifiedBar({ verified, spaces }: { verified: number; spaces: number }) {
+    const percentage = spaces > 0 ? Math.round((verified / spaces) * 100) : 0;
 
     return (
         <span className="flex items-center gap-2.5">
