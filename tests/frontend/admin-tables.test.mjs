@@ -55,6 +55,7 @@ function load(path) {
             if (name === '@/components/ui/switch')
                 return { Switch: ({ checked }) => React.createElement('input', { type: 'checkbox', checked, readOnly: true }) };
             if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: () => element('span') });
+            if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             return require(name);
         },
     };

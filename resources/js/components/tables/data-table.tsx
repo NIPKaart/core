@@ -1,6 +1,7 @@
 import type { DataTableFeatures } from '@/components/tables/features';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { ColumnDef, flexRender, Header, OnChangeFn, Row, RowData, RowSelectionState, SortingState, useTable } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
@@ -19,6 +20,8 @@ interface DataTableProps<TData extends RowData> {
     onRowClick?: (row: TData) => void;
     rowSelection?: RowSelectionState;
     onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+    /** Extra classes for the table surface, for example to drop its frame inside a card. */
+    className?: string;
     initialState?: {
         sorting?: SortingState;
         globalFilter?: string;
@@ -37,6 +40,7 @@ export function DataTable<TData extends RowData>({
     onRowClick,
     rowSelection,
     onRowSelectionChange,
+    className,
     initialState,
 }: DataTableProps<TData>) {
     const { t } = useTranslation('global/common');
@@ -89,7 +93,7 @@ export function DataTable<TData extends RowData>({
                 toolbar
             )}
 
-            <div className="overflow-x-auto rounded-md border">
+            <div className={cn('overflow-x-auto rounded-md border', className)}>
                 <Table>
                     <TableHeader className="sticky top-0 z-10 bg-muted">
                         {table.getHeaderGroups().map((headerGroup) => (

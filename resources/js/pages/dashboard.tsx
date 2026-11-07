@@ -155,7 +155,7 @@ type PageProps = {
 const MAP_IMAGE = '/assets/images/home/map-preview.webp';
 const NEARBY_METRES = 300;
 const tile = 'flex min-w-0 flex-col gap-4 rounded-xl border border-stone-200 bg-white p-5.5 dark:border-neutral-800 dark:bg-neutral-900';
-const eyebrow = 'text-xs font-semibold tracking-wider text-stone-500 uppercase dark:text-stone-400';
+const eyebrow = 'text-xs font-semibold tracking-wider text-stone-600 uppercase dark:text-stone-400';
 const textLink = 'inline-flex min-h-11 items-center font-semibold text-orange-700 hover:text-orange-800 dark:text-orange-400';
 const darkButton =
     'inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-stone-900 px-5.5 font-semibold text-white hover:bg-stone-800 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200';
@@ -248,7 +248,7 @@ function SectionView({ title, children, count }: { title: string; children: Reac
                 >
                     {title}
                 </h1>
-                {count !== undefined && <span className="text-sm text-muted-foreground">{t('contributions.count', { count })}</span>}
+                {count !== undefined && <span className="text-sm text-stone-600 dark:text-stone-400">{t('contributions.count', { count })}</span>}
             </div>
             {children}
         </section>
@@ -386,7 +386,7 @@ function Hero({ overview }: { overview: Overview }) {
                         {t('hero.search_label')}
                     </label>
                     <div className="relative flex-1">
-                        <Search className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-stone-500" aria-hidden />
+                        <Search className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-stone-600" aria-hidden />
                         <input
                             id="dashboard-destination"
                             type="search"
@@ -591,7 +591,7 @@ function LiveGarageTile({ garage }: { garage: NonNullable<Overview['garage']> })
                             {hasTotal ? state.free : t('nearby.free', { count: state.free })}
                         </span>
                         {hasTotal && (
-                            <span className="text-sm font-normal text-stone-500"> {tGarages('status.free_of_short', { total: state.total })}</span>
+                            <span className="text-sm font-normal text-stone-600"> {tGarages('status.free_of_short', { total: state.total })}</span>
                         )}
                     </span>
                     {state.percent !== null && (
@@ -606,7 +606,7 @@ function LiveGarageTile({ garage }: { garage: NonNullable<Overview['garage']> })
                         />
                     )}
                     {garage.observed_at && (
-                        <span className="text-sm text-stone-500 tabular-nums">
+                        <span className="text-sm text-stone-600 tabular-nums">
                             {tGarages('status.measured')} {measured(garage.observed_at)}
                         </span>
                     )}
@@ -919,7 +919,7 @@ function HistoryTile({ history }: { history: Contribution[] }) {
                             <span className="flex-[1_1_11rem] text-sm text-stone-600 dark:text-stone-400">
                                 {t(`contributions.kinds.${item.kind}`)}
                             </span>
-                            <time dateTime={item.at} className="w-24 text-sm text-stone-500 tabular-nums max-sm:hidden">
+                            <time dateTime={item.at} className="w-24 text-sm text-stone-600 tabular-nums max-sm:hidden">
                                 {formatShortDate(item.at, i18n.language)}
                             </time>
                             <Chip tone={statusChip[item.status].tone}>{t(`contributions.status.${item.status}`)}</Chip>
@@ -1299,7 +1299,7 @@ function AttentionTile({
         <li key={key} className="border-t border-stone-100 first:border-t-0 dark:border-neutral-800">
             <Link href={href} className="flex items-center gap-3 py-3">
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-stone-500">{kind}</span>
+                    <span className="text-xs font-semibold text-stone-600">{kind}</span>
                     <span className="truncate text-[15px] font-semibold">{name}</span>
                     {status}
                 </span>
@@ -1320,7 +1320,7 @@ function AttentionTile({
                 <h3 id="dashboard-attention" className={eyebrow}>
                     {t(skip ? 'work.attention.also' : 'work.attention.eyebrow')}
                 </h3>
-                <span className="text-xs text-stone-500">{t('work.attention.admins')}</span>
+                <span className="text-xs text-stone-600">{t('work.attention.admins')}</span>
             </div>
             {sources.total + rules.total === 0 && (
                 <p className="flex items-center gap-2 text-[15px] text-stone-600 dark:text-stone-400">
@@ -1448,7 +1448,7 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
     );
     const empty = (
         <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <p className="text-sm text-muted-foreground">{filtered ? t('contributions.no_results') : t('contributions.empty')}</p>
+            <p className="text-sm text-stone-600 dark:text-stone-400">{filtered ? t('contributions.no_results') : t('contributions.empty')}</p>
             {filtered && (
                 <Link href={contributionsIndex()} className={cn(textLink, 'text-sm')}>
                     {t('contributions.reset')}
@@ -1464,7 +1464,7 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
             cell: ({ row }) => (
                 <div className="min-w-0 whitespace-normal">
                     <p className="font-medium break-words">{row.original.label ?? t('activity.unknown_place')}</p>
-                    {row.original.reason && <p className="mt-1 text-xs text-muted-foreground">{row.original.reason}</p>}
+                    {row.original.reason && <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">{row.original.reason}</p>}
                 </div>
             ),
         },
@@ -1492,7 +1492,7 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
                 </button>
             ),
             cell: ({ row }) => (
-                <time dateTime={row.original.at} className="text-muted-foreground tabular-nums">
+                <time dateTime={row.original.at} className="text-stone-600 tabular-nums dark:text-stone-400">
                     {date(row.original.at)}
                 </time>
             ),
@@ -1507,7 +1507,7 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
 
     return (
         <div className="flex flex-col gap-5">
-            <p className="-mt-2 text-sm text-muted-foreground">{t('contributions.description')}</p>
+            <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">{t('contributions.description')}</p>
             {withdrawId && (
                 <ConfirmDialog
                     title={t('contributions.withdraw.title')}
@@ -1531,7 +1531,10 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
             )}
             <div className="flex flex-wrap items-center gap-2">
                 <label role="search" className="relative w-full sm:w-96">
-                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                    <Search
+                        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-600 dark:text-stone-400"
+                        aria-hidden
+                    />
                     <Input
                         type="search"
                         value={search}
@@ -1550,26 +1553,40 @@ function ContributionList({ contributions }: { contributions: Contributions }) {
                     onClear={() => visit({ status: null })}
                 />
             </div>
-            <div className="hidden md:block">
-                <DataTable columns={columns} data={contributions.data} toolbar={null} enableSorting={false} emptyState={empty} />
+            {/* The list sits on its own white surface: the page canvas behind rows and grey text would fall below AA contrast. */}
+            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="hidden md:block">
+                    <DataTable
+                        columns={columns}
+                        data={contributions.data}
+                        toolbar={null}
+                        enableSorting={false}
+                        emptyState={empty}
+                        className="rounded-none border-0"
+                    />
+                </div>
+                <ul className="divide-y divide-stone-200 md:hidden dark:divide-neutral-800">
+                    {contributions.data.length === 0 && <li>{empty}</li>}
+                    {contributions.data.map((item) => (
+                        <li key={item.key} className="flex flex-col gap-2 px-4 py-4">
+                            <p className="font-medium break-words">{item.label ?? t('activity.unknown_place')}</p>
+                            <p className="text-xs text-stone-600 dark:text-stone-400">
+                                {t(`contributions.kinds.${item.kind}`)} · {date(item.at)}
+                            </p>
+                            {item.reason && <p className="text-xs text-stone-600 dark:text-stone-400">{item.reason}</p>}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <ContributionStatus status={item.status} />
+                                <div className="flex flex-wrap gap-1">{actions(item)}</div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+                {contributions.total > 0 && (
+                    <div className="border-t border-stone-200 px-4 py-3 sm:px-5 dark:border-neutral-800">
+                        <DataTablePagination pagination={contributions} />
+                    </div>
+                )}
             </div>
-            <ul className="border-t border-stone-200 md:hidden dark:border-neutral-800">
-                {contributions.data.length === 0 && <li>{empty}</li>}
-                {contributions.data.map((item) => (
-                    <li key={item.key} className="flex flex-col gap-2 border-b border-stone-200 py-4 dark:border-neutral-800">
-                        <p className="font-medium break-words">{item.label ?? t('activity.unknown_place')}</p>
-                        <p className="text-xs text-muted-foreground">
-                            {t(`contributions.kinds.${item.kind}`)} · {date(item.at)}
-                        </p>
-                        {item.reason && <p className="text-xs text-muted-foreground">{item.reason}</p>}
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <ContributionStatus status={item.status} />
-                            <div className="flex flex-wrap gap-1">{actions(item)}</div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-            {contributions.total > 0 && <DataTablePagination pagination={contributions} />}
         </div>
     );
 }

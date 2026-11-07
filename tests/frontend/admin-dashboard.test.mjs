@@ -64,11 +64,11 @@ function render(pageProps) {
             if (name === '@/components/ui/input') return { Input: (props) => React.createElement('input', props) };
             if (name === '@/components/tables/data-table')
                 return {
-                    DataTable: ({ columns, data, emptyState }) => {
+                    DataTable: ({ columns, data, emptyState, className }) => {
                         const header = (column) => (typeof column.header === 'function' ? column.header({}) : column.header);
                         return React.createElement(
                             'table',
-                            null,
+                            { className },
                             React.createElement(
                                 'thead',
                                 null,
@@ -418,6 +418,38 @@ test('contributions are a data table with instant search, a counted status filte
     assert.doesNotMatch(html, /contributions\.status\.kept:/);
     assert.match(html, /aria-label="contributions\.sort\.oldest"/);
     assert.match(html, /aria-label="table.pagination"[^>]*>5\/10</);
+});
+
+test('contributions sit on a white surface with secondary text that meets AA contrast on every background', () => {
+    const html = render({
+        section: 'contributions',
+        contributions: {
+            data: [
+                {
+                    key: 'improvement:2',
+                    kind: 'improvement',
+                    label: 'Kerkstraat',
+                    at: '2026-10-02T09:00:00Z',
+                    status: 'rejected',
+                    reason: 'Dubbel',
+                    url: null,
+                    action: null,
+                    withdraw_id: null,
+                },
+            ],
+            current_page: 1,
+            last_page: 2,
+            total: 11,
+            counts: { all: 11, rejected: 1 },
+            filters: { search: '', status: null, sort: 'newest' },
+        },
+    });
+    const surface = html.indexOf('rounded-xl border border-stone-200 bg-white');
+
+    assert.ok(surface > -1);
+    assert.ok(surface < html.indexOf('<table') && html.indexOf('<table') < html.indexOf('aria-label="table.pagination"'));
+    assert.match(html, /<table class="rounded-none border-0"/);
+    assert.doesNotMatch(html, /text-muted-foreground|text-stone-500/);
 });
 
 test('the date column offers the opposite order and rare statuses appear once they occur', () => {
