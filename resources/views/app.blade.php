@@ -30,16 +30,21 @@
             }
         </style>
 
-        @isset($bioMeta)
-            <title data-inertia="">{{ $bioMeta['title'] }}</title>
-            <meta data-inertia="description" name="description" content="{{ $bioMeta['description'] }}">
-            <link data-inertia="canonical" rel="canonical" href="{{ $bioMeta['canonical'] }}">
-            <meta data-inertia="og:title" property="og:title" content="{{ $bioMeta['title'] }}">
-            <meta data-inertia="og:description" property="og:description" content="{{ $bioMeta['description'] }}">
+        @isset($pageMeta)
+            <title data-inertia="">{{ $pageMeta['title'] }}</title>
+            <meta data-inertia="description" name="description" content="{{ $pageMeta['description'] }}">
+            <link data-inertia="canonical" rel="canonical" href="{{ $pageMeta['canonical'] }}">
+            @if (! empty($pageMeta['robots']))
+                <meta data-inertia="robots" name="robots" content="{{ $pageMeta['robots'] }}">
+            @endif
+            <meta data-inertia="og:title" property="og:title" content="{{ $pageMeta['title'] }}">
+            <meta data-inertia="og:description" property="og:description" content="{{ $pageMeta['description'] }}">
             <meta data-inertia="og:type" property="og:type" content="website">
-            <meta data-inertia="og:url" property="og:url" content="{{ $bioMeta['canonical'] }}">
-            <meta data-inertia="og:image" property="og:image" content="{{ $bioMeta['image'] }}">
-            <meta data-inertia="twitter:card" name="twitter:card" content="summary_large_image">
+            <meta data-inertia="og:url" property="og:url" content="{{ $pageMeta['canonical'] }}">
+            @if (! empty($pageMeta['image']))
+                <meta data-inertia="og:image" property="og:image" content="{{ $pageMeta['image'] }}">
+                <meta data-inertia="twitter:card" name="twitter:card" content="summary_large_image">
+            @endif
         @else
             <title inertia>{{ config('app.name', 'Laravel') }}</title>
         @endisset

@@ -26,7 +26,7 @@ class BioController extends Controller
             ...$content->resolve(),
             'canonical' => $seo['canonical'],
             'socialImage' => $seo['image'],
-        ])->withViewData(['bioMeta' => $seo])->toResponse($request);
+        ])->withViewData(['pageMeta' => $seo])->toResponse($request);
         $response->headers->set('Cache-Control', 'no-store, private');
 
         return $response;

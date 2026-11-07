@@ -9,6 +9,7 @@ import { NavigationMenu, NavigationMenuItem } from '@/components/ui/navigation-m
 import { useIsActive } from '@/lib/is-active';
 import { cn } from '@/lib/utils';
 import { about, dashboard, garages, home, locationMap, login, logout } from '@/routes';
+import { index as areas } from '@/routes/areas';
 import { add } from '@/routes/location-map';
 import { type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
@@ -43,6 +44,7 @@ export default function Navbar({
         { name: t('find'), href: locationMap() },
         { name: t('add'), href: add() },
         { name: t('garages'), href: garages() },
+        { name: t('areas'), href: areas(), prefix: true },
         { name: t('about'), href: about() },
     ];
 
@@ -126,9 +128,10 @@ export default function Navbar({
                                     <NavItem
                                         name={item.name}
                                         href={item.href.url}
+                                        activePrefix={item.prefix}
                                         className={cn(
                                             'h-10 px-3 text-base whitespace-nowrap xl:px-6',
-                                            isActive(item.href) && 'font-semibold text-orange-600 dark:text-orange-400',
+                                            isActive(item.href, { prefix: item.prefix }) && 'font-semibold text-orange-600 dark:text-orange-400',
                                         )}
                                     />
                                 </NavigationMenuItem>
@@ -169,7 +172,13 @@ export default function Navbar({
                     <div className="absolute top-full right-0 left-0 z-40 w-full border-b border-gray-200 bg-white px-4 py-4 shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
                         <div className="space-y-2">
                             {navigation.map((item) => (
-                                <NavItem key={item.name} name={item.name} href={item.href.url} onClick={() => setMobileMenuOpen(false)} />
+                                <NavItem
+                                    key={item.name}
+                                    name={item.name}
+                                    href={item.href.url}
+                                    activePrefix={item.prefix}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                />
                             ))}
                         </div>
 

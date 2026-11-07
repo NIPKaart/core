@@ -1,6 +1,7 @@
 {
     "find": "Map",
     "add": "Add a parking space",
+    "areas": "Municipalities",
     "garages": "Garages and P+R",
     "about": "About NIPKaart",
     "dashboard": "My NIPKaart",

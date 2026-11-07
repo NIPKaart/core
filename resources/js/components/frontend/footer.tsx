@@ -1,4 +1,5 @@
 import { about, contact, garages, locationMap } from '@/routes';
+import { index as areas } from '@/routes/areas';
 import { add } from '@/routes/location-map';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +31,9 @@ export default function Footer() {
                             </Link>
                             <Link href={garages()} className={link}>
                                 {t('garages')}
+                            </Link>
+                            <Link href={areas()} className={link}>
+                                {t('areas')}
                             </Link>
                         </nav>
                         <nav aria-label={t('nipkaart')} className="flex flex-col lg:gap-3">

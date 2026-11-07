@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingStatus;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingOffstreet;
@@ -10,6 +11,7 @@ use App\Support\GeoBounds;
 use App\Support\GeoPoint;
 use App\Support\MapTile;
 use App\Support\ParkingResult;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
@@ -45,6 +47,112 @@ final class ParkingDiscovery
                 'countries' => (int) $counts->countries,
             ];
         });
+    }
+
+    /**
+     * Public parking per municipality, under the same publication rules as the map: approved community spaces and
+     * visible municipal and offstreet records. Street spaces count per source record, as the map shows them; garages
+     * and P+R facilities count separately. A street space is confirmed once it has at least one existence confirmation.
+     *
+     * @return array<int, array{country_id: int, province_id: ?int, community: int, municipal: int, confirmed: int, last_confirmed_at: ?string, garages: int, park_and_ride: int, live_garages: int, live_park_and_ride: int, observed_at: ?string}>
+     */
+    public function municipalityTotals(): array
+    {
+        return Cache::remember('parking.municipality-totals.v1', 300, function (): array {
+            $empty = ['community' => 0, 'municipal' => 0, 'confirmed' => 0, 'last_confirmed_at' => null, 'garages' => 0, 'park_and_ride' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'observed_at' => null];
+            $totals = [];
+            $add = function (object $row) use (&$totals, $empty): string {
+                $totals[$row->municipality_id] ??= ['country_id' => (int) $row->country_id, 'province_id' => $row->province_id === null ? null : (int) $row->province_id, ...$empty];
+
+                return (string) $row->municipality_id;
+            };
+
+            foreach (['community' => ParkingSpace::class, 'municipal' => ParkingMunicipal::class] as $source => $model) {
+                $places = $this->publishedStreetPlaces($source, $model);
+                $places->clone()->selectRaw('municipality_id, country_id, province_id, COUNT(*) AS total')->groupBy('municipality_id', 'country_id', 'province_id')->get()
+                    ->each(function (object $row) use (&$totals, $add, $source): void {
+                        $totals[$add($row)][$source] += (int) $row->total;
+                    });
+
+                $foreignKey = $source === 'community' ? 'parking_space_id' : 'parking_municipal_id';
+                DB::query()->fromSub($places->select(['id', 'municipality_id']), 'places')
+                    ->join('parking_space_confirmations as confirmation', "confirmation.{$foreignKey}", '=', 'places.id')
+                    ->where('confirmation.status', ParkingConfirmationStatus::CONFIRMED->value)
+                    ->selectRaw('places.municipality_id, COUNT(DISTINCT places.id) AS confirmed, MAX(confirmation.confirmed_at) AS last_confirmed_at')
+                    ->groupBy('places.municipality_id')
+                    ->get()
+                    ->each(function (object $row) use (&$totals): void {
+                        $totals[$row->municipality_id]['confirmed'] += (int) $row->confirmed;
+                        $totals[$row->municipality_id]['last_confirmed_at'] = max($totals[$row->municipality_id]['last_confirmed_at'], CarbonImmutable::parse($row->last_confirmed_at)->toISOString());
+                    });
+            }
+
+            ParkingOffstreet::query()->where('visibility', true)
+                ->get(['id', 'municipality_id', 'country_id', 'province_id', 'parking_type', 'observed_at', 'api_state', 'occupancy_status', 'free_space'])
+                ->each(function (ParkingOffstreet $facility) use (&$totals, $add): void {
+                    $key = $add($facility);
+                    $kind = $facility->parking_type === 'parkandride' ? 'park_and_ride' : 'garages';
+                    $totals[$key][$kind]++;
+                    if ($facility->availability() === 'current') {
+                        $totals[$key]['live_'.$kind]++;
+                        $totals[$key]['observed_at'] = max($totals[$key]['observed_at'], $facility->observed_at?->toISOString());
+                    }
+                });
+
+            return $totals;
+        });
+    }
+
+    /**
+     * Where the public parking of an area lies, with nearby records grouped, for a still preview of the map.
+     *
+     * @param  'country_id'|'province_id'|'municipality_id'  $column
+     * @return array{bounds: array{south: float, north: float, west: float, east: float}, clusters: list<array{latitude: float, longitude: float, count: int}>}|null
+     */
+    public function areaPreview(string $column, int $id): ?array
+    {
+        if (! in_array($column, ['country_id', 'province_id', 'municipality_id'], true)) {
+            throw new InvalidArgumentException('Unsupported area column.');
+        }
+
+        return Cache::remember("parking.area-preview.v1.{$column}.{$id}", 300, function () use ($column, $id): ?array {
+            $records = $this->publicParking(fn (Builder $query) => $query->where($column, $id), false);
+            $extent = DB::query()->fromSub($records, 'records')
+                ->selectRaw('MIN(latitude) AS south, MAX(latitude) AS north, MIN(longitude) AS west, MAX(longitude) AS east, COUNT(*) AS total')
+                ->first();
+            if ((int) $extent->total === 0) {
+                return null;
+            }
+
+            $cell = max(((float) $extent->north - (float) $extent->south) / 6, ((float) $extent->east - (float) $extent->west) / 9, 0.002);
+            $clusters = DB::query()->fromSub($this->publicParking(fn (Builder $query) => $query->where($column, $id), false), 'records')
+                ->selectRaw('AVG(latitude) AS latitude, AVG(longitude) AS longitude, COUNT(*) AS count')
+                ->groupByRaw('FLOOR(latitude / ?), FLOOR(longitude / ?)', [$cell, $cell])
+                ->orderByDesc('count')
+                ->limit(80)
+                ->get()
+                ->map(fn (object $cluster): array => ['latitude' => (float) $cluster->latitude, 'longitude' => (float) $cluster->longitude, 'count' => (int) $cluster->count])
+                ->all();
+
+            return [
+                'bounds' => ['south' => (float) $extent->south, 'north' => (float) $extent->north, 'west' => (float) $extent->west, 'east' => (float) $extent->east],
+                'clusters' => $clusters,
+            ];
+        });
+    }
+
+    /**
+     * The published records of one street-space source, under the map's publication rules.
+     *
+     * @param  class-string<ParkingSpace|ParkingMunicipal>  $model
+     */
+    private function publishedStreetPlaces(string $source, string $model): QueryBuilder
+    {
+        $query = $model::query();
+        $source === 'community' ? $query->where('status', ParkingStatus::APPROVED) : $query->where('visibility', true);
+
+        // toBase applies Eloquent's soft-delete scope.
+        return $query->toBase();
     }
 
     public function withinRadius(GeoPoint $origin, float $metres, int $limit = 100, int $offset = 0, string $source = 'all', string $sort = 'distance'): Collection
