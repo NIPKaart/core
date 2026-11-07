@@ -9,3 +9,4 @@ Before planning or editing, find every row whose globs match the files in scope 
 | resources/lang/** | .ai/rules/lang.md |
 | resources/locales/** | .ai/rules/locales.md |
 | app/Models/Parking*.php | .ai/rules/models.md |
+| resources/** | .ai/rules/resources.md |
