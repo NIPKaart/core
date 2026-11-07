@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import type { Page } from '@inertiajs/core';
 import { Form, Link, router } from '@inertiajs/react';
 import type { Geometry } from 'geojson';
-import { divIcon, geoJSON, latLngBounds } from 'leaflet';
+import { circleMarker, divIcon, geoJSON, latLngBounds } from 'leaflet';
 import {
     ArrowRight,
     Check,
@@ -957,6 +957,7 @@ export function ReviewMap({
                     <GeoJSON
                         key={`proposed-${JSON.stringify(row.geometry_derivation.geometry)}`}
                         data={row.geometry_derivation.geometry}
+                        pointToLayer={(_, position) => circleMarker(position, { radius: 5 })}
                         style={{ color: '#2563eb', fillOpacity: 0.2, weight: 3 }}
                     />
                 )}

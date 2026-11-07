@@ -55,6 +55,12 @@ function approveMunicipal(DatasetImport $import, User $user): void
     $service->decide($import, $user, 'publish', 'Bronregelingen beoordeeld.', $service->review($import)['token']);
 }
 
+it('returns 404 for a marker image filename in place of an import ID', function () {
+    $this->actingAs(importReviewer())
+        ->get('/admin/imports/marker-icon-2x.png')
+        ->assertNotFound();
+});
+
 it('decodes each stored source claim a bounded number of times when comparing a delivery', function () {
     $this->freezeTime();
     DatasetSource::factory()->create();
