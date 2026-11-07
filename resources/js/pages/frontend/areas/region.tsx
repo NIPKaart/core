@@ -5,8 +5,6 @@ import {
     AreaMapPreview,
     AreaTitle,
     card,
-    ConfirmationStatus,
-    ConfirmedBar,
     MapButton,
     municipalityContactUrl,
     muted,
@@ -16,6 +14,8 @@ import {
     SectionTitle,
     textLink,
     useAreaFormat,
+    VerificationStatus,
+    VerifiedBar,
 } from '@/components/frontend/areas/area-parts';
 import Footer from '@/components/frontend/footer';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ import { Landmark, Search, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-type Sort = 'count' | 'confirmed' | 'facilities' | 'name';
+type Sort = 'count' | 'verified' | 'facilities' | 'name';
 
 const tableHead = 'border-b border-neutral-200 px-4 py-3 dark:border-neutral-800';
 const tableCell = 'border-b border-stone-100 px-4 py-3.5 dark:border-neutral-800';
@@ -65,7 +65,7 @@ export default function Region(area: RegionArea) {
                                     ))}
                             </dl>
                             {totals.spaces > 0 && (
-                                <ConfirmationStatus
+                                <VerificationStatus
                                     totals={totals}
                                     showLast={false}
                                     className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')}
@@ -112,11 +112,11 @@ function MunicipalityTable({ area }: { area: RegionArea }) {
     const rows = useMemo(() => {
         const needle = query.trim().toLocaleLowerCase(i18n.language);
         const matching = area.municipalities.filter((row) => !needle || row.name.toLocaleLowerCase(i18n.language).includes(needle));
-        const share = (row: (typeof matching)[number]) => (row.spaces > 0 ? row.confirmed / row.spaces : -1);
+        const share = (row: (typeof matching)[number]) => (row.spaces > 0 ? row.verified / row.spaces : -1);
 
         return [...matching].sort((a, b) => {
             if (sort === 'count') return b.spaces - a.spaces;
-            if (sort === 'confirmed') return share(b) - share(a);
+            if (sort === 'verified') return share(b) - share(a);
             if (sort === 'facilities') return b.garages + b.park_and_ride - (a.garages + a.park_and_ride) || b.spaces - a.spaces;
             return a.name.localeCompare(b.name, i18n.language);
         });
@@ -148,7 +148,7 @@ function MunicipalityTable({ area }: { area: RegionArea }) {
                     aria-label={t('table.sort')}
                     className="flex flex-wrap gap-1 rounded-[10px] bg-stone-200/70 p-1 dark:bg-neutral-800"
                 >
-                    {(['count', 'confirmed', 'facilities', 'name'] as const).map((value) => (
+                    {(['count', 'verified', 'facilities', 'name'] as const).map((value) => (
                         <button
                             key={value}
                             type="button"
@@ -183,7 +183,7 @@ function MunicipalityTable({ area }: { area: RegionArea }) {
                                 {t('table.park_and_ride')}
                             </th>
                             <th scope="col" className={cn(tableHead, 'pl-6 text-left')}>
-                                {t('table.confirmed')}
+                                {t('table.verified')}
                             </th>
                             <th scope="col" className={cn(tableHead, 'pr-5 text-left')}>
                                 {t('table.data')}
@@ -209,7 +209,7 @@ function MunicipalityTable({ area }: { area: RegionArea }) {
                                     {row.park_and_ride > 0 ? format.number(row.park_and_ride) : <Dash />}
                                 </td>
                                 <td className={cn(tableCell, 'pl-6')}>
-                                    <ConfirmedBar confirmed={row.confirmed} spaces={row.spaces} />
+                                    <VerifiedBar verified={row.verified} spaces={row.spaces} />
                                 </td>
                                 <td className={cn(tableCell, 'pr-5 text-sm text-stone-700 dark:text-stone-300')}>
                                     <span className="inline-flex items-center gap-2">
@@ -293,7 +293,7 @@ function ForMunicipalities({ area }: { area: RegionArea }) {
             <div className="flex min-w-0 flex-col gap-2 lg:flex-[1_1_520px]">
                 <span className={cn('text-[15px] font-medium', muted)}>{t('for_municipalities.kicker')}</span>
                 <h2 id="for-municipalities" className="text-xl leading-[1.3] font-bold tracking-[-0.02em] lg:text-2xl">
-                    {t('for_municipalities.region_title', { count: without, total: area.municipalities.length, name: area.name })}
+                    {t('for_municipalities.region_title', { name: area.name })}
                 </h2>
                 <p className={cn('text-base', muted)}>{t('for_municipalities.region_text')}</p>
             </div>

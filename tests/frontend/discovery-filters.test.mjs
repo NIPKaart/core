@@ -67,3 +67,14 @@ test('clearing the destination removes all destination state while preserving fi
     assert.equal(cleared.search, '?source=municipal&radius=500&sort=distance');
     assert.equal(cleared.hash, '#17/52/5');
 });
+
+test('an area link supplies map bounds independently of a destination search', () => {
+    const { readAreaMapBounds } = context.exports;
+    const bounds = 'south=52.2&north=53.2&west=4.4&east=5.3';
+    assert.deepEqual(
+        { ...readAreaMapBounds(new URLSearchParams('view=area&' + bounds)) },
+        { south: 52.2, north: 53.2, west: 4.4, east: 5.3 },
+    );
+    assert.equal(readAreaMapBounds(new URLSearchParams('destination=Haarlem&' + bounds)), undefined);
+    assert.equal(readAreaMapBounds(new URLSearchParams('view=area&south=53&north=52&west=4.4&east=5.3')), undefined);
+});

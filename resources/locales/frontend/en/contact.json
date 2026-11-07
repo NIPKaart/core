@@ -11,7 +11,7 @@
         "topics": {
             "question": "Question or idea",
             "map_error": "Error on the map",
-            "data": "Municipality or data",
+            "data": "Partner with NIPKaart",
             "other": "Something else"
         },
         "name": "Name",
@@ -30,8 +30,8 @@
         "text": "You can also e-mail us directly. We reply in Dutch or English."
     },
     "data": {
-        "title": "Municipality or data provider",
-        "text": "Do you share open data about disabled parking spaces or garage occupancy? Choose ‘Municipality or data’ and tell us which dataset it is, and we will gladly see how we can show it."
+        "title": "Partner with NIPKaart",
+        "text": "NIPKaart welcomes partnerships with municipalities and parking operators to make information about disabled parking spaces, car parks and occupancy easier to find. We’d be happy to discuss how we can work together."
     },
     "code": {
         "title": "A bug or technical idea?",

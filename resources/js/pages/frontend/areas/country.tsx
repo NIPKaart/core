@@ -4,8 +4,6 @@ import {
     AreaMapPreview,
     AreaTitle,
     card,
-    ConfirmationStatus,
-    ConfirmedBar,
     municipalityContactUrl,
     muted,
     PillLink,
@@ -14,6 +12,8 @@ import {
     SectionTitle,
     textLink,
     useAreaFormat,
+    VerificationStatus,
+    VerifiedBar,
 } from '@/components/frontend/areas/area-parts';
 import Footer from '@/components/frontend/footer';
 import { Input } from '@/components/ui/input';
@@ -63,7 +63,7 @@ export default function Country(area: CountryArea) {
                             <Totals area={area} />
                             {area.regions.length > 0 && <Regions area={area} />}
                             <AllMunicipalities area={area} query={query} />
-                            {area.without_open_data > 0 && <ForMunicipalities area={area} />}
+                            {area.without_open_data > 0 && <ForMunicipalities />}
                             <div className="flex flex-col gap-12 lg:flex-row lg:flex-wrap lg:items-start lg:gap-x-18 lg:gap-y-12">
                                 <Rules area={area} />
                                 <Sources area={area} />
@@ -154,7 +154,7 @@ function Totals({ area }: { area: CountryArea }) {
                     </div>
                 ))}
             </dl>
-            {totals.spaces > 0 && <ConfirmationStatus totals={totals} showLast={false} split className={cn(card, 'px-5 py-5 lg:px-7 lg:py-6')} />}
+            {totals.spaces > 0 && <VerificationStatus totals={totals} showLast={false} split className={cn(card, 'px-5 py-5 lg:px-7 lg:py-6')} />}
         </section>
     );
 }
@@ -179,7 +179,7 @@ function Regions({ area }: { area: CountryArea }) {
                                 </th>
                             ))}
                             <th scope="col" className={cn(tableHead, 'pr-5 pl-6 text-left')}>
-                                {t('table.confirmed')}
+                                {t('table.verified')}
                             </th>
                         </tr>
                     </thead>
@@ -200,7 +200,7 @@ function Regions({ area }: { area: CountryArea }) {
                                     </td>
                                 ))}
                                 <td className={cn(tableCell, 'pr-5 pl-6')}>
-                                    <ConfirmedBar confirmed={region.confirmed} spaces={region.spaces} />
+                                    <VerifiedBar verified={region.verified} spaces={region.spaces} />
                                 </td>
                             </tr>
                         ))}
@@ -282,7 +282,7 @@ function AllMunicipalities({ area, query }: { area: CountryArea; query: string }
     );
 }
 
-function ForMunicipalities({ area }: { area: CountryArea }) {
+function ForMunicipalities() {
     const { t } = useTranslation('frontend/areas');
 
     return (
@@ -293,16 +293,13 @@ function ForMunicipalities({ area }: { area: CountryArea }) {
             <div className="flex min-w-0 flex-col gap-2.5 lg:flex-[1_1_520px]">
                 <span className={cn('text-[15px] font-medium', muted)}>{t('for_municipalities.kicker')}</span>
                 <h2 id="for-municipalities" className="text-2xl leading-[1.2] font-bold tracking-[-0.025em] lg:text-[32px]">
-                    {t('for_municipalities.country_title', { count: area.without_open_data })}
+                    {t('for_municipalities.country_title')}
                 </h2>
                 <p className={cn('max-w-[640px] text-[17px]', muted)}>{t('for_municipalities.country_text')}</p>
             </div>
-            <div className="flex flex-col items-start gap-1.5">
-                <Link href={municipalityContactUrl} className={primaryButton}>
-                    {t('for_municipalities.action')}
-                </Link>
-                <span className={cn('text-sm', muted)}>{t('for_municipalities.topic')}</span>
-            </div>
+            <Link href={municipalityContactUrl} className={cn(primaryButton, 'self-start lg:self-auto')}>
+                {t('for_municipalities.action')}
+            </Link>
         </section>
     );
 }

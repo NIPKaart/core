@@ -52,14 +52,14 @@ final class ParkingDiscovery
     /**
      * Public parking per municipality, under the same publication rules as the map: approved community spaces and
      * visible municipal and offstreet records. Street spaces count per source record, as the map shows them; garages
-     * and P+R facilities count separately. A street space is confirmed once it has at least one existence confirmation.
+     * and P+R facilities count separately. Visible municipal records are verified by their source; community records need an existence confirmation.
      *
-     * @return array<int, array{country_id: int, province_id: ?int, community: int, municipal: int, confirmed: int, last_confirmed_at: ?string, garages: int, park_and_ride: int, live_garages: int, live_park_and_ride: int, observed_at: ?string}>
+     * @return array<int, array{country_id: int, province_id: ?int, community: int, municipal: int, verified: int, last_confirmed_at: ?string, garages: int, park_and_ride: int, live_garages: int, live_park_and_ride: int, observed_at: ?string}>
      */
     public function municipalityTotals(): array
     {
-        return Cache::remember('parking.municipality-totals.v1', 300, function (): array {
-            $empty = ['community' => 0, 'municipal' => 0, 'confirmed' => 0, 'last_confirmed_at' => null, 'garages' => 0, 'park_and_ride' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'observed_at' => null];
+        return Cache::remember('parking.municipality-totals.v2', 300, function (): array {
+            $empty = ['community' => 0, 'municipal' => 0, 'verified' => 0, 'last_confirmed_at' => null, 'garages' => 0, 'park_and_ride' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'observed_at' => null];
             $totals = [];
             $add = function (object $row) use (&$totals, $empty): string {
                 $totals[$row->municipality_id] ??= ['country_id' => (int) $row->country_id, 'province_id' => $row->province_id === null ? null : (int) $row->province_id, ...$empty];
@@ -71,7 +71,11 @@ final class ParkingDiscovery
                 $places = $this->publishedStreetPlaces($source, $model);
                 $places->clone()->selectRaw('municipality_id, country_id, province_id, COUNT(*) AS total')->groupBy('municipality_id', 'country_id', 'province_id')->get()
                     ->each(function (object $row) use (&$totals, $add, $source): void {
-                        $totals[$add($row)][$source] += (int) $row->total;
+                        $key = $add($row);
+                        $totals[$key][$source] += (int) $row->total;
+                        if ($source === 'municipal') {
+                            $totals[$key]['verified'] += (int) $row->total;
+                        }
                     });
 
                 $foreignKey = $source === 'community' ? 'parking_space_id' : 'parking_municipal_id';
@@ -81,8 +85,10 @@ final class ParkingDiscovery
                     ->selectRaw('places.municipality_id, COUNT(DISTINCT places.id) AS confirmed, MAX(confirmation.confirmed_at) AS last_confirmed_at')
                     ->groupBy('places.municipality_id')
                     ->get()
-                    ->each(function (object $row) use (&$totals): void {
-                        $totals[$row->municipality_id]['confirmed'] += (int) $row->confirmed;
+                    ->each(function (object $row) use (&$totals, $source): void {
+                        if ($source === 'community') {
+                            $totals[$row->municipality_id]['verified'] += (int) $row->confirmed;
+                        }
                         $totals[$row->municipality_id]['last_confirmed_at'] = max($totals[$row->municipality_id]['last_confirmed_at'], CarbonImmutable::parse($row->last_confirmed_at)->toISOString());
                     });
             }

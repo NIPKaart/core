@@ -80,7 +80,7 @@ final class AreaPages
             ->all();
 
         return [
-            ...$this->page('country', $this->countryName($country), $sum, $this->mapUrl($this->countryName($country), 'country', 'country_id', $country->id), $this->discovery->areaPreview('country_id', $country->id)),
+            ...$this->page('country', $this->countryName($country), $sum, $this->mapUrl('country_id', $country->id), $this->discovery->areaPreview('country_id', $country->id)),
             'breadcrumbs' => [['name' => $this->countryName($country), 'href' => null]],
             'regions' => $regions,
             'municipalities' => $municipalities->map(fn (Municipality $municipality): array => [
@@ -113,7 +113,7 @@ final class AreaPages
         $ownRules = ParkingRule::query()->whereIn('municipality_id', $municipalities->modelKeys())->get()->keyBy('municipality_id');
 
         return [
-            ...$this->page('region', $province->name, $sum, $this->mapUrl($province->name, 'region', 'province_id', $province->id), $this->discovery->areaPreview('province_id', $province->id)),
+            ...$this->page('region', $province->name, $sum, $this->mapUrl('province_id', $province->id), $this->discovery->areaPreview('province_id', $province->id)),
             'country' => ['name' => $this->countryName($country), 'href' => $this->countryUrl($country)],
             'breadcrumbs' => [['name' => $this->countryName($country), 'href' => $this->countryUrl($country)], ['name' => $province->name, 'href' => null]],
             'municipalities' => $municipalities->map(fn (Municipality $municipality): array => [
@@ -153,7 +153,7 @@ final class AreaPages
         $ownRule = ParkingRule::query()->where('municipality_id', $municipality->id)->first();
 
         return [
-            ...$this->page('municipality', $municipality->name, $sum, $preview === null ? $this->parentMapUrl($municipality) : $this->mapUrl($municipality->name, 'municipality', 'municipality_id', $municipality->id), $preview),
+            ...$this->page('municipality', $municipality->name, $sum, $preview === null ? $this->parentMapUrl($municipality) : $this->mapUrl('municipality_id', $municipality->id), $preview),
             'country' => ['name' => $this->countryName($country), 'href' => $this->countryUrl($country)],
             'region' => $parent,
             'breadcrumbs' => [['name' => $this->countryName($country), 'href' => $this->countryUrl($country)], ...($parent ? [$parent] : []), ['name' => $municipality->name, 'href' => null]],
@@ -228,12 +228,12 @@ final class AreaPages
      * The totals of every municipality matching a column, added up.
      *
      * @param  array<int, array<string, mixed>>  $totals
-     * @return array{spaces: int, garages: int, park_and_ride: int, confirmed: int, live_garages: int, live_park_and_ride: int, municipalities: int, last_confirmed_at: ?string, observed_at: ?string}
+     * @return array{spaces: int, garages: int, park_and_ride: int, verified: int, live_garages: int, live_park_and_ride: int, municipalities: int, last_confirmed_at: ?string, observed_at: ?string}
      */
     private function sum(array $totals, string $column, int $id): array
     {
         $matching = $column === 'municipality_id' ? array_intersect_key($totals, [$id => true]) : array_filter($totals, fn (array $row): bool => $row[$column] === $id);
-        $sum = ['spaces' => 0, 'garages' => 0, 'park_and_ride' => 0, 'confirmed' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'municipalities' => count($matching), 'last_confirmed_at' => null, 'observed_at' => null];
+        $sum = ['spaces' => 0, 'garages' => 0, 'park_and_ride' => 0, 'verified' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'municipalities' => count($matching), 'last_confirmed_at' => null, 'observed_at' => null];
         foreach ($matching as $row) {
             foreach ($this->counts($row) as $key => $value) {
                 $sum[$key] += $value;
@@ -247,7 +247,7 @@ final class AreaPages
 
     /**
      * @param  array<string, mixed>  $row
-     * @return array{spaces: int, garages: int, park_and_ride: int, confirmed: int, live_garages: int, live_park_and_ride: int}
+     * @return array{spaces: int, garages: int, park_and_ride: int, verified: int, live_garages: int, live_park_and_ride: int}
      */
     private function counts(array $row): array
     {
@@ -255,7 +255,7 @@ final class AreaPages
             'spaces' => $row['spaces'] ?? $this->spaces($row),
             'garages' => $row['garages'],
             'park_and_ride' => $row['park_and_ride'],
-            'confirmed' => $row['confirmed'],
+            'verified' => $row['verified'],
             'live_garages' => $row['live_garages'],
             'live_park_and_ride' => $row['live_park_and_ride'],
         ];
@@ -312,29 +312,25 @@ final class AreaPages
             ->values()->all();
     }
 
-    /** The map focused on the extent of an area's public parking, through the map's own destination handoff. */
-    private function mapUrl(string $name, string $type, string $column, int $id): ?string
+    /** The map focused on the extent of an area's public parking, without starting a nearby search. */
+    private function mapUrl(string $column, int $id): ?string
     {
         $preview = $this->discovery->areaPreview($column, $id);
         if ($preview === null) {
             return null;
         }
-        $bounds = $preview['bounds'];
 
         return route('location-map', [
-            'destination' => $name,
-            'destination_type' => $type,
-            'lat' => round(($bounds['south'] + $bounds['north']) / 2, 6),
-            'lng' => round(($bounds['west'] + $bounds['east']) / 2, 6),
-            ...array_map(fn (float $value): float => round($value, 6), $bounds),
+            'view' => 'area',
+            ...array_map(fn (float $value): float => round($value, 6), $preview['bounds']),
         ]);
     }
 
     /** Without public parking of its own, a municipality hands off to the map around its region or country. */
     private function parentMapUrl(Municipality $municipality): string
     {
-        return ($municipality->province ? $this->mapUrl($municipality->province->name, 'region', 'province_id', $municipality->province->id) : null)
-            ?? $this->mapUrl($this->countryName($municipality->country), 'country', 'country_id', $municipality->country->id)
+        return ($municipality->province ? $this->mapUrl('province_id', $municipality->province->id) : null)
+            ?? $this->mapUrl('country_id', $municipality->country->id)
             ?? route('location-map');
     }
 }

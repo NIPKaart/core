@@ -39,3 +39,24 @@ export function clearDiscoveryDestinationUrl(url: URL): string {
     for (const key of ['destination', 'destination_type', 'lat', 'lng', 'south', 'north', 'west', 'east']) url.searchParams.delete(key);
     return url.pathname + url.search + url.hash;
 }
+
+export function readMapBounds(params: URLSearchParams): DestinationResult['bounds'] {
+    const [south, north, west, east] = ['south', 'north', 'west', 'east'].map((key) => {
+        const value = params.get(key);
+        return value?.trim() ? Number(value) : NaN;
+    });
+
+    return [south, north, west, east].every(Number.isFinite) &&
+        south >= -90 &&
+        north <= 90 &&
+        south <= north &&
+        west >= -180 &&
+        east <= 180 &&
+        west <= east
+        ? { south, north, west, east }
+        : undefined;
+}
+
+export function readAreaMapBounds(params: URLSearchParams): DestinationResult['bounds'] {
+    return params.get('view') === 'area' ? readMapBounds(params) : undefined;
+}

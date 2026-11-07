@@ -6,7 +6,6 @@ import {
     AreaPin,
     AreaTitle,
     card,
-    ConfirmationStatus,
     MapButton,
     municipalityContactUrl,
     muted,
@@ -16,6 +15,7 @@ import {
     RulesDisclaimer,
     SectionTitle,
     useAreaFormat,
+    VerificationStatus,
 } from '@/components/frontend/areas/area-parts';
 import Footer from '@/components/frontend/footer';
 import FrontendLayout from '@/layouts/frontend-layout';
@@ -66,7 +66,7 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                             {t('intro.municipality', { name: area.name })}
                         </p>
                         {totals.spaces > 0 && (
-                            <ConfirmationStatus totals={totals} className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')} />
+                            <VerificationStatus totals={totals} className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')} />
                         )}
                     </div>
                     {area.preview && area.map_url && (
@@ -319,7 +319,7 @@ function MunicipalityWithoutParking({ area, parent }: { area: MunicipalityArea; 
                     <h2 id="for-municipality" className="text-[22px] leading-[1.3] font-bold">
                         {t('municipality_contact.title', { name: area.name })}
                     </h2>
-                    <p className={muted}>{t('municipality_contact.share_empty')}</p>
+                    <p className={muted}>{t('municipality_contact.share_empty', { name: area.name })}</p>
                     <Link href={municipalityContactUrl} className={actionLink}>
                         {t('municipality_contact.action')}
                     </Link>
