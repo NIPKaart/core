@@ -1,3 +1,4 @@
+import { AreaPreviewMap } from '@/components/frontend/areas/area-parts';
 import CardLocationMarker from '@/components/map/card-location-marker';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import ReportStep from '@/components/map/parking-detail/report-step';
@@ -10,6 +11,7 @@ import { login, register } from '@/routes';
 import { municipality } from '@/routes/areas';
 import { check } from '@/routes/areas/municipality';
 import { confirm } from '@/routes/map/places';
+import type { AreaPreview } from '@/types/area';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import { ArrowRight, Check, ChevronLeft, CircleCheck, Eye, Flag, Info, RefreshCw, TriangleAlert, UserRound, X } from 'lucide-react';
 import { type ReactNode, type Ref, type RefObject, useEffect, useRef, useState } from 'react';
@@ -32,6 +34,7 @@ type Props = {
     skipped: boolean;
     canContribute: boolean;
     place: Place | null;
+    preview: AreaPreview | null;
 };
 
 const floating = 'lg:rounded-2xl lg:bg-white lg:shadow-[0_8px_28px_rgba(28,25,23,0.16)] lg:dark:bg-neutral-900';
@@ -41,7 +44,7 @@ const floating = 'lg:rounded-2xl lg:bg-white lg:shadow-[0_8px_28px_rgba(28,25,23
  */
 export default function ParkingCheck(props: Props) {
     const { t } = useTranslation('frontend/areas');
-    const { area, name, place } = props;
+    const { area, name, place, preview } = props;
     const title = t('check.title', { name });
 
     return (
@@ -73,7 +76,7 @@ export default function ParkingCheck(props: Props) {
 
                 <CheckPanel key={JSON.stringify(props.cursor)} {...props} />
 
-                <div className="order-2 h-[42vh] min-h-64 lg:absolute lg:inset-0 lg:h-auto">
+                <div className={cn('order-2 h-[42vh] min-h-64 lg:absolute lg:inset-0 lg:block lg:h-auto', !place && 'hidden')}>
                     {place ? (
                         <CardLocationMarker
                             key={`${place.source}-${place.id}`}
@@ -84,7 +87,7 @@ export default function ParkingCheck(props: Props) {
                             className="h-full rounded-none border-0"
                         />
                     ) : (
-                        <div aria-hidden className="h-full bg-stone-200 dark:bg-neutral-800" />
+                        <div className="relative h-full bg-[#ece7dc] dark:bg-neutral-800">{preview && <AreaPreviewMap preview={preview} />}</div>
                     )}
                 </div>
             </div>
@@ -146,7 +149,8 @@ function CheckPanel({ area, name, cursor, state, skipped, canContribute, place }
             aria-labelledby="check-step"
             aria-busy={step === 'loading'}
             className={cn(
-                'relative z-10 order-3 -mt-4 flex flex-col rounded-t-2xl bg-white shadow-[0_-6px_22px_rgba(28,25,23,0.16)] lg:absolute lg:top-4 lg:right-4 lg:bottom-4 lg:mt-0 lg:w-[416px] lg:overflow-hidden dark:bg-neutral-900',
+                'relative z-10 order-3 flex flex-col bg-white lg:absolute lg:top-4 lg:right-4 lg:mt-0 lg:max-h-[calc(100%-2rem)] lg:w-[416px] lg:overflow-hidden dark:bg-neutral-900',
+                place ? '-mt-4 rounded-t-2xl shadow-[0_-6px_22px_rgba(28,25,23,0.16)] lg:bottom-4' : 'max-lg:border-t',
                 floating,
             )}
         >
@@ -186,7 +190,7 @@ function CheckPanel({ area, name, cursor, state, skipped, canContribute, place }
                             </Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="min-h-12 flex-[1_1_150px]">
-                            <Link href={register()}>{t('check.sign_in.register')}</Link>
+                            <Link href={register({ query: { return: returnPath } })}>{t('check.sign_in.register')}</Link>
                         </Button>
                     </div>
                     <BackLink href={backHref} label={t('check.back', { name })} />

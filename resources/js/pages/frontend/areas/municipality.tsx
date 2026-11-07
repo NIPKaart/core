@@ -18,7 +18,6 @@ import {
     VerificationStatus,
 } from '@/components/frontend/areas/area-parts';
 import Footer from '@/components/frontend/footer';
-import { Button } from '@/components/ui/button';
 import FrontendLayout from '@/layouts/frontend-layout';
 import { cn } from '@/lib/utils';
 import { garages } from '@/routes';
@@ -82,11 +81,6 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                     {area.map_url && (
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 lg:col-start-1 lg:row-start-2">
                             <MapButton href={area.map_url} name={area.name} className="h-13 w-full lg:h-12 lg:w-auto" />
-                            {totals.spaces > 0 && (
-                                <Button variant="outline" asChild className="h-13 w-full lg:h-12 lg:w-auto">
-                                    <Link href={check(area.check_area)}>{t('check.start', { name: area.name })}</Link>
-                                </Button>
-                            )}
                         </div>
                     )}
                 </section>
@@ -94,6 +88,8 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
 
             <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 pt-10 pb-14 sm:px-6 lg:gap-18 lg:px-8 lg:pt-18 lg:pb-26">
                 <Counts area={area} />
+
+                {totals.spaces > 0 && <CheckInvite area={area} />}
 
                 <div className="flex flex-col gap-12 lg:flex-row lg:flex-wrap lg:items-start lg:gap-x-18 lg:gap-y-12">
                     <Rules area={area} />
@@ -103,6 +99,32 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                 {area.neighbours.length > 0 && <Neighbours area={area} />}
             </div>
         </>
+    );
+}
+
+/** Invites residents into the guided check of this municipality's street parking spaces. */
+function CheckInvite({ area }: { area: MunicipalityArea }) {
+    const { t } = useTranslation('frontend/areas');
+    const format = useAreaFormat();
+    const unverified = Math.max(0, area.totals.spaces - area.totals.verified);
+
+    return (
+        <section
+            aria-labelledby="check-invite"
+            className="flex flex-col items-start gap-4 rounded-xl bg-canvas-strong px-5 py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-8 lg:py-7 dark:bg-neutral-900"
+        >
+            <div className="flex flex-col gap-1.5">
+                <SectionTitle id="check-invite" size="medium">
+                    {unverified > 0
+                        ? t('check.invite.title', { count: unverified, formatted: format.number(unverified), name: area.name })
+                        : t('check.invite.all', { name: area.name })}
+                </SectionTitle>
+                <p className={cn('text-[17px]', muted)}>{t('check.invite.text')}</p>
+            </div>
+            <Link href={check(area.check_area)} className={cn(primaryButton, 'w-full shrink-0 lg:w-auto')}>
+                {t('check.start', { name: area.name })}
+            </Link>
+        </section>
     );
 }
 

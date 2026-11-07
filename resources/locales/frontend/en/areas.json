@@ -162,6 +162,12 @@
     },
     "check": {
         "start": "Help check {{name}}",
+        "invite": {
+            "title_one": "{{formatted}} parking space in {{name}} has not been verified yet",
+            "title_other": "{{formatted}} parking spaces in {{name}} have not been verified yet",
+            "all": "All parking spaces in {{name}} have been verified",
+            "text": "Passing by? Let us know whether they are still there."
+        },
         "title": "Help check {{name}}",
         "intro": "You see one parking space at a time. Tell us whether it is still there, or skip it.",
         "back": "Back to {{name}}",

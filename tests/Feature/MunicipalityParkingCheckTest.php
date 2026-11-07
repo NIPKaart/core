@@ -6,6 +6,7 @@ use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\User;
+use Illuminate\Support\Facades\URL;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -23,7 +24,7 @@ it('asks a guest to sign in before the first published Amsterdam parking space a
     $this->get(route('areas.municipality', $this->area))->assertInertia(fn (Assert $page) => $page
         ->where('totals.spaces', 1)->where('check_area', $this->area));
     $this->get($this->queue)->assertOk()->assertHeader('X-Robots-Tag', 'noindex')->assertInertia(fn (Assert $page) => $page
-        ->component('frontend/areas/parking-check')->where('state', 'sign_in')->where('place', null));
+        ->component('frontend/areas/parking-check')->where('state', 'sign_in')->where('place', null)->whereNot('preview', null));
     $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'sign_in')->where('place', null));
 
     $this->get(route('login', ['return' => route('areas.municipality.check', $this->area, absolute: false)]))->assertOk();
@@ -31,11 +32,28 @@ it('asks a guest to sign in before the first published Amsterdam parking space a
     $this->get($this->queue)->assertRedirect($check);
     $this->get($check)->assertInertia(fn (Assert $page) => $page
         ->where('place.id', $parking->id)->where('state', 'ready')->where('canContribute', true)->where('skipped', false)
-        ->where('place.orientation', $parking->orientation->label())->where('place.last_confirmed_at', null));
+        ->where('place.orientation', $parking->orientation->label())->where('place.last_confirmed_at', null)->where('preview', null));
 
     $this->from($check)->post(route('map.places.confirm', $identity))->assertRedirect($check);
     $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'confirmed')->whereNot('place.last_confirmed_at', null));
     $this->get($this->queue)->assertInertia(fn (Assert $page) => $page->where('state', 'empty'));
+});
+
+it('returns a new account to the check after registering and again after verifying its email address', function () {
+    $parking = ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
+    $check = route('areas.municipality.check', $this->area + ['source' => 'community', 'id' => $parking->id]);
+
+    $this->get(route('register', ['return' => route('areas.municipality.check', $this->area, absolute: false)]))->assertOk();
+    $this->post(route('register.store'), [
+        'name' => 'Nieuwe bewoner', 'email' => 'bewoner@example.com', 'password' => 'password', 'password_confirmation' => 'password',
+    ])->assertRedirect($this->queue);
+    $this->get($this->queue)->assertRedirect($check);
+    $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'ready')->where('canContribute', false));
+
+    $user = User::where('email', 'bewoner@example.com')->firstOrFail();
+    $this->get(URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $user->id, 'hash' => sha1($user->email)]))
+        ->assertRedirect($check);
+    $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'ready')->where('canContribute', true));
 });
 
 it('skips to the next parking space without recording an answer', function () {

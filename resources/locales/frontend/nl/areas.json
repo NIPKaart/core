@@ -162,6 +162,12 @@
     },
     "check": {
         "start": "Help {{name}} controleren",
+        "invite": {
+            "title_one": "{{formatted}} parkeerplaats in {{name}} is nog niet geverifieerd",
+            "title_other": "{{formatted}} parkeerplaatsen in {{name}} zijn nog niet geverifieerd",
+            "all": "Alle parkeerplaatsen in {{name}} zijn geverifieerd",
+            "text": "Kom je er langs? Laat weten of ze er nog zijn."
+        },
         "title": "Help {{name}} controleren",
         "intro": "Je ziet steeds één parkeerplaats. Laat weten of die er nog is, of sla hem over.",
         "back": "Terug naar {{name}}",

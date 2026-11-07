@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\User;
+use App\Services\ParkingDiscovery;
 use App\Services\ParkingPlaces;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MunicipalityParkingCheckController extends Controller
 {
-    public function __invoke(Request $request, ParkingPlaces $places, string $country, string $municipality): Response
+    public function __invoke(Request $request, ParkingPlaces $places, ParkingDiscovery $discovery, string $country, string $municipality): Response
     {
         $area = Municipality::query()->where('slug', $municipality)
             ->whereRelation('country', 'code', strtoupper($country))->firstOrFail();
@@ -49,13 +50,21 @@ class MunicipalityParkingCheckController extends Controller
             default => 'ready',
         };
 
+        $canContribute = $user?->can('contribute') ?? false;
+        if ($state === 'ready' && ! $canContribute) {
+            // A new account verifies its email address first; the verification link then returns here.
+            redirect()->setIntendedUrl(url($request->getRequestUri()));
+        }
+
         return Inertia::render('frontend/areas/parking-check', [
             'area' => ['country' => $country, 'municipality' => $municipality],
             'name' => $area->name,
             'cursor' => $hasTarget ? ['source' => $source, 'id' => $id] : null,
             'state' => $state,
             'skipped' => $request->boolean('skipped') && $target !== null,
-            'canContribute' => $user?->can('contribute') ?? false,
+            'canContribute' => $canContribute,
+            // Without a parking space, the panel sits on an overview of the municipality instead.
+            'preview' => $target === null ? $discovery->areaPreview('municipality_id', $area->id) : null,
             'place' => $target === null ? null : [
                 'source' => $source,
                 'id' => (string) $target->getKey(),
