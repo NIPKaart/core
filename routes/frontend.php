@@ -63,5 +63,14 @@ Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,de
 Route::get('bio', [Frontend\BioController::class, 'index'])->name('bio');
 Route::get('garages', [Frontend\GarageController::class, 'index'])->name('garages');
 Route::get('about', [Frontend\AboutController::class, 'index'])->name('about');
+
+// Public parking per country, region and municipality (#1307)
+Route::prefix('areas')->as('areas.')->controller(Frontend\AreaController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('{country}', 'country')->where('country', '[a-z]{2}')->name('country');
+    Route::get('{country}/regions/{region}', 'region')->where(['country' => '[a-z]{2}', 'region' => '[a-z0-9-]+'])->name('region');
+    Route::get('{country}/municipalities/{municipality}', 'municipality')->where(['country' => '[a-z]{2}', 'municipality' => '[a-z0-9-]+'])->name('municipality');
+});
+Route::get('sitemap.xml', Frontend\SitemapController::class)->name('sitemap');
 Route::get('contact', [Frontend\ContactController::class, 'index'])->name('contact');
 Route::post('contact', [Frontend\ContactController::class, 'store'])->middleware('throttle:5,10,contact')->name('contact.store');

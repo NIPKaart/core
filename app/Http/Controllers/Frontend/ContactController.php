@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContactMessageRequest;
 use App\Mail\ContactMessage;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,11 +14,16 @@ use Inertia\Response;
 class ContactController extends Controller
 {
     /**
-     * Frontend - Render the contact page.
+     * Frontend - Render the contact page, optionally with a topic chosen by the page that links here.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        return Inertia::render('frontend/contact', ['email' => ContactMessage::RECIPIENT]);
+        $topic = $request->query('topic');
+
+        return Inertia::render('frontend/contact', [
+            'email' => ContactMessage::RECIPIENT,
+            'topic' => in_array($topic, StoreContactMessageRequest::TOPICS, true) ? $topic : null,
+        ]);
     }
 
     /**

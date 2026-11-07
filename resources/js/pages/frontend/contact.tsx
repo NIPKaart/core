@@ -18,9 +18,9 @@ type Topic = (typeof TOPICS)[number];
 const link = 'flex min-h-11 items-center self-start font-semibold text-orange-700 hover:text-orange-800 dark:text-orange-400';
 const field = 'h-11 bg-white dark:bg-neutral-900';
 
-export default function Contact({ email }: { email: string }) {
+export default function Contact({ email, topic: initialTopic }: { email: string; topic: Topic | null }) {
     const { t } = useTranslation('frontend/contact');
-    const [topic, setTopic] = useState<Topic>('question');
+    const [topic, setTopic] = useState<Topic>(initialTopic ?? 'question');
 
     return (
         <FrontendLayout>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasAreaSlug;
 use Database\Factories\MunicipalityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Municipality extends Model
 {
     /** @use HasFactory<MunicipalityFactory> */
-    use HasFactory;
+    use HasAreaSlug, HasFactory;
 
     protected $fillable = [
         'name',
