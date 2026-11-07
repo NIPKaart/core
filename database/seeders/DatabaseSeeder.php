@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PermissionsTableSeeder::class,
             CountrySeeder::class,
             ProvinceSeeder::class,
+            StockholmReferenceSeeder::class,
             // UserTableSeeder::class,
 
             // MunicipalityWithParkingSeeder::class,

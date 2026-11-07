@@ -21,6 +21,7 @@ use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
 use Database\Factories\DatasetSourceFactory;
+use Database\Seeders\StockholmReferenceSeeder;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
@@ -400,22 +401,30 @@ it('discovers approves publishes and repeats a Swedish source without inventing 
     $this->freezeTime();
     Queue::fake([ProcessDatasetDelivery::class]);
     $admin = discoveryAdmin();
-    $province = Province::factory()->state(['geocode' => 'SE-AB'])->for(Country::factory()->state(['code' => 'SE']))->create();
+    $country = Country::factory()->create(['code' => 'SE']);
     $handler = discoveryBucket();
     $json = stockholmDiscoveryDelivery();
 
     discoverFolder($handler, [objectFor($json, '2026-09-28T10:00:00Z')], $json, 'se-stockholm');
 
     $source = DatasetSource::sole();
-    expect($source)->code->toBe('se-stockholm')->approval_state->toBe('pending')->municipality_id->toBeNull()->registration_error->toBeNull();
+    expect($source)->code->toBe('se-stockholm')->approval_state->toBe('pending')->municipality_id->toBeNull()
+        ->registration_error->toBe('Land SE of provincie SE-AB is niet bekend in NIPKaart.');
     $this->assertDatabaseCount('parking_municipal_spaces', 0);
     app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
     $this->assertDatabaseCount('dataset_imports', 0);
+    $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasErrors('source');
+
+    $this->seed(StockholmReferenceSeeder::class);
+    $province = $country->provinces()->where('geocode', 'SE-AB')->sole();
+    $this->seed(StockholmReferenceSeeder::class);
+    expect($country->provinces()->sole()->id)->toBe($province->id);
+
     $this->actingAs($admin)->patch(route('app.imports.sources.update', $source), ['decision' => 'approve'])->assertSessionHasNoErrors()->assertRedirect();
 
     $municipality = Municipality::sole();
     expect($municipality)->code_scheme->toBe('se-scb')->code->toBe('0180')->country_id->toBe($province->country_id)->province_id->toBe($province->id);
-    expect($source->fresh())->approval_state->toBe('approved')->municipality_id->toBe($municipality->id)->licence->toBeNull();
+    expect($source->fresh())->approval_state->toBe('approved')->municipality_id->toBe($municipality->id)->licence->toBeNull()->registration_error->toBeNull();
     Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === DatasetDelivery::sole()->id);
     $handler->append(objectResult($json));
     app(DatasetDeliveryService::class)->process(DatasetDelivery::sole()->id);
