@@ -1,4 +1,4 @@
-import type { Geometry, LineString, MultiLineString, MultiPolygon, Point, Polygon } from 'geojson';
+import type { Geometry, GeometryCollection, LineString, MultiLineString, MultiPolygon, Point, Polygon } from 'geojson';
 
 export type Claim = {
     source_updated_at?: string | null;
@@ -26,7 +26,12 @@ export function claimTitle(claim: Claim | null | undefined): string | null {
 export function claimCapacity(claim: Claim | null | undefined): number | null {
     return claim?.number ?? null;
 }
-type Derivation = { geometry: Polygon | MultiPolygon; reason: string; method: string; engine: string };
+type Derivation = {
+    geometry: Polygon | MultiPolygon | Point | GeometryCollection<LineString | MultiLineString | Point>;
+    reason: string;
+    method: string;
+    engine: string;
+};
 export type Row = {
     identity?: {
         method: string;

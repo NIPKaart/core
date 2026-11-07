@@ -34,7 +34,7 @@ function mount(file, modules = {}) {
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'nl' } }) };
             if (name === '@inertiajs/react') return { Form: 'Form', Link: 'Link', Head: 'Head', router: { get: (...args) => visits.push(args) } };
             if (name === '@/actions/App/Http/Controllers/Admin/DatasetImportController') return { show: route, index: route, update: route };
-            if (name === 'leaflet') return { divIcon: (options) => options };
+            if (name === 'leaflet') return { divIcon: (options) => options, circleMarker: (latlng, options) => ({ latlng, options }) };
             if (name === '@/lib/pin-svg') return { pinSvg: () => '<svg />' };
             if (name === '@/components/map/aerial-imagery')
                 return {
@@ -314,6 +314,31 @@ test('geometry layers can be toggled and map style persists when moving to anoth
         null,
     );
     assert.ok(find(tree, (node) => node.type === 'GeoJSON' && node.props.data === record.geometry_derivation.geometry));
+});
+
+test('a collapsed point in a repaired line is drawn without a Leaflet image marker', () => {
+    const app = mount('review-workspace.tsx', { './source-record': mount('source-record.ts').exports });
+    const line = [
+        [18.16, 59.34],
+        [18.1601, 59.3401],
+    ];
+    const point = { type: 'Point', coordinates: line[1] };
+    const repaired = { type: 'GeometryCollection', geometries: [{ type: 'LineString', coordinates: line }, point] };
+    const tree = app.render(app.exports.ReviewMap, {
+        row: {
+            ...row('a'),
+            point: { longitude: 18.16, latitude: 59.34 },
+            after: { street: 'Färögatan', geometry: { type: 'MultiLineString', coordinates: [line, [line[1], line[1]]] } },
+            geometry_derivation: { geometry: repaired, reason: 'Too few points in geometry component[18.1601 59.3401]' },
+        },
+        candidateId: '',
+    });
+
+    const proposed = find(tree, (node) => node.type === 'GeoJSON' && node.props.data === repaired);
+    const latlng = { lat: 59.3401, lng: 18.1601 };
+    const marker = proposed.props.pointToLayer(point, latlng);
+    assert.equal(marker.latlng, latlng);
+    assert.ok(marker.options.radius > 0);
 });
 
 test('a shape is labelled above its top edge instead of pinned, and the reported fault is ringed on the map', () => {
