@@ -24,13 +24,13 @@ import {
     ChevronLeft,
     ChevronRight,
     Circle,
+    CircleCheck,
     CircleDot,
     Expand,
     Link2,
     List,
-    LocateFixed,
     Map as MapIcon,
-    MapPin,
+    Maximize,
     Satellite,
     TriangleAlert,
 } from 'lucide-react';
@@ -51,38 +51,19 @@ export type MapPoint = {
     review_required: boolean;
 };
 
-export function DeliverySummary({ recordCount, derivations, identities }: { recordCount: number; derivations: number; identities: number }) {
-    const { t, i18n } = useTranslation('backend/imports');
-    return (
-        <div className="grid shrink-0 grid-cols-3 divide-x rounded-xl border bg-background">
-            {[
-                { icon: MapPin, count: recordCount, label: t('workspace.source_records') },
-                { icon: TriangleAlert, count: derivations, label: t('workspace.geometry_tasks') },
-                { icon: Link2, count: identities, label: t('workspace.identity_tasks') },
-            ].map(({ icon: Icon, count, label }) => (
-                <div key={label} className="flex items-center gap-3 px-3 py-3 sm:px-5">
-                    <Icon className="hidden size-4 shrink-0 text-muted-foreground sm:block" aria-hidden />
-                    <div>
-                        <p className="text-xl font-semibold tabular-nums">{count.toLocaleString(i18n.language)}</p>
-                        <p className="text-xs text-muted-foreground">{label}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
+/** The marker colour of a source record, shared by the overview map, its legend and the list of changes. */
+const markerColour = (status: Row['status'], reviewRequired = false) => (reviewRequired ? '#d97706' : status === 'missing' ? '#64748b' : '#2563eb');
+
+const CHANGE_STATUSES = ['new', 'changed', 'missing', 'conflict'] as const;
 
 export function DeliveryOverview({
     delivery,
     points,
     derivations,
     identities,
-    recordCount,
     completed,
     onStart,
-    onDecision,
     onSelect,
-    onRecords,
     counts,
     loading = false,
 }: {
@@ -90,48 +71,76 @@ export function DeliveryOverview({
     points: MapPoint[];
     derivations: number;
     identities: number;
-    recordCount: number;
     completed: number;
     onStart: (filter: string) => void;
-    onDecision: () => void;
     onSelect: (id: string) => void;
-    onRecords: () => void;
     counts?: Partial<Record<Row['status'], number>>;
     loading?: boolean;
 }) {
-    const { t } = useTranslation('backend/imports');
+    const { t, i18n } = useTranslation('backend/imports');
     const pending = delivery.state === 'pending' && !delivery.superseded;
+    const tasksLeft = derivations > completed || identities > 0;
+    const changes = CHANGE_STATUSES.filter((status) => (counts?.[status] ?? 0) > 0);
+
     return (
         <section
-            className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 lg:overflow-hidden"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden"
             aria-label={t('workspace.overview')}
             aria-busy={loading}
         >
-            <DeliverySummary recordCount={recordCount} derivations={derivations} identities={identities} />
-            <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border bg-background lg:grid-cols-[minmax(0,1fr)_20rem]">
-                <div className="h-[36svh] min-h-0 lg:h-auto">
-                    <OverviewMap points={points} onSelect={onSelect} />
+            <div className="h-[40svh] min-h-0 shrink-0 lg:h-auto lg:flex-1">
+                <OverviewMap points={points} onSelect={onSelect} />
+            </div>
+            <aside
+                aria-labelledby="delivery-overview-panel"
+                className="flex min-h-0 flex-col border-t bg-background lg:w-90 lg:shrink-0 lg:border-t-0 lg:border-l"
+            >
+                <div className="shrink-0 space-y-1 border-b px-5 py-4">
+                    <h2 id="delivery-overview-panel" className="font-semibold">
+                        {t('workspace.this_delivery')}
+                    </h2>
+                    {delivery.retrieved_at && (
+                        <p className="text-sm text-muted-foreground">
+                            {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
+                        </p>
+                    )}
                 </div>
-                <aside className="flex min-h-0 flex-col border-t lg:border-t-0 lg:border-l">
-                    <div className="shrink-0 border-b px-5 py-4">
-                        <h2 className="font-semibold">{t(pending ? 'workspace.to_review' : 'workspace.overview')}</h2>
-                    </div>
-                    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-2">
-                        {loading ? (
-                            <p role="status" className="animate-pulse py-4 text-sm text-muted-foreground">
-                                {t('workspace.loading')}
-                            </p>
-                        ) : (
-                            <>
-                                {pending && (
-                                    <div className="divide-y">
+                <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+                    {loading ? (
+                        <p role="status" className="animate-pulse text-sm text-muted-foreground">
+                            {t('workspace.loading')}
+                        </p>
+                    ) : (
+                        <>
+                            {pending && !tasksLeft && (
+                                <div
+                                    role="status"
+                                    className="flex gap-3 rounded-xl border border-green-200 bg-green-50 p-3.5 dark:border-green-900 dark:bg-green-950/40"
+                                >
+                                    <CircleCheck className="mt-0.5 size-5 shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                                    <span className="space-y-0.5">
+                                        <strong className="block text-sm font-semibold text-green-950 dark:text-green-100">
+                                            {t('workspace.nothing_to_check')}
+                                        </strong>
+                                        <span className="block text-sm text-green-900 dark:text-green-200">
+                                            {t('workspace.nothing_to_check_text')}
+                                        </span>
+                                    </span>
+                                </div>
+                            )}
+                            {pending && tasksLeft && (
+                                <section aria-labelledby="delivery-overview-tasks" className="space-y-2">
+                                    <h3 id="delivery-overview-tasks" className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                        {t('workspace.to_review')}
+                                    </h3>
+                                    <div className="divide-y rounded-xl border">
                                         {derivations > 0 && (
                                             <Button
                                                 variant="ghost"
                                                 onClick={() => onStart('geometry')}
-                                                className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4 text-left whitespace-normal"
+                                                className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-3.5 py-3 text-left whitespace-normal"
                                             >
-                                                <TriangleAlert className="size-4 shrink-0 text-amber-600" aria-hidden />
+                                                <TriangleAlert className="size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
                                                 <span className="flex-1">{t('workspace.geometry_progress', { completed, total: derivations })}</span>
                                                 <ChevronRight className="size-4 shrink-0" aria-hidden />
                                             </Button>
@@ -140,7 +149,7 @@ export function DeliveryOverview({
                                             <Button
                                                 variant="ghost"
                                                 onClick={() => onStart('identity')}
-                                                className="h-auto w-full justify-start gap-3 rounded-none px-0 py-4 text-left whitespace-normal"
+                                                className="h-auto min-h-12 w-full justify-start gap-3 rounded-none px-3.5 py-3 text-left whitespace-normal"
                                             >
                                                 <Link2 className="size-4 shrink-0" aria-hidden />
                                                 <span className="flex-1">{t('workspace.identity_remaining', { count: identities })}</span>
@@ -148,56 +157,57 @@ export function DeliveryOverview({
                                             </Button>
                                         )}
                                     </div>
-                                )}
-                                {pending && derivations > 0 && (
-                                    <Progress
-                                        value={(completed / derivations) * 100}
-                                        aria-label={t('workspace.geometry_tasks')}
-                                        aria-valuetext={t('workspace.geometry_progress', { completed, total: derivations })}
-                                    />
-                                )}
-                                {counts && (['new', 'changed', 'missing', 'conflict'] as const).some((status) => (counts[status] ?? 0) > 0) && (
-                                    <div className="border-t pt-3">
-                                        <h3 className="mb-1 text-xs font-medium text-muted-foreground">{t('workspace.changes')}</h3>
-                                        {(['new', 'changed', 'missing', 'conflict'] as const)
-                                            .filter((status) => (counts[status] ?? 0) > 0)
-                                            .map((status) => (
-                                                <Button
-                                                    key={status}
-                                                    variant="ghost"
-                                                    className="h-10 w-full justify-between px-0 text-sm"
-                                                    onClick={() => onStart(status)}
-                                                >
-                                                    <span>{t(`counts.${status}`)}</span>
-                                                    <span className="flex items-center gap-2 text-muted-foreground">
-                                                        {counts[status]?.toLocaleString()}
-                                                        <ChevronRight className="size-4" />
-                                                    </span>
-                                                </Button>
-                                            ))}
+                                    {derivations > 0 && (
+                                        <Progress
+                                            value={(completed / derivations) * 100}
+                                            aria-label={t('workspace.geometry_tasks')}
+                                            aria-valuetext={t('workspace.geometry_progress', { completed, total: derivations })}
+                                        />
+                                    )}
+                                </section>
+                            )}
+                            {changes.length > 0 && (
+                                <section aria-labelledby="delivery-overview-changes" className="space-y-2">
+                                    <h3
+                                        id="delivery-overview-changes"
+                                        className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                                    >
+                                        {t('workspace.changes_on_map')}
+                                    </h3>
+                                    <div className="divide-y rounded-xl border">
+                                        {changes.map((status) => (
+                                            <Button
+                                                key={status}
+                                                variant="ghost"
+                                                className="h-12 w-full justify-start gap-2.5 rounded-none px-3.5 text-sm"
+                                                onClick={() => onStart(status)}
+                                            >
+                                                <span
+                                                    aria-hidden
+                                                    className="size-2.5 shrink-0 rounded-full"
+                                                    style={{ background: markerColour(status) }}
+                                                />
+                                                <span className="flex-1 text-left font-medium">{t(`counts.${status}`)}</span>
+                                                <span className="font-semibold tabular-nums">{counts?.[status]?.toLocaleString(i18n.language)}</span>
+                                                <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                                            </Button>
+                                        ))}
                                     </div>
-                                )}
-                                {delivery.review_reason && <p className="py-3 text-sm whitespace-pre-wrap">{delivery.review_reason}</p>}
-                            </>
-                        )}
-                    </div>
-                    <div className="shrink-0 space-y-2 border-t p-4">
-                        {pending && (
-                            <Button
-                                className="w-full"
-                                disabled={loading}
-                                onClick={() => (derivations > completed ? onStart('geometry') : identities ? onStart('identity') : onDecision())}
-                            >
-                                {t(derivations > completed || identities ? 'workspace.start' : 'make_decision')}
-                                <ArrowRight aria-hidden />
-                            </Button>
-                        )}
-                        <Button variant="outline" className="w-full" disabled={loading} onClick={onRecords}>
-                            {t('all_records')}
+                                </section>
+                            )}
+                            {delivery.review_reason && <p className="text-sm whitespace-pre-wrap">{delivery.review_reason}</p>}
+                        </>
+                    )}
+                </div>
+                {pending && tasksLeft && (
+                    <div className="shrink-0 border-t p-4">
+                        <Button className="w-full" disabled={loading} onClick={() => onStart(derivations > completed ? 'geometry' : 'identity')}>
+                            {t('workspace.start')}
+                            <ArrowRight aria-hidden />
                         </Button>
                     </div>
-                </aside>
-            </div>
+                )}
+            </aside>
         </section>
     );
 }
@@ -213,6 +223,13 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                 {t('no_map_locations')}
             </p>
         );
+    const legend = (
+        [
+            ['source', markerColour('new'), points.some((point) => !point.review_required && point.status !== 'missing')],
+            ['review', markerColour('new', true), points.some((point) => point.review_required)],
+            ['missing', markerColour('missing'), points.some((point) => !point.review_required && point.status === 'missing')],
+        ] as const
+    ).filter(([, , shown]) => shown);
     return (
         <div className="relative isolate h-full">
             <MapToolbar style={style} onStyleChange={setStyle} imagery={imagery} onFit={() => setFit((value) => value + 1)} />
@@ -233,7 +250,7 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                         center={[point.point.latitude, point.point.longitude]}
                         radius={point.review_required ? 6 : 3}
                         pathOptions={{
-                            color: point.review_required ? '#d97706' : point.status === 'missing' ? '#64748b' : '#2563eb',
+                            color: markerColour(point.status, point.review_required),
                             fillOpacity: 0.8,
                             weight: 1,
                         }}
@@ -245,16 +262,18 @@ function OverviewMap({ points, onSelect }: { points: MapPoint[]; onSelect: (id: 
                     </CircleMarker>
                 ))}
             </MapContainer>
-            <div className="absolute right-20 bottom-3 z-400 hidden max-w-sm flex-wrap gap-3 rounded-lg bg-background/95 px-3 py-2 text-xs lg:flex">
-                <span className="inline-flex items-center gap-2">
-                    <MapPin className="size-3 text-blue-600" aria-hidden="true" />
-                    {t('workspace.source_records')}
-                </span>
-                <span className="inline-flex items-center gap-2">
-                    <TriangleAlert className="size-3 text-amber-600" aria-hidden="true" />
-                    {t('workspace.geometry_tasks')}
-                </span>
-            </div>
+            {/* The legend uses the same dot as the map and only names what is on it. */}
+            <ul
+                aria-label={t('workspace.legend')}
+                className="absolute bottom-3 left-28 z-400 hidden max-w-md flex-wrap gap-x-4 gap-y-1 rounded-lg bg-background/95 px-3 py-2 text-xs text-foreground shadow-sm lg:flex"
+            >
+                {legend.map(([key, colour]) => (
+                    <li key={key} className="inline-flex items-center gap-2">
+                        <span aria-hidden className="size-2.5 rounded-full ring-1 ring-white" style={{ background: colour }} />
+                        {t(`workspace.legend_items.${key}`)}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
@@ -321,7 +340,7 @@ export function MapToolbar({
                         className="h-9 rounded-[9px] px-3.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                     >
                         <Satellite className="size-4" aria-hidden />
-                        {tMap('controls.satellite')}
+                        {t('workspace.aerial')}
                     </ToggleGroupItem>
                 </ToggleGroup>
                 {style === 'satellite' && <AerialPicker layers={imagery.layers} layer={imagery.layer} onChoose={imagery.choose} />}
@@ -331,9 +350,10 @@ export function MapToolbar({
                 size="icon"
                 className="pointer-events-auto absolute right-3 bottom-32 size-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:right-5"
                 aria-label={t('workspace.fit_map')}
+                title={t('workspace.fit_map')}
                 onClick={onFit}
             >
-                <LocateFixed className="size-5" aria-hidden />
+                <Maximize className="size-5" aria-hidden />
             </Button>
         </div>
     );

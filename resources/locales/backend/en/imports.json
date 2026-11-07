@@ -307,8 +307,7 @@
     },
     "workspace": {
         "fit_map": "Fit to view",
-        "overview": "Delivery overview",
-        "source_records": "Source locations",
+        "overview": "Overview",
         "geometry_tasks": "Check parking geometries",
         "identity_tasks": "Review location links",
         "to_review": "To review",
@@ -379,10 +378,23 @@
             "check_position": "The blue shape lies on the parking bay.",
             "check_complete": "No part of the parking bay is missing.",
             "technical": "Technical message"
+        },
+        "this_delivery": "This delivery",
+        "nothing_to_check": "Nothing to check",
+        "nothing_to_check_text": "No parking bays or location links need attention. You can make a decision.",
+        "changes_on_map": "What changes on the map",
+        "ready": "Ready to decide",
+        "aerial": "Aerial photo",
+        "legend": "Legend",
+        "legend_items": {
+            "source": "Source location",
+            "review": "To check",
+            "missing": "Leaves the map"
         }
     },
     "sheet": {
         "about": "About the source",
         "review_ready": "A new delivery is waiting for review."
-    }
+    },
+    "breadcrumb_delivery": "Delivery {{date}}"
 }

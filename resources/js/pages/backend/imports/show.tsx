@@ -20,7 +20,7 @@ import { translateSourceValue } from '@/utils/translation';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { geoJSON, latLngBounds } from 'leaflet';
-import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, Search, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, CircleCheck, ExternalLink, Search, TriangleAlert } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GeoJSON, MapContainer, ScaleControl, Tooltip, useMap } from 'react-leaflet';
@@ -66,6 +66,10 @@ export default function Show({ import: delivery, dataset, review, page, pages, t
     const remainingGeometry = review.geometry_ids.length - completed;
     const remainingTasks = remainingGeometry + review.identity_count;
     const nextTask = remainingGeometry > 0 ? 'geometry' : review.identity_count > 0 ? 'identity' : 'changes';
+    const deliveryDate = new Date(delivery.retrieved_at).toLocaleDateString(i18n.language, {
+        day: 'numeric',
+        month: 'short',
+    });
     const recordCount = Object.values(review.counts).reduce((sum, count) => sum + count, 0);
     const startReview = (filter: string, q = '') => {
         setView('workspace');
@@ -183,7 +187,7 @@ export default function Show({ import: delivery, dataset, review, page, pages, t
             breadcrumbs={[
                 { title: t('title'), href: index() },
                 { title: dataset.name, href: index({ query: { tab: 'deliveries', dataset: dataset.id } }) },
-                { title: t('review'), href: show(delivery.id) },
+                { title: t('breadcrumb_delivery', { date: deliveryDate }), href: show(delivery.id) },
             ]}
         >
             <Head title={`${t('review')} · ${dataset.name}`} />
@@ -221,7 +225,8 @@ export default function Show({ import: delivery, dataset, review, page, pages, t
                                         : t(`states.${delivery.superseded ? 'superseded' : delivery.state}` as const)}
                                 </Badge>
                             </div>
-                            <p className="truncate text-xs text-muted-foreground">{dataset.name}</p>
+                            {/* The breadcrumb names the source from md up; phones keep it under the heading. */}
+                            <p className="truncate text-xs text-muted-foreground md:hidden">{dataset.name}</p>
                             <p className={view === 'table' ? 'text-sm text-muted-foreground' : 'sr-only'}>
                                 {t('retrieved')} <MunicipalDateTime value={delivery.retrieved_at} />
                             </p>
@@ -266,6 +271,12 @@ export default function Show({ import: delivery, dataset, review, page, pages, t
                             {pending && remainingGeometry > 0 && (
                                 <span className="hidden text-sm text-muted-foreground lg:inline">
                                     {t('workspace.geometry_remaining', { count: remainingGeometry })}
+                                </span>
+                            )}
+                            {pending && remainingTasks === 0 && review.blockers.length === 0 && (
+                                <span className="hidden items-center gap-1.5 text-sm font-medium text-green-700 lg:inline-flex dark:text-green-400">
+                                    <CircleCheck className="size-4" aria-hidden />
+                                    {t('workspace.ready')}
                                 </span>
                             )}
                             {delivery.state === 'pending' && !delivery.superseded && (
@@ -406,15 +417,9 @@ export default function Show({ import: delivery, dataset, review, page, pages, t
                         points={review.map_points}
                         derivations={review.derivations}
                         identities={review.identity_count}
-                        recordCount={recordCount}
                         completed={completed}
                         onStart={startReview}
-                        onDecision={() => setDecisionOpen(true)}
                         onSelect={(id) => startReview('all', id)}
-                        onRecords={() => {
-                            setView('table');
-                            router.get(show.url(delivery.id), { filter: 'all' }, { preserveState: true, preserveScroll: true });
-                        }}
                     />
                 )}
                 {view === 'table' && (
