@@ -15,25 +15,40 @@ beforeEach(function () {
     $this->queue = route('areas.municipality.check', $this->area);
 });
 
-it('restores the same published Amsterdam parking space after signing in and records the confirmation', function () {
+it('asks a guest to sign in before the first published Amsterdam parking space and records the confirmation', function () {
     $parking = ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
     $user = User::factory()->create();
     $identity = ['source' => 'community', 'id' => $parking->id];
     $check = route('areas.municipality.check', $this->area + $identity);
     $this->get(route('areas.municipality', $this->area))->assertInertia(fn (Assert $page) => $page
         ->where('totals.spaces', 1)->where('check_area', $this->area));
-    $this->get($this->queue)->assertRedirect($check);
-    $this->get($check)->assertOk()->assertHeader('X-Robots-Tag', 'noindex')->assertInertia(fn (Assert $page) => $page
-        ->component('frontend/areas/parking-check')->where('place.id', $parking->id)->where('state', 'ready')->where('canContribute', false));
+    $this->get($this->queue)->assertOk()->assertHeader('X-Robots-Tag', 'noindex')->assertInertia(fn (Assert $page) => $page
+        ->component('frontend/areas/parking-check')->where('state', 'sign_in')->where('place', null));
+    $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'sign_in')->where('place', null));
 
-    $this->get(route('login', ['return' => route('areas.municipality.check', $this->area + $identity, absolute: false)]))->assertOk();
-    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])->assertRedirect($check);
+    $this->get(route('login', ['return' => route('areas.municipality.check', $this->area, absolute: false)]))->assertOk();
+    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password'])->assertRedirect($this->queue);
+    $this->get($this->queue)->assertRedirect($check);
     $this->get($check)->assertInertia(fn (Assert $page) => $page
-        ->where('place.id', $parking->id)->where('state', 'ready')->where('canContribute', true));
+        ->where('place.id', $parking->id)->where('state', 'ready')->where('canContribute', true)->where('skipped', false)
+        ->where('place.orientation', $parking->orientation->label())->where('place.last_confirmed_at', null));
 
     $this->from($check)->post(route('map.places.confirm', $identity))->assertRedirect($check);
-    $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'confirmed'));
+    $this->get($check)->assertInertia(fn (Assert $page) => $page->where('state', 'confirmed')->whereNot('place.last_confirmed_at', null));
     $this->get($this->queue)->assertInertia(fn (Assert $page) => $page->where('state', 'empty'));
+});
+
+it('skips to the next parking space without recording an answer', function () {
+    $first = ParkingMunicipal::factory()->for($this->amsterdam)->create(['id' => 'a-first', 'visibility' => true]);
+    $second = ParkingMunicipal::factory()->for($this->amsterdam)->create(['id' => 'b-second', 'visibility' => true]);
+    $user = User::factory()->create();
+    $secondCheck = route('areas.municipality.check', $this->area + ['source' => 'municipal', 'id' => $second->id, 'skipped' => 1]);
+
+    $this->actingAs($user)->get(route('areas.municipality.check', $this->area + ['source' => 'municipal', 'id' => $first->id, 'next' => 1, 'skipped' => 1]))
+        ->assertRedirect($secondCheck);
+    $this->get($secondCheck)->assertInertia(fn (Assert $page) => $page->where('place.id', $second->id)->where('skipped', true));
+    expect($first->confirmations()->count())->toBe(0)
+        ->and($first->reports()->count())->toBe(0);
 });
 
 it('advances past a withdrawn place to a published record in the same municipality and sends reports to moderation', function () {

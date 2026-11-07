@@ -161,34 +161,60 @@
         "text": "Bekijk de kaart of voeg een parkeerplaats toe."
     },
     "check": {
-        "start": "Help controleren",
-        "title": "Parkeerplaatsen controleren in {{name}}",
-        "back": "Terug naar parkeren in {{name}}",
-        "question": "Is deze parkeerplaats er nog?",
-        "address": "{{address}}, {{name}}",
-        "no_street": "Straatnaam niet beschikbaar",
-        "map": "Toon deze parkeerplaats op de kaart",
-        "explanation": "Controleer of de gehandicaptenparkeerplaats er nog is. Je hoeft de andere gegevens niet te controleren.",
-        "sign_in": "Inloggen om te antwoorden",
-        "ineligible": "Om een controle in te sturen heb je een geverifieerd account nodig waarmee je kunt bijdragen.",
-        "confirm": "Ja, die is er nog",
-        "report": "Melden dat die weg is",
-        "unsure": "Ik weet het niet zeker",
-        "next": "Volgende parkeerplaats",
-        "restart": "Opnieuw beginnen",
-        "status": {
-            "confirmed": "Parkeerplaats bevestigd",
-            "reported": "Melding verstuurd",
-            "withdrawn": "Parkeerplaats niet meer beschikbaar",
-            "empty": "Geen parkeerplaatsen meer om te controleren",
-            "unsure": "Geen antwoord opgeslagen"
+        "start": "Help {{name}} controleren",
+        "title": "Help {{name}} controleren",
+        "intro": "Je ziet steeds één parkeerplaats. Laat weten of die er nog is, of sla hem over.",
+        "back": "Terug naar {{name}}",
+        "stop": "Stoppen met controleren",
+        "map": "Kaart rond de parkeerplaats",
+        "no_street": "Straatnaam onbekend",
+        "kind": {
+            "community": "Community-parkeerplaats",
+            "municipal": "Gemeentelijke parkeerplaats"
         },
-        "detail": {
-            "confirmed": "Je hebt vandaag bevestigd dat deze parkeerplaats er is.",
-            "reported": "Een moderator beoordeelt je melding. In de tussentijd blijft de parkeerplaats op de kaart staan.",
-            "withdrawn": "Je kunt deze parkeerplaats in deze gemeente niet meer controleren. Ga gerust door naar de volgende.",
-            "empty": "Je kunt terug naar de gemeentepagina.",
-            "unsure": "Weet je niet zeker of deze parkeerplaats er nog is? Dan kun je doorgaan naar de volgende."
+        "streetview": "Street View",
+        "question": "Is deze parkeerplaats er nog?",
+        "confirm": "Ja, de parkeerplaats is er nog",
+        "report": "Meld dat de parkeerplaats verdwenen is",
+        "unsure": "Weet ik niet",
+        "skipped": "Vorige parkeerplaats overgeslagen.",
+        "next": "Volgende parkeerplaats",
+        "loading": "Volgende parkeerplaats laden…",
+        "details": {
+            "orientation": "Vak",
+            "under_sign": "Onderbord",
+            "source": "Bron",
+            "confirmed": "Bevestigd",
+            "unknown": "Niet bekend",
+            "never": "Nog niet bevestigd",
+            "community": "Toegevoegd door een bezoeker",
+            "municipal": "Gemeente {{name}}"
+        },
+        "disclaimer": "Controleer ter plaatse altijd de borden; aan deze informatie kun je geen rechten ontlenen.",
+        "sign_in": {
+            "title": "Log in om te beginnen",
+            "text": "Na het inloggen zie je meteen de eerste parkeerplaats.",
+            "login": "Inloggen",
+            "register": "Account aanmaken"
+        },
+        "ineligible": {
+            "title": "Bevestig eerst je e-mailadres",
+            "text": "Daarna kun je meehelpen met controleren."
+        },
+        "confirmed": "Bedankt voor je bevestiging",
+        "reported": {
+            "title": "Je melding wordt beoordeeld",
+            "text": "Een moderator kijkt ernaar. Tot dan blijft de parkeerplaats op de kaart."
+        },
+        "withdrawn": "Deze parkeerplaats staat niet meer op de kaart",
+        "error": {
+            "title": "De volgende parkeerplaats kon niet worden geladen",
+            "text": "Controleer je internetverbinding en probeer het opnieuw.",
+            "retry": "Opnieuw proberen"
+        },
+        "empty": {
+            "title": "Je hebt alle beschikbare parkeerplaatsen voor deze ronde bekeken",
+            "text": "Bedankt voor je hulp."
         }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Municipality;
+use App\Models\ParkingSpace;
 use App\Models\User;
 use App\Services\ParkingPlaces;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,22 +26,26 @@ class MunicipalityParkingCheckController extends Controller
             || ! is_string($id) || $id === '' || strlen($id) > 255
             || ($source === 'community' && ! Str::isUuid($id))), 404);
 
+        // Checking needs an account, so a guest signs in before seeing the first parking space.
         $user = $request->user();
         $advancing = $hasTarget && $request->boolean('next');
+        $skipped = $advancing && $request->boolean('skipped');
         $target = null;
-        if (! $hasTarget || $advancing) {
+        if ($user !== null && (! $hasTarget || $advancing)) {
             $next = $this->next($places, $area, $user, $source, $id);
             if ($next !== null) {
-                return to_route('areas.municipality.check', [$country, $municipality, ...$next])->header('Cache-Control', 'private, no-store');
+                return to_route('areas.municipality.check', [$country, $municipality, ...$next, ...($skipped ? ['skipped' => 1] : [])])
+                    ->header('Cache-Control', 'private, no-store');
             }
-        } else {
+        } elseif ($user !== null) {
             $target = $places->published($source, $id)->whereBelongsTo($area)->first();
         }
 
         $state = match (true) {
+            $user === null => 'sign_in',
             $target === null => $hasTarget && ! $advancing ? 'withdrawn' : 'empty',
-            $user !== null && $target->isReportedBy($user) => 'reported',
-            $user !== null && $target->isConfirmedTodayBy($user) => 'confirmed',
+            $target->isReportedBy($user) => 'reported',
+            $target->isConfirmedTodayBy($user) => 'confirmed',
             default => 'ready',
         };
 
@@ -49,6 +54,7 @@ class MunicipalityParkingCheckController extends Controller
             'name' => $area->name,
             'cursor' => $hasTarget ? ['source' => $source, 'id' => $id] : null,
             'state' => $state,
+            'skipped' => $request->boolean('skipped') && $target !== null,
             'canContribute' => $user?->can('contribute') ?? false,
             'place' => $target === null ? null : [
                 'source' => $source,
@@ -56,6 +62,9 @@ class MunicipalityParkingCheckController extends Controller
                 'street' => $target->street,
                 'latitude' => $target->latitude,
                 'longitude' => $target->longitude,
+                'orientation' => $target->orientation?->label(),
+                'under_sign' => $target instanceof ParkingSpace ? $target->under_sign?->label() : null,
+                'last_confirmed_at' => $target->publicConfirmations($user)['last_confirmed_at'],
             ],
         ])->toResponse($request)->withHeaders(['Cache-Control' => 'private, no-store', 'X-Robots-Tag' => 'noindex']);
     }

@@ -37,7 +37,7 @@ export default function ReportStep({ source, id, onBack, onReported, onUnavailab
                 >
                     <ChevronLeft className="h-5 w-5" aria-hidden />
                 </Button>
-                <h3 id="parking-report-step" className="text-base font-semibold">
+                <h3 id="parking-report-step" tabIndex={-1} className="text-base font-semibold">
                     {t('detail.report.title')}
                 </h3>
             </div>

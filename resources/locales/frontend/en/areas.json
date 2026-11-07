@@ -161,34 +161,60 @@
         "text": "View the map or add a parking space."
     },
     "check": {
-        "start": "Help check parking spaces",
-        "title": "Check parking spaces in {{name}}",
-        "back": "Back to parking in {{name}}",
-        "question": "Is this parking space still here?",
-        "address": "{{address}}, {{name}}",
-        "no_street": "Street name unavailable",
-        "map": "Show this parking space on the map",
-        "explanation": "Check whether the disabled parking space still exists. You do not need to check its other details.",
-        "sign_in": "Sign in to answer",
-        "ineligible": "You need a verified account with permission to contribute to submit a check.",
-        "confirm": "Yes, it is still here",
-        "report": "Report that it is gone",
-        "unsure": "I’m not sure",
-        "next": "Next parking space",
-        "restart": "Start again",
-        "status": {
-            "confirmed": "Parking space confirmed",
-            "reported": "Report submitted",
-            "withdrawn": "Parking space no longer available",
-            "empty": "No more parking spaces to check",
-            "unsure": "No answer recorded"
+        "start": "Help check {{name}}",
+        "title": "Help check {{name}}",
+        "intro": "You see one parking space at a time. Tell us whether it is still there, or skip it.",
+        "back": "Back to {{name}}",
+        "stop": "Stop checking",
+        "map": "Map around the parking space",
+        "no_street": "Street name unknown",
+        "kind": {
+            "community": "Community parking space",
+            "municipal": "Municipal parking space"
         },
-        "detail": {
-            "confirmed": "You confirmed today that this parking space exists.",
-            "reported": "Your report is awaiting moderation. The parking space remains on the map during review.",
-            "withdrawn": "This parking space is no longer available to check in this municipality. You can continue to the next one.",
-            "empty": "You can return to the municipality page.",
-            "unsure": "If you cannot tell whether this parking space still exists, you can continue to the next one."
+        "streetview": "Street View",
+        "question": "Is this parking space still there?",
+        "confirm": "Yes, the parking space is still there",
+        "report": "Report that the parking space is gone",
+        "unsure": "I don’t know",
+        "skipped": "Previous parking space skipped.",
+        "next": "Next parking space",
+        "loading": "Loading the next parking space…",
+        "details": {
+            "orientation": "Bay",
+            "under_sign": "Additional sign",
+            "source": "Source",
+            "confirmed": "Confirmed",
+            "unknown": "Unknown",
+            "never": "Not confirmed yet",
+            "community": "Added by a visitor",
+            "municipal": "Municipality of {{name}}"
+        },
+        "disclaimer": "Always check the signs on site; no rights can be derived from this information.",
+        "sign_in": {
+            "title": "Sign in to start",
+            "text": "After signing in you will see the first parking space straight away.",
+            "login": "Sign in",
+            "register": "Create account"
+        },
+        "ineligible": {
+            "title": "Verify your email address first",
+            "text": "Then you can help check parking spaces."
+        },
+        "confirmed": "Thanks for confirming",
+        "reported": {
+            "title": "Your report is being reviewed",
+            "text": "A moderator will look at it. Until then the parking space stays on the map."
+        },
+        "withdrawn": "This parking space is no longer on the map",
+        "error": {
+            "title": "The next parking space could not be loaded",
+            "text": "Check your internet connection and try again.",
+            "retry": "Try again"
+        },
+        "empty": {
+            "title": "You have seen all available parking spaces for this round",
+            "text": "Thanks for your help."
         }
     }
 }

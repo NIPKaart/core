@@ -84,7 +84,7 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                             <MapButton href={area.map_url} name={area.name} className="h-13 w-full lg:h-12 lg:w-auto" />
                             {totals.spaces > 0 && (
                                 <Button variant="outline" asChild className="h-13 w-full lg:h-12 lg:w-auto">
-                                    <Link href={check(area.check_area)}>{t('check.start')}</Link>
+                                    <Link href={check(area.check_area)}>{t('check.start', { name: area.name })}</Link>
                                 </Button>
                             )}
                         </div>
