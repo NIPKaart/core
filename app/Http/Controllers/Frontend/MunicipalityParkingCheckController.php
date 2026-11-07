@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Http\Controllers\Frontend;
+
+use App\Http\Controllers\Controller;
+use App\Models\Municipality;
+use App\Models\User;
+use App\Services\ParkingPlaces;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
+
+class MunicipalityParkingCheckController extends Controller
+{
+    public function __invoke(Request $request, ParkingPlaces $places, string $country, string $municipality): Response
+    {
+        $area = Municipality::query()->where('slug', $municipality)
+            ->whereRelation('country', 'code', strtoupper($country))->firstOrFail();
+        $source = $request->query('source');
+        $id = $request->query('id');
+        $hasTarget = $source !== null || $id !== null;
+        abort_if($hasTarget && (! in_array($source, ParkingPlaces::SOURCES, true)
+            || ! is_string($id) || $id === '' || strlen($id) > 255
+            || ($source === 'community' && ! Str::isUuid($id))), 404);
+
+        $user = $request->user();
+        $advancing = $hasTarget && $request->boolean('next');
+        $target = null;
+        if (! $hasTarget || $advancing) {
+            $next = $this->next($places, $area, $user, $source, $id);
+            if ($next !== null) {
+                return to_route('areas.municipality.check', [$country, $municipality, ...$next])->header('Cache-Control', 'private, no-store');
+            }
+        } else {
+            $target = $places->published($source, $id)->whereBelongsTo($area)->first();
+        }
+
+        $state = match (true) {
+            $target === null => $hasTarget && ! $advancing ? 'withdrawn' : 'empty',
+            $user !== null && $target->isReportedBy($user) => 'reported',
+            $user !== null && $target->isConfirmedTodayBy($user) => 'confirmed',
+            default => 'ready',
+        };
+
+        return Inertia::render('frontend/areas/parking-check', [
+            'area' => ['country' => $country, 'municipality' => $municipality],
+            'name' => $area->name,
+            'cursor' => $hasTarget ? ['source' => $source, 'id' => $id] : null,
+            'state' => $state,
+            'canContribute' => $user?->can('contribute') ?? false,
+            'place' => $target === null ? null : [
+                'source' => $source,
+                'id' => (string) $target->getKey(),
+                'street' => $target->street,
+                'latitude' => $target->latitude,
+                'longitude' => $target->longitude,
+            ],
+        ])->toResponse($request)->withHeaders(['Cache-Control' => 'private, no-store', 'X-Robots-Tag' => 'noindex']);
+    }
+
+    /** @return array{source: string, id: string}|null */
+    private function next(ParkingPlaces $places, Municipality $area, ?User $user, ?string $source, ?string $id): ?array
+    {
+        // A source and primary key form a stable cursor even if the previous record has disappeared.
+        foreach (ParkingPlaces::SOURCES as $candidateSource) {
+            if ($source === 'municipal' && $candidateSource !== $source) {
+                continue;
+            }
+
+            $query = $places->publishedFrom($candidateSource)->whereBelongsTo($area);
+            if ($candidateSource === $source) {
+                $query->where('id', '>', $id);
+            }
+            if ($user !== null) {
+                $query->whereDoesntHave('confirmations', fn (Builder $confirmations) => $confirmations
+                    ->whereBelongsTo($user)->whereDate('confirmed_at', now()->toDateString()))
+                    ->whereDoesntHave('reports', fn (Builder $reports) => $reports->open()->whereBelongsTo($user));
+            }
+
+            $candidate = $query->orderBy('id')->value('id');
+            if ($candidate !== null) {
+                return ['source' => $candidateSource, 'id' => (string) $candidate];
+            }
+        }
+
+        return null;
+    }
+}

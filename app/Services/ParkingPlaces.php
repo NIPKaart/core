@@ -24,9 +24,15 @@ class ParkingPlaces
      */
     public function published(string $source, string $id): Builder
     {
+        return $this->publishedFrom($source)->whereKey($source === 'community' && ! Str::isUuid($id) ? abort(404) : $id);
+    }
+
+    /** @return Builder<ParkingSpace>|Builder<ParkingMunicipal> */
+    public function publishedFrom(string $source): Builder
+    {
         return match ($source) {
-            'community' => $this->place($source, $id)->where('status', ParkingStatus::APPROVED),
-            'municipal' => $this->place($source, $id)->where('visibility', true),
+            'community' => ParkingSpace::query()->where('status', ParkingStatus::APPROVED),
+            'municipal' => ParkingMunicipal::query()->where('visibility', true),
         };
     }
 

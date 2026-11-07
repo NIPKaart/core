@@ -159,5 +159,36 @@
     "empty": {
         "title": "NIPKaart heeft hier op dit moment geen parkeerlocaties",
         "text": "Bekijk de kaart of voeg een parkeerplaats toe."
+    },
+    "check": {
+        "start": "Help controleren",
+        "title": "Parkeerplaatsen controleren in {{name}}",
+        "back": "Terug naar parkeren in {{name}}",
+        "question": "Is deze parkeerplaats er nog?",
+        "address": "{{address}}, {{name}}",
+        "no_street": "Straatnaam niet beschikbaar",
+        "map": "Toon deze parkeerplaats op de kaart",
+        "explanation": "Controleer of de gehandicaptenparkeerplaats er nog is. Je hoeft de andere gegevens niet te controleren.",
+        "sign_in": "Inloggen om te antwoorden",
+        "ineligible": "Om een controle in te sturen heb je een geverifieerd account nodig waarmee je kunt bijdragen.",
+        "confirm": "Ja, die is er nog",
+        "report": "Melden dat die weg is",
+        "unsure": "Ik weet het niet zeker",
+        "next": "Volgende parkeerplaats",
+        "restart": "Opnieuw beginnen",
+        "status": {
+            "confirmed": "Parkeerplaats bevestigd",
+            "reported": "Melding verstuurd",
+            "withdrawn": "Parkeerplaats niet meer beschikbaar",
+            "empty": "Geen parkeerplaatsen meer om te controleren",
+            "unsure": "Geen antwoord opgeslagen"
+        },
+        "detail": {
+            "confirmed": "Je hebt vandaag bevestigd dat deze parkeerplaats er is.",
+            "reported": "Een moderator beoordeelt je melding. In de tussentijd blijft de parkeerplaats op de kaart staan.",
+            "withdrawn": "Je kunt deze parkeerplaats in deze gemeente niet meer controleren. Ga gerust door naar de volgende.",
+            "empty": "Je kunt terug naar de gemeentepagina.",
+            "unsure": "Weet je niet zeker of deze parkeerplaats er nog is? Dan kun je doorgaan naar de volgende."
+        }
     }
 }

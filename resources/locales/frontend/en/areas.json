@@ -159,5 +159,36 @@
     "empty": {
         "title": "NIPKaart currently has no parking here",
         "text": "View the map or add a parking space."
+    },
+    "check": {
+        "start": "Help check parking spaces",
+        "title": "Check parking spaces in {{name}}",
+        "back": "Back to parking in {{name}}",
+        "question": "Is this parking space still here?",
+        "address": "{{address}}, {{name}}",
+        "no_street": "Street name unavailable",
+        "map": "Show this parking space on the map",
+        "explanation": "Check whether the disabled parking space still exists. You do not need to check its other details.",
+        "sign_in": "Sign in to answer",
+        "ineligible": "You need a verified account with permission to contribute to submit a check.",
+        "confirm": "Yes, it is still here",
+        "report": "Report that it is gone",
+        "unsure": "I’m not sure",
+        "next": "Next parking space",
+        "restart": "Start again",
+        "status": {
+            "confirmed": "Parking space confirmed",
+            "reported": "Report submitted",
+            "withdrawn": "Parking space no longer available",
+            "empty": "No more parking spaces to check",
+            "unsure": "No answer recorded"
+        },
+        "detail": {
+            "confirmed": "You confirmed today that this parking space exists.",
+            "reported": "Your report is awaiting moderation. The parking space remains on the map during review.",
+            "withdrawn": "This parking space is no longer available to check in this municipality. You can continue to the next one.",
+            "empty": "You can return to the municipality page.",
+            "unsure": "If you cannot tell whether this parking space still exists, you can continue to the next one."
+        }
     }
 }

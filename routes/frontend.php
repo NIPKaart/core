@@ -71,6 +71,9 @@ Route::prefix('areas')->as('areas.')->controller(Frontend\AreaController::class)
     Route::get('{country}/regions/{region}', 'region')->where(['country' => '[a-z]{2}', 'region' => '[a-z0-9-]+'])->name('region');
     Route::get('{country}/municipalities/{municipality}', 'municipality')->where(['country' => '[a-z]{2}', 'municipality' => '[a-z0-9-]+'])->name('municipality');
 });
+Route::get('areas/{country}/municipalities/{municipality}/check', Frontend\MunicipalityParkingCheckController::class)
+    ->where(['country' => '[a-z]{2}', 'municipality' => '[a-z0-9-]+'])
+    ->name('areas.municipality.check');
 Route::get('sitemap.xml', Frontend\SitemapController::class)->name('sitemap');
 Route::get('contact', [Frontend\ContactController::class, 'index'])->name('contact');
 Route::post('contact', [Frontend\ContactController::class, 'store'])->middleware('throttle:5,10,contact')->name('contact.store');

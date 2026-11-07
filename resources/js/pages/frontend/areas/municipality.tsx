@@ -18,9 +18,11 @@ import {
     VerificationStatus,
 } from '@/components/frontend/areas/area-parts';
 import Footer from '@/components/frontend/footer';
+import { Button } from '@/components/ui/button';
 import FrontendLayout from '@/layouts/frontend-layout';
 import { cn } from '@/lib/utils';
 import { garages } from '@/routes';
+import { check } from '@/routes/areas/municipality';
 import { add } from '@/routes/location-map';
 import type { MunicipalityArea } from '@/types/area';
 import { Head, Link } from '@inertiajs/react';
@@ -80,6 +82,11 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                     {area.map_url && (
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 lg:col-start-1 lg:row-start-2">
                             <MapButton href={area.map_url} name={area.name} className="h-13 w-full lg:h-12 lg:w-auto" />
+                            {totals.spaces > 0 && (
+                                <Button variant="outline" asChild className="h-13 w-full lg:h-12 lg:w-auto">
+                                    <Link href={check(area.check_area)}>{t('check.start')}</Link>
+                                </Button>
+                            )}
                         </div>
                     )}
                 </section>

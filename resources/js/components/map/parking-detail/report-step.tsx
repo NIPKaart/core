@@ -11,6 +11,7 @@ type Props = {
     id: string;
     onBack: () => void;
     onReported: () => void;
+    onUnavailable?: () => void;
 };
 
 const REASONS = ['sign_removed', 'now_regular_bay', 'other'] as const;
@@ -19,7 +20,7 @@ const NOTE_MAX_LENGTH = 500;
 /**
  * A step inside the detail sheet for reporting that the place is gone; a moderator decides, the place stays on the map meanwhile.
  */
-export default function ReportStep({ source, id, onBack, onReported }: Props) {
+export default function ReportStep({ source, id, onBack, onReported, onUnavailable }: Props) {
     const { t } = useTranslation('frontend/map/modals');
     const noteId = useId();
 
@@ -51,6 +52,12 @@ export default function ReportStep({ source, id, onBack, onReported }: Props) {
                 action={report({ source, id })}
                 options={{ preserveScroll: true }}
                 onSuccess={onReported}
+                onHttpException={(response) => {
+                    if (response.status === 404 && onUnavailable) {
+                        onUnavailable();
+                        return false;
+                    }
+                }}
                 className="flex flex-col gap-4"
             >
                 {({ errors, processing }) => (
