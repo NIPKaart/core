@@ -190,12 +190,9 @@
             "rejected": "Bron afgewezen",
             "approved": "Goedgekeurd"
         },
-        "title": "Nieuwe bron wacht op goedkeuring",
-        "reapproval_title": "Gewijzigde bronbeschrijving wacht op goedkeuring",
-        "rejected_title": "Bron afgewezen",
-        "hint": "Controleer licentie, voorwaarden en gebied één keer. Na goedkeuring gaan leveringen van deze bron gewoon naar beoordeling.",
+        "title": "Controleren",
+        "hint": "Controleer licentie, voorwaarden en gebied. Na goedkeuring gaan leveringen van deze bron naar beoordeling.",
         "rejected_hint": "Leveringen van deze bron worden genegeerd. Keur de bron goed om ze alsnog te verwerken.",
-        "changed_fields": "Gewijzigd sinds de laatste goedkeuring",
         "no_licence": "Geen licentie opgegeven",
         "fields": {
             "name": "Naam",
@@ -214,9 +211,12 @@
         "hours_one": "Elk {{count}} uur",
         "hours_other": "Elke {{count}} uur",
         "reason": "Reden",
-        "reason_placeholder": "Optioneel: waarom je deze bron goedkeurt of afwijst",
+        "reason_placeholder": "Bijvoorbeeld: licentie gecontroleerd op de bronpagina",
         "approve": "Bron goedkeuren",
-        "reject": "Bron afwijzen"
+        "reject": "Bron afwijzen",
+        "changed": "Gewijzigd",
+        "previous": "Eerder",
+        "reason_label": "Reden (optioneel)"
     },
     "live": {
         "processing": "Leveringen worden verwerkt. Deze pagina werkt zichzelf bij."

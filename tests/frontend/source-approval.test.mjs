@@ -22,10 +22,14 @@ const context = {
     require: (name) => {
         if (name === 'react-i18next') return { useTranslation: () => ({ t }) };
         if (name === '@/actions/App/Http/Controllers/Admin/DatasetSourceController') return { update: { form: () => ({}) } };
-        if (name === '@inertiajs/react') return { Form: ({ children }) => children({ errors: {}, processing: false }) };
+        if (name === '@inertiajs/react')
+            return { Form: ({ children }) => React.createElement('form', null, children({ errors: {}, processing: false })) };
         if (name === '@/components/ui/button') return { Button: ({ children, value }) => React.createElement('button', { value }, children) };
         if (name === '@/components/ui/textarea') return { Textarea: (props) => React.createElement('textarea', props) };
         if (name === '@/components/input-error') return { default: ({ message }) => React.createElement('p', null, message) };
+        if (name === '@/components/ui/label') return { Label: ({ children }) => React.createElement('label', null, children) };
+        if (name === '@/components/ui/badge') return { Badge: ({ children }) => React.createElement('mark', null, children) };
+        if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
         return require(name);
     },
 };
@@ -61,9 +65,12 @@ const render = (overrides) =>
 
 test('a new source shows what the administrator approves, including a missing licence', () => {
     const html = render({});
-    assert.match(html, /New source awaiting approval/);
+    assert.match(html, /Check the licence, terms and area/);
     assert.match(html, /No licence stated/);
-    assert.match(html, /Eindhoven \(GM0772\) · NL-NB · NL/);
+    assert.match(html, /GM0772/);
+    assert.match(html, /NL-NB · NL/);
+    assert.match(html, /5\.32, 51\.35, 5\.62, 51\.52/);
+    assert.doesNotMatch(html, /<mark>/);
     assert.match(html, /Catalog delivery interval/);
     assert.match(html, /Every 24 hours/);
     assert.match(html, /value="approve"/);
@@ -73,8 +80,9 @@ test('a new source shows what the administrator approves, including a missing li
 test('a changed description names the changed fields but ignores a new delivery interval', () => {
     assert.deepEqual([...changedFields(description, { ...description, expected_interval_hours: 48 })], []);
     const html = render({ pending_description: { ...description, licence: 'CC0-1.0', expected_interval_hours: 48 } });
-    assert.match(html, /Changed source description awaiting approval/);
-    assert.match(html, /Changed since the last approval: Licence/);
+    assert.match(html, /Licence<mark>Changed<\/mark>/);
+    assert.match(html, /Previously: <s>No licence stated<\/s>/);
+    assert.equal(html.match(/<mark>/g).length, 1);
     assert.match(html, /CC0-1\.0/);
 });
 
@@ -85,7 +93,7 @@ test('registration problems are announced and a rejected source can only be appr
         review_reason: 'Licence unclear',
     });
     assert.match(html, /role="alert"[^>]*>.*NL-XX/);
-    assert.match(html, /Source rejected/);
+    assert.match(html, /Deliveries of this source are ignored/);
     assert.match(html, /Reason: Licence unclear/);
     assert.doesNotMatch(html, /value="reject"/);
 });

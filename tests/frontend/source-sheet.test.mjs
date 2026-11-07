@@ -44,7 +44,8 @@ const context = {
         if (name === '@/components/ui/button') return { Button: passThrough };
         if (name === '@/components/municipal-date-time') return { __esModule: true, default: () => 'date' };
         if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
-        if (name === './source-approval') return { __esModule: true, default: () => React.createElement('section', null, 'approval') };
+        if (name === './source-approval')
+            return { __esModule: true, default: ({ children, history }) => React.createElement('section', null, 'approval', children, history) };
         if (name === './source-status') return { SourceStatus: () => 'status', SourceType: () => 'type' };
         return new Proxy({}, { get: () => () => null });
     },
@@ -107,10 +108,18 @@ test('the sheet shows what is on the map and offers municipal locations only for
     assert.match(offstreet, /sources_table\.not_published/);
 });
 
-test('a source without a licence says so and an unapproved source shows its approval', () => {
-    const html = render(sourceRow({ approval_state: 'pending', description: { ...description, licence: null } }));
-    assert.match(html, /approval\.no_licence/);
-    assert.match(html, /<section>approval<\/section>/);
+test('a source without a licence says so', () => {
+    assert.match(render(sourceRow({ description: { ...description, licence: null } })), /approval\.no_licence/);
+});
+
+test('an unapproved source shows its approval instead of repeating the source details', () => {
+    const html = render(sourceRow({ approval_state: 'pending', latest_import: null, last_published_retrieved_at: null }));
+    assert.match(html, /<section>approval/);
+    assert.doesNotMatch(html, /sheet\.about/);
+    assert.doesNotMatch(html, /on_map/);
+    assert.doesNotMatch(html, /history/);
+    assert.match(render(sourceRow({ approval_state: 'pending' })), /on_map/);
+    assert.match(render(sourceRow({ approval_state: 'rejected' })), /<section>approval.*history/);
 });
 
 for (const [locale, catalog, hours, occupancy, interval] of [
