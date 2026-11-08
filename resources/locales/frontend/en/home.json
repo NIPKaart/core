@@ -1,13 +1,13 @@
 {
     "meta": {
-        "title": "Find disabled parking spaces near your destination",
-        "description": "Find disabled parking spaces near your destination. No account needed."
+        "title": "Find a disabled parking space near your destination",
+        "description": "Find disabled parking spaces near your destination and check the parking rules where available. The map also shows garages and park-and-ride sites."
     },
     "hero": {
         "eyebrow": "For everyone with a disabled parking card",
-        "title": "Find disabled parking spaces near your destination",
-        "intro": "Search by address or name.",
-        "intro_short": "Search by address or name.",
+        "title": "Know where to park before you go",
+        "intro": "Find disabled parking spaces near your destination and check the parking rules where available. The map also shows garages and park-and-ride sites.",
+        "intro_short": "Find disabled parking spaces near your destination and check the parking rules where available.",
         "label": "Where are you going?",
         "placeholder": "E.g. Rijksmuseum or Utrecht Centraal",
         "placeholder_short": "Address or place",

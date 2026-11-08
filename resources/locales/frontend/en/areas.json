@@ -153,9 +153,6 @@
         "others_spaces_other": "{{value}} spaces",
         "all": "All regions and municipalities"
     },
-    "community_progress": {
-        "count": "Community: {{confirmed}} of {{total}} parking spaces confirmed"
-    },
     "municipality": {
         "more_in": "More municipalities in {{name}}",
         "all_in": "All municipalities in {{name}}",
