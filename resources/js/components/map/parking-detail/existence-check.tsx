@@ -42,15 +42,13 @@ export default function ExistenceCheck({
     // Show the outcome straight away; the refreshed detail confirms it shortly after.
     const [justConfirmed, setJustConfirmed] = useState(false);
     const date = (value: string) => <time dateTime={value}>{formatShortDate(value, i18n.language)}</time>;
-    const evidence =
-        confirmedCount > 0 ? (
-            <>
-                {t('detail.existence.count', { count: confirmedCount })}
-                {lastConfirmedAt && <> · {date(lastConfirmedAt)}</>}
-            </>
-        ) : (
-            t('detail.existence.none')
-        );
+    const evidence = lastConfirmedAt ? (
+        <>
+            {t('detail.existence.present_since')} {date(lastConfirmedAt)}
+        </>
+    ) : (
+        t(confirmedCount > 0 ? 'detail.existence.confirmed' : 'detail.existence.none')
+    );
 
     if (signedIn && reported) {
         return (
@@ -67,6 +65,7 @@ export default function ExistenceCheck({
                         {t('detail.existence.reported')}
                     </h3>
                     <p className="text-xs text-pretty text-orange-800 dark:text-orange-200">{t('detail.existence.reported_note')}</p>
+                    {lastConfirmedAt && <p className="text-xs text-muted-foreground">{evidence}</p>}
                 </div>
             </section>
         );
@@ -89,6 +88,7 @@ export default function ExistenceCheck({
                     <p className="text-xs font-medium text-pretty text-green-800 dark:text-green-200">
                         {t('detail.existence.today_by_you', { count: Math.max(confirmedCount, 1) })}
                     </p>
+                    {lastConfirmedAt && <p className="text-xs text-muted-foreground">{evidence}</p>}
                 </div>
             </section>
         );
@@ -109,13 +109,8 @@ export default function ExistenceCheck({
                     </span>
                     <div className="flex min-w-0 flex-col gap-0.5 leading-tight">
                         <h3 id="parking-existence" className="text-sm font-semibold">
-                            {confirmedCount > 0 ? t('detail.existence.count', { count: confirmedCount }) : t('detail.existence.none')}
+                            {evidence}
                         </h3>
-                        {lastConfirmedAt && (
-                            <p className="text-xs text-muted-foreground">
-                                {t('detail.existence.present_since')} {date(lastConfirmedAt)}
-                            </p>
-                        )}
                     </div>
                 </div>
                 <p className="ml-13 text-xs text-pretty text-muted-foreground">

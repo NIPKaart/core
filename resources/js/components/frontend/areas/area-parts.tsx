@@ -104,11 +104,13 @@ export function VerificationStatus({
     totals,
     className,
     showLast = true,
+    communityConfirmedSpaces,
     split = false,
 }: {
     totals: AreaTotals;
     className?: string;
     showLast?: boolean;
+    communityConfirmedSpaces?: number;
     /** Summary and breakdown side by side on wide screens, as on the country page. */
     split?: boolean;
 }) {
@@ -154,6 +156,14 @@ export function VerificationStatus({
                 </ul>
             </div>
             <p className={muted}>{t('status.explanation')}</p>
+            {communityConfirmedSpaces !== undefined && (
+                <p className="text-sm font-medium">
+                    {t('community_progress.count', {
+                        confirmed: format.number(communityConfirmedSpaces),
+                        total: format.number(totals.spaces),
+                    })}
+                </p>
+            )}
             {showLast && totals.last_confirmed_at && (
                 <span className={cn('text-sm', muted)}>{t('status.last', { time: format.relative(totals.last_confirmed_at) })}</span>
             )}
