@@ -120,6 +120,7 @@ class OffstreetObservationService
             }
             $applied = 0;
             $unknown = 0;
+            $publicGarageIds = [];
             foreach ($delivery['records'] as $record) {
                 $space = $spaces->get($delivery['catalog_delivery_id'] === null && $delivery['identity_records'] === null ? $record['external_id'] : ($bindings[$record['external_id']] ?? null));
                 if ($space === null) {
@@ -135,13 +136,19 @@ class OffstreetObservationService
                         'observation_fetched_at' => $delivery['fetched_at'],
                         'observation_identity' => ['catalog_delivery_id' => $delivery['catalog_delivery_id'], 'source_record' => $context[$record['external_id']] ?? null],
                     ])->save();
+                    if ($space->visibility) {
+                        $publicGarageIds[$space->id] = $space->id;
+                    }
                     $applied++;
                 }
             }
             $source->forceFill(['last_observation_key' => $newest['key']])->save();
             if ($applied > 0) {
                 DatasetDataChanged::dispatch('observations', 'offstreet');
-                OffstreetObservationsApplied::dispatch();
+                // Bound the public payload to fit Reverb's message size limit.
+                foreach (array_chunk(array_values($publicGarageIds), 100) ?: [[]] as $garageIds) {
+                    OffstreetObservationsApplied::dispatch($garageIds);
+                }
             }
 
             // Unknown facilities wait for a catalog link; they are counted, never created.

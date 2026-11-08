@@ -190,8 +190,14 @@ it('tells open pages about applied observations, and stays quiet when nothing ch
     ingestObservations($this->bucket, [observationKey('20260928T100200Z')], observationDelivery([observation(['external_id' => 'UNKNOWN'])]));
     Event::assertNotDispatched(OffstreetObservationsApplied::class);
 
-    ingestObservations($this->bucket, [observationKey('20260928T100400Z')], observationDelivery([observation()]));
-    Event::assertDispatched(OffstreetObservationsApplied::class);
+    $hidden = ParkingOffstreet::factory()->create(['dataset_source_id' => $this->source->id, 'external_id' => 'hidden', 'visibility' => false]);
+    $current = ParkingOffstreet::factory()->create(['dataset_source_id' => $this->source->id, 'external_id' => 'current', 'observed_at' => now()]);
+    ingestObservations($this->bucket, [observationKey('20260928T100400Z')], observationDelivery([
+        observation(), observation(['external_id' => 'hidden']), observation(['external_id' => 'current']),
+    ]));
+    Event::assertDispatchedTimes(OffstreetObservationsApplied::class, 1);
+    Event::assertDispatched(OffstreetObservationsApplied::class, fn (OffstreetObservationsApplied $event) => $event->broadcastWith() === ['garage_ids' => [$this->garage->id]]);
+    expect($hidden->fresh()->free_space)->toBe(37)->and($current->fresh()->observed_at)->toEqual(now()->startOfSecond());
     Event::assertDispatched(DatasetDataChanged::class, fn (DatasetDataChanged $event) => $event->broadcastWith() === ['scope' => 'observations', 'target_type' => 'offstreet']
         && $event->broadcastOn()[0]->name === 'private-datasets');
 });
