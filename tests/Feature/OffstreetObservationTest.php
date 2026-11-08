@@ -13,6 +13,7 @@ use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 
@@ -74,6 +75,33 @@ it('applies only the newest delivery with its own capacity and waits for unknown
         ->observed_at->toEqual(now()->subMinute()->startOfSecond());
     expect($this->source->fresh()->last_observation_key)->toBe($key);
     expect(ParkingOffstreet::count())->toBe(1);
+});
+
+it('updates multiple facilities in one query while retaining their individual measurements', function () {
+    $second = ParkingOffstreet::factory()->create(['dataset_source_id' => $this->source->id, 'external_id' => 'G2']);
+    $key = observationKey('20260928T100200Z');
+    $json = observationDelivery([
+        observation(['available' => 0]),
+        observation(['external_id' => 'G2', 'available' => null, 'capacity' => null, 'observed_at' => null]),
+    ]);
+
+    DB::enableQueryLog();
+    try {
+        $result = ingestObservations($this->bucket, [$key], $json);
+        $writes = collect(DB::getQueryLog())->filter(fn (array $entry): bool => str_starts_with(
+            strtolower(str_replace('"', '', $entry['query'])),
+            'update parking_offstreet_spaces ',
+        ));
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
+
+    expect($writes)->toHaveCount(1)
+        ->and($result)->toBe(['nl-amsterdam-garages' => ['applied' => 2, 'unknown' => 0]])
+        ->and($this->garage->fresh())->free_space->toBe(0)->capacity->toBe(400)
+        ->and($second->fresh())->free_space->toBeNull()->capacity->toBeNull()->observed_at->toBeNull()
+        ->and($this->source->fresh()->last_observation_key)->toBe($key);
 });
 
 it('resumes after the last processed key so a delivery is never applied twice', function () {
