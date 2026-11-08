@@ -162,7 +162,7 @@ function Rules({ area }: { area: MunicipalityArea }) {
     return (
         <section aria-labelledby="rules" className="flex min-w-0 flex-col gap-4 lg:flex-[999_1_560px] lg:gap-5">
             <SectionTitle id="rules" size="medium">
-                {t('rules.permit_title')}
+                <span className="block wrap-anywhere hyphens-auto">{t('rules.permit_title')}</span>
             </SectionTitle>
             {!area.rules.some((rule) => rule.scope === 'municipality') && <p className={muted}>{t('rules.local_unknown')}</p>}
             {area.rules.length > 0 ? (
