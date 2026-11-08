@@ -89,7 +89,7 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                 <Counts area={area} />
 
                 <div className="flex flex-col gap-12 lg:flex-row lg:flex-wrap lg:items-start lg:gap-x-18 lg:gap-y-12">
-                    <Rules area={area} />
+                    <Rules area={area} className="lg:flex-[999_1_560px]" />
                     <Sources area={area} />
                 </div>
 
@@ -156,34 +156,31 @@ function Counts({ area }: { area: MunicipalityArea }) {
     );
 }
 
-function Rules({ area }: { area: MunicipalityArea }) {
+function Rules({ area, className }: { area: MunicipalityArea; className: string }) {
     const { t } = useTranslation('frontend/areas');
 
+    if (area.rules.length === 0 && !area.gpkwijs_url) {
+        return null;
+    }
+
     return (
-        <section aria-labelledby="rules" className="flex min-w-0 flex-col gap-4 lg:flex-[999_1_560px] lg:gap-5">
+        <section aria-labelledby="rules" className={cn('flex min-w-0 flex-col gap-4 lg:gap-5', className)}>
             <SectionTitle id="rules" size="medium">
                 <span className="block wrap-anywhere hyphens-auto">{t('rules.permit_title')}</span>
             </SectionTitle>
-            {!area.rules.some((rule) => rule.scope === 'municipality') && <p className={muted}>{t('rules.local_unknown')}</p>}
-            {area.rules.length > 0 ? (
-                <ul className={cn(card, 'overflow-hidden')}>
-                    {area.rules.map((rule) => (
-                        <RuleRow
-                            key={rule.scope}
-                            rule={rule}
-                            title={t(rule.scope === 'municipality' ? 'rules.official_local' : 'rules.official_national', { name: rule.name })}
-                            scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
-                        />
-                    ))}
-                </ul>
-            ) : (
-                <p className={muted}>{t('rules.national_unknown')}</p>
-            )}
-            {area.gpkwijs_url && (
-                <ul className={card}>
+            <ul className={cn(card, 'overflow-hidden')}>
+                {area.rules.map((rule) => (
+                    <RuleRow
+                        key={rule.scope}
+                        rule={rule}
+                        title={t(rule.scope === 'municipality' ? 'rules.official_local' : 'rules.official_national', { name: rule.name })}
+                        scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
+                    />
+                ))}
+                {area.gpkwijs_url && (
                     <RuleRow rule={{ url: area.gpkwijs_url }} title={t('rules.gpkwijs')} scope={t('rules.gpkwijs_scope', { name: area.name })} />
-                </ul>
-            )}
+                )}
+            </ul>
             <RulesDisclaimer />
         </section>
     );
@@ -229,7 +226,7 @@ function Sources({ area }: { area: MunicipalityArea }) {
                 ))}
             </dl>
             <div className={cn(card, 'flex flex-col gap-1 px-4.5 py-4 lg:px-5 lg:py-4.5')}>
-                <strong>{t('municipality_contact.title', { name: area.name })}</strong>
+                <strong>{t('municipality_contact.title')}</strong>
                 <span className={cn('text-[15px]', muted)}>
                     {t(sources.municipal.length > 0 ? 'municipality_contact.update' : 'municipality_contact.share')}
                 </span>
@@ -298,9 +295,7 @@ function MunicipalityWithoutParking({ area, parent }: { area: MunicipalityArea; 
             </AreaHero>
 
             <div className="mx-auto flex max-w-7xl flex-col gap-4.5 px-5 pt-10 pb-14 sm:px-6 lg:px-8 lg:pt-16 lg:pb-26">
-                <div className="mb-6 max-w-[720px]">
-                    <Rules area={area} />
-                </div>
+                <Rules area={area} className="mb-6 max-w-[720px]" />
                 {area.neighbours.length > 0 && (
                     <>
                         <SectionTitle id="nearby" size="small">
@@ -326,7 +321,7 @@ function MunicipalityWithoutParking({ area, parent }: { area: MunicipalityArea; 
                 >
                     <span className={cn('text-[15px] font-medium', muted)}>{t('municipality_contact.kicker')}</span>
                     <h2 id="for-municipality" className="text-[22px] leading-[1.3] font-bold">
-                        {t('municipality_contact.title', { name: area.name })}
+                        {t('municipality_contact.title')}
                     </h2>
                     <p className={muted}>{t('municipality_contact.share_empty', { name: area.name })}</p>
                     <Link href={municipalityContactUrl} className={actionLink}>
