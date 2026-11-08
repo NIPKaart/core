@@ -65,7 +65,6 @@ async function municipality(props = {}) {
             breadcrumbs: [],
             neighbours: [],
             totals: { spaces: 0, garages: 1 },
-            community_confirmed_spaces: 0,
             sources: { municipal: [], facilities: true },
             rules: [],
             gpkwijs_url: null,
@@ -114,19 +113,18 @@ test('municipal rules suppress the missing local rules notice', async () => {
     assert.doesNotMatch(html, /Lokale parkeerregels onbekend/);
 });
 
-test('municipal progress shows community confirmations against all published street spaces', async () => {
-    const totals = { spaces: 4, verified: 3, garages: 1 };
-    const confirmed = await municipality({ totals, community_confirmed_spaces: 2 });
-    const unconfirmed = await municipality({ totals });
+test('municipal verification shows a localized percentage that matches the breakdown', async () => {
+    const html = await municipality({ totals: { spaces: 1430, verified: 1426, garages: 1 } });
 
-    assert.match(confirmed, /aria-label="3 van 4 parkeerplaatsen geverifieerd"/);
-    assert.match(confirmed, /Community: 2 van 4 parkeerplaatsen bevestigd/);
-    assert.match(unconfirmed, /0 van 4 parkeerplaatsen bevestigd/);
+    assert.match(html, />99,7%<\/span> <span[^>]*>van de 1\.430 parkeerplaatsen geverifieerd/);
+    assert.match(html, /aria-label="1\.426 van 1\.430 parkeerplaatsen geverifieerd"/);
+    assert.doesNotMatch(html, /Community:/);
+});
 
-    for (const indexable of [true, false]) {
-        const empty = await municipality({ indexable });
-        assert.match(empty, /Nog geen gehandicaptenparkeerplaatsen bekend/);
-        assert.doesNotMatch(empty, /Community: 0 van 0/);
-        assert.doesNotMatch(empty, /role="progressbar"/);
-    }
+test('municipal verification only shows 100% when all spaces are verified', async () => {
+    const partial = await municipality({ totals: { spaces: 10000, verified: 9999, garages: 1 } });
+    const full = await municipality({ totals: { spaces: 10000, verified: 10000, garages: 1 } });
+
+    assert.match(partial, />&gt;99,9%<\/span>/);
+    assert.match(full, />100%<\/span>/);
 });

@@ -60,7 +60,6 @@ export type RegionArea = AreaPage & {
 export type MunicipalityArea = AreaPage & {
     country: AreaLink;
     region: AreaLink | null;
-    community_confirmed_spaces: number;
     gpkwijs_url: string | null;
     rules: (RuleLink & { scope: 'municipality' | 'country'; name: string })[];
     sources: {

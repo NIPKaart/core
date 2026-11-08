@@ -54,12 +54,12 @@ final class ParkingDiscovery
      * visible municipal and offstreet records. Street spaces count per source record, as the map shows them; garages
      * and P+R facilities count separately. Visible municipal records are verified by their source; community records need an existence confirmation.
      *
-     * @return array<int, array{country_id: int, province_id: ?int, community: int, municipal: int, verified: int, community_confirmed_spaces: int, last_confirmed_at: ?string, garages: int, park_and_ride: int, live_garages: int, live_park_and_ride: int, observed_at: ?string}>
+     * @return array<int, array{country_id: int, province_id: ?int, community: int, municipal: int, verified: int, last_confirmed_at: ?string, garages: int, park_and_ride: int, live_garages: int, live_park_and_ride: int, observed_at: ?string}>
      */
     public function municipalityTotals(): array
     {
-        return Cache::remember('parking.municipality-totals.v3', 300, function (): array {
-            $empty = ['community' => 0, 'municipal' => 0, 'verified' => 0, 'community_confirmed_spaces' => 0, 'last_confirmed_at' => null, 'garages' => 0, 'park_and_ride' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'observed_at' => null];
+        return Cache::remember('parking.municipality-totals.v2', 300, function (): array {
+            $empty = ['community' => 0, 'municipal' => 0, 'verified' => 0, 'last_confirmed_at' => null, 'garages' => 0, 'park_and_ride' => 0, 'live_garages' => 0, 'live_park_and_ride' => 0, 'observed_at' => null];
             $totals = [];
             $add = function (object $row) use (&$totals, $empty): string {
                 $totals[$row->municipality_id] ??= ['country_id' => (int) $row->country_id, 'province_id' => $row->province_id === null ? null : (int) $row->province_id, ...$empty];
@@ -79,14 +79,18 @@ final class ParkingDiscovery
                     });
 
                 $foreignKey = $source === 'community' ? 'parking_space_id' : 'parking_municipal_id';
-                DB::query()->fromSub($places->select(['id', 'municipality_id']), 'places')
+                $confirmations = DB::query()->fromSub($places->select(['id', 'municipality_id']), 'places')
                     ->join('parking_space_confirmations as confirmation', "confirmation.{$foreignKey}", '=', 'places.id')
                     ->where('confirmation.status', ParkingConfirmationStatus::CONFIRMED->value)
-                    ->selectRaw('places.municipality_id, COUNT(DISTINCT places.id) AS confirmed, MAX(confirmation.confirmed_at) AS last_confirmed_at')
-                    ->groupBy('places.municipality_id')
-                    ->get()
+                    ->selectRaw('places.municipality_id, MAX(confirmation.confirmed_at) AS last_confirmed_at')
+                    ->groupBy('places.municipality_id');
+
+                if ($source === 'community') {
+                    $confirmations->selectRaw('COUNT(DISTINCT places.id) AS confirmed');
+                }
+
+                $confirmations->get()
                     ->each(function (object $row) use (&$totals, $source): void {
-                        $totals[$row->municipality_id]['community_confirmed_spaces'] += (int) $row->confirmed;
                         if ($source === 'community') {
                             $totals[$row->municipality_id]['verified'] += (int) $row->confirmed;
                         }

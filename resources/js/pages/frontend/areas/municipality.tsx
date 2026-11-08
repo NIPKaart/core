@@ -65,11 +65,7 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                             {t('intro.municipality', { name: area.name })}
                         </p>
                         {area.totals.spaces > 0 ? (
-                            <VerificationStatus
-                                totals={area.totals}
-                                communityConfirmedSpaces={area.community_confirmed_spaces}
-                                className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')}
-                            />
+                            <VerificationStatus totals={area.totals} className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')} />
                         ) : (
                             <p className={cn('wrap-anywhere hyphens-auto', muted)}>{t('municipality.empty_title')}.</p>
                         )}

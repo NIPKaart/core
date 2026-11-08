@@ -28,6 +28,13 @@ export function useAreaFormat() {
 
     return {
         number: (value: number) => value.toLocaleString(locale),
+        verifiedShare: (share: number) => {
+            const format = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 });
+            if (share > 0 && share < 0.001) return `<${format.format(0.001)}`;
+            if (share < 1 && share > 0.999) return `>${format.format(0.999)}`;
+
+            return format.format(share);
+        },
         date: (value: string) => new Date(value).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }),
         relative: (value: string) => {
             const days = Math.round((new Date(value).getTime() - Date.now()) / 86_400_000);
@@ -104,19 +111,17 @@ export function VerificationStatus({
     totals,
     className,
     showLast = true,
-    communityConfirmedSpaces,
     split = false,
 }: {
     totals: AreaTotals;
     className?: string;
     showLast?: boolean;
-    communityConfirmedSpaces?: number;
     /** Summary and breakdown side by side on wide screens, as on the country page. */
     split?: boolean;
 }) {
     const { t } = useTranslation('frontend/areas');
     const format = useAreaFormat();
-    const percentage = Math.round((totals.verified / totals.spaces) * 100);
+    const share = totals.verified / totals.spaces;
     const rows = [
         { key: 'verified', count: totals.verified, swatch: 'bg-blue-700' },
         { key: 'unverified', count: totals.spaces - totals.verified, swatch: 'bg-stone-200 shadow-[inset_0_0_0_1px_#a6a09b] dark:bg-neutral-700' },
@@ -126,7 +131,9 @@ export function VerificationStatus({
         <div className={cn('flex flex-col gap-3 lg:gap-3.5', split && 'lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-16', className)}>
             <div className="flex flex-col gap-3 lg:gap-3.5">
                 <span className="flex items-baseline gap-2 lg:gap-2.5">
-                    <span className="text-[28px] leading-none font-bold tracking-[-0.03em] tabular-nums lg:text-[32px]">{percentage}%</span>
+                    <span className="text-[28px] leading-none font-bold tracking-[-0.03em] tabular-nums lg:text-[32px]">
+                        {format.verifiedShare(share)}
+                    </span>{' '}
                     <span className="font-semibold">{t('status.summary', { count: totals.spaces, total: format.number(totals.spaces) })}</span>
                 </span>
                 <div
@@ -134,10 +141,7 @@ export function VerificationStatus({
                     aria-label={t('status.label', { verified: format.number(totals.verified), total: format.number(totals.spaces) })}
                     className="flex h-3 overflow-hidden rounded-full bg-stone-200 dark:bg-neutral-700"
                 >
-                    <span
-                        className="block h-full"
-                        style={{ width: `${((totals.verified / totals.spaces) * 100).toFixed(1)}%`, background: VERIFIED }}
-                    />
+                    <span className="block h-full" style={{ width: `${share * 100}%`, background: VERIFIED }} />
                 </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -156,14 +160,6 @@ export function VerificationStatus({
                 </ul>
             </div>
             <p className={muted}>{t('status.explanation')}</p>
-            {communityConfirmedSpaces !== undefined && (
-                <p className="text-sm font-medium">
-                    {t('community_progress.count', {
-                        confirmed: format.number(communityConfirmedSpaces),
-                        total: format.number(totals.spaces),
-                    })}
-                </p>
-            )}
             {showLast && totals.last_confirmed_at && (
                 <span className={cn('text-sm', muted)}>{t('status.last', { time: format.relative(totals.last_confirmed_at) })}</span>
             )}
@@ -309,14 +305,15 @@ export function PillLink({ href, children }: { href: string; children: ReactNode
 
 /** A bar with the verified share, as used in the area tables. */
 export function VerifiedBar({ verified, spaces }: { verified: number; spaces: number }) {
-    const percentage = spaces > 0 ? Math.round((verified / spaces) * 100) : 0;
+    const format = useAreaFormat();
+    const share = spaces > 0 ? verified / spaces : 0;
 
     return (
         <span className="flex items-center gap-2.5">
             <span aria-hidden className="flex h-1.5 w-22 overflow-hidden rounded-full bg-stone-200 dark:bg-neutral-700">
-                <span className="block h-full bg-blue-700" style={{ width: `${percentage}%` }} />
+                <span className="block h-full bg-blue-700" style={{ width: `${share * 100}%` }} />
             </span>
-            <span className="text-sm font-semibold tabular-nums">{spaces > 0 ? `${percentage}%` : '–'}</span>
+            <span className="text-sm font-semibold tabular-nums">{spaces > 0 ? format.verifiedShare(share) : '–'}</span>
         </span>
     );
 }

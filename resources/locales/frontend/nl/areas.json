@@ -153,9 +153,6 @@
         "others_spaces_other": "{{value}} plaatsen",
         "all": "Alle provincies en gemeenten"
     },
-    "community_progress": {
-        "count": "Community: {{confirmed}} van {{total}} parkeerplaatsen bevestigd"
-    },
     "municipality": {
         "more_in": "Meer gemeenten in {{name}}",
         "all_in": "Alle gemeenten in {{name}}",

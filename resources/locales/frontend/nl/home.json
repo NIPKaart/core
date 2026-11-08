@@ -1,13 +1,13 @@
 {
     "meta": {
-        "title": "Vind gehandicaptenparkeerplaatsen bij je bestemming",
-        "description": "Vind gehandicaptenparkeerplaatsen bij je bestemming. Geen account nodig."
+        "title": "Vind een gehandicaptenparkeerplaats bij je bestemming",
+        "description": "Vind gehandicaptenparkeerplaatsen bij je bestemming en bekijk de parkeerregels die daar bekend zijn. Ook garages en P+R staan op de kaart."
     },
     "hero": {
         "eyebrow": "Voor iedereen met een gehandicaptenparkeerkaart",
-        "title": "Vind gehandicaptenparkeerplaatsen bij je bestemming",
-        "intro": "Zoek op adres of naam.",
-        "intro_short": "Zoek op adres of naam.",
+        "title": "Vind een parkeerplaats vóór je vertrekt",
+        "intro": "Bekijk gehandicaptenparkeerplaatsen, garages, P+R en bekende parkeerregels bij je bestemming.",
+        "intro_short": "Vind gehandicaptenparkeerplaatsen bij je bestemming en bekijk de bekende parkeerregels.",
         "label": "Waar ga je naartoe?",
         "placeholder": "Bijv. Rijksmuseum of Utrecht Centraal",
         "placeholder_short": "Adres of plek",

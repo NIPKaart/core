@@ -46,7 +46,6 @@ it('counts only what the public map shows, with garages and P+R apart', function
             ->where('indexable', true)
             ->where('totals.spaces', 4)
             ->where('totals.verified', 3)
-            ->where('community_confirmed_spaces', 2)
             ->where('totals.garages', 1)
             ->where('totals.live_garages', 1)
             ->where('totals.park_and_ride', 1)
@@ -58,12 +57,16 @@ it('counts only what the public map shows, with garages and P+R apart', function
             ->where('breadcrumbs.2.href', null));
 });
 
-it('shows zero community confirmations when only the municipal source lists a space', function () {
-    ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
+it('shows the latest visitor confirmation without counting a municipal space twice', function () {
+    $municipal = ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
+    $confirmedAt = now()->subDay()->startOfSecond();
+    ParkingSpaceConfirmation::factory()->municipal()->create(['parking_municipal_id' => $municipal->id, 'confirmed_at' => $confirmedAt]);
 
     $this->get(route('areas.municipality', ['nl', 'amsterdam']))->assertInertia(fn (Assert $page) => $page
         ->where('totals.spaces', 1)
-        ->where('community_confirmed_spaces', 0));
+        ->where('totals.verified', 1)
+        ->where('totals.last_confirmed_at', $confirmedAt->toISOString())
+        ->missing('community_confirmed_spaces'));
 });
 
 it('hands off to the map around the area without starting a search around the midpoint', function () {
@@ -136,7 +139,7 @@ it('keeps a municipality without public parking reachable but out of the index',
     $this->get(route('areas.municipality', ['nl', 'amsterdam']))
         ->assertOk()
         ->assertSee('<meta data-inertia="robots" name="robots" content="noindex">', false)
-        ->assertInertia(fn (Assert $page) => $page->where('indexable', false)->where('totals.spaces', 0)->where('community_confirmed_spaces', 0)->where('preview', null));
+        ->assertInertia(fn (Assert $page) => $page->where('indexable', false)->where('totals.spaces', 0)->where('preview', null));
 
     $this->get(route('sitemap'))->assertOk()->assertDontSee(route('areas.municipality', ['nl', 'amsterdam']));
 });

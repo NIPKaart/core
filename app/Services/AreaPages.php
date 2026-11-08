@@ -162,7 +162,6 @@ final class AreaPages
                 $ownRule ? ['scope' => 'municipality', 'name' => $municipality->name, ...$this->ruleLink($ownRule)] : null,
                 ($national = $this->nationalRule($country)) ? ['scope' => 'country', 'name' => $this->countryName($country), ...$national] : null,
             ])),
-            'community_confirmed_spaces' => $own['community_confirmed_spaces'] ?? 0,
             'gpkwijs_url' => $this->gpkwijsUrl($municipality),
             'sources' => [
                 'municipal' => ($own['municipal'] ?? 0) > 0 ? $this->municipalSources($municipality) : [],
