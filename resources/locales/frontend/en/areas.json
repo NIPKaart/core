@@ -46,6 +46,11 @@
         "municipalities": "Municipalities with parking"
     },
     "rules": {
+        "permit_title": "Where can I park with my disabled parking permit?",
+        "official_local": "Official municipal rules for {{name}}",
+        "official_national": "Official national rules for {{name}}",
+        "gpkwijs": "Parking guidance from GPKwijs",
+        "gpkwijs_scope": "Independent guidance on parking in {{name}} at gpkwijs.nl",
         "title": "Parking rules",
         "municipality": "Municipality of {{name}}",
         "national": "National rules",
@@ -76,7 +81,7 @@
         "live_count_other": "Current occupancy in {{count}} municipalities"
     },
     "municipality_contact": {
-        "title": "Partnering with the municipality of {{name}}",
+        "title": "Work with us?",
         "update": "NIPKaart would like to work with the municipality to keep the map up to date. We can discuss how to keep locations and parking conditions current.",
         "share": "The municipality and NIPKaart can work together to make disabled parking spaces easier for residents and visitors to find. We can explore what information is available and how to show it on the map with credit to the municipality.",
         "share_empty": "NIPKaart invites the municipality of {{name}} to work together to map disabled parking spaces. An existing map or address list can start a conversation about what residents and visitors need to plan their trips.",

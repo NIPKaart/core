@@ -249,7 +249,7 @@ export function AreaPin({ garage, className }: { garage: boolean; className?: st
     );
 }
 
-export function RuleRow({ rule, title, scope, compact = false }: { rule: RuleLink; title: string; scope: string; compact?: boolean }) {
+export function RuleRow({ rule, title, scope, compact = false }: { rule: Pick<RuleLink, 'url'>; title: string; scope: string; compact?: boolean }) {
     return (
         <li
             className={cn(
@@ -261,10 +261,14 @@ export function RuleRow({ rule, title, scope, compact = false }: { rule: RuleLin
                 href={rule.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn('inline-flex items-center gap-1.5 self-start', compact ? 'text-base' : 'text-[17px]', textLink)}
+                className={cn(
+                    'inline-flex max-w-full items-center gap-1.5 self-start rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2',
+                    compact ? 'text-base' : 'text-[17px]',
+                    textLink,
+                )}
             >
-                {title}
-                <ExternalLink className="size-3.75" aria-hidden />
+                <span className="min-w-0 wrap-anywhere">{title}</span>
+                <ExternalLink className="size-3.75 shrink-0" aria-hidden />
             </a>
             <span className={cn('text-sm', muted)}>{scope}</span>
         </li>

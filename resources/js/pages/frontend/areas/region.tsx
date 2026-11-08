@@ -343,7 +343,7 @@ function Rules({ area }: { area: RegionArea }) {
                         <ul>
                             <RuleRow
                                 rule={area.national_rule}
-                                title={t('rules.national')}
+                                title={t('rules.official_national', { name: area.country.name })}
                                 scope={t(area.municipal_rules.length > 0 ? 'rules.national_scope_others' : 'rules.national_scope', {
                                     host: area.national_rule.host,
                                 })}

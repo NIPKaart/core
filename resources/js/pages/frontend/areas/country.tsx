@@ -70,10 +70,13 @@ export default function Country(area: CountryArea) {
                             </div>
                         </>
                     ) : (
-                        <div className={cn(card, 'flex flex-col gap-1.5 p-6')}>
-                            <strong>{t('empty.title')}</strong>
-                            <span className={muted}>{t('empty.text')}</span>
-                        </div>
+                        <>
+                            <div className={cn(card, 'flex flex-col gap-1.5 p-6')}>
+                                <strong>{t('empty.title')}</strong>
+                                <span className={muted}>{t('empty.text')}</span>
+                            </div>
+                            <Rules area={area} />
+                        </>
                     )}
                     {area.countries.length > 0 && <OtherCountries area={area} />}
                 </div>
@@ -316,7 +319,7 @@ function Rules({ area }: { area: CountryArea }) {
                 <ul className={cn(card, 'overflow-hidden')}>
                     <RuleRow
                         rule={area.national_rule}
-                        title={t('rules.national')}
+                        title={t('rules.official_national', { name: area.name })}
                         scope={t('rules.national_scope', { host: area.national_rule.host })}
                     />
                 </ul>

@@ -46,6 +46,11 @@
         "municipalities": "Gemeenten met parkeerlocaties"
     },
     "rules": {
+        "permit_title": "Waar mag ik parkeren met mijn gehandicaptenparkeerkaart?",
+        "official_local": "Officiële gemeentelijke regels voor {{name}}",
+        "official_national": "Officiële landelijke regels voor {{name}}",
+        "gpkwijs": "Parkeeruitleg van GPKwijs",
+        "gpkwijs_scope": "Onafhankelijke uitleg over parkeren in {{name}} op gpkwijs.nl",
         "title": "Parkeerregels",
         "municipality": "Gemeente {{name}}",
         "national": "Landelijke regels",
@@ -76,7 +81,7 @@
         "live_count_other": "Actuele bezetting in {{count}} gemeenten"
     },
     "municipality_contact": {
-        "title": "Samenwerken met de gemeente {{name}}",
+        "title": "Samenwerken?",
         "update": "NIPKaart werkt graag met de gemeente samen om de kaart actueel te houden. In een gesprek kunnen we afspraken maken over het bijwerken van locaties en parkeervoorwaarden.",
         "share": "Samen kunnen de gemeente en NIPKaart gehandicaptenparkeerplaatsen beter vindbaar maken voor inwoners en bezoekers. We verkennen graag welke gegevens beschikbaar zijn en hoe we die met bronvermelding op de kaart kunnen tonen.",
         "share_empty": "NIPKaart nodigt de gemeente {{name}} uit om samen gehandicaptenparkeerplaatsen in kaart te brengen. Een bestaande kaart of adressenlijst kan het startpunt zijn voor een gesprek over wat inwoners en bezoekers nodig hebben om hun reis te plannen.",

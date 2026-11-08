@@ -66,7 +66,7 @@ it('hands off to the map around the area without starting a search around the mi
         ->where('preview.clusters', fn ($clusters) => collect($clusters)->sum('count') === 2));
 });
 
-it('links the municipality’s own rules and the national rules', function () {
+it('links Amsterdam’s official rules and separate GPKwijs guidance', function () {
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
     ParkingRule::factory()->for($this->amsterdam)->for($this->netherlands)->create(['url' => 'https://www.amsterdam.nl/parkeren']);
     ParkingRule::factory()->nationwide()->create(['country_id' => $this->netherlands->id, 'url' => 'https://www.rijksoverheid.nl/parkeren']);
@@ -74,7 +74,50 @@ it('links the municipality’s own rules and the national rules', function () {
     $this->get(route('areas.municipality', ['nl', 'amsterdam']))->assertInertia(fn (Assert $page) => $page
         ->where('rules.0', ['scope' => 'municipality', 'name' => 'Amsterdam', 'url' => 'https://www.amsterdam.nl/parkeren', 'host' => 'amsterdam.nl'])
         ->where('rules.1.scope', 'country')
-        ->where('rules.1.host', 'rijksoverheid.nl'));
+        ->where('rules.1.host', 'rijksoverheid.nl')
+        ->has('rules', 2)
+        ->where('gpkwijs_url', 'https://www.gpkwijs.nl/gemeente/amsterdam'));
+});
+
+it('derives the GPKwijs destination from the Dutch municipality name', function (string $name, string $provinceCode, string $expectedSlug) {
+    $province = Province::factory()->for($this->netherlands)->create(['geocode' => $provinceCode]);
+    $municipality = Municipality::factory()->for($this->netherlands)->for($province)->create(['name' => $name]);
+
+    $this->get(route('areas.municipality', ['nl', $municipality->slug]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('gpkwijs_url', "https://www.gpkwijs.nl/gemeente/{$expectedSlug}"));
+})->with([
+    'apostrophe' => ["'s-Hertogenbosch", 'NL-NB', 's-hertogenbosch'],
+    'accented letters' => ['Súdwest-Fryslân', 'NL-FR', 'sdwest-frysln'],
+    'comma and spaces' => ['Nuenen, Gerwen en Nederwetten', 'NL-NB', 'nuenen-gerwen-en-nederwetten'],
+    'unqualified name in Noord-Holland' => ['Haarlem', 'NL-NH', 'haarlem'],
+    'Bergen in Noord-Holland' => ['Bergen', 'NL-NH', 'bergen-nh'],
+    'Bergen in Limburg' => ['Bergen', 'NL-LI', 'bergen-l'],
+    'name with a province qualifier' => ['Beek (L.)', 'NL-LI', 'beek-l'],
+    'Hengelo' => ['Hengelo', 'NL-OV', 'hengelo-o'],
+    'Middelburg' => ['Middelburg', 'NL-ZE', 'middelburg-z'],
+    'Rijswijk' => ['Rijswijk', 'NL-ZH', 'rijswijk-zh'],
+]);
+
+it('provides only the national rule for a municipality without an official local source', function () {
+    $belgium = Country::factory()->create(['code' => 'BE']);
+    $province = Province::factory()->for($belgium)->create(['name' => 'Oost-Vlaanderen']);
+    $municipality = Municipality::factory()->for($belgium)->for($province)->create(['name' => 'Gent']);
+    $national = ParkingRule::factory()->nationwide()->create(['country_id' => $belgium->id, 'url' => 'https://www.belgium.be/nl/mobiliteit']);
+    ParkingRule::factory()->for($this->amsterdam)->for($this->netherlands)->create();
+
+    $this->get(route('areas.municipality', ['be', $municipality->slug]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('indexable', false)
+            ->has('rules', 1)
+            ->where('rules.0.scope', 'country')
+            ->where('rules.0.url', $national->url)
+            ->where('gpkwijs_url', null));
+
+    $national->delete();
+
+    $this->get(route('areas.municipality', ['be', $municipality->slug]))
+        ->assertInertia(fn (Assert $page) => $page->where('rules', [])->where('gpkwijs_url', null));
 });
 
 it('keeps a municipality without public parking reachable but out of the index', function () {

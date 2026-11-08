@@ -10,6 +10,7 @@ use App\Models\ParkingRule;
 use App\Models\Province;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Locale;
 
 /**
@@ -161,6 +162,7 @@ final class AreaPages
                 $ownRule ? ['scope' => 'municipality', 'name' => $municipality->name, ...$this->ruleLink($ownRule)] : null,
                 ($national = $this->nationalRule($country)) ? ['scope' => 'country', 'name' => $this->countryName($country), ...$national] : null,
             ])),
+            'gpkwijs_url' => $this->gpkwijsUrl($municipality),
             'sources' => [
                 'municipal' => ($own['municipal'] ?? 0) > 0 ? $this->municipalSources($municipality) : [],
                 'community' => ($own['community'] ?? 0) > 0,
@@ -277,6 +279,32 @@ final class AreaPages
     private function totals(): array
     {
         return $this->discovery->municipalityTotals();
+    }
+
+    private function gpkwijsUrl(Municipality $municipality): ?string
+    {
+        if ($municipality->country->code !== 'NL') {
+            return null;
+        }
+
+        // GPKwijs drops accent letters instead of transliterating them.
+        $name = preg_replace('/[^a-zA-Z0-9\s-]/u', '', $municipality->name);
+        $slug = Str::slug($name, language: null);
+
+        [$provinceSuffix, $qualifiedSlugs] = match ($municipality->province?->geocode) {
+            'NL-LI' => ['-l', ['beek', 'bergen', 'stein']],
+            'NL-NH' => ['-nh', ['bergen', 'laren']],
+            'NL-OV' => ['-o', ['hengelo']],
+            'NL-ZE' => ['-z', ['middelburg']],
+            'NL-ZH' => ['-zh', ['rijswijk']],
+            default => ['', []],
+        };
+
+        if (in_array($slug, $qualifiedSlugs, true)) {
+            $slug .= $provinceSuffix;
+        }
+
+        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}";
     }
 
     /** @return array{url: string, host: ?string}|null */
