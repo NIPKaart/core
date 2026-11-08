@@ -25,7 +25,7 @@ _Avoid_: window times
 **ParkingSpaceImprovement**: A signed-in person's proposed improvement to a published community ParkingSpace: its location, orientation, under-sign or note. The public space stays unchanged until a moderator approves it, possibly after correcting it; a rejection carries a reason from a fixed list. It keeps what was submitted, what was applied and what that replaced. Published community data belongs to the community, so anyone signed in may propose one; a person has one pending proposal per space. It improves NIPKaart's own community data only: a municipality's dataset is the source of truth for its places and is never corrected or overlaid by the community.
 _Avoid_: edit, revision
 
-**Moderation queue**: The one queue of community decisions a moderator works through: pending ParkingSpace submissions, pending ParkingSpaceImprovements and places with open ParkingPlaceReports (one item per place). Reports have high priority because they concern information the map already shows; everything else is normal. Within a priority the item that has waited longest comes first. What is known about a contributor is shown as context and never changes the order. Approving happens one item at a time; submissions and improvements may be rejected in bulk with one shared reason. Dataset and import work is not part of it.
+**Moderation queue**: The one queue of community decisions a moderator works through: pending ParkingSpace submissions, pending ParkingSpaceImprovements, places with open ParkingPlaceReports (one item per place), and location proposals as a separate group. Reports have high priority because they concern information the map already shows; everything else is normal. Within a priority the item that has waited longest comes first. What is known about a contributor is shown as context and never changes the order. Approving happens one item at a time; submissions and improvements may be rejected in bulk with one shared reason. Dataset and import work is not part of it.
 _Avoid_: inbox items as a stored entity, moderation dashboard
 
 **Community points**: Called "communitypunten" in Dutch. The accumulated value of a person's reviewed community contributions, calculated internally from minimal moderation outcomes. It starts at zero and is shown only to authorized moderators alongside reviewed-outcome context. It does not imply that a new contribution is correct and never changes queue priority, permissions or publication. Achievements and rewards are separate future systems.
@@ -40,6 +40,10 @@ _Avoid_: karma, contributor reputation, reliability percentage
 **Favorite**: A user's saved reference to a parking option from any of the three sources.
 
 **DatasetSource**: A dataset selected for connection to NIPKaart, with an identified publisher, scope and provenance. It is not a research lead or a contact-management record.
+
+**Location proposal** (Dutch: locatievoorstel): A possible accessible parking location supported by one or more points from a proposal source. A moderator works out which physical bays the evidence supports. Each bay drawn and submitted becomes an approved community ParkingSpace, verified by the moderator's existence confirmation at submission. The evidence points are kept separately and linked to the resulting bays.
+
+**Location proposal decision**: A moderator's attributable completion or rejection of a location proposal. Completion records the bays added and, when fewer were added than reported, the reason. Rejection records why the proposal was declined and identifies the existing community space when that is the reason. Reopening preserves earlier decisions.
 
 **SourceRecord**: What one dataset says about a parking place or facility, identified within that dataset. Multiple source records can describe the same physical place without becoming the same source.
 
