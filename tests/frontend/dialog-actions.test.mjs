@@ -76,16 +76,12 @@ function loadParkingDetail({ data = null, allowed = false, desktop = true, useEf
 test('an open garage detail refreshes only for a matching observation and removes its listener on close', () => {
     const effects = [];
     const requests = [];
-    let receive;
+    const listeners = new Map();
     const channel = {
-        listen: (event, callback) => {
-            assert.equal(event, '.observations.applied');
-            receive = callback;
-        },
+        listen: (event, callback) => listeners.set(event, callback),
         stopListening: (event, callback) => {
-            assert.equal(event, '.observations.applied');
-            assert.equal(callback, receive);
-            receive = undefined;
+            assert.equal(callback, listeners.get(event));
+            listeners.delete(event);
         },
     };
     const Detail = loadParkingDetail({
@@ -98,16 +94,17 @@ test('an open garage detail refreshes only for a matching observation and remove
     });
     Detail({ result: { source: 'offstreet', id: 'a', title: 'Garage', distance_metres: null }, open: true, onClose() {} });
     const cleanup = effects[1]();
+    const receive = listeners.get('.observations.applied');
     receive();
     receive({ garage_ids: [] });
     receive({ garage_ids: ['b'] });
     assert.equal(requests.length, 0);
-    receive({ garage_ids: ['b', 'a'] });
+    listeners.get('.observations.details-applied')({ garage_ids: ['b', 'a'] });
     assert.equal(requests.length, 1);
     assert.equal(requests[0].url, '/detail');
     cleanup();
     assert.equal(requests[0].signal.aborted, true);
-    assert.equal(receive, undefined);
+    assert.equal(listeners.size, 0);
 });
 
 test('parking detail share and close actions have matching hover surfaces and remain operable', () => {

@@ -16,7 +16,7 @@ class OffstreetObservationsApplied implements ShouldBroadcast, ShouldDispatchAft
     use Dispatchable, InteractsWithSockets;
 
     /** @param list<string> $garageIds */
-    public function __construct(private array $garageIds) {}
+    public function __construct(private array $garageIds, private bool $detailOnly = false) {}
 
     /** @return array<int, Channel> */
     public function broadcastOn(): array
@@ -26,7 +26,7 @@ class OffstreetObservationsApplied implements ShouldBroadcast, ShouldDispatchAft
 
     public function broadcastAs(): string
     {
-        return 'observations.applied';
+        return ($this->detailOnly ?? false) ? 'observations.details-applied' : 'observations.applied';
     }
 
     /** @return array{garage_ids: list<string>} */

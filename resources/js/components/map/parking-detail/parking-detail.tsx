@@ -108,11 +108,13 @@ export default function ParkingDetail({ result, approximateDestination = false, 
                 .catch(() => {});
         };
         channel.listen('.observations.applied', refresh);
+        channel.listen('.observations.details-applied', refresh);
 
         // Only this listener is removed: the map shares the channel for its garage badges.
         return () => {
             request.abort();
             channel.stopListening('.observations.applied', refresh);
+            channel.stopListening('.observations.details-applied', refresh);
         };
     }, [open, source, id]);
 

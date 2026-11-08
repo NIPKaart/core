@@ -53,16 +53,23 @@ class DatasetDeliveryService
                     if (! $source || $source->target_type !== $type) {
                         continue;
                     }
-                    foreach ($objects as $object) {
-                        $delivery = DatasetDelivery::firstOrCreate(
-                            ['bucket' => $bucket, 'object_key' => $object['key']],
-                            ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
-                        );
-                        if ($delivery->wasRecentlyCreated) {
-                            $received[$type] = true;
-                        }
-                        if ($delivery->etag !== $object['etag']) {
-                            $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
+                    foreach (array_chunk($objects, 500) as $batch) {
+                        $existing = DatasetDelivery::where('bucket', $bucket)
+                            ->whereIn('object_key', array_column($batch, 'key'))
+                            ->get()
+                            ->keyBy('object_key');
+
+                        foreach ($batch as $object) {
+                            $delivery = $existing->get($object['key']) ?? DatasetDelivery::firstOrCreate(
+                                ['bucket' => $bucket, 'object_key' => $object['key']],
+                                ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
+                            );
+                            if ($delivery->wasRecentlyCreated) {
+                                $received[$type] = true;
+                            }
+                            if ($delivery->etag !== $object['etag']) {
+                                $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
+                            }
                         }
                     }
                 }

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Laravel\Nightwatch\Facades\Nightwatch;
 use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\Request;
 
 /**
@@ -26,6 +27,8 @@ final class ObservabilityPrivacy
         Nightwatch::redactOutgoingRequests(function (OutgoingRequest $request): void {
             $request->url = self::withoutQuery($request->url);
         });
+        Nightwatch::rejectQueries(fn (Query $query): bool => $query->duration < 10_000
+            && $query->sql === 'select * from "dataset_deliveries" where ("bucket" = ? and "object_key" = ?) limit 1');
     }
 
     /**

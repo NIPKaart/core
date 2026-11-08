@@ -3,7 +3,9 @@
 use App\Models\User;
 use App\Support\ObservabilityPrivacy;
 use Laravel\Nightwatch\Facades\Nightwatch;
+use Laravel\Nightwatch\QueryConnectionType;
 use Laravel\Nightwatch\Records\OutgoingRequest;
+use Laravel\Nightwatch\Records\Query;
 use Laravel\Nightwatch\Records\Request;
 use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\HeaderBag;
@@ -24,6 +26,11 @@ test('monitoring knows users by id only and keeps locations, searches and keys o
 
     ObservabilityPrivacy::register();
     $callbacks = $recorder->callbacks;
+    $deliveryLookup = 'select * from "dataset_deliveries" where ("bucket" = ? and "object_key" = ?) limit 1';
+    $query = fn (string $sql, int $duration): Query => new Query($sql, '', 0, $duration, 'pgsql', QueryConnectionType::Unknown);
+    expect(($callbacks['rejectQueries'])($query($deliveryLookup, 9_999)))->toBeTrue()
+        ->and(($callbacks['rejectQueries'])($query($deliveryLookup, 10_000)))->toBeFalse()
+        ->and(($callbacks['rejectQueries'])($query('select * from "dataset_sources"', 1_000)))->toBeFalse();
 
     $request = new Request(
         method: 'GET', url: 'https://nipkaart.nl/map?place=community%3A42&at=52.38010%2C4.63720', routeName: 'location-map', routeMethods: ['GET'],
