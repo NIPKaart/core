@@ -10,6 +10,7 @@ use App\Models\ParkingRule;
 use App\Models\Province;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Locale;
 
 /**
@@ -286,24 +287,20 @@ final class AreaPages
             return null;
         }
 
-        // GPKwijs removes accented letters and punctuation, then hyphenates whitespace.
-        $name = preg_replace('/[^a-z0-9\s-]/u', '', mb_strtolower($municipality->name));
-        $slug = preg_replace('/\s+/u', '-', trim($name));
+        // GPKwijs drops accent letters instead of transliterating them.
+        $name = preg_replace('/[^a-zA-Z0-9\s-]/u', '', $municipality->name);
+        $slug = Str::slug($name, language: null);
 
-        // GPKwijs uses province abbreviations for these otherwise unqualified names.
-        $slug = match ([$slug, $municipality->province?->geocode]) {
-            ['beek', 'NL-LI'] => 'beek-l',
-            ['bergen', 'NL-LI'] => 'bergen-l',
-            ['bergen', 'NL-NH'] => 'bergen-nh',
-            ['hengelo', 'NL-OV'] => 'hengelo-o',
-            ['laren', 'NL-NH'] => 'laren-nh',
-            ['middelburg', 'NL-ZE'] => 'middelburg-z',
-            ['rijswijk', 'NL-ZH'] => 'rijswijk-zh',
-            ['stein', 'NL-LI'] => 'stein-l',
-            default => $slug,
+        $provinceSuffix = match ([$slug, $municipality->province?->geocode]) {
+            ['beek', 'NL-LI'], ['bergen', 'NL-LI'], ['stein', 'NL-LI'] => '-l',
+            ['bergen', 'NL-NH'], ['laren', 'NL-NH'] => '-nh',
+            ['hengelo', 'NL-OV'] => '-o',
+            ['middelburg', 'NL-ZE'] => '-z',
+            ['rijswijk', 'NL-ZH'] => '-zh',
+            default => '',
         };
 
-        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}";
+        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}{$provinceSuffix}";
     }
 
     /** @return array{url: string, host: ?string}|null */

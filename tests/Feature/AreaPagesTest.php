@@ -92,6 +92,10 @@ it('derives the GPKwijs destination from the Dutch municipality name', function 
     'comma and spaces' => ['Nuenen, Gerwen en Nederwetten', 'NL-NB', 'nuenen-gerwen-en-nederwetten'],
     'Bergen in Noord-Holland' => ['Bergen', 'NL-NH', 'bergen-nh'],
     'Bergen in Limburg' => ['Bergen', 'NL-LI', 'bergen-l'],
+    'name with a province qualifier' => ['Beek (L.)', 'NL-LI', 'beek-l'],
+    'Hengelo' => ['Hengelo', 'NL-OV', 'hengelo-o'],
+    'Middelburg' => ['Middelburg', 'NL-ZE', 'middelburg-z'],
+    'Rijswijk' => ['Rijswijk', 'NL-ZH', 'rijswijk-zh'],
 ]);
 
 it('provides only the national rule for a municipality without an official local source', function () {
