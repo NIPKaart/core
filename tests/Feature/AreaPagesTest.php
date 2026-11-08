@@ -90,6 +90,7 @@ it('derives the GPKwijs destination from the Dutch municipality name', function 
     'apostrophe' => ["'s-Hertogenbosch", 'NL-NB', 's-hertogenbosch'],
     'accented letters' => ['Súdwest-Fryslân', 'NL-FR', 'sdwest-frysln'],
     'comma and spaces' => ['Nuenen, Gerwen en Nederwetten', 'NL-NB', 'nuenen-gerwen-en-nederwetten'],
+    'unqualified name in Noord-Holland' => ['Haarlem', 'NL-NH', 'haarlem'],
     'Bergen in Noord-Holland' => ['Bergen', 'NL-NH', 'bergen-nh'],
     'Bergen in Limburg' => ['Bergen', 'NL-LI', 'bergen-l'],
     'name with a province qualifier' => ['Beek (L.)', 'NL-LI', 'beek-l'],

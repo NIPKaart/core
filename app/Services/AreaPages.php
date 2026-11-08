@@ -291,16 +291,20 @@ final class AreaPages
         $name = preg_replace('/[^a-zA-Z0-9\s-]/u', '', $municipality->name);
         $slug = Str::slug($name, language: null);
 
-        $provinceSuffix = match ([$slug, $municipality->province?->geocode]) {
-            ['beek', 'NL-LI'], ['bergen', 'NL-LI'], ['stein', 'NL-LI'] => '-l',
-            ['bergen', 'NL-NH'], ['laren', 'NL-NH'] => '-nh',
-            ['hengelo', 'NL-OV'] => '-o',
-            ['middelburg', 'NL-ZE'] => '-z',
-            ['rijswijk', 'NL-ZH'] => '-zh',
-            default => '',
+        [$provinceSuffix, $qualifiedSlugs] = match ($municipality->province?->geocode) {
+            'NL-LI' => ['-l', ['beek', 'bergen', 'stein']],
+            'NL-NH' => ['-nh', ['bergen', 'laren']],
+            'NL-OV' => ['-o', ['hengelo']],
+            'NL-ZE' => ['-z', ['middelburg']],
+            'NL-ZH' => ['-zh', ['rijswijk']],
+            default => ['', []],
         };
 
-        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}{$provinceSuffix}";
+        if (in_array($slug, $qualifiedSlugs, true)) {
+            $slug .= $provinceSuffix;
+        }
+
+        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}";
     }
 
     /** @return array{url: string, host: ?string}|null */
