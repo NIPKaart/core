@@ -1,13 +1,13 @@
 {
     "meta": {
         "title": "Vind gehandicaptenparkeerplaatsen bij je bestemming",
-        "description": "Zoek een adres of plek en vind bekende gehandicaptenparkeerplaatsen in de buurt. Je hebt geen account nodig."
+        "description": "Vind gehandicaptenparkeerplaatsen bij je bestemming. Geen account nodig."
     },
     "hero": {
         "eyebrow": "Voor iedereen met een gehandicaptenparkeerkaart",
         "title": "Vind gehandicaptenparkeerplaatsen bij je bestemming",
-        "intro": "Zoek een adres of plek. Op de kaart zie je welke gehandicaptenparkeerplaatsen NIPKaart in de buurt kent.",
-        "intro_short": "Zoek een adres of plek en zie welke gehandicaptenparkeerplaatsen er in de buurt liggen.",
+        "intro": "Zoek op adres of naam.",
+        "intro_short": "Zoek op adres of naam.",
         "label": "Waar ga je naartoe?",
         "placeholder": "Bijv. Rijksmuseum of Utrecht Centraal",
         "placeholder_short": "Adres of plek",
@@ -42,9 +42,9 @@
         }
     },
     "garages": {
-        "title": "Bekijk de bezetting van garages en P+R",
-        "text": "Bij een actuele meting zie je hoeveel plaatsen er in de hele garage of op het hele terrein vrij zijn en wanneer dat is gemeten.",
-        "text_short": "Je ziet de algemene bezetting als er een actuele meting is.",
+        "title": "Bezetting van garages en P+R",
+        "text": "Bij een actuele meting zie je hoeveel plaatsen er vrij zijn en wanneer dat is gemeten.",
+        "text_short": "Vrije plaatsen bij een actuele meting.",
         "link": "Alle garages en P+R",
         "example_note": "Voorbeeld met fictieve bezettingscijfers.",
         "example_municipality": "Amsterdam",
@@ -55,8 +55,8 @@
         }
     },
     "contribute": {
-        "title": "Staat een parkeerplaats er nog niet op?",
-        "text": "Ken je een gehandicaptenparkeerplaats die nog ontbreekt? Voeg die toe. Staat de parkeerplaats al op de kaart? Open de details om te bevestigen dat die er nog is of te melden dat die is verdwenen.",
+        "title": "Ontbreekt er een parkeerplaats?",
+        "text": "Staat de parkeerplaats al op de kaart? Open de details en bevestig dat die er nog is of meld dat die weg is.",
         "cta": "Parkeerplaats toevoegen",
         "step": "Zet de pin op de plek",
         "next": "Daarna vul je de ligging en eventuele parkeertijden in"

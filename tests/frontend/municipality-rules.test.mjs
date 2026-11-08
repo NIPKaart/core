@@ -79,7 +79,7 @@ test('GPKwijs stands on its own when there are no official rules', async () => {
     assert.match(html, /href="https:\/\/gpkwijs\.nl\/amsterdam"/);
     assert.match(html, /Parkeeruitleg van GPKwijs/);
     assert.match(html, /Controleer de borden/);
-    assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
+    assert.match(html, /Lokale parkeerregels onbekend/);
     assert.match(html, /<strong>Samenwerken\?<\/strong>/);
 });
 
@@ -90,16 +90,16 @@ test('national rules remain available when local rules are unknown', async () =>
 
     assert.match(html, /href="https:\/\/example\.com\/regels"/);
     assert.match(html, /Officiële landelijke regels voor Nederland/);
-    assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
+    assert.match(html, /Lokale parkeerregels onbekend/);
 });
 
 test('municipality pages distinguish missing spaces from missing local rules', async () => {
     for (const indexable of [true, false]) {
         const html = await municipality({ indexable });
 
-        assert.match(html, /NIPKaart kent nog geen gehandicaptenparkeerplaatsen in deze gemeente/);
-        assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
-        assert.equal(html.includes('Geen actuele meting van de garage- of terreinbezetting'), indexable);
+        assert.match(html, /Nog geen gehandicaptenparkeerplaatsen bekend/);
+        assert.match(html, /Lokale parkeerregels onbekend/);
+        assert.equal(html.includes('Geen actuele bezettingsmeting'), indexable);
         assert.match(html, /Neem contact op/);
     }
 });
@@ -110,5 +110,5 @@ test('municipal rules suppress the missing local rules notice', async () => {
     });
 
     assert.match(html, /Officiële gemeentelijke regels voor Amsterdam/);
-    assert.doesNotMatch(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
+    assert.doesNotMatch(html, /Lokale parkeerregels onbekend/);
 });

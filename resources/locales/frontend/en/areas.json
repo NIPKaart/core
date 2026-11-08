@@ -48,7 +48,7 @@
     "rules": {
         "permit_title": "Where can I park with my disabled parking permit?",
         "official_local": "Official municipal rules for {{name}}",
-        "local_unknown": "NIPKaart does not yet know the local parking rules.",
+        "local_unknown": "Local parking rules unknown.",
         "official_national": "Official national rules for {{name}}",
         "gpkwijs": "Parking guidance from GPKwijs",
         "gpkwijs_scope": "Independent guidance on parking in {{name}} at gpkwijs.nl",
@@ -73,7 +73,7 @@
         "community_text": "Added by visitors. Visitors can also confirm that a parking space is still there.",
         "facilities": "Car parks and park-and-ride",
         "facilities_observed": "Occupancy last measured {{time}}",
-        "facilities_none": "No current measurement of garage or site occupancy.",
+        "facilities_none": "No current occupancy reading.",
         "open_data_count_one": "{{count}} municipality shares open data",
         "open_data_count_other": "{{count}} municipalities share open data",
         "community_count_one": "In {{count}} municipality",
@@ -156,8 +156,8 @@
     "municipality": {
         "more_in": "More municipalities in {{name}}",
         "all_in": "All municipalities in {{name}}",
-        "empty_title": "NIPKaart does not yet know of any disabled parking spaces in this municipality",
-        "empty_text": "Know a disabled parking space in {{name}}? Add it. Once approved, it will appear on the map.",
+        "empty_title": "No known disabled parking spaces yet",
+        "empty_text": "Know of one in {{name}}? Add it.",
         "add": "Add a parking space",
         "view_map": "View the map",
         "nearby": "More municipalities in {{name}} with parking"

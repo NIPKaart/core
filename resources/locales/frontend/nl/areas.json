@@ -48,7 +48,7 @@
     "rules": {
         "permit_title": "Waar mag ik parkeren met mijn gehandicaptenparkeerkaart?",
         "official_local": "Officiële gemeentelijke regels voor {{name}}",
-        "local_unknown": "De lokale parkeerregels zijn bij NIPKaart nog niet bekend.",
+        "local_unknown": "Lokale parkeerregels onbekend.",
         "official_national": "Officiële landelijke regels voor {{name}}",
         "gpkwijs": "Parkeeruitleg van GPKwijs",
         "gpkwijs_scope": "Onafhankelijke uitleg over parkeren in {{name}} op gpkwijs.nl",
@@ -73,7 +73,7 @@
         "community_text": "Toegevoegd door bezoekers. Bezoekers kunnen ook bevestigen dat een parkeerplaats er nog is.",
         "facilities": "Garages en P+R",
         "facilities_observed": "Laatste meting van de bezetting {{time}}",
-        "facilities_none": "Geen actuele meting van de garage- of terreinbezetting.",
+        "facilities_none": "Geen actuele bezettingsmeting.",
         "open_data_count_one": "{{count}} gemeente deelt open data",
         "open_data_count_other": "{{count}} gemeenten delen open data",
         "community_count_one": "In {{count}} gemeente",
@@ -156,8 +156,8 @@
     "municipality": {
         "more_in": "Meer gemeenten in {{name}}",
         "all_in": "Alle gemeenten in {{name}}",
-        "empty_title": "NIPKaart kent nog geen gehandicaptenparkeerplaatsen in deze gemeente",
-        "empty_text": "Ken je een gehandicaptenparkeerplaats in {{name}}? Voeg die toe. Na goedkeuring verschijnt die op de kaart.",
+        "empty_title": "Nog geen gehandicaptenparkeerplaatsen bekend",
+        "empty_text": "Ken je er een in {{name}}? Voeg die toe.",
         "add": "Parkeerplaats toevoegen",
         "view_map": "Bekijk de kaart",
         "nearby": "Meer gemeenten in {{name}} met parkeerlocaties"

@@ -1,13 +1,13 @@
 {
     "meta": {
         "title": "Find disabled parking spaces near your destination",
-        "description": "Search for an address or place to find known disabled parking spaces nearby. No account needed."
+        "description": "Find disabled parking spaces near your destination. No account needed."
     },
     "hero": {
         "eyebrow": "For everyone with a disabled parking card",
         "title": "Find disabled parking spaces near your destination",
-        "intro": "Search for an address or place. The map shows the disabled parking spaces NIPKaart knows about nearby.",
-        "intro_short": "Search an address or place and see which disabled parking spaces are nearby.",
+        "intro": "Search by address or name.",
+        "intro_short": "Search by address or name.",
         "label": "Where are you going?",
         "placeholder": "E.g. Rijksmuseum or Utrecht Centraal",
         "placeholder_short": "Address or place",
@@ -42,9 +42,9 @@
         }
     },
     "garages": {
-        "title": "Check occupancy at garages and park-and-ride sites",
-        "text": "When a current measurement is available, you can see how many spaces were free across the whole facility and when they were measured.",
-        "text_short": "See general occupancy where a current measurement is available.",
+        "title": "Garage and park-and-ride occupancy",
+        "text": "See how many spaces were free and when, where a current reading is available.",
+        "text_short": "Free spaces where a current reading is available.",
         "link": "All garages and P+R",
         "example_note": "Example with fictional occupancy figures.",
         "example_municipality": "Amsterdam",
@@ -55,8 +55,8 @@
         }
     },
     "contribute": {
-        "title": "Is a parking space missing?",
-        "text": "Know a disabled parking space that is missing? Add it. If it is already on the map, open its details to confirm it is still there or report that it is gone.",
+        "title": "Missing a parking space?",
+        "text": "Already on the map? Open the details to confirm the space is still there or report it as gone.",
         "cta": "Add a parking space",
         "step": "Put the pin on the spot",
         "next": "Then fill in the orientation and any time limits"
