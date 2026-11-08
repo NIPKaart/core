@@ -43,7 +43,8 @@ test('missing live data keeps three garage rows without live claims or navigatio
     assert.match(html, /Garage Centrum/);
     assert.match(html, /P\+R Stadsrand/);
     assert.match(html, /128/);
-    assert.doesNotMatch(html, /Voorbeeld|Live|<time|href=/);
+    assert.match(html, /Voorbeeld met fictieve bezettingscijfers/);
+    assert.doesNotMatch(html, /Live|<time|href=/);
 });
 
 test('available live data replaces the fallback and retains real measurement times and navigation', () => {
@@ -54,5 +55,5 @@ test('available live data replaces the fallback and retains real measurement tim
     assert.match(html, /Real garage/);
     assert.match(html, /<time/);
     assert.match(html, /href="\/map"/);
-    assert.doesNotMatch(html, /Garage Centrum|P\+R Stadsrand/);
+    assert.doesNotMatch(html, /Voorbeeld|Garage Centrum|P\+R Stadsrand/);
 });

@@ -1,13 +1,13 @@
 {
     "meta": {
-        "title": "Parking at your destination",
-        "description": "Search an address or place and see the disabled parking spaces and garages nearby. No account needed."
+        "title": "Find disabled parking spaces near your destination",
+        "description": "Find disabled parking spaces near your destination. No account needed."
     },
     "hero": {
         "eyebrow": "For everyone with a disabled parking card",
-        "title": "Park at your destination without circling the block",
-        "intro": "Search an address or place and see which disabled parking spaces are nearby. If the street is full, you can see straight away which garage still has room.",
-        "intro_short": "Search an address or place and see which disabled parking spaces are nearby.",
+        "title": "Find disabled parking spaces near your destination",
+        "intro": "Search by address or name.",
+        "intro_short": "Search by address or name.",
         "label": "Where are you going?",
         "placeholder": "E.g. Rijksmuseum or Utrecht Centraal",
         "placeholder_short": "Address or place",
@@ -16,25 +16,25 @@
         "map": "Or browse the whole map"
     },
     "preview": {
-        "alt": "Map around the Rijksmuseum in Amsterdam with disabled parking spaces and a garage with free spaces",
-        "title": "Parking results",
+        "alt": "Example map around the Rijksmuseum with disabled parking spaces and a garage",
+        "title": "Example parking results",
         "sorted": "Sorted by distance to Rijksmuseum",
         "attribution": "© Mapbox © OpenStreetMap"
     },
     "legend": {
         "title": "How to read the map",
-        "intro": "Each marker shows what kind of place it is. Choose one to see the details.",
+        "intro": "Choose a marker to see the details.",
         "space": {
             "title": "Disabled parking space",
-            "text": "From the municipality or added by a user. The details show which times and rules apply."
+            "text": "From municipal data or added by a visitor. The details show any known times and rules."
         },
         "garage": {
             "title": "Garage or P+R",
-            "text": "The number shows the free spaces in the whole garage, not specifically the disabled spaces."
+            "text": "When a current measurement is available, the number shows free spaces across the whole garage or site."
         },
         "cluster": {
-            "title": "Several places",
-            "text": "Places close together are grouped. Zoom in to see them individually."
+            "title": "Several parking locations",
+            "text": "Nearby parking locations share a marker. Zoom in to see them individually."
         },
         "destination": {
             "title": "Your destination",
@@ -42,10 +42,11 @@
         }
     },
     "garages": {
-        "title": "Street full? See which garage still has room",
-        "text": "For each municipality you can see how many spaces garages and park-and-ride sites have free right now, with the time of the latest measurement.",
-        "text_short": "Current occupancy per garage and P+R, with the time of measurement.",
+        "title": "Garage and park-and-ride occupancy",
+        "text": "See how many spaces were free and when, where a current reading is available.",
+        "text_short": "Free spaces where a current reading is available.",
         "link": "All garages and P+R",
+        "example_note": "Example with fictional occupancy figures.",
         "example_municipality": "Amsterdam",
         "example_names": {
             "centre": "City Centre Garage",
@@ -54,8 +55,8 @@
         }
     },
     "contribute": {
-        "title": "Is a parking space missing?",
-        "text": "You often know your own neighbourhood and the places you visit regularly best. Add a disabled parking space you know in a few steps and help other visitors find their way. Every contribution makes the map more complete.",
+        "title": "Missing a parking space?",
+        "text": "Already on the map? Open the details to confirm the space is still there or report it as gone.",
         "cta": "Add a parking space",
         "step": "Put the pin on the spot",
         "next": "Then fill in the orientation and any time limits"

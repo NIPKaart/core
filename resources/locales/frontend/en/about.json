@@ -23,13 +23,13 @@
             "name": "Community",
             "kind": "Contributions from users",
             "shows": "Parking spaces that are not (yet) in open data. Other users can confirm that a parking space is still there.",
-            "freshness": "Updated as users add or confirm parking spaces."
+            "freshness": "The date a space was added and visitor confirmations are shown separately."
         },
         "offstreet": {
             "name": "Garages and P+R",
             "kind": "Operators and municipalities",
             "shows": "The number of free spaces in the whole garage, not specifically the disabled spaces.",
-            "freshness": "Updated every few minutes, with the time of the latest measurement."
+            "freshness": "When a current measurement is available, its time is shown."
         }
     },
     "why": {

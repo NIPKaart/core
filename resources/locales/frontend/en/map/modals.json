@@ -13,7 +13,7 @@
             "unlimited": "Unlimited",
             "never": "Never",
             "area": "Area",
-            "added_on": "Added on",
+            "added_on": "Added to NIPKaart on",
             "time_format": {
                 "hours": "{{count}} hour",
                 "hours_plural": "{{count}} hours",
@@ -42,10 +42,10 @@
             "updated_at": "Last updated",
             "source": "Source",
             "terms": "Source terms",
-            "fetched_at": "Fetched on"
+            "fetched_at": "Source data fetched on"
         },
         "unknown": "Unknown",
-        "fetched_note": "This is when the data was fetched, not an on-site check of the parking space."
+        "fetched_note": "This is the date NIPKaart fetched the source data. Visitor confirmations are shown separately."
     },
     "offstreet": {
         "modal": {
@@ -117,8 +117,8 @@
         "rules": {
             "facility_info": "Rates and opening hours",
             "title": "Parking rules",
-            "municipality": "Municipality of {{name}}",
-            "country": "National rules",
+            "municipality": "Official municipal rules for {{name}}",
+            "country": "Official national rules",
             "official": "Official source"
         },
         "availability": {
@@ -126,7 +126,7 @@
             "live_unavailable": "Live data unavailable",
             "stale": "No recent measurement",
             "unavailable": "Live data unavailable",
-            "unknown": "No live data",
+            "unknown": "No current occupancy measurement",
             "free": "{{free}} free",
             "general": "General spaces free",
             "full": "Full",
@@ -136,7 +136,7 @@
         "source": {
             "community": "Community contribution, approved for publication",
             "municipal": "Municipal open data",
-            "source_date": "Source date",
+            "source_date": "Source data updated on",
             "municipality": "Municipality of {{name}}"
         },
         "copy_id": "Copy location ID",
@@ -163,8 +163,8 @@
             "question": "Is the parking space still here?",
             "count_one": "Confirmed {{count}}×",
             "count_other": "Confirmed {{count}}×",
-            "none": "Not confirmed yet",
-            "present_since": "Present, last on",
+            "none": "No visitor confirmation yet",
+            "present_since": "Last confirmed by a visitor on",
             "yes": "Yes",
             "no": "No",
             "yes_label": "Yes, the parking space is here",

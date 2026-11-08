@@ -34,7 +34,7 @@ export default function MapPreview() {
                 className="absolute inset-x-0 bottom-0 flex flex-col rounded-t-2xl bg-white px-5 pt-2.5 pb-1 shadow-[0_-8px_24px_rgb(28_25_23/12%)] lg:inset-x-auto lg:top-7 lg:bottom-auto lg:left-7 lg:w-96 lg:rounded-xl lg:border lg:border-stone-200 lg:px-5 lg:pt-5 lg:pb-2 lg:shadow-[0_12px_32px_rgb(28_25_23/14%)] dark:bg-neutral-900 dark:lg:border-neutral-800"
             >
                 <span className="mx-auto h-1 w-9 rounded-full bg-stone-300 lg:hidden dark:bg-neutral-700" />
-                <span className="mt-2.5 font-semibold lg:mt-0 lg:text-lg">{tMap('results.title')}</span>
+                <span className="mt-2.5 font-semibold lg:mt-0 lg:text-lg">{t('preview.title')}</span>
                 <span className="hidden text-sm text-stone-600 lg:block dark:text-stone-400">{t('preview.sorted')}</span>
                 <ul className="mt-1 divide-y divide-stone-100 lg:mt-2 dark:divide-neutral-800">
                     {EXAMPLE.map((result, index) => (
