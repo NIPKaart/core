@@ -35,7 +35,7 @@ class SourceRegistrar
             if ($existing) {
                 return $existing;
             }
-            [$municipality, $error] = $this->findMunicipality($data['source']['area']);
+            [$municipality, $error] = $this->sourceArea($targetType, $data['source']['area']);
             $source = DatasetSource::create([
                 ...DatasetSource::attributesFromDescription($data['source']),
                 'code' => $data['dataset'], 'selection' => $data['selection'], 'target_type' => $targetType,
@@ -74,19 +74,21 @@ class SourceRegistrar
                 $source->fill(DatasetSource::attributesFromDescription($source->pending_description));
             }
             $area = $source->description['area'];
-            [$municipality, $error] = $this->findMunicipality($area);
+            [$municipality, $error] = $this->sourceArea($source->target_type, $area);
             if ($error !== null) {
                 throw ValidationException::withMessages(['source' => __('Country :country or subdivision :subdivision is not known in NIPKaart.', [
-                    'country' => $area['country'], 'subdivision' => $area['subdivision'],
+                    'country' => $area['country'], 'subdivision' => $area['subdivision'] ?? '',
                 ])]);
             }
             // A municipality is only added to the reference data once an administrator accepts the source.
-            $municipality ??= Municipality::create([
-                'name' => $area['municipality']['name'], 'code_scheme' => $area['municipality']['scheme'], 'code' => $area['municipality']['code'],
-                ...$this->region($area),
-            ]);
+            if ($source->target_type !== 'proposals') {
+                $municipality ??= Municipality::create([
+                    'name' => $area['municipality']['name'], 'code_scheme' => $area['municipality']['scheme'], 'code' => $area['municipality']['code'],
+                    ...$this->region($area),
+                ]);
+            }
             $source->forceFill([
-                'municipality_id' => $municipality->id, 'pending_description' => null, 'registration_error' => null,
+                'municipality_id' => $municipality?->id, 'pending_description' => null, 'registration_error' => null,
                 'approval_state' => 'approved', 'reviewed_by' => $actor->id, 'reviewed_at' => now(), 'review_reason' => $reason,
             ])->save();
         });
@@ -99,6 +101,32 @@ class SourceRegistrar
         Gate::forUser($actor)->authorize('approve', $source);
         $source->forceFill(['approval_state' => 'rejected', 'reviewed_by' => $actor->id, 'reviewed_at' => now(), 'review_reason' => $reason])->save();
         DatasetDataChanged::dispatch('sources', $source->target_type);
+    }
+
+    /** @return array{0: ?Municipality, 1: ?string} */
+    private function sourceArea(string $type, array $area): array
+    {
+        if ($type === 'proposals') {
+            return [null, Country::where('code', $area['country'])->exists() ? null : "Unknown country {$area['country']}."];
+        }
+
+        return $this->findMunicipality($area);
+    }
+
+    /** Resolve a code from trusted reference data, preserving existing municipality identity. */
+    public function referenceMunicipality(array $area): ?Municipality
+    {
+        [$municipality, $error] = $this->findMunicipality($area);
+        if ($error !== null) {
+            return null;
+        }
+
+        $official = $area['municipality'];
+
+        return $municipality ?? Municipality::firstOrCreate(
+            ['country_id' => $this->region($area)['country_id'], 'code_scheme' => $official['scheme'], 'code' => $official['code']],
+            ['name' => $official['name'], 'province_id' => $this->region($area)['province_id']],
+        );
     }
 
     /**

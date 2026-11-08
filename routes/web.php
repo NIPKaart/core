@@ -108,6 +108,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('reports/{source}/{id}/remove', 'remove')->whereIn('source', ['community', 'municipal'])->name('reports.remove');
         });
 
+        Route::get('moderation/proposals', [Admin\LocationProposalController::class, 'index'])->name('moderation.proposals.index');
+        Route::post('moderation/proposals/{proposal}/group', [Admin\LocationProposalController::class, 'group'])
+            ->whereNumber('proposal')->name('moderation.proposals.group');
+
         // Former queues, kept as addresses into the inbox
         Route::get('improvements', fn () => redirect()->route('app.moderation.index', ['type' => 'improvement']));
         Route::get('improvements/{improvement}', fn (string $improvement) => redirect()->route('app.moderation.improvements.show', $improvement))->whereNumber('improvement');

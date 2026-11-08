@@ -17,7 +17,7 @@ export type SourceDescription = {
     licence: string | null;
     terms_url: string;
     attribution: string;
-    area: { country: string; subdivision: string; municipality: { scheme: string; code: string; name: string } };
+    area: { country: string; subdivision?: string; municipality?: { scheme: string; code: string; name: string } };
     bounds: [number, number, number, number];
     expected_interval_hours: number;
 };
@@ -25,7 +25,7 @@ export type SourceDescription = {
 type Props = {
     source: {
         id: number;
-        target_type?: 'municipal' | 'offstreet';
+        target_type?: 'municipal' | 'offstreet' | 'proposals';
         approval_state: 'pending' | 'approved' | 'rejected';
         description: SourceDescription;
         pending_description: SourceDescription | null;
@@ -110,7 +110,13 @@ export default function SourceApproval({ source, children, history }: Props) {
                                 ) : (
                                     <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden="true" />
                                 )}
-                                {t(rejected ? 'approval.rejected_hint' : 'approval.hint')}
+                                {t(
+                                    rejected
+                                        ? 'approval.rejected_hint'
+                                        : source.target_type === 'proposals'
+                                          ? 'approval.proposal_hint'
+                                          : 'approval.hint',
+                                )}
                             </p>
                             {rejected && source.review_reason && (
                                 <p className="pl-6.5 text-muted-foreground">
@@ -143,9 +149,14 @@ export default function SourceApproval({ source, children, history }: Props) {
                                     t('approval.fields.area'),
                                     ['area', 'bounds'],
                                     <>
-                                        {shown.area.municipality.name} <span className="text-muted-foreground">({shown.area.municipality.code})</span>
+                                        {shown.area.municipality && (
+                                            <>
+                                                {shown.area.municipality.name}{' '}
+                                                <span className="text-muted-foreground">({shown.area.municipality.code})</span>
+                                            </>
+                                        )}
                                         <span className="block text-muted-foreground">
-                                            {shown.area.subdivision} · {shown.area.country}
+                                            {[shown.area.subdivision, shown.area.country].filter(Boolean).join(' · ')}
                                         </span>
                                         <span className="mt-1 block font-mono text-xs text-muted-foreground" title={t('approval.fields.bounds')}>
                                             <span className="sr-only">{t('approval.fields.bounds')}: </span>

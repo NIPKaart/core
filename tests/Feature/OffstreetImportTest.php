@@ -189,6 +189,7 @@ it('discovers catalogs under the offstreet prefix and stages them without publis
             ['Key' => 'municipal/nl-amsterdam-garages/'.Str::uuid().'.json', 'ETag' => '"wrong-folder"'],
         ], 'IsTruncated' => false]);
     });
+    $handler->append(new Result(['IsTruncated' => false]));
     $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
     $delivery = DatasetDelivery::sole();
     expect($delivery->object_key)->toBe($key);

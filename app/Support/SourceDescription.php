@@ -15,9 +15,9 @@ final class SourceDescription
     /**
      * Validates and normalizes a source block.
      *
-     * @return array{name: string, publisher: string, source_url: string, licence: ?string, terms_url: string, attribution: string, area: array{country: string, subdivision: string, municipality: array{scheme: string, code: string, name: string}}, bounds: array{0: float, 1: float, 2: float, 3: float}, expected_interval_hours: int}
+     * @return array{name: string, publisher: string, source_url: string, licence: ?string, terms_url: string, attribution: string, area: array{country: string, subdivision?: string, municipality?: array{scheme: string, code: string, name: string}}, bounds: array{0: float, 1: float, 2: float, 3: float}, expected_interval_hours: int}
      */
-    public static function validate(mixed $block): array
+    public static function validate(mixed $block, bool $national = false): array
     {
         if (! is_array($block) || array_is_list($block)) {
             self::fail('source', 'De levering moet een bronbeschrijving bevatten.');
@@ -35,26 +35,30 @@ final class SourceDescription
             'source.licence' => ['present', 'nullable', 'string', 'regex:/^[A-Za-z0-9.+-]{1,64}$/'],
             'source.terms_url' => ['required', 'string', 'max:2000', 'url:https'],
             'source.attribution' => ['required', 'string', 'max:1000'],
-            'source.area' => ['required', 'array:country,subdivision,municipality'],
+            'source.area' => ['required', $national ? 'array:country' : 'array:country,subdivision,municipality'],
             'source.area.country' => ['required', 'string', 'regex:/^[A-Z]{2}$/'],
-            'source.area.subdivision' => ['required', 'string', 'regex:/^[A-Z]{2}-[A-Z0-9]{1,3}$/'],
-            'source.area.municipality' => ['required', 'array:scheme,code,name'],
-            'source.area.municipality.scheme' => ['required', 'string', 'in:'.implode(',', array_keys($schemes))],
-            'source.area.municipality.code' => ['required', 'string', 'max:32'],
-            'source.area.municipality.name' => ['required', 'string', 'max:255'],
+            ...($national ? [] : [
+                'source.area.subdivision' => ['required', 'string', 'regex:/^[A-Z]{2}-[A-Z0-9]{1,3}$/'],
+                'source.area.municipality' => ['required', 'array:scheme,code,name'],
+                'source.area.municipality.scheme' => ['required', 'string', 'in:'.implode(',', array_keys($schemes))],
+                'source.area.municipality.code' => ['required', 'string', 'max:32'],
+                'source.area.municipality.name' => ['required', 'string', 'max:255'],
+            ]),
             'source.bounds' => ['required', 'array', 'list', 'size:4'],
             'source.expected_interval_hours' => ['required', 'integer', 'min:1', 'max:8760'],
         ])->validate();
         $area = $block['area'];
-        if (! str_starts_with($area['subdivision'], $area['country'].'-')) {
-            self::fail('source.area.subdivision', 'De provincie hoort niet bij het opgegeven land.');
-        }
-        $scheme = $schemes[$area['municipality']['scheme']];
-        if ($scheme['country'] !== $area['country']) {
-            self::fail('source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.');
-        }
-        if (! preg_match($scheme['pattern'], $area['municipality']['code'])) {
-            self::fail('source.area.municipality.code', 'Ongeldige officiële gemeentecode.');
+        if (! $national) {
+            if (! str_starts_with($area['subdivision'], $area['country'].'-')) {
+                self::fail('source.area.subdivision', 'De provincie hoort niet bij het opgegeven land.');
+            }
+            $scheme = $schemes[$area['municipality']['scheme']];
+            if ($scheme['country'] !== $area['country']) {
+                self::fail('source.area.municipality.scheme', 'Het gemeentecodestelsel hoort niet bij het opgegeven land.');
+            }
+            if (! preg_match($scheme['pattern'], $area['municipality']['code'])) {
+                self::fail('source.area.municipality.code', 'Ongeldige officiële gemeentecode.');
+            }
         }
         foreach ($block['bounds'] as $value) {
             if ((! is_int($value) && ! is_float($value)) || ! is_finite($value)) {

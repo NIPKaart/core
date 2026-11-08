@@ -25,6 +25,7 @@ export const SOURCE_STATUSES = [
     'overdue',
     'awaiting_review',
     'awaiting_delivery',
+    'processed',
     'published',
     'rejected',
 ] as const;
@@ -39,7 +40,7 @@ export type SourceRow = {
     terms_url: string;
     source_url: string;
     licence: string | null;
-    target_type: 'municipal' | 'offstreet';
+    target_type: 'municipal' | 'offstreet' | 'proposals';
     municipality_id: number | null;
     approval_state: 'pending' | 'approved' | 'rejected';
     description: SourceDescription;
@@ -49,6 +50,8 @@ export type SourceRow = {
     latest_import: Pick<Import, 'id' | 'state' | 'retrieved_at'> | null;
     latest_delivery: { state: string; error_code: string | null; created_at: string } | null;
     last_published_retrieved_at: string | null;
+    last_proposal_retrieved_at: string | null;
+    last_proposal_source_count: number | null;
     status: SourceStatusKey;
     country: string | null;
     subdivision: string | null;
@@ -70,6 +73,7 @@ export const sourceStatusAppearance: Record<SourceStatusKey, { icon: LucideIcon;
     overdue: { icon: Clock, className: 'text-destructive' },
     awaiting_review: { icon: FileSearch, className: 'text-blue-700 dark:text-blue-400' },
     awaiting_delivery: { icon: CircleDashed, className: 'text-muted-foreground' },
+    processed: { icon: CircleCheck, className: 'text-emerald-700 dark:text-emerald-400' },
     published: { icon: CircleCheck, className: 'text-emerald-700 dark:text-emerald-400' },
     rejected: { icon: CircleX, className: 'text-muted-foreground' },
 };

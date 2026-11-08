@@ -135,7 +135,7 @@ type Todo = {
         items: {
             id: number;
             name: string;
-            status: Exclude<SourceStatusKey, 'published' | 'rejected' | 'awaiting_delivery'>;
+            status: Exclude<SourceStatusKey, 'published' | 'processed' | 'rejected' | 'awaiting_delivery'>;
             import_id: number | null;
             since: string | null;
         }[];

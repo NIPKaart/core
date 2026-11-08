@@ -29,11 +29,17 @@ Collector pending bytes are durable transport state; core alone retains import/r
 
 ## Discovery and source approval
 
-Core lists dataset folders under `municipal/` and `offstreet/`. For an unknown folder, `DatasetDeliveryService` validates its newest object and `SourceRegistrar` creates a source awaiting approval. An invalid newest object registers nothing; discovery retries later. Countries and subdivisions must already exist. Core matches a municipality by official code, or links an existing uncoded municipality by name within its region; a missing municipality is created only when an administrator approves the source.
+Core lists dataset folders under `municipal/`, `offstreet/` and `proposals/`. For an unknown folder, `DatasetDeliveryService` validates its newest object and `SourceRegistrar` creates a source awaiting approval. An invalid newest object registers nothing; discovery retries later. Countries and subdivisions must already exist. Core matches a municipality by official code, or links an existing uncoded municipality by name within its region; a missing municipality is created only when an administrator approves the source.
 
 An administrator checks the source description, rights, selection, area and bounds once. Approval allows pending deliveries to enter intake and review; catalog publication remains an explicit separate decision. Rejection retains the source and receipts while processing is blocked. A changed approved description requires re-approval, except `expected_interval_hours`, which updates the cadence without re-approval. `config/dataset-deliveries.php` contains general enablement, lateness and observation freshness settings, not a per-dataset allowlist. No `nipkaart:register-dataset` command is needed. Lateness currently uses two expected delivery intervals; observation freshness uses ten minutes.
 
 [ADR 0013](../adr/0013-discover-dataset-sources-from-deliveries-with-one-time-approval.md) still has decision status **proposed**. Discovery and approval are implemented; implementation alone does not change that status. Its original source-block catalog version was `nipkaart-offstreet-catalog-2`; the current catalog is `nipkaart-offstreet-catalog-3`, with capacity moved into separate observations (Amsterdam version 2, Hamburg version 3).
+
+### National location proposal sources
+
+[ADR 0015](../adr/0015-ingest-location-proposal-sources.md) covers `proposals/<dataset>/<delivery_id>.json` and `nipkaart-location-proposals-1`. NDW delivers one national E6 snapshot. Core uses the existing source approval and R2 receipts, then reconciles source points in the moderation database. These deliveries create neither dataset imports nor public map records. Full reconciliation scans also cover the proposal prefix when no R2 notification is received.
+
+The bundled [CBS 2026 municipality reference](../../resources/data/cbs-municipalities-2026.csv) contains only the official code, name and subdivision from [CBS StatLine 86247NED](https://www.cbs.nl/nl-nl/cijfers/detail/86247NED). Core uses existing municipality identities first. A code outside Core and the reference remains unresolved until reference data is available.
 
 ## Registrations, candidates and acceptance
 

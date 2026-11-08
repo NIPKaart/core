@@ -1,4 +1,23 @@
 {
+    "proposals": {
+        "title": "Locatievoorstellen",
+        "description": "Bekijk bronpunten die een gehandicaptenparkeerplaats suggereren.",
+        "open": "Open",
+        "count_one": "{{count}} voorstel",
+        "count_other": "{{count}} voorstellen",
+        "points_one": "{{count}} bronpunt",
+        "points_other": "{{count}} bronpunten",
+        "previous": "Vorige",
+        "next": "Volgende",
+        "nearby": "Bestaande parkeerplaatsen in de buurt",
+        "community": "Community-parkeerplaats",
+        "municipal": "Gemeentelijke parkeerplaats",
+        "unknown_street": "Straat onbekend",
+        "none_nearby": "Geen bestaande parkeerplaatsen in de buurt.",
+        "group": "Voorstellen groeperen",
+        "group_help": "Controleer op beeldmateriaal of beide voorstellen bij dezelfde parkeerlocatie horen.",
+        "choose": "Kies een voorstel in de buurt"
+    },
     "title": "Moderatie",
     "search": "Zoek op straat, gemeente of indiener",
     "tabs": {

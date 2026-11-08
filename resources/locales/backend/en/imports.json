@@ -185,6 +185,7 @@
     },
     "unknown_name": "Facility without a name",
     "approval": {
+        "proposal_hint": "Approve this source to process its deliveries into location proposals for moderators.",
         "states": {
             "pending": "Awaiting approval",
             "rejected": "Source rejected",
@@ -222,6 +223,7 @@
         "processing": "Deliveries are being processed. This page updates automatically."
     },
     "sources_table": {
+        "source_points": "Source points",
         "source": "Source",
         "area": "Area",
         "municipality": "Municipality",
@@ -243,6 +245,7 @@
         "no_matches": "No sources match these filters",
         "no_matches_hint": "Change your search or clear the filters.",
         "types": {
+            "proposals": "Location proposals",
             "municipal": "Municipal",
             "offstreet": "Garage and P+R"
         },
@@ -254,6 +257,7 @@
             "live_stale": "Live data stopped"
         },
         "statuses": {
+            "processed": "Processed",
             "awaiting_approval": "Awaiting approval",
             "reapproval": "Changed, re-approve",
             "intake_problem": "Intake problem",

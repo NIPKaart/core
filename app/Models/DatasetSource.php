@@ -22,6 +22,7 @@ class DatasetSource extends Model
     protected $casts = [
         'requires_identity_context' => 'boolean',
         'bounds' => 'array', 'description' => 'array', 'pending_description' => 'array',
+        'last_proposal_retrieved_at' => 'immutable_datetime', 'last_proposal_source_count' => 'integer',
         'expected_interval_hours' => 'integer', 'reviewed_at' => 'immutable_datetime', 'last_published_retrieved_at' => 'immutable_datetime',
     ];
 

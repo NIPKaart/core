@@ -17,7 +17,7 @@ class SourceOverview
     /** Status order doubles as the default sort: sources that need an administrator come first. */
     public const array STATUSES = [
         'awaiting_approval', 'reapproval', 'intake_problem', 'live_stale', 'overdue', 'awaiting_review',
-        'awaiting_delivery', 'published', 'rejected',
+        'awaiting_delivery', 'processed', 'published', 'rejected',
     ];
 
     /** Statuses that need an administrator's action. */
@@ -64,6 +64,7 @@ class SourceOverview
             $this->liveFeedStopped($source) => 'live_stale',
             $deliveryStatus === 'overdue' => 'overdue',
             $needsReview => 'awaiting_review',
+            $source->last_proposal_retrieved_at !== null => 'processed',
             $source->last_published_retrieved_at === null => 'awaiting_delivery',
             default => 'published',
         };
