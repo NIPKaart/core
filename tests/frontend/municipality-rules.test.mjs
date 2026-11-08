@@ -64,7 +64,8 @@ async function municipality(props = {}) {
             country: { name: 'Nederland' },
             breadcrumbs: [],
             neighbours: [],
-            totals: { garages: 1 },
+            totals: { spaces: 0, garages: 1 },
+            community_confirmed_spaces: 0,
             sources: { municipal: [], facilities: true },
             rules: [],
             gpkwijs_url: null,
@@ -111,4 +112,21 @@ test('municipal rules suppress the missing local rules notice', async () => {
 
     assert.match(html, /Officiële gemeentelijke regels voor Amsterdam/);
     assert.doesNotMatch(html, /Lokale parkeerregels onbekend/);
+});
+
+test('municipal progress shows community confirmations against all published street spaces', async () => {
+    const totals = { spaces: 4, verified: 3, garages: 1 };
+    const confirmed = await municipality({ totals, community_confirmed_spaces: 2 });
+    const unconfirmed = await municipality({ totals });
+
+    assert.match(confirmed, /aria-label="3 van 4 parkeerplaatsen geverifieerd"/);
+    assert.match(confirmed, /Community: 2 van 4 parkeerplaatsen bevestigd/);
+    assert.match(unconfirmed, /0 van 4 parkeerplaatsen bevestigd/);
+
+    for (const indexable of [true, false]) {
+        const empty = await municipality({ indexable });
+        assert.match(empty, /Nog geen gehandicaptenparkeerplaatsen bekend/);
+        assert.doesNotMatch(empty, /Community: 0 van 0/);
+        assert.doesNotMatch(empty, /role="progressbar"/);
+    }
 });

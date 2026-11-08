@@ -24,16 +24,17 @@ beforeEach(function () {
 it('counts only what the public map shows, with garages and P+R apart', function () {
     $published = ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
     ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::APPROVED]);
-    ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::PENDING]);
+    $pending = ParkingSpace::factory()->for($this->amsterdam)->create(['status' => ParkingStatus::PENDING]);
     $municipal = ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
     ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
-    ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => false]);
+    $hidden = ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => false]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => true, 'parking_type' => 'garage', 'api_state' => ApiState::OK, 'occupancy_status' => 'counting', 'free_space' => 12, 'observed_at' => now()->subMinute()]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => true, 'parking_type' => 'parkandride', 'observed_at' => null, 'api_state' => null]);
     ParkingOffstreet::factory()->for($this->amsterdam)->create(['visibility' => false, 'parking_type' => 'garage']);
 
-    // The official source verifies both visible municipal records, even without a visitor confirmation.
     ParkingSpaceConfirmation::factory()->for($published)->count(2)->create();
+    ParkingSpaceConfirmation::factory()->for($pending)->create();
+    ParkingSpaceConfirmation::factory()->municipal()->create(['parking_municipal_id' => $hidden->id]);
     ParkingSpaceConfirmation::factory()->municipal()->create(['parking_municipal_id' => $municipal->id, 'confirmed_at' => now()->subDay()]);
     ParkingSpaceConfirmation::factory()->create(['parking_space_id' => ParkingSpace::query()->where('status', ParkingStatus::APPROVED)->whereKeyNot($published->id)->value('id'), 'status' => ParkingConfirmationStatus::MOVED]);
 
@@ -45,6 +46,7 @@ it('counts only what the public map shows, with garages and P+R apart', function
             ->where('indexable', true)
             ->where('totals.spaces', 4)
             ->where('totals.verified', 3)
+            ->where('community_confirmed_spaces', 2)
             ->where('totals.garages', 1)
             ->where('totals.live_garages', 1)
             ->where('totals.park_and_ride', 1)
@@ -54,6 +56,14 @@ it('counts only what the public map shows, with garages and P+R apart', function
             ->where('breadcrumbs.0.href', route('areas.country', 'nl'))
             ->where('breadcrumbs.1.href', route('areas.region', ['nl', 'noord-holland']))
             ->where('breadcrumbs.2.href', null));
+});
+
+it('shows zero community confirmations when only the municipal source lists a space', function () {
+    ParkingMunicipal::factory()->for($this->amsterdam)->create(['visibility' => true]);
+
+    $this->get(route('areas.municipality', ['nl', 'amsterdam']))->assertInertia(fn (Assert $page) => $page
+        ->where('totals.spaces', 1)
+        ->where('community_confirmed_spaces', 0));
 });
 
 it('hands off to the map around the area without starting a search around the midpoint', function () {
@@ -126,7 +136,7 @@ it('keeps a municipality without public parking reachable but out of the index',
     $this->get(route('areas.municipality', ['nl', 'amsterdam']))
         ->assertOk()
         ->assertSee('<meta data-inertia="robots" name="robots" content="noindex">', false)
-        ->assertInertia(fn (Assert $page) => $page->where('indexable', false)->where('totals.spaces', 0)->where('preview', null));
+        ->assertInertia(fn (Assert $page) => $page->where('indexable', false)->where('totals.spaces', 0)->where('community_confirmed_spaces', 0)->where('preview', null));
 
     $this->get(route('sitemap'))->assertOk()->assertDontSee(route('areas.municipality', ['nl', 'amsterdam']));
 });

@@ -327,13 +327,13 @@ test('the existence check asks one question when signed in and shows the outcome
             }),
         );
 
-    assert.match(text(html()), /Is the parking space still here\? Confirmed 3× · 4 Mar/);
+    assert.match(text(html()), /Is the parking space still here\? Existence confirmed by the community on 4 Mar/);
     assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
     assert.match(html(), /aria-label="Yes, the parking space is here"/);
     assert.match(html(), /aria-label="No, the parking space is gone"/);
-    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the parking space still here\? No visitor confirmation yet/);
+    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the parking space still here\? No community confirmation yet/);
 
-    assert.match(text(html({ confirmedToday: true })), /Thanks, you confirmed Confirmed 3× · today also by you/);
+    assert.match(text(html({ confirmedToday: true })), /Thanks, you confirmed Confirmed 3× · today also by you Existence confirmed by the community on 4 Mar/);
     assert.match(text(html({ reported: true })), /You reported that the parking space is gone A moderator will look at it\./);
     for (const state of [{ confirmedToday: true }, { reported: true }]) assert.doesNotMatch(html(state), /<form|<button/);
 });
@@ -354,7 +354,7 @@ test('signed-out visitors see only the evidence and a quiet hint to log in', () 
         }),
     );
 
-    assert.match(text(guest), /Confirmed 3× Last confirmed by a visitor on 4 Mar Log in to confirm or report\./);
+    assert.match(text(guest), /Existence confirmed by the community on 4 Mar Log in to confirm or report\./);
     assert.match(guest, /<a href="\/login\?return=%2Fmap"[^>]*>Log in<\/a>/);
     assert.doesNotMatch(guest, /<form|<button|Is the parking space still here/);
 });

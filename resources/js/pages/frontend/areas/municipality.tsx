@@ -53,7 +53,6 @@ export default function Municipality(area: MunicipalityArea) {
 
 function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; parent: string }) {
     const { t } = useTranslation('frontend/areas');
-    const { totals } = area;
 
     return (
         <>
@@ -65,8 +64,12 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                         <p className={cn('max-w-[540px] text-[17px] leading-[1.6] lg:text-lg', muted)}>
                             {t('intro.municipality', { name: area.name })}
                         </p>
-                        {totals.spaces > 0 ? (
-                            <VerificationStatus totals={totals} className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')} />
+                        {area.totals.spaces > 0 ? (
+                            <VerificationStatus
+                                totals={area.totals}
+                                communityConfirmedSpaces={area.community_confirmed_spaces}
+                                className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')}
+                            />
                         ) : (
                             <p className={cn('wrap-anywhere hyphens-auto', muted)}>{t('municipality.empty_title')}.</p>
                         )}
