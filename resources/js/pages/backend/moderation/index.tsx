@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { SelectionBar, SelectionHeader } from './bulk-pane';
 import { panelMode } from './geo';
 import { useAgo } from './parts';
+import type { PilotProposal } from './pilot-proposals';
 import { QueueList, TYPE_COLORS } from './queue-list';
 import { ReviewPane } from './review-pane';
 import { ShortcutsDialog, useShortcuts } from './shortcuts';
@@ -40,6 +41,7 @@ const COUNTRY_ZOOM = 7;
 
 type PageProps = {
     status: 'open' | 'decided';
+    pilotProposals: PilotProposal[];
     filters: Filters;
     items: PaginatedResponse<QueueItem> | null;
     history: PaginatedResponse<HistoryRow> | null;
@@ -54,7 +56,7 @@ type PageProps = {
  * item under review and a selection, as on the public map. After a decision the inbox continues with the next item.
  * Selected items are rejected together; approving always happens one item at a time.
  */
-export default function Index({ status, filters, items, history, selected, position, decidedToday, options }: PageProps) {
+export default function Index({ status, filters, items, history, selected, position, decidedToday, options, pilotProposals }: PageProps) {
     const { t } = useTranslation('backend/moderation');
     const open = status === 'open';
     const query = filterQuery(filters);
@@ -152,6 +154,7 @@ export default function Index({ status, filters, items, history, selected, posit
                         >
                             <QueueList
                                 status={status}
+                                pilotProposals={pilotProposals}
                                 items={items}
                                 filters={filters}
                                 options={options}

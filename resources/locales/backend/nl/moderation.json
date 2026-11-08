@@ -1,4 +1,12 @@
 {
+    "pilot": {
+        "title": "Interne voorstellen · Delft",
+        "reported_one": "{{count}} gemeld vak",
+        "reported_other": "{{count}} gemelde vakken",
+        "guidance": "Controleer de locatie en registreer elk bevestigd vak afzonderlijk. De kaart opent bij het bord. Verplaats de pin naar het vak.",
+        "add": "Vak registreren bij bord {{number}}",
+        "seen": "NDW laatst gezien op {{date}}"
+    },
     "title": "Moderatie",
     "search": "Zoek op straat, gemeente of indiener",
     "tabs": {

@@ -1,4 +1,12 @@
 {
+    "pilot": {
+        "title": "Internal proposals · Delft",
+        "reported_one": "{{count}} reported bay",
+        "reported_other": "{{count}} reported bays",
+        "guidance": "Check the location and register each confirmed bay separately. The map opens at the sign. Move the pin to the bay.",
+        "add": "Register a bay near sign {{number}}",
+        "seen": "Last seen by NDW on {{date}}"
+    },
     "title": "Moderation",
     "search": "Search by street, municipality or contributor",
     "tabs": {

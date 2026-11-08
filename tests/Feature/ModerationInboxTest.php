@@ -47,6 +47,23 @@ function openReportOn(ParkingSpace|ParkingMunicipal $place, array $attributes = 
 }
 
 describe('queue', function () {
+    test('the Delft pilot exposes four internal location proposals without creating submissions', function () {
+        $this->actingAs($this->contributor)->get(route('app.moderation.index'))->assertForbidden();
+
+        $this->actingAs($this->moderator)->get(route('app.moderation.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('pilotProposals', 4)
+                ->where('pilotProposals.0.street', 'Oude Kerkstraat 2')
+                ->where('pilotProposals.0.reported_bays', 4)
+                ->has('pilotProposals.2.signs', 2)
+                ->where('items.total', 0));
+
+        $this->get(route('app.moderation.index', ['status' => 'decided']))
+            ->assertInertia(fn (Assert $page) => $page->where('pilotProposals', []));
+
+        expect(ParkingSpace::count())->toBe(0);
+    });
+
     test('reports come first, then everything else, each oldest first', function () {
         $this->travelTo('2026-10-01 09:00:00');
         $submission = pendingSubmission($this->contributor);

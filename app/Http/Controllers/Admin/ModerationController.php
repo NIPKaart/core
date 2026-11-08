@@ -334,6 +334,10 @@ class ModerationController extends Controller
 
         return Inertia::render('backend/moderation/index', [
             'status' => $open ? 'open' : 'decided',
+            'pilotProposals' => fn () => $open && $user->can('bulkUpdate', ParkingSpace::class)
+                && in_array(ModerationQueue::SUBMISSION, $types, true)
+                    ? config('moderation-pilot.proposals', [])
+                    : [],
             'filters' => [
                 'types' => $filters['types'] ?? [],
                 'municipality_ids' => array_map('strval', $filters['municipality_ids'] ?? []),

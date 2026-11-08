@@ -16,6 +16,7 @@ import { Link } from '@inertiajs/react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PilotProposals, type PilotProposal } from './pilot-proposals';
 import { Kbd } from './shortcuts';
 import { TYPE_ICONS } from './type-badge';
 import { filterQuery, type Filters, type ItemType, type Options, type QueueItem } from './types';
@@ -63,6 +64,7 @@ function useItemPreview() {
  */
 export function QueueList({
     status,
+    pilotProposals,
     items,
     filters,
     options,
@@ -76,6 +78,7 @@ export function QueueList({
     footer,
 }: {
     status: 'open' | 'decided';
+    pilotProposals: PilotProposal[];
     items: PaginatedResponse<QueueItem> | null;
     filters: Filters;
     options: Options;
@@ -234,7 +237,8 @@ export function QueueList({
                 className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50"
                 onMouseLeave={() => onHover?.(null)}
             >
-                {rows.length === 0 && (
+                {!selecting && !filtered && pilotProposals.length > 0 && <PilotProposals proposals={pilotProposals} />}
+                {rows.length === 0 && (filtered || pilotProposals.length === 0) && (
                     <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
                         {!filtered && (
                             <span className="flex size-12 items-center justify-center rounded-full bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
