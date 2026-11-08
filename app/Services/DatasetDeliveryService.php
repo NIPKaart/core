@@ -10,6 +10,7 @@ use App\Models\DatasetSource;
 use App\Models\User;
 use App\Support\SourceDescription;
 use Aws\Exception\AwsException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -21,6 +22,7 @@ class DatasetDeliveryService
         private DatasetImports $imports,
         private SourceRegistrar $registrar,
         private MunicipalProvenance $provenance,
+        private DatasetDeliveryNotifications $notifications,
     ) {}
 
     public function upload(string $json, User $actor): DatasetImport
@@ -38,39 +40,29 @@ class DatasetDeliveryService
      * Records every delivery in the bucket. Unknown dataset folders become sources awaiting approval
      * (ADR 0013); only deliveries of approved sources are processed.
      */
-    public function discover(): void
+    public function discover(bool $forceFull = false): void
     {
         if (! config('dataset-deliveries.enabled')) {
             return;
         }
         $bucket = $this->storage->bucket();
+        $incremental = $this->notifications->configured();
+        $checkpoint = 'dataset-deliveries.full-scan.'.hash('sha256', $bucket);
+        $full = $forceFull || ! $incremental || ! Cache::has($checkpoint);
+        $messages = [];
         $received = [];
         try {
-            foreach (array_keys(DatasetDeliveryStorage::PREFIXES) as $type) {
-                foreach ($this->storage->datasets($type) as $code) {
-                    $objects = iterator_to_array($this->storage->objects($type, $code), false);
-                    $source = DatasetSource::where('code', $code)->first() ?? $this->registerFrom($type, $objects);
-                    if (! $source || $source->target_type !== $type) {
-                        continue;
+            if ($full) {
+                foreach (array_keys(DatasetDeliveryStorage::PREFIXES) as $type) {
+                    foreach ($this->storage->datasets($type) as $code) {
+                        $this->scanFolder($bucket, $type, $code, null, $received);
                     }
-                    foreach (array_chunk($objects, 500) as $batch) {
-                        $existing = DatasetDelivery::where('bucket', $bucket)
-                            ->whereIn('object_key', array_column($batch, 'key'))
-                            ->get()
-                            ->keyBy('object_key');
-
-                        foreach ($batch as $object) {
-                            $delivery = $existing->get($object['key']) ?? DatasetDelivery::firstOrCreate(
-                                ['bucket' => $bucket, 'object_key' => $object['key']],
-                                ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
-                            );
-                            if ($delivery->wasRecentlyCreated) {
-                                $received[$type] = true;
-                            }
-                            if ($delivery->etag !== $object['etag']) {
-                                $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
-                            }
-                        }
+                }
+            } else {
+                $messages = $this->notifications->pull();
+                foreach ($this->notifiedObjects($bucket, $messages) as $type => $folders) {
+                    foreach ($folders as $code => $keys) {
+                        $this->scanFolder($bucket, $type, $code, array_keys($keys), $received);
                     }
                 }
             }
@@ -85,6 +77,71 @@ class DatasetDeliveryService
                         ProcessDatasetDelivery::dispatch($delivery->id)->afterCommit();
                     }
                 });
+        }
+
+        if ($full && $incremental) {
+            Cache::put($checkpoint, true, now()->addHour());
+        }
+        $this->notifications->acknowledge($messages);
+    }
+
+    private function notifiedObjects(string $bucket, array $messages): array
+    {
+        $folders = [];
+        foreach ($messages as $message) {
+            $body = $message['body'] ?? null;
+            if (is_string($body)) {
+                $decoded = json_decode($body, true);
+                if ($decoded === null && in_array($message['metadata']['CF-Content-Type'] ?? null, ['json', 'bytes'], true)) {
+                    $decoded = json_decode(base64_decode($body, true) ?: '', true);
+                }
+                $body = $decoded;
+            }
+            $key = $body['object']['key'] ?? null;
+            if (($body['bucket'] ?? null) !== $bucket || ! is_string($key)) {
+                continue;
+            }
+            [$type, $code] = array_pad(explode('/', $key, 3), 2, '');
+            if ($this->storage->deliveryId($key, $type, $code) !== null) {
+                $folders[$type][$code][$key] = true;
+            }
+        }
+
+        return $folders;
+    }
+
+    /** @param list<string>|null $keys Null requests a full listing. */
+    private function scanFolder(string $bucket, string $type, string $code, ?array $keys, array &$received): void
+    {
+        $source = DatasetSource::where('code', $code)->first();
+        // A new source still takes its description from the newest delivery in the folder.
+        if ($keys === null || $source === null) {
+            $objects = iterator_to_array($this->storage->objects($type, $code), false);
+            $source ??= $this->registerFrom($type, $objects);
+        } else {
+            $objects = iterator_to_array($this->storage->currentObjects($keys), false);
+        }
+        if (! $source || $source->target_type !== $type) {
+            return;
+        }
+        foreach (array_chunk($objects, 500) as $batch) {
+            $existing = DatasetDelivery::where('bucket', $bucket)
+                ->whereIn('object_key', array_column($batch, 'key'))
+                ->get()
+                ->keyBy('object_key');
+
+            foreach ($batch as $object) {
+                $delivery = $existing->get($object['key']) ?? DatasetDelivery::firstOrCreate(
+                    ['bucket' => $bucket, 'object_key' => $object['key']],
+                    ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
+                );
+                if ($delivery->wasRecentlyCreated) {
+                    $received[$type] = true;
+                }
+                if ($delivery->etag !== $object['etag']) {
+                    $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
+                }
+            }
         }
     }
 

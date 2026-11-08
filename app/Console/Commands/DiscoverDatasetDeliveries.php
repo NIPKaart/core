@@ -7,13 +7,13 @@ use Illuminate\Console\Command;
 
 class DiscoverDatasetDeliveries extends Command
 {
-    protected $signature = 'nipkaart:discover-deliveries';
+    protected $signature = 'nipkaart:discover-deliveries {--full : Reconcile all retained deliveries immediately}';
 
-    protected $description = 'Discover retained municipal deliveries and resume pending intake';
+    protected $description = 'Discover retained dataset deliveries and resume pending intake';
 
     public function handle(DatasetDeliveryService $service): int
     {
-        $service->discover();
+        $service->discover(forceFull: (bool) $this->option('full'));
 
         return self::SUCCESS;
     }

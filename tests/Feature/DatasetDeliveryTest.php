@@ -11,6 +11,7 @@ use App\Notifications\DatasetImport\ReviewNotificationChannel;
 use App\Services\DatasetDeliveryService;
 use App\Services\DatasetDeliveryStorage;
 use App\Services\MunicipalImportService;
+use Aws\Command;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\Exception\S3Exception;
@@ -22,6 +23,7 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -109,6 +111,83 @@ it('discovers every listing page and resumes registered but undispatched work', 
     expect(DatasetDelivery::count())->toBe(3);
     Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === $existing->id);
     Queue::assertPushed(ProcessDatasetDelivery::class, 3);
+});
+
+it('checks notified objects between full scans and reconciles missed or modified files after an hour', function () {
+    [$handler] = bucketClient();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    config(['dataset-deliveries.notifications' => ['account_id' => 'account', 'queue_id' => 'queue', 'token' => 'test']]);
+    $source = DatasetSource::factory()->create();
+    $existing = DatasetDelivery::factory()->create(['dataset_source_id' => $source->id]);
+    $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
+    $late = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
+    $event = ['bucket' => 'municipal-test', 'object' => ['key' => $key, 'eTag' => 'stale-notification']];
+    Http::preventStrayRequests();
+    Http::fake([
+        'https://api.cloudflare.com/client/v4/accounts/account/queues/queue/messages/pull' => Http::response([
+            'success' => true,
+            'result' => ['messages' => [
+                ['lease_id' => 'first', 'body' => base64_encode(json_encode($event, JSON_THROW_ON_ERROR)), 'metadata' => ['CF-Content-Type' => 'json']],
+                ['lease_id' => 'duplicate', 'body' => base64_encode(json_encode($event, JSON_THROW_ON_ERROR)), 'metadata' => ['CF-Content-Type' => 'json']],
+                ['lease_id' => 'unrelated', 'body' => ['bucket' => 'another-bucket', 'object' => ['key' => $key]]],
+            ]],
+        ]),
+        'https://api.cloudflare.com/client/v4/accounts/account/queues/queue/messages/ack' => function ($request) use ($key) {
+            expect(DatasetDelivery::where('object_key', $key)->sole()->etag)->toBe('"current"')
+                ->and($request['acks'])->toBe([['lease_id' => 'first'], ['lease_id' => 'duplicate'], ['lease_id' => 'unrelated']]);
+
+            return Http::response(['success' => true, 'result' => ['ackCount' => 3]]);
+        },
+    ]);
+
+    bucketFolders($handler, $source->code);
+    $handler->append(new Result(['Contents' => [['Key' => $existing->object_key, 'ETag' => $existing->etag]], 'IsTruncated' => false]));
+    bucketNoOffstreetFolders($handler);
+    $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
+    Http::assertNothingSent();
+
+    $this->travel(5)->minutes();
+    $handler->append(function ($command) use ($key) {
+        expect($command->getName())->toBe('HeadObject')->and($command['Key'])->toBe($key);
+
+        return new Result(['ETag' => '"current"']);
+    });
+    $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
+    Http::assertSentCount(2);
+    expect($handler->count())->toBe(0);
+
+    $this->travel(55)->minutes();
+    bucketFolders($handler, $source->code);
+    $handler->append(new Result(['Contents' => [
+        ['Key' => $existing->object_key, 'ETag' => '"changed"'],
+        ['Key' => $late, 'ETag' => '"late"'],
+    ], 'IsTruncated' => false]));
+    bucketNoOffstreetFolders($handler);
+    $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
+    Http::assertSentCount(2);
+    expect($existing->fresh())->state->toBe('rejected')->error_code->toBe('object_changed')
+        ->and(DatasetDelivery::where('object_key', $late)->sole()->state)->toBe('pending');
+});
+
+it('leaves notifications unacknowledged when the object metadata cannot be read', function () {
+    [$handler] = bucketClient();
+    Queue::fake([ProcessDatasetDelivery::class]);
+    config(['dataset-deliveries.notifications' => ['account_id' => 'account', 'queue_id' => 'queue', 'token' => 'test']]);
+    $source = DatasetSource::factory()->create();
+    $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
+    bucketFolders($handler);
+    bucketNoOffstreetFolders($handler);
+    $this->artisan('nipkaart:discover-deliveries --full')->assertSuccessful();
+    Http::preventStrayRequests();
+    Http::fake(['https://api.cloudflare.com/client/v4/accounts/account/queues/queue/messages/pull' => Http::response([
+        'success' => true,
+        'result' => ['messages' => [['lease_id' => 'retry', 'body' => ['bucket' => 'municipal-test', 'object' => ['key' => $key]]]]],
+    ])]);
+    $handler->append(new S3Exception('Unavailable', new Command('HeadObject'), ['response' => new Response(503)]));
+
+    expect(fn () => app(DatasetDeliveryService::class)->discover())->toThrow(S3Exception::class);
+    Http::assertSentCount(1);
+    expect(DatasetDelivery::count())->toBe(0);
 });
 
 it('intakes a first retained delivery without a user and keeps it pending for manual publication', function () {

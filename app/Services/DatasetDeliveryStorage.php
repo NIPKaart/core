@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Support\MunicipalSnapshot;
 use Aws\Exception\AwsException;
+use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3ClientInterface;
 use Generator;
 use Illuminate\Support\Facades\Log;
@@ -84,6 +85,28 @@ class DatasetDeliveryStorage
                     yield ['key' => $object['Key'], 'etag' => $object['ETag'], 'modified' => (string) ($object['LastModified'] ?? '')];
                 }
             }
+        }
+    }
+
+    /**
+     * Fetch current metadata so delayed or duplicated notifications cannot supply a stale ETag.
+     *
+     * @param  list<string>  $keys
+     * @return Generator<int, array{key: string, etag: string}>
+     */
+    public function currentObjects(array $keys): Generator
+    {
+        foreach ($keys as $key) {
+            try {
+                $object = $this->client->headObject(['Bucket' => $this->bucket(), 'Key' => $key]);
+            } catch (S3Exception $exception) {
+                if ($exception->getStatusCode() === 404) {
+                    continue;
+                }
+
+                throw $exception;
+            }
+            yield ['key' => $key, 'etag' => $object['ETag']];
         }
     }
 
