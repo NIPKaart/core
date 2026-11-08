@@ -9,12 +9,14 @@ use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * Public signal that garage occupancy changed. It carries no data: an open garage detail refetches its own,
- * so freshness rules stay on the server (#1221).
+ * Public signal carrying the IDs of visible facilities whose occupancy was updated.
  */
 class OffstreetObservationsApplied implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets;
+
+    /** @param list<string> $garageIds */
+    public function __construct(private array $garageIds, private bool $detailOnly = false) {}
 
     /** @return array<int, Channel> */
     public function broadcastOn(): array
@@ -24,12 +26,12 @@ class OffstreetObservationsApplied implements ShouldBroadcast, ShouldDispatchAft
 
     public function broadcastAs(): string
     {
-        return 'observations.applied';
+        return ($this->detailOnly ?? false) ? 'observations.details-applied' : 'observations.applied';
     }
 
-    /** @return array<string, never> */
+    /** @return array{garage_ids: list<string>} */
     public function broadcastWith(): array
     {
-        return [];
+        return ['garage_ids' => $this->garageIds ?? []];
     }
 }

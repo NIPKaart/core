@@ -100,18 +100,21 @@ export default function ParkingDetail({ result, approximateDestination = false, 
         if (!echo) return;
         const channel = echo.channel('parking-offstreet');
         const request = new AbortController();
-        const refresh = () => {
+        const refresh = (event?: { garage_ids?: string[] }) => {
+            if (!event?.garage_ids?.includes(id)) return;
             fetch(detailUrls.offstreet(id), { signal: request.signal, headers: { Accept: 'application/json' } })
                 .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Parking detail refresh failed'))))
                 .then((detail) => setData({ source: 'offstreet', detail } as ParkingDetailData))
                 .catch(() => {});
         };
         channel.listen('.observations.applied', refresh);
+        channel.listen('.observations.details-applied', refresh);
 
         // Only this listener is removed: the map shares the channel for its garage badges.
         return () => {
             request.abort();
             channel.stopListening('.observations.applied', refresh);
+            channel.stopListening('.observations.details-applied', refresh);
         };
     }, [open, source, id]);
 

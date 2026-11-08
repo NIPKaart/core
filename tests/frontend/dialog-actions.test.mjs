@@ -6,8 +6,9 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-function load(file, overrides = () => undefined) {
+function load(file, overrides = () => undefined, globals = {}) {
     const context = {
+        ...globals,
         exports: {},
         require: (name) => overrides(name) ?? (name === '@/lib/utils' ? { cn: (...values) => values.filter(Boolean).join(' ') } : require(name)),
     };
@@ -54,10 +55,11 @@ test('the standard dialog close action uses the same ghost button and retains it
     assert.equal(find(DialogContent({ showClose: false }), (node) => node.type === 'Close'), null);
 });
 
-function loadParkingDetail({ data = null, allowed = false, desktop = true } = {}) {
+function loadParkingDetail({ data = null, allowed = false, desktop = true, useEffect = () => {}, echo, fetch } = {}) {
     let stateIndex = 0;
     return load('map/parking-detail/parking-detail.tsx', (name) => {
-        if (name === 'react') return { useState: (initial) => [stateIndex++ === 0 && data ? data : stateIndex === 2 && data ? 'ready' : initial, () => {}], useEffect() {}, useRef: () => ({ current: null }), useCallback: (fn) => fn };
+        if (name === 'react') return { useState: (initial) => [stateIndex++ === 0 && data ? data : stateIndex === 2 && data ? 'ready' : initial, () => {}], useEffect, useRef: () => ({ current: null }), useCallback: (fn) => fn };
+        if (name === '@/echo') return { getEcho: () => echo };
         if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) };
         if (name === '@/lib/place-link') return { placeLinkPath: () => '/map' };
         if (name === '@/routes') return { login: () => '/login' };
@@ -68,8 +70,42 @@ function loadParkingDetail({ data = null, allowed = false, desktop = true } = {}
         if (name.startsWith('@/routes/map/')) return { show: { url: () => '/detail' } };
         if (name.startsWith('@/components/ui/')) return new Proxy({}, { get: (_, key) => key });
         if (name.startsWith('@/') || name.startsWith('./')) return new Proxy({}, { get: (_, key) => key });
-    }).default;
+    }, { AbortController, fetch }).default;
 }
+
+test('an open garage detail refreshes only for a matching observation and removes its listener on close', () => {
+    const effects = [];
+    const requests = [];
+    const listeners = new Map();
+    const channel = {
+        listen: (event, callback) => listeners.set(event, callback),
+        stopListening: (event, callback) => {
+            assert.equal(callback, listeners.get(event));
+            listeners.delete(event);
+        },
+    };
+    const Detail = loadParkingDetail({
+        useEffect: (effect) => effects.push(effect),
+        echo: { channel: () => channel },
+        fetch: (url, options) => {
+            requests.push({ url, signal: options.signal });
+            return Promise.resolve({ ok: true, json: async () => ({ id: 'a' }) });
+        },
+    });
+    Detail({ result: { source: 'offstreet', id: 'a', title: 'Garage', distance_metres: null }, open: true, onClose() {} });
+    const cleanup = effects[1]();
+    const receive = listeners.get('.observations.applied');
+    receive();
+    receive({ garage_ids: [] });
+    receive({ garage_ids: ['b'] });
+    assert.equal(requests.length, 0);
+    listeners.get('.observations.details-applied')({ garage_ids: ['b', 'a'] });
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/detail');
+    cleanup();
+    assert.equal(requests[0].signal.aborted, true);
+    assert.equal(listeners.size, 0);
+});
 
 test('parking detail share and close actions have matching hover surfaces and remain operable', () => {
     let closed = false;
