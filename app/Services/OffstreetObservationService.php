@@ -11,6 +11,7 @@ use App\Support\OffstreetObservations;
 use App\Support\OffstreetSnapshot;
 use Aws\Exception\AwsException;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -120,13 +121,14 @@ class OffstreetObservationService
             }
             $applied = 0;
             $unknown = 0;
+            $updates = [];
             foreach ($delivery['records'] as $record) {
                 $space = $spaces->get($delivery['catalog_delivery_id'] === null && $delivery['identity_records'] === null ? $record['external_id'] : ($bindings[$record['external_id']] ?? null));
                 if ($space === null) {
                     $unknown++;
                 }
                 if ($space && $this->isNewer($record, $delivery['fetched_at'], $space)) {
-                    $space->forceFill([
+                    $attributes = [
                         'api_state' => $record['source_state'],
                         'occupancy_status' => $record['status'],
                         'capacity' => $record['capacity'],
@@ -134,9 +136,29 @@ class OffstreetObservationService
                         'observed_at' => $record['observed_at'],
                         'observation_fetched_at' => $delivery['fetched_at'],
                         'observation_identity' => ['catalog_delivery_id' => $delivery['catalog_delivery_id'], 'source_record' => $context[$record['external_id']] ?? null],
-                    ])->save();
+                    ];
+                    $space->forceFill($attributes)->updateTimestamps();
+                    $updates[$space->id] = [
+                        ...Arr::only($space->getAttributes(), ['id', 'updated_at', ...array_keys($attributes)]),
+                        'observation_identity' => $attributes['observation_identity'],
+                    ];
                     $applied++;
                 }
+            }
+            foreach (array_chunk($updates, 500) as $batch) {
+                DB::update(<<<'SQL'
+                    UPDATE parking_offstreet_spaces AS space
+                    SET api_state = incoming.api_state,
+                        occupancy_status = incoming.occupancy_status,
+                        capacity = incoming.capacity,
+                        free_space = incoming.free_space,
+                        observed_at = incoming.observed_at,
+                        observation_fetched_at = incoming.observation_fetched_at,
+                        observation_identity = incoming.observation_identity,
+                        updated_at = incoming.updated_at
+                    FROM jsonb_populate_recordset(NULL::parking_offstreet_spaces, ?::jsonb) AS incoming
+                    WHERE space.id = incoming.id
+                    SQL, [json_encode($batch, JSON_THROW_ON_ERROR)]);
             }
             $source->forceFill(['last_observation_key' => $newest['key']])->save();
             if ($applied > 0) {
