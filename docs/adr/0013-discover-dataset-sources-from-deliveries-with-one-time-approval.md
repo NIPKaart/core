@@ -50,6 +50,8 @@ The catalog version above describes the initial source-block change. The current
 4. Approval makes the source's deliveries flow into the existing staging, review and publication. Rejection keeps the source and its receipts for traceability and ignores its deliveries until someone reverses the decision.
 5. A later delivery whose source block differs from the approved one (for example a changed licence, publisher or area) is held for re-approval of the source before it can be reviewed.
 
+[ADR 0015](0015-ingest-location-proposal-sources.md) extends discovery and source approval to `proposals/`. For a national proposal dataset, the source area identifies the country and core resolves municipalities per point. Approval enables reconciliation of moderation evidence, with no parking-record staging or publication.
+
 Validation becomes per format, not per dataset. Rules that are specific to one upstream source (such as Amsterdam's E6a regime filter) stay in that source's collector adapter, which must deliver records that already mean what the format says.
 
 ## Why
