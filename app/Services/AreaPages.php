@@ -161,7 +161,7 @@ final class AreaPages
                 $ownRule ? ['scope' => 'municipality', 'name' => $municipality->name, ...$this->ruleLink($ownRule)] : null,
                 ($national = $this->nationalRule($country)) ? ['scope' => 'country', 'name' => $this->countryName($country), ...$national] : null,
             ])),
-            'gpkwijs_url' => config("parking-rule-guidance.gpkwijs.{$country->code}.{$municipality->slug}"),
+            'gpkwijs_url' => $this->gpkwijsUrl($municipality),
             'sources' => [
                 'municipal' => ($own['municipal'] ?? 0) > 0 ? $this->municipalSources($municipality) : [],
                 'community' => ($own['community'] ?? 0) > 0,
@@ -278,6 +278,32 @@ final class AreaPages
     private function totals(): array
     {
         return $this->discovery->municipalityTotals();
+    }
+
+    private function gpkwijsUrl(Municipality $municipality): ?string
+    {
+        if ($municipality->country->code !== 'NL') {
+            return null;
+        }
+
+        // GPKwijs removes accented letters and punctuation, then hyphenates whitespace.
+        $name = preg_replace('/[^a-z0-9\s-]/u', '', mb_strtolower($municipality->name));
+        $slug = preg_replace('/\s+/u', '-', trim($name));
+
+        // GPKwijs uses province abbreviations for these otherwise unqualified names.
+        $slug = match ([$slug, $municipality->province?->geocode]) {
+            ['beek', 'NL-LI'] => 'beek-l',
+            ['bergen', 'NL-LI'] => 'bergen-l',
+            ['bergen', 'NL-NH'] => 'bergen-nh',
+            ['hengelo', 'NL-OV'] => 'hengelo-o',
+            ['laren', 'NL-NH'] => 'laren-nh',
+            ['middelburg', 'NL-ZE'] => 'middelburg-z',
+            ['rijswijk', 'NL-ZH'] => 'rijswijk-zh',
+            ['stein', 'NL-LI'] => 'stein-l',
+            default => $slug,
+        };
+
+        return $slug === '' ? null : "https://www.gpkwijs.nl/gemeente/{$slug}";
     }
 
     /** @return array{url: string, host: ?string}|null */

@@ -79,6 +79,21 @@ it('links Amsterdam’s official rules and separate GPKwijs guidance', function 
         ->where('gpkwijs_url', 'https://www.gpkwijs.nl/gemeente/amsterdam'));
 });
 
+it('derives the GPKwijs destination from the Dutch municipality name', function (string $name, string $provinceCode, string $expectedSlug) {
+    $province = Province::factory()->for($this->netherlands)->create(['geocode' => $provinceCode]);
+    $municipality = Municipality::factory()->for($this->netherlands)->for($province)->create(['name' => $name]);
+
+    $this->get(route('areas.municipality', ['nl', $municipality->slug]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('gpkwijs_url', "https://www.gpkwijs.nl/gemeente/{$expectedSlug}"));
+})->with([
+    'apostrophe' => ["'s-Hertogenbosch", 'NL-NB', 's-hertogenbosch'],
+    'accented letters' => ['Súdwest-Fryslân', 'NL-FR', 'sdwest-frysln'],
+    'comma and spaces' => ['Nuenen, Gerwen en Nederwetten', 'NL-NB', 'nuenen-gerwen-en-nederwetten'],
+    'Bergen in Noord-Holland' => ['Bergen', 'NL-NH', 'bergen-nh'],
+    'Bergen in Limburg' => ['Bergen', 'NL-LI', 'bergen-l'],
+]);
+
 it('provides only the national rule for a municipality without an official local source', function () {
     $belgium = Country::factory()->create(['code' => 'BE']);
     $province = Province::factory()->for($belgium)->create(['name' => 'Oost-Vlaanderen']);
