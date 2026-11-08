@@ -1,10 +1,10 @@
 {
     "meta": {
         "title": "Garages, parkeerterreinen en P+R",
-        "description": "Live overzicht van parkeergarages, parkeerterreinen en P+R per gemeente, met de algemene bezetting en het tijdstip van de laatste meting."
+        "description": "Vind parkeergarages, parkeerterreinen en P+R per gemeente. Bij een actuele meting zie je de algemene bezetting en het meettijdstip."
     },
     "title": "Garages, parkeerterreinen en P+R",
-    "intro": "De laatste algemene bezetting van elke garage, parkeerterrein en P+R, per gemeente. Handig als er geen gehandicaptenparkeerplaats op straat vrij is.",
+    "intro": "Bekijk garages, parkeerterreinen en P+R per gemeente. Bij een actuele meting zie je hoeveel plaatsen er in totaal vrij zijn en wanneer dat is gemeten.",
     "empty": "Er zijn nog geen parkeervoorzieningen beschikbaar.",
     "locations_one": "{{count}} locatie",
     "locations_other": "{{count}} locaties",
@@ -56,7 +56,7 @@
         "closed": "Gesloten",
         "stale": "Geen recente meting",
         "unavailable": "Live gegevens niet beschikbaar",
-        "unknown": "Geen live gegevens",
+        "unknown": "Geen actuele bezettingsmeting",
         "measured": "Gemeten"
     },
     "actions": {

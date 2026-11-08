@@ -23,13 +23,13 @@
             "name": "Community",
             "kind": "Bijdragen van gebruikers",
             "shows": "Parkeerplaatsen die (nog) niet in open data staan. Andere gebruikers kunnen bevestigen dat een parkeerplaats er nog is.",
-            "freshness": "Bijgewerkt zodra gebruikers een parkeerplaats toevoegen of bevestigen."
+            "freshness": "De toevoegdatum en de bevestiging door bezoekers staan afzonderlijk bij de parkeerplaats."
         },
         "offstreet": {
             "name": "Garages en P+R",
             "kind": "Exploitanten en gemeenten",
             "shows": "Het aantal vrije plaatsen in de hele garage, niet specifiek de gehandicaptenplaatsen.",
-            "freshness": "Elke paar minuten bijgewerkt, met het tijdstip van de laatste meting."
+            "freshness": "Bij een actuele meting zie je ook het meettijdstip."
         }
     },
     "why": {

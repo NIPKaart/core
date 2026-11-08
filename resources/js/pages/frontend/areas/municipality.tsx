@@ -65,8 +65,10 @@ function MunicipalityWithParking({ area, parent }: { area: MunicipalityArea; par
                         <p className={cn('max-w-[540px] text-[17px] leading-[1.6] lg:text-lg', muted)}>
                             {t('intro.municipality', { name: area.name })}
                         </p>
-                        {totals.spaces > 0 && (
+                        {totals.spaces > 0 ? (
                             <VerificationStatus totals={totals} className={cn(card, 'max-w-[540px] px-4.5 py-4 lg:px-5.5 lg:py-5')} />
+                        ) : (
+                            <p className={cn('wrap-anywhere hyphens-auto', muted)}>{t('municipality.empty_title')}.</p>
                         )}
                     </div>
                     {area.preview && area.map_url && (
@@ -159,28 +161,30 @@ function Counts({ area }: { area: MunicipalityArea }) {
 function Rules({ area, className }: { area: MunicipalityArea; className: string }) {
     const { t } = useTranslation('frontend/areas');
 
-    if (area.rules.length === 0 && !area.gpkwijs_url) {
-        return null;
-    }
+    const hasLocalRules = area.rules.some((rule) => rule.scope === 'municipality');
+    const hasLinks = area.rules.length > 0 || Boolean(area.gpkwijs_url);
 
     return (
         <section aria-labelledby="rules" className={cn('flex min-w-0 flex-col gap-4 lg:gap-5', className)}>
             <SectionTitle id="rules" size="medium">
                 <span className="block wrap-anywhere hyphens-auto">{t('rules.permit_title')}</span>
             </SectionTitle>
-            <ul className={cn(card, 'overflow-hidden')}>
-                {area.rules.map((rule) => (
-                    <RuleRow
-                        key={rule.scope}
-                        rule={rule}
-                        title={t(rule.scope === 'municipality' ? 'rules.official_local' : 'rules.official_national', { name: rule.name })}
-                        scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
-                    />
-                ))}
-                {area.gpkwijs_url && (
-                    <RuleRow rule={{ url: area.gpkwijs_url }} title={t('rules.gpkwijs')} scope={t('rules.gpkwijs_scope', { name: area.name })} />
-                )}
-            </ul>
+            {!hasLocalRules && <p className={muted}>{t('rules.local_unknown')}</p>}
+            {hasLinks && (
+                <ul className={cn(card, 'overflow-hidden')}>
+                    {area.rules.map((rule) => (
+                        <RuleRow
+                            key={rule.scope}
+                            rule={rule}
+                            title={t(rule.scope === 'municipality' ? 'rules.official_local' : 'rules.official_national', { name: rule.name })}
+                            scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
+                        />
+                    ))}
+                    {area.gpkwijs_url && (
+                        <RuleRow rule={{ url: area.gpkwijs_url }} title={t('rules.gpkwijs')} scope={t('rules.gpkwijs_scope', { name: area.name })} />
+                    )}
+                </ul>
+            )}
             <RulesDisclaimer />
         </section>
     );
@@ -276,7 +280,7 @@ function MunicipalityWithoutParking({ area, parent }: { area: MunicipalityArea; 
                     <AreaTitle name={area.name} />
                     <div className={cn(card, 'flex items-start gap-3.5 px-4.5 py-4 lg:px-5.5 lg:py-5')}>
                         <MapPinOff className="mt-0.5 size-5.5 shrink-0 text-stone-600 dark:text-stone-400" aria-hidden />
-                        <span className="flex flex-col gap-1">
+                        <span className="flex min-w-0 flex-col gap-1 wrap-anywhere hyphens-auto">
                             <strong className="text-lg">{t('municipality.empty_title')}</strong>
                             <span className={cn('text-base', muted)}>{t('municipality.empty_text', { name: area.name })}</span>
                         </span>

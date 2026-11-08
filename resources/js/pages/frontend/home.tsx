@@ -33,7 +33,7 @@ export default function Home({ garages }: Props) {
                     <div className="flex flex-col gap-4 px-5 pt-9 pb-8 sm:px-6 lg:justify-center lg:gap-5.5 lg:px-[clamp(2rem,5vw,7rem)] lg:py-20">
                         <div className="flex w-full max-w-2xl flex-col gap-4 lg:gap-5.5">
                             <span className="text-sm font-medium text-stone-600 lg:text-[15px] dark:text-stone-400">{t('hero.eyebrow')}</span>
-                            <h1 className="text-4xl leading-[1.06] font-bold tracking-[-0.035em] text-balance text-stone-900 lg:text-[clamp(3.5rem,3.25vw,4.5rem)] lg:leading-[1.04] dark:text-white">
+                            <h1 className="text-4xl leading-[1.06] font-bold tracking-[-0.035em] text-balance wrap-anywhere hyphens-auto text-stone-900 lg:text-[clamp(3.5rem,3.25vw,4.5rem)] lg:leading-[1.04] dark:text-white">
                                 {t('hero.title')}
                             </h1>
                             <p className="max-w-xl text-[17px] leading-relaxed text-stone-600 lg:text-lg dark:text-stone-300">

@@ -49,7 +49,7 @@ export default function MapLegend() {
                         className="flex gap-4 border-b border-stone-200 py-4.5 lg:flex-col lg:gap-3.5 lg:py-8 lg:odd:pr-8 lg:even:border-l lg:even:pl-8 xl:border-b-0 xl:border-l xl:px-8 xl:pb-0 xl:first:border-l-0 xl:first:pl-0 xl:last:pr-0 dark:border-neutral-800"
                     >
                         <span className="flex h-12 w-14 shrink-0 items-start lg:w-auto">{marker}</span>
-                        <span className="flex flex-col gap-1 lg:gap-3.5">
+                        <span className="flex min-w-0 flex-col gap-1 wrap-anywhere hyphens-auto lg:gap-3.5">
                             <h3 className="text-[17px] font-semibold lg:text-lg">{t(`legend.${key}.title` as const)}</h3>
                             <p className="text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">{t(`legend.${key}.text` as const)}</p>
                         </span>

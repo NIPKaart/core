@@ -22,6 +22,7 @@ export default function HomeGaragePreview({ garages }: { garages: Preview | null
 
     return (
         <div className="flex min-w-0 flex-1 flex-col gap-3">
+            {!garages && <p className="text-sm text-muted-foreground">{t('garages.example_note')}</p>}
             <GarageTable
                 municipality={garages?.municipality ?? { name: t('garages.example_municipality'), garages: examples }}
                 total={garages?.total}

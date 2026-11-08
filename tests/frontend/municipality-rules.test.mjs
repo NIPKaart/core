@@ -79,25 +79,36 @@ test('GPKwijs stands on its own when there are no official rules', async () => {
     assert.match(html, /href="https:\/\/gpkwijs\.nl\/amsterdam"/);
     assert.match(html, /Parkeeruitleg van GPKwijs/);
     assert.match(html, /Controleer de borden/);
-    assert.doesNotMatch(html, /parkeerregels zijn bij NIPKaart nog niet bekend/);
+    assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
     assert.match(html, /<strong>Samenwerken\?<\/strong>/);
 });
 
-test('available national rules are shown without a notice about missing local rules', async () => {
+test('national rules remain available when local rules are unknown', async () => {
     const html = await municipality({
         rules: [{ scope: 'country', name: 'Nederland', url: 'https://example.com/regels', host: 'example.com' }],
     });
 
     assert.match(html, /href="https:\/\/example\.com\/regels"/);
     assert.match(html, /Officiële landelijke regels voor Nederland/);
-    assert.doesNotMatch(html, /lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
+    assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
 });
 
-test('municipality pages omit the rules section when there are no links', async () => {
+test('municipality pages distinguish missing spaces from missing local rules', async () => {
     for (const indexable of [true, false]) {
         const html = await municipality({ indexable });
 
-        assert.doesNotMatch(html, /aria-labelledby="rules"|Controleer de borden/);
+        assert.match(html, /NIPKaart kent nog geen gehandicaptenparkeerplaatsen in deze gemeente/);
+        assert.match(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
+        assert.equal(html.includes('Geen actuele meting van de garage- of terreinbezetting'), indexable);
         assert.match(html, /Neem contact op/);
     }
+});
+
+test('municipal rules suppress the missing local rules notice', async () => {
+    const html = await municipality({
+        rules: [{ scope: 'municipality', name: 'Amsterdam', url: 'https://example.com/regels', host: 'example.com' }],
+    });
+
+    assert.match(html, /Officiële gemeentelijke regels voor Amsterdam/);
+    assert.doesNotMatch(html, /De lokale parkeerregels zijn bij NIPKaart nog niet bekend/);
 });

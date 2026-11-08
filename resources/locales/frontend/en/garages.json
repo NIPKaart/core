@@ -1,10 +1,10 @@
 {
     "meta": {
         "title": "Garages, parking lots and P+R",
-        "description": "Live overview of garages, parking lots and P+R facilities per municipality, with general occupancy and the time of the last measurement."
+        "description": "Find garages, parking lots and park-and-ride sites by municipality. See general occupancy and the measurement time where a current reading is available."
     },
     "title": "Garages, parking lots and P+R",
-    "intro": "The latest general occupancy of every garage, parking lot and P+R, per municipality. Useful when no accessible street space is free.",
+    "intro": "Browse garages, parking lots and park-and-ride sites by municipality. Where a current reading is available, see how many spaces were free across the facility and when they were measured.",
     "empty": "No parking facilities are available yet.",
     "locations_one": "{{count}} location",
     "locations_other": "{{count}} locations",
@@ -56,7 +56,7 @@
         "closed": "Closed",
         "stale": "No recent measurement",
         "unavailable": "Live data unavailable",
-        "unknown": "No live data",
+        "unknown": "No current occupancy measurement",
         "measured": "Measured"
     },
     "actions": {

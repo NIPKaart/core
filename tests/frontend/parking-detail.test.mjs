@@ -143,7 +143,7 @@ test('every source keeps the same group order but only shows the groups that app
     );
     assert.match(
         text(render('municipal', { rule: { url: 'https://www.haarlem.nl/regels', scope: 'municipality', name: 'Haarlem', host: 'haarlem.nl' } })),
-        /Parking rules Municipality of Haarlem \(opens in a new tab\) Official source · haarlem\.nl Layout/,
+        /Parking rules Official municipal rules for Haarlem \(opens in a new tab\) Official source · haarlem\.nl Layout/,
     );
     assert.match(
         text(
@@ -151,7 +151,7 @@ test('every source keeps the same group order but only shows the groups that app
                 rule: { url: 'https://www.rijksoverheid.nl/regels', scope: 'country', name: 'Netherlands', host: 'rijksoverheid.nl' },
             }),
         ),
-        /Parking rules National rules \(opens in a new tab\) Official source · rijksoverheid\.nl/,
+        /Parking rules Official national rules \(opens in a new tab\) Official source · rijksoverheid\.nl/,
     );
     assert.match(text(render('municipal')), /Parking rules Unknown Layout/);
     const garage = text(render('offstreet', { url: 'https://example.test/garage' }));
@@ -167,15 +167,15 @@ test('distance to the destination is formatted in metres or kilometres', () => {
 
 test('street parking omits fields its source never provides and marks missing known fields as unknown', () => {
     const municipal = text(render('municipal'));
-    assert.doesNotMatch(municipal, /Max\. parking time|availability|Source date/i);
+    assert.doesNotMatch(municipal, /Max\. parking time|availability|Source data updated on/i);
     assert.match(municipal, /Orientation Unknown/);
-    assert.match(municipal, /Fetched on Unknown/);
-    assert.doesNotMatch(municipal, /This is when the data was fetched/);
+    assert.match(municipal, /Source data fetched on Unknown/);
+    assert.doesNotMatch(municipal, /This is the date NIPKaart fetched the source data/);
     assert.match(municipal, /Leiden, Zuid-Holland, Netherlands/);
     assert.match(text(render('municipal', { municipality: null, province: null, country: ' ' })), /Parking location without an address/);
     assert.match(
         text(render('municipal', { provenance: { ...details.municipal.provenance, source_updated_at: '2026-03-04T00:00:00Z' } })),
-        /Source date 4 Mar 2026/,
+        /Source data updated on 4 Mar 2026/,
     );
 
     const community = text(render('community'));
@@ -207,7 +207,7 @@ test('garage occupancy is only shown for a current measurement', () => {
 
     const unknown = text(render('offstreet', { availability: 'unknown', observed_at: null }));
     assert.doesNotMatch(unknown, /37 of 400|Measured/);
-    assert.match(unknown, /No live data/);
+    assert.match(unknown, /No current occupancy measurement/);
 });
 
 test('closed is not full and status-only sites show their status without counts', () => {
@@ -331,7 +331,7 @@ test('the existence check asks one question when signed in and shows the outcome
     assert.match(html(), /<form action="\/map\/places\/municipal\/42\/confirm"/);
     assert.match(html(), /aria-label="Yes, the parking space is here"/);
     assert.match(html(), /aria-label="No, the parking space is gone"/);
-    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the parking space still here\? Not confirmed yet/);
+    assert.match(text(html({ confirmedCount: 0, lastConfirmedAt: null })), /Is the parking space still here\? No visitor confirmation yet/);
 
     assert.match(text(html({ confirmedToday: true })), /Thanks, you confirmed Confirmed 3× · today also by you/);
     assert.match(text(html({ reported: true })), /You reported that the parking space is gone A moderator will look at it\./);
@@ -354,7 +354,7 @@ test('signed-out visitors see only the evidence and a quiet hint to log in', () 
         }),
     );
 
-    assert.match(text(guest), /Confirmed 3× Present, last on 4 Mar Log in to confirm or report\./);
+    assert.match(text(guest), /Confirmed 3× Last confirmed by a visitor on 4 Mar Log in to confirm or report\./);
     assert.match(guest, /<a href="\/login\?return=%2Fmap"[^>]*>Log in<\/a>/);
     assert.doesNotMatch(guest, /<form|<button|Is the parking space still here/);
 });

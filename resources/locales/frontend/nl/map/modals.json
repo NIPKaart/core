@@ -13,7 +13,7 @@
             "unlimited": "Onbeperkt",
             "never": "Nooit",
             "area": "Gebied",
-            "added_on": "Toegevoegd op",
+            "added_on": "Toegevoegd aan NIPKaart op",
             "time_format": {
                 "hours": "{{count}} uur",
                 "hours_plural": "{{count}} uur",
@@ -42,10 +42,10 @@
             "updated_at": "Laatst bijgewerkt",
             "source": "Bron",
             "terms": "Bronvoorwaarden",
-            "fetched_at": "Opgehaald op"
+            "fetched_at": "Brongegevens opgehaald op"
         },
         "unknown": "Onbekend",
-        "fetched_note": "Dit is de ophaaldatum van de gegevens, geen controle van de parkeerplaats."
+        "fetched_note": "Dit is de datum waarop NIPKaart de brongegevens heeft opgehaald. Bevestigingen door bezoekers staan apart."
     },
     "offstreet": {
         "modal": {
@@ -117,8 +117,8 @@
         "rules": {
             "facility_info": "Tarieven en openingstijden",
             "title": "Parkeerregels",
-            "municipality": "Gemeente {{name}}",
-            "country": "Landelijke regels",
+            "municipality": "Officiële gemeentelijke regels voor {{name}}",
+            "country": "Officiële landelijke regels",
             "official": "Officiële bron"
         },
         "availability": {
@@ -126,7 +126,7 @@
             "live_unavailable": "Live gegevens niet beschikbaar",
             "stale": "Geen recente meting",
             "unavailable": "Live gegevens niet beschikbaar",
-            "unknown": "Geen live gegevens",
+            "unknown": "Geen actuele bezettingsmeting",
             "free": "{{free}} vrij",
             "general": "Algemene vrije plaatsen",
             "full": "Vol",
@@ -136,7 +136,7 @@
         "source": {
             "community": "Bijdrage van de community, goedgekeurd voor publicatie",
             "municipal": "Open data van de gemeente",
-            "source_date": "Datum bij de bron",
+            "source_date": "Brongegevens bijgewerkt op",
             "municipality": "Gemeente {{name}}"
         },
         "copy_id": "Locatie-ID kopiëren",
@@ -163,8 +163,8 @@
             "question": "Is de parkeerplaats er nog?",
             "count_one": "{{count}}× bevestigd",
             "count_other": "{{count}}× bevestigd",
-            "none": "Nog niet bevestigd",
-            "present_since": "Aanwezig, laatst op",
+            "none": "Nog niet bevestigd door een bezoeker",
+            "present_since": "Laatst bevestigd door een bezoeker op",
             "yes": "Ja",
             "no": "Nee",
             "yes_label": "Ja, de parkeerplaats is er",
