@@ -128,7 +128,7 @@ it('checks notified objects between full scans and reconciles missed or modified
             'success' => true,
             'result' => ['messages' => [
                 ['lease_id' => 'first', 'body' => base64_encode(json_encode($event, JSON_THROW_ON_ERROR)), 'metadata' => ['CF-Content-Type' => 'json']],
-                ['lease_id' => 'duplicate', 'body' => $event],
+                ['lease_id' => 'duplicate', 'body' => base64_encode(json_encode($event, JSON_THROW_ON_ERROR)), 'metadata' => ['CF-Content-Type' => 'json']],
                 ['lease_id' => 'unrelated', 'body' => ['bucket' => 'another-bucket', 'object' => ['key' => $key]]],
             ]],
         ]),
@@ -136,7 +136,7 @@ it('checks notified objects between full scans and reconciles missed or modified
             expect(DatasetDelivery::where('object_key', $key)->sole()->etag)->toBe('"current"')
                 ->and($request['acks'])->toBe([['lease_id' => 'first'], ['lease_id' => 'duplicate'], ['lease_id' => 'unrelated']]);
 
-            return Http::response(['success' => true]);
+            return Http::response(['success' => true, 'result' => ['ackCount' => 3]]);
         },
     ]);
 

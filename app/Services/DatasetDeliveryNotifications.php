@@ -35,10 +35,13 @@ class DatasetDeliveryNotifications
     public function acknowledge(array $messages): void
     {
         if ($messages !== []) {
-            $this->request('ack', ['acks' => array_map(
+            $result = $this->request('ack', ['acks' => array_map(
                 fn (array $message): array => ['lease_id' => $message['lease_id']],
                 $messages,
             )]);
+            if (($result['ackCount'] ?? null) !== count($messages)) {
+                throw new RuntimeException('Cloudflare did not acknowledge all delivery notifications.');
+            }
         }
     }
 
