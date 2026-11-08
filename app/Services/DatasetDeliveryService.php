@@ -91,7 +91,11 @@ class DatasetDeliveryService
         foreach ($messages as $message) {
             $body = $message['body'] ?? null;
             if (is_string($body)) {
-                $body = json_decode($body, true);
+                $decoded = json_decode($body, true);
+                if ($decoded === null && in_array($message['metadata']['CF-Content-Type'] ?? null, ['json', 'bytes'], true)) {
+                    $decoded = json_decode(base64_decode($body, true) ?: '', true);
+                }
+                $body = $decoded;
             }
             $key = $body['object']['key'] ?? null;
             if (($body['bucket'] ?? null) !== $bucket || ! is_string($key)) {
@@ -115,21 +119,28 @@ class DatasetDeliveryService
             $objects = iterator_to_array($this->storage->objects($type, $code), false);
             $source ??= $this->registerFrom($type, $objects);
         } else {
-            $objects = $this->storage->currentObjects($keys);
+            $objects = iterator_to_array($this->storage->currentObjects($keys), false);
         }
         if (! $source || $source->target_type !== $type) {
             return;
         }
-        foreach ($objects as $object) {
-            $delivery = DatasetDelivery::firstOrCreate(
-                ['bucket' => $bucket, 'object_key' => $object['key']],
-                ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
-            );
-            if ($delivery->wasRecentlyCreated) {
-                $received[$type] = true;
-            }
-            if ($delivery->etag !== $object['etag']) {
-                $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
+        foreach (array_chunk($objects, 500) as $batch) {
+            $existing = DatasetDelivery::where('bucket', $bucket)
+                ->whereIn('object_key', array_column($batch, 'key'))
+                ->get()
+                ->keyBy('object_key');
+
+            foreach ($batch as $object) {
+                $delivery = $existing->get($object['key']) ?? DatasetDelivery::firstOrCreate(
+                    ['bucket' => $bucket, 'object_key' => $object['key']],
+                    ['dataset_source_id' => $source->id, 'etag' => $object['etag']],
+                );
+                if ($delivery->wasRecentlyCreated) {
+                    $received[$type] = true;
+                }
+                if ($delivery->etag !== $object['etag']) {
+                    $delivery->forceFill(['state' => 'rejected', 'error_code' => 'object_changed'])->save();
+                }
             }
         }
     }

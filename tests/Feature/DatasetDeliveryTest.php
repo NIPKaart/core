@@ -22,6 +22,7 @@ use GuzzleHttp\Psr7\NoSeekStream;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
@@ -79,6 +80,7 @@ it('discovers every listing page and resumes registered but undispatched work', 
     Queue::fake([ProcessDatasetDelivery::class]);
     $source = DatasetSource::factory()->create();
     $existing = DatasetDelivery::factory()->create(['dataset_source_id' => $source->id]);
+    $second = DatasetDelivery::factory()->create(['dataset_source_id' => $source->id]);
     $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
     bucketFolders($handler, $source->code, 'Bad_Folder');
     $handler->append(new Result(['Contents' => [
@@ -87,16 +89,28 @@ it('discovers every listing page and resumes registered but undispatched work', 
         ['Key' => 'https://example.test/file.json', 'ETag' => 'url'],
         ['Key' => 'municipal/another/'.Str::uuid().'.json', 'ETag' => 'other'],
     ], 'IsTruncated' => true, 'NextContinuationToken' => 'page-two']));
-    $handler->append(function ($command) use ($key) {
+    $handler->append(function ($command) use ($key, $second) {
         expect($command['ContinuationToken'])->toBe('page-two');
 
-        return new Result(['Contents' => [['Key' => $key, 'ETag' => '"next"']], 'IsTruncated' => false]);
+        return new Result(['Contents' => [
+            ['Key' => $second->object_key, 'ETag' => $second->etag],
+            ['Key' => $key, 'ETag' => '"next"'],
+        ], 'IsTruncated' => false]);
     });
     bucketNoOffstreetFolders($handler);
-    $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
-    expect(DatasetDelivery::count())->toBe(2);
+    DB::enableQueryLog();
+    try {
+        $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
+        $lookups = collect(DB::getQueryLog())->filter(fn (array $entry): bool => str_starts_with($entry['query'], 'select * from "dataset_deliveries"')
+            && str_contains($entry['query'], '"object_key"'));
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
+    expect($lookups)->toHaveCount(2);
+    expect(DatasetDelivery::count())->toBe(3);
     Queue::assertPushed(ProcessDatasetDelivery::class, fn ($job) => $job->deliveryId === $existing->id);
-    Queue::assertPushed(ProcessDatasetDelivery::class, 2);
+    Queue::assertPushed(ProcessDatasetDelivery::class, 3);
 });
 
 it('checks notified objects between full scans and reconciles missed or modified files after an hour', function () {
@@ -113,7 +127,7 @@ it('checks notified objects between full scans and reconciles missed or modified
         'https://api.cloudflare.com/client/v4/accounts/account/queues/queue/messages/pull' => Http::response([
             'success' => true,
             'result' => ['messages' => [
-                ['lease_id' => 'first', 'body' => json_encode($event, JSON_THROW_ON_ERROR)],
+                ['lease_id' => 'first', 'body' => base64_encode(json_encode($event, JSON_THROW_ON_ERROR)), 'metadata' => ['CF-Content-Type' => 'json']],
                 ['lease_id' => 'duplicate', 'body' => $event],
                 ['lease_id' => 'unrelated', 'body' => ['bucket' => 'another-bucket', 'object' => ['key' => $key]]],
             ]],
