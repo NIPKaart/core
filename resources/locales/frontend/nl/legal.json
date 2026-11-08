@@ -1,0 +1,66 @@
+{
+    "navigation": "Juridische informatie",
+    "revision": "Laatst herzien op",
+    "draft": "Concept ter beoordeling. De formele verantwoordelijke en de gegevens over verwerking en bewaring worden vóór publicatie bevestigd.",
+    "contactLink": "Neem contact op met NIPKaart",
+    "terms": {
+        "title": "Gebruiksvoorwaarden",
+        "intro": "Hier lees je hoe je de kaart, je account en de mogelijkheden om bij te dragen gebruikt.",
+        "sections": {
+            "map": {
+                "title": "De kaart gebruiken",
+                "body": "NIPKaart helpt je gehandicaptenparkeerplaatsen en parkeervoorzieningen te vinden. Controleer ter plaatse de borden, markeringen en parkeerregels. Bezettingscijfers bij garages en P+R gaan over de hele voorziening."
+            },
+            "account": {
+                "title": "Je account",
+                "body": "Je kunt de openbare kaart zonder account gebruiken. Voor bijdragen en bepaalde persoonlijke functies heb je een account nodig. Houd je inloggegevens voor jezelf en geef het door als je vermoedt dat iemand anders je account gebruikt."
+            },
+            "contributions": {
+                "title": "Bijdragen en moderatie",
+                "body": "Voeg informatie toe die je zelf hebt waargenomen of die je mag delen. Laat kentekens, namen en andere persoonlijke gegevens weg uit vrije tekst. Moderatoren kunnen bijdragen beoordelen, corrigeren of verwijderen. Gebruik de meldfunctie of het contactformulier als iets op de kaart niet klopt."
+            },
+            "licences": {
+                "title": "Software en gegevens",
+                "body": "De licentie van de NIPKaart-software staat bij de broncode. Voor gegevens van gemeenten en andere leveranciers gelden de voorwaarden van de betreffende bron. Raadpleeg de bronvermelding bij de gegevens voordat je ze hergebruikt."
+            }
+        }
+    },
+    "privacy": {
+        "title": "Privacybeleid",
+        "intro": "Hier lees je welke gegevens NIPKaart gebruikt bij het bekijken van de kaart, het gebruik van een account en het doen van een bijdrage.",
+        "sections": {
+            "controller": {
+                "title": "Wie is verantwoordelijk?",
+                "body": "De formele naam en contactgegevens van de verwerkingsverantwoordelijke worden voor publicatie bevestigd. Voor vragen over dit concept kun je het contactformulier van NIPKaart gebruiken."
+            },
+            "account": {
+                "title": "Account en persoonlijke functies",
+                "body": "Voor je account gebruiken we je naam, e-mailadres en een beveiligde afgeleide van je wachtwoord. We gebruiken deze gegevens om je te laten inloggen, je e-mailadres te verifiëren en toegang tot je account te herstellen. Opgeslagen bestemmingen, favorieten en instellingen horen bij je account."
+            },
+            "contributions": {
+                "title": "Bijdragen en moderatie",
+                "body": "Bij een nieuwe bijdrage bewaren we je account, het IP-adres, de positie van de parkeerplaats en de ingevulde details. We gebruiken die voor beoordeling, beheer en het behandelen van meldingen. Bij publicatie worden de locatie en openbare parkeergegevens zichtbaar op de kaart."
+            },
+            "contact": {
+                "title": "Contact opnemen",
+                "body": "Via het contactformulier gebruiken we je naam, e-mailadres, onderwerp en bericht om te kunnen reageren. Bij een kaartmelding kun je een locatie toevoegen. Het formulier stuurt deze gegevens per e-mail naar NIPKaart."
+            },
+            "map": {
+                "title": "Kaart en zoeken",
+                "body": "Bij het zoeken naar een bestemming kan NIPKaart de zoekterm of coördinaten doorgeven aan een geocodingdienst. Afhankelijk van de kaartlaag vraagt je browser kaartbeelden op bij een kaartleverancier. Als je een externe navigatie- of straatbeeldlink opent, krijgt die dienst de coördinaten uit de link."
+            },
+            "storage": {
+                "title": "Cookies en browseropslag",
+                "body": "NIPKaart gebruikt sessiecookies om je sessie te onthouden en formulieren te beveiligen. Je browser kan ook je weergavevoorkeur en recente zoekopdrachten bewaren."
+            },
+            "retention": {
+                "title": "Grondslagen, ontvangers en bewaartermijnen",
+                "body": "De juridische grondslag per doel, de productieontvangers, eventuele doorgiften buiten de EER en de bewaartermijnen van onder meer bijdragen, contactmail, logboeken en back-ups worden vóór publicatie bevestigd."
+            },
+            "rights": {
+                "title": "Je privacyrechten",
+                "body": "Je kunt vragen om inzage, correctie of verwijdering van je gegevens. Afhankelijk van de verwerking kun je ook vragen om beperking of overdracht, of bezwaar maken. Gebruik het contactformulier om een verzoek in te dienen. Je kunt ook een klacht indienen bij de Autoriteit Persoonsgegevens."
+            }
+        }
+    }
+}
