@@ -89,6 +89,7 @@ function discoverFolder(MockHandler $handler, array $objects, ?string $readJson 
     if ($type === 'municipal') {
         $handler->append(new Result(['IsTruncated' => false]));
     }
+    $handler->append(new Result(['IsTruncated' => false]));
     app(DatasetDeliveryService::class)->discover();
 }
 
