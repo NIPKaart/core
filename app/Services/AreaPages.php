@@ -161,6 +161,7 @@ final class AreaPages
                 $ownRule ? ['scope' => 'municipality', 'name' => $municipality->name, ...$this->ruleLink($ownRule)] : null,
                 ($national = $this->nationalRule($country)) ? ['scope' => 'country', 'name' => $this->countryName($country), ...$national] : null,
             ])),
+            'gpkwijs_url' => config("parking-rule-guidance.gpkwijs.{$country->code}.{$municipality->slug}"),
             'sources' => [
                 'municipal' => ($own['municipal'] ?? 0) > 0 ? $this->municipalSources($municipality) : [],
                 'community' => ($own['community'] ?? 0) > 0,

@@ -46,6 +46,13 @@
         "municipalities": "Gemeenten met parkeerlocaties"
     },
     "rules": {
+        "permit_title": "Waar mag ik parkeren met mijn gehandicaptenparkeerkaart?",
+        "official_local": "Officiële gemeentelijke regels voor {{name}}",
+        "official_national": "Officiële landelijke regels voor {{name}}",
+        "local_unknown": "De lokale parkeerregels zijn bij NIPKaart nog niet bekend.",
+        "national_unknown": "De landelijke parkeerregels zijn bij NIPKaart nog niet bekend.",
+        "gpkwijs": "Aanvullende uitleg van GPKwijs",
+        "gpkwijs_scope": "Onafhankelijke uitleg over parkeren in {{name}} op gpkwijs.nl",
         "title": "Parkeerregels",
         "municipality": "Gemeente {{name}}",
         "national": "Landelijke regels",

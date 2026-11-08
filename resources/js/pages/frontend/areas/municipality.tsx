@@ -162,21 +162,27 @@ function Rules({ area }: { area: MunicipalityArea }) {
     return (
         <section aria-labelledby="rules" className="flex min-w-0 flex-col gap-4 lg:flex-[999_1_560px] lg:gap-5">
             <SectionTitle id="rules" size="medium">
-                {t('rules.title')}
+                {t('rules.permit_title')}
             </SectionTitle>
+            {!area.rules.some((rule) => rule.scope === 'municipality') && <p className={muted}>{t('rules.local_unknown')}</p>}
             {area.rules.length > 0 ? (
                 <ul className={cn(card, 'overflow-hidden')}>
                     {area.rules.map((rule) => (
                         <RuleRow
                             key={rule.scope}
                             rule={rule}
-                            title={rule.scope === 'municipality' ? t('rules.municipality', { name: rule.name }) : t('rules.national')}
+                            title={t(rule.scope === 'municipality' ? 'rules.official_local' : 'rules.official_national', { name: rule.name })}
                             scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
                         />
                     ))}
                 </ul>
             ) : (
-                <p className={muted}>{t('rules.none', { name: area.name })}</p>
+                <p className={muted}>{t('rules.national_unknown')}</p>
+            )}
+            {area.gpkwijs_url && (
+                <ul className={card}>
+                    <RuleRow rule={{ url: area.gpkwijs_url }} title={t('rules.gpkwijs')} scope={t('rules.gpkwijs_scope', { name: area.name })} />
+                </ul>
             )}
             <RulesDisclaimer />
         </section>
@@ -292,6 +298,9 @@ function MunicipalityWithoutParking({ area, parent }: { area: MunicipalityArea; 
             </AreaHero>
 
             <div className="mx-auto flex max-w-7xl flex-col gap-4.5 px-5 pt-10 pb-14 sm:px-6 lg:px-8 lg:pt-16 lg:pb-26">
+                <div className="mb-6 max-w-[720px]">
+                    <Rules area={area} />
+                </div>
                 {area.neighbours.length > 0 && (
                     <>
                         <SectionTitle id="nearby" size="small">

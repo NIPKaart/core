@@ -46,6 +46,13 @@
         "municipalities": "Municipalities with parking"
     },
     "rules": {
+        "permit_title": "Where can I park with my disabled parking permit?",
+        "official_local": "Official municipal rules for {{name}}",
+        "official_national": "Official national rules for {{name}}",
+        "local_unknown": "NIPKaart does not yet have the local parking rules.",
+        "national_unknown": "NIPKaart does not yet have the national parking rules.",
+        "gpkwijs": "Additional guidance from GPKwijs",
+        "gpkwijs_scope": "Independent guidance on parking in {{name}} at gpkwijs.nl",
         "title": "Parking rules",
         "municipality": "Municipality of {{name}}",
         "national": "National rules",
