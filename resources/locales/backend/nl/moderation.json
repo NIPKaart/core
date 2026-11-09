@@ -224,7 +224,8 @@
         "today": "Vandaag",
         "yesterday": "Gisteren",
         "with_reason": "{{decision}}: {{reason}}",
-        "not_on_map": "Geen locatie bekend voor dit besluit."
+        "not_on_map": "Geen locatie bekend voor dit besluit.",
+        "page": "{{from}}–{{to}}"
     },
     "review": {
         "position_label": "Plaats in de wachtrij",

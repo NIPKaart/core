@@ -56,19 +56,26 @@ final class ModerationQueue
     /**
      * One page of the open items the user may see, in the order to work through them.
      *
-     * The order, filters and paging run in one database query over all open items; only the items on the page are
-     * built in full. A page past the end shows the last page.
+     * The order, filters, count and paging run in one database query over all open items; only the items on the page
+     * are built in full. A page past the end shows the last page.
      *
      * @param  array{types?: list<string>, municipality_ids?: list<int>, search?: ?string}  $filters
      */
     public function page(User $user, array $filters = [], int $page = 1, int $perPage = 50): LengthAwarePaginator
     {
         $index = $this->index($user, $filters);
-        $total = DB::query()->fromSub($index, 'queue')->count();
-        $page = min(max(1, $page), max(1, (int) ceil($total / $perPage)));
-        $rows = $this->ordered(DB::query()->fromSub($index, 'queue'))->forPage($page, $perPage)->get();
+        $slice = fn (int $page) => $this->ordered(DB::query()->fromSub($index, 'queue')->select('queue.*')->selectRaw('count(*) over () as total'))
+            ->forPage($page, $perPage)->get();
 
-        return new LengthAwarePaginator($this->hydrate($rows), $total, $perPage, $page);
+        $page = max(1, $page);
+        $rows = $slice($page);
+        if ($rows->isEmpty() && $page > 1) {
+            $total = DB::query()->fromSub($index, 'queue')->count();
+            $page = max(1, (int) ceil($total / $perPage));
+            $rows = $slice($page);
+        }
+
+        return new LengthAwarePaginator($this->hydrate($rows), (int) ($rows->first()->total ?? 0), $perPage, $page);
     }
 
     /**
@@ -92,16 +99,22 @@ final class ModerationQueue
     public function position(User $user, string $key, array $filters = []): array
     {
         $index = $this->index($user, $filters);
-        $numbered = DB::query()->fromSub($index, 'queue')->select('queue.*')
-            ->selectRaw('row_number() over (order by priority, waiting_since, item_key collate "C") as position');
-        $total = DB::query()->fromSub($index, 'queue')->count();
-        $position = (int) DB::query()->fromSub($numbered, 'numbered')->where('item_key', $key)->value('position');
+        $link = "json_build_object('item_key', item_key, 'kind', kind, 'source', source, 'ref', ref, 'street', street)";
+        $order = 'order by priority, waiting_since, item_key collate "C"';
+        $numbered = DB::query()->fromSub($index, 'queue')->select('item_key')
+            ->selectRaw("row_number() over ({$order}) as position, count(*) over () as total")
+            ->selectRaw("lag({$link}) over ({$order}) as previous, lead({$link}) over ({$order}) as next");
+        $row = DB::query()->fromSub($numbered, 'numbered')->where('item_key', $key)->first();
 
-        $at = fn (int $position) => $position < 1 ? null : $this->link(DB::query()->fromSub($numbered, 'numbered')->where('position', $position)->first());
+        if ($row === null) {
+            $first = $this->ordered(DB::query()->fromSub($index, 'queue')->select('queue.*')->selectRaw('count(*) over () as total'))->first();
 
-        return $position === 0
-            ? ['index' => 0, 'total' => $total, 'previous' => null, 'next' => $at(1)]
-            : ['index' => $position, 'total' => $total, 'previous' => $at($position - 1), 'next' => $at($position + 1)];
+            return ['index' => 0, 'total' => (int) ($first->total ?? 0), 'previous' => null, 'next' => $this->link($first)];
+        }
+
+        $decode = fn (?string $json) => $json === null ? null : $this->link((object) json_decode($json, true));
+
+        return ['index' => (int) $row->position, 'total' => (int) $row->total, 'previous' => $decode($row->previous), 'next' => $decode($row->next)];
     }
 
     /**

@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import app from '@/routes/app';
-import type { PaginatedResponse } from '@/types';
 import { router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
@@ -8,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAgo } from './parts';
 import { PageLink, TypeTile, useShortAge } from './queue-list';
 import { TypeBadge } from './type-badge';
-import type { HistoryRow, Options } from './types';
+import type { HistoryPage, HistoryRow, Options } from './types';
 import { useValueFormatter } from './values';
 import { PanelNav } from './workspace';
 
@@ -35,7 +34,7 @@ export function DecidedList({
     onOpen,
     onHover,
 }: {
-    history: PaginatedResponse<HistoryRow> | null;
+    history: HistoryPage | null;
     header: React.ReactNode;
     onOpen: (row: HistoryRow) => void;
     onHover?: (key: string | null) => void;
@@ -119,9 +118,9 @@ export function DecidedList({
                         </ul>
                     </Fragment>
                 ))}
-                {history && history.last_page > 1 && (
+                {history && (history.prev_page_url || history.next_page_url) && (
                     <div className="mt-2 flex items-center justify-between px-4.5 text-xs text-muted-foreground">
-                        <span>{t('queue.page', { from: history.from, to: history.to, total: history.total })}</span>
+                        <span>{t('history.page', { from: history.from, to: history.to })}</span>
                         <span className="flex gap-1">
                             <PageLink href={history.prev_page_url} label={t('queue.previous_page')} icon={ChevronLeft} />
                             <PageLink href={history.next_page_url} label={t('queue.next_page')} icon={ChevronRight} />

@@ -60,9 +60,12 @@ class ParkingPlaceModeration
      */
     public function openPlaceCount(): int
     {
+        // A join, not an exists inside an or: that would read every parking space to count a handful of reports.
         return (int) ParkingPlaceReport::open()
-            ->where(fn (Builder $reports) => $reports->whereNull('parking_space_id')->orWhereHas('parkingSpace'))
-            ->selectRaw('count(distinct coalesce(parking_space_id::text, parking_municipal_id)) as places')
+            ->leftJoin('parking_spaces as space', 'space.id', '=', 'parking_place_reports.parking_space_id')
+            ->where(fn (Builder $reports) => $reports->whereNull('parking_place_reports.parking_space_id')
+                ->orWhere(fn (Builder $community) => $community->whereNotNull('space.id')->whereNull('space.deleted_at')))
+            ->selectRaw('count(distinct coalesce(parking_place_reports.parking_space_id::text, parking_place_reports.parking_municipal_id)) as places')
             ->value('places');
     }
 

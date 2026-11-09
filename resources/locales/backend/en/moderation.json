@@ -224,7 +224,8 @@
         "today": "Today",
         "yesterday": "Yesterday",
         "with_reason": "{{decision}}: {{reason}}",
-        "not_on_map": "No location is known for this decision."
+        "not_on_map": "No location is known for this decision.",
+        "page": "{{from}}–{{to}}"
     },
     "review": {
         "position_label": "Place in the queue",
