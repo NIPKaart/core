@@ -54,10 +54,13 @@ it('publishes all bays with an attributable approval and existence confirmation 
     fakeReverseGeocoding($this->municipality);
     $this->freezeSecond();
 
-    $this->actingAs($this->moderator)->post($this->url, $this->payload)->assertRedirect($this->detail);
+    $this->actingAs($this->moderator)->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('locationProposals.0.id', $this->proposal)->where('locationProposals.0.status', 'open'));
+    $this->post($this->url, $this->payload)->assertRedirect($this->detail);
     $this->post($this->url, $this->payload)->assertRedirect($this->detail);
     $this->get($this->detail)->assertInertia(fn (Assert $page) => $page
-        ->where('proposals.data.0.status', 'added')->where('selected.published', true)->has('selected.publishedBays', 3));
+        ->where('proposals.data.0.status', 'added')->where('selected.published', true)->has('selected.publishedBays', 3)
+        ->where('selected.publishedBays.0.number', 1)->where('selected.publishedBays.2.number', 3));
     $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('items.total', 0));
 
     $spaces = ParkingSpace::with(['reviews', 'confirmations'])->get();

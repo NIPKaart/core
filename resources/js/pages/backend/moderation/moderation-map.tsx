@@ -64,6 +64,38 @@ const numberedIcon = (number: number) =>
         }),
     );
 
+/** The point a location proposal comes from, such as an NDW sign: a square, not a pin, because it is not a parking bay. */
+const sourcePointIcon = L.divIcon({
+    html: '<span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;box-sizing:border-box;border:2px solid #fff;border-radius:4px;background:#1e3a8a;box-shadow:0 0 0 1px #1e3a8a,0 2px 6px rgba(0,0,0,.45)"><svg viewBox="0 0 21 21" width="14" height="14" aria-hidden="true"><g fill="#fff"><circle cx="9.5" cy="2.6" r="2.4"/><path d="M8.2 6h2.4l.4 5h5.1l3.1 6.6-2 .9-2.5-5.2H8.9z"/><path d="M6.4 9.3l.3 2.1a4.9 4.9 0 1 0 6.9 5.6l1.9.8A7 7 0 1 1 6.4 9.3z"/></g></svg></span>',
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+
+export type BayState = 'placed' | 'selected' | 'submitted';
+export type BayMarker = { key: string; point: MapPoint; number: number; state: BayState; label: string };
+
+/** A bay drawn in for a location proposal: white while placed, blue while selected, dark with a check once submitted. */
+const bayIcon = (number: number, state: BayState) =>
+    cachedIcon(`b${number}${state}`, () => {
+        const [width, height] = state === 'selected' ? [36, 48] : [30, 40];
+        const [fill, stroke, text] = {
+            placed: ['#fff', '#1d4ed8', '#1d4ed8'],
+            selected: ['#1d4ed8', '#fff', '#fff'],
+            submitted: ['#171717', '#fff', '#fff'],
+        }[state];
+        const check =
+            state === 'submitted'
+                ? '<span style="position:absolute;right:-6px;top:-4px;display:flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#171717" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>'
+                : '';
+        return L.divIcon({
+            html: `<span style="position:relative;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))"><svg viewBox="0 0 36 48" width="${width}" height="${height}" aria-hidden="true"><path d="${PIN}" fill="${fill}" stroke="${stroke}" stroke-width="${state === 'placed' ? 3 : 2.4}"/><text x="18" y="23" text-anchor="middle" font-family="inherit" font-size="15" font-weight="700" fill="${text}">${number}</text></svg>${check}</span>`,
+            className: state === 'submitted' ? '' : 'cursor-grab',
+            iconSize: [width, height],
+            iconAnchor: [width / 2, height - 2],
+        });
+    });
+
 /** An open item in the queue overview, in the colour of its kind; the one the moderator points at is larger. */
 const queueIcon = (color: string, highlighted: boolean) =>
     cachedIcon(`q${color}${highlighted ? '+' : ''}`, () => {
@@ -101,14 +133,17 @@ export function ModerationMap({
     current,
     proposed,
     numbered,
-    fitNumbered = true,
-    sourcePoints = [],
-    publishedBays = [],
     queue,
     highlighted,
     onPick,
     onMove,
     movedLabel,
+    sourcePoint,
+    comparisonPoint,
+    bays,
+    onPlace,
+    onMoveBay,
+    onSelectBay,
     zoom,
     inset = 0,
     className,
@@ -126,9 +161,6 @@ export function ModerationMap({
     proposed?: MapPoint | null;
     /** Several selected items, numbered in list order; replaces the main pin. */
     numbered?: MapPoint[];
-    fitNumbered?: boolean;
-    sourcePoints?: MapPoint[];
-    publishedBays?: MapPoint[];
     /** The open items of the queue; replaces the main pin. */
     queue?: QueuePin[];
     highlighted?: string | null;
@@ -137,6 +169,15 @@ export function ModerationMap({
     onMove?: (point: MapPoint) => void;
     /** A short label beside the ghost, such as the distance moved. */
     movedLabel?: string | null;
+    /** The point a location proposal comes from; its bays are drawn in around it. */
+    sourcePoint?: MapPoint | null;
+    comparisonPoint?: MapPoint;
+    /** Bays drawn in for a location proposal; replaces the main pin. */
+    bays?: BayMarker[];
+    /** A click on the map adds a bay there. */
+    onPlace?: (point: MapPoint) => void;
+    onMoveBay?: (key: string, point: MapPoint) => void;
+    onSelectBay?: (key: string) => void;
     /** The zoom to open at, when the layer's own zoom is too close, such as for the whole country. */
     zoom?: number;
     /** Pixels on the left covered by the panel, kept out of the way when centring. */
@@ -148,7 +189,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = (fitNumbered ? numbered : undefined) ?? queue?.map((pin) => pin.point);
+    const spread = numbered ?? queue?.map((pin) => pin.point);
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
@@ -179,17 +220,6 @@ export function ModerationMap({
                 {municipal.map((point, index) => (
                     <Marker key={`m${index}`} position={[point.latitude, point.longitude]} icon={municipalIcon} interactive={false} />
                 ))}
-                {sourcePoints.map((point, index) => (
-                    <Marker key={`source${index}`} position={[point.latitude, point.longitude]} icon={ghostIcon} interactive={false} />
-                ))}
-                {publishedBays.map((point, index) => (
-                    <Marker
-                        key={`published${index}`}
-                        position={[point.latitude, point.longitude]}
-                        icon={queueIcon('#15803d', false)}
-                        interactive={false}
-                    />
-                ))}
                 {current && (
                     <>
                         <Polyline
@@ -209,7 +239,28 @@ export function ModerationMap({
                         </Marker>
                     </>
                 )}
-                {queue ? (
+                {comparisonPoint && (
+                    <Marker position={[comparisonPoint.latitude, comparisonPoint.longitude]} icon={sourcePointIcon} interactive={false} />
+                )}
+                {sourcePoint && (
+                    <Marker
+                        position={[sourcePoint.latitude, sourcePoint.longitude]}
+                        icon={sourcePointIcon}
+                        title={t('map.source_point')}
+                        keyboard={false}
+                        zIndexOffset={-500}
+                    />
+                )}
+                {bays ? (
+                    bays.map((bay) => (
+                        <BayPin
+                            key={bay.key}
+                            bay={bay}
+                            onMove={bay.state === 'submitted' || !onMoveBay ? undefined : (point) => onMoveBay(bay.key, point)}
+                            onSelect={bay.state === 'submitted' ? undefined : () => onSelectBay?.(bay.key)}
+                        />
+                    ))
+                ) : queue ? (
                     queue.map((item) => (
                         <Marker
                             key={item.key}
@@ -227,7 +278,8 @@ export function ModerationMap({
                 ) : (
                     <MainPin key={onMove ? 'movable' : 'fixed'} point={pin} onMove={onMove} label={t('map.pin')} />
                 )}
-                {onMove && <PlaceOnClick onMove={onMove} />}
+                {onMove && !bays && <PlaceOnClick onMove={onMove} />}
+                {onPlace && <PlaceOnClick onMove={onPlace} />}
             </MapContainer>
             {map && (
                 <div className="absolute right-3 bottom-7 z-500 flex flex-col gap-2.5 lg:right-4 lg:bottom-6">
@@ -259,8 +311,43 @@ export function ModerationMap({
                     </div>
                 </div>
             )}
+            {sourcePoint && bays && <BayLegend />}
             {children}
         </div>
+    );
+}
+
+/** What the source point and the three pin states mean, beside the zoom buttons. Left out on small screens, where the map is small. */
+function BayLegend() {
+    const { t } = useTranslation('backend/moderation');
+    const pin = (fill: string, stroke: string, width = 2.4) => (
+        <svg viewBox="0 0 36 48" width="14" height="19" aria-hidden>
+            <path d={PIN} fill={fill} stroke={stroke} strokeWidth={width} />
+        </svg>
+    );
+    const items = [
+        {
+            key: 'source',
+            icon: <span className="size-4 rounded-[3px] border-2 border-white bg-[#1e3a8a] shadow-[0_0_0_1px_#1e3a8a]" aria-hidden />,
+            label: t('map.source_point'),
+        },
+        { key: 'selected', icon: pin('#1d4ed8', '#fff'), label: t('map.legend.selected') },
+        { key: 'placed', icon: pin('#fff', '#1d4ed8', 3.5), label: t('map.legend.placed') },
+        { key: 'submitted', icon: pin('#171717', '#fff'), label: t('map.legend.submitted') },
+    ];
+
+    return (
+        <ul
+            aria-label={t('map.legend.label')}
+            className="absolute right-20 bottom-6 z-500 hidden items-center gap-4 rounded-xl bg-background px-3.5 py-2.5 text-xs shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:flex"
+        >
+            {items.map((item) => (
+                <li key={item.key} className="flex items-center gap-1.5">
+                    {item.icon}
+                    {item.label}
+                </li>
+            ))}
+        </ul>
     );
 }
 
@@ -270,6 +357,36 @@ export function ModerationMap({
  */
 function MainPin({ point, onMove, label }: { point: MapPoint; onMove?: (point: MapPoint) => void; label: string }) {
     const marker = useRef<L.Marker | null>(null);
+    useArrowKeys(marker, point, onMove, label);
+
+    return (
+        <Marker
+            ref={marker}
+            position={[point.latitude, point.longitude]}
+            icon={mainIcon}
+            draggable={!!onMove}
+            keyboard={!!onMove}
+            interactive={!!onMove}
+            zIndexOffset={1000}
+            eventHandlers={{
+                dragend: (event) => {
+                    const { lat, lng } = (event.target as L.Marker).getLatLng();
+                    onMove?.({ latitude: Math.round(lat * 1e7) / 1e7, longitude: Math.round(lng * 1e7) / 1e7 });
+                },
+            }}
+        />
+    );
+}
+
+/** A focused pin moves with the arrow keys (Shift for bigger steps), so placing it never depends on dragging alone. */
+function useArrowKeys(
+    marker: React.RefObject<L.Marker | null>,
+    point: MapPoint,
+    onMove: ((point: MapPoint) => void) | undefined,
+    label: string,
+    /** Changes whenever the icon does: Leaflet then replaces the element the keys listen on. */
+    icon?: L.DivIcon,
+) {
     const latest = useRef({ point, onMove });
     latest.current = { point, onMove };
 
@@ -287,18 +404,27 @@ function MainPin({ point, onMove, label }: { point: MapPoint; onMove?: (point: M
         };
         element.addEventListener('keydown', onKey);
         return () => element.removeEventListener('keydown', onKey);
-    }, [onMove, label]);
+    }, [marker, onMove, label, icon]);
+}
+
+/** One drawn-in bay: dragged or moved with the arrow keys while it is not submitted, and selected with a click. */
+function BayPin({ bay, onMove, onSelect }: { bay: BayMarker; onMove?: (point: MapPoint) => void; onSelect?: () => void }) {
+    const marker = useRef<L.Marker | null>(null);
+    const icon = bayIcon(bay.number, bay.state);
+    useArrowKeys(marker, bay.point, onMove, bay.label, icon);
 
     return (
         <Marker
             ref={marker}
-            position={[point.latitude, point.longitude]}
-            icon={mainIcon}
+            position={[bay.point.latitude, bay.point.longitude]}
+            icon={icon}
+            title={bay.label}
             draggable={!!onMove}
-            keyboard={!!onMove}
-            interactive={!!onMove}
-            zIndexOffset={1000}
+            keyboard={!!onSelect}
+            zIndexOffset={bay.state === 'selected' ? 1000 : 0}
             eventHandlers={{
+                click: () => onSelect?.(),
+                dragstart: () => onSelect?.(),
                 dragend: (event) => {
                     const { lat, lng } = (event.target as L.Marker).getLatLng();
                     onMove?.({ latitude: Math.round(lat * 1e7) / 1e7, longitude: Math.round(lng * 1e7) / 1e7 });

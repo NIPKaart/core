@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SelectionBar, SelectionHeader } from './bulk-pane';
 import { panelMode } from './geo';
+import type { ProposalRow } from './location-proposals';
 import { useAgo } from './parts';
 import { QueueList, TYPE_COLORS } from './queue-list';
 import { ReviewPane } from './review-pane';
@@ -40,6 +41,7 @@ const COUNTRY_ZOOM = 7;
 
 type PageProps = {
     status: 'open' | 'decided';
+    locationProposals?: ProposalRow[];
     filters: Filters;
     items: PaginatedResponse<QueueItem> | null;
     history: PaginatedResponse<HistoryRow> | null;
@@ -54,7 +56,7 @@ type PageProps = {
  * item under review and a selection, as on the public map. After a decision the inbox continues with the next item.
  * Selected items are rejected together; approving always happens one item at a time.
  */
-export default function Index({ status, filters, items, history, selected, position, decidedToday, options }: PageProps) {
+export default function Index({ status, locationProposals, filters, items, history, selected, position, decidedToday, options }: PageProps) {
     const { t } = useTranslation('backend/moderation');
     const open = status === 'open';
     const query = filterQuery(filters);
@@ -152,6 +154,7 @@ export default function Index({ status, filters, items, history, selected, posit
                         >
                             <QueueList
                                 status={status}
+                                locationProposals={locationProposals}
                                 items={items}
                                 filters={filters}
                                 options={options}

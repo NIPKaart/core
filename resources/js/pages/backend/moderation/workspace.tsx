@@ -1,4 +1,4 @@
-import { AerialPicker, useAerialImagery } from '@/components/map/aerial-imagery';
+import { AerialPicker, useAerialImagery, type AerialLayer } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -52,6 +52,7 @@ export function Workspace({
     scope,
     map,
     streetView,
+    imageryLayers,
     label,
     aside,
     asideLabel,
@@ -61,6 +62,7 @@ export function Workspace({
     map: MapProps;
     /** Where Street View should open, for an item. */
     streetView?: MapPoint | null;
+    imageryLayers?: AerialLayer[];
     label: string;
     /** A second panel beside the first, such as the details editor; a sheet over the item on small screens. */
     aside?: React.ReactNode;
@@ -69,7 +71,7 @@ export function Workspace({
 }) {
     const { t } = useTranslation('backend/moderation');
     const [layer, setLayer] = useLayer(scope);
-    const imagery = useAerialImagery();
+    const imagery = useAerialImagery(imageryLayers);
     const wide = useMediaQuery('(min-width: 1024px)');
     const street = streetView ? streetViewUrl(streetView.latitude, streetView.longitude) : null;
 

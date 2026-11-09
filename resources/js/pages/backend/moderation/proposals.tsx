@@ -1,7 +1,5 @@
 import type { OrientationOption } from '@/components/contribute/types';
-import Heading from '@/components/heading';
 import type { AerialLayer } from '@/components/map/aerial-imagery';
-import StreetViewCard from '@/components/map/card-location-streetview';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
@@ -11,45 +9,112 @@ import { Form, Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MapPoint } from './geo';
-import { ProposalBayEditor } from './proposal-bay-editor';
+import type { PublishedBay } from './location-proposal-draft';
+import { LocationProposalReview, LocationProposals, toLocationProposal, type ProposalRow } from './location-proposals';
+import { PanelNav, Workspace } from './workspace';
 
-type Point = {
-    id: number;
-    proposal_id: number;
-    external_id: string;
-    latitude: number;
-    longitude: number;
-    source: string;
-    source_last_seen_on: string | null;
-    under_sign_types: string[];
-};
-
-type NearbyPlace = { street: string | null; distance_metres: number; latitude: number; longitude: number };
+type Point = ProposalRow['points'][number];
+type NearbyPlace = MapPoint & { street: string | null; distance_metres: number };
 type Props = {
-    proposals: PaginatedResponse<{ id: number; municipality: string; points: Point[]; status: 'open' | 'added'; bayCount: number | null }>;
+    proposals: PaginatedResponse<ProposalRow>;
     municipalities: { id: number; name: string }[];
     municipality: string | number | null;
+    fromQueue: boolean;
     bayOptions: { orientations: OrientationOption[]; restrictionDays: RestrictionDay[]; maxBays: number };
     selected: {
         id: number;
+        pointId: number;
+        municipality: string;
         points: Point[];
         candidates: Point[];
         published: boolean;
-        publishedBays: MapPoint[];
+        publishedBays: PublishedBay[];
         imagery: AerialLayer[];
         community: NearbyPlace | null;
         municipal: NearbyPlace | null;
     } | null;
 };
 
-export default function LocationProposals({ proposals, municipalities, municipality, selected, bayOptions }: Props) {
+export default function Proposals({ proposals, municipalities, municipality, selected, bayOptions, fromQueue }: Props) {
     const { t } = useTranslation('backend/moderation');
     const routes = app.moderation.proposals;
-    const query = municipality ? { municipality } : {};
-    const anchor = selected?.points[0];
+    const query = { ...(municipality ? { municipality } : {}), page: proposals.current_page };
     const [grouping, setGrouping] = useState<{ proposal: number; candidate: string } | null>(null);
     const candidate =
         grouping?.proposal === selected?.id ? selected?.candidates.find((point) => String(point.proposal_id) === grouping?.candidate) : undefined;
+
+    const reviewQuery = { ...query, ...(selected ? { point: selected.pointId } : {}), ...(fromQueue ? { from: 'queue' as const } : {}) };
+    const rows = proposals.data.map(toLocationProposal);
+    const review = selected
+        ? toLocationProposal({
+              id: selected.id,
+              municipality: selected.municipality,
+              status: selected.published ? 'added' : 'open',
+              bayCount: null,
+              points: selected.points,
+          })
+        : null;
+    const selectedPoint = review?.points.find((point) => point.id === selected?.pointId);
+
+    const groups = selected && (
+        <>
+            {(selected.community || selected.municipal) && (
+                <section className="space-y-1 text-sm">
+                    <h3 className="font-semibold">{t('proposals.nearby')}</h3>
+                    {(
+                        [
+                            ['community', selected.community],
+                            ['municipal', selected.municipal],
+                        ] as const
+                    ).map(
+                        ([kind, place]) =>
+                            place && (
+                                <p key={kind}>
+                                    {t(`proposals.${kind}`)} · {place.street ?? t('proposals.unknown_street')} · {place.distance_metres} m
+                                </p>
+                            ),
+                    )}
+                </section>
+            )}
+            {selected.candidates.length > 0 && (
+                <Form action={routes.group(selected.id, { query: reviewQuery })} className="space-y-2">
+                    {({ processing, errors }) => (
+                        <>
+                            <label className="block text-sm font-semibold" htmlFor="group-with">
+                                {t('proposals.group')}
+                            </label>
+                            <p className="text-sm text-muted-foreground">{t('proposals.group_help')}</p>
+                            <select
+                                id="group-with"
+                                name="with"
+                                required
+                                value={candidate?.proposal_id ?? ''}
+                                onChange={(event) => setGrouping({ proposal: selected.id, candidate: event.target.value })}
+                                className="w-full rounded-md border bg-background p-2 text-sm"
+                            >
+                                <option value="" disabled>
+                                    {t('proposals.choose')}
+                                </option>
+                                {selected.candidates.map((point) => (
+                                    <option key={point.id} value={point.proposal_id}>
+                                        #{point.proposal_id} · {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.with && (
+                                <p role="alert" className="text-sm text-destructive">
+                                    {errors.with}
+                                </p>
+                            )}
+                            <Button type="submit" variant="outline" disabled={processing}>
+                                {t('proposals.group')}
+                            </Button>
+                        </>
+                    )}
+                </Form>
+            )}
+        </>
+    );
 
     return (
         <AppLayout
@@ -59,155 +124,81 @@ export default function LocationProposals({ proposals, municipalities, municipal
             ]}
         >
             <Head title={t('proposals.title')} />
-            <div className="space-y-4 p-4 md:p-6">
-                <Heading title={t('proposals.title')} description={t('proposals.description')} />
-                <Button variant="outline" asChild>
-                    <Link href={app.moderation.index()}>{t('queue.label')}</Link>
-                </Button>
-                <div className="grid items-start gap-4 lg:grid-cols-[minmax(18rem,25rem)_minmax(0,1fr)]">
-                    <section className="space-y-3 rounded-xl border bg-card p-4">
-                        <Select
-                            value={municipality === null ? 'all' : String(municipality)}
-                            onValueChange={(value) => router.get(routes.index.url(), value === 'all' ? {} : { municipality: value })}
-                        >
-                            <SelectTrigger aria-label={t('queue.all_municipalities')}>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('queue.all_municipalities')}</SelectItem>
-                                {municipalities.map((item) => (
-                                    <SelectItem key={item.id} value={String(item.id)}>
-                                        {item.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="text-sm text-muted-foreground">{t('proposals.count', { count: proposals.total })}</p>
-                        <ul className="divide-y">
-                            {proposals.data.map((item) => (
-                                <li key={item.id}>
-                                    <Link
-                                        href={routes.index({ query: { ...query, page: proposals.current_page, proposal: item.id } })}
-                                        aria-current={selected?.id === item.id ? 'true' : undefined}
-                                        className="block rounded-md px-2 py-2.5 hover:bg-muted aria-[current=true]:bg-muted"
-                                    >
-                                        <span className="block text-sm font-semibold">
-                                            {item.municipality} · #{item.id}
-                                        </span>
-                                        <span className="text-sm text-muted-foreground">
-                                            {item.points[0]?.source} · {t(`proposals.${item.status}`)} ·{' '}
-                                            {t('proposals.points', { count: item.points.length })}
-                                        </span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                        <div className="flex gap-2">
-                            {proposals.prev_page_url && (
-                                <Button variant="outline" asChild>
-                                    <Link href={proposals.prev_page_url}>{t('proposals.previous')}</Link>
-                                </Button>
-                            )}
-                            {proposals.next_page_url && (
-                                <Button variant="outline" asChild>
-                                    <Link href={proposals.next_page_url}>{t('proposals.next')}</Link>
-                                </Button>
-                            )}
+            <div className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
+                {selected && review && selectedPoint ? (
+                    <LocationProposalReview
+                        key={selected.id}
+                        selection={{ proposal: review, point: selectedPoint }}
+                        imagery={selected.imagery}
+                        options={bayOptions}
+                        publishedBays={selected.publishedBays}
+                        nearby={selected.community ?? undefined}
+                        municipal={selected.municipal ?? undefined}
+                        comparison={candidate}
+                        group={groups}
+                        query={reviewQuery}
+                        onBack={() => router.visit(fromQueue ? app.moderation.index() : routes.index({ query }))}
+                    />
+                ) : (
+                    <Workspace
+                        scope="overview"
+                        label={t('proposals.title')}
+                        map={{
+                            center: rows[0]?.points[0] ?? { latitude: 52.2, longitude: 5.3 },
+                            zoom: 7,
+                            queue: rows.flatMap((item) =>
+                                item.points.map((point) => ({ key: String(point.id), point, color: '#1e3a8a', label: item.street })),
+                            ),
+                            onPick: (key) => {
+                                const item = rows.find((row) => row.points.some((point) => String(point.id) === key));
+                                if (item) router.visit(routes.index({ query: { ...query, proposal: item.id, point: key } }));
+                            },
+                        }}
+                    >
+                        <PanelNav back={t('queue.label')} onBack={() => router.visit(app.moderation.index())} />
+                        <div className="px-4.5 py-3">
+                            <Select
+                                value={municipality === null ? 'all' : String(municipality)}
+                                onValueChange={(value) => router.get(routes.index.url(), value === 'all' ? {} : { municipality: value })}
+                            >
+                                <SelectTrigger aria-label={t('queue.all_municipalities')}>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('queue.all_municipalities')}</SelectItem>
+                                    {municipalities.map((item) => (
+                                        <SelectItem key={item.id} value={String(item.id)}>
+                                            {item.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </section>
-                    {selected && anchor && (
-                        <section className="space-y-4 rounded-xl border bg-card p-4">
-                            <h2 className="text-lg font-semibold">
-                                {t('proposals.title')} · #{selected.id}
-                            </h2>
-                            <ProposalBayEditor
-                                key={selected.id}
-                                proposal={selected.id}
-                                points={selected.points}
-                                comparison={candidate}
-                                community={selected.community ?? undefined}
-                                municipal={selected.municipal ?? undefined}
-                                aerial={selected.imagery[0]}
-                                published={selected.published}
-                                publishedBays={selected.publishedBays}
-                                query={{ ...query, page: proposals.current_page }}
-                                {...bayOptions}
+                        <div className="min-h-0 flex-1 overflow-y-auto">
+                            <LocationProposals
+                                proposals={rows}
+                                total={proposals.total}
+                                onOpen={({ proposal, point }) =>
+                                    router.visit(routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }))
+                                }
                             />
-                            <ul className="space-y-2 text-sm">
-                                {selected.points.map((point) => (
-                                    <li key={point.id}>
-                                        <p className="font-medium">
-                                            {point.source} · {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}
-                                        </p>
-                                        <p className="text-muted-foreground">
-                                            {point.external_id}
-                                            {point.source_last_seen_on && ` · ${point.source_last_seen_on}`}
-                                            {point.under_sign_types.length > 0 && ` · ${point.under_sign_types.join(', ')}`}
-                                        </p>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="space-y-2 text-sm">
-                                <h3 className="font-semibold">{t('proposals.nearby')}</h3>
-                                {(
-                                    [
-                                        ['community', selected.community],
-                                        ['municipal', selected.municipal],
-                                    ] as const
-                                ).map(
-                                    ([kind, place]) =>
-                                        place && (
-                                            <p key={kind}>
-                                                {t(`proposals.${kind}`)} · {place.street ?? t('proposals.unknown_street')} · {place.distance_metres} m
-                                            </p>
-                                        ),
+                        </div>
+                        {(proposals.prev_page_url || proposals.next_page_url) && (
+                            <div className="flex shrink-0 gap-2 border-t px-5 py-4">
+                                {proposals.prev_page_url && (
+                                    <Button variant="outline" asChild>
+                                        <Link href={proposals.prev_page_url}>{t('proposals.previous')}</Link>
+                                    </Button>
                                 )}
-                                {!selected.community && !selected.municipal && <p className="text-muted-foreground">{t('proposals.none_nearby')}</p>}
+                                {proposals.next_page_url && (
+                                    <Button variant="outline" asChild>
+                                        <Link href={proposals.next_page_url}>{t('proposals.next')}</Link>
+                                    </Button>
+                                )}
                             </div>
-                            <details className="space-y-2">
-                                <summary className="cursor-pointer text-sm font-semibold">Street View</summary>
-                                <StreetViewCard latitude={anchor.latitude} longitude={anchor.longitude} />
-                            </details>
-                            {selected.candidates.length > 0 && (
-                                <Form action={routes.group(selected.id, { query })} className="space-y-2">
-                                    {({ processing, errors }) => (
-                                        <>
-                                            <label className="block text-sm font-semibold" htmlFor="group-with">
-                                                {t('proposals.group')}
-                                            </label>
-                                            <p className="text-sm text-muted-foreground">{t('proposals.group_help')}</p>
-                                            <select
-                                                id="group-with"
-                                                name="with"
-                                                required
-                                                value={candidate ? String(candidate.proposal_id) : ''}
-                                                onChange={(event) => setGrouping({ proposal: selected.id, candidate: event.target.value })}
-                                                className="w-full rounded-md border bg-background p-2 text-sm"
-                                            >
-                                                <option value="" disabled>
-                                                    {t('proposals.choose')}
-                                                </option>
-                                                {selected.candidates.map((point) => (
-                                                    <option key={point.id} value={point.proposal_id}>
-                                                        #{point.proposal_id} · {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            {errors.with && (
-                                                <p className="text-sm text-destructive" role="alert">
-                                                    {errors.with}
-                                                </p>
-                                            )}
-                                            <Button type="submit" disabled={processing}>
-                                                {t('proposals.group')}
-                                            </Button>
-                                        </>
-                                    )}
-                                </Form>
-                            )}
-                        </section>
-                    )}
-                </div>
+                        )}
+                    </Workspace>
+                )}
             </div>
         </AppLayout>
     );
