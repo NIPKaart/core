@@ -10,7 +10,6 @@ use App\Enums\RemovalReason;
 use App\Enums\UnderSign;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParkingSpaceImprovementRequest;
-use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
@@ -27,7 +26,6 @@ use App\Services\ParkingSpaceImprovements;
 use App\Support\GeoPoint;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -107,7 +105,7 @@ class ModerationController extends Controller
     {
         Gate::authorize('viewAny', ParkingPlaceReport::class);
 
-        $place = $this->reports->queue()->firstWhere('key', "{$source}:{$id}");
+        $place = $this->reports->queue([$source => [$id]])->first();
         if ($place === null) {
             return $this->toQueue($request);
         }
@@ -317,8 +315,8 @@ class ModerationController extends Controller
     /**
      * The inbox, with the item under review when one is open.
      *
-     * The queue, history and options are closures, so switching between items reloads only the item; the queue feeds
-     * several props and is built at most once per filter set in a request.
+     * The queue, history and options are closures, so switching between items reloads only the item. Each prop asks
+     * the queue for just what it shows: one page, one item, a position or a country.
      */
     private function page(Request $request, ?string $selectedKey = null, ?callable $details = null): Response
     {
@@ -329,11 +327,6 @@ class ModerationController extends Controller
         $open = $request->input('status') !== 'decided';
         $filters = $this->filters($request, $open ? ModerationQueue::TYPES : $this->history->typesFor($user));
 
-        $built = [];
-        $items = function (array $filters = []) use ($user, &$built): Collection {
-            return $built[serialize($filters)] ??= $this->queue->items($user, $filters);
-        };
-
         return Inertia::render('backend/moderation/index', [
             'status' => $open ? 'open' : 'decided',
             'filters' => [
@@ -341,7 +334,8 @@ class ModerationController extends Controller
                 'municipality_ids' => array_map('strval', $filters['municipality_ids'] ?? []),
                 'search' => $filters['search'] ?? null,
             ],
-            'items' => fn () => $open ? $this->openPage($request, $items($filters)) : null,
+            'items' => fn () => $open ? $this->queue->page($user, $filters, (int) $request->query('page', '1'), self::PER_PAGE)
+                ->withPath(route('app.moderation.index'))->withQueryString() : null,
             'history' => fn () => $open ? null : $this->history->page($user, $filters),
             'locationProposals' => fn () => $open && $selectedKey === null
                 && in_array(ModerationQueue::SUBMISSION, $types, true)
@@ -350,22 +344,16 @@ class ModerationController extends Controller
                 ? $this->locationProposals->rows($this->locationProposals->proposals()->limit(4)->get())
                 : [],
             'selected' => fn () => $selectedKey === null ? null : [
-                ...$items($filters)->firstWhere('key', $selectedKey)
-                    ?? $items()->firstWhere('key', $selectedKey)
-                    ?? [],
+                ...$this->queue->item($user, $selectedKey) ?? [],
                 'details' => $details(),
             ],
-            'position' => fn () => $selectedKey === null ? null : $this->position($items($filters), $selectedKey),
-            'imagery' => fn () => $this->imagery->forCountry(
-                ($selectedKey === null ? null : $this->countryOf(collect([$items($filters)->firstWhere('key', $selectedKey) ?? $items()->firstWhere('key', $selectedKey)])->filter()))
-                    ?? $this->countryOf($items($filters))
-            ),
+            'position' => fn () => $selectedKey === null ? null : $this->queue->position($user, $selectedKey, $filters),
+            'imagery' => fn () => $this->imagery->forCountry($this->queue->country($user, $filters, $selectedKey)),
             'decidedToday' => fn () => $this->history->countsBy($user, now(self::LOCAL_TIMEZONE)->startOfDay()->utc())['total'],
             'options' => fn () => [
                 'types' => $types,
                 'historyTypes' => $this->history->typesFor($user),
-                'municipalities' => Municipality::whereIn('id', $items()->pluck('municipality_id')->filter()->unique())
-                    ->orderBy('name')->get(['id', 'name']),
+                'municipalities' => $this->queue->municipalities($user),
                 'orientations' => ParkingOrientation::mapped(),
                 'underSign' => UnderSign::mapped(),
                 'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
@@ -383,44 +371,6 @@ class ModerationController extends Controller
                 ],
             ],
         ]);
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $items
-     */
-    private function openPage(Request $request, Collection $items): LengthAwarePaginator
-    {
-        $page = min(max(1, (int) $request->query('page', '1')), max(1, (int) ceil($items->count() / self::PER_PAGE)));
-
-        return (new LengthAwarePaginator($items->forPage($page, self::PER_PAGE)->values(), $items->count(), self::PER_PAGE, $page, [
-            'path' => route('app.moderation.index'),
-        ]))->withQueryString();
-    }
-
-    /**
-     * The country most of these items lie in, so the aerial photo matches where the moderator is looking.
-     */
-    private function countryOf(Collection $items): ?string
-    {
-        $municipalityIds = $items->pluck('municipality_id')->filter();
-        $codes = Municipality::query()->join('countries', 'countries.id', '=', 'municipalities.country_id')
-            ->whereIn('municipalities.id', $municipalityIds->unique())->pluck('countries.code', 'municipalities.id');
-
-        return $municipalityIds->map(fn (int|string $id): ?string => $codes[$id] ?? null)->filter()->countBy()->sortDesc()->keys()->first();
-    }
-
-    /**
-     * The item's place in the queue, with links to its neighbours.
-     *
-     * @param  Collection<int, array<string, mixed>>  $items
-     * @return array{index: int, total: int, previous: ?array<string, mixed>, next: ?array<string, mixed>}
-     */
-    private function position(Collection $items, string $key): array
-    {
-        $position = $this->queue->position($items, $key);
-        $link = fn (?array $item) => $item === null ? null : ['key' => $item['key'], 'type' => $item['type'], 'route' => $item['route'], 'street' => $item['street']];
-
-        return [...$position, 'previous' => $link($position['previous']), 'next' => $link($position['next'])];
     }
 
     /**

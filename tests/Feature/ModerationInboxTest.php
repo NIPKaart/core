@@ -111,6 +111,37 @@ describe('queue', function () {
                 ->where('filters.municipality_ids', [(string) $utrecht->id]));
     });
 
+    test('the queue searches streets, municipalities and contributors, and pages in order', function () {
+        $leiden = Municipality::factory()->create(['name' => 'Leiden']);
+        $sanne = User::factory()->create(['name' => 'Sanne_de Vries']);
+        $this->travelTo('2026-10-01 09:00:00');
+        $first = pendingSubmission($this->contributor, ['street' => 'Breestraat']);
+        $this->travelTo('2026-10-02 09:00:00');
+        $second = pendingSubmission($sanne, ['street' => 'Lange Voorhout']);
+        $this->travelTo('2026-10-03 09:00:00');
+        $third = pendingSubmission($this->contributor, ['street' => 'Haarlemmerstraat', 'municipality_id' => $leiden->id]);
+        $this->travelTo('2026-10-04 09:00:00');
+        pendingSubmission($this->contributor, ['street' => '100% Kerkplein']);
+
+        $this->actingAs($this->moderator);
+        $search = fn (string $term) => $this->get(route('app.moderation.index', ['search' => $term]));
+        $search('breestraat')->assertInertia(fn (Assert $page) => $page->has('items.data', 1)->where('items.data.0.key', "submission:{$first->id}"));
+        $search('leiden')->assertInertia(fn (Assert $page) => $page->has('items.data', 1)->where('items.data.0.key', "submission:{$third->id}"));
+        $search('sanne_de')->assertInertia(fn (Assert $page) => $page->has('items.data', 1)->where('items.data.0.key', "submission:{$second->id}"));
+        $search('0%')->assertInertia(fn (Assert $page) => $page->has('items.data', 1)->where('items.data.0.street', '100% Kerkplein'));
+
+        $this->get(route('app.moderation.index', ['page' => 9]))
+            ->assertInertia(fn (Assert $page) => $page->where('items.total', 4)->where('items.current_page', 1)->where('items.data.0.key', "submission:{$first->id}"));
+
+        $this->get(route('app.moderation.submissions.show', $second))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('selected.key', "submission:{$second->id}")
+                ->where('position.index', 2)
+                ->where('position.total', 4)
+                ->where('position.previous.route', ['parking_space' => $first->id])
+                ->where('position.next.route', ['parking_space' => $third->id]));
+    });
+
     test('each person sees only the kinds of items they may moderate', function () {
         pendingSubmission($this->contributor);
         ParkingSpaceImprovement::factory()->create();
