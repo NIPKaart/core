@@ -45,23 +45,28 @@ function load() {
     return { DuplicateWalk: context.exports.DuplicateWalk, listeners };
 }
 
+const alternative = { source: 'community', id: 'c2', street: 'Kerkstraat', latitude: 52.011, longitude: 4.36008, distance_metres: 5.5 };
 const overlap = { source: 'municipal', id: 'm1', street: 'Markt', latitude: 52.011, longitude: 4.36002, distance_metres: 1.4 };
 const rows = [1, 2, 3].map((id) => ({
     id,
+    revision: 2,
     municipality: 'Delft',
     status: 'open',
-    points: [{ id: id * 10, latitude: 52.011, longitude: 4.36, overlap }],
+    points: [{ id: id * 10, latitude: 52.011, longitude: 4.36, overlap, candidates: [overlap, alternative] }],
 }));
 
 function render(walk, handlers = {}) {
     const { DuplicateWalk, listeners } = load();
-    const calls = { answers: [], closed: null, jumped: null };
+    const calls = { answers: [], closed: null, jumped: null, toggles: [], all: [], chosen: null };
     const view = DuplicateWalk({
         rows,
-        walk,
+        walk: { choices: {}, ...walk },
         reasonLabel: 'Already on the map',
         closing: false,
         onAnswer: (row, answer) => calls.answers.push([row.id, answer]),
+        onToggle: (row, checked) => calls.toggles.push([row.id, checked]),
+        onToggleAll: (checked) => calls.all.push(checked),
+        onChoose: (row, pin) => (calls.chosen = [row.id, pin]),
         onPrevious() {},
         onJump: (index) => (calls.jumped = index),
         onRestart() {},
@@ -82,9 +87,10 @@ test('asks about one sign at a time with nothing answered in advance', () => {
     );
     buttons[1].props.onClick();
     assert.deepEqual(calls.answers, [[2, 'missing']]);
-    assert.equal(
-        find(view, (node) => node.props.children?.[0] === 'proposals.close_selected'),
-        undefined,
+    const checkboxes = findAll(view, (node) => node.type === 'Checkbox');
+    assert.deepEqual(
+        checkboxes.map((checkbox) => checkbox.props.checked),
+        ['indeterminate', true, false, false],
     );
 });
 
@@ -95,12 +101,15 @@ test('answers with the keyboard, but not while typing', () => {
     assert.deepEqual(calls.answers, [[1, 'ok']]);
 });
 
-test('the summary closes only the signs confirmed as complete', () => {
-    const { view, calls } = render({ index: 3, answers: { 1: 'ok', 2: 'missing', 3: 'ok' } });
+test('confirms only checked rows with the exact pin selected for each sign', () => {
+    const { view, calls } = render({ index: 0, answers: { 1: 'ok', 2: 'missing', 3: 'ok' }, choices: { 1: alternative } });
     const close = find(view, (node) => node.type === 'Button' && node.props.className?.includes('flex-[2]'));
     assert.equal(close.props.disabled, false);
     close.props.onClick();
-    assert.deepEqual(calls.closed, [1, 3]);
+    assert.deepEqual(JSON.parse(JSON.stringify(calls.closed)), [
+        { proposal: 1, point: 10, revision: 2, source: 'community', parking_id: 'c2' },
+        { proposal: 3, point: 30, revision: 2, source: 'municipal', parking_id: 'm1' },
+    ]);
 });
 
 test('jumps to another sign from the progress list', () => {
@@ -120,4 +129,18 @@ test('offers the previous sign only when there is one', () => {
     const { view } = render({ index: 1, answers: {} }, { onPrevious: () => (previous = true) });
     find(view, isPrevious).props.onClick();
     assert.equal(previous, true);
+});
+
+test('offers page selection, individual exceptions and an alternate pin', () => {
+    const { view, calls } = render({ index: 0, answers: {} });
+    const [master, first] = findAll(view, (node) => node.type === 'Checkbox');
+    assert.equal(master.props.checked, false);
+    master.props.onCheckedChange(true);
+    first.props.onCheckedChange(false);
+    assert.deepEqual(calls.all, [true]);
+    assert.deepEqual(calls.toggles, [[1, false]]);
+    const select = find(view, (node) => node.type === 'select');
+    assert.equal(select.props.value, 'parking:municipal:m1');
+    select.props.onChange({ target: { value: 'parking:community:c2' } });
+    assert.deepEqual(calls.chosen, [1, alternative]);
 });

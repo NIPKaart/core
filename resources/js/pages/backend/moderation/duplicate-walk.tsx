@@ -1,5 +1,6 @@
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { Camera, Check, ChevronLeft, MapPinned, TriangleAlert } from 'lucide-react';
 import { useEffect } from 'react';
@@ -8,7 +9,29 @@ import { ExistingLine, toLocationProposal, type ProposalOverlap, type ProposalRo
 
 export type WalkAnswer = 'ok' | 'missing';
 /** Where the moderator is in the group and what they answered so far; nothing is answered in advance. */
-export type Walk = { index: number; answers: Record<number, WalkAnswer> };
+export type Walk = { index: number; answers: Record<number, WalkAnswer>; choices: Record<number, ProposalOverlap> };
+export type ConfirmedMatch = { proposal: number; point: number; revision: number; source: ProposalOverlap['source']; parking_id: string };
+
+export const pinKey = (pin: ProposalOverlap) => `parking:${pin.source}:${pin.id}`;
+
+export function candidatePins(target: ReturnType<typeof walkTarget>) {
+    if (!target) return [];
+    return [target.overlap, ...(target.point.candidates ?? []).filter((pin) => pinKey(pin) !== pinKey(target.overlap))];
+}
+
+export function chosenPin(row: ProposalRow, walk: Walk) {
+    return walk.choices[row.id] ?? walkTarget(row)?.overlap;
+}
+
+export function confirmedMatches(rows: ProposalRow[], walk: Walk): ConfirmedMatch[] {
+    return rows.flatMap((row) => {
+        const target = walkTarget(row);
+        const pin = chosenPin(row, walk);
+        return target && pin && walk.answers[row.id] === 'ok'
+            ? [{ proposal: row.id, point: target.point.id, revision: row.revision, source: pin.source, parking_id: pin.id }]
+            : [];
+    });
+}
 
 /** The point of a proposal with parking within 3 m, and that parking. */
 export function walkTarget(row: ProposalRow): { point: ProposalRow['points'][number]; overlap: ProposalOverlap } | null {
@@ -27,6 +50,9 @@ export function DuplicateWalk({
     reasonLabel,
     closing,
     onAnswer,
+    onToggle,
+    onToggleAll,
+    onChoose,
     onPrevious,
     onJump,
     onRestart,
@@ -38,22 +64,27 @@ export function DuplicateWalk({
     reasonLabel?: string;
     closing: boolean;
     onAnswer: (row: ProposalRow, answer: WalkAnswer) => void;
+    onToggle: (row: ProposalRow, checked: boolean) => void;
+    onToggleAll: (checked: boolean) => void;
+    onChoose: (row: ProposalRow, pin: ProposalOverlap) => void;
     onPrevious: () => void;
     /** Go to another sign, from the list or the map; all signs of the group stay visible on the map. */
     onJump: (index: number) => void;
     onRestart: () => void;
     onStop: () => void;
-    onClose: (ids: number[]) => void;
+    onClose: (matches: ConfirmedMatch[]) => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const current = rows[walk.index] ?? null;
     const target = current ? walkTarget(current) : null;
-    const confirmed = rows.filter((row) => walk.answers[row.id] === 'ok').map((row) => row.id);
+    const confirmed = confirmedMatches(rows, walk);
+    const pin = current ? chosenPin(current, walk) : undefined;
+    const choices = candidatePins(target);
     const yesKey = t('proposals.walk_ok_key');
     const noKey = t('proposals.walk_missing_key');
 
     useEffect(() => {
-        if (!current) return;
+        if (!current || closing) return;
         const listener = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null;
             if (
@@ -61,7 +92,7 @@ export function DuplicateWalk({
                 event.metaKey ||
                 event.ctrlKey ||
                 event.altKey ||
-                target?.closest('input, textarea, select, [contenteditable]')
+                target?.closest('input, textarea, select, [role=checkbox], [contenteditable]')
             )
                 return;
             const key = event.key.toLowerCase();
@@ -71,14 +102,14 @@ export function DuplicateWalk({
         window.addEventListener('keydown', listener);
 
         return () => window.removeEventListener('keydown', listener);
-    }, [current, yesKey, noKey, onAnswer]);
+    }, [current, closing, yesKey, noKey, onAnswer]);
 
     const street = target ? streetViewUrl(target.point.latitude, target.point.longitude) : null;
 
     return (
         <>
             <nav aria-label={t('proposals.walk_label')} className="flex h-[52px] shrink-0 items-center justify-between gap-2 border-b pr-4 pl-2">
-                <Button variant="ghost" className="h-9 cursor-pointer gap-1 px-2 text-sm font-medium" onClick={onStop}>
+                <Button variant="ghost" className="h-9 cursor-pointer gap-1 px-2 text-sm font-medium" disabled={closing} onClick={onStop}>
                     <ChevronLeft className="size-[18px]" aria-hidden />
                     {t('proposals.walk_stop')}
                 </Button>
@@ -94,9 +125,28 @@ export function DuplicateWalk({
                             <h2 id="walk-current" className="text-xl font-bold tracking-tight">
                                 {toLocationProposal(current).street}
                             </h2>
-                            <span className="text-[13px] text-muted-foreground">
-                                <ExistingLine source={target.overlap.source} distance={target.overlap.distance_metres} />
-                            </span>
+                            <label className="mt-2 flex flex-col gap-1 text-sm">
+                                {t('proposals.pick_duplicate')}
+                                <select
+                                    className="w-full rounded-md border bg-background px-2 py-2"
+                                    value={pin ? pinKey(pin) : ''}
+                                    disabled={closing}
+                                    onChange={(event) => {
+                                        const chosen = choices.find((candidate) => pinKey(candidate) === event.target.value);
+                                        if (chosen) onChoose(current, chosen);
+                                    }}
+                                >
+                                    {choices.map((candidate) => (
+                                        <option key={pinKey(candidate)} value={pinKey(candidate)}>
+                                            {t('proposals.duplicate_option', {
+                                                place: t(`proposals.${candidate.source}`),
+                                                street: candidate.street ?? t('proposals.unknown_street'),
+                                                distance: candidate.distance_metres,
+                                            })}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                         </div>
                         <p className="text-sm font-medium">{t('proposals.walk_question')}</p>
                         <div className="grid gap-2">
@@ -107,6 +157,7 @@ export function DuplicateWalk({
                                     variant="outline"
                                     className="h-12 justify-start px-4 text-[15px] font-semibold max-lg:h-14 max-lg:rounded-xl"
                                     aria-keyshortcuts={answer === 'ok' ? yesKey : noKey}
+                                    disabled={closing}
                                     onClick={() => onAnswer(current, answer)}
                                 >
                                     {t(`proposals.walk_${answer}`)}
@@ -144,6 +195,15 @@ export function DuplicateWalk({
                         </p>
                     </section>
                 )}
+                <label className="flex items-center gap-2 border-b px-4.5 py-3 text-sm">
+                    <Checkbox
+                        checked={confirmed.length === rows.length ? true : confirmed.length > 0 ? 'indeterminate' : false}
+                        disabled={closing}
+                        onCheckedChange={(checked) => onToggleAll(checked === true)}
+                    />
+                    {t('proposals.bulk_select_all')}
+                </label>
+                <p className="px-4.5 pt-2 text-sm text-muted-foreground">{t('proposals.bulk_hint')}</p>
                 <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
                     <span>{t('proposals.walk_progress')}</span>
                     <span className="tabular-nums">
@@ -154,10 +214,16 @@ export function DuplicateWalk({
                     {rows.map((row, index) => {
                         const answer = walk.answers[row.id];
                         const isCurrent = index === walk.index && !!current;
-                        const overlap = walkTarget(row)?.overlap;
+                        const overlap = chosenPin(row, walk);
 
                         return (
-                            <li key={row.id} className="border-t border-muted">
+                            <li key={row.id} className="flex items-center border-t border-muted pl-4.5">
+                                <Checkbox
+                                    aria-label={t('proposals.bulk_select_row', { sign: toLocationProposal(row).street })}
+                                    checked={answer === 'ok'}
+                                    disabled={closing}
+                                    onCheckedChange={(checked) => onToggle(row, checked === true)}
+                                />
                                 <button
                                     type="button"
                                     aria-current={isCurrent ? 'step' : undefined}
@@ -187,11 +253,13 @@ export function DuplicateWalk({
                                     <span className="flex min-w-0 flex-1 flex-col gap-px">
                                         <span className="truncate text-[15px] font-medium">{toLocationProposal(row).street}</span>
                                         <span className="truncate text-[13px] text-muted-foreground">
-                                            {answer ? (
-                                                t(`proposals.walk_status_${answer}`)
-                                            ) : overlap ? (
-                                                <ExistingLine source={overlap.source} distance={overlap.distance_metres} />
-                                            ) : null}
+                                            {overlap && (
+                                                <>
+                                                    {overlap.street ?? t('proposals.unknown_street')}
+                                                    <ExistingLine source={overlap.source} distance={overlap.distance_metres} />
+                                                </>
+                                            )}
+                                            {answer === 'missing' && t('proposals.walk_status_missing')}
                                         </span>
                                     </span>
                                     <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">{index + 1}</span>
@@ -201,22 +269,20 @@ export function DuplicateWalk({
                     })}
                 </ol>
             </div>
-            {!current && (
-                <div className="flex shrink-0 flex-col gap-2.5 border-t px-5 py-4">
-                    <div className="flex items-center justify-between gap-3 text-[13px]">
-                        <span className="text-muted-foreground">{t('proposals.reason')}</span>
-                        <span className="font-semibold">{reasonLabel}</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button className="h-11 flex-[2]" disabled={confirmed.length === 0 || closing} onClick={() => onClose(confirmed)}>
-                            {t('proposals.close_selected', { count: confirmed.length })}
-                        </Button>
-                        <Button variant="outline" className="h-11 flex-1" disabled={closing} onClick={onRestart}>
-                            {t('proposals.walk_again')}
-                        </Button>
-                    </div>
+            <div className="flex shrink-0 flex-col gap-2.5 border-t px-5 py-4">
+                <div className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="text-muted-foreground">{t('proposals.reason')}</span>
+                    <span className="font-semibold">{reasonLabel}</span>
                 </div>
-            )}
+                <div className="flex gap-2">
+                    <Button className="h-11 flex-[2]" disabled={confirmed.length === 0 || closing} onClick={() => onClose(confirmed)}>
+                        {t('proposals.bulk_confirm', { count: confirmed.length })}
+                    </Button>
+                    <Button variant="outline" className="h-11 flex-1" disabled={closing} onClick={onRestart}>
+                        {t('proposals.walk_again')}
+                    </Button>
+                </div>
+            </div>
         </>
     );
 }

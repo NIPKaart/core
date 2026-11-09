@@ -222,7 +222,7 @@ it('stores the decision and records a new decision when more bays are added afte
         ->where('history.data.1.proposal.total_bays', 3)->where('history.data.1.proposal.reopen_revision', null));
 });
 
-it('closes proposals with parking within 3 m in one go and leaves the others open', function () {
+it('records the confirmed pins and leaves a proposal open when its selected pin becomes unavailable', function () {
     $source = DB::table('location_proposal_points')->where('id', $this->proposal)->value('dataset_source_id');
     $proposalAt = function (float $longitude) use ($source): int {
         $id = DB::table('location_proposal_points')->insertGetId([
@@ -238,14 +238,25 @@ it('closes proposals with parking within 3 m in one go and leaves the others ope
     $community = $proposalAt(4.37);
     $distant = $proposalAt(4.38);
     $location = ['municipality_id' => $this->municipality->id, 'latitude' => 52.011];
-    $municipal = ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.36002, 'visibility' => true, 'street' => 'Markt']);
+    ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.36002, 'visibility' => true]);
+    $municipal = ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.36005, 'visibility' => true, 'street' => 'Markt']);
     $space = ParkingSpace::factory()->create([...$location, 'longitude' => 4.37002, 'status' => ParkingStatus::APPROVED]);
-    ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.38005, 'visibility' => true]);
+    ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.38002, 'visibility' => true]);
+    $hidden = ParkingMunicipal::factory()->create([...$location, 'longitude' => 4.38005, 'visibility' => false]);
+    $match = fn (int $proposal, string $type, string $id): array => [
+        'proposal' => $proposal, 'point' => $proposal, 'revision' => 0, 'source' => $type, 'parking_id' => $id,
+    ];
     $index = route('app.moderation.proposals.index', ['municipality' => $this->municipality->id]);
 
     $this->actingAs($this->moderator)->post(route('app.moderation.proposals.duplicates.close'), [
-        'proposals' => [$this->proposal, $community, $distant], 'municipality' => $this->municipality->id,
-    ])->assertRedirect($index)->assertSessionHas('proposal_duplicates_closed', [$this->proposal, $community]);
+        'matches' => [
+            $match($this->proposal, 'municipal', $municipal->id),
+            $match($community, 'community', $space->id),
+            $match($distant, 'municipal', $hidden->id),
+        ],
+        'municipality' => $this->municipality->id,
+    ])->assertRedirect($index)->assertSessionHas('proposal_duplicates_closed', [$this->proposal, $community])
+        ->assertSessionHas('proposal_matches_failed', [$distant]);
 
     $this->assertDatabaseHas('location_proposal_decisions', [
         'location_proposal_id' => $this->proposal, 'reason' => 'duplicate', 'moderator_id' => $this->moderator->id,
@@ -256,17 +267,17 @@ it('closes proposals with parking within 3 m in one go and leaves the others ope
     ]);
     $this->assertDatabaseHas('location_proposals', ['id' => $distant, 'closed_at' => null, 'decision_revision' => 0]);
     expect(LocationProposalDecision::where('location_proposal_id', $this->proposal)->sole()->evidence)
-        ->toMatchArray(['street' => 'Markt', 'existing_source' => 'municipal', 'marker_distance_metres' => 1.37]);
+        ->toMatchArray(['street' => 'Markt', 'existing_source' => 'municipal', 'marker_distance_metres' => 3.43]);
 
     $this->get($index)->assertInertia(fn (Assert $page) => $page
         ->where('recentlyClosed', [$this->proposal, $community])
-        ->where('onMapCount', 0)->where('proposals.total', 1)->where('proposals.data.0.id', $distant));
+        ->where('failedMatches', [$distant])->where('onMapCount', 1)->where('proposals.total', 1)->where('proposals.data.0.id', $distant));
     $this->get(route('app.moderation.proposals.index', ['municipality' => $this->municipality->id, 'view' => 'closed']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('view', 'closed')->where('proposals.total', 2)
             ->where('proposals.data.0.id', $community)->where('proposals.data.0.existing.source', 'community')
             ->where('proposals.data.1.id', $this->proposal)
-            ->where('proposals.data.1.existing', ['source' => 'municipal', 'street' => 'Markt', 'distance_metres' => 1.4])
+            ->where('proposals.data.1.existing', ['source' => 'municipal', 'street' => 'Markt', 'distance_metres' => 3.4])
             ->where('proposals.data.1.moderator', $this->moderator->name));
     $this->get($this->detail)->assertInertia(fn (Assert $page) => $page
         ->where('selected.decision.reason', 'duplicate')
@@ -275,20 +286,25 @@ it('closes proposals with parking within 3 m in one go and leaves the others ope
             'place' => "municipal:{$municipal->id}", 'at' => "{$municipal->latitude},{$municipal->longitude}",
         ])));
 
-    $this->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$this->proposal]])
+    $this->post(route('app.moderation.proposals.duplicates.close'), ['matches' => [$match($this->proposal, 'municipal', $municipal->id)]])
         ->assertSessionHas('proposal_duplicates_closed', []);
     $this->assertDatabaseCount('location_proposal_decisions', 2);
 });
 
 it('undoes closing as a duplicate only for proposals that are still closed that way', function () {
-    ParkingMunicipal::factory()->create([
+    $pin = ParkingMunicipal::factory()->create([
         'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36002, 'visibility' => true,
     ]);
-    $this->actingAs($this->moderator)->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$this->proposal]]);
+    $matches = ['matches' => [[
+        'proposal' => $this->proposal, 'point' => $this->proposal, 'revision' => 0, 'source' => 'municipal', 'parking_id' => $pin->id,
+    ]]];
+    $this->actingAs($this->moderator)->post(route('app.moderation.proposals.duplicates.close'), $matches);
 
     $this->post(route('app.moderation.proposals.duplicates.reopen'), ['proposals' => [$this->proposal]])->assertRedirect();
     $this->assertDatabaseHas('location_proposals', ['id' => $this->proposal, 'closed_at' => null, 'decision_revision' => 2]);
 
+    $this->post(route('app.moderation.proposals.duplicates.close'), $matches)
+        ->assertSessionHas('proposal_matches_failed', [$this->proposal]);
     $this->post(route('app.moderation.proposals.reject', $this->proposal), ['revision' => 2, 'reason' => 'not_a_disabled_bay'])->assertRedirect();
     $this->post(route('app.moderation.proposals.duplicates.reopen'), ['proposals' => [$this->proposal]]);
     $this->assertDatabaseHas('location_proposals', ['id' => $this->proposal, 'decision_revision' => 3]);
@@ -299,7 +315,7 @@ it('refuses bulk actions without moderation rights or without proposals', functi
     $this->actingAs(User::factory()->create())->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$this->proposal]])
         ->assertForbidden();
     $this->actingAs($this->moderator)->postJson(route('app.moderation.proposals.duplicates.close'), ['proposals' => []])
-        ->assertJsonValidationErrors('proposals');
+        ->assertJsonValidationErrors('matches');
     $this->assertDatabaseCount('location_proposal_decisions', 0);
 });
 
