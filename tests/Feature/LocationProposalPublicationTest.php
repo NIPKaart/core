@@ -193,21 +193,21 @@ it('stores partial decisions and records a new decision when more bays are added
 
 it('records a reviewed candidate without closing the proposal or creating a decision', function (string $outcome) {
     $municipal = ParkingMunicipal::factory()->create([
-        'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36005, 'visibility' => true,
+        'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36002, 'visibility' => true,
     ]);
     $this->actingAs($this->moderator)->post(route('app.moderation.proposals.reject', $this->proposal), [
         'revision' => 0, 'reason' => 'duplicate', 'existing_parking_municipal_id' => $municipal->id, 'match_outcome' => $outcome,
     ])->assertRedirect($this->detail);
     $this->assertDatabaseHas('location_proposal_match_reviews', [
         'location_proposal_point_id' => $this->proposal, 'moderator_id' => $this->moderator->id,
-        'parking_source' => 'municipal', 'parking_id' => $municipal->id, 'marker_distance_metres' => 3.43, 'outcome' => $outcome,
+        'parking_source' => 'municipal', 'parking_id' => $municipal->id, 'marker_distance_metres' => 1.37, 'outcome' => $outcome,
     ]);
     $this->assertDatabaseHas('location_proposals', ['id' => $this->proposal, 'closed_at' => null, 'decision_revision' => 0]);
     $this->assertDatabaseCount('location_proposal_decisions', 0);
 })->with(['different_bay', 'unclear']);
 
-it('shows parking beyond four metres as context but rejects it as a comparison target', function (string $source) {
-    $attributes = ['municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36006];
+it('shows parking beyond three metres as context but rejects it as a comparison target', function (string $source) {
+    $attributes = ['municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36005];
     $place = $source === 'municipal'
         ? ParkingMunicipal::factory()->create([...$attributes, 'visibility' => true])
         : ParkingSpace::factory()->create([...$attributes, 'status' => ParkingStatus::APPROVED]);
@@ -215,7 +215,7 @@ it('shows parking beyond four metres as context but rejects it as a comparison t
 
     $this->actingAs($this->moderator)->get($this->detail)->assertInertia(fn (Assert $page) => $page
         ->where("selected.{$source}.0.id", $place->id)
-        ->where("selected.{$source}.0.can_compare", false));
+        ->where("selected.{$source}.0.possible_duplicate", false));
     $this->postJson(route('app.moderation.proposals.reject', $this->proposal), [
         'revision' => 0, 'reason' => 'duplicate', 'match_outcome' => 'unclear', $field => $place->id,
     ])->assertJsonValidationErrors($field);

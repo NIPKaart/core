@@ -173,9 +173,6 @@ it('filters possible overlaps across both sources before paging and keeps next w
         ->where('proposals.data.1.points.0.overlap.source', 'community'));
     $this->get($url(['overlap' => 'none']))->assertInertia(fn (Assert $page) => $page
         ->where('proposals.total', 1)->where('proposals.data.0.id', $second));
-    $this->get($url(['overlap' => 'sample']))->assertInertia(fn (Assert $page) => $page
-        ->where('proposals.total', 1)->where('proposals.data.0.id', $second)
-        ->where('proposals.data.0.points.0.overlap.distance_metres', 3.4));
     $this->get($url(['overlap' => 'possible', 'after' => $first]))
         ->assertRedirect($url(['overlap' => 'possible', 'proposal' => $third]));
 });

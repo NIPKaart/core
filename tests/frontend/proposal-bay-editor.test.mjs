@@ -94,12 +94,19 @@ function editor(reported_bays = null) {
                 revision: 0,
                 canReject: true,
                 community: [
-                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat', can_compare: close, distance_metres: close ? 2 : 92 },
-                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat', can_compare: false, distance_metres: 92 },
+                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat', possible_duplicate: close, distance_metres: close ? 2 : 92 },
+                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat', possible_duplicate: false, distance_metres: 92 },
                 ],
                 municipal: [
-                    { ...point, latitude: 52.0111, id: 'existing-space', street: 'Markt', can_compare: close, distance_metres: close ? 3.5 : 92 },
-                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null, can_compare: false, distance_metres: 92 },
+                    {
+                        ...point,
+                        latitude: 52.0111,
+                        id: 'existing-space',
+                        street: 'Markt',
+                        possible_duplicate: close,
+                        distance_metres: close ? 2.5 : 92,
+                    },
+                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null, possible_duplicate: false, distance_metres: 92 },
                 ],
                 query: {},
                 publishedBays,

@@ -53,7 +53,7 @@ class LocationProposalController extends Controller
             'point' => ['nullable', 'integer', 'min:1'],
             'from' => ['nullable', 'in:queue'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'overlap' => ['nullable', 'in:possible,none,sample'],
+            'overlap' => ['nullable', 'in:possible,none'],
         ]);
         $overlapFilter = $filters['overlap'] ?? null;
         $preference = 'proposal_municipality_'.$request->user()->id;
@@ -224,7 +224,7 @@ class LocationProposalController extends Controller
                 $field = $municipalId === null ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
                 $existing = ($municipalId === null ? $this->nearbyCommunity($point) : $this->nearbyMunicipal($point))
                     ->whereKey($request->validated($field))->lockForUpdate()->first();
-                if ($existing === null || (float) $existing->distance_metres > LocationProposalQueue::SAMPLE_RADIUS_METRES) {
+                if ($existing === null || (float) $existing->distance_metres > LocationProposalQueue::OVERLAP_RADIUS_METRES) {
                     throw ValidationException::withMessages([$field => __('parking_spaces.proposal.existing_required')]);
                 }
 
@@ -381,7 +381,6 @@ class LocationProposalController extends Controller
             'latitude' => $place->latitude,
             'longitude' => $place->longitude,
             'distance_metres' => round((float) $place->distance_metres, 1),
-            'can_compare' => (float) $place->distance_metres <= LocationProposalQueue::SAMPLE_RADIUS_METRES,
             'possible_duplicate' => (float) $place->distance_metres <= LocationProposalQueue::OVERLAP_RADIUS_METRES,
         ];
         $record = DB::table('location_proposals')->find($id);

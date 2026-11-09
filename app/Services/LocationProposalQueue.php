@@ -11,8 +11,6 @@ class LocationProposalQueue
 {
     public const int OVERLAP_RADIUS_METRES = 3;
 
-    public const int SAMPLE_RADIUS_METRES = 4;
-
     private const string POINT_GEOGRAPHY = 'ST_SetSRID(ST_MakePoint(point.longitude, point.latitude), 4326)::geography';
 
     public function proposals(?string $overlap = null): Builder
@@ -25,38 +23,35 @@ class LocationProposalQueue
             ->orderBy('proposal.id');
 
         if ($overlap !== null) {
-            $query->whereExists($this->matchedPoints(self::OVERLAP_RADIUS_METRES), not: $overlap !== 'possible');
-        }
-        if ($overlap === 'sample') {
-            $query->whereExists($this->matchedPoints(self::SAMPLE_RADIUS_METRES));
+            $query->whereExists($this->matchedPoints(), not: $overlap !== 'possible');
         }
 
         return $query;
     }
 
-    private function matchedPoints(int $radius): Builder
+    private function matchedPoints(): Builder
     {
         return $this->activePoints()->whereColumn('point.location_proposal_id', 'proposal.id')
-            ->where(fn (Builder $points) => $points->whereExists($this->municipalOverlap($radius))->orWhereExists($this->communityOverlap($radius)));
+            ->where(fn (Builder $points) => $points->whereExists($this->municipalOverlap())->orWhereExists($this->communityOverlap()));
     }
 
-    private function municipalOverlap(int $radius): Builder
+    private function municipalOverlap(): Builder
     {
         return DB::table('parking_municipal_spaces as nearby')->where('nearby.visibility', true)
-            ->whereRaw('ST_DWithin(nearby.location, '.self::POINT_GEOGRAPHY.', ?)', [$radius]);
+            ->whereRaw('ST_DWithin(nearby.location, '.self::POINT_GEOGRAPHY.', ?)', [self::OVERLAP_RADIUS_METRES]);
     }
 
-    private function communityOverlap(int $radius): Builder
+    private function communityOverlap(): Builder
     {
         return DB::table('parking_spaces as nearby')->where('nearby.status', ParkingStatus::APPROVED->value)->whereNull('nearby.deleted_at')
-            ->whereRaw('ST_DWithin(nearby.location, '.self::POINT_GEOGRAPHY.', ?)', [$radius]);
+            ->whereRaw('ST_DWithin(nearby.location, '.self::POINT_GEOGRAPHY.', ?)', [self::OVERLAP_RADIUS_METRES]);
     }
 
-    private function closestOverlap(int $radius): Builder
+    private function closestOverlap(): Builder
     {
         $distance = 'ST_Distance(nearby.location, '.self::POINT_GEOGRAPHY.')';
-        $municipal = $this->municipalOverlap($radius)->selectRaw("'municipal' AS kind, nearby.id::text, nearby.street, {$distance} AS distance");
-        $community = $this->communityOverlap($radius)->selectRaw("'community' AS kind, nearby.id::text, nearby.street, {$distance} AS distance");
+        $municipal = $this->municipalOverlap()->selectRaw("'municipal' AS kind, nearby.id::text, nearby.street, {$distance} AS distance");
+        $community = $this->communityOverlap()->selectRaw("'community' AS kind, nearby.id::text, nearby.street, {$distance} AS distance");
 
         return DB::query()->fromSub($municipal->unionAll($community), 'matches')
             ->selectRaw("json_build_object('source', kind, 'street', street, 'distance_metres', round(distance::numeric, 1))")
@@ -105,8 +100,8 @@ class LocationProposalQueue
     {
         $query = $this->activePoints()->whereIn('point.location_proposal_id', $proposals->pluck('id'))
             ->select('point.*', 'source.name as source')->orderBy('point.id');
-        if (in_array($overlap, ['possible', 'sample'], true)) {
-            $query->selectSub($this->closestOverlap($overlap === 'sample' ? self::SAMPLE_RADIUS_METRES : self::OVERLAP_RADIUS_METRES), 'overlap');
+        if ($overlap === 'possible') {
+            $query->selectSub($this->closestOverlap(), 'overlap');
         }
         $points = $query->get()->groupBy('location_proposal_id');
 

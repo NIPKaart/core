@@ -22,7 +22,7 @@ import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
-type OverlapFilter = 'possible' | 'none' | 'sample';
+type OverlapFilter = 'possible' | 'none';
 type Props = {
     proposals: PaginatedResponse<ProposalRow> | null;
     municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
@@ -258,7 +258,7 @@ export default function Proposals({
                                 <>
                                     <h2 className="px-5 pt-4 text-lg font-semibold">{municipalityName}</h2>
                                     <div className="flex flex-wrap gap-2 px-5 py-3" role="group" aria-label={t('proposals.overlap_filter')}>
-                                        {([null, 'none', 'possible', 'sample'] as const).map((filter) => (
+                                        {([null, 'none', 'possible'] as const).map((filter) => (
                                             <Button key={filter ?? 'all'} variant={filter === overlap ? 'default' : 'outline'} size="sm" asChild>
                                                 <Link
                                                     href={routes.index({ query: { municipality, overlap: filter ?? undefined } })}

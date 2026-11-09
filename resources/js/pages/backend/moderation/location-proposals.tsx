@@ -36,7 +36,6 @@ export type NearbyPlace = MapPoint & {
     street: string | null;
     distance_metres: number;
     possible_duplicate: boolean;
-    can_compare: boolean;
 };
 
 type ProposalOverlap = { source: 'municipal' | 'community'; street: string | null; distance_metres: number };
@@ -181,7 +180,7 @@ export function LocationProposalReview({
     municipal: NearbyPlace[];
     comparison?: MapPoint;
     group?: React.ReactNode;
-    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue'; overlap?: 'possible' | 'none' | 'sample' };
+    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue'; overlap?: 'possible' | 'none' };
     onBack: () => void;
     onPointChange: (id: number) => void;
     nextUrl?: string;
@@ -220,10 +219,10 @@ export function LocationProposalReview({
     const pickingDuplicate = rejecting && reason === 'duplicate';
     const duplicatePlaces = [
         ...community
-            .filter((place) => place.can_compare)
+            .filter((place) => place.possible_duplicate)
             .map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: '#15803d' })),
         ...municipal
-            .filter((place) => place.can_compare)
+            .filter((place) => place.possible_duplicate)
             .map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: '#7c3aed' })),
     ].sort((a, b) => a.distance_metres - b.distance_metres);
     const duplicatePlace = duplicatePlaces.find((place) => place.key === existing);
