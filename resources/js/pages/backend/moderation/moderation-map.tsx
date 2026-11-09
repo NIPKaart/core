@@ -117,7 +117,16 @@ const TILES = {
     satellite: { zoom: 19 },
 };
 
-type QueuePin = { key: string; point: MapPoint; color: string; label: string; count?: number; legendLabel?: string };
+type QueuePin = {
+    key: string;
+    point: MapPoint;
+    color: string;
+    label: string;
+    count?: number;
+    legendLabel?: string;
+    /** The item's place in the moderator's selection; a numbered pin stands out without moving the map. */
+    number?: number;
+};
 
 const municipalityIcon = (count: number, color: string) => {
     const label = count > 999 ? `${Math.floor(count / 1000)}k+` : String(count);
@@ -133,7 +142,7 @@ const municipalityIcon = (count: number, color: string) => {
 
 /**
  * The map the moderator works on: it fills the screen behind the panel. It shows the item under review with what
- * NIPKaart knows around it, the open items of the queue, or a numbered selection. When the item can be corrected,
+ * NIPKaart knows around it, or the open items of the queue with the selected ones numbered. When the item can be corrected,
  * its pin can be dragged, placed with a click, or moved with the arrow keys.
  */
 export function ModerationMap({
@@ -144,7 +153,6 @@ export function ModerationMap({
     municipal = [],
     current,
     proposed,
-    numbered,
     queue,
     highlighted,
     onPick,
@@ -171,8 +179,6 @@ export function ModerationMap({
     current?: MapPoint | null;
     /** The location to show with the main pin when it differs from the centre. */
     proposed?: MapPoint | null;
-    /** Several selected items, numbered in list order; replaces the main pin. */
-    numbered?: MapPoint[];
     /** The open items of the queue; replaces the main pin. */
     queue?: QueuePin[];
     highlighted?: string | null;
@@ -201,7 +207,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = numbered ?? queue?.map((pin) => pin.point);
+    const spread = queue?.map((pin) => pin.point);
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
@@ -278,16 +284,16 @@ export function ModerationMap({
                             key={item.key}
                             position={[item.point.latitude, item.point.longitude]}
                             icon={
-                                item.count === undefined ? queueIcon(item.color, item.key === highlighted) : municipalityIcon(item.count, item.color)
+                                item.number !== undefined
+                                    ? numberedIcon(item.number)
+                                    : item.count === undefined
+                                      ? queueIcon(item.color, item.key === highlighted)
+                                      : municipalityIcon(item.count, item.color)
                             }
                             title={item.label}
-                            zIndexOffset={item.key === highlighted ? 1000 : 0}
+                            zIndexOffset={item.key === highlighted ? 1000 : item.number !== undefined ? 500 : 0}
                             eventHandlers={{ click: () => onPick?.(item.key) }}
                         />
-                    ))
-                ) : numbered ? (
-                    numbered.map((point, index) => (
-                        <Marker key={`p${index}`} position={[point.latitude, point.longitude]} icon={numberedIcon(index + 1)} interactive={false} />
                     ))
                 ) : (
                     <MainPin key={onMove ? 'movable' : 'fixed'} point={pin} onMove={onMove} label={t('map.pin')} />

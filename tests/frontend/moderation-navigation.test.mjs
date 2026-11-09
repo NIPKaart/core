@@ -129,3 +129,20 @@ test('decided items show on the map and open as a decision in the panel', () => 
     find(opened, 'DecisionPane').props.onBack();
     assert.ok(find(app.render(decided), 'DecidedList'), 'going back shows the list again');
 });
+
+test('selecting an item keeps the map where it is and numbers the selected pin', () => {
+    const app = setup();
+    const before = find(app.render(), 'Workspace').props.map;
+    find(app.render(), 'QueueList').props.onCheck([app.item.key]);
+
+    const after = find(app.render(), 'Workspace').props.map;
+    assert.deepEqual(after.center, before.center, 'the map must not move to the selection');
+    assert.deepEqual(
+        after.queue.map((pin) => pin.key),
+        before.queue.map((pin) => pin.key),
+        'every queue pin stays on the map',
+    );
+    assert.equal(after.queue[0].number, 1);
+    assert.equal(before.queue[0].number, undefined);
+    assert.ok(find(app.render(), 'QueueList'), 'the list stays in the panel');
+});
