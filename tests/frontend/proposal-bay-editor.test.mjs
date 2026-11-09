@@ -16,12 +16,12 @@ function find(node, predicate) {
     return predicate(node) ? node : find(node.props.children, predicate);
 }
 
-function editor() {
+function editor(reported_bays = null) {
     const states = [];
     const requests = [];
     const storage = new Map();
     const point = { id: 15, latitude: 52.011, longitude: 4.36, last_seen: null };
-    const proposal = { id: 23, points: [point], status: 'open', source: 'NDW', street: 'Delft', reported_bays: null };
+    const proposal = { id: 23, points: [point], status: 'open', source: 'NDW', street: 'Delft', reported_bays };
     let hook = 0;
     let uuid = 0;
     const jsx = (type, props) => ({ type, props });
@@ -54,7 +54,16 @@ function editor() {
         },
         '@inertiajs/react': { router: { post: (url, data, options) => requests.push({ url, data, options }) } },
         'react-i18next': { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) },
-        '@/routes/app': { default: { moderation: { proposals: { publish: { url: (id) => `/moderation/proposals/${id}/publish` } } } } },
+        '@/routes/app': {
+            default: {
+                moderation: {
+                    proposals: {
+                        publish: { url: (id) => `/moderation/proposals/${id}/publish` },
+                        reject: { url: (id) => `/moderation/proposals/${id}/reject` },
+                    },
+                },
+            },
+        },
         '@/components/contribute/details-step': { default: 'DetailsStep' },
         '@/components/input-error': { default: 'InputError' },
         '@/components/map/parking-detail/navigation-handoff': { streetViewUrl: () => 'https://example.test/streetview' },
@@ -75,7 +84,16 @@ function editor() {
             return context.exports.LocationProposalReview({
                 selection: { proposal: { ...proposal, status: published ? 'added' : 'open' }, point },
                 imagery: [],
-                options: { orientations: [], restrictionDays: [], maxBays: 20 },
+                options: {
+                    orientations: [],
+                    restrictionDays: [],
+                    maxBays: 20,
+                    completionReasons: [{ value: 'not_visible', label: 'Not visible' }],
+                    rejectionReasons: [{ value: 'duplicate', label: 'Already exists' }],
+                },
+                revision: 0,
+                canReject: true,
+                duplicates: [{ ...point, id: 'existing-space', street: 'Oude Kerkstraat' }],
                 query: {},
                 publishedBays,
                 onBack() {},
@@ -154,4 +172,72 @@ test('publishes the whole pilot batch and keeps draggable drafts until Core conf
     assert.equal(map.onMoveBay, undefined);
     assert.equal(screen.storage.size, 0);
     action(view, 'proposals.back_to_queue');
+});
+
+test('a partial completion sends a reason without saving it in the local draft', () => {
+    const screen = editor(2);
+    element(screen.render(), 'Workspace').props.map.onPlace({ latitude: 52.011, longitude: 4.36 });
+    action(screen.render(), 'proposals.to_details').props.onClick();
+    element(screen.render(), 'DetailsStep').props.setData('orientation', 'parallel');
+    element(screen.render(), 'DetailsStep').props.setData('under_sign', 'no');
+    action(screen.render(), 'proposals.check').props.onClick();
+    assert.equal(action(screen.render(), 'proposals.complete_with').props.disabled, true);
+    find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+    action(screen.render(), 'proposals.complete_with').props.onClick();
+    assert.equal(screen.requests[0].data.reason, 'not_visible');
+    assert.ok(![...screen.storage.values()][0].includes('not_visible'));
+});
+
+test('duplicate rejection requires selecting a published space on the map', () => {
+    const screen = editor();
+    action(screen.render(), 'proposals.reject_title').props.onClick();
+    find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+    const view = screen.render();
+    assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
+    element(view, 'Workspace').props.map.onPick('existing-space');
+    action(screen.render(), 'proposals.reject_title').props.onClick();
+    assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
+    assert.equal(screen.requests[0].data.existing_parking_space_id, 'existing-space');
+});
+
+test('decided history stacks row labels and shows proposal map links in the sheet', () => {
+    const jsx = (type, props) => ({ type, props });
+    const tags = new Proxy({}, { get: (_, name) => String(name) });
+    const modules = {
+        'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' },
+        react: { useEffect() {}, useState: (initial) => [initial, () => {}] },
+        'react-i18next': { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) },
+        '@/lib/utils': { cn: (...classes) => classes.join(' ') },
+        './parts': { useAgo: () => () => '5 minutes ago' },
+        './values': { useValueFormatter: () => () => '' },
+    };
+    const context = { exports: {}, require: (name) => modules[name] ?? tags };
+    vm.runInNewContext(compiled('index.tsx'), context);
+    const row = {
+        key: 'proposal:1',
+        type: 'proposal',
+        decision: 'completed',
+        street: 'Oude Kerkstraat 2',
+        municipality: 'Delft',
+        reviewer: 'Moderator',
+        reason: 'Not visible',
+        proposal: { source: 'NDW', total_bays: 1, reported_bays: 2, bays: [{ id: 'bay', number: 1, url: '/map?place=community:bay' }] },
+    };
+    const { History, DecisionSheet } = context.exports;
+    const table = element(History({ history: { data: [row] } }), 'DataTable');
+    const cells = table.props.columns.map(({ cell }) => cell({ row: { original: row } }));
+    for (const [cell, label] of [
+        [cells[1], 'Delft'],
+        [cells[3], '5 minutes ago'],
+    ]) {
+        const secondLine = find(cell, (node) => node.props.children === label);
+        assert.match(secondLine.props.className, /\bblock\b/);
+    }
+    const decision = cells[2].type(cells[2].props);
+    assert.match(find(decision, (node) => node.props.children === row.reason).props.className, /\bblock\b/);
+
+    const sheet = DecisionSheet({ row, options: {} });
+    assert.equal(element(sheet, 'a').props.href, '/map?place=community:bay');
+    const rejected = { ...row, decision: 'rejected', proposal: { ...row.proposal, bays: [], existing_url: '/map?place=community:existing' } };
+    assert.equal(element(DecisionSheet({ row: rejected, options: {} }), 'a').props.href, '/map?place=community:existing');
 });

@@ -17,8 +17,6 @@ import {
     browserStorage,
     canCheck,
     emptyDraft,
-    finish,
-    FINISH_REASONS,
     loadDraft,
     moveBay,
     publicationPayload,
@@ -26,11 +24,11 @@ import {
     saveDraft,
     setDetail,
     type BayDetails,
-    type FinishReason,
     type ProposalDraft,
     type PublishedBay,
 } from './location-proposal-draft';
 import type { BayMarker, MapPoint } from './moderation-map';
+import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 export type LocationProposal = {
@@ -129,7 +127,6 @@ function StatusText({ draft, proposal }: { draft: ProposalDraft | null; proposal
     const { t } = useTranslation('backend/moderation');
 
     if (proposal.status === 'added') return t('proposals.added');
-    if (draft?.finished) return t('proposals.status.finished_none');
     if (draft?.bays.length) return t('proposals.status.draft', { count: draft.bays.length });
 
     return proposal.reported_bays === null ? proposal.source : t('proposals.reported', { count: proposal.reported_bays });
@@ -140,6 +137,9 @@ export function LocationProposalReview({
     imagery,
     options,
     publishedBays,
+    revision,
+    canReject,
+    duplicates,
     nearby,
     municipal,
     comparison,
@@ -149,8 +149,17 @@ export function LocationProposalReview({
 }: {
     selection: LocationProposalSelection;
     imagery: AerialLayer[];
-    options: { orientations: OrientationOption[]; restrictionDays: RestrictionDay[]; maxBays: number };
+    options: {
+        orientations: OrientationOption[];
+        restrictionDays: RestrictionDay[];
+        maxBays: number;
+        completionReasons: EnumOption[];
+        rejectionReasons: EnumOption[];
+    };
     publishedBays: PublishedBay[];
+    revision: number;
+    canReject: boolean;
+    duplicates: (MapPoint & { id: string; street: string | null })[];
     nearby?: MapPoint;
     municipal?: MapPoint;
     comparison?: MapPoint;
@@ -168,8 +177,10 @@ export function LocationProposalReview({
     const [selected, setSelected] = useState<string | null>(null);
     const [chosenStep, setStep] = useState<Step>('place');
     const [view, setView] = useState<{ center: MapPoint; zoom?: number }>({ center: point });
-    const [finishing, setFinishing] = useState(false);
-    const [reason, setReason] = useState<FinishReason>(FINISH_REASONS[0]);
+    const [rejecting, setRejecting] = useState(false);
+    const [reason, setReason] = useState('');
+    const [note, setNote] = useState('');
+    const [existing, setExisting] = useState<string | null>(null);
     const [failure, setFailure] = useState<string | null>(null);
     const [processing, setProcessing] = useState(false);
 
@@ -186,7 +197,11 @@ export function LocationProposalReview({
         draft.details.under_sign === 'yes'
             ? draft.details.under_sign_text || t('proposals.summary.under_sign_yes')
             : t('proposals.summary.under_sign_no');
-    const askReason = !published && finishing && bays.length === 0;
+    const totalBays = submittedCount + bays.length;
+    const partial = proposal.reported_bays !== null && totalBays < proposal.reported_bays;
+    const askReason = !published && !rejecting && step === 'check' && partial;
+    const pickingDuplicate = rejecting && reason === 'duplicate';
+    const lastPublishedNumber = Math.max(0, ...publishedBays.map((bay) => bay.number));
 
     const markers: BayMarker[] = [
         ...publishedBays.map((bay) => ({
@@ -197,7 +212,7 @@ export function LocationProposalReview({
             label: t('proposals.bay_submitted_label', { number: bay.number }),
         })),
         ...bays.map((bay) => {
-            const number = bayNumber(draft, bay.id);
+            const number = lastPublishedNumber + bayNumber(draft, bay.id);
             return {
                 key: bay.id,
                 point: bay,
@@ -213,7 +228,6 @@ export function LocationProposalReview({
         const id = crypto.randomUUID();
         setDraft((current) => addBay(current, position, id, point.id));
         setSelected(id);
-        setFinishing(false);
     };
 
     const remove = (id: string) => {
@@ -227,27 +241,87 @@ export function LocationProposalReview({
     };
 
     const submit = () => {
-        if (published || processing || !canCheck(draft)) return;
+        if (published || processing || !canCheck(draft) || (partial && !reason)) return;
         setFailure(null);
         setProcessing(true);
-        router.post(app.moderation.proposals.publish.url(proposal.id, { query }), publicationPayload(draft), {
-            preserveScroll: true,
-            onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
-            onSuccess: () => {
-                setDraft(emptyDraft());
-                setSelected(null);
-                setStep('place');
+        router.post(
+            app.moderation.proposals.publish.url(proposal.id, { query }),
+            { ...publicationPayload(draft), revision, ...(partial ? { reason, note } : {}) },
+            {
+                preserveScroll: true,
+                onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
+                onSuccess: () => {
+                    setDraft(emptyDraft());
+                    setSelected(null);
+                    setStep('place');
+                },
+                onFinish: () => setProcessing(false),
             },
-            onFinish: () => setProcessing(false),
-        });
+        );
     };
 
-    const finishProposal = () => {
-        const finished = finish(draft, reason);
-        saveDraft(storage, proposal.id, finished);
-        setDraft(finished);
-        onBack();
+    const reject = () => {
+        if (processing || !reason || (pickingDuplicate && !existing)) return;
+        setFailure(null);
+        setProcessing(true);
+        router.post(
+            app.moderation.proposals.reject.url(proposal.id, { query }),
+            { revision, reason, note, existing_parking_space_id: pickingDuplicate ? existing : null },
+            {
+                onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
+                onSuccess: () => saveDraft(storage, proposal.id, emptyDraft()),
+                onFinish: () => setProcessing(false),
+            },
+        );
     };
+
+    const decisionFields = (legend: string, reasons: EnumOption[]) => (
+        <fieldset className="flex flex-col gap-2 rounded-xl border p-4" disabled={processing}>
+            <legend className="px-1 text-[15px] font-semibold">{legend}</legend>
+            {reasons.map((option) => (
+                <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 text-sm">
+                    <input
+                        type="radio"
+                        name="proposal-reason"
+                        checked={reason === option.value}
+                        onChange={() => setReason(option.value)}
+                        className="size-4 shrink-0 accent-foreground"
+                    />
+                    {option.label}
+                </label>
+            ))}
+            {pickingDuplicate && (
+                <label className="space-y-1 text-sm">
+                    <span>{t('proposals.pick_duplicate')}</span>
+                    <select
+                        className="w-full rounded-md border bg-background p-2"
+                        value={existing ?? ''}
+                        onChange={(event) => {
+                            const place = duplicates.find((candidate) => candidate.id === event.target.value);
+                            setExisting(place?.id ?? null);
+                            if (place) setView({ center: place, zoom: BAY_ZOOM });
+                        }}
+                    >
+                        <option value="">{t('proposals.choose')}</option>
+                        {duplicates.map((place) => (
+                            <option key={place.id} value={place.id}>
+                                {place.street || t('proposals.unknown_street')} ({place.latitude.toFixed(5)}, {place.longitude.toFixed(5)})
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
+            <label className="space-y-1 text-sm">
+                <span>{t('proposals.decision_note')}</span>
+                <textarea
+                    className="w-full rounded-md border bg-background p-2"
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    maxLength={500}
+                />
+            </label>
+        </fieldset>
+    );
 
     const detailsForm: ContributionForm = { ...draft.details, latitude: null, longitude: null };
     const bayList = (checking: boolean) => (
@@ -262,7 +336,7 @@ export function LocationProposalReview({
                 </li>
             ))}
             {bays.map((bay) => {
-                const number = bayNumber(draft, bay.id);
+                const number = lastPublishedNumber + bayNumber(draft, bay.id);
                 const isSelected = bay.id === selected;
                 const street = streetViewUrl(bay.latitude, bay.longitude);
 
@@ -314,7 +388,7 @@ export function LocationProposalReview({
             {!checking && !published && (
                 <li className="flex items-center gap-3 px-3 py-3 text-[13px] text-muted-foreground">
                     <MousePointer2 className="size-4 shrink-0" aria-hidden />
-                    {t('proposals.next_hint', { number: bays.length + 1 })}
+                    {t('proposals.next_hint', { number: lastPublishedNumber + bays.length + 1 })}
                 </li>
             )}
         </ul>
@@ -333,9 +407,19 @@ export function LocationProposalReview({
                 comparisonPoint: comparison,
                 nearby: nearby ? [nearby] : [],
                 municipal: municipal ? [municipal] : [],
-                bays: markers,
-                onPlace: !published && step === 'place' && !processing ? place : undefined,
-                onMoveBay: published || processing ? undefined : (id, point) => setDraft((current) => moveBay(current, id, point)),
+                bays: pickingDuplicate ? undefined : markers,
+                queue: pickingDuplicate
+                    ? duplicates.map((place) => ({
+                          key: place.id,
+                          point: place,
+                          color: '#15803d',
+                          label: place.street ?? t('proposals.unknown_street'),
+                      }))
+                    : undefined,
+                highlighted: pickingDuplicate ? (existing ?? undefined) : undefined,
+                onPick: pickingDuplicate ? setExisting : undefined,
+                onPlace: !published && !rejecting && (step === 'place' || askReason) && !processing ? place : undefined,
+                onMoveBay: published || rejecting || processing ? undefined : (id, point) => setDraft((current) => moveBay(current, id, point)),
                 onSelectBay: setSelected,
             }}
         >
@@ -347,7 +431,7 @@ export function LocationProposalReview({
                     </span>
                     <h2 className="text-2xl leading-tight font-bold tracking-tight">{proposal.street}</h2>
                     {seen && <span className="text-sm text-muted-foreground">{t('proposals.seen', { date: seen })}</span>}
-                    {proposal.points.length > 1 && !published && (
+                    {proposal.points.length > 1 && !published && !rejecting && (
                         <select
                             aria-label={t('proposals.source_point')}
                             className="mt-2 rounded-md border bg-background p-2 text-sm"
@@ -380,14 +464,18 @@ export function LocationProposalReview({
                     <div role="status" className="flex flex-col gap-0.5 rounded-xl border p-3">
                         <span className="text-xs text-muted-foreground">{t('proposals.progress')}</span>
                         <span className="font-semibold">
-                            {published ? t('proposals.added_count', { count: submittedCount }) : t('proposals.progress_none')}
+                            {published && canReject
+                                ? t('decisions.rejected')
+                                : submittedCount > 0
+                                  ? t('proposals.added_count', { count: submittedCount })
+                                  : t('proposals.progress_none')}
                         </span>
                     </div>
                 </div>
 
-                {bays.length > 0 && <StepBar step={step} canCheck={canCheck(draft)} onStep={setStep} />}
+                {!rejecting && bays.length > 0 && <StepBar step={step} canCheck={canCheck(draft)} onStep={setStep} />}
 
-                {step === 'check' ? (
+                {rejecting ? null : step === 'check' ? (
                     <>
                         <div className="flex flex-col gap-1">
                             <h3 className="text-lg font-bold">{t('proposals.check_title', { count: draft.bays.length })}</h3>
@@ -437,7 +525,7 @@ export function LocationProposalReview({
                                     <span className="text-[13px] text-muted-foreground">{t('proposals.placed', { count: draft.bays.length })}</span>
                                 )}
                             </div>
-                            {bays.length === 0 && !published ? (
+                            {bays.length === 0 && submittedCount === 0 && !published ? (
                                 <div className="flex items-center gap-3 rounded-xl border-[1.5px] border-dashed p-4">
                                     <MousePointer2 className="size-5 shrink-0 text-muted-foreground" aria-hidden />
                                     <span className="flex flex-col gap-0.5">
@@ -451,36 +539,63 @@ export function LocationProposalReview({
                         </section>
 
                         {group}
-                        {askReason && (
-                            <fieldset className="flex flex-col gap-2 rounded-xl border p-4">
-                                <legend className="px-1 text-[15px] font-semibold">{t('proposals.nothing_title')}</legend>
-                                <p className="text-[13px] text-muted-foreground">{t('proposals.nothing_hint')}</p>
-                                {FINISH_REASONS.map((option) => (
-                                    <label key={option} className="flex min-h-8 cursor-pointer items-center gap-2.5 text-sm">
-                                        <input
-                                            type="radio"
-                                            name="proposal-reason"
-                                            value={option}
-                                            checked={reason === option}
-                                            onChange={() => setReason(option)}
-                                            className="size-4 accent-foreground"
-                                        />
-                                        {t(`proposals.reasons.${option}`)}
-                                    </label>
-                                ))}
-                            </fieldset>
-                        )}
                     </>
                 )}
+                {askReason &&
+                    decisionFields(t('proposals.partial_reason', { count: (proposal.reported_bays ?? 0) - totalBays }), options.completionReasons)}
+                {rejecting && decisionFields(t('proposals.reject_title'), options.rejectionReasons)}
+                {rejecting && <InputError message={failure ?? undefined} />}
             </div>
             <div className="flex shrink-0 gap-2 border-t px-5 py-4">
-                {step === 'check' ? (
+                {rejecting ? (
                     <>
-                        <Button type="button" className="h-11 flex-[2]" disabled={processing || draft.bays.length === 0} onClick={submit}>
-                            {processing ? t('proposals.submitting') : t('proposals.publish', { count: draft.bays.length })}
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            className="h-11 flex-[2]"
+                            disabled={processing || !reason || (pickingDuplicate && !existing)}
+                            onClick={reject}
+                        >
+                            {t('proposals.reject_title')}
                         </Button>
-                        <Button type="button" variant="outline" className="h-11 flex-1" disabled={processing} onClick={() => setStep('details')}>
-                            {t('proposals.back')}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 flex-1"
+                            disabled={processing}
+                            onClick={() => {
+                                setRejecting(false);
+                                setReason('');
+                                setNote('');
+                                setExisting(null);
+                                setFailure(null);
+                            }}
+                        >
+                            {t('proposals.cancel')}
+                        </Button>
+                    </>
+                ) : step === 'check' ? (
+                    <>
+                        <Button
+                            type="button"
+                            className="h-11 flex-[2]"
+                            disabled={processing || draft.bays.length === 0 || (partial && !reason)}
+                            onClick={submit}
+                        >
+                            {processing
+                                ? t('proposals.submitting')
+                                : partial
+                                  ? t('proposals.complete_with', { count: totalBays })
+                                  : t('proposals.publish', { count: draft.bays.length })}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 flex-1"
+                            disabled={processing}
+                            onClick={partial ? onBack : () => setStep('details')}
+                        >
+                            {t(partial ? 'proposals.resume_later' : 'proposals.back')}
                         </Button>
                     </>
                 ) : step === 'details' ? (
@@ -510,20 +625,21 @@ export function LocationProposalReview({
                     <Button type="button" className="h-11 flex-1" onClick={onBack}>
                         {t('proposals.back_to_queue')}
                     </Button>
-                ) : finishing ? (
-                    <>
-                        <Button type="button" className="h-11 flex-[2]" onClick={finishProposal}>
-                            {t('proposals.finish_none')}
-                        </Button>
-                        <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setFinishing(false)}>
-                            {t('proposals.cancel')}
-                        </Button>
-                    </>
-                ) : (
-                    <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setFinishing(true)}>
-                        {t('proposals.nothing_found')}
+                ) : canReject ? (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 flex-1"
+                        onClick={() => {
+                            setReason('');
+                            setNote('');
+                            setFailure(null);
+                            setRejecting(true);
+                        }}
+                    >
+                        {t('proposals.reject_title')}
                     </Button>
-                )}
+                ) : null}
             </div>
         </Workspace>
     );

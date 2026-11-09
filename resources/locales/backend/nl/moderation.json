@@ -1,5 +1,13 @@
 {
     "proposals": {
+        "reject_title": "Voorstel afwijzen",
+        "pick_duplicate": "Kies de bestaande community-parkeerplaats op de kaart of in de lijst",
+        "decision_note": "Opmerking bij het besluit (optioneel)",
+        "partial_reason_one": "Ontbrekend vak? Kies een reden",
+        "partial_reason_other": "Ontbrekende vakken? Kies een reden",
+        "complete_with_one": "Afronden met {{count}} vak",
+        "complete_with_other": "Afronden met {{count}} vakken",
+        "resume_later": "Later verder",
         "added": "Toegevoegd",
         "added_count_one": "{{count}} parkeervak toegevoegd en gepubliceerd.",
         "added_count_other": "{{count}} parkeervakken toegevoegd en gepubliceerd.",
@@ -109,6 +117,7 @@
         "municipality": "Gemeente"
     },
     "types": {
+        "proposal": "Locatievoorstel",
         "submission": "Nieuw",
         "improvement": "Verbetering",
         "report": "Verdwenen"
@@ -148,6 +157,7 @@
         "reporters_other": "{{count}} melders"
     },
     "decisions": {
+        "completed": "Afgerond",
         "approved": "Goedgekeurd",
         "approved_corrected": "Goedgekeurd, aangepast",
         "rejected": "Afgewezen",
@@ -186,6 +196,17 @@
         "label": "Selectie"
     },
     "history": {
+        "proposal_added_one": "{{count}} vak toegevoegd",
+        "proposal_added_other": "{{count}} vakken toegevoegd",
+        "proposal_partial": "{{count}} van {{reported}} vakken toegevoegd",
+        "proposal_source": "Uit {{source}}",
+        "proposal_source_reported_one": "Uit {{source}}, {{count}} gemeld vak in de lokale bron",
+        "proposal_source_reported_other": "Uit {{source}}, {{count}} gemelde vakken in de lokale bron",
+        "proposal_bays": "Toegevoegd, meteen goedgekeurd en geverifieerd",
+        "proposal_duplicate": "Bestaande community-parkeerplaats op de kaart",
+        "proposal_reopen": "Voorstel heropenen",
+        "proposal_minutes_one": "{{count}} minuut",
+        "proposal_minutes_other": "{{count}} minuten",
         "submitted_was": "Ingediend was {{value}}",
         "decided": "Besloten door {{reviewer}} {{ago}}.",
         "reports_one": "Na {{count}} melding.",
