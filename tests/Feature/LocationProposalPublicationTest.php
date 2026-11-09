@@ -320,9 +320,13 @@ it('rejects a proposal with an attributable decision and requires a public space
     $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->has('locationProposals', 0));
     $this->get(route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']))->assertInertia(fn (Assert $page) => $page
         ->where('history.data.0.decision', 'rejected')
+        ->where('history.data.0.reason', __("enums/location_proposal_decision_reason.{$reason}"))
         ->where('history.data.0.latitude', 52.011)->where('history.data.0.longitude', $existing === null ? 4.36 : 4.36001)
         ->where('history.data.0.proposal.existing_url', $existing === null ? null : fn (string $url) => str_contains($url, $existing)));
-})->with(['not_a_disabled_bay', 'duplicate']);
+    if ($reason === 'reserved_for_registration') {
+        $this->assertDatabaseCount('parking_spaces', 0);
+    }
+})->with(['not_a_disabled_bay', 'duplicate', 'reserved_for_registration']);
 
 it('backfills an existing publication with its original moderator, timestamp and under-sign details', function () {
     (require database_path('migrations/2026_11_09_140619_drop_reported_bays_from_location_proposals_table.php'))->down();
