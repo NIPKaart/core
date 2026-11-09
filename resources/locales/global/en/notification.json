@@ -17,12 +17,12 @@
     },
     "actions": {
         "markRead": "Mark as read",
-        "open": "Open",
-        "viewAll": "View all",
+        "viewAll": "All notifications",
         "markAll": "Mark all as read"
     },
     "empty": {
-        "title": "No notifications yet"
+        "title": "No notifications yet",
+        "caughtUp": "You're all caught up"
     },
     "relative": {
         "today": "Today",
@@ -46,5 +46,15 @@
             "duplicate": "Duplicate",
             "other": "Other"
         }
+    },
+    "filters": {
+        "unread": "Unread",
+        "all": "All"
+    },
+    "footer": {
+        "moreUnread": "{{count}} more unread"
+    },
+    "status": {
+        "unread": "Unread"
     }
 }

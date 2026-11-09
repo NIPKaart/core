@@ -5,13 +5,15 @@ import { getNotificationLabel } from '@/utils/notifications';
 import { translateSourceValue } from '@/utils/translation';
 import { Link, router } from '@inertiajs/react';
 import { isToday, isYesterday } from 'date-fns';
-import { BellRing, Check, ChevronRight, Database, FileSearch, Inbox, MapPin, Megaphone, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
+import { BellRing, Check, CheckCheck, Database, FileSearch, Inbox, MapPin, Megaphone, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import { Fragment, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type NotificationsListProps = {
     items: NotificationItem[];
     loading?: boolean;
+    /** True when only unread notifications are listed, so an empty list means everything has been read. */
+    caughtUp?: boolean;
     onMarkOne: (id: string) => void;
     onOpen?: (id: string, url: string) => void;
 };
@@ -33,6 +35,26 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
     'dataset.import_ready_for_review': FileSearch,
     'system.announcement': Megaphone,
     default: BellRing,
+};
+
+type Tone = 'data' | 'place' | 'positive' | 'neutral';
+
+/** Colours the icon tile by what a notification is about, so a long list can be scanned by kind. */
+const TYPE_TONE: Record<string, Tone> = {
+    'community.space_submitted': 'place',
+    'community.space_restored': 'place',
+    'community.improvement_approved': 'positive',
+    'report.place_kept': 'positive',
+    'dataset.source_awaiting_approval': 'data',
+    'dataset.source_awaiting_reapproval': 'data',
+    'dataset.import_ready_for_review': 'data',
+};
+
+const TONE_CLASS: Record<Tone, string> = {
+    data: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+    place: 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300',
+    positive: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+    neutral: 'bg-muted text-foreground/70',
 };
 
 function useI18nDates() {
@@ -89,16 +111,13 @@ function groupByDay(items: NotificationItem[], labeler: (d: Date) => string) {
 
 function SkeletonRow() {
     return (
-        <div className="relative overflow-hidden rounded-xl border bg-card p-3">
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-[linear-gradient(110deg,transparent,rgba(0,0,0,.04),transparent)]" />
-            <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-md bg-muted" />
-                <div className="flex-1 space-y-2">
-                    <div className="h-3 w-2/3 rounded bg-muted" />
-                    <div className="h-3 w-1/3 rounded bg-muted" />
-                </div>
-                <div className="h-3 w-10 rounded bg-muted" />
+        <div className="grid animate-pulse grid-cols-[2.25rem_1fr_2.5rem] items-start gap-3 px-3 py-2.5">
+            <div className="size-9 rounded-[10px] bg-muted" />
+            <div className="space-y-2 pt-1">
+                <div className="h-3 w-2/3 rounded bg-muted" />
+                <div className="h-2.5 w-1/3 rounded bg-muted" />
             </div>
+            <div className="mt-1 h-2.5 rounded bg-muted" />
         </div>
     );
 }
@@ -126,6 +145,7 @@ function NotificationRow({
     const rawType = (typeof n.type === 'string' && n.type) || (typeof raw.type === 'string' && (raw.type as string)) || 'default';
 
     const Icon = TYPE_ICON[rawType] ?? TYPE_ICON.default;
+    const tone = TONE_CLASS[TYPE_TONE[rawType] ?? 'neutral'];
 
     const title = getNotificationLabel(tGlobal, rawType);
 
@@ -145,124 +165,84 @@ function NotificationRow({
     };
 
     const commonClassName = cn(
-        'group relative block rounded-xl border p-3 transition',
-        'bg-card hover:border-accent/50 hover:bg-accent/40',
-        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
+        'grid grid-cols-[2.25rem_1fr_auto] items-start gap-3 rounded-[10px] px-3 py-2.5 transition-colors',
+        'group-focus-within:bg-muted hover:bg-muted',
+        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
     );
+
+    const time = n.created_at && <LocalizedDateTime value={n.created_at}>{timeAgo(n.created_at)}</LocalizedDateTime>;
 
     const inner = (
         <>
-            <span aria-hidden className={cn('absolute top-2 left-2 h-2 w-2 rounded-full', unread ? 'bg-primary' : 'bg-transparent')} />
-            <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3">
-                <div
-                    className={cn(
-                        'mt-0.5 flex h-8 w-8 items-center justify-center rounded-md',
-                        unread ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground',
-                    )}
-                >
-                    <Icon className="h-4 w-4" />
-                </div>
+            <span aria-hidden className={cn('flex size-9 items-center justify-center rounded-[10px]', tone)}>
+                <Icon className="size-[18px]" />
+            </span>
 
-                <div className="min-w-0">
-                    <div className="flex items-start gap-2 pr-8">
-                        <span className={cn('truncate text-sm leading-5', unread && 'font-semibold')}>{title}</span>
-                    </div>
+            <span className="flex min-w-0 flex-col gap-0.5">
+                <span className={cn('text-sm leading-5', unread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80')}>{title}</span>
+                {subject && <span className="line-clamp-2 text-[13px] leading-[18px] text-muted-foreground">{subject}</span>}
+                {reason && (
+                    <span className="mt-1 self-start rounded-md bg-muted px-2 py-0.5 text-xs leading-[18px] text-foreground/80">
+                        {tGlobal('reason', { reason: translateSourceValue('global/notification', `reasons.${reason}`) })}
+                    </span>
+                )}
+                {time && <span className="mt-0.5 text-xs text-muted-foreground sm:hidden">{time}</span>}
+            </span>
 
-                    {n.created_at && (
-                        <div className="mt-0.5 text-[11px] text-muted-foreground sm:hidden">
-                            <LocalizedDateTime value={n.created_at}>{timeAgo(n.created_at)}</LocalizedDateTime>
-                        </div>
-                    )}
-
-                    {subject && <div className="line-clamp-2 text-xs leading-4 text-muted-foreground">{subject}</div>}
-                    {reason && (
-                        <div className="text-xs leading-4 text-muted-foreground">
-                            {tGlobal('reason', { reason: translateSourceValue('global/notification', `reasons.${reason}`) })}
-                        </div>
-                    )}
-
-                    <div className="mt-2 hidden items-center gap-2 text-xs text-muted-foreground group-hover:flex sm:mt-1">
-                        {unread && (
-                            <button
-                                type="button"
-                                className="cursor-pointer rounded-md border bg-background px-2 py-1 hover:bg-muted"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    onMarkOne(n.id);
-                                }}
-                            >
-                                <span className="inline-flex items-center gap-1">
-                                    <Check className="h-3.5 w-3.5" />
-                                    {tGlobal('actions.markRead')}
-                                </span>
-                            </button>
-                        )}
-                        {url && (
-                            <button
-                                type="button"
-                                className="inline-flex cursor-pointer items-center gap-1 rounded-md border bg-background px-2 py-1 hover:bg-muted"
-                                onClick={(e) => handleOpen(e, url)}
-                            >
-                                {tGlobal('actions.open')}
-                                <ChevronRight className="h-3.5 w-3.5" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-0.5 flex items-center">
-                    {n.created_at && (
-                        <span className="hidden text-[11px] text-muted-foreground sm:inline">
-                            <LocalizedDateTime value={n.created_at}>{timeAgo(n.created_at)}</LocalizedDateTime>
-                        </span>
-                    )}
-                    {unread && (
-                        <button
-                            type="button"
-                            className="ml-1 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground sm:hidden"
-                            aria-label={tGlobal('actions.markRead')}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onMarkOne(n.id);
-                            }}
-                        >
-                            <Check className="h-3.5 w-3.5" />
-                        </button>
-                    )}
-                </div>
-            </div>
+            <span
+                className={cn(
+                    'flex items-center gap-2 pt-0.5',
+                    unread && 'max-sm:invisible sm:group-hover:invisible sm:group-has-[button:focus-visible]:invisible',
+                )}
+            >
+                {time && <span className="hidden text-xs leading-4 text-muted-foreground sm:inline">{time}</span>}
+                {unread && <span className="size-2 rounded-full bg-orange-600 dark:bg-orange-500" />}
+                {unread && <span className="sr-only">{tGlobal('status.unread')}</span>}
+            </span>
         </>
     );
 
-    return url ? (
-        <Link href={url} onClick={(e) => handleOpen(e, url)} className={commonClassName}>
-            {inner}
-        </Link>
-    ) : (
-        <div onClick={handleDivClick} className={commonClassName}>
-            {inner}
-        </div>
+    return (
+        <li className="group relative">
+            {url ? (
+                <Link href={url} onClick={(e) => handleOpen(e, url)} className={commonClassName}>
+                    {inner}
+                </Link>
+            ) : (
+                <div onClick={handleDivClick} className={commonClassName}>
+                    {inner}
+                </div>
+            )}
+            {unread && (
+                <button
+                    type="button"
+                    className={cn(
+                        'absolute top-2.5 right-3 flex size-9 cursor-pointer items-center justify-center rounded-lg border bg-background text-foreground/80 hover:bg-muted hover:text-foreground sm:size-8',
+                        'sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100',
+                        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                    )}
+                    aria-label={tGlobal('actions.markRead')}
+                    title={tGlobal('actions.markRead')}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onMarkOne(n.id);
+                    }}
+                >
+                    <Check className="size-4" />
+                </button>
+            )}
+        </li>
     );
 }
 
-export function NotificationsList({ items, loading = false, onMarkOne, onOpen }: NotificationsListProps) {
+export function NotificationsList({ items, loading = false, caughtUp = false, onMarkOne, onOpen }: NotificationsListProps) {
     const { t, relDayLabel } = useI18nDates();
     const groups = useMemo(() => groupByDay(items, (d) => relDayLabel(d)), [items, relDayLabel]);
 
-    const EmptyState = (
-        <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center text-sm text-muted-foreground">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-card">
-                <Inbox className="h-5 w-5" />
-            </div>
-            <div className="text-base font-medium text-foreground">{t('empty.title')}</div>
-        </div>
-    );
-
     if (loading) {
         return (
-            <div className="space-y-2 p-3">
+            <div className="p-2" aria-busy="true">
                 <SkeletonRow />
                 <SkeletonRow />
                 <SkeletonRow />
@@ -271,20 +251,31 @@ export function NotificationsList({ items, loading = false, onMarkOne, onOpen }:
     }
 
     if (items.length === 0) {
-        return <div className="max-h-[70vh] overflow-auto">{EmptyState}</div>;
+        return (
+            <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+                <span
+                    aria-hidden
+                    className={cn(
+                        'flex size-12 items-center justify-center rounded-full',
+                        caughtUp ? TONE_CLASS.positive : 'bg-muted text-muted-foreground',
+                    )}
+                >
+                    {caughtUp ? <CheckCheck className="size-5" /> : <Inbox className="size-5" />}
+                </span>
+                <p className="text-[15px] font-semibold">{t(caughtUp ? 'empty.caughtUp' : 'empty.title')}</p>
+            </div>
+        );
     }
 
     return (
         <div className="max-h-[70vh] overflow-auto">
-            <div className="space-y-4 p-3">
+            <div className="px-2 pt-1 pb-2">
                 {Object.entries(groups).map(([label, arr]) => (
                     <Fragment key={label}>
-                        <div className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{label}</div>
-                        <ul className="space-y-2">
+                        <h3 className="px-3 pt-3 pb-1 text-xs leading-4 font-medium text-muted-foreground">{label}</h3>
+                        <ul>
                             {arr.map((n) => (
-                                <li key={n.id}>
-                                    <NotificationRow n={n} onMarkOne={onMarkOne} onOpen={onOpen} />
-                                </li>
+                                <NotificationRow key={n.id} n={n} onMarkOne={onMarkOne} onOpen={onOpen} />
                             ))}
                         </ul>
                     </Fragment>

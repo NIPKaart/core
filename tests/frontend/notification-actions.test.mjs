@@ -30,7 +30,8 @@ function mount() {
             useMemo: (fn) => fn(),
         },
         'react/jsx-runtime': { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) },
-        'react-i18next': { useTranslation: () => ({ t: (key) => key }) },
+        'react-i18next': { useTranslation: () => ({ t: (key, options) => (options?.count === undefined ? key : `${key}: ${options.count}`) }) },
+        '@/lib/utils': { cn: (...classes) => classes.filter(Boolean).join(' ') },
         '@/hooks/use-media-query': { useMediaQuery: () => true },
         '@/routes/notifications': {
             default: { index: () => '/notifications', readAll: () => '/notifications/read/all', read: (id) => `/notifications/${id}/read` },
@@ -47,7 +48,14 @@ function mount() {
             if (found) return found;
         }
     }
-    return { calls, props, button: find(tree, (n) => n.props?.onClick), list: find(tree, (n) => n.props?.onMarkOne) };
+    const text = (node) =>
+        typeof node === 'string'
+            ? node
+            : [node?.props?.children]
+                  .flat()
+                  .map((child) => (child && typeof child === 'object' ? text(child) : (child ?? '')))
+                  .join('');
+    return { calls, props, button: find(tree, (n) => n.props?.onClick), list: find(tree, (n) => n.props?.onMarkOne), text: text(tree) };
 }
 
 test('marking all read updates the counter and list optimistically with one silent partial visit', () => {
@@ -85,6 +93,17 @@ test('opening a notification visits its destination after saving the read state'
     assert.equal(calls.length, 1);
     calls[0][2].onSuccess();
     assert.deepEqual(calls[1], ['visit', '/destination']);
+});
+
+test('the dropdown opens on unread notifications and counts the unread ones it cannot show', () => {
+    const { list, text } = mount();
+    assert.deepEqual(
+        list.props.items.map((n) => n.id),
+        ['a', 'b'],
+    );
+    assert.equal(list.props.caughtUp, true);
+    assert.match(text, /filters\.unread8/);
+    assert.match(text, /footer\.moreUnread: 6/);
 });
 
 function renderModule(path, modules) {

@@ -17,12 +17,12 @@
     },
     "actions": {
         "markRead": "Markeren als gelezen",
-        "open": "Openen",
-        "viewAll": "Alles bekijken",
+        "viewAll": "Alle meldingen",
         "markAll": "Alles markeren als gelezen"
     },
     "empty": {
-        "title": "Nog geen meldingen"
+        "title": "Nog geen meldingen",
+        "caughtUp": "Je bent helemaal bij"
     },
     "relative": {
         "today": "Vandaag",
@@ -46,5 +46,15 @@
             "duplicate": "Dubbel",
             "other": "Anders"
         }
+    },
+    "filters": {
+        "unread": "Ongelezen",
+        "all": "Alles"
+    },
+    "footer": {
+        "moreUnread": "Nog {{count}} ongelezen"
+    },
+    "status": {
+        "unread": "Ongelezen"
     }
 }

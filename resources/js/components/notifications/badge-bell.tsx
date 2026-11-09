@@ -1,11 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
 import notifications from '@/routes/notifications';
 import type { NotificationItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Check } from 'lucide-react';
+import { Bell, CheckCheck, ChevronRight } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NotificationsList } from './list-notifications';
@@ -36,7 +37,12 @@ export default function BellBadge() {
         }
     };
 
-    const quickItems = useMemo(() => recentFromProps.filter((n) => !n.read_at).slice(0, 12), [recentFromProps]);
+    const [showAll, setShowAll] = useState(false);
+    const quickItems = useMemo(
+        () => (showAll ? recentFromProps : recentFromProps.filter((n) => !n.read_at)).slice(0, 12),
+        [recentFromProps, showAll],
+    );
+    const unreadNotShown = Math.max(0, unread - recentFromProps.filter((n) => !n.read_at).length);
 
     const markRead = (id?: string, url?: string) => {
         router.get(
@@ -72,6 +78,75 @@ export default function BellBadge() {
     const markOne = (id: string) => markRead(id);
     const markAndOpen = (id: string, url: string) => markRead(id, url);
 
+    const badge = unread > 0 && (
+        <span className="absolute top-0.5 right-0 min-w-[18px] rounded-full border-2 border-background bg-orange-700 px-[5px] text-center text-[10px] leading-[14px] font-semibold text-white">
+            {unread > 99 ? '99+' : unread}
+        </span>
+    );
+
+    const filters = (
+        <div className="flex gap-1">
+            {[
+                { all: false, label: t('filters.unread'), count: unread },
+                { all: true, label: t('filters.all'), count: 0 },
+            ].map((filter) => (
+                <button
+                    key={filter.label}
+                    type="button"
+                    aria-pressed={showAll === filter.all}
+                    onClick={() => setShowAll(filter.all)}
+                    className={cn(
+                        'flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors',
+                        'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                        showAll === filter.all ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted hover:text-foreground',
+                    )}
+                >
+                    {filter.label}
+                    {filter.count > 0 && (
+                        <span
+                            className={cn(
+                                'rounded-full px-1.5 text-[11px] leading-[18px]',
+                                showAll === filter.all ? 'bg-primary-foreground/20' : 'bg-muted',
+                            )}
+                        >
+                            {filter.count > 99 ? '99+' : filter.count}
+                        </span>
+                    )}
+                </button>
+            ))}
+        </div>
+    );
+
+    const markAllButton = (
+        <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 cursor-pointer px-2.5 text-[13px] text-foreground/80"
+            onClick={markAll}
+            disabled={unread === 0}
+        >
+            <CheckCheck className="size-4" />
+            {t('actions.markAll')}
+        </Button>
+    );
+
+    const list = <NotificationsList items={quickItems} loading={loading} caughtUp={!showAll} onMarkOne={markOne} onOpen={markAndOpen} />;
+
+    const footer = (
+        <div className="flex items-center justify-between gap-3 border-t bg-muted/40 py-2.5 pr-3 pl-5">
+            <span className="text-xs text-muted-foreground">
+                {!showAll && unreadNotShown > 0 && t('footer.moreUnread', { count: unreadNotShown })}
+            </span>
+            <Link
+                href={notifications.index()}
+                className="flex h-9 items-center gap-1 rounded-lg px-2 text-[13px] font-semibold hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+                {t('actions.viewAll')}
+                <ChevronRight className="size-4" />
+            </Link>
+        </div>
+    );
+
     if (isDesktop) {
         return (
             <DropdownMenu
@@ -80,38 +155,29 @@ export default function BellBadge() {
                 }}
             >
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label={t('header.title')} className="relative cursor-pointer rounded-full">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t('header.title')}
+                        className="relative cursor-pointer rounded-full data-[state=open]:bg-muted"
+                    >
                         <Bell className="h-5 w-5" />
-                        {unread > 0 && (
-                            <span className="absolute top-[3px] right-[3px] min-w-[16px] rounded-full border border-background bg-primary px-1 text-center text-[9px] leading-[14px] font-semibold text-primary-foreground">
-                                {unread > 99 ? '99+' : unread}
-                            </span>
-                        )}
+                        {badge}
                     </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="z-50 w-[min(92vw,30rem)] rounded-xl border bg-background p-0 shadow-sm sm:w-[30rem]"
+                    className="z-50 w-[min(92vw,30rem)] overflow-hidden rounded-[14px] border bg-background p-0 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.18),0_2px_6px_rgba(0,0,0,0.04)] sm:w-[30rem]"
                 >
-                    <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center justify-between pt-3.5 pr-4 pb-2.5 pl-5">
                         <DropdownMenuLabel className="p-0 text-base font-semibold">{t('header.title')}</DropdownMenuLabel>
-                        <Button variant="ghost" size="sm" className="h-7 cursor-pointer px-2 text-xs" onClick={markAll} disabled={unread === 0}>
-                            <Check className="mr-1 h-3.5 w-3.5" />
-                            {t('actions.markAll')}
-                        </Button>
+                        {markAllButton}
                     </div>
-                    <DropdownMenuSeparator />
-                    <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
-                    <DropdownMenuSeparator />
-                    <div className="px-4 py-3">
-                        <Link href={notifications.index()} className="block">
-                            <Button variant="secondary" className="w-full cursor-pointer">
-                                {t('actions.viewAll')}
-                            </Button>
-                        </Link>
-                    </div>
+                    <div className="border-b px-4 pb-3">{filters}</div>
+                    {list}
+                    {footer}
                 </DropdownMenuContent>
             </DropdownMenu>
         );
@@ -131,36 +197,23 @@ export default function BellBadge() {
                 }}
             >
                 <Bell className="h-5 w-5" />
-                {unread > 0 && (
-                    <span className="absolute top-[3px] right-[3px] min-w-[16px] rounded-full border border-background bg-primary px-1 text-center text-[9px] leading-[14px] font-semibold text-primary-foreground">
-                        {unread > 99 ? '99+' : unread}
-                    </span>
-                )}
+                {badge}
             </Button>
 
             <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
                 <DrawerContent className="p-0">
-                    <DrawerHeader className="flex items-center justify-between border-b px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2 text-center">
-                            <Bell className="h-6 w-6" />
+                    <DrawerHeader className="gap-3 border-b px-4 pt-3 pb-3 text-left">
+                        <div className="flex items-center justify-between gap-2">
                             <DrawerTitle className="text-lg font-semibold">{t('header.title')}</DrawerTitle>
+                            {markAllButton}
                         </div>
-                        <DrawerDescription className="mt-1 mb-0 text-center text-sm text-muted-foreground">{t('header.subtitle')}</DrawerDescription>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={markAll} disabled={unread === 0}>
-                            <Check className="mr-1 h-3.5 w-3.5" />
-                            {t('actions.markAll')}
-                        </Button>
+                        <DrawerDescription className="sr-only">{t('header.subtitle')}</DrawerDescription>
+                        {filters}
                     </DrawerHeader>
 
-                    <NotificationsList items={quickItems} loading={loading} onMarkOne={markOne} onOpen={markAndOpen} />
+                    {list}
 
-                    <DrawerFooter className="border-t px-4 py-3">
-                        <Link href={notifications.index()} className="block w-full">
-                            <Button variant="secondary" className="w-full">
-                                {t('actions.viewAll')}
-                            </Button>
-                        </Link>
-                    </DrawerFooter>
+                    <DrawerFooter className="p-0">{footer}</DrawerFooter>
                 </DrawerContent>
             </Drawer>
         </>
