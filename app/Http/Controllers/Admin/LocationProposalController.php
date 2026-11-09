@@ -91,7 +91,7 @@ class LocationProposalController extends Controller
             $closedView => $this->queue->closedDuplicates($municipality)->paginate(50)->withQueryString(),
             default => $this->queue->municipalityProposals($municipality)->paginate(50)->withQueryString(),
         };
-        $rows = $page === null ? null : ($closedView ? $this->queue->closedRows($page->getCollection()) : $this->queue->rows($page->getCollection()));
+        $rows = $page === null ? null : ($closedView ? $this->queue->closedRows($page->getCollection()) : $this->queue->rows($page->getCollection(), withCandidates: $selected === null));
 
         return Inertia::render('backend/moderation/proposals', [
             'proposals' => $page?->setCollection($rows),
@@ -103,6 +103,7 @@ class LocationProposalController extends Controller
                 : $this->queue->nextInMunicipality($municipality, $selected['id']) !== null),
             'view' => $closedView ? 'closed' : 'open',
             'onMapCount' => $municipality === null || $closedView ? 0 : $this->queue->onMapCount($municipality),
+            'failedMatches' => array_map('intval', (array) $request->session()->get('proposal_matches_failed', [])),
             'recentlyClosed' => array_map('intval', (array) $request->session()->get('proposal_duplicates_closed', [])),
             'imagery' => $municipality === null || $selected !== null ? [] : $imagery->forCountry(Municipality::with('country')->find($municipality)?->country?->code),
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
@@ -293,29 +294,43 @@ class LocationProposalController extends Controller
             : to_route('app.moderation.proposals.index', $request->only(['municipality', 'page']));
     }
 
-    /**
-     * Close open proposals in one go when parking is already on the map within 3 m of one of their points. A
-     * proposal that has no such parking any more, or was decided meanwhile, is left as it is.
-     */
     public function closeDuplicates(Request $request): RedirectResponse
     {
         $this->authorizeModeration();
         $data = $request->validate([
-            'proposals' => ['required', 'array', 'min:1', 'max:'.self::BULK_LIMIT],
-            'proposals.*' => ['integer', 'min:1', 'distinct'],
+            'matches' => ['required', 'array', 'list', 'min:1', 'max:'.self::BULK_LIMIT],
+            'matches.*' => ['required', 'array:proposal,point,revision,source,parking_id'],
+            'matches.*.proposal' => ['required', 'integer', 'min:1', 'distinct'],
+            'matches.*.point' => ['required', 'integer', 'min:1'],
+            'matches.*.revision' => ['required', 'integer', 'min:0'],
+            'matches.*.source' => ['required', 'in:community,municipal'],
+            'matches.*.parking_id' => ['required', 'string', 'max:255'],
             'municipality' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $closed = DB::transaction(function () use ($request, $data): array {
-            $ids = array_map('intval', $data['proposals']);
+        $matches = collect($data['matches'])->keyBy('proposal');
+        $closed = DB::transaction(function () use ($request, $matches, $data): array {
+            $ids = $matches->keys()->all();
             $this->lockSources($ids);
             $records = DB::table('location_proposals')->whereIn('id', $ids)->orderBy('id')->lockForUpdate()->get();
             $closed = [];
             foreach ($records as $record) {
-                if ($record->closed_at !== null || $record->bays_published_at !== null) {
+                $match = $matches->get($record->id);
+                if ($record->closed_at !== null || $record->bays_published_at !== null
+                    || $record->decision_revision !== (int) $match['revision']
+                    || (isset($data['municipality']) && $record->municipality_id !== (int) $data['municipality'])) {
                     continue;
                 }
-                [$point, $existing] = $this->closestOnMap($this->proposalPoints($record->id));
+                $points = $this->proposalPoints($record->id);
+                $point = $points->first();
+                if ($points->count() !== 1 || $point->id !== (int) $match['point']) {
+                    continue;
+                }
+                if ($match['source'] === 'community' && ! Str::isUuid($match['parking_id'])) {
+                    continue;
+                }
+                $existing = ($match['source'] === 'municipal' ? $this->nearbyMunicipal($point) : $this->nearbyCommunity($point))
+                    ->whereKey($match['parking_id'])->lockForUpdate()->first();
                 if ($existing === null) {
                     continue;
                 }
@@ -324,10 +339,10 @@ class LocationProposalController extends Controller
             }
 
             return $closed;
-        });
+        }, 3);
 
         $request->session()->flash('proposal_duplicates_closed', $closed);
-        Inertia::flash('success', trans_choice('parking_spaces.proposal.duplicates_closed', count($closed), ['count' => count($closed)]));
+        $request->session()->flash('proposal_matches_failed', array_values(array_diff($matches->keys()->all(), $closed)));
 
         return to_route('app.moderation.proposals.index', $request->only(['municipality']));
     }
@@ -367,27 +382,6 @@ class LocationProposalController extends Controller
         return to_route('app.moderation.proposals.index', $request->only(['municipality']));
     }
 
-    /**
-     * The visible municipal or approved community parking space nearest to any of the points, within 3 m.
-     *
-     * @param  Collection<int, object>  $points
-     * @return array{0: ?object, 1: ParkingSpace|ParkingMunicipal|null}
-     */
-    private function closestOnMap(Collection $points): array
-    {
-        $best = [null, null];
-        foreach ($points as $point) {
-            foreach ([$this->nearbyMunicipal($point), $this->nearbyCommunity($point)] as $query) {
-                $place = $query->withinRadius(new GeoPoint($point->latitude, $point->longitude), LocationProposalQueue::OVERLAP_RADIUS_METRES)->first();
-                if ($place !== null && ($best[1] === null || (float) $place->distance_metres < (float) $best[1]->distance_metres)) {
-                    $best = [$point, $place];
-                }
-            }
-        }
-
-        return $best;
-    }
-
     public function reopen(Request $request, int $proposal): RedirectResponse
     {
         $this->authorizeModeration();
@@ -420,7 +414,7 @@ class LocationProposalController extends Controller
     {
         $location = new GeoPoint($point->latitude, $point->longitude);
 
-        return ParkingSpace::query()->select('id', 'street', 'latitude', 'longitude')->where('status', ParkingStatus::APPROVED)->withinRadius($location, 250)->nearestTo($location);
+        return ParkingSpace::query()->select('id', 'street', 'latitude', 'longitude')->where('status', ParkingStatus::APPROVED)->withinRadius($location, LocationProposalQueue::NEARBY_COMMUNITY_METRES)->nearestTo($location);
     }
 
     private function nearbyMunicipal(object $point): Builder

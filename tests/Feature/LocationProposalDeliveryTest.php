@@ -171,6 +171,9 @@ it('lists proposals with parking within 3 m first, across both sources, and keep
         ->where('proposals.data.0.points.0.overlap.source', 'municipal')
         ->where('proposals.data.0.points.0.overlap.street', 'Markt')
         ->where('proposals.data.0.points.0.overlap.distance_metres', 1.4)
+        ->where('proposals.data.0.points.0.candidates.0.street', 'Markt')
+        ->where('proposals.data.0.points.0.candidates.1.source', 'community')
+        ->where('proposals.data.0.points.0.candidates.1.distance_metres', 72.1)
         ->where('proposals.data.1.id', $third)
         ->where('proposals.data.1.points.0.overlap.source', 'community')
         ->where('proposals.data.2.id', $second)
@@ -198,7 +201,9 @@ it('keeps a proposal closed as a duplicate when the same NDW point is updated, a
 
     $this->actingAs($moderator)->get(route('app.moderation.proposals.index', ['proposal' => $proposal]))
         ->assertInertia(fn (Assert $page) => $page->where("selected.{$target}.0.possible_duplicate", true));
-    $this->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$proposal]])->assertRedirect();
+    $this->post(route('app.moderation.proposals.duplicates.close'), ['matches' => [[
+        'proposal' => $proposal, 'point' => $proposal, 'revision' => 0, 'source' => $target, 'parking_id' => $existing->id,
+    ]]])->assertRedirect();
     $this->assertDatabaseHas('location_proposal_decisions', ['location_proposal_id' => $proposal, 'reason' => 'duplicate', $field => $existing->id]);
 
     $point['source_last_seen_on'] = '2026-11-02';

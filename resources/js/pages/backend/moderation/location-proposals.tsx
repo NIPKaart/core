@@ -79,9 +79,17 @@ export type LocationProposal = {
 
 export type ProposalRow = {
     id: number;
+    revision: number;
     municipality: string;
     status: 'open' | 'added';
-    points: (MapPoint & { id: number; proposal_id: number; source: string; source_last_seen_on: string | null; overlap?: ProposalOverlap })[];
+    points: (MapPoint & {
+        id: number;
+        proposal_id: number;
+        source: string;
+        source_last_seen_on: string | null;
+        overlap?: ProposalOverlap;
+        candidates?: ProposalOverlap[];
+    })[];
 };
 
 export function toLocationProposal(row: ProposalRow): LocationProposal {

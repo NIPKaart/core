@@ -9,10 +9,11 @@ import { Head, Link, router } from '@inertiajs/react';
 import { ArrowRight, CircleCheck, Undo2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DuplicateWalk, walkTarget, type Walk, type WalkAnswer } from './duplicate-walk';
+import { candidatePins, chosenPin, DuplicateWalk, pinKey, walkTarget, type ConfirmedMatch, type Walk, type WalkAnswer } from './duplicate-walk';
 import type { MapPoint } from './geo';
 import type { PublishedBay } from './location-proposal-draft';
 import {
+    EXISTING_COLOR,
     ExistingLine,
     LocationProposalReview,
     LocationProposals,
@@ -44,6 +45,7 @@ type Props = {
     onMapCount: number;
     /** Proposals just closed as already on the map, so the moderator can undo it. */
     recentlyClosed: number[];
+    failedMatches: number[];
     bayOptions: {
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
@@ -94,6 +96,7 @@ export default function Proposals({
     view,
     onMapCount,
     recentlyClosed,
+    failedMatches,
 }: Props) {
     const { t } = useTranslation('backend/moderation');
     const routes = app.moderation.proposals;
@@ -106,26 +109,40 @@ export default function Proposals({
     const onMapRows = view === 'open' ? (proposals?.data ?? []).filter((row) => row.points.some((point) => point.overlap)) : [];
     const todoRows = view === 'open' ? (proposals?.data ?? []).filter((row) => !onMapRows.includes(row)) : [];
     const closedRows = view === 'closed' ? ((proposals?.data ?? []) as ClosedRow[]) : [];
-    const walking = walk !== null && onMapRows.length > 0;
-    const walkRow = walking ? (onMapRows[walk.index] ?? null) : null;
+    const bulkRows = onMapRows.filter((row) => row.points.length === 1);
+    const walking = walk !== null && bulkRows.length > 0;
+    const walkRow = walking ? (bulkRows[walk.index] ?? null) : null;
     const walkPoint = walkRow ? walkTarget(walkRow) : null;
     const existing = existingOnMap(onMapRows);
+    const walkPin = walkRow && walk ? chosenPin(walkRow, walk) : undefined;
+    const walkCandidates = candidatePins(walkPoint);
+    const walkCenter =
+        walkPoint && walkPin
+            ? {
+                  latitude: (walkPoint.point.latitude + walkPin.latitude) / 2,
+                  longitude: (walkPoint.point.longitude + walkPin.longitude) / 2,
+              }
+            : walkPoint?.point;
+    const walkDistance = walkPin?.distance_metres ?? 0;
+    const walkZoom = walkDistance > 120 ? 16 : walkDistance > 40 ? 17 : WALK_ZOOM;
+    const choosePin = (row: ProposalRow, pin: ProposalOverlap) =>
+        setWalk((current) => current && { ...current, choices: { ...current.choices, [row.id]: pin } });
     const walkTo = (index: number) => setWalk((current) => current && { ...current, index });
     const duplicateLabel = bayOptions.rejectionReasons.find((option) => option.value === 'duplicate')?.label;
 
-    const closeConfirmed = (ids: number[]) => {
-        if (ids.length === 0 || closing) return;
+    const closeConfirmed = (matches: ConfirmedMatch[]) => {
+        if (matches.length === 0 || closing) return;
         setClosing(true);
         router.post(
             routes.duplicates.close.url(),
-            { proposals: ids, municipality },
+            { matches, municipality },
             { preserveScroll: true, onSuccess: () => setWalk(null), onFinish: () => setClosing(false) },
         );
     };
     const undo = () => router.post(routes.duplicates.reopen.url(), { proposals: recentlyClosed, municipality }, { preserveScroll: true });
     const answer = useCallback(
         (row: ProposalRow, value: WalkAnswer) =>
-            setWalk((current) => current && { index: current.index + 1, answers: { ...current.answers, [row.id]: value } }),
+            setWalk((current) => current && { ...current, index: current.index + 1, answers: { ...current.answers, [row.id]: value } }),
         [],
     );
     const overview = routes.index({ query: { overview: 1 } });
@@ -134,6 +151,7 @@ export default function Proposals({
         ? toLocationProposal({
               id: selected.id,
               municipality: selected.municipality,
+              revision: selected.revision,
               status: selected.published ? 'added' : 'open',
               points: selected.points,
           })
@@ -193,26 +211,35 @@ export default function Proposals({
                         label={t(walking ? 'proposals.walk_label' : 'proposals.title')}
                         streetView={walkPoint?.point}
                         map={{
-                            center: walkPoint?.point ?? rows[0]?.points[0] ?? municipalityPins[0]?.point ?? { latitude: 52.2, longitude: 5.3 },
-                            zoom: walkPoint ? WALK_ZOOM : municipality === null ? 7 : 12,
-                            nearby: existing.nearby,
-                            municipal: existing.municipal,
+                            center: walkCenter ?? rows[0]?.points[0] ?? municipalityPins[0]?.point ?? { latitude: 52.2, longitude: 5.3 },
+                            zoom: walkPoint ? walkZoom : municipality === null ? 7 : 12,
+                            nearby: walking ? [] : existing.nearby,
+                            municipal: walking ? [] : existing.municipal,
                             fitQueue: !walkPoint,
-                            highlighted: walkPoint ? String(walkPoint.point.id) : undefined,
+                            highlighted: walkPin ? pinKey(walkPin) : undefined,
                             queue:
                                 municipality === null
                                     ? municipalityPins
                                     : walking
-                                      ? onMapRows.flatMap((row) => {
-                                            const state = (walk.answers[row.id] as WalkAnswer | undefined) ?? 'open';
-                                            return row.points.map((point) => ({
-                                                key: String(point.id),
-                                                point,
-                                                color: WALK_COLOR[state],
-                                                label: toLocationProposal(row).street,
-                                                legendLabel: state === 'open' ? t('map.source_point') : t(`proposals.walk_status_${state}`),
-                                            }));
-                                        })
+                                      ? [
+                                            ...bulkRows.flatMap((row) => {
+                                                const state = (walk.answers[row.id] as WalkAnswer | undefined) ?? 'open';
+                                                return row.points.map((point) => ({
+                                                    key: String(point.id),
+                                                    point,
+                                                    color: WALK_COLOR[state],
+                                                    label: toLocationProposal(row).street,
+                                                    legendLabel: state === 'open' ? t('map.source_point') : t(`proposals.walk_status_${state}`),
+                                                }));
+                                            }),
+                                            ...walkCandidates.map((pin) => ({
+                                                key: pinKey(pin),
+                                                point: pin,
+                                                color: EXISTING_COLOR[pin.source],
+                                                label: pin.street ?? t('proposals.unknown_street'),
+                                                legendLabel: t(`proposals.${pin.source}`),
+                                            })),
+                                        ]
                                       : rows.flatMap((item) =>
                                             item.points.map((point) => ({
                                                 key: String(point.id),
@@ -224,7 +251,13 @@ export default function Proposals({
                                         ),
                             onPick: (key) => {
                                 if (walking) {
-                                    const index = onMapRows.findIndex((row) => row.points.some((point) => String(point.id) === key));
+                                    if (closing) return;
+                                    const pin = walkCandidates.find((candidate) => pinKey(candidate) === key);
+                                    if (pin && walkRow) {
+                                        choosePin(walkRow, pin);
+                                        return;
+                                    }
+                                    const index = bulkRows.findIndex((row) => row.points.some((point) => String(point.id) === key));
                                     if (index >= 0) walkTo(index);
                                     return;
                                 }
@@ -239,14 +272,29 @@ export default function Proposals({
                     >
                         {walking ? (
                             <DuplicateWalk
-                                rows={onMapRows}
+                                rows={bulkRows}
                                 walk={walk}
                                 reasonLabel={duplicateLabel}
                                 closing={closing}
                                 onAnswer={answer}
+                                onChoose={choosePin}
+                                onToggle={(row, checked) =>
+                                    setWalk(
+                                        (current) => current && { ...current, answers: { ...current.answers, [row.id]: checked ? 'ok' : 'missing' } },
+                                    )
+                                }
+                                onToggleAll={(checked) =>
+                                    setWalk(
+                                        (current) =>
+                                            current && {
+                                                ...current,
+                                                answers: checked ? Object.fromEntries(bulkRows.map((row) => [row.id, 'ok' as const])) : {},
+                                            },
+                                    )
+                                }
                                 onPrevious={() => walkTo(Math.max(0, walk.index - 1))}
                                 onJump={walkTo}
-                                onRestart={() => setWalk({ index: 0, answers: {} })}
+                                onRestart={() => setWalk({ index: 0, answers: {}, choices: {} })}
                                 onStop={() => setWalk(null)}
                                 onClose={closeConfirmed}
                             />
@@ -303,6 +351,11 @@ export default function Proposals({
                                                     ))}
                                                 </nav>
                                             </div>
+                                            {view === 'open' && failedMatches.length > 0 && (
+                                                <p role="status" className="mx-5 my-2 rounded-xl bg-muted px-3 py-2 text-sm">
+                                                    {t('proposals.bulk_failed', { signs: failedMatches.map((id) => `#${id}`).join(', ') })}
+                                                </p>
+                                            )}
                                             {view === 'open' && recentlyClosed.length > 0 && (
                                                 <div
                                                     role="status"
@@ -376,13 +429,15 @@ export default function Proposals({
                                                             total={onMapCount}
                                                             proposals={onMapRows.map(toLocationProposal)}
                                                             action={
-                                                                <Button
-                                                                    variant="outline"
-                                                                    className="h-10 w-full"
-                                                                    onClick={() => setWalk({ index: 0, answers: {} })}
-                                                                >
-                                                                    {t('proposals.walk_start')}
-                                                                </Button>
+                                                                bulkRows.length > 0 && (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="h-10 w-full"
+                                                                        onClick={() => setWalk({ index: 0, answers: {}, choices: {} })}
+                                                                    >
+                                                                        {t('proposals.walk_start')}
+                                                                    </Button>
+                                                                )
                                                             }
                                                             onOpen={({ proposal, point }) =>
                                                                 router.visit(

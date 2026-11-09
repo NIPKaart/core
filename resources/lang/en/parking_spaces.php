@@ -6,7 +6,6 @@ return [
         'rejected' => 'Location proposal rejected.',
         'reopened' => 'Location proposal reopened.',
         'existing_required' => 'Select an existing parking space on the map.',
-        'duplicates_closed' => '{0} Nothing closed; these proposals were already decided or have no parking space within 3 metres.|{1} :count proposal closed.|[2,*] :count proposals closed.',
         'duplicates_reopened' => '{0} Nothing reopened.|{1} :count proposal reopened.|[2,*] :count proposals reopened.',
         'duplicate' => 'Place each bay at a different position.',
         'changed' => 'The proposal changed. Open it again and check the source points.',

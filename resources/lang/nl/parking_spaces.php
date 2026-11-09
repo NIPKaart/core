@@ -6,7 +6,6 @@ return [
         'rejected' => 'Locatievoorstel afgewezen.',
         'reopened' => 'Locatievoorstel heropend.',
         'existing_required' => 'Kies een bestaande parkeerplaats op de kaart.',
-        'duplicates_closed' => '{0} Niets gesloten; deze voorstellen waren al afgehandeld of hebben geen parkeerplaats binnen 3 meter.|{1} :count voorstel gesloten.|[2,*] :count voorstellen gesloten.',
         'duplicates_reopened' => '{0} Niets heropend.|{1} :count voorstel heropend.|[2,*] :count voorstellen heropend.',
         'duplicate' => 'Plaats elk parkeervak op een eigen positie.',
         'changed' => 'Het voorstel is gewijzigd. Open het opnieuw en controleer de bronpunten.',
