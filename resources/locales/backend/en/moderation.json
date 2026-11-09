@@ -216,7 +216,15 @@
         "submitted_was": "Submitted was {{value}}",
         "decided": "Decided by {{reviewer}} {{ago}}.",
         "reports_one": "After {{count}} report.",
-        "reports_other": "After {{count}} reports."
+        "reports_other": "After {{count}} reports.",
+        "legend": {
+            "applied": "Applied",
+            "rejected": "Rejected"
+        },
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "with_reason": "{{decision}}: {{reason}}",
+        "not_on_map": "No location is known for this decision."
     },
     "review": {
         "position_label": "Place in the queue",

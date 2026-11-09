@@ -200,19 +200,18 @@ test('duplicate rejection requires selecting a published space on the map', () =
     assert.equal(screen.requests[0].data.existing_parking_space_id, 'existing-space');
 });
 
-test('decided history stacks row labels and shows proposal map links in the sheet', () => {
+test('a decided proposal links to its bays on the map, or to the existing space it duplicates', () => {
     const jsx = (type, props) => ({ type, props });
     const tags = new Proxy({}, { get: (_, name) => String(name) });
     const modules = {
         'react/jsx-runtime': { jsx, jsxs: jsx, Fragment: 'Fragment' },
         react: { useEffect() {}, useState: (initial) => [initial, () => {}] },
         'react-i18next': { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) },
-        '@/lib/utils': { cn: (...classes) => classes.join(' ') },
         './parts': { useAgo: () => () => '5 minutes ago' },
         './values': { useValueFormatter: () => () => '' },
     };
     const context = { exports: {}, require: (name) => modules[name] ?? tags };
-    vm.runInNewContext(compiled('index.tsx'), context);
+    vm.runInNewContext(compiled('decided.tsx'), context);
     const row = {
         key: 'proposal:1',
         type: 'proposal',
@@ -221,23 +220,17 @@ test('decided history stacks row labels and shows proposal map links in the shee
         municipality: 'Delft',
         reviewer: 'Moderator',
         reason: 'Not visible',
+        latitude: 52.011,
+        longitude: 4.36,
         proposal: { source: 'NDW', total_bays: 1, reported_bays: 2, bays: [{ id: 'bay', number: 1, url: '/map?place=community:bay' }] },
     };
-    const { History, DecisionSheet } = context.exports;
-    const table = element(History({ history: { data: [row] } }), 'DataTable');
-    const cells = table.props.columns.map(({ cell }) => cell({ row: { original: row } }));
-    for (const [cell, label] of [
-        [cells[1], 'Delft'],
-        [cells[3], '5 minutes ago'],
-    ]) {
-        const secondLine = find(cell, (node) => node.props.children === label);
-        assert.match(secondLine.props.className, /\bblock\b/);
-    }
-    const decision = cells[2].type(cells[2].props);
-    assert.match(find(decision, (node) => node.props.children === row.reason).props.className, /\bblock\b/);
+    const { DecisionPane, DecisionLabel } = context.exports;
 
-    const sheet = DecisionSheet({ row, options: {} });
-    assert.equal(element(sheet, 'a').props.href, '/map?place=community:bay');
+    const label = DecisionLabel({ row });
+    assert.ok(find(label, (node) => node.props.children === 'history.proposal_partial'));
+    assert.match(find(label, (node) => node.props.children === row.reason).props.className, /\bblock\b/);
+
+    assert.equal(element(DecisionPane({ row, options: {} }), 'a').props.href, '/map?place=community:bay');
     const rejected = { ...row, decision: 'rejected', proposal: { ...row.proposal, bays: [], existing_url: '/map?place=community:existing' } };
-    assert.equal(element(DecisionSheet({ row: rejected, options: {} }), 'a').props.href, '/map?place=community:existing');
+    assert.equal(element(DecisionPane({ row: rejected, options: {} }), 'a').props.href, '/map?place=community:existing');
 });

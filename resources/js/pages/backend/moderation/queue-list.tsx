@@ -16,17 +16,17 @@ import { Link, router } from '@inertiajs/react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LocationProposals, toLocationProposal, type ProposalRow } from './location-proposals';
+import { LocationProposals, SOURCE_COLOR, toLocationProposal, type ProposalRow } from './location-proposals';
 import { Kbd } from './shortcuts';
 import { TYPE_ICONS } from './type-badge';
-import { filterQuery, type Filters, type ItemType, type Options, type QueueItem } from './types';
+import { filterQuery, type Filters, type HistoryType, type ItemType, type Options, type QueueItem } from './types';
 import { useChangeSummary } from './values';
 
 /** One colour per kind of item, used in the queue and on the map. */
 export const TYPE_COLORS: Record<ItemType, string> = { report: '#dc2626', submission: '#d97706', improvement: '#2563eb' };
 
 /** A short age such as "9d" or "3u", so the queue reads at a glance. */
-function useShortAge() {
+export function useShortAge() {
     const { t } = useTranslation('backend/moderation');
 
     return (value: string) => {
@@ -58,8 +58,7 @@ function useItemPreview() {
 }
 
 /**
- * The queue in the panel beside the map: open and decided, filters, and the open items with the oldest first and
- * reports on top. Pointing at an item highlights it on the map. While items are selected the panel's top and bottom
+ * The open queue in the panel beside the map: the open items with the oldest first and reports on top. Pointing at an item highlights it on the map. While items are selected the panel's top and bottom
  * belong to the selection.
  */
 export function QueueList({
@@ -95,19 +94,8 @@ export function QueueList({
 }) {
     const { t } = useTranslation('backend/moderation');
     const query = filterQuery(filters);
-    const [searching, setSearching] = useState(Boolean(filters.search));
-    const [search, setSearch] = useState(filters.search ?? '');
-    const searchInput = useRef<HTMLInputElement>(null);
     const age = useShortAge();
     const preview = useItemPreview();
-
-    useEffect(() => {
-        if (search === (filters.search ?? '')) return;
-        const timer = setTimeout(() => onFilter({ search: search || null }), 300);
-        return () => clearTimeout(timer);
-        // Only the typed search should trigger this debounce.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search]);
 
     const rows = items?.data ?? [];
     const groups = [
@@ -117,128 +105,19 @@ export function QueueList({
     const selectable = (item: QueueItem) => item.type !== 'report' && options.can[item.type];
     const selecting = checked.length > 0;
     const toggle = (key: string, on: boolean) => onCheck(on ? [...checked, key] : checked.filter((item) => item !== key));
-    const total = items?.total ?? 0;
     const filtered = Object.keys(query).length > 0;
-
-    const typeLabel =
-        filters.types.length === 0
-            ? t('queue.all_types')
-            : filters.types.length === 1
-              ? t(`types.${filters.types[0]}`)
-              : t('queue.types_count', { count: filters.types.length });
-    const municipalityLabel =
-        filters.municipality_ids.length === 0
-            ? t('queue.all_municipalities')
-            : filters.municipality_ids.length === 1
-              ? (options.municipalities.find((municipality) => String(municipality.id) === filters.municipality_ids[0])?.name ?? '')
-              : t('queue.municipalities_count', { count: filters.municipality_ids.length });
 
     return (
         <>
             {selection || (
-                <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                        <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
-                        <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <nav aria-label={t('tabs.label')} className="flex flex-1 rounded-[10px] bg-muted p-1">
-                            {(['open', 'decided'] as const).map((tab) => (
-                                <Link
-                                    key={tab}
-                                    href={app.moderation.index({
-                                        query: tab === 'decided' ? { ...(query.type ? { type: query.type } : {}), status: 'decided' } : query,
-                                    })}
-                                    aria-current={status === tab ? 'page' : undefined}
-                                    className={cn(
-                                        'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm',
-                                        status === tab
-                                            ? 'bg-background font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.08)]'
-                                            : 'font-medium text-muted-foreground hover:text-foreground',
-                                    )}
-                                >
-                                    {t(`tabs.${tab}`)}
-                                    {tab === 'open' && status === 'open' && (
-                                        <span className="font-medium text-muted-foreground tabular-nums">{total}</span>
-                                    )}
-                                </Link>
-                            ))}
-                            {options.types.includes('submission') && options.can.submission && (
-                                <Link
-                                    href={app.moderation.proposals.index()}
-                                    className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-                                >
-                                    {t('proposals.tab')}
-                                </Link>
-                            )}
-                        </nav>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-[42px] cursor-pointer rounded-[10px]"
-                            aria-label={t('search')}
-                            aria-pressed={searching}
-                            onClick={() => {
-                                setSearching((value) => !value);
-                                setTimeout(() => searchInput.current?.focus());
-                            }}
-                        >
-                            <Search className="size-[18px]" />
-                        </Button>
-                    </div>
-                    {searching && (
-                        <div className="relative">
-                            <Input
-                                ref={searchInput}
-                                value={search}
-                                onChange={(event) => setSearch(event.target.value)}
-                                placeholder={t('search')}
-                                aria-label={t('search')}
-                                className="h-9 pr-8 text-sm"
-                            />
-                            {search && (
-                                <button
-                                    type="button"
-                                    aria-label={t('queue.clear_search')}
-                                    onClick={() => setSearch('')}
-                                    className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
-                                >
-                                    <X className="size-4" />
-                                </button>
-                            )}
-                        </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2">
-                        {options.types.length > 1 && (
-                            <FilterMenu
-                                label={typeLabel}
-                                options={options.types.map((type) => ({ value: type, label: t(`types.${type}`) }))}
-                                selected={filters.types}
-                                onChange={(types) => onFilter({ types: types as ItemType[] })}
-                            />
-                        )}
-                        {options.municipalities.length > 0 && (
-                            <FilterMenu
-                                label={municipalityLabel}
-                                options={options.municipalities.map((municipality) => ({ value: String(municipality.id), label: municipality.name }))}
-                                selected={filters.municipality_ids}
-                                onChange={(municipality_ids) => onFilter({ municipality_ids })}
-                            />
-                        )}
-                        {filtered && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSearch('');
-                                    onFilter({ types: [], municipality_ids: [], search: null });
-                                }}
-                                className="ml-auto cursor-pointer text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                            >
-                                {t('queue.clear_filters')}
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <QueueHeader
+                    status={status}
+                    total={items?.total ?? 0}
+                    decidedToday={decidedToday}
+                    filters={filters}
+                    options={options}
+                    onFilter={onFilter}
+                />
             )}
 
             <div
@@ -351,14 +230,174 @@ export function QueueList({
     );
 }
 
+/**
+ * The top of the queue panel: the status tabs, search and filters. Open items can be searched and filtered by
+ * municipality; decided items only by type.
+ */
+export function QueueHeader({
+    status,
+    total,
+    decidedToday,
+    filters,
+    options,
+    onFilter,
+}: {
+    status: 'open' | 'decided';
+    total: number;
+    decidedToday: number;
+    filters: Filters;
+    options: Options;
+    onFilter: (next: Partial<Filters>) => void;
+}) {
+    const { t } = useTranslation('backend/moderation');
+    const open = status === 'open';
+    const query = filterQuery(filters);
+    const [searching, setSearching] = useState(Boolean(filters.search));
+    const [search, setSearch] = useState(filters.search ?? '');
+    const searchInput = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (search === (filters.search ?? '')) return;
+        const timer = setTimeout(() => onFilter({ search: search || null }), 300);
+        return () => clearTimeout(timer);
+        // Only the typed search should trigger this debounce.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
+    const filtered = Object.keys(query).length > 0;
+    const types: HistoryType[] = open ? options.types : options.historyTypes;
+    const tabQuery = {
+        open: open ? query : filterQuery({ ...filters, types: filters.types.filter((type) => type !== 'proposal') }),
+        decided: { ...(query.type ? { type: query.type } : {}), status: 'decided' },
+    };
+
+    const typeLabel =
+        filters.types.length === 0
+            ? t('queue.all_types')
+            : filters.types.length === 1
+              ? t(`types.${filters.types[0]}`)
+              : t('queue.types_count', { count: filters.types.length });
+    const municipalityLabel =
+        filters.municipality_ids.length === 0
+            ? t('queue.all_municipalities')
+            : filters.municipality_ids.length === 1
+              ? (options.municipalities.find((municipality) => String(municipality.id) === filters.municipality_ids[0])?.name ?? '')
+              : t('queue.municipalities_count', { count: filters.municipality_ids.length });
+
+    return (
+        <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
+            <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
+                <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+            </div>
+            <div className="flex gap-2">
+                <nav aria-label={t('tabs.label')} className="flex flex-1 rounded-[10px] bg-muted p-1">
+                    {(['open', 'decided'] as const).map((tab) => (
+                        <Link
+                            key={tab}
+                            href={app.moderation.index({ query: tabQuery[tab] })}
+                            aria-current={status === tab ? 'page' : undefined}
+                            className={cn(
+                                'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm',
+                                status === tab
+                                    ? 'bg-background font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.08)]'
+                                    : 'font-medium text-muted-foreground hover:text-foreground',
+                            )}
+                        >
+                            {t(`tabs.${tab}`)}
+                            {tab === 'open' && open && <span className="font-medium text-muted-foreground tabular-nums">{total}</span>}
+                        </Link>
+                    ))}
+                    {options.types.includes('submission') && options.can.submission && (
+                        <Link
+                            href={app.moderation.proposals.index()}
+                            className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                        >
+                            {t('proposals.tab')}
+                        </Link>
+                    )}
+                </nav>
+                {open && (
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-[42px] cursor-pointer rounded-[10px]"
+                        aria-label={t('search')}
+                        aria-pressed={searching}
+                        onClick={() => {
+                            setSearching((value) => !value);
+                            setTimeout(() => searchInput.current?.focus());
+                        }}
+                    >
+                        <Search className="size-[18px]" />
+                    </Button>
+                )}
+            </div>
+            {open && searching && (
+                <div className="relative">
+                    <Input
+                        ref={searchInput}
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder={t('search')}
+                        aria-label={t('search')}
+                        className="h-9 pr-8 text-sm"
+                    />
+                    {search && (
+                        <button
+                            type="button"
+                            aria-label={t('queue.clear_search')}
+                            onClick={() => setSearch('')}
+                            className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="size-4" />
+                        </button>
+                    )}
+                </div>
+            )}
+            <div className="flex flex-wrap items-center gap-2">
+                {types.length > 1 && (
+                    <FilterMenu
+                        label={typeLabel}
+                        options={types.map((type) => ({ value: type, label: t(`types.${type}`) }))}
+                        selected={filters.types}
+                        onChange={(next) => onFilter({ types: next as HistoryType[] })}
+                    />
+                )}
+                {open && options.municipalities.length > 0 && (
+                    <FilterMenu
+                        label={municipalityLabel}
+                        options={options.municipalities.map((municipality) => ({ value: String(municipality.id), label: municipality.name }))}
+                        selected={filters.municipality_ids}
+                        onChange={(municipality_ids) => onFilter({ municipality_ids })}
+                    />
+                )}
+                {filtered && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSearch('');
+                            onFilter({ types: [], municipality_ids: [], search: null });
+                        }}
+                        className="ml-auto cursor-pointer text-[13px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                        {t('queue.clear_filters')}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
 /** The kind of an item as a tinted tile, in the same colour as its pin on the map. */
-function TypeTile({ type }: { type: ItemType }) {
+export function TypeTile({ type }: { type: HistoryType }) {
+    const color = type === 'proposal' ? SOURCE_COLOR : TYPE_COLORS[type];
     const Icon = TYPE_ICONS[type];
 
     return (
         <span
             className="flex size-9 shrink-0 items-center justify-center rounded-[10px]"
-            style={{ background: `color-mix(in srgb, ${TYPE_COLORS[type]} 12%, transparent)`, color: TYPE_COLORS[type] }}
+            style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}
             aria-hidden
         >
             <Icon className="size-[18px]" />
@@ -366,7 +405,7 @@ function TypeTile({ type }: { type: ItemType }) {
     );
 }
 
-function PageLink({ href, label, icon: Icon }: { href: string | null; label: string; icon: typeof ChevronLeft }) {
+export function PageLink({ href, label, icon: Icon }: { href: string | null; label: string; icon: typeof ChevronLeft }) {
     return href ? (
         <Link
             href={href}

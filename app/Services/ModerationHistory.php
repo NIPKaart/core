@@ -7,6 +7,7 @@ use App\Enums\ParkingStatus;
 use App\Enums\ReportResolution;
 use App\Enums\UnderSign;
 use App\Models\LocationProposalDecision;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingPlaceRemoval;
 use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
@@ -188,8 +189,11 @@ final class ModerationHistory
             ->groupBy('location_proposal_id')->selectRaw('location_proposal_id, max(id) as id')->pluck('id', 'location_proposal_id');
         $closed = DB::table('location_proposals')->whereIn('id', $decisions->pluck('location_proposal_id'))
             ->whereNotNull('closed_at')->pluck('decision_revision', 'id');
+        $sourcePoints = DB::table('location_proposal_points')->whereIn('location_proposal_id', $decisions->pluck('location_proposal_id'))
+            ->groupBy('location_proposal_id')->selectRaw('location_proposal_id, avg(latitude) as latitude, avg(longitude) as longitude')
+            ->get()->keyBy('location_proposal_id');
 
-        return $decisions->map(function (LocationProposalDecision $decision) use ($spaces, $activeProposals, $current, $closed): array {
+        return $decisions->map(function (LocationProposalDecision $decision) use ($spaces, $activeProposals, $current, $closed, $sourcePoints): array {
             $evidence = $decision->evidence;
             $proposal = $decision->location_proposal_id;
             $map = function (?string $id) use ($spaces): ?string {
@@ -199,6 +203,7 @@ final class ModerationHistory
                     'place' => "community:{$space->id}", 'at' => "{$space->latitude},{$space->longitude}",
                 ]);
             };
+            $located = $spaces->get($evidence['bays'][0]['id'] ?? $decision->existing_parking_space_id) ?? $sourcePoints->get($proposal);
 
             return [
                 'key' => LocationProposalDecisions::TYPE.":{$decision->id}",
@@ -211,6 +216,7 @@ final class ModerationHistory
                 'note' => $decision->note,
                 'reviewer' => $decision->moderator?->name,
                 'decided_at' => $decision->decided_at,
+                ...$this->location($located),
                 'proposal' => [
                     'id' => $proposal,
                     'reopen_revision' => $activeProposals->has($proposal) && $current->get($proposal) === $decision->id ? $closed->get($proposal) : null,
@@ -252,6 +258,7 @@ final class ModerationHistory
                 'note' => $review->note,
                 'reviewer' => $review->reviewer?->name,
                 'decided_at' => $review->reviewed_at,
+                ...$this->location($review->parkingSpace),
             ]);
     }
 
@@ -271,6 +278,8 @@ final class ModerationHistory
                 'municipality' => $row['space']['municipality'],
                 'contributor' => $row['proposer'],
                 'decided_at' => $row['reviewed_at'],
+                'latitude' => $row['space']['latitude'],
+                'longitude' => $row['space']['longitude'],
             ]);
     }
 
@@ -280,7 +289,12 @@ final class ModerationHistory
      */
     private function removalRows(array $ids): Collection
     {
-        return ParkingPlaceRemoval::whereKey($ids)->with('remover:id,name')->get()
+        $removals = ParkingPlaceRemoval::whereKey($ids)->with('remover:id,name')->get();
+        // A removed community place is deleted with its location; a hidden municipal place still knows where it is.
+        $hidden = ParkingMunicipal::whereKey($removals->where('source', 'municipal')->pluck('place_id')->all())
+            ->get(['id', 'latitude', 'longitude'])->keyBy('id');
+
+        return $removals
             ->map(fn (ParkingPlaceRemoval $removal) => [
                 'key' => self::REMOVAL.":{$removal->id}",
                 'type' => ModerationQueue::REPORT,
@@ -293,6 +307,7 @@ final class ModerationHistory
                 'note' => $removal->note,
                 'reviewer' => $removal->remover?->name,
                 'decided_at' => $removal->removed_at,
+                ...$this->location($removal->source === 'municipal' ? $hidden->get($removal->place_id) : null),
             ]);
     }
 
@@ -320,7 +335,21 @@ final class ModerationHistory
                     'note' => null,
                     'reviewer' => $report->resolver?->name,
                     'decided_at' => $report->resolved_at,
+                    ...$this->location($place),
                 ];
             });
+    }
+
+    /**
+     * Where a decision happened, so it can be shown on the map; null when the place is gone without a trace.
+     *
+     * @return array{latitude: ?float, longitude: ?float}
+     */
+    private function location(?object $place): array
+    {
+        return [
+            'latitude' => $place?->latitude === null ? null : (float) $place->latitude,
+            'longitude' => $place?->longitude === null ? null : (float) $place->longitude,
+        ];
     }
 }

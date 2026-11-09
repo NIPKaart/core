@@ -216,7 +216,15 @@
         "submitted_was": "Ingediend was {{value}}",
         "decided": "Besloten door {{reviewer}} {{ago}}.",
         "reports_one": "Na {{count}} melding.",
-        "reports_other": "Na {{count}} meldingen."
+        "reports_other": "Na {{count}} meldingen.",
+        "legend": {
+            "applied": "Doorgevoerd",
+            "rejected": "Afgewezen"
+        },
+        "today": "Vandaag",
+        "yesterday": "Gisteren",
+        "with_reason": "{{decision}}: {{reason}}",
+        "not_on_map": "Geen locatie bekend voor dit besluit."
     },
     "review": {
         "position_label": "Plaats in de wachtrij",

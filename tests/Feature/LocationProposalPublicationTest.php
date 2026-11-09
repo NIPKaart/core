@@ -149,7 +149,8 @@ it('stores partial decisions and records a new decision when more bays are added
         ->where('history.data.0.type', 'proposal')->where('history.data.0.decision', 'completed')
         ->where('history.data.0.note', 'Tree obscures the bay')->where('history.data.0.reviewer', $this->moderator->name)
         ->where('history.data.0.proposal.reported_bays', 4)->where('history.data.0.proposal.last_seen_on', '2026-10-01')
-        ->has('history.data.0.proposal.bays', 3)->where('history.data.0.proposal.reopen_revision', 1));
+        ->has('history.data.0.proposal.bays', 3)->where('history.data.0.proposal.reopen_revision', 1)
+        ->where('history.data.0.latitude', 52.011)->where('history.data.0.longitude', 4.36001));
 
     $this->post(route('app.moderation.proposals.reopen', $this->proposal), ['revision' => 1])->assertRedirect($this->detail);
     $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('locationProposals.0.id', $this->proposal));
@@ -187,6 +188,7 @@ it('rejects a proposal with an attributable decision and requires a public space
     $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->has('locationProposals', 0));
     $this->get(route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']))->assertInertia(fn (Assert $page) => $page
         ->where('history.data.0.decision', 'rejected')
+        ->where('history.data.0.latitude', 52.011)->where('history.data.0.longitude', $existing === null ? 4.36 : 4.36001)
         ->where('history.data.0.proposal.existing_url', $existing === null ? null : fn (string $url) => str_contains($url, $existing)));
 })->with(['not_a_disabled_bay', 'duplicate']);
 

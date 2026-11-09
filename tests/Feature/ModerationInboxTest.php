@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ImprovementRejectionReason;
 use App\Enums\ParkingConfirmationStatus;
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
@@ -378,6 +379,41 @@ describe('history', function () {
                 ->where('history.data.2.decision', 'rejected')
                 ->where('history.data.2.reason', RejectionReason::DUPLICATE->label())
                 ->where('history.data.2.contributor', $this->contributor->name));
+    });
+
+    test('decided items carry where they happened, except a deleted community place', function () {
+        $space = pendingSubmission($this->contributor, ['latitude' => 52.0918, 'longitude' => 5.118]);
+        $improvement = ParkingSpaceImprovement::factory()
+            ->for(ParkingSpace::factory()->state(['status' => ParkingStatus::APPROVED, 'latitude' => 52.37, 'longitude' => 4.89]))
+            ->create();
+        $reported = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED, 'latitude' => 51.92, 'longitude' => 4.48]);
+        openReportOn($reported);
+        $kept = ParkingMunicipal::factory()->create(['visibility' => true, 'latitude' => 52.08, 'longitude' => 4.31]);
+        openReportOn($kept);
+
+        $this->actingAs($this->moderator);
+        $this->travelTo('2026-10-01 09:00:00');
+        $this->post(route('app.moderation.submissions.reject', $space), ['reason' => RejectionReason::DUPLICATE->value]);
+        $this->travelTo('2026-10-02 09:00:00');
+        $this->post(route('app.moderation.improvements.reject', $improvement), ['reason' => ImprovementRejectionReason::INCORRECT->value]);
+        $this->travelTo('2026-10-03 09:00:00');
+        $this->post(route('app.moderation.reports.remove', ['source' => 'community', 'id' => $reported->id]), ['reason' => 'no_longer_exists']);
+        $this->travelTo('2026-10-04 09:00:00');
+        $this->post(route('app.moderation.reports.keep', ['source' => 'municipal', 'id' => $kept->id]));
+
+        $this->get(route('app.moderation.index', ['status' => 'decided']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('history.data', 4)
+                ->where('history.data.0.latitude', 52.08)
+                ->where('history.data.0.longitude', 4.31)
+                ->where('history.data.1.decision', 'removed')
+                ->where('history.data.1.latitude', null)
+                ->where('history.data.1.longitude', null)
+                ->where('history.data.2.type', 'improvement')
+                ->where('history.data.2.latitude', 52.37)
+                ->where('history.data.2.longitude', 4.89)
+                ->where('history.data.3.latitude', 52.0918)
+                ->where('history.data.3.longitude', 5.118));
     });
 });
 
