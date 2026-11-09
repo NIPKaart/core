@@ -38,9 +38,11 @@ class LocationProposalController extends Controller
 
     private const int BAY_RADIUS_METRES = 150;
 
+    private const int NEARBY_PLACES_LIMIT = 30;
+
     public function __construct(private LocationProposalQueue $queue, private LocationProposalDecisions $decisions) {}
 
-    public function index(Request $request, AerialImagery $imagery, ModerationEvidence $evidence): Response|RedirectResponse
+    public function index(Request $request, AerialImagery $imagery): Response|RedirectResponse
     {
         $this->authorizeModeration();
         $filters = $request->validate([
@@ -76,7 +78,7 @@ class LocationProposalController extends Controller
         }
 
         $selected = isset($filters['proposal'])
-            ? $this->detail((int) $filters['proposal'], isset($filters['point']) ? (int) $filters['point'] : null, $evidence, $imagery)
+            ? $this->detail((int) $filters['proposal'], isset($filters['point']) ? (int) $filters['point'] : null, $imagery)
             : null;
         $municipality = $selected['municipalityId'] ?? $municipality;
         $page = $municipality === null ? null : $this->queue->proposals()
@@ -328,16 +330,26 @@ class LocationProposalController extends Controller
         return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])]);
     }
 
-    private function detail(int $id, ?int $pointId, ModerationEvidence $evidence, AerialImagery $imagery): array
+    private function detail(int $id, ?int $pointId, AerialImagery $imagery): array
     {
         $points = $this->proposalPoints($id);
         $anchor = $points->firstWhere('id', $pointId) ?? $points->first();
         abort_if($anchor === null, 404);
         $location = new GeoPoint($anchor->latitude, $anchor->longitude);
-        $nearby = $this->nearbyCommunity($anchor)->limit(30)->get();
-        $community = $nearby->first();
-        $municipal = $evidence->nearestMunicipal($location);
-        $municipalPosition = $municipal === null ? null : ParkingMunicipal::find($municipal['id'], ['latitude', 'longitude']);
+        $community = $this->nearbyCommunity($anchor)->limit(self::NEARBY_PLACES_LIMIT)->get();
+        $municipal = ParkingMunicipal::select('id', 'street', 'latitude', 'longitude')
+            ->where('visibility', true)
+            ->withinRadius($location, ModerationEvidence::NEAREST_MUNICIPAL_METRES)
+            ->nearestTo($location)
+            ->limit(self::NEARBY_PLACES_LIMIT)
+            ->get();
+        $nearbyPlace = static fn (ParkingSpace|ParkingMunicipal $place): array => [
+            'id' => $place->id,
+            'street' => $place->street,
+            'latitude' => $place->latitude,
+            'longitude' => $place->longitude,
+            'distance_metres' => (int) round((float) $place->distance_metres),
+        ];
         $record = DB::table('location_proposals')->find($id);
         $closed = $record->closed_at !== null;
         $publishedBays = $record->bays_published_at !== null ? ParkingSpace::query()->where('location_proposal_id', $id)
@@ -357,19 +369,9 @@ class LocationProposalController extends Controller
             'revision' => $record->decision_revision,
             'reportedBays' => $record->reported_bays,
             'canReject' => $record->bays_published_at === null,
-            'duplicates' => $nearby->map(fn (ParkingSpace $space): array => [
-                'id' => $space->id, 'street' => $space->street, 'latitude' => $space->latitude, 'longitude' => $space->longitude,
-            ]),
             'publishedBays' => $publishedBays,
-            'community' => $community === null ? null : [
-                'street' => $community->street,
-                'latitude' => $community->latitude,
-                'longitude' => $community->longitude,
-                'distance_metres' => (int) round((float) $community->distance_metres),
-            ],
-            'municipal' => $municipalPosition === null ? null : [
-                ...$municipal, 'latitude' => $municipalPosition->latitude, 'longitude' => $municipalPosition->longitude,
-            ],
+            'community' => $community->map($nearbyPlace)->all(),
+            'municipal' => $municipal->map($nearbyPlace)->all(),
             'imagery' => $imagery->forCountry($anchor->country),
         ];
     }

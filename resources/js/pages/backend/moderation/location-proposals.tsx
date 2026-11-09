@@ -139,8 +139,7 @@ export function LocationProposalReview({
     publishedBays,
     revision,
     canReject,
-    duplicates,
-    nearby,
+    community,
     municipal,
     comparison,
     group,
@@ -160,9 +159,8 @@ export function LocationProposalReview({
     publishedBays: PublishedBay[];
     revision: number;
     canReject: boolean;
-    duplicates: (MapPoint & { id: string; street: string | null })[];
-    nearby?: MapPoint;
-    municipal?: MapPoint;
+    community: (MapPoint & { id: string; street: string | null })[];
+    municipal: MapPoint[];
     comparison?: MapPoint;
     group?: React.ReactNode;
     query: { municipality?: string | number; page?: number; point?: number; from?: 'queue' };
@@ -299,13 +297,13 @@ export function LocationProposalReview({
                         className="w-full rounded-md border bg-background p-2"
                         value={existing ?? ''}
                         onChange={(event) => {
-                            const place = duplicates.find((candidate) => candidate.id === event.target.value);
+                            const place = community.find((candidate) => candidate.id === event.target.value);
                             setExisting(place?.id ?? null);
                             if (place) setView({ center: place, zoom: BAY_ZOOM });
                         }}
                     >
                         <option value="">{t('proposals.choose')}</option>
-                        {duplicates.map((place) => (
+                        {community.map((place) => (
                             <option key={place.id} value={place.id}>
                                 {place.street || t('proposals.unknown_street')} ({place.latitude.toFixed(5)}, {place.longitude.toFixed(5)})
                             </option>
@@ -407,11 +405,11 @@ export function LocationProposalReview({
                 zoom: view.zoom ?? 19,
                 sourcePoint: point,
                 comparisonPoint: comparison,
-                nearby: nearby ? [nearby] : [],
-                municipal: municipal ? [municipal] : [],
+                nearby: pickingDuplicate ? [] : community,
+                municipal,
                 bays: pickingDuplicate ? undefined : markers,
                 queue: pickingDuplicate
-                    ? duplicates.map((place) => ({
+                    ? community.map((place) => ({
                           key: place.id,
                           point: place,
                           color: '#15803d',

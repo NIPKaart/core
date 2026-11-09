@@ -93,7 +93,14 @@ function editor(reported_bays = null) {
                 },
                 revision: 0,
                 canReject: true,
-                duplicates: [{ ...point, id: 'existing-space', street: 'Oude Kerkstraat' }],
+                community: [
+                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat' },
+                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat' },
+                ],
+                municipal: [
+                    { ...point, latitude: 52.0111 },
+                    { ...point, latitude: 52.0112 },
+                ],
                 query: {},
                 publishedBays,
                 onBack() {},
@@ -115,6 +122,13 @@ function action(tree, key) {
     assert.ok(match, key);
     return match;
 }
+
+test('shows nearby parking from both sources before entering duplicate selection', () => {
+    const map = element(editor().render(), 'Workspace').props.map;
+
+    assert.equal(map.nearby.length, 2);
+    assert.equal(map.municipal.length, 2);
+});
 
 test('publishes the whole pilot batch and keeps draggable drafts until Core confirms publication', () => {
     const screen = editor();
