@@ -119,8 +119,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('moderation.proposals.duplicates.reopen');
         Route::post('moderation/proposals/{proposal}/reopen', [Admin\LocationProposalController::class, 'reopen'])
             ->whereNumber('proposal')->name('moderation.proposals.reopen');
-        Route::post('moderation/proposals/{proposal}/group', [Admin\LocationProposalController::class, 'group'])
-            ->whereNumber('proposal')->name('moderation.proposals.group');
 
         // Former queues, kept as addresses into the inbox
         Route::get('improvements', fn () => redirect()->route('app.moderation.index', ['type' => 'improvement']));

@@ -1,10 +1,11 @@
 import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
+import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { pinSvg } from '@/lib/pin-svg';
 import { cn } from '@/lib/utils';
 import L from 'leaflet';
-import { Info, LocateFixed, Minus, Plus, X } from 'lucide-react';
+import { Camera, ExternalLink, Info, LocateFixed, Minus, Move, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
@@ -162,10 +163,10 @@ export function ModerationMap({
     onMove,
     movedLabel,
     sourcePoint,
-    comparisonPoint,
     bays,
     onPlace,
     onMoveBay,
+    onRemoveBay,
     onSelectBay,
     zoom,
     inset = 0,
@@ -194,12 +195,13 @@ export function ModerationMap({
     movedLabel?: string | null;
     /** The point a location proposal comes from; its bays are drawn in around it. */
     sourcePoint?: MapPoint | null;
-    comparisonPoint?: MapPoint;
     /** Bays drawn in for a location proposal; replaces the main pin. */
     bays?: BayMarker[];
     /** A click on the map adds a bay there. */
     onPlace?: (point: MapPoint) => void;
     onMoveBay?: (key: string, point: MapPoint) => void;
+    /** Shows a toolbar above the selected bay to drag it, open Street View there, or remove it. */
+    onRemoveBay?: (key: string) => void;
     onSelectBay?: (key: string) => void;
     /** The zoom to open at, when the layer's own zoom is too close, such as for the whole country. */
     zoom?: number;
@@ -267,9 +269,6 @@ export function ModerationMap({
                         </Marker>
                     </>
                 )}
-                {comparisonPoint && (
-                    <Marker position={[comparisonPoint.latitude, comparisonPoint.longitude]} icon={sourcePointIcon} interactive={false} />
-                )}
                 {sourcePoint && (
                     <Marker
                         position={[sourcePoint.latitude, sourcePoint.longitude]}
@@ -286,6 +285,7 @@ export function ModerationMap({
                             bay={bay}
                             onMove={bay.state === 'submitted' || !onMoveBay ? undefined : (point) => onMoveBay(bay.key, point)}
                             onSelect={bay.state === 'submitted' ? undefined : () => onSelectBay?.(bay.key)}
+                            onRemove={bay.state === 'selected' && onRemoveBay ? () => onRemoveBay(bay.key) : undefined}
                         />
                     ))
                 ) : queue ? (
@@ -500,9 +500,21 @@ function useArrowKeys(
 }
 
 /** One drawn-in bay: dragged or moved with the arrow keys while it is not submitted, and selected with a click. */
-function BayPin({ bay, onMove, onSelect }: { bay: BayMarker; onMove?: (point: MapPoint) => void; onSelect?: () => void }) {
+function BayPin({
+    bay,
+    onMove,
+    onSelect,
+    onRemove,
+}: {
+    bay: BayMarker;
+    onMove?: (point: MapPoint) => void;
+    onSelect?: () => void;
+    onRemove?: () => void;
+}) {
+    const { t } = useTranslation('backend/moderation');
     const marker = useRef<L.Marker | null>(null);
     const icon = bayIcon(bay.number, bay.state);
+    const street = streetViewUrl(bay.point.latitude, bay.point.longitude);
     useArrowKeys(marker, bay.point, onMove, bay.label, icon);
 
     return (
@@ -522,14 +534,57 @@ function BayPin({ bay, onMove, onSelect }: { bay: BayMarker; onMove?: (point: Ma
                     onMove?.({ latitude: Math.round(lat * 1e7) / 1e7, longitude: Math.round(lng * 1e7) / 1e7 });
                 },
             }}
-        />
+        >
+            {onRemove && (
+                <Tooltip
+                    permanent
+                    interactive
+                    direction="top"
+                    offset={[0, -50]}
+                    className="!rounded-[10px] !border-0 !bg-background !p-0.5 !text-foreground !shadow-[0_6px_18px_rgba(0,0,0,0.22)] before:!hidden"
+                >
+                    <div role="toolbar" aria-label={bay.label} className="flex h-10 items-center gap-0.5 text-[13px]">
+                        <span className="flex h-9 items-center gap-1.5 px-2.5 text-neutral-700 dark:text-muted-foreground">
+                            <Move className="size-3.5" aria-hidden />
+                            {t('map.bay_toolbar.drag')}
+                        </span>
+                        {street && (
+                            <>
+                                <span className="h-[22px] w-px bg-border" aria-hidden />
+                                <a
+                                    href={street}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                                >
+                                    <Camera className="size-3.5" aria-hidden />
+                                    {t('map.bay_toolbar.street_view')}
+                                    <ExternalLink className="size-3" role="img" aria-label={t('map.bay_toolbar.new_tab')} />
+                                </a>
+                            </>
+                        )}
+                        <span className="h-[22px] w-px bg-border" aria-hidden />
+                        <button
+                            type="button"
+                            onClick={onRemove}
+                            className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 font-medium text-red-700 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:text-red-400"
+                        >
+                            <Trash2 className="size-3.5" aria-hidden />
+                            {t('map.bay_toolbar.remove')}
+                        </button>
+                    </div>
+                </Tooltip>
+            )}
+        </Marker>
     );
 }
 
-/** A click on the map places the pin there. */
+/** A click on the map places the pin there; a click on a toolbar over the map does not. */
 function PlaceOnClick({ onMove }: { onMove: (point: MapPoint) => void }) {
     useMapEvents({
-        click: (event) => onMove({ latitude: Math.round(event.latlng.lat * 1e7) / 1e7, longitude: Math.round(event.latlng.lng * 1e7) / 1e7 }),
+        click: (event) =>
+            !(event.originalEvent.target as Element | null)?.closest?.('.leaflet-tooltip') &&
+            onMove({ latitude: Math.round(event.latlng.lat * 1e7) / 1e7, longitude: Math.round(event.latlng.lng * 1e7) / 1e7 }),
     });
     return null;
 }

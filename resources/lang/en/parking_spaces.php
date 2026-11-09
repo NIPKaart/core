@@ -4,14 +4,12 @@ return [
     'proposal' => [
         'rejected' => 'Location proposal rejected.',
         'reopened' => 'Location proposal reopened.',
-        'reason_required' => 'Choose why you are adding fewer bays than reported.',
         'existing_required' => 'Select an existing parking space on the map.',
         'duplicates_closed' => '{0} Nothing closed; these proposals were already decided or have no parking space within 3 metres.|{1} :count proposal closed.|[2,*] :count proposals closed.',
         'duplicates_reopened' => '{0} Nothing reopened.|{1} :count proposal reopened.|[2,*] :count proposals reopened.',
         'duplicate' => 'Place each bay at a different position.',
         'changed' => 'The proposal changed. Open it again and check the source points.',
         'invalid_point' => 'This bay must be near an active source point from this proposal.',
-        'already_added' => 'Bays have already been added to one of these proposals.',
     ],
     'validation' => [
         'orientation_required' => 'Select an orientation for the parking space.',

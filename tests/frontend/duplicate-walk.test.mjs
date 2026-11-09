@@ -50,7 +50,6 @@ const rows = [1, 2, 3].map((id) => ({
     id,
     municipality: 'Delft',
     status: 'open',
-    bayCount: null,
     points: [{ id: id * 10, latitude: 52.011, longitude: 4.36, overlap }],
 }));
 
@@ -111,4 +110,14 @@ test('jumps to another sign from the progress list', () => {
     assert.equal(steps[0].props['aria-current'], 'step');
     steps[2].props.onClick();
     assert.equal(calls.jumped, 2);
+});
+
+test('offers the previous sign only when there is one', () => {
+    const isPrevious = (node) => node.type === 'Button' && node.props.children?.[1] === 'proposals.walk_previous';
+    assert.equal(find(render({ index: 0, answers: {} }).view, isPrevious), undefined);
+
+    let previous = false;
+    const { view } = render({ index: 1, answers: {} }, { onPrevious: () => (previous = true) });
+    find(view, isPrevious).props.onClick();
+    assert.equal(previous, true);
 });

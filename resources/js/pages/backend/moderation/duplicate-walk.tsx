@@ -117,12 +117,15 @@ export function DuplicateWalk({
                             ))}
                         </div>
                         <div className="flex items-center justify-between text-[13px]">
-                            <Button variant="ghost" size="sm" className="h-9 px-2" disabled={walk.index === 0} onClick={onPrevious}>
-                                <ChevronLeft aria-hidden />
-                                {t('proposals.walk_previous')}
-                            </Button>
+                            {/* The first sign has nothing before it, so the way back only appears from the second on. */}
+                            {walk.index > 0 && (
+                                <Button variant="ghost" size="sm" className="h-9 px-2" onClick={onPrevious}>
+                                    <ChevronLeft aria-hidden />
+                                    {t('proposals.walk_previous')}
+                                </Button>
+                            )}
                             {street && (
-                                <Button variant="ghost" size="sm" className="h-9 px-2" asChild>
+                                <Button variant="ghost" size="sm" className="ml-auto h-9 px-2" asChild>
                                     <a href={street} target="_blank" rel="noreferrer">
                                         <Camera aria-hidden />
                                         {t('review.views.street_view')}

@@ -129,7 +129,6 @@ export type HistoryRow = {
         reopen_revision: number | null;
         source: string | null;
         last_seen_on: string | null;
-        reported_bays: number | null;
         total_bays: number;
         orientation: string | null;
         under_sign: string | null;

@@ -4,20 +4,12 @@ namespace App\Enums;
 
 enum LocationProposalDecisionReason: string
 {
-    case NOT_VISIBLE = 'not_visible';
-    case GONE = 'gone';
-    case OTHER = 'other';
     case NOT_A_DISABLED_BAY = 'not_a_disabled_bay';
     case DUPLICATE = 'duplicate';
 
     public function label(): string
     {
         return __("enums/location_proposal_decision_reason.{$this->value}");
-    }
-
-    public static function completion(): array
-    {
-        return [self::NOT_VISIBLE, self::GONE, self::OTHER];
     }
 
     public static function rejection(): array

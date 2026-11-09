@@ -70,7 +70,7 @@ export type LocationProposal = {
     id: number;
     source: string;
     street: string;
-    reported_bays: number | null;
+    municipality: string;
     status: 'open' | 'added';
     points: (MapPoint & { id: number; last_seen: string | null; overlap?: ProposalOverlap })[];
 };
@@ -79,7 +79,6 @@ export type ProposalRow = {
     id: number;
     municipality: string;
     status: 'open' | 'added';
-    bayCount: number | null;
     points: (MapPoint & { id: number; proposal_id: number; source: string; source_last_seen_on: string | null; overlap?: ProposalOverlap })[];
 };
 
@@ -87,8 +86,8 @@ export function toLocationProposal(row: ProposalRow): LocationProposal {
     return {
         id: row.id,
         street: `${row.municipality} · #${row.id}`,
+        municipality: row.municipality,
         source: row.points[0]?.source ?? '',
-        reported_bays: row.bayCount,
         status: row.status,
         points: row.points.map((point) => ({ ...point, last_seen: point.source_last_seen_on })),
     };
@@ -125,11 +124,11 @@ export function LocationProposals({
     return (
         <>
             <div className="flex items-center justify-between gap-3 px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
-                <span>
-                    {title ?? t('proposals.title')} <span className="tabular-nums">{total ?? proposals.length}</span>
-                </span>
-                {action}
+                <span>{title ?? t('proposals.title')}</span>
+                {/* The count stands apart from the title, as in the other queue groups, so it never reads as part of it. */}
+                <span className="tabular-nums">{total ?? proposals.length}</span>
             </div>
+            {action && <div className="px-4.5 pb-2.5">{action}</div>}
             <ul className="flex flex-col">
                 {points.map(({ proposal, point, index }) => (
                     <li key={point.id} className="border-t border-muted">
@@ -174,7 +173,7 @@ function StatusText({ draft, proposal }: { draft: ProposalDraft | null; proposal
     if (proposal.status === 'added') return t('proposals.added');
     if (draft?.bays.length) return t('proposals.status.draft', { count: draft.bays.length });
 
-    return proposal.reported_bays === null ? proposal.source : t('proposals.reported', { count: proposal.reported_bays });
+    return proposal.source;
 }
 
 export function LocationProposalReview({
@@ -187,8 +186,6 @@ export function LocationProposalReview({
     community,
     municipal,
     decision,
-    comparison,
-    group,
     query,
     onBack,
     onPointChange,
@@ -200,7 +197,6 @@ export function LocationProposalReview({
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
         maxBays: number;
-        completionReasons: EnumOption[];
         rejectionReasons: EnumOption[];
     };
     publishedBays: PublishedBay[];
@@ -209,8 +205,6 @@ export function LocationProposalReview({
     community: NearbyPlace[];
     municipal: NearbyPlace[];
     decision?: ClosedDecision | null;
-    comparison?: MapPoint;
-    group?: React.ReactNode;
     query: { municipality?: string | number; page?: number; point?: number; from?: 'queue' };
     onBack: () => void;
     onPointChange: (id: number) => void;
@@ -244,15 +238,11 @@ export function LocationProposalReview({
         draft.details.under_sign === 'yes'
             ? draft.details.under_sign_text || t('proposals.summary.under_sign_yes')
             : t('proposals.summary.under_sign_no');
-    const totalBays = submittedCount + bays.length;
-    const partial = proposal.reported_bays !== null && totalBays < proposal.reported_bays;
-    const askReason = !published && !rejecting && step === 'check' && partial;
     const pickingDuplicate = rejecting && reason === 'duplicate';
     const duplicatePlaces = [
         ...community.map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: EXISTING_COLOR.community })),
         ...municipal.map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: EXISTING_COLOR.municipal })),
     ].sort((a, b) => a.distance_metres - b.distance_metres);
-    const onMap = duplicatePlaces.filter((place) => place.possible_duplicate).length;
     const reopenable = published && canReject && !!decision;
     const duplicatePlace = duplicatePlaces.find((place) => place.key === existing);
     const lastPublishedNumber = Math.max(0, ...publishedBays.map((bay) => bay.number));
@@ -295,12 +285,12 @@ export function LocationProposalReview({
     };
 
     const submit = () => {
-        if (published || processing || !canCheck(draft) || (partial && !reason)) return;
+        if (published || processing || !canCheck(draft)) return;
         setFailure(null);
         setProcessing(true);
         router.post(
             app.moderation.proposals.publish.url(proposal.id, { query }),
-            { ...publicationPayload(draft), revision, ...(partial ? { reason, note } : {}) },
+            { ...publicationPayload(draft), revision },
             {
                 preserveScroll: true,
                 onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
@@ -414,7 +404,16 @@ export function LocationProposalReview({
             {bays.map((bay) => {
                 const number = lastPublishedNumber + bayNumber(draft, bay.id);
                 const isSelected = bay.id === selected;
-                const street = streetViewUrl(bay.latitude, bay.longitude);
+                // Street View sits with the bay being placed; while checking, every bay gets it to walk them all.
+                const street = checking || isSelected ? streetViewUrl(bay.latitude, bay.longitude) : null;
+                const iconColor = isSelected ? 'text-blue-900 dark:text-blue-200' : 'text-stone-600 dark:text-muted-foreground';
+                const streetViewButton = street && (
+                    <Button variant="ghost" size="icon" className={cn('size-10', iconColor)} asChild>
+                        <a href={street} target="_blank" rel="noreferrer" aria-label={t('proposals.street_view', { number })}>
+                            <Camera className="size-4" aria-hidden />
+                        </a>
+                    </Button>
+                );
 
                 return (
                     <li
@@ -430,34 +429,32 @@ export function LocationProposalReview({
                             <PinBadge number={number} state={isSelected ? 'selected' : 'placed'} />
                             <span className="text-sm font-semibold">{t('proposals.bay', { number })}</span>
                         </button>
+                        {!checking && streetViewButton}
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="size-10"
+                            className={cn('size-10', iconColor)}
                             aria-label={t('proposals.zoom', { number })}
                             onClick={() => zoomTo(bay, bay.id)}
                         >
                             <ZoomIn className="size-4" aria-hidden />
                         </Button>
-                        {street && (
-                            <Button variant="ghost" size="icon" className="size-10" asChild>
-                                <a href={street} target="_blank" rel="noreferrer" aria-label={t('proposals.street_view', { number })}>
-                                    <Camera className="size-4" aria-hidden />
-                                </a>
+                        {checking ? (
+                            streetViewButton
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className={cn('size-10', iconColor)}
+                                aria-label={t('proposals.remove', { number })}
+                                disabled={processing}
+                                onClick={() => remove(bay.id)}
+                            >
+                                <Trash2 className="size-4" aria-hidden />
                             </Button>
                         )}
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-10 text-red-700 hover:text-red-800"
-                            aria-label={t('proposals.remove', { number })}
-                            disabled={processing}
-                            onClick={() => remove(bay.id)}
-                        >
-                            <Trash2 className="size-4" aria-hidden />
-                        </Button>
                     </li>
                 );
             })}
@@ -473,14 +470,14 @@ export function LocationProposalReview({
     return (
         <Workspace
             scope="item"
-            label={proposal.street}
+            label={proposal.municipality}
             imageryLayers={imagery}
             streetView={selectedBay ?? point}
+            mapHint={!published && !rejecting && step === 'place' && bays.length === 0 && submittedCount === 0 ? t('proposals.map_hint') : undefined}
             map={{
                 center: view.center,
                 zoom: view.zoom ?? 19,
                 sourcePoint: point,
-                comparisonPoint: comparison,
                 nearby: pickingDuplicate ? [] : community,
                 municipal: pickingDuplicate ? [] : municipal,
                 bays: pickingDuplicate ? undefined : markers,
@@ -494,30 +491,19 @@ export function LocationProposalReview({
                     : undefined,
                 highlighted: pickingDuplicate ? (existing ?? undefined) : undefined,
                 onPick: pickingDuplicate ? setExisting : undefined,
-                onPlace: !published && !rejecting && (step === 'place' || askReason) && !processing ? place : undefined,
+                onPlace: !published && !rejecting && step === 'place' && !processing ? place : undefined,
                 onMoveBay: published || rejecting || processing ? undefined : (id, point) => setDraft((current) => moveBay(current, id, point)),
+                onRemoveBay: published || rejecting || processing || step === 'details' ? undefined : remove,
                 onSelectBay: setSelected,
             }}
         >
-            <PanelNav
-                back={t('queue.label')}
-                onBack={onBack}
-                action={
-                    nextUrl && !published && !processing ? (
-                        <Button variant="ghost" size="sm" asChild>
-                            <Link href={nextUrl}>
-                                {t('proposals.next_proposal')} <ArrowRight aria-hidden />
-                            </Link>
-                        </Button>
-                    ) : undefined
-                }
-            />
+            <PanelNav back={t('queue.label')} onBack={onBack} />
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
                 <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-semibold text-blue-700 dark:text-blue-300">
                         {t('proposals.eyebrow', { source: proposal.source })}
                     </span>
-                    <h2 className="text-2xl leading-tight font-bold tracking-tight">{proposal.street}</h2>
+                    <h2 className="text-2xl leading-tight font-bold tracking-tight">{proposal.municipality}</h2>
                     {seen && <span className="text-sm text-muted-foreground">{t('proposals.seen', { date: seen })}</span>}
                     {proposal.points.length > 1 && !published && !rejecting && (
                         <select
@@ -534,30 +520,15 @@ export function LocationProposalReview({
                         </select>
                     )}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                    {proposal.reported_bays === null ? (
-                        <div className="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
-                            <span className="text-xs text-stone-600 dark:text-muted-foreground">{t('proposals.on_map')}</span>
-                            <span className="font-semibold">
-                                {onMap > 0 ? t('proposals.on_map_count', { count: onMap }) : t('proposals.on_map_none')}
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
-                            <span className="text-xs text-stone-600 dark:text-muted-foreground">{t('proposals.source')}</span>
-                            <span className="font-semibold">{t('proposals.reported', { count: proposal.reported_bays })}</span>
-                        </div>
-                    )}
-                    <div role="status" className="flex flex-col gap-0.5 rounded-xl border p-3">
-                        <span className="text-xs text-muted-foreground">{t('proposals.progress')}</span>
-                        <span className="font-semibold">
-                            {published && canReject
-                                ? t('decisions.rejected')
-                                : submittedCount > 0
-                                  ? t('proposals.added_count', { count: submittedCount })
-                                  : t('proposals.progress_none')}
-                        </span>
-                    </div>
+                <div role="status" className="flex flex-col gap-0.5 rounded-xl border p-3">
+                    <span className="text-xs text-muted-foreground">{t('proposals.progress')}</span>
+                    <span className="font-semibold">
+                        {published && canReject
+                            ? t('decisions.rejected')
+                            : submittedCount > 0
+                              ? t('proposals.added_count', { count: submittedCount })
+                              : t('proposals.progress_none')}
+                    </span>
                 </div>
 
                 {published && canReject && decision && <ClosedCard decision={decision} source={proposal.source} />}
@@ -626,12 +597,8 @@ export function LocationProposalReview({
                                 bayList(false)
                             )}
                         </section>
-
-                        {group}
                     </>
                 )}
-                {askReason &&
-                    decisionFields(t('proposals.partial_reason', { count: (proposal.reported_bays ?? 0) - totalBays }), options.completionReasons)}
                 {rejecting && decisionFields(t('proposals.reject_title'), options.rejectionReasons)}
                 {rejecting && <InputError message={failure ?? undefined} />}
             </div>
@@ -665,26 +632,11 @@ export function LocationProposalReview({
                     </>
                 ) : step === 'check' ? (
                     <>
-                        <Button
-                            type="button"
-                            className="h-11 flex-[2]"
-                            disabled={processing || draft.bays.length === 0 || (partial && !reason)}
-                            onClick={submit}
-                        >
-                            {processing
-                                ? t('proposals.submitting')
-                                : partial
-                                  ? t('proposals.complete_with', { count: totalBays })
-                                  : t('proposals.publish', { count: draft.bays.length })}
+                        <Button type="button" className="h-11 flex-[2]" disabled={processing || draft.bays.length === 0} onClick={submit}>
+                            {processing ? t('proposals.submitting') : t('proposals.publish', { count: draft.bays.length })}
                         </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="h-11 flex-1"
-                            disabled={processing}
-                            onClick={partial ? onBack : () => setStep('details')}
-                        >
-                            {t(partial ? 'proposals.resume_later' : 'proposals.back')}
+                        <Button type="button" variant="outline" className="h-11 flex-1" disabled={processing} onClick={() => setStep('details')}>
+                            {t('proposals.back')}
                         </Button>
                     </>
                 ) : step === 'details' ? (
@@ -718,16 +670,18 @@ export function LocationProposalReview({
                                 {t('proposals.reopen')}
                             </Button>
                         )}
-                        {nextUrl && (
+                        {/* The way back is already at the top of the panel; the footer offers it only when nothing follows. */}
+                        {nextUrl ? (
                             <Button className="h-11 flex-1" asChild>
                                 <Link href={nextUrl}>
                                     {t('proposals.next_proposal')} <ArrowRight aria-hidden />
                                 </Link>
                             </Button>
+                        ) : (
+                            <Button type="button" className="h-11 flex-1" onClick={onBack}>
+                                {t('proposals.back_to_queue')}
+                            </Button>
                         )}
-                        <Button type="button" variant={nextUrl ? 'outline' : 'default'} className="h-11 flex-1" onClick={onBack}>
-                            {t('proposals.back_to_queue')}
-                        </Button>
                     </>
                 ) : canReject ? (
                     <Button
@@ -741,7 +695,7 @@ export function LocationProposalReview({
                             setRejecting(true);
                         }}
                     >
-                        {t('proposals.reject_title')}
+                        {t('proposals.nothing_found')}
                     </Button>
                 ) : null}
             </div>

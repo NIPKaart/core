@@ -235,18 +235,36 @@ it('rolls back already written chunks when late evidence is invalid', function (
     expect($source->fresh()->last_proposal_retrieved_at)->toBeNull();
 });
 
-it('groups nearby points explicitly and preserves the group on later deliveries', function () {
-    $data = proposalEnvelope([proposalPoint(), proposalPoint(longitude: 4.3601)], 2);
+it('bundles signs within 25 m into one proposal and keeps the bundle on later deliveries', function () {
+    [$first, $near, $far] = [proposalPoint(), proposalPoint(longitude: 4.3601), proposalPoint(longitude: 4.361)];
+    $data = proposalEnvelope([$first, $near, $far], 2);
     $source = app(SourceRegistrar::class)->register('proposals', $data);
     app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
     expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
-    [$first, $second] = DB::table('location_proposals')->orderBy('id')->pluck('id')->all();
+    $proposalOf = fn (array $point) => DB::table('location_proposal_points')->where('external_id', $point['external_id'])->value('location_proposal_id');
+    $bundle = $proposalOf($first);
+    expect($proposalOf($near))->toBe($bundle)->and($proposalOf($far))->not->toBe($bundle);
 
-    $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
-    $this->actingAs($moderator)->post(route('app.moderation.proposals.group', $first), ['with' => $second])->assertRedirect();
+    $this->actingAs(User::factory()->create()->assignRole(UserRole::MODERATOR));
     expect(processProposalObject($this->handler, $source, proposalEnvelope($data['records']))->state)->toBe('validated');
-    $this->get(route('app.moderation.proposals.index', ['proposal' => $first]))
-        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 1)->has('selected.points', 2));
+    expect($proposalOf($near))->toBe($bundle);
+    $this->get(route('app.moderation.proposals.index', ['proposal' => $bundle]))
+        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 2)->has('selected.points', 2));
+});
+
+it('leaves a decided proposal alone when a new sign appears next to it', function () {
+    $first = proposalPoint();
+    $data = proposalEnvelope([$first], 2);
+    $source = app(SourceRegistrar::class)->register('proposals', $data);
+    app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
+    expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
+    $closed = DB::table('location_proposal_points')->where('external_id', $first['external_id'])->value('location_proposal_id');
+    DB::table('location_proposals')->where('id', $closed)->update(['closed_at' => now(), 'decision_revision' => 1]);
+
+    $next = proposalPoint(longitude: 4.3601);
+    expect(processProposalObject($this->handler, $source, proposalEnvelope([$first, $next]))->state)->toBe('validated');
+    expect(DB::table('location_proposal_points')->where('external_id', $next['external_id'])->value('location_proposal_id'))->not->toBe($closed);
+    expect(DB::table('location_proposal_points')->where('location_proposal_id', $closed)->count())->toBe(1);
 });
 
 it('requires reapproval for changed terms without letting malformed points stop an approved source', function () {
@@ -282,7 +300,7 @@ it('counts open proposals once per municipality and continues within the chosen 
     $source = app(SourceRegistrar::class)->register('proposals', $data);
     app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
     expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
-    [$first, $amsterdam, $grouped, $closed, $missing, $last] = collect($data['records'])->map(fn (array $point) => DB::table('location_proposal_points')
+    [$first, $amsterdam, $bundled, $closed, $missing, $last] = collect($data['records'])->map(fn (array $point) => DB::table('location_proposal_points')
         ->where('external_id', $point['external_id'])->value('location_proposal_id'))->all();
     $delftId = Municipality::where('code', 'GM0503')->value('id');
     $amsterdamId = Municipality::where('code', 'GM0363')->value('id');
@@ -291,7 +309,8 @@ it('counts open proposals once per municipality and continues within the chosen 
 
     $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
     $route = fn (array $query = []) => route('app.moderation.proposals.index', $query);
-    $this->actingAs($moderator)->post(route('app.moderation.proposals.group', $first), ['with' => $grouped])->assertRedirect();
+    expect($bundled)->toBe($first);
+    $this->actingAs($moderator);
     $this->get($route())->assertInertia(fn (Assert $page) => $page
         ->where('proposals', null)->where('municipality', null)
         ->where('municipalities', [
