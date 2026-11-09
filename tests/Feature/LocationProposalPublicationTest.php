@@ -78,6 +78,31 @@ it('shows multiple nearby municipal and community spaces on opening a proposal',
         ->where('selected.community.1.id', $fartherCommunity->id));
 });
 
+it('loads published parking across the municipality independently of proposal matches and pagination', function () {
+    $location = ['municipality_id' => $this->municipality->id, 'latitude' => 52.02, 'longitude' => 4.39];
+    $other = ['municipality_id' => Municipality::factory()->create()->id];
+    $municipal = ParkingMunicipal::factory()->state([...$location, 'visibility' => true]);
+    $community = ParkingSpace::factory()->state([...$location, 'status' => ParkingStatus::APPROVED]);
+
+    $municipal->create();
+    $municipal->create(['visibility' => false]);
+    $municipal->create($other);
+    $community->create(['longitude' => 4.4]);
+    $community->create(['status' => ParkingStatus::PENDING]);
+    $community->create()->delete();
+    $community->create($other);
+
+    $index = route('app.moderation.proposals.index', ['municipality' => $this->municipality->id, 'page' => 2]);
+    $this->actingAs($this->moderator)->get($index)->assertInertia(fn (Assert $page) => $page
+        ->has('proposals.data', 0)
+        ->where('onMapCount', 0)
+        ->where('parking.municipal', [['latitude' => 52.02, 'longitude' => 4.39]])
+        ->where('parking.community', [['latitude' => 52.02, 'longitude' => 4.4]]));
+
+    $this->get($this->detail)->assertInertia(fn (Assert $page) => $page->where('parking', null));
+    $this->get(route('app.moderation.proposals.index', ['overview' => 1]))->assertInertia(fn (Assert $page) => $page->where('parking', null));
+});
+
 it('publishes all bays with an attributable approval and existence confirmation and safely repeats the request', function () {
     fakeReverseGeocoding($this->municipality);
     $this->freezeSecond();

@@ -108,6 +108,7 @@ class LocationProposalController extends Controller
             'imagery' => $municipality === null || $selected !== null ? [] : $imagery->forCountry(Municipality::with('country')->find($municipality)?->country?->code),
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
             'selected' => $selected,
+            'parking' => $municipality !== null && $selected === null && ! $closedView ? $this->municipalityParking($municipality) : null,
             'bayOptions' => [
                 'orientations' => ParkingOrientation::mapped(),
                 'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
@@ -408,6 +409,21 @@ class LocationProposalController extends Controller
     private function reasonOptions(array $reasons): array
     {
         return array_map(fn (Reason $reason): array => ['value' => $reason->value, 'label' => $reason->label()], $reasons);
+    }
+
+    /** @return array{community: Collection<int, ParkingSpace>, municipal: Collection<int, ParkingMunicipal>} */
+    private function municipalityParking(int $municipality): array
+    {
+        return [
+            'community' => ParkingSpace::query()
+                ->where('municipality_id', $municipality)
+                ->where('status', ParkingStatus::APPROVED)
+                ->get(['latitude', 'longitude']),
+            'municipal' => ParkingMunicipal::query()
+                ->where('municipality_id', $municipality)
+                ->where('visibility', true)
+                ->get(['latitude', 'longitude']),
+        ];
     }
 
     private function nearbyCommunity(object $point): Builder
