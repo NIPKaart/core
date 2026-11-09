@@ -117,6 +117,41 @@ it('publishes all bays with an attributable approval and existence confirmation 
         ->assertOk()->assertJsonPath('confirmations_count.confirmed', 1);
 });
 
+it('adds an independently verified parking space and returns to the same open proposal', function () {
+    fakeReverseGeocoding($this->municipality);
+    $query = ['proposal' => $this->proposal, 'municipality' => $this->municipality->id, 'point' => $this->proposal, 'from' => 'queue'];
+    $url = route('app.moderation.proposals.standalone-space', $query);
+    $id = (string) Str::uuid();
+    $payload = [
+        'submission_id' => $id, 'latitude' => 52.01125, 'longitude' => 4.36025,
+        'orientation' => 'parallel', 'under_sign' => 'no', 'street_view_confirmed' => true,
+    ];
+
+    $this->actingAs(User::factory()->create())->postJson($url, $payload)->assertForbidden();
+    $this->actingAs($this->moderator)->postJson($url, [...$payload, 'street_view_confirmed' => false])
+        ->assertJsonValidationErrors('street_view_confirmed');
+    $this->assertDatabaseCount('parking_spaces', 0);
+
+    $return = route('app.moderation.proposals.index', $query);
+    $this->post($url, $payload)->assertRedirect($return);
+    $this->post($url, $payload)->assertRedirect($return);
+    $this->get($return)->assertInertia(fn (Assert $page) => $page
+        ->where('selected.id', $this->proposal)->where('selected.published', false)->where('fromQueue', true)
+        ->where('selected.community.0.id', $id));
+
+    $space = ParkingSpace::sole();
+    expect($space)->id->toBe($id)
+        ->status->toBe(ParkingStatus::APPROVED)
+        ->location_proposal_id->toBeNull()
+        ->location_proposal_point_id->toBeNull();
+    expect($space->reviews()->sole())->reviewed_by->toBe($this->moderator->id);
+    expect($space->confirmations()->sole())->user_id->toBe($this->moderator->id)
+        ->status->toBe(ParkingConfirmationStatus::CONFIRMED)
+        ->comment->toBe('Street View: https://maps.google.com/maps?q=&layer=c&cbll=52.0112500,4.3602500');
+    $this->assertDatabaseCount('location_proposal_decisions', 0);
+    $this->assertDatabaseCount('community_point_events', 0);
+});
+
 it('refuses the entire batch when a bay references a foreign, missing or distant source point', function () {
     $this->payload['bays'][1]['source_point_id'] = $this->proposal + 1;
     $this->actingAs($this->moderator)->postJson($this->url, $this->payload)

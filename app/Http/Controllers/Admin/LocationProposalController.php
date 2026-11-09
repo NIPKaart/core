@@ -9,6 +9,7 @@ use App\Enums\ParkingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PublishLocationProposalRequest;
 use App\Http\Requests\RejectLocationProposalRequest;
+use App\Http\Requests\StoreStandaloneParkingSpaceRequest;
 use App\Models\DatasetSource;
 use App\Models\LocationProposalDecision;
 use App\Models\Municipality;
@@ -200,6 +201,56 @@ class LocationProposalController extends Controller
         });
 
         return to_route('app.moderation.proposals.index', $return);
+    }
+
+    public function storeStandaloneSpace(StoreStandaloneParkingSpaceRequest $request, int $proposal, ParkingLocationResolver $resolver): RedirectResponse
+    {
+        abort_unless(DB::table('location_proposals')->where('id', $proposal)->exists(), 404);
+        $point = new GeoPoint(round((float) $request->validated('latitude'), 7), round((float) $request->validated('longitude'), 7));
+        $location = $resolver->lookup($point->latitude, $point->longitude)
+            ?? throw ValidationException::withMessages(['latitude' => __('parking_spaces.contribute.unresolved')]);
+        $moderator = $request->user();
+        $evidence = sprintf('Street View: https://maps.google.com/maps?q=&layer=c&cbll=%.7F,%.7F', $point->latitude, $point->longitude);
+
+        DB::transaction(function () use ($request, $resolver, $point, $location, $moderator, $evidence): void {
+            $space = ParkingSpace::withTrashed()->firstOrCreate(
+                ['id' => $request->validated('submission_id')],
+                [
+                    'latitude' => $point->latitude,
+                    'longitude' => $point->longitude,
+                    ...$resolver->attributesFor($location),
+                    ...$request->parkingSpaceDetails(),
+                    'status' => ParkingStatus::APPROVED,
+                ],
+            );
+
+            if (! $space->wasRecentlyCreated) {
+                if ($space->trashed() || $space->location_proposal_id !== null || ! $space->confirmations()
+                    ->where('user_id', $moderator->id)->where('comment', $evidence)->exists()) {
+                    throw ValidationException::withMessages(['submission_id' => __('parking_spaces.proposal.changed')]);
+                }
+
+                return;
+            }
+
+            $now = now();
+            $space->reviews()->create([
+                'reviewed_by' => $moderator->id,
+                'from_status' => null,
+                'to_status' => ParkingStatus::APPROVED,
+                'reviewed_at' => $now,
+            ]);
+            $space->confirmations()->create([
+                'user_id' => $moderator->id,
+                'status' => ParkingConfirmationStatus::CONFIRMED,
+                'confirmed_at' => $now,
+                'comment' => $evidence,
+            ]);
+        });
+
+        Inertia::flash('success', __('parking_spaces.proposal.standalone_added'));
+
+        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])]);
     }
 
     public function reject(RejectLocationProposalRequest $request, int $proposal): RedirectResponse
@@ -448,6 +499,7 @@ class LocationProposalController extends Controller
             'published' => $closed,
             'revision' => $record->decision_revision,
             'canReject' => $record->bays_published_at === null,
+            'canAddStandalone' => Gate::allows('create', ParkingSpace::class),
             'publishedBays' => $publishedBays,
             'community' => $community->map($nearbyPlace)->all(),
             'municipal' => $municipal->map($nearbyPlace)->all(),

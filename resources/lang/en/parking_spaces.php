@@ -2,6 +2,7 @@
 
 return [
     'proposal' => [
+        'standalone_added' => 'Parking space added.',
         'rejected' => 'Location proposal rejected.',
         'reopened' => 'Location proposal reopened.',
         'existing_required' => 'Select an existing parking space on the map.',

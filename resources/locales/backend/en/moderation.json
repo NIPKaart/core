@@ -1,5 +1,11 @@
 {
     "proposals": {
+        "standalone": {
+            "title": "Add a separate parking space",
+            "place": "Click the missing parking bay or move the pin.",
+            "confirm": "I verified this parking space in Street View.",
+            "save": "Save parking space"
+        },
         "tab": "Proposals",
         "municipality_overview": "Municipalities",
         "next_proposal": "Next proposal",

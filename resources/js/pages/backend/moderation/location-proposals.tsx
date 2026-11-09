@@ -4,6 +4,7 @@ import InputError from '@/components/input-error';
 import type { AerialLayer } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { RestrictionDay } from '@/types';
@@ -16,6 +17,7 @@ import {
     bayNumber,
     browserStorage,
     canCheck,
+    emptyDetails,
     emptyDraft,
     loadDraft,
     moveBay,
@@ -183,6 +185,7 @@ export function LocationProposalReview({
     publishedBays,
     revision,
     canReject,
+    canAddStandalone,
     community,
     municipal,
     decision,
@@ -202,6 +205,7 @@ export function LocationProposalReview({
     publishedBays: PublishedBay[];
     revision: number;
     canReject: boolean;
+    canAddStandalone: boolean;
     community: NearbyPlace[];
     municipal: NearbyPlace[];
     decision?: ClosedDecision | null;
@@ -224,6 +228,35 @@ export function LocationProposalReview({
     const [existing, setExisting] = useState<string | null>(null);
     const [failure, setFailure] = useState<string | null>(null);
     const [processing, setProcessing] = useState(false);
+
+    const [standalone, setStandalone] = useState<{
+        id: string;
+        pin: MapPoint | null;
+        details: BayDetails;
+        confirmed: boolean;
+        error?: string;
+    } | null>(null);
+
+    const moveStandalone = (pin: MapPoint) => {
+        setStandalone((current) => current && { ...current, pin, confirmed: false, error: undefined });
+    };
+    const standaloneStreet = standalone?.pin && streetViewUrl(standalone.pin.latitude, standalone.pin.longitude);
+    const canSaveStandalone = !!standalone?.pin && standalone.confirmed && !!standalone.details.orientation && !!standalone.details.under_sign;
+
+    const saveStandalone = () => {
+        if (!standalone || !canSaveStandalone || processing) return;
+        setProcessing(true);
+        router.post(
+            app.moderation.proposals.standaloneSpace.url(proposal.id, { query }),
+            { ...standalone.details, ...standalone.pin, submission_id: standalone.id, street_view_confirmed: standalone.confirmed },
+            {
+                preserveState: true,
+                onSuccess: () => setStandalone(null),
+                onError: (errors) => setStandalone((current) => current && { ...current, error: Object.values(errors)[0] }),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
 
     useEffect(() => saveDraft(storage, proposal.id, published ? emptyDraft() : draft), [storage, proposal.id, draft, published]);
 
@@ -472,15 +505,23 @@ export function LocationProposalReview({
             scope="item"
             label={proposal.municipality}
             imageryLayers={imagery}
-            streetView={selectedBay ?? point}
-            mapHint={!published && !rejecting && step === 'place' && bays.length === 0 && submittedCount === 0 ? t('proposals.map_hint') : undefined}
+            streetView={standalone ? standalone.pin : (selectedBay ?? point)}
+            mapHint={
+                standalone
+                    ? t('proposals.standalone.place')
+                    : !published && !rejecting && step === 'place' && bays.length === 0 && submittedCount === 0
+                      ? t('proposals.map_hint')
+                      : undefined
+            }
             map={{
                 center: view.center,
                 zoom: view.zoom ?? 19,
                 sourcePoint: point,
+                proposed: standalone ? (standalone.pin ?? point) : undefined,
+                onMove: standalone && !processing ? moveStandalone : undefined,
                 nearby: pickingDuplicate ? [] : community,
                 municipal: pickingDuplicate ? [] : municipal,
-                bays: pickingDuplicate ? undefined : markers,
+                bays: pickingDuplicate || standalone ? undefined : markers,
                 queue: pickingDuplicate
                     ? duplicatePlaces.map((place) => ({
                           key: place.key,
@@ -491,14 +532,72 @@ export function LocationProposalReview({
                     : undefined,
                 highlighted: pickingDuplicate ? (existing ?? undefined) : undefined,
                 onPick: pickingDuplicate ? setExisting : undefined,
-                onPlace: !published && !rejecting && step === 'place' && !processing ? place : undefined,
+                onPlace: !standalone && !published && !rejecting && step === 'place' && !processing ? place : undefined,
                 onMoveBay: published || rejecting || processing ? undefined : (id, point) => setDraft((current) => moveBay(current, id, point)),
                 onRemoveBay: published || rejecting || processing || step === 'details' ? undefined : remove,
                 onSelectBay: setSelected,
             }}
         >
-            <PanelNav back={t('queue.label')} onBack={onBack} />
-            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+            {standalone ? (
+                <>
+                    <PanelNav back={t('proposals.title')} onBack={() => !processing && setStandalone(null)} />
+                    <section aria-labelledby="standalone-title" className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+                        <h2 id="standalone-title" className="text-lg font-bold">
+                            {t('proposals.standalone.title')}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">{t('proposals.standalone.place')}</p>
+                        {standaloneStreet && (
+                            <>
+                                <a href={standaloneStreet} target="_blank" rel="noreferrer" className="w-fit text-sm font-medium underline">
+                                    {t('review.views.street_view')}
+                                </a>
+                                <label className="flex items-center gap-2 text-sm">
+                                    <Checkbox
+                                        checked={standalone.confirmed}
+                                        disabled={processing}
+                                        onCheckedChange={(checked) =>
+                                            setStandalone((current) => current && { ...current, confirmed: checked === true })
+                                        }
+                                    />
+                                    {t('proposals.standalone.confirm')}
+                                </label>
+                            </>
+                        )}
+                        <fieldset disabled={processing}>
+                            <DetailsStep
+                                data={{
+                                    ...standalone.details,
+                                    latitude: standalone.pin?.latitude ?? null,
+                                    longitude: standalone.pin?.longitude ?? null,
+                                }}
+                                setData={(key, value) => {
+                                    if (key === 'latitude' || key === 'longitude') return;
+                                    setStandalone((current) => current && { ...current, details: { ...current.details, [key]: value } });
+                                }}
+                                errors={{}}
+                                orientationOptions={options.orientations}
+                                restrictionDays={options.restrictionDays}
+                            />
+                        </fieldset>
+                        {standalone.error && (
+                            <div role="alert">
+                                <InputError message={standalone.error} />
+                            </div>
+                        )}
+                    </section>
+                    <div className="flex shrink-0 gap-2 border-t px-5 py-4">
+                        <Button type="button" className="flex-1" disabled={!canSaveStandalone || processing} onClick={saveStandalone}>
+                            {processing ? t('proposals.submitting') : t('proposals.standalone.save')}
+                        </Button>
+                        <Button type="button" variant="outline" disabled={processing} onClick={() => setStandalone(null)}>
+                            {t('proposals.cancel')}
+                        </Button>
+                    </div>
+                </>
+            ) : (
+                <PanelNav back={t('queue.label')} onBack={onBack} />
+            )}
+            <div hidden={!!standalone} className={cn('min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4', !standalone && 'flex')}>
                 <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-semibold text-blue-700 dark:text-blue-300">
                         {t('proposals.eyebrow', { source: proposal.source })}
@@ -531,6 +630,18 @@ export function LocationProposalReview({
                     </span>
                 </div>
 
+                {!published && !rejecting && canAddStandalone && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="self-start"
+                        disabled={processing}
+                        onClick={() => setStandalone({ id: crypto.randomUUID(), pin: null, details: emptyDetails(), confirmed: false })}
+                    >
+                        <MapPinned aria-hidden />
+                        {t('proposals.standalone.title')}
+                    </Button>
+                )}
                 {published && canReject && decision && <ClosedCard decision={decision} source={proposal.source} />}
 
                 {!rejecting && bays.length > 0 && <StepBar step={step} canCheck={canCheck(draft)} onStep={setStep} />}
@@ -602,7 +713,7 @@ export function LocationProposalReview({
                 {rejecting && decisionFields(t('proposals.reject_title'), options.rejectionReasons)}
                 {rejecting && <InputError message={failure ?? undefined} />}
             </div>
-            <div className="flex shrink-0 gap-2 border-t px-5 py-4">
+            <div hidden={!!standalone} className={cn('shrink-0 gap-2 border-t px-5 py-4', !standalone && 'flex')}>
                 {rejecting ? (
                     <>
                         <Button

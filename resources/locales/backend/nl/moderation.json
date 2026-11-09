@@ -1,5 +1,11 @@
 {
     "proposals": {
+        "standalone": {
+            "title": "Losse parkeerplaats toevoegen",
+            "place": "Klik op het ontbrekende parkeervak of verplaats de pin.",
+            "confirm": "Ik heb deze parkeerplaats op Street View gecontroleerd.",
+            "save": "Parkeerplaats opslaan"
+        },
         "tab": "Voorstellen",
         "municipality_overview": "Gemeenten",
         "next_proposal": "Volgend voorstel",
