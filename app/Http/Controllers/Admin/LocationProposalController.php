@@ -214,7 +214,10 @@ class LocationProposalController extends Controller
             }
 
             $points = $this->proposalPoints($proposal);
-            $point = $points->firstWhere('id', $request->integer('point')) ?? $points->first();
+            $point = $request->filled('point') ? $points->firstWhere('id', $request->integer('point')) : $points->first();
+            if ($point === null && $request->filled('point')) {
+                throw ValidationException::withMessages(['decision' => __('parking_spaces.proposal.changed')]);
+            }
             abort_if($point === null, 404);
 
             $reason = Reason::from($request->validated('reason'));
