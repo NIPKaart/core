@@ -15,9 +15,9 @@ use App\Models\ParkingSpaceImprovement;
 use App\Models\ParkingSpaceReview;
 use App\Models\User;
 use Carbon\CarbonInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Pagination\LengthAwarePaginator as Paginator;
+use Illuminate\Pagination\Paginator as SimplePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -47,30 +47,34 @@ final class ModerationHistory
     /**
      * @param  array{types?: list<string>}  $filters
      */
-    public function page(User $user, array $filters = [], int $perPage = 25): LengthAwarePaginator
+    public function page(User $user, array $filters = [], int $perPage = 25): Paginator
     {
         $types = $this->typesFor($user);
         if (($filters['types'] ?? []) !== []) {
             $types = array_values(array_intersect($types, $filters['types']));
         }
 
+        // Each kind reads only its newest decisions up to this page, through its own index, before they are merged.
+        $take = SimplePaginator::resolveCurrentPage() * $perPage + 1;
+        $newest = fn (Builder $query, string $decidedAt, string $ref) => $query->orderByRaw("{$decidedAt} desc, {$ref} desc")->limit($take);
         $decisions = collect([
-            in_array(LocationProposalDecisions::TYPE, $types, true) ? DB::table('location_proposal_decisions')
-                ->selectRaw("'proposal' as kind, id::text as ref, decided_at AT TIME ZONE 'UTC' as decided_at, 0 as reports") : null,
-            in_array(ModerationQueue::SUBMISSION, $types, true) ? $this->submissionDecisions() : null,
-            in_array(ModerationQueue::IMPROVEMENT, $types, true) ? $this->improvementDecisions() : null,
-            in_array(ModerationQueue::REPORT, $types, true) ? $this->removals() : null,
-            in_array(ModerationQueue::REPORT, $types, true) ? $this->keptPlaces() : null,
+            in_array(LocationProposalDecisions::TYPE, $types, true) ? $newest(DB::table('location_proposal_decisions')
+                ->selectRaw("'proposal' as kind, id::text as ref, decided_at AT TIME ZONE 'UTC' as decided_at, 0 as reports"), 'location_proposal_decisions.decided_at', 'id::text') : null,
+            in_array(ModerationQueue::SUBMISSION, $types, true) ? $newest($this->submissionDecisions(), 'reviewed_at', 'id::text') : null,
+            in_array(ModerationQueue::IMPROVEMENT, $types, true) ? $newest($this->improvementDecisions(), 'reviewed_at', 'id::text') : null,
+            in_array(ModerationQueue::REPORT, $types, true) ? $newest($this->removals(), 'removed_at', 'id::text') : null,
+            in_array(ModerationQueue::REPORT, $types, true) ? $newest($this->keptPlaces(), 'resolved_at', 'min(id)::text') : null,
         ])->filter();
 
         if ($decisions->isEmpty()) {
-            return new Paginator([], 0, $perPage);
+            return new SimplePaginator([], $perPage);
         }
 
+        // Paged without a total: counting would read every decision ever taken on each visit.
         $union = $decisions->reduce(fn (?Builder $union, Builder $query) => $union?->unionAll($query) ?? $query);
         $page = DB::query()->fromSub($union, 'decisions')
             ->orderByDesc('decided_at')->orderBy('kind')->orderByDesc('ref')
-            ->paginate($perPage)
+            ->simplePaginate($perPage)
             ->withQueryString();
 
         $rows = $this->hydrate(collect($page->items()));
@@ -146,7 +150,7 @@ final class ModerationHistory
         return DB::table('parking_place_reports')
             ->selectRaw("'".self::KEPT."' as kind, min(id)::text as ref, resolved_at as decided_at, count(*) as reports")
             ->where('resolution', ReportResolution::KEPT->value)
-            ->groupByRaw('coalesce(parking_space_id::text, parking_municipal_id), resolved_at');
+            ->groupByRaw('resolved_at, coalesce(parking_space_id::text, parking_municipal_id)');
     }
 
     /**

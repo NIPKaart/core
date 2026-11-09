@@ -15,6 +15,7 @@ use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceImprovement;
+use App\Models\ParkingSpaceReview;
 use App\Models\Province;
 use App\Models\User;
 use App\Notifications\CommunitySpace\StatusChanged;
@@ -414,6 +415,30 @@ describe('history', function () {
                 ->where('history.data.2.decision', 'rejected')
                 ->where('history.data.2.reason', RejectionReason::DUPLICATE->label())
                 ->where('history.data.2.contributor', $this->contributor->name));
+    });
+
+    test('decisions taken at the same moment page without gaps or repeats, newest kinds merged in order', function () {
+        $bulk = now()->subDay()->startOfSecond();
+        $reviews = ParkingSpaceReview::factory()->count(30)->create([
+            'reviewed_by' => $this->moderator->id, 'to_status' => ParkingStatus::REJECTED, 'reviewed_at' => $bulk,
+        ]);
+        $newest = ParkingSpaceImprovement::factory()->create([
+            'status' => ParkingStatus::APPROVED, 'reviewed_by' => $this->moderator->id, 'reviewed_at' => $bulk->copy()->addMinute(),
+        ]);
+
+        $this->actingAs($this->moderator);
+        $keys = fn (int $page) => collect($this->get(route('app.moderation.index', ['status' => 'decided', 'page' => $page]))
+            ->assertInertia(fn (Assert $page) => $page->missing('history.total'))
+            ->inertiaProps('history.data'))->pluck('key')->all();
+        $first = $keys(1);
+        $second = $keys(2);
+
+        expect($first)->toHaveCount(25)
+            ->and($first[0])->toBe("improvement:{$newest->id}")
+            ->and($second)->toHaveCount(6)
+            ->and(collect([...$first, ...$second])->unique())->toHaveCount(31)
+            ->and(collect([...$first, ...$second])->filter(fn (string $key) => str_starts_with($key, 'submission:'))->sort()->values()->all())
+            ->toBe($reviews->map(fn (ParkingSpaceReview $review) => "submission:{$review->id}")->sort()->values()->all());
     });
 
     test('decided items carry where they happened, except a deleted community place', function () {

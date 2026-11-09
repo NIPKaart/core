@@ -1,5 +1,5 @@
 import app from '@/routes/app';
-import type { ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
+import type { PaginatedResponse, ParkingMunicipal, ParkingSpace, RestrictionDay } from '@/types';
 import type { CommunityPointsProfile, Contributor } from './parts';
 import type { ChangeGroup, EnumOption, ImprovementValues } from './values';
 
@@ -142,6 +142,12 @@ export type HistoryRow = {
         existing_url: string | null;
     };
 };
+
+/** A page of decisions; paged without a total, because counting would read every decision ever taken. */
+export type HistoryPage = Pick<
+    PaginatedResponse<HistoryRow>,
+    'data' | 'current_page' | 'from' | 'to' | 'per_page' | 'prev_page_url' | 'next_page_url'
+>;
 
 export type Filters = { types: HistoryType[]; municipality_ids: string[]; search: string | null };
 

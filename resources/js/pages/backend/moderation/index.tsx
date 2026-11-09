@@ -17,6 +17,7 @@ import {
     filterQuery,
     itemUrl,
     type Filters,
+    type HistoryPage,
     type HistoryRow,
     type ItemLink,
     type Options,
@@ -37,7 +38,7 @@ type PageProps = {
     locationProposals?: ProposalRow[];
     filters: Filters;
     items: PaginatedResponse<QueueItem> | null;
-    history: PaginatedResponse<HistoryRow> | null;
+    history: HistoryPage | null;
     selected: SelectedItem | null;
     position: Position | null;
     decidedToday: number;
