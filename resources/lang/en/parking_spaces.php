@@ -6,7 +6,7 @@ return [
         'reopened' => 'Location proposal reopened.',
         'reason_required' => 'Choose why you are adding fewer bays than reported.',
         'match_reviewed' => 'Assessment saved. The proposal stays open.',
-        'existing_required' => 'Select a nearby parking space that is already on the map.',
+        'existing_required' => 'Select an existing parking space on the map within 4 metres of the source point.',
         'duplicate' => 'Place each bay at a different position.',
         'changed' => 'The proposal changed. Open it again and check the source points.',
         'invalid_point' => 'This bay must be near an active source point from this proposal.',

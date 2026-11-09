@@ -11,7 +11,7 @@ class LocationProposalQueue
 {
     public const int OVERLAP_RADIUS_METRES = 3;
 
-    private const int SAMPLE_RADIUS_METRES = 4;
+    public const int SAMPLE_RADIUS_METRES = 4;
 
     private const string POINT_GEOGRAPHY = 'ST_SetSRID(ST_MakePoint(point.longitude, point.latitude), 4326)::geography';
 

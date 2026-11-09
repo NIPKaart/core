@@ -6,7 +6,7 @@ return [
         'reopened' => 'Locatievoorstel heropend.',
         'reason_required' => 'Kies waarom je minder vakken toevoegt dan gemeld.',
         'match_reviewed' => 'Beoordeling opgeslagen. Het voorstel blijft open.',
-        'existing_required' => 'Kies een bestaande parkeerplaats in de buurt die op de kaart staat.',
+        'existing_required' => 'Kies een bestaande parkeerplaats op de kaart binnen 4 meter van het bronpunt.',
         'duplicate' => 'Plaats elk parkeervak op een eigen positie.',
         'changed' => 'Het voorstel is gewijzigd. Open het opnieuw en controleer de bronpunten.',
         'invalid_point' => 'Dit parkeervak moet bij een actief bronpunt van dit voorstel liggen.',

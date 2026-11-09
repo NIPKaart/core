@@ -31,6 +31,14 @@ import type { BayMarker, MapPoint } from './moderation-map';
 import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
+export type NearbyPlace = MapPoint & {
+    id: string;
+    street: string | null;
+    distance_metres: number;
+    possible_duplicate: boolean;
+    can_compare: boolean;
+};
+
 type ProposalOverlap = { source: 'municipal' | 'community'; street: string | null; distance_metres: number };
 
 export type LocationProposal = {
@@ -154,6 +162,7 @@ export function LocationProposalReview({
     group,
     query,
     onBack,
+    onPointChange,
     nextUrl,
 }: {
     selection: LocationProposalSelection;
@@ -168,18 +177,17 @@ export function LocationProposalReview({
     publishedBays: PublishedBay[];
     revision: number;
     canReject: boolean;
-    community: (MapPoint & { id: string; street: string | null })[];
-    municipal: (MapPoint & { id: string; street: string | null })[];
+    community: NearbyPlace[];
+    municipal: NearbyPlace[];
     comparison?: MapPoint;
     group?: React.ReactNode;
     query: { municipality?: string | number; page?: number; point?: number; from?: 'queue'; overlap?: 'possible' | 'none' | 'sample' };
     onBack: () => void;
+    onPointChange: (id: number) => void;
     nextUrl?: string;
 }) {
     const { t, i18n } = useTranslation('backend/moderation');
-    const { proposal, point: initialPoint } = selection;
-    const [sourcePointId, setSourcePointId] = useState(initialPoint.id);
-    const point = proposal.points.find((candidate) => candidate.id === sourcePointId) ?? initialPoint;
+    const { proposal, point } = selection;
     const published = proposal.status === 'added';
     const storage = browserStorage();
     const [draft, setDraft] = useState<ProposalDraft>(() => loadDraft(storage, proposal.id) ?? emptyDraft());
@@ -210,12 +218,14 @@ export function LocationProposalReview({
     const partial = proposal.reported_bays !== null && totalBays < proposal.reported_bays;
     const askReason = !published && !rejecting && step === 'check' && partial;
     const pickingDuplicate = rejecting && reason === 'duplicate';
-    const duplicatePlaces = pickingDuplicate
-        ? [
-              ...community.map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: '#15803d' })),
-              ...municipal.map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: '#7c3aed' })),
-          ]
-        : [];
+    const duplicatePlaces = [
+        ...community
+            .filter((place) => place.can_compare)
+            .map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: '#15803d' })),
+        ...municipal
+            .filter((place) => place.can_compare)
+            .map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: '#7c3aed' })),
+    ].sort((a, b) => a.distance_metres - b.distance_metres);
     const duplicatePlace = duplicatePlaces.find((place) => place.key === existing);
     const lastPublishedNumber = Math.max(0, ...publishedBays.map((bay) => bay.number));
 
@@ -310,18 +320,20 @@ export function LocationProposalReview({
     const decisionFields = (legend: string, reasons: EnumOption[]) => (
         <fieldset className="flex flex-col gap-2 rounded-xl border p-4" disabled={processing}>
             <legend className="px-1 text-[15px] font-semibold">{legend}</legend>
-            {reasons.map((option) => (
-                <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 text-sm">
-                    <input
-                        type="radio"
-                        name="proposal-reason"
-                        checked={reason === option.value}
-                        onChange={() => setReason(option.value)}
-                        className="size-4 shrink-0 accent-foreground"
-                    />
-                    {option.value === 'duplicate' ? t('proposals.review_match') : option.label}
-                </label>
-            ))}
+            {reasons
+                .filter((option) => option.value !== 'duplicate' || duplicatePlaces.length > 0)
+                .map((option) => (
+                    <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 text-sm">
+                        <input
+                            type="radio"
+                            name="proposal-reason"
+                            checked={reason === option.value}
+                            onChange={() => setReason(option.value)}
+                            className="size-4 shrink-0 accent-foreground"
+                        />
+                        {option.value === 'duplicate' ? t('proposals.review_match') : option.label}
+                    </label>
+                ))}
             {pickingDuplicate && (
                 <label className="space-y-1 text-sm">
                     <span>{t('proposals.pick_duplicate')}</span>
@@ -337,8 +349,8 @@ export function LocationProposalReview({
                         <option value="">{t('proposals.choose')}</option>
                         {duplicatePlaces.map((place) => (
                             <option key={place.key} value={place.key}>
-                                {t(`proposals.${place.source}`)} ·{place.street || t('proposals.unknown_street')} ({place.latitude.toFixed(5)},{' '}
-                                {place.longitude.toFixed(5)})
+                                {t(`proposals.${place.source}`)} · {place.street || t('proposals.unknown_street')} ·{' '}
+                                {t('proposals.overlap_distance', { count: place.distance_metres })}
                             </option>
                         ))}
                     </select>
@@ -491,13 +503,7 @@ export function LocationProposalReview({
                             aria-label={t('proposals.source_point')}
                             className="mt-2 rounded-md border bg-background p-2 text-sm"
                             value={point.id}
-                            onChange={(event) => {
-                                const next = proposal.points.find((candidate) => candidate.id === Number(event.target.value));
-                                if (next) {
-                                    setSourcePointId(next.id);
-                                    setView({ center: next });
-                                }
-                            }}
+                            onChange={(event) => onPointChange(Number(event.target.value))}
                         >
                             {proposal.points.map((item, index) => (
                                 <option key={item.id} value={item.id}>
@@ -594,7 +600,7 @@ export function LocationProposalReview({
                         </section>
 
                         {group}
-                        {!published && canReject && (community.length > 0 || municipal.length > 0) && (
+                        {!published && canReject && duplicatePlaces.length > 0 && (
                             <Button
                                 type="button"
                                 variant="outline"

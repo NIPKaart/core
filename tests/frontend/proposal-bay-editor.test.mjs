@@ -79,7 +79,7 @@ function editor(reported_bays = null) {
     };
     vm.runInNewContext(compiled('location-proposals.tsx'), context);
     return {
-        render({ published = false, publishedBays = [] } = {}) {
+        render({ published = false, publishedBays = [], close = true } = {}) {
             hook = 0;
             return context.exports.LocationProposalReview({
                 selection: { proposal: { ...proposal, status: published ? 'added' : 'open' }, point },
@@ -94,12 +94,12 @@ function editor(reported_bays = null) {
                 revision: 0,
                 canReject: true,
                 community: [
-                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat' },
-                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat' },
+                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat', can_compare: close, distance_metres: close ? 2 : 92 },
+                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat', can_compare: false, distance_metres: 92 },
                 ],
                 municipal: [
-                    { ...point, latitude: 52.0111, id: 'existing-space', street: 'Markt' },
-                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null },
+                    { ...point, latitude: 52.0111, id: 'existing-space', street: 'Markt', can_compare: close, distance_metres: close ? 3.5 : 92 },
+                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null, can_compare: false, distance_metres: 92 },
                 ],
                 query: {},
                 publishedBays,
@@ -224,10 +224,22 @@ for (const [source, field] of [
 test('compares a candidate and sends an uncertain assessment without a close decision', () => {
     const screen = editor();
     action(screen.render(), 'proposals.review_match').props.onClick();
-    element(screen.render(), 'Workspace').props.map.onPick('municipal:existing-space');
+    const map = element(screen.render(), 'Workspace').props.map;
+    assert.equal(map.queue.length, 2);
+    assert.ok(map.queue.every((place) => place.key.endsWith(':existing-space')));
+    map.onPick('municipal:existing-space');
     action(screen.render(), 'proposals.match_unclear').props.onClick();
     assert.equal(screen.requests[0].data.match_outcome, 'unclear');
     assert.equal(screen.requests[0].data.existing_parking_municipal_id, 'existing-space');
+});
+
+test('keeps distant parking as map context without offering candidate comparison', () => {
+    const view = editor().render({ close: false });
+    assert.equal(element(view, 'Workspace').props.map.nearby.length, 2);
+    assert.equal(
+        find(view, (node) => node.type === 'Button' && node.props.children === 'proposals.review_match'),
+        undefined,
+    );
 });
 
 test('a decided proposal links to its bays on the map, or to the existing space it duplicates', () => {

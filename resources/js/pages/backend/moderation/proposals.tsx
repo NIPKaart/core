@@ -10,12 +10,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MapPoint } from './geo';
 import type { PublishedBay } from './location-proposal-draft';
-import { LocationProposalReview, LocationProposals, SOURCE_COLOR, toLocationProposal, type ProposalRow } from './location-proposals';
+import {
+    LocationProposalReview,
+    LocationProposals,
+    SOURCE_COLOR,
+    toLocationProposal,
+    type NearbyPlace,
+    type ProposalRow,
+} from './location-proposals';
 import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
-type NearbyPlace = MapPoint & { id: string; street: string | null; distance_metres: number; possible_duplicate: boolean };
 type OverlapFilter = 'possible' | 'none' | 'sample';
 type Props = {
     proposals: PaginatedResponse<ProposalRow> | null;
@@ -176,7 +182,7 @@ export default function Proposals({
             <div className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
                 {selected && review && selectedPoint ? (
                     <LocationProposalReview
-                        key={`${selected.id}:${selected.revision}`}
+                        key={`${selected.id}:${selected.pointId}:${selected.revision}`}
                         selection={{ proposal: review, point: selectedPoint }}
                         imagery={selected.imagery}
                         options={bayOptions}
@@ -189,6 +195,7 @@ export default function Proposals({
                         group={groups}
                         query={reviewQuery}
                         nextUrl={next?.url}
+                        onPointChange={(point) => router.visit(routes.index({ query: { ...reviewQuery, proposal: selected.id, point } }))}
                         onBack={() => router.visit(fromQueue ? app.moderation.index() : routes.index({ query }))}
                     />
                 ) : (

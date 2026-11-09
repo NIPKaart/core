@@ -224,7 +224,7 @@ class LocationProposalController extends Controller
                 $field = $municipalId === null ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
                 $existing = ($municipalId === null ? $this->nearbyCommunity($point) : $this->nearbyMunicipal($point))
                     ->whereKey($request->validated($field))->lockForUpdate()->first();
-                if ($existing === null) {
+                if ($existing === null || (float) $existing->distance_metres > LocationProposalQueue::SAMPLE_RADIUS_METRES) {
                     throw ValidationException::withMessages([$field => __('parking_spaces.proposal.existing_required')]);
                 }
 
@@ -380,7 +380,8 @@ class LocationProposalController extends Controller
             'street' => $place->street,
             'latitude' => $place->latitude,
             'longitude' => $place->longitude,
-            'distance_metres' => (int) round((float) $place->distance_metres),
+            'distance_metres' => round((float) $place->distance_metres, 1),
+            'can_compare' => (float) $place->distance_metres <= LocationProposalQueue::SAMPLE_RADIUS_METRES,
             'possible_duplicate' => (float) $place->distance_metres <= LocationProposalQueue::OVERLAP_RADIUS_METRES,
         ];
         $record = DB::table('location_proposals')->find($id);

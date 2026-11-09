@@ -206,6 +206,22 @@ it('records a reviewed candidate without closing the proposal or creating a deci
     $this->assertDatabaseCount('location_proposal_decisions', 0);
 })->with(['different_bay', 'unclear']);
 
+it('shows parking beyond four metres as context but rejects it as a comparison target', function (string $source) {
+    $attributes = ['municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36006];
+    $place = $source === 'municipal'
+        ? ParkingMunicipal::factory()->create([...$attributes, 'visibility' => true])
+        : ParkingSpace::factory()->create([...$attributes, 'status' => ParkingStatus::APPROVED]);
+    $field = $source === 'municipal' ? 'existing_parking_municipal_id' : 'existing_parking_space_id';
+
+    $this->actingAs($this->moderator)->get($this->detail)->assertInertia(fn (Assert $page) => $page
+        ->where("selected.{$source}.0.id", $place->id)
+        ->where("selected.{$source}.0.can_compare", false));
+    $this->postJson(route('app.moderation.proposals.reject', $this->proposal), [
+        'revision' => 0, 'reason' => 'duplicate', 'match_outcome' => 'unclear', $field => $place->id,
+    ])->assertJsonValidationErrors($field);
+    $this->assertDatabaseCount('location_proposal_match_reviews', 0);
+})->with(['municipal', 'community']);
+
 it('rejects a hidden or distant municipal duplicate target and a request with both target types', function () {
     $municipal = ParkingMunicipal::factory()->create([
         'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36, 'visibility' => false,
