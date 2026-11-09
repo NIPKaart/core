@@ -191,6 +191,35 @@ it('stores partial decisions and records a new decision when more bays are added
         ->where('history.data.1.proposal.total_bays', 3)->where('history.data.1.proposal.reopen_revision', null));
 });
 
+it('records a reviewed candidate without closing the proposal or creating a decision', function (string $outcome) {
+    $municipal = ParkingMunicipal::factory()->create([
+        'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36005, 'visibility' => true,
+    ]);
+    $this->actingAs($this->moderator)->post(route('app.moderation.proposals.reject', $this->proposal), [
+        'revision' => 0, 'reason' => 'duplicate', 'existing_parking_municipal_id' => $municipal->id, 'match_outcome' => $outcome,
+    ])->assertRedirect($this->detail);
+    $this->assertDatabaseHas('location_proposal_match_reviews', [
+        'location_proposal_point_id' => $this->proposal, 'moderator_id' => $this->moderator->id,
+        'parking_source' => 'municipal', 'parking_id' => $municipal->id, 'marker_distance_metres' => 3.43, 'outcome' => $outcome,
+    ]);
+    $this->assertDatabaseHas('location_proposals', ['id' => $this->proposal, 'closed_at' => null, 'decision_revision' => 0]);
+    $this->assertDatabaseCount('location_proposal_decisions', 0);
+})->with(['different_bay', 'unclear']);
+
+it('rejects a hidden or distant municipal duplicate target and a request with both target types', function () {
+    $municipal = ParkingMunicipal::factory()->create([
+        'municipality_id' => $this->municipality->id, 'latitude' => 52.011, 'longitude' => 4.36, 'visibility' => false,
+    ]);
+    $url = route('app.moderation.proposals.reject', $this->proposal);
+    $payload = ['revision' => 0, 'reason' => 'duplicate', 'existing_parking_municipal_id' => $municipal->id];
+    $this->actingAs($this->moderator)->postJson($url, $payload)->assertJsonValidationErrors('existing_parking_municipal_id');
+    $municipal->update(['visibility' => true, 'longitude' => 4.37]);
+    $this->postJson($url, $payload)->assertJsonValidationErrors('existing_parking_municipal_id');
+    $this->postJson($url, [...$payload, 'existing_parking_space_id' => (string) Str::uuid()])
+        ->assertJsonValidationErrors('existing_parking_space_id');
+    $this->assertDatabaseCount('location_proposal_decisions', 0);
+});
+
 it('rejects a proposal with an attributable decision and requires a public space for duplicates', function (string $reason) {
     $url = route('app.moderation.proposals.reject', $this->proposal);
     $payload = ['revision' => 0, 'reason' => $reason, 'note' => 'Reviewed on the map'];

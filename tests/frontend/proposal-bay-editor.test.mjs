@@ -98,8 +98,8 @@ function editor(reported_bays = null) {
                     { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat' },
                 ],
                 municipal: [
-                    { ...point, latitude: 52.0111 },
-                    { ...point, latitude: 52.0112 },
+                    { ...point, latitude: 52.0111, id: 'existing-space', street: 'Markt' },
+                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null },
                 ],
                 query: {},
                 publishedBays,
@@ -202,16 +202,32 @@ test('a partial completion sends a reason without saving it in the local draft',
     assert.ok(![...screen.storage.values()][0].includes('not_visible'));
 });
 
-test('duplicate rejection requires selecting a published space on the map', () => {
+for (const [source, field] of [
+    ['community', 'existing_parking_space_id'],
+    ['municipal', 'existing_parking_municipal_id'],
+]) {
+    test(`duplicate rejection can select a ${source} space on the map`, () => {
+        const screen = editor();
+        action(screen.render(), 'proposals.reject_title').props.onClick();
+        find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+        const view = screen.render();
+        assert.equal(action(view, 'proposals.match_same').props.disabled, true);
+        element(view, 'Workspace').props.map.onPick(`${source}:existing-space`);
+        action(screen.render(), 'proposals.match_same').props.onClick();
+        assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
+        assert.equal(screen.requests[0].data[field], 'existing-space');
+        const otherField = source === 'municipal' ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
+        assert.equal(screen.requests[0].data[otherField], null);
+    });
+}
+
+test('compares a candidate and sends an uncertain assessment without a close decision', () => {
     const screen = editor();
-    action(screen.render(), 'proposals.reject_title').props.onClick();
-    find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
-    const view = screen.render();
-    assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
-    element(view, 'Workspace').props.map.onPick('existing-space');
-    action(screen.render(), 'proposals.reject_title').props.onClick();
-    assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
-    assert.equal(screen.requests[0].data.existing_parking_space_id, 'existing-space');
+    action(screen.render(), 'proposals.review_match').props.onClick();
+    element(screen.render(), 'Workspace').props.map.onPick('municipal:existing-space');
+    action(screen.render(), 'proposals.match_unclear').props.onClick();
+    assert.equal(screen.requests[0].data.match_outcome, 'unclear');
+    assert.equal(screen.requests[0].data.existing_parking_municipal_id, 'existing-space');
 });
 
 test('a decided proposal links to its bays on the map, or to the existing space it duplicates', () => {

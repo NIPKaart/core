@@ -53,7 +53,9 @@ class LocationProposalController extends Controller
             'point' => ['nullable', 'integer', 'min:1'],
             'from' => ['nullable', 'in:queue'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'overlap' => ['nullable', 'in:possible,none,sample'],
         ]);
+        $overlapFilter = $filters['overlap'] ?? null;
         $preference = 'proposal_municipality_'.$request->user()->id;
         $municipality = isset($filters['municipality']) ? (int) $filters['municipality'] : null;
 
@@ -64,15 +66,16 @@ class LocationProposalController extends Controller
         if ($municipality === null && ! isset($filters['proposal']) && ! $request->boolean('overview')) {
             $remembered = (int) $request->cookie($preference);
             if ($remembered > 0 && Municipality::whereKey($remembered)->exists()) {
-                return to_route('app.moderation.proposals.index', ['municipality' => $remembered]);
+                return to_route('app.moderation.proposals.index', ['municipality' => $remembered, 'overlap' => $overlapFilter]);
             }
         }
 
         if (isset($filters['after']) && $municipality !== null) {
-            $next = $this->queue->nextInMunicipality($municipality, (int) $filters['after']);
+            $next = $this->queue->nextInMunicipality($municipality, (int) $filters['after'], $overlapFilter);
 
             return to_route('app.moderation.proposals.index', [
                 'municipality' => $municipality,
+                'overlap' => $overlapFilter,
                 ...($next === null ? [] : ['proposal' => $next]),
             ]);
         }
@@ -81,17 +84,18 @@ class LocationProposalController extends Controller
             ? $this->detail((int) $filters['proposal'], isset($filters['point']) ? (int) $filters['point'] : null, $imagery)
             : null;
         $municipality = $selected['municipalityId'] ?? $municipality;
-        $page = $municipality === null ? null : $this->queue->proposals()
+        $page = $municipality === null ? null : $this->queue->proposals($overlapFilter)
             ->where('proposal.municipality_id', $municipality)->paginate(50)->withQueryString();
 
         return Inertia::render('backend/moderation/proposals', [
-            'proposals' => $page?->setCollection($this->queue->rows($page->getCollection())),
+            'proposals' => $page?->setCollection($this->queue->rows($page->getCollection(), $overlapFilter)),
             'municipalities' => $municipality === null ? $this->queue->municipalityTotals() : [],
             'municipality' => $municipality,
             'municipalityName' => $municipality === null ? null : ($selected['municipality'] ?? Municipality::whereKey($municipality)->value('name')),
             'hasNext' => $municipality !== null && ($selected === null
                 ? $page->total() > 0
-                : $this->queue->nextInMunicipality($municipality, $selected['id']) !== null),
+                : $this->queue->nextInMunicipality($municipality, $selected['id'], $overlapFilter) !== null),
+            'overlap' => $overlapFilter,
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
             'selected' => $selected,
             'bayOptions' => [
@@ -108,7 +112,7 @@ class LocationProposalController extends Controller
     {
         $record = DB::table('location_proposals')->find($proposal);
         abort_if($record === null, 404);
-        $return = ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])];
+        $return = ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from', 'overlap'])];
 
         $bays = $request->validated('bays');
         $revision = (int) $request->validated('revision', 0);
@@ -199,7 +203,8 @@ class LocationProposalController extends Controller
 
     public function reject(RejectLocationProposalRequest $request, int $proposal): RedirectResponse
     {
-        DB::transaction(function () use ($request, $proposal): void {
+        $outcome = $request->validated('match_outcome') ?? 'same_bay';
+        DB::transaction(function () use ($request, $proposal, $outcome): void {
             $this->lockSources([$proposal]);
             $record = DB::table('location_proposals')->lockForUpdate()->find($proposal);
             abort_if($record === null, 404);
@@ -215,20 +220,43 @@ class LocationProposalController extends Controller
             $reason = Reason::from($request->validated('reason'));
             $existing = null;
             if ($reason === Reason::DUPLICATE) {
-                $existing = $this->nearbyCommunity($point)->whereKey($request->validated('existing_parking_space_id'))->lockForUpdate()->first();
+                $municipalId = $request->validated('existing_parking_municipal_id');
+                $field = $municipalId === null ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
+                $existing = ($municipalId === null ? $this->nearbyCommunity($point) : $this->nearbyMunicipal($point))
+                    ->whereKey($request->validated($field))->lockForUpdate()->first();
                 if ($existing === null) {
-                    throw ValidationException::withMessages(['existing_parking_space_id' => __('parking_spaces.proposal.existing_required')]);
+                    throw ValidationException::withMessages([$field => __('parking_spaces.proposal.existing_required')]);
+                }
+
+                DB::table('location_proposal_match_reviews')->insert([
+                    'location_proposal_point_id' => $point->id,
+                    'moderator_id' => $request->user()->id,
+                    'parking_source' => $municipalId === null ? 'community' : 'municipal',
+                    'parking_id' => $existing->id,
+                    'marker_distance_metres' => round((float) $existing->distance_metres, 2),
+                    'outcome' => $outcome,
+                    'reviewed_at' => now(),
+                ]);
+
+                if ($outcome !== 'same_bay') {
+                    return;
                 }
             }
 
             $this->decisions->record($record, $point, $request->user(), now(), $reason, $request->validated('note'), existing: $existing);
         });
 
+        if ($outcome !== 'same_bay') {
+            Inertia::flash('success', __('parking_spaces.proposal.match_reviewed'));
+
+            return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from', 'overlap'])]);
+        }
+
         Inertia::flash('success', __('parking_spaces.proposal.rejected'));
 
         return $request->query('from') === 'queue' && ! $request->filled('municipality')
             ? to_route('app.moderation.index')
-            : to_route('app.moderation.proposals.index', $request->only(['municipality', 'page']));
+            : to_route('app.moderation.proposals.index', $request->only(['municipality', 'page', 'overlap']));
     }
 
     public function reopen(Request $request, int $proposal): RedirectResponse
@@ -251,7 +279,7 @@ class LocationProposalController extends Controller
 
         Inertia::flash('success', __('parking_spaces.proposal.reopened'));
 
-        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])]);
+        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from', 'overlap'])]);
     }
 
     private function reasonOptions(array $reasons): array
@@ -264,6 +292,16 @@ class LocationProposalController extends Controller
         $location = new GeoPoint($point->latitude, $point->longitude);
 
         return ParkingSpace::query()->select('id', 'street', 'latitude', 'longitude')->where('status', ParkingStatus::APPROVED)->withinRadius($location, 250)->nearestTo($location);
+    }
+
+    private function nearbyMunicipal(object $point): \Illuminate\Database\Eloquent\Builder
+    {
+        $location = new GeoPoint($point->latitude, $point->longitude);
+
+        return ParkingMunicipal::select('id', 'street', 'latitude', 'longitude')
+            ->where('visibility', true)
+            ->withinRadius($location, ModerationEvidence::NEAREST_MUNICIPAL_METRES)
+            ->nearestTo($location);
     }
 
     private function validatePublicationReplay(object $proposal, array $bays, int $revision): void
@@ -327,7 +365,7 @@ class LocationProposalController extends Controller
                 ->update(['location_proposal_id' => $proposal]);
         });
 
-        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])]);
+        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from', 'overlap'])]);
     }
 
     private function detail(int $id, ?int $pointId, AerialImagery $imagery): array
@@ -335,20 +373,15 @@ class LocationProposalController extends Controller
         $points = $this->proposalPoints($id);
         $anchor = $points->firstWhere('id', $pointId) ?? $points->first();
         abort_if($anchor === null, 404);
-        $location = new GeoPoint($anchor->latitude, $anchor->longitude);
         $community = $this->nearbyCommunity($anchor)->limit(self::NEARBY_PLACES_LIMIT)->get();
-        $municipal = ParkingMunicipal::select('id', 'street', 'latitude', 'longitude')
-            ->where('visibility', true)
-            ->withinRadius($location, ModerationEvidence::NEAREST_MUNICIPAL_METRES)
-            ->nearestTo($location)
-            ->limit(self::NEARBY_PLACES_LIMIT)
-            ->get();
+        $municipal = $this->nearbyMunicipal($anchor)->limit(self::NEARBY_PLACES_LIMIT)->get();
         $nearbyPlace = static fn (ParkingSpace|ParkingMunicipal $place): array => [
             'id' => $place->id,
             'street' => $place->street,
             'latitude' => $place->latitude,
             'longitude' => $place->longitude,
             'distance_metres' => (int) round((float) $place->distance_metres),
+            'possible_duplicate' => (float) $place->distance_metres <= LocationProposalQueue::OVERLAP_RADIUS_METRES,
         ];
         $record = DB::table('location_proposals')->find($id);
         $closed = $record->closed_at !== null;

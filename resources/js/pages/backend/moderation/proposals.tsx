@@ -15,7 +15,8 @@ import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
-type NearbyPlace = MapPoint & { id: string; street: string | null; distance_metres: number };
+type NearbyPlace = MapPoint & { id: string; street: string | null; distance_metres: number; possible_duplicate: boolean };
+type OverlapFilter = 'possible' | 'none' | 'sample';
 type Props = {
     proposals: PaginatedResponse<ProposalRow> | null;
     municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
@@ -23,6 +24,7 @@ type Props = {
     municipalityName: string | null;
     hasNext: boolean;
     fromQueue: boolean;
+    overlap: OverlapFilter | null;
     bayOptions: {
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
@@ -47,10 +49,20 @@ type Props = {
     } | null;
 };
 
-export default function Proposals({ proposals, municipalities, municipality, municipalityName, hasNext, selected, bayOptions, fromQueue }: Props) {
+export default function Proposals({
+    proposals,
+    municipalities,
+    municipality,
+    municipalityName,
+    hasNext,
+    selected,
+    bayOptions,
+    fromQueue,
+    overlap,
+}: Props) {
     const { t } = useTranslation('backend/moderation');
     const routes = app.moderation.proposals;
-    const query = { ...(municipality ? { municipality } : {}), page: proposals?.current_page };
+    const query = { ...(municipality ? { municipality } : {}), overlap: overlap ?? undefined, page: proposals?.current_page };
     const [grouping, setGrouping] = useState<{ proposal: number; candidate: string } | null>(null);
     const candidate =
         grouping?.proposal === selected?.id ? selected?.candidates.find((point) => String(point.proposal_id) === grouping?.candidate) : undefined;
@@ -58,7 +70,10 @@ export default function Proposals({ proposals, municipalities, municipality, mun
     const reviewQuery = { ...query, ...(selected ? { point: selected.pointId } : {}), ...(fromQueue ? { from: 'queue' as const } : {}) };
     const rows = proposals?.data.map(toLocationProposal) ?? [];
     const overview = routes.index({ query: { overview: 1 } });
-    const next = hasNext && municipality !== null ? routes.index({ query: { municipality, after: selected?.id ?? 0 } }) : undefined;
+    const next =
+        hasNext && municipality !== null
+            ? routes.index({ query: { municipality, overlap: overlap ?? undefined, after: selected?.id ?? 0 } })
+            : undefined;
     const review = selected
         ? toLocationProposal({
               id: selected.id,
@@ -88,6 +103,9 @@ export default function Proposals({ proposals, municipalities, municipality, mun
         <>
             <section className="space-y-1 text-sm">
                 <h3 className="font-semibold">{t('proposals.nearby')}</h3>
+                {[...selected.community, ...selected.municipal].some((place) => place.possible_duplicate) && (
+                    <p className="font-medium">{t('proposals.possible_duplicate')}</p>
+                )}
                 {selected.community.length === 0 && selected.municipal.length === 0 && <p>{t('proposals.none_nearby')}</p>}
                 {(
                     [
@@ -232,6 +250,18 @@ export default function Proposals({ proposals, municipalities, municipality, mun
                             ) : (
                                 <>
                                     <h2 className="px-5 pt-4 text-lg font-semibold">{municipalityName}</h2>
+                                    <div className="flex flex-wrap gap-2 px-5 py-3" role="group" aria-label={t('proposals.overlap_filter')}>
+                                        {([null, 'none', 'possible', 'sample'] as const).map((filter) => (
+                                            <Button key={filter ?? 'all'} variant={filter === overlap ? 'default' : 'outline'} size="sm" asChild>
+                                                <Link
+                                                    href={routes.index({ query: { municipality, overlap: filter ?? undefined } })}
+                                                    aria-current={filter === overlap ? 'page' : undefined}
+                                                >
+                                                    {t(`proposals.overlap_${filter ?? 'all'}`)}
+                                                </Link>
+                                            </Button>
+                                        ))}
+                                    </div>
                                     {rows.length === 0 ? (
                                         <p className="px-5 py-3 text-sm text-muted-foreground">{t('proposals.no_open')}</p>
                                     ) : (

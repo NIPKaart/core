@@ -31,13 +31,15 @@ import type { BayMarker, MapPoint } from './moderation-map';
 import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
+type ProposalOverlap = { source: 'municipal' | 'community'; street: string | null; distance_metres: number };
+
 export type LocationProposal = {
     id: number;
     source: string;
     street: string;
     reported_bays: number | null;
     status: 'open' | 'added';
-    points: (MapPoint & { id: number; last_seen: string | null })[];
+    points: (MapPoint & { id: number; last_seen: string | null; overlap?: ProposalOverlap })[];
 };
 
 export type ProposalRow = {
@@ -45,7 +47,7 @@ export type ProposalRow = {
     municipality: string;
     status: 'open' | 'added';
     bayCount: number | null;
-    points: (MapPoint & { id: number; proposal_id: number; source: string; source_last_seen_on: string | null })[];
+    points: (MapPoint & { id: number; proposal_id: number; source: string; source_last_seen_on: string | null; overlap?: ProposalOverlap })[];
 };
 
 export function toLocationProposal(row: ProposalRow): LocationProposal {
@@ -107,7 +109,14 @@ export function LocationProposals({
                             <span className="flex min-w-0 flex-1 flex-col gap-px">
                                 <span className="truncate text-[15px] font-medium">{proposal.street}</span>
                                 <span className="truncate text-[13px] text-muted-foreground">
-                                    <StatusText draft={loadDraft(storage, proposal.id)} proposal={proposal} />
+                                    {point.overlap ? (
+                                        <>
+                                            {t(`proposals.${point.overlap.source}`)} · {point.overlap.street ?? t('proposals.unknown_street')} ·{' '}
+                                            {t('proposals.overlap_distance', { count: point.overlap.distance_metres })}
+                                        </>
+                                    ) : (
+                                        <StatusText draft={loadDraft(storage, proposal.id)} proposal={proposal} />
+                                    )}
                                 </span>
                             </span>
                             {proposal.points.length > 1 && (
@@ -160,10 +169,10 @@ export function LocationProposalReview({
     revision: number;
     canReject: boolean;
     community: (MapPoint & { id: string; street: string | null })[];
-    municipal: MapPoint[];
+    municipal: (MapPoint & { id: string; street: string | null })[];
     comparison?: MapPoint;
     group?: React.ReactNode;
-    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue' };
+    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue'; overlap?: 'possible' | 'none' | 'sample' };
     onBack: () => void;
     nextUrl?: string;
 }) {
@@ -201,6 +210,13 @@ export function LocationProposalReview({
     const partial = proposal.reported_bays !== null && totalBays < proposal.reported_bays;
     const askReason = !published && !rejecting && step === 'check' && partial;
     const pickingDuplicate = rejecting && reason === 'duplicate';
+    const duplicatePlaces = pickingDuplicate
+        ? [
+              ...community.map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: '#15803d' })),
+              ...municipal.map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: '#7c3aed' })),
+          ]
+        : [];
+    const duplicatePlace = duplicatePlaces.find((place) => place.key === existing);
     const lastPublishedNumber = Math.max(0, ...publishedBays.map((bay) => bay.number));
 
     const markers: BayMarker[] = [
@@ -260,16 +276,32 @@ export function LocationProposalReview({
         );
     };
 
-    const reject = () => {
-        if (processing || !reason || (pickingDuplicate && !existing)) return;
+    const reject = (outcome: 'same_bay' | 'different_bay' | 'unclear' = 'same_bay') => {
+        if (processing || !reason || (pickingDuplicate && !duplicatePlace)) return;
         setFailure(null);
         setProcessing(true);
         router.post(
             app.moderation.proposals.reject.url(proposal.id, { query }),
-            { revision, reason, note, existing_parking_space_id: pickingDuplicate ? existing : null },
+            {
+                revision,
+                reason,
+                note,
+                ...(pickingDuplicate ? { match_outcome: outcome } : {}),
+                existing_parking_space_id: duplicatePlace?.source === 'community' ? duplicatePlace.id : null,
+                existing_parking_municipal_id: duplicatePlace?.source === 'municipal' ? duplicatePlace.id : null,
+            },
             {
                 onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
-                onSuccess: () => saveDraft(storage, proposal.id, emptyDraft()),
+                onSuccess: () => {
+                    if (outcome === 'same_bay') {
+                        saveDraft(storage, proposal.id, emptyDraft());
+                    } else {
+                        setRejecting(false);
+                        setReason('');
+                        setNote('');
+                        setExisting(null);
+                    }
+                },
                 onFinish: () => setProcessing(false),
             },
         );
@@ -287,7 +319,7 @@ export function LocationProposalReview({
                         onChange={() => setReason(option.value)}
                         className="size-4 shrink-0 accent-foreground"
                     />
-                    {option.label}
+                    {option.value === 'duplicate' ? t('proposals.review_match') : option.label}
                 </label>
             ))}
             {pickingDuplicate && (
@@ -297,19 +329,30 @@ export function LocationProposalReview({
                         className="w-full rounded-md border bg-background p-2"
                         value={existing ?? ''}
                         onChange={(event) => {
-                            const place = community.find((candidate) => candidate.id === event.target.value);
-                            setExisting(place?.id ?? null);
+                            const place = duplicatePlaces.find((candidate) => candidate.key === event.target.value);
+                            setExisting(place?.key ?? null);
                             if (place) setView({ center: place, zoom: BAY_ZOOM });
                         }}
                     >
                         <option value="">{t('proposals.choose')}</option>
-                        {community.map((place) => (
-                            <option key={place.id} value={place.id}>
-                                {place.street || t('proposals.unknown_street')} ({place.latitude.toFixed(5)}, {place.longitude.toFixed(5)})
+                        {duplicatePlaces.map((place) => (
+                            <option key={place.key} value={place.key}>
+                                {t(`proposals.${place.source}`)} ·{place.street || t('proposals.unknown_street')} ({place.latitude.toFixed(5)},{' '}
+                                {place.longitude.toFixed(5)})
                             </option>
                         ))}
                     </select>
                 </label>
+            )}
+            {pickingDuplicate && (
+                <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" variant="outline" disabled={!duplicatePlace} onClick={() => reject('different_bay')}>
+                        {t('proposals.match_different')}
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" disabled={!duplicatePlace} onClick={() => reject('unclear')}>
+                        {t('proposals.match_unclear')}
+                    </Button>
+                </div>
             )}
             <label className="space-y-1 text-sm">
                 <span>{t('proposals.decision_note')}</span>
@@ -406,13 +449,13 @@ export function LocationProposalReview({
                 sourcePoint: point,
                 comparisonPoint: comparison,
                 nearby: pickingDuplicate ? [] : community,
-                municipal,
+                municipal: pickingDuplicate ? [] : municipal,
                 bays: pickingDuplicate ? undefined : markers,
                 queue: pickingDuplicate
-                    ? community.map((place) => ({
-                          key: place.id,
+                    ? duplicatePlaces.map((place) => ({
+                          key: place.key,
                           point: place,
-                          color: '#15803d',
+                          color: place.color,
                           label: place.street ?? t('proposals.unknown_street'),
                       }))
                     : undefined,
@@ -551,6 +594,20 @@ export function LocationProposalReview({
                         </section>
 
                         {group}
+                        {!published && canReject && (community.length > 0 || municipal.length > 0) && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    setReason('duplicate');
+                                    setNote('');
+                                    setFailure(null);
+                                    setRejecting(true);
+                                }}
+                            >
+                                {t('proposals.review_match')}
+                            </Button>
+                        )}
                     </>
                 )}
                 {askReason &&
@@ -565,10 +622,10 @@ export function LocationProposalReview({
                             type="button"
                             variant="destructive"
                             className="h-11 flex-[2]"
-                            disabled={processing || !reason || (pickingDuplicate && !existing)}
-                            onClick={reject}
+                            disabled={processing || !reason || (pickingDuplicate && !duplicatePlace)}
+                            onClick={() => reject()}
                         >
-                            {t('proposals.reject_title')}
+                            {t(pickingDuplicate ? 'proposals.match_same' : 'proposals.reject_title')}
                         </Button>
                         <Button
                             type="button"
