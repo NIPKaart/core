@@ -316,9 +316,23 @@ export function QueueHeader({
 
     return (
         <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
-            <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
-                <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+            <div className="flex items-center gap-3">
+                {/* On a touch screen the select button takes the right, so today's count moves below the title. */}
+                <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3 pointer-coarse:flex-col pointer-coarse:gap-0.5">
+                    <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
+                    <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+                </div>
+                {open && selectMode !== undefined && (
+                    <Button
+                        variant={selectMode ? 'default' : 'secondary'}
+                        aria-pressed={selectMode}
+                        onClick={() => onSelectMode?.(!selectMode)}
+                        className="h-11 shrink-0 cursor-pointer rounded-[10px] pointer-fine:hidden"
+                    >
+                        {selectMode ? <Check aria-hidden /> : <ListChecks aria-hidden />}
+                        {t(selectMode ? 'queue.select_done' : 'queue.select')}
+                    </Button>
+                )}
             </div>
             <div className="flex gap-2">
                 <nav aria-label={t('tabs.label')} className="flex flex-1 rounded-[10px] bg-muted p-1">
@@ -367,17 +381,6 @@ export function QueueHeader({
                     </Button>
                 )}
             </div>
-            {open && selectMode !== undefined && (
-                <Button
-                    variant={selectMode ? 'default' : 'secondary'}
-                    aria-pressed={selectMode}
-                    onClick={() => onSelectMode?.(!selectMode)}
-                    className="h-11 cursor-pointer self-start rounded-[10px] pointer-fine:hidden"
-                >
-                    {selectMode ? <Check aria-hidden /> : <ListChecks aria-hidden />}
-                    {t(selectMode ? 'queue.select_done' : 'queue.select')}
-                </Button>
-            )}
             {open && searching && (
                 <div className="relative">
                     <Input
