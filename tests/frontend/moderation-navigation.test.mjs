@@ -59,6 +59,7 @@ function setup() {
             if (name === './parts') return { useAgo: () => () => '' };
             if (name === './shortcuts') return { useShortcuts: () => {} };
             if (name === './queue-list') return { QueueList: 'QueueList', TYPE_COLORS: { submission: 'blue' } };
+            if (name === './decided') return { DecidedList: 'DecidedList', DecisionPane: 'DecisionPane', decisionColor: (row) => row.decision };
             return tags;
         },
     };
@@ -100,4 +101,31 @@ test('a failed item request keeps the queue visible', () => {
     app.finish();
 
     assert.ok(find(app.render(), 'QueueList'));
+});
+
+test('decided items show on the map and open as a decision in the panel', () => {
+    const app = setup();
+    const removed = { key: 'removal:1', type: 'report', decision: 'removed', street: 'Coolsingel', latitude: 51.92, longitude: 4.48 };
+    const gone = { key: 'kept:2', type: 'report', decision: 'kept', street: null, latitude: null, longitude: null };
+    const decided = { status: 'decided', items: null, history: { data: [removed, gone] } };
+
+    const overview = app.render(decided);
+    const pins = find(overview, 'Workspace').props.map.queue;
+    assert.deepEqual(
+        pins.map((pin) => pin.key),
+        ['removal:1'],
+        'a decision without a known location has no pin',
+    );
+    assert.equal(pins[0].color, 'removed');
+
+    find(overview, 'DecidedList').props.onOpen(removed);
+    const opened = app.render(decided);
+    assert.equal(find(opened, 'DecisionPane').props.row, removed);
+    assert.deepEqual(
+        find(opened, 'Workspace').props.map.queue.map((pin) => pin.key),
+        ['removal:1'],
+    );
+
+    find(opened, 'DecisionPane').props.onBack();
+    assert.ok(find(app.render(decided), 'DecidedList'), 'going back shows the list again');
 });

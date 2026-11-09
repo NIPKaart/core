@@ -114,6 +114,9 @@ export type HistoryRow = {
     note: string | null;
     reviewer: string | null;
     decided_at: string;
+    /** Where the decision happened; null when the place is gone without a trace. */
+    latitude: number | null;
+    longitude: number | null;
     source?: 'community' | 'municipal';
     reports?: number;
     changes?: ChangeGroup[];

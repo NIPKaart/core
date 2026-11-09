@@ -231,7 +231,7 @@ final class ParkingSpaceImprovements
      */
     public function decided(Collection $improvements): Collection
     {
-        $improvements->loadMissing(['parkingSpace:id,street,municipality_id', 'parkingSpace.municipality:id,name', 'reviewer:id,name', 'user:id,name']);
+        $improvements->loadMissing(['parkingSpace:id,street,municipality_id,latitude,longitude', 'parkingSpace.municipality:id,name', 'reviewer:id,name', 'user:id,name']);
         $municipalities = $this->municipalityNames($improvements);
 
         return $improvements->map(fn (ParkingSpaceImprovement $improvement) => $this->decidedRow($improvement, $municipalities));
@@ -348,6 +348,8 @@ final class ParkingSpaceImprovements
                 'id' => $improvement->parking_space_id,
                 'street' => $improvement->parkingSpace?->street,
                 'municipality' => $improvement->parkingSpace?->municipality?->name,
+                'latitude' => $improvement->parkingSpace?->latitude,
+                'longitude' => $improvement->parkingSpace?->longitude,
             ],
             'changes' => $this->changeGroups($applied !== [] ? $applied : $improvement->submitted),
             'status' => $improvement->status->value,
