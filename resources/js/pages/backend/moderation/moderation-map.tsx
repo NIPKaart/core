@@ -1,8 +1,10 @@
 import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { pinSvg } from '@/lib/pin-svg';
 import { cn } from '@/lib/utils';
 import L from 'leaflet';
-import { LocateFixed, Minus, Plus } from 'lucide-react';
+import { Info, LocateFixed, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
@@ -154,6 +156,7 @@ export function ModerationMap({
     current,
     proposed,
     queue,
+    fitQueue = true,
     highlighted,
     onPick,
     onMove,
@@ -181,6 +184,8 @@ export function ModerationMap({
     proposed?: MapPoint | null;
     /** The open items of the queue; replaces the main pin. */
     queue?: QueuePin[];
+    /** Fit the map around all queue pins; off to keep the centre and zoom on one of them while the others stay in view. */
+    fitQueue?: boolean;
     highlighted?: string | null;
     onPick?: (key: string) => void;
     /** Makes the main pin movable and reports where it went. */
@@ -207,7 +212,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = queue?.map((pin) => pin.point);
+    const spread = fitQueue ? queue?.map((pin) => pin.point) : undefined;
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
@@ -215,6 +220,11 @@ export function ModerationMap({
     );
     const pin = proposed ?? center;
     const startZoom = zoom ?? tiles.zoom;
+    const legendItems = [
+        ...(sourcePoint && bays ? bayLegend(t) : queue ? queueLegend(queue) : []),
+        ...(nearby.length > 0 ? [{ key: 'community', icon: legendDot('#16a34a'), label: t('map.legend.community') }] : []),
+        ...(municipal.length > 0 ? [{ key: 'municipal', icon: legendDot('#7c3aed'), label: t('map.legend.municipal') }] : []),
+    ];
 
     return (
         <div className={cn('relative isolate overflow-hidden bg-[#e8e6e1]', className)}>
@@ -303,6 +313,7 @@ export function ModerationMap({
             </MapContainer>
             {map && (
                 <div className="absolute right-3 bottom-7 z-500 flex flex-col gap-2.5 lg:right-4 lg:bottom-6">
+                    <MapLegend items={legendItems} />
                     <button
                         type="button"
                         aria-label={t(spread ? 'map.fit_all' : 'map.recenter')}
@@ -331,7 +342,6 @@ export function ModerationMap({
                     </div>
                 </div>
             )}
-            {sourcePoint && bays ? <BayLegend /> : queue && <QueueLegend pins={queue} />}
             {children}
         </div>
     );
@@ -345,38 +355,45 @@ function legendPin(fill: string, stroke = '#fff', width = 2.4) {
     );
 }
 
-function QueueLegend({ pins }: { pins: QueuePin[] }) {
+function legendDot(color: string) {
+    return (
+        <span
+            className="size-3.5 shrink-0 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.2)]"
+            style={{ backgroundColor: color }}
+            aria-hidden
+        />
+    );
+}
+
+type LegendItem = { key: string; icon: React.ReactNode; label: string };
+
+function queueLegend(pins: QueuePin[]): LegendItem[] {
     const entries = new Map<string, QueuePin>();
     for (const pin of pins) {
         if (pin.legendLabel && !entries.has(pin.legendLabel)) entries.set(pin.legendLabel, pin);
     }
 
-    return (
-        <MapLegend
-            items={Array.from(entries, ([label, pin]) => ({
-                key: label,
-                label,
-                icon:
-                    pin.count === undefined ? (
-                        legendPin(pin.color)
-                    ) : (
-                        <span
-                            className="flex size-4 items-center justify-center rounded-full border border-white text-[9px] font-semibold text-white"
-                            style={{ backgroundColor: pin.color }}
-                            aria-hidden
-                        >
-                            #
-                        </span>
-                    ),
-            }))}
-        />
-    );
+    return Array.from(entries, ([label, pin]) => ({
+        key: label,
+        label,
+        icon:
+            pin.count === undefined ? (
+                legendPin(pin.color)
+            ) : (
+                <span
+                    className="flex size-4 items-center justify-center rounded-full border border-white text-[9px] font-semibold text-white"
+                    style={{ backgroundColor: pin.color }}
+                    aria-hidden
+                >
+                    #
+                </span>
+            ),
+    }));
 }
 
-/** What the source point and the three pin states mean, beside the zoom buttons. */
-function BayLegend() {
-    const { t } = useTranslation('backend/moderation');
-    const items = [
+/** What the source point and the three pin states mean. */
+function bayLegend(t: (key: string) => string): LegendItem[] {
+    return [
         {
             key: 'source',
             icon: <span className="size-4 rounded-[3px] border-2 border-white bg-[#1e3a8a] shadow-[0_0_0_1px_#1e3a8a]" aria-hidden />,
@@ -386,26 +403,43 @@ function BayLegend() {
         { key: 'placed', icon: legendPin('#fff', '#1d4ed8', 3.5), label: t('map.legend.placed') },
         { key: 'submitted', icon: legendPin('#171717', '#fff'), label: t('map.legend.submitted') },
     ];
-
-    return <MapLegend items={items} />;
 }
 
-function MapLegend({ items }: { items: { key: string; icon: React.ReactNode; label: string }[] }) {
+/** The legend behind an info button above the map controls, as on the public map, so it never covers the map. */
+function MapLegend({ items }: { items: LegendItem[] }) {
     const { t } = useTranslation('backend/moderation');
+    const [open, setOpen] = useState(false);
     if (items.length === 0) return null;
 
     return (
-        <ul
-            aria-label={t('map.legend.label')}
-            className="absolute right-20 bottom-6 z-500 hidden items-center gap-4 rounded-xl bg-background px-3.5 py-2.5 text-xs shadow-[0_2px_10px_rgba(0,0,0,0.14)] lg:flex"
-        >
-            {items.map((item) => (
-                <li key={item.key} className="flex items-center gap-1.5">
-                    {item.icon}
-                    {item.label}
-                </li>
-            ))}
-        </ul>
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    aria-label={t('map.legend.label')}
+                    title={t('map.legend.label')}
+                    className="flex size-11 cursor-pointer items-center justify-center rounded-xl bg-background text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.14)] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted lg:size-12"
+                >
+                    <Info className="size-5" aria-hidden />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent side="left" align="end" sideOffset={8} className="w-72 rounded-xl p-3" aria-label={t('map.legend.label')}>
+                <div className="mb-1 flex items-center justify-between pl-1">
+                    <h2 className="text-sm font-semibold">{t('map.legend.label')}</h2>
+                    <Button variant="ghost" size="icon" className="size-11" aria-label={t('map.legend.close')} onClick={() => setOpen(false)}>
+                        <X className="size-4" aria-hidden />
+                    </Button>
+                </div>
+                <ul className="grid gap-2 px-1 pb-1 text-sm">
+                    {items.map((item) => (
+                        <li key={item.key} className="flex items-center gap-3">
+                            <span className="flex w-5 shrink-0 justify-center">{item.icon}</span>
+                            {item.label}
+                        </li>
+                    ))}
+                </ul>
+            </PopoverContent>
+        </Popover>
     );
 }
 

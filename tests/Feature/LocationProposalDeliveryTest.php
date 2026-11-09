@@ -1,11 +1,15 @@
 <?php
 
+use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Jobs\ProcessDatasetDelivery;
 use App\Models\Country;
 use App\Models\DatasetDelivery;
 use App\Models\DatasetSource;
+use App\Models\LocationProposalDecision;
 use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
+use App\Models\ParkingSpace;
 use App\Models\Province;
 use App\Models\User;
 use App\Services\DatasetDeliveryService;
@@ -143,6 +147,80 @@ it('discovers and approves a national source, then reconciles evidence without p
     $this->assertDatabaseCount('location_proposal_points', 5);
     $this->assertDatabaseCount('location_proposals', 2);
 });
+
+it('lists proposals with parking within 3 m first, across both sources, and keeps next in id order', function () {
+    $data = proposalEnvelope([proposalPoint(), proposalPoint(longitude: 4.361), proposalPoint(longitude: 4.362)]);
+    $source = app(SourceRegistrar::class)->register('proposals', $data);
+    app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
+    expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
+
+    [$first, $second, $third] = DB::table('location_proposals')->orderBy('id')->pluck('id')->all();
+    $municipality = Municipality::where('code', 'GM0503')->sole();
+    $nearby = ['municipality_id' => $municipality->id, 'latitude' => 52.01];
+    ParkingMunicipal::factory()->create([...$nearby, 'longitude' => 4.36002, 'visibility' => true, 'street' => 'Markt']);
+    ParkingMunicipal::factory()->create([...$nearby, 'longitude' => 4.361, 'visibility' => false]);
+    ParkingSpace::factory()->create([...$nearby, 'longitude' => 4.361, 'status' => ParkingStatus::PENDING]);
+    ParkingSpace::factory()->create([...$nearby, 'longitude' => 4.36105, 'status' => ParkingStatus::APPROVED]);
+    ParkingSpace::factory()->create([...$nearby, 'longitude' => 4.36202, 'status' => ParkingStatus::APPROVED]);
+
+    $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
+    $url = fn (array $query) => route('app.moderation.proposals.index', ['municipality' => $municipality->id, ...$query]);
+    $this->actingAs($moderator)->get($url([]))->assertInertia(fn (Assert $page) => $page
+        ->where('proposals.total', 3)->where('onMapCount', 2)
+        ->where('proposals.data.0.id', $first)
+        ->where('proposals.data.0.points.0.overlap.source', 'municipal')
+        ->where('proposals.data.0.points.0.overlap.street', 'Markt')
+        ->where('proposals.data.0.points.0.overlap.distance_metres', 1.4)
+        ->where('proposals.data.1.id', $third)
+        ->where('proposals.data.1.points.0.overlap.source', 'community')
+        ->where('proposals.data.2.id', $second)
+        ->missing('proposals.data.2.points.0.overlap'));
+    $this->get($url(['after' => $first]))->assertRedirect($url(['proposal' => $second]));
+});
+
+it('keeps a proposal closed as a duplicate when the same NDW point is updated, absent and returned', function (string $target) {
+    $point = proposalPoint();
+    $otherPoints = array_map(fn () => proposalPoint('GM0363', longitude: 4.9), range(1, 4));
+    $data = proposalEnvelope([$point, ...$otherPoints], 4);
+    $source = app(SourceRegistrar::class)->register('proposals', $data);
+    app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
+    expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
+
+    $municipality = Municipality::where('code', 'GM0503')->sole();
+    $location = ['municipality_id' => $municipality->id, 'latitude' => 52.01, 'longitude' => 4.36002];
+    $existing = $target === 'municipal'
+        ? ParkingMunicipal::factory()->create([...$location, 'visibility' => true])
+        : ParkingSpace::factory()->create([...$location, 'status' => ParkingStatus::APPROVED]);
+    $field = $target === 'municipal' ? 'existing_parking_municipal_id' : 'existing_parking_space_id';
+    $proposal = DB::table('location_proposal_points')->where('external_id', $point['external_id'])->value('location_proposal_id');
+    $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
+    $url = route('app.moderation.proposals.index', ['municipality' => $municipality->id]);
+
+    $this->actingAs($moderator)->get(route('app.moderation.proposals.index', ['proposal' => $proposal]))
+        ->assertInertia(fn (Assert $page) => $page->where("selected.{$target}.0.possible_duplicate", true));
+    $this->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$proposal]])->assertRedirect();
+    $this->assertDatabaseHas('location_proposal_decisions', ['location_proposal_id' => $proposal, 'reason' => 'duplicate', $field => $existing->id]);
+
+    $point['source_last_seen_on'] = '2026-11-02';
+    $point['geometry']['coordinates'][0] = 4.3601;
+    foreach ([3 => [$point, ...$otherPoints], 2 => $otherPoints, 1 => [$point, ...$otherPoints]] as $hours => $points) {
+        expect(processProposalObject($this->handler, $source, proposalEnvelope($points, $hours))->state)->toBe('validated');
+        $this->get($url)->assertInertia(fn (Assert $page) => $page->where('proposals.total', 0));
+    }
+
+    $this->assertDatabaseHas('location_proposal_points', [
+        'external_id' => $point['external_id'], 'location_proposal_id' => $proposal,
+        'source_last_seen_on' => '2026-11-02', 'missing_since' => null,
+    ]);
+    expect(LocationProposalDecision::sole()->evidence)
+        ->toMatchArray(['existing_id' => $existing->id, 'existing_source' => $target, 'marker_distance_metres' => 1.37]);
+    $this->get(route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('history.data.0.proposal.existing_url', route('location-map', [
+                'place' => "{$target}:{$existing->id}", 'at' => "{$existing->latitude},{$existing->longitude}",
+            ]))
+            ->where('history.data.0.proposal.reopen_revision', 1));
+})->with(['municipal', 'community']);
 
 it('rolls back already written chunks when late evidence is invalid', function () {
     $points = array_map(fn () => proposalPoint(), range(1, 500));

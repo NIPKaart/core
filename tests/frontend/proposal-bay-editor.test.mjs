@@ -60,6 +60,7 @@ function editor(reported_bays = null) {
                     proposals: {
                         publish: { url: (id) => `/moderation/proposals/${id}/publish` },
                         reject: { url: (id) => `/moderation/proposals/${id}/reject` },
+                        reopen: { url: (id) => `/moderation/proposals/${id}/reopen` },
                     },
                 },
             },
@@ -79,7 +80,7 @@ function editor(reported_bays = null) {
     };
     vm.runInNewContext(compiled('location-proposals.tsx'), context);
     return {
-        render({ published = false, publishedBays = [] } = {}) {
+        render({ published = false, publishedBays = [], close = true, decision = null } = {}) {
             hook = 0;
             return context.exports.LocationProposalReview({
                 selection: { proposal: { ...proposal, status: published ? 'added' : 'open' }, point },
@@ -94,15 +95,23 @@ function editor(reported_bays = null) {
                 revision: 0,
                 canReject: true,
                 community: [
-                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat' },
-                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat' },
+                    { ...point, id: 'existing-space', street: 'Oude Kerkstraat', possible_duplicate: close, distance_metres: close ? 2 : 92 },
+                    { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat', possible_duplicate: false, distance_metres: 92 },
                 ],
                 municipal: [
-                    { ...point, latitude: 52.0111 },
-                    { ...point, latitude: 52.0112 },
+                    {
+                        ...point,
+                        latitude: 52.0111,
+                        id: 'existing-space',
+                        street: 'Markt',
+                        possible_duplicate: close,
+                        distance_metres: close ? 2.5 : 92,
+                    },
+                    { ...point, latitude: 52.0112, id: 'other-municipal', street: null, possible_duplicate: false, distance_metres: 92 },
                 ],
                 query: {},
                 publishedBays,
+                decision,
                 onBack() {},
             });
         },
@@ -202,16 +211,56 @@ test('a partial completion sends a reason without saving it in the local draft',
     assert.ok(![...screen.storage.values()][0].includes('not_visible'));
 });
 
-test('duplicate rejection requires selecting a published space on the map', () => {
+for (const [source, field] of [
+    ['community', 'existing_parking_space_id'],
+    ['municipal', 'existing_parking_municipal_id'],
+]) {
+    test(`duplicate rejection can select a ${source} space on the map`, () => {
+        const screen = editor();
+        action(screen.render(), 'proposals.reject_title').props.onClick();
+        find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+        const view = screen.render();
+        assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
+        element(view, 'Workspace').props.map.onPick(`${source}:existing-space`);
+        action(screen.render(), 'proposals.reject_title').props.onClick();
+        assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
+        assert.equal(screen.requests[0].data[field], 'existing-space');
+        const otherField = source === 'municipal' ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
+        assert.equal(screen.requests[0].data[otherField], null);
+    });
+}
+
+test('counts parking within 3 m as already on the map, and a sign without it as nothing nearby', () => {
+    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map'));
+    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map_count'));
+    assert.ok(find(editor().render({ close: false }), (node) => node.props.children === 'proposals.on_map_none'));
+});
+
+test('a duplicate further than 3 m away can still be chosen when closing the proposal', () => {
     const screen = editor();
-    action(screen.render(), 'proposals.reject_title').props.onClick();
-    find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
-    const view = screen.render();
-    assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
-    element(view, 'Workspace').props.map.onPick('existing-space');
-    action(screen.render(), 'proposals.reject_title').props.onClick();
-    assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
-    assert.equal(screen.requests[0].data.existing_parking_space_id, 'existing-space');
+    action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
+    find(screen.render({ close: false }), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+    element(screen.render({ close: false }), 'Workspace').props.map.onPick('community:other-space');
+    action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
+    assert.equal(screen.requests[0].data.existing_parking_space_id, 'other-space');
+    assert.equal('match_outcome' in screen.requests[0].data, false);
+});
+
+test('a proposal closed as a duplicate shows the existing space and can be reopened', () => {
+    const screen = editor();
+    const decision = {
+        reason: 'duplicate',
+        reasonLabel: 'Already exists',
+        decidedAt: '2026-11-09T10:00:00+00:00',
+        moderator: 'Moderator',
+        existing: { source: 'municipal', street: 'Markt', distance_metres: 2.5, url: '/map?place=municipal:existing-space' },
+    };
+    const view = screen.render({ published: true, decision });
+    const card = find(view, (node) => node.type?.name === 'ClosedCard');
+    assert.equal(card.props.decision.existing.url, '/map?place=municipal:existing-space');
+    action(view, 'proposals.reopen').props.onClick();
+    assert.equal(screen.requests[0].url, '/moderation/proposals/23/reopen');
+    assert.deepEqual({ ...screen.requests[0].data }, { revision: 0 });
 });
 
 test('a decided proposal links to its bays on the map, or to the existing space it duplicates', () => {

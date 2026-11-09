@@ -5,5 +5,5 @@ return [
     'gone' => 'Het vak is er niet meer',
     'other' => 'Andere reden',
     'not_a_disabled_bay' => 'Geen gehandicaptenparkeerplaats op deze locatie',
-    'duplicate' => 'Staat al als community-parkeerplaats op de kaart',
+    'duplicate' => 'Staat al op de kaart',
 ];

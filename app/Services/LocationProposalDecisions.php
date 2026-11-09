@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\LocationProposalDecisionReason;
 use App\Events\ModerationQueueChanged;
 use App\Models\LocationProposalDecision;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\User;
 use Carbon\CarbonInterface;
@@ -32,7 +33,7 @@ final class LocationProposalDecisions
         ?string $note,
         array $bays = [],
         int $total = 0,
-        ?ParkingSpace $existing = null,
+        ParkingSpace|ParkingMunicipal|null $existing = null,
     ): void {
         $first = $bays[0] ?? null;
         LocationProposalDecision::create([
@@ -42,9 +43,17 @@ final class LocationProposalDecisions
             'outcome' => $bays === [] ? 'rejected' : 'completed',
             'reason' => $reason,
             'note' => $note,
-            'existing_parking_space_id' => $existing?->id,
+            'existing_parking_space_id' => $existing instanceof ParkingSpace ? $existing->id : null,
+            'existing_parking_municipal_id' => $existing instanceof ParkingMunicipal ? $existing->id : null,
             'evidence' => [
                 'street' => $first?->street ?? $existing?->street,
+                'existing_id' => $existing?->id,
+                ...($existing === null ? [] : ['marker_distance_metres' => round((float) $existing->distance_metres, 2)]),
+                'existing_source' => match (true) {
+                    $existing instanceof ParkingSpace => 'community',
+                    $existing instanceof ParkingMunicipal => 'municipal',
+                    default => null,
+                },
                 'municipality' => $point->municipality,
                 'source' => $point->source,
                 'last_seen_on' => $point->source_last_seen_on,

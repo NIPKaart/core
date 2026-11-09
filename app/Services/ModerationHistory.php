@@ -186,6 +186,8 @@ final class ModerationHistory
         ])->filter()->unique();
         $spaces = ParkingSpace::whereKey($spaceIds->all())->where('status', ParkingStatus::APPROVED)
             ->get(['id', 'street', 'latitude', 'longitude'])->keyBy('id');
+        $municipal = ParkingMunicipal::whereKey($decisions->pluck('existing_parking_municipal_id')->filter()->unique()->all())
+            ->where('visibility', true)->get(['id', 'latitude', 'longitude'])->keyBy('id');
         $activeProposals = $this->proposals->activePoints()
             ->whereIn('point.location_proposal_id', $decisions->pluck('location_proposal_id'))
             ->distinct()->pluck('point.location_proposal_id')->flip();
@@ -197,7 +199,7 @@ final class ModerationHistory
             ->groupBy('location_proposal_id')->selectRaw('location_proposal_id, avg(latitude) as latitude, avg(longitude) as longitude')
             ->get()->keyBy('location_proposal_id');
 
-        return $decisions->map(function (LocationProposalDecision $decision) use ($spaces, $activeProposals, $current, $closed, $sourcePoints): array {
+        return $decisions->map(function (LocationProposalDecision $decision) use ($spaces, $municipal, $activeProposals, $current, $closed, $sourcePoints): array {
             $evidence = $decision->evidence;
             $proposal = $decision->location_proposal_id;
             $map = function (?string $id) use ($spaces): ?string {
@@ -207,7 +209,8 @@ final class ModerationHistory
                     'place' => "community:{$space->id}", 'at' => "{$space->latitude},{$space->longitude}",
                 ]);
             };
-            $located = $spaces->get($evidence['bays'][0]['id'] ?? $decision->existing_parking_space_id) ?? $sourcePoints->get($proposal);
+            $existingMunicipal = $municipal->get($decision->existing_parking_municipal_id);
+            $located = $spaces->get($evidence['bays'][0]['id'] ?? $decision->existing_parking_space_id) ?? $existingMunicipal ?? $sourcePoints->get($proposal);
 
             return [
                 'key' => LocationProposalDecisions::TYPE.":{$decision->id}",
@@ -236,7 +239,11 @@ final class ModerationHistory
                     'restriction_starts_at' => $evidence['restriction_starts_at'] ?? null,
                     'restriction_ends_at' => $evidence['restriction_ends_at'] ?? null,
                     'bays' => array_map(fn (array $bay): array => [...$bay, 'url' => $map($bay['id'])], $evidence['bays']),
-                    'existing_url' => $map($decision->existing_parking_space_id),
+                    'existing_url' => $existingMunicipal === null
+                        ? $map($decision->existing_parking_space_id)
+                        : route('location-map', [
+                            'place' => "municipal:{$existingMunicipal->id}", 'at' => "{$existingMunicipal->latitude},{$existingMunicipal->longitude}",
+                        ]),
                 ],
             ];
         });

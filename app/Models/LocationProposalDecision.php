@@ -17,7 +17,7 @@ class LocationProposalDecision extends Model
 
     protected $fillable = [
         'location_proposal_id', 'moderator_id', 'decided_at', 'outcome', 'reason', 'note',
-        'existing_parking_space_id', 'evidence',
+        'existing_parking_space_id', 'existing_parking_municipal_id', 'evidence',
     ];
 
     protected $casts = [
