@@ -103,6 +103,7 @@ export default function Index({ status, locationProposals, filters, items, histo
             key: `proposal-point:${point.id}`,
             point,
             color: SOURCE_COLOR,
+            legendLabel: t('types.proposal'),
             label: `${t('types.proposal')} · ${proposal.municipality} #${proposal.id}`,
         })),
     );
@@ -153,6 +154,7 @@ export default function Index({ status, locationProposals, filters, items, histo
                                                   key: item.key,
                                                   point: { latitude: item.latitude, longitude: item.longitude },
                                                   color: TYPE_COLORS[item.type],
+                                                  legendLabel: t(`types.${item.type}`),
                                                   label: item.street ?? t('no_address'),
                                               })),
                                               ...proposalPins,

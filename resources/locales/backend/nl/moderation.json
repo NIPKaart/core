@@ -527,6 +527,7 @@
         "fit_all": "Alles in beeld",
         "source_point": "Bronpunt",
         "legend": {
+            "municipality_count": "Open voorstellen per gemeente",
             "label": "Legenda",
             "selected": "Geselecteerd",
             "placed": "Geplaatst, niet ingediend",

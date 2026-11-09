@@ -527,6 +527,7 @@
         "fit_all": "Show everything",
         "source_point": "Source point",
         "legend": {
+            "municipality_count": "Open proposals per municipality",
             "label": "Legend",
             "selected": "Selected",
             "placed": "Placed, not submitted",

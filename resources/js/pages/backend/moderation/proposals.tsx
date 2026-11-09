@@ -78,6 +78,7 @@ export default function Proposals({ proposals, municipalities, municipality, mun
                       color: SOURCE_COLOR,
                       label: `${item.name} · ${t('proposals.open_count', { count: item.open_count })}`,
                       count: item.open_count,
+                      legendLabel: t('map.legend.municipality_count'),
                   },
               ]
             : [],
@@ -182,7 +183,13 @@ export default function Proposals({ proposals, municipalities, municipality, mun
                                 municipality === null
                                     ? municipalityPins
                                     : rows.flatMap((item) =>
-                                          item.points.map((point) => ({ key: String(point.id), point, color: SOURCE_COLOR, label: item.street })),
+                                          item.points.map((point) => ({
+                                              key: String(point.id),
+                                              point,
+                                              color: SOURCE_COLOR,
+                                              label: item.street,
+                                              legendLabel: t('map.source_point'),
+                                          })),
                                       ),
                             onPick: (key) => {
                                 if (municipality === null) {
