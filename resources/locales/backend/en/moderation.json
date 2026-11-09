@@ -152,7 +152,8 @@
         "walk_status_missing": "Bays are missing, stays open",
         "walk_done": "Done going over",
         "walk_summary": "{{closing}} of {{total}} can be closed. The rest stays open to draw in.",
-        "walk_again": "Start again"
+        "walk_again": "Start again",
+        "walk_answered": "{{count}} of {{total}} reviewed"
     },
     "title": "Moderation",
     "search": "Search by street, municipality or contributor",

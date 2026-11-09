@@ -56,7 +56,7 @@ const rows = [1, 2, 3].map((id) => ({
 
 function render(walk, handlers = {}) {
     const { DuplicateWalk, listeners } = load();
-    const calls = { answers: [], closed: null };
+    const calls = { answers: [], closed: null, jumped: null };
     const view = DuplicateWalk({
         rows,
         walk,
@@ -64,6 +64,7 @@ function render(walk, handlers = {}) {
         closing: false,
         onAnswer: (row, answer) => calls.answers.push([row.id, answer]),
         onPrevious() {},
+        onJump: (index) => (calls.jumped = index),
         onRestart() {},
         onStop() {},
         onClose: (ids) => (calls.closed = ids),
@@ -101,4 +102,13 @@ test('the summary closes only the signs confirmed as complete', () => {
     assert.equal(close.props.disabled, false);
     close.props.onClick();
     assert.deepEqual(calls.closed, [1, 3]);
+});
+
+test('jumps to another sign from the progress list', () => {
+    const { view, calls } = render({ index: 0, answers: {} });
+    const steps = findAll(view, (node) => node.type === 'button' && node.props.onClick && 'aria-current' in node.props);
+    assert.equal(steps.length, 3);
+    assert.equal(steps[0].props['aria-current'], 'step');
+    steps[2].props.onClick();
+    assert.equal(calls.jumped, 2);
 });

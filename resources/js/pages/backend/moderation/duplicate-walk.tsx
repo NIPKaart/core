@@ -1,7 +1,7 @@
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Camera, Check, ChevronLeft } from 'lucide-react';
+import { Camera, Check, ChevronLeft, MapPinned, TriangleAlert } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ExistingLine, toLocationProposal, type ProposalOverlap, type ProposalRow } from './location-proposals';
@@ -28,6 +28,7 @@ export function DuplicateWalk({
     closing,
     onAnswer,
     onPrevious,
+    onJump,
     onRestart,
     onStop,
     onClose,
@@ -38,6 +39,8 @@ export function DuplicateWalk({
     closing: boolean;
     onAnswer: (row: ProposalRow, answer: WalkAnswer) => void;
     onPrevious: () => void;
+    /** Go to another sign, from the list or the map; all signs of the group stay visible on the map. */
+    onJump: (index: number) => void;
     onRestart: () => void;
     onStop: () => void;
     onClose: (ids: number[]) => void;
@@ -138,35 +141,58 @@ export function DuplicateWalk({
                         </p>
                     </section>
                 )}
-                <ol aria-label={t('proposals.walk_progress')} className="flex flex-col py-1.5">
+                <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
+                    <span>{t('proposals.walk_progress')}</span>
+                    <span className="tabular-nums">
+                        {t('proposals.walk_answered', { count: Object.keys(walk.answers).length, total: rows.length })}
+                    </span>
+                </div>
+                <ol aria-label={t('proposals.walk_progress')} className="flex flex-col">
                     {rows.map((row, index) => {
                         const answer = walk.answers[row.id];
                         const isCurrent = index === walk.index && !!current;
+                        const overlap = walkTarget(row)?.overlap;
 
                         return (
-                            <li
-                                key={row.id}
-                                aria-current={isCurrent ? 'step' : undefined}
-                                className={cn('flex items-center gap-3 px-4.5 py-2', isCurrent && 'bg-blue-50 dark:bg-blue-950/50')}
-                            >
-                                <span
-                                    aria-hidden
+                            <li key={row.id} className="border-t border-muted">
+                                <button
+                                    type="button"
+                                    aria-current={isCurrent ? 'step' : undefined}
+                                    onClick={() => onJump(index)}
                                     className={cn(
-                                        'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                                        answer === 'ok' && 'bg-foreground text-background',
-                                        answer === 'missing' && 'border-[1.5px] border-orange-700 bg-orange-50 text-orange-800 dark:bg-orange-950',
-                                        !answer && isCurrent && 'bg-[#1e3a8a] text-white',
-                                        !answer && !isCurrent && 'border-[1.5px] border-stone-400 text-stone-600',
+                                        'flex w-full cursor-pointer items-center gap-3 border-l-[3px] border-transparent py-2.5 pr-4 pl-[15px] text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                                        isCurrent && 'border-blue-700 bg-blue-50 hover:bg-blue-50 dark:bg-blue-950/50 dark:hover:bg-blue-950/50',
                                     )}
                                 >
-                                    {answer === 'ok' ? <Check className="size-3.5" /> : answer === 'missing' ? '!' : index + 1}
-                                </span>
-                                <span className="flex min-w-0 flex-1 flex-col gap-px">
-                                    <span className={cn('truncate text-sm', isCurrent ? 'font-semibold' : 'font-medium')}>
-                                        {toLocationProposal(row).street}
+                                    <span
+                                        aria-hidden
+                                        className={cn(
+                                            'flex size-9 shrink-0 items-center justify-center rounded-[10px]',
+                                            answer === 'ok' && 'bg-muted text-foreground',
+                                            answer === 'missing' && 'bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200',
+                                            !answer && 'bg-[#1e3a8a]/12 text-[#1e3a8a] dark:text-blue-300',
+                                        )}
+                                    >
+                                        {answer === 'ok' ? (
+                                            <Check className="size-[18px]" />
+                                        ) : answer === 'missing' ? (
+                                            <TriangleAlert className="size-[18px]" />
+                                        ) : (
+                                            <MapPinned className="size-[18px]" />
+                                        )}
                                     </span>
-                                    {answer && <span className="text-xs text-muted-foreground">{t(`proposals.walk_status_${answer}`)}</span>}
-                                </span>
+                                    <span className="flex min-w-0 flex-1 flex-col gap-px">
+                                        <span className="truncate text-[15px] font-medium">{toLocationProposal(row).street}</span>
+                                        <span className="truncate text-[13px] text-muted-foreground">
+                                            {answer ? (
+                                                t(`proposals.walk_status_${answer}`)
+                                            ) : overlap ? (
+                                                <ExistingLine source={overlap.source} distance={overlap.distance_metres} />
+                                            ) : null}
+                                        </span>
+                                    </span>
+                                    <span className="shrink-0 text-[13px] text-muted-foreground tabular-nums">{index + 1}</span>
+                                </button>
                             </li>
                         );
                     })}

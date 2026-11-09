@@ -152,7 +152,8 @@
         "walk_status_missing": "Er missen vakken, blijft open",
         "walk_done": "Klaar met nalopen",
         "walk_summary": "{{closing}} van {{total}} kunnen dicht. De rest blijft open om in te tekenen.",
-        "walk_again": "Opnieuw"
+        "walk_again": "Opnieuw",
+        "walk_answered": "{{count}} van {{total}} bekeken"
     },
     "title": "Moderatie",
     "search": "Zoek op straat, gemeente of indiener",

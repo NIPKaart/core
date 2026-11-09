@@ -69,10 +69,10 @@ type Props = {
     } | null;
 };
 
-/** Signs that keep their proposal open after going over them stay on the map, quieter. */
-const LEFT_OUT_COLOR = '#64748b';
-/** Close enough on the aerial photo to count the bays at one sign. */
-const WALK_ZOOM = 20;
+/** While going over signs: answered complete, answered missing bays, and still to answer, on the map and in its legend. */
+const WALK_COLOR = { ok: '#171717', missing: '#c2410c', open: SOURCE_COLOR } as const;
+/** Close enough on the aerial photo to count the bays at one sign, with neighbouring signs still in view. */
+const WALK_ZOOM = 19;
 
 /** The parking spaces already on the map near these proposals, split the way the map draws them. */
 function existingOnMap(rows: ProposalRow[]) {
@@ -114,7 +114,8 @@ export default function Proposals({
     const walking = walk !== null && onMapRows.length > 0;
     const walkRow = walking ? (onMapRows[walk.index] ?? null) : null;
     const walkPoint = walkRow ? walkTarget(walkRow) : null;
-    const existing = walkPoint ? existingOnMap([walkRow!]) : existingOnMap(onMapRows);
+    const existing = existingOnMap(onMapRows);
+    const walkTo = (index: number) => setWalk((current) => current && { ...current, index });
     const duplicateLabel = bayOptions.rejectionReasons.find((option) => option.value === 'duplicate')?.label;
 
     const closeConfirmed = (ids: number[]) => {
@@ -278,21 +279,37 @@ export default function Proposals({
                             zoom: walkPoint ? WALK_ZOOM : municipality === null ? 7 : 12,
                             nearby: existing.nearby,
                             municipal: existing.municipal,
+                            fitQueue: !walkPoint,
+                            highlighted: walkPoint ? String(walkPoint.point.id) : undefined,
                             queue:
                                 municipality === null
                                     ? municipalityPins
-                                    : (walkPoint ? [toLocationProposal(walkRow!)] : walking ? onMapRows.map(toLocationProposal) : rows).flatMap(
-                                          (item) =>
-                                              item.points.map((point) => ({
-                                                  key: String(point.id),
-                                                  point,
-                                                  color: walking && !walkPoint && walk.answers[item.id] !== 'ok' ? LEFT_OUT_COLOR : SOURCE_COLOR,
-                                                  label: item.street,
-                                                  legendLabel: t('map.source_point'),
-                                              })),
-                                      ),
+                                    : walking
+                                      ? onMapRows.flatMap((row) => {
+                                            const state = (walk.answers[row.id] as WalkAnswer | undefined) ?? 'open';
+                                            return row.points.map((point) => ({
+                                                key: String(point.id),
+                                                point,
+                                                color: WALK_COLOR[state],
+                                                label: toLocationProposal(row).street,
+                                                legendLabel: state === 'open' ? t('map.source_point') : t(`proposals.walk_status_${state}`),
+                                            }));
+                                        })
+                                      : rows.flatMap((item) =>
+                                            item.points.map((point) => ({
+                                                key: String(point.id),
+                                                point,
+                                                color: SOURCE_COLOR,
+                                                label: item.street,
+                                                legendLabel: t('map.source_point'),
+                                            })),
+                                        ),
                             onPick: (key) => {
-                                if (walking) return;
+                                if (walking) {
+                                    const index = onMapRows.findIndex((row) => row.points.some((point) => String(point.id) === key));
+                                    if (index >= 0) walkTo(index);
+                                    return;
+                                }
                                 if (municipality === null) {
                                     router.visit(routes.index({ query: { municipality: key } }));
                                     return;
@@ -309,7 +326,8 @@ export default function Proposals({
                                 reasonLabel={duplicateLabel}
                                 closing={closing}
                                 onAnswer={answer}
-                                onPrevious={() => setWalk((current) => current && { ...current, index: Math.max(0, current.index - 1) })}
+                                onPrevious={() => walkTo(Math.max(0, walk.index - 1))}
+                                onJump={walkTo}
                                 onRestart={() => setWalk({ index: 0, answers: {} })}
                                 onStop={() => setWalk(null)}
                                 onClose={closeConfirmed}

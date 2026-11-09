@@ -156,6 +156,7 @@ export function ModerationMap({
     current,
     proposed,
     queue,
+    fitQueue = true,
     highlighted,
     onPick,
     onMove,
@@ -183,6 +184,8 @@ export function ModerationMap({
     proposed?: MapPoint | null;
     /** The open items of the queue; replaces the main pin. */
     queue?: QueuePin[];
+    /** Fit the map around all queue pins; off to keep the centre and zoom on one of them while the others stay in view. */
+    fitQueue?: boolean;
     highlighted?: string | null;
     onPick?: (key: string) => void;
     /** Makes the main pin movable and reports where it went. */
@@ -209,7 +212,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = queue?.map((pin) => pin.point);
+    const spread = fitQueue ? queue?.map((pin) => pin.point) : undefined;
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
