@@ -46,18 +46,25 @@ class FortifyServiceProvider extends ServiceProvider
         });
         Passkeys::authorizeLoginUsing(fn (Request $request, User $user): bool => ! $user->suspended_at);
 
-        Fortify::loginView(function (Request $request) {
-            // A page that sends a visitor to log in may ask to return there; only paths on this site are accepted.
+        // A page that sends a visitor to log in or register may ask to return there; only paths on this site are accepted.
+        $rememberReturn = function (Request $request): void {
             $return = $request->query('return');
             if (is_string($return) && preg_match('#^/(?![/\\\\])#', $return)) {
                 redirect()->setIntendedUrl(url($return));
             }
+        };
+        Fortify::loginView(function (Request $request) use ($rememberReturn) {
+            $rememberReturn($request);
 
             return Inertia::render('auth/login', [
                 'canResetPassword' => true, 'status' => $request->session()->get('status'),
             ]);
         });
-        Fortify::registerView(fn () => Inertia::render('auth/register'));
+        Fortify::registerView(function (Request $request) use ($rememberReturn) {
+            $rememberReturn($request);
+
+            return Inertia::render('auth/register');
+        });
         Fortify::requestPasswordResetLinkView(fn (Request $request) => Inertia::render('auth/forgot-password', [
             'status' => $request->session()->get('status'),
         ]));

@@ -55,7 +55,7 @@ class AreaController extends Controller
     {
         $model = Municipality::query()->with(['country', 'province'])->where('country_id', $this->findCountry($country)->id)->where('slug', $municipality)->firstOrFail();
 
-        return $this->render($request, 'frontend/areas/municipality', $this->areas->municipality($model), $this->areas->municipalityUrl($model));
+        return $this->render($request, 'frontend/areas/municipality', [...$this->areas->municipality($model), 'check_area' => ['country' => $country, 'municipality' => $model->slug]], $this->areas->municipalityUrl($model));
     }
 
     /**

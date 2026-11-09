@@ -179,7 +179,6 @@ function clusterIcon(count: number) {
  */
 export function AreaMapPreview({ preview, href, name, className }: { preview: AreaPreview; href: string; name: string; className?: string }) {
     const { t } = useTranslation('frontend/areas');
-    const { bounds } = preview;
 
     return (
         <a
@@ -190,38 +189,7 @@ export function AreaMapPreview({ preview, href, name, className }: { preview: Ar
                 className,
             )}
         >
-            <div className="pointer-events-none absolute inset-0" aria-hidden>
-                <MapContainer
-                    bounds={[
-                        [bounds.south, bounds.west],
-                        [bounds.north, bounds.east],
-                    ]}
-                    boundsOptions={{ padding: [36, 36], maxZoom: 15 }}
-                    className="z-0 h-full w-full"
-                    zoomControl={false}
-                    attributionControl={false}
-                    dragging={false}
-                    scrollWheelZoom={false}
-                    doubleClickZoom={false}
-                    touchZoom={false}
-                    boxZoom={false}
-                    keyboard={false}
-                >
-                    <TileLayer
-                        url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
-                        maxZoom={22}
-                    />
-                    {preview.clusters.map((cluster) => (
-                        <Marker
-                            key={`${cluster.latitude}:${cluster.longitude}`}
-                            position={[cluster.latitude, cluster.longitude]}
-                            icon={clusterIcon(cluster.count)}
-                            interactive={false}
-                            keyboard={false}
-                        />
-                    ))}
-                </MapContainer>
-            </div>
+            <AreaPreviewMap preview={preview} />
             <span className="absolute bottom-5 left-5 z-10 hidden items-center gap-2 rounded-[10px] bg-white px-4 py-3 text-[15px] font-semibold text-stone-900 shadow-[0_8px_24px_rgb(28_25_23/16%)] lg:inline-flex">
                 {t('map.open')}
                 <ArrowRight className="size-4" aria-hidden />
@@ -230,6 +198,46 @@ export function AreaMapPreview({ preview, href, name, className }: { preview: Ar
                 {t('map.attribution')}
             </span>
         </a>
+    );
+}
+
+/** A still map of where an area's parking spaces are, without controls; the parent positions it. */
+export function AreaPreviewMap({ preview }: { preview: AreaPreview }) {
+    const { bounds } = preview;
+
+    return (
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <MapContainer
+                bounds={[
+                    [bounds.south, bounds.west],
+                    [bounds.north, bounds.east],
+                ]}
+                boundsOptions={{ padding: [36, 36], maxZoom: 15 }}
+                className="z-0 h-full w-full"
+                zoomControl={false}
+                attributionControl={false}
+                dragging={false}
+                scrollWheelZoom={false}
+                doubleClickZoom={false}
+                touchZoom={false}
+                boxZoom={false}
+                keyboard={false}
+            >
+                <TileLayer
+                    url={`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}`}
+                    maxZoom={22}
+                />
+                {preview.clusters.map((cluster) => (
+                    <Marker
+                        key={`${cluster.latitude}:${cluster.longitude}`}
+                        position={[cluster.latitude, cluster.longitude]}
+                        icon={clusterIcon(cluster.count)}
+                        interactive={false}
+                        keyboard={false}
+                    />
+                ))}
+            </MapContainer>
+        </div>
     );
 }
 

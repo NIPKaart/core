@@ -165,5 +165,68 @@
     "empty": {
         "title": "NIPKaart heeft hier op dit moment geen parkeerlocaties",
         "text": "Bekijk de kaart of voeg een parkeerplaats toe."
+    },
+    "check": {
+        "start": "Help {{name}} controleren",
+        "invite": {
+            "title_one": "{{formatted}} parkeerplaats in {{name}} is nog niet geverifieerd",
+            "title_other": "{{formatted}} parkeerplaatsen in {{name}} zijn nog niet geverifieerd",
+            "all": "Alle parkeerplaatsen in {{name}} zijn geverifieerd",
+            "text": "Kom je er langs? Laat weten of ze er nog zijn."
+        },
+        "title": "Help {{name}} controleren",
+        "intro": "Je ziet steeds één parkeerplaats. Laat weten of die er nog is, of sla hem over.",
+        "back": "Terug naar {{name}}",
+        "stop": "Stoppen met controleren",
+        "map": "Kaart rond de parkeerplaats",
+        "no_street": "Straatnaam onbekend",
+        "kind": {
+            "community": "Community-parkeerplaats",
+            "municipal": "Gemeentelijke parkeerplaats"
+        },
+        "streetview": "Street View",
+        "question": "Is deze parkeerplaats er nog?",
+        "confirm": "Ja, de parkeerplaats is er nog",
+        "report": "Meld dat de parkeerplaats verdwenen is",
+        "unsure": "Weet ik niet",
+        "skipped": "Vorige parkeerplaats overgeslagen.",
+        "next": "Volgende parkeerplaats",
+        "loading": "Volgende parkeerplaats laden…",
+        "details": {
+            "orientation": "Vak",
+            "under_sign": "Onderbord",
+            "source": "Bron",
+            "confirmed": "Bevestigd",
+            "unknown": "Niet bekend",
+            "never": "Nog niet bevestigd",
+            "community": "Toegevoegd door een bezoeker",
+            "municipal": "Gemeente {{name}}"
+        },
+        "disclaimer": "Controleer ter plaatse altijd de borden; aan deze informatie kun je geen rechten ontlenen.",
+        "sign_in": {
+            "title": "Log in om te beginnen",
+            "text": "Na het inloggen zie je meteen de eerste parkeerplaats.",
+            "login": "Inloggen",
+            "register": "Account aanmaken"
+        },
+        "ineligible": {
+            "title": "Bevestig eerst je e-mailadres",
+            "text": "Daarna kun je meehelpen met controleren."
+        },
+        "confirmed": "Bedankt voor je bevestiging",
+        "reported": {
+            "title": "Je melding wordt beoordeeld",
+            "text": "Een moderator kijkt ernaar. Tot dan blijft de parkeerplaats op de kaart."
+        },
+        "withdrawn": "Deze parkeerplaats staat niet meer op de kaart",
+        "error": {
+            "title": "De volgende parkeerplaats kon niet worden geladen",
+            "text": "Controleer je internetverbinding en probeer het opnieuw.",
+            "retry": "Opnieuw proberen"
+        },
+        "empty": {
+            "title": "Je hebt alle beschikbare parkeerplaatsen voor deze ronde bekeken",
+            "text": "Bedankt voor je hulp."
+        }
     }
 }
