@@ -16,6 +16,7 @@ use App\Models\ParkingPlaceReport;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
 use App\Services\AerialImagery;
+use App\Services\LocationProposalQueue;
 use App\Services\ModerationEvidence;
 use App\Services\ModerationHistory;
 use App\Services\ModerationQueue;
@@ -58,6 +59,7 @@ class ModerationController extends Controller
         private ParkingPlaceModeration $reports,
         private ParkingPlaces $places,
         private AerialImagery $imagery,
+        private LocationProposalQueue $locationProposals,
     ) {}
 
     public function index(Request $request): Response
@@ -341,6 +343,11 @@ class ModerationController extends Controller
             ],
             'items' => fn () => $open ? $this->openPage($request, $items($filters)) : null,
             'history' => fn () => $open ? null : $this->history->page($user, $filters),
+            'locationProposals' => fn () => $open && $selectedKey === null
+                && in_array(ModerationQueue::SUBMISSION, $types, true)
+                && $user->can('bulkUpdate', ParkingSpace::class)
+                ? $this->locationProposals->rows($this->locationProposals->proposals()->limit(4)->get())
+                : [],
             'selected' => fn () => $selectedKey === null ? null : [
                 ...$items($filters)->firstWhere('key', $selectedKey)
                     ?? $items()->firstWhere('key', $selectedKey)

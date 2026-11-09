@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'proposal' => [
+        'duplicate' => 'Place each bay at a different position.',
+        'changed' => 'The proposal changed. Open it again and check the source points.',
+        'invalid_point' => 'This bay must be near an active source point from this proposal.',
+        'already_added' => 'Bays have already been added to one of these proposals.',
+    ],
     'validation' => [
         'orientation_required' => 'Select an orientation for the parking space.',
         'orientation_invalid' => 'The selected orientation is invalid. Please select a valid option.',

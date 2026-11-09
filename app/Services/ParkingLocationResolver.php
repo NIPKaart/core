@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\ReverseGeocoder;
 use App\Models\Country;
+use App\Models\Municipality;
 use App\Models\Province;
 use App\Traits\FindsOrCreatesMunicipality;
 use App\Traits\FindsOrCreatesProvince;
@@ -63,15 +64,15 @@ final class ParkingLocationResolver
      * @param  array{country_id: int, municipality: string, address: array<string, string>}  $location
      * @return array<string, int|string|null>
      */
-    public function attributesFor(array $location): array
+    public function attributesFor(array $location, ?Municipality $knownMunicipality = null): array
     {
         $address = $location['address'];
-        $province = $this->findOrCreateProvince(
+        $province = $knownMunicipality?->province ?? $this->findOrCreateProvince(
             $address['state'] ?? $location['municipality'],
             $location['country_id'],
             $address['ISO3166-2-lvl6'] ?? $address['ISO3166-2-lvl4'] ?? null,
         );
-        $municipality = $this->findOrCreateMunicipality($location['municipality'], $location['country_id'], $province->id);
+        $municipality = $knownMunicipality ?? $this->findOrCreateMunicipality($location['municipality'], $location['country_id'], $province->id);
 
         return [
             'country_id' => $location['country_id'],

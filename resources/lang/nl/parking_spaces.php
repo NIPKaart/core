@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'proposal' => [
+        'duplicate' => 'Plaats elk parkeervak op een eigen positie.',
+        'changed' => 'Het voorstel is gewijzigd. Open het opnieuw en controleer de bronpunten.',
+        'invalid_point' => 'Dit parkeervak moet bij een actief bronpunt van dit voorstel liggen.',
+        'already_added' => 'Aan een van deze voorstellen zijn al parkeervakken toegevoegd.',
+    ],
     'validation' => [
         'orientation_required' => 'Kies een oriëntatie voor de parkeerplaats.',
         'orientation_invalid' => 'De gekozen oriëntatie is ongeldig. Kies een geldige optie.',

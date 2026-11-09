@@ -12,10 +12,11 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { PaginatedResponse } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { LocationProposals, toLocationProposal, type ProposalRow } from './location-proposals';
 import { Kbd } from './shortcuts';
 import { TYPE_ICONS } from './type-badge';
 import { filterQuery, type Filters, type ItemType, type Options, type QueueItem } from './types';
@@ -63,6 +64,7 @@ function useItemPreview() {
  */
 export function QueueList({
     status,
+    locationProposals = [],
     items,
     filters,
     options,
@@ -76,6 +78,7 @@ export function QueueList({
     footer,
 }: {
     status: 'open' | 'decided';
+    locationProposals?: ProposalRow[];
     items: PaginatedResponse<QueueItem> | null;
     filters: Filters;
     options: Options;
@@ -242,7 +245,15 @@ export function QueueList({
                 className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50"
                 onMouseLeave={() => onHover?.(null)}
             >
-                {rows.length === 0 && (
+                {!selecting && !filtered && locationProposals.length > 0 && (
+                    <LocationProposals
+                        proposals={locationProposals.map(toLocationProposal)}
+                        onOpen={({ proposal, point }) =>
+                            router.visit(app.moderation.proposals.index({ query: { proposal: proposal.id, point: point.id, from: 'queue' } }))
+                        }
+                    />
+                )}
+                {rows.length === 0 && (filtered || locationProposals.length === 0) && (
                     <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
                         {!filtered && (
                             <span className="flex size-12 items-center justify-center rounded-full bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">

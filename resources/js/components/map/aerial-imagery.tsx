@@ -28,8 +28,13 @@ export type AerialLayer = {
  * The aerial photo layers the page offers and the one in use: the best one for the location until the viewer picks
  * another to compare.
  */
-export function useAerialImagery(): { layers: AerialLayer[]; layer: AerialLayer | undefined; choose: (key: string) => void } {
-    const layers = usePage<{ imagery?: AerialLayer[] }>().props.imagery ?? [];
+export function useAerialImagery(availableLayers?: AerialLayer[]): {
+    layers: AerialLayer[];
+    layer: AerialLayer | undefined;
+    choose: (key: string) => void;
+} {
+    const pageLayers = usePage<{ imagery?: AerialLayer[] }>().props.imagery;
+    const layers = availableLayers ?? pageLayers ?? [];
     const [chosen, choose] = useState<string | null>(null);
 
     return { layers, layer: layers.find((layer) => layer.key === chosen) ?? layers[0], choose };
