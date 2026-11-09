@@ -170,6 +170,7 @@ export function ModerationMap({
     onSelectBay,
     zoom,
     inset = 0,
+    insetBottom = 0,
     className,
     controls,
     links,
@@ -209,9 +210,14 @@ export function ModerationMap({
     zoom?: number;
     /** Pixels on the left covered by the panel, kept out of the way when centring. */
     inset?: number;
+    /** Pixels at the bottom covered by the sheet on a small screen, kept out of the way in the same way. */
+    insetBottom?: number;
     className?: string;
-    /** View controls for the top right, such as the layer switch; the legend joins them there, as on the public map. */
-    controls?: React.ReactNode;
+    /**
+     * View controls for the top right. A function receives the legend instead, for a compact menu that holds both on a
+     * small screen.
+     */
+    controls?: React.ReactNode | ((legend: LegendItem[]) => React.ReactNode);
     /** Links that leave the map, such as Street View, after the legend. */
     links?: React.ReactNode;
     children?: React.ReactNode;
@@ -244,7 +250,7 @@ export function ModerationMap({
                 attributionControl={false}
                 className="absolute inset-0 z-0 size-full"
             >
-                <Focus center={center} zoom={startZoom} bounds={bounds} inset={inset} focus={focus} />
+                <Focus center={center} zoom={startZoom} bounds={bounds} inset={inset} insetBottom={insetBottom} focus={focus} />
                 {layer === 'streets' ? (
                     <TileLayer key={layer} url={TILES.streets.url} attribution={TILES.streets.attribution} maxZoom={21} />
                 ) : (
@@ -318,7 +324,10 @@ export function ModerationMap({
                 {onPlace && <PlaceOnClick onMove={onPlace} />}
             </MapContainer>
             {map && (
-                <div className="absolute right-3 bottom-7 z-500 flex flex-col gap-2.5 lg:right-4 lg:bottom-6">
+                <div
+                    className="absolute right-3 bottom-7 z-500 flex flex-col gap-2.5 transition-[bottom] duration-300 ease-out motion-reduce:transition-none lg:right-4 lg:bottom-6"
+                    style={insetBottom ? { bottom: insetBottom + 12 } : undefined}
+                >
                     <button
                         type="button"
                         aria-label={t(spread ? 'map.fit_all' : 'map.recenter')}
@@ -327,7 +336,8 @@ export function ModerationMap({
                     >
                         <LocateFixed className="size-5" aria-hidden />
                     </button>
-                    <div className="flex flex-col overflow-hidden rounded-xl bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
+                    {/* Touch screens pinch to zoom, so the zoom buttons only show with a mouse. */}
+                    <div className="flex flex-col overflow-hidden rounded-xl bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)] pointer-coarse:hidden">
                         <button
                             type="button"
                             aria-label={t('map.zoom_in')}
@@ -348,8 +358,14 @@ export function ModerationMap({
                 </div>
             )}
             <div className="absolute top-3 right-3 z-500 flex gap-2 lg:top-4 lg:right-4">
-                {controls}
-                <MapLegend items={legendItems} />
+                {typeof controls === 'function' ? (
+                    controls(legendItems)
+                ) : (
+                    <>
+                        {controls}
+                        <MapLegend items={legendItems} />
+                    </>
+                )}
                 {links}
             </div>
             {children}
@@ -375,7 +391,7 @@ function legendDot(color: string) {
     );
 }
 
-type LegendItem = { key: string; icon: React.ReactNode; label: string };
+export type LegendItem = { key: string; icon: React.ReactNode; label: string };
 
 function queueLegend(pins: QueuePin[]): LegendItem[] {
     const entries = new Map<string, QueuePin>();
@@ -440,16 +456,23 @@ function MapLegend({ items }: { items: LegendItem[] }) {
                         <X className="size-4" aria-hidden />
                     </Button>
                 </div>
-                <ul className="grid gap-2 px-1 pb-1 text-sm">
-                    {items.map((item) => (
-                        <li key={item.key} className="flex items-center gap-3">
-                            <span className="flex w-5 shrink-0 justify-center">{item.icon}</span>
-                            {item.label}
-                        </li>
-                    ))}
-                </ul>
+                <LegendList items={items} />
             </PopoverContent>
         </Popover>
+    );
+}
+
+/** What each pin and dot on the map stands for. */
+export function LegendList({ items }: { items: LegendItem[] }) {
+    return (
+        <ul className="grid gap-2 px-1 pb-1 text-sm">
+            {items.map((item) => (
+                <li key={item.key} className="flex items-center gap-3">
+                    <span className="flex w-5 shrink-0 justify-center">{item.icon}</span>
+                    {item.label}
+                </li>
+            ))}
+        </ul>
     );
 }
 
@@ -608,33 +631,38 @@ function Focus({
     zoom,
     bounds,
     inset,
+    insetBottom = 0,
     focus,
 }: {
     center: MapPoint;
     zoom: number;
     bounds: L.LatLngBounds | null;
     inset: number;
+    insetBottom?: number;
     focus: number;
 }) {
     const map = useMap();
     const key = `${center.latitude},${center.longitude}`;
-    const previous = useRef<{ key: string; inset: number; focus: number } | null>(null);
+    const previous = useRef<{ key: string; inset: number; insetBottom: number; focus: number } | null>(null);
 
     useEffect(() => {
         const last = previous.current;
-        previous.current = { key, inset, focus };
-        const panelChanged = last !== null && last.key === key && last.focus === focus && last.inset !== inset;
+        previous.current = { key, inset, insetBottom, focus };
+        const panelChanged = last !== null && last.key === key && last.focus === focus && (last.inset !== inset || last.insetBottom !== insetBottom);
         const animate = panelChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (bounds) {
-            map.fitBounds(bounds, { paddingTopLeft: [inset + 48, 64], paddingBottomRight: [72, 48], maxZoom: 17, animate: false });
+            map.fitBounds(bounds, { paddingTopLeft: [inset + 48, 64], paddingBottomRight: [72, insetBottom + 48], maxZoom: 17, animate: false });
             return;
         }
         const targetZoom = panelChanged ? map.getZoom() : zoom;
-        const target = map.unproject(map.project([center.latitude, center.longitude], targetZoom).subtract([inset / 2, 0]), targetZoom);
+        const target = map.unproject(
+            map.project([center.latitude, center.longitude], targetZoom).subtract([inset / 2, -insetBottom / 2]),
+            targetZoom,
+        );
         map.setView(target, targetZoom, { animate, duration: 0.3 });
         // The centre is compared by value, so a new object for the same place does not move the map.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map, key, bounds, inset, focus]);
+    }, [map, key, bounds, inset, insetBottom, focus]);
 
     return null;
 }

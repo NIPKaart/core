@@ -9,7 +9,8 @@ export function Kbd({ children, inverted = false, className, ...props }: React.C
         <kbd
             {...props}
             className={cn(
-                'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] border px-[5px] font-sans text-[11px] font-medium',
+                // Touch screens have no keyboard to press it on.
+                'inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] border px-[5px] font-sans text-[11px] font-medium pointer-coarse:hidden',
                 inverted ? 'border-white/20 bg-white/[0.14] text-neutral-300' : 'border-border bg-muted text-muted-foreground',
                 className,
             )}

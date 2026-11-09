@@ -156,6 +156,7 @@ function Frame({
             label={t('review.label')}
             aside={!decision && editor ? editor : undefined}
             asideLabel={t('edit.title')}
+            expanded={Boolean(decision)}
         >
             {decision ? (
                 <PanelNav back={t('review.back_to_item')} onBack={() => onCancelDecision?.()} />
@@ -188,7 +189,7 @@ function Frame({
                         <div className={cn(scroll, 'pt-0')}>{body}</div>
                     )}
                     {actions && (
-                        <div ref={actionRow} className="flex shrink-0 gap-2 border-t px-5 py-3">
+                        <div ref={actionRow} className="flex shrink-0 gap-2 border-t px-5 py-3 max-lg:px-4">
                             {actions}
                         </div>
                     )}
@@ -272,7 +273,11 @@ function PanelHeader({
 /** The decision buttons at the bottom of the panel, each taking half the row. */
 function Act({ children, primary = false, shortcut, ...props }: React.ComponentProps<typeof Button> & { primary?: boolean; shortcut?: string }) {
     return (
-        <Button {...props} variant={primary ? 'default' : 'outline'} className="flex-1 basis-0 cursor-pointer">
+        <Button
+            {...props}
+            variant={primary ? 'default' : 'outline'}
+            className="flex-1 basis-0 cursor-pointer max-lg:h-12 max-lg:rounded-xl max-lg:text-base"
+        >
             {children}
             {shortcut && (
                 <Kbd inverted={primary} aria-hidden>

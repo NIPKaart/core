@@ -99,18 +99,18 @@ export function DuplicateWalk({
                             </span>
                         </div>
                         <p className="text-sm font-medium">{t('proposals.walk_question')}</p>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid gap-2">
                             {(['ok', 'missing'] as const).map((answer) => (
                                 <Button
                                     key={answer}
                                     type="button"
                                     variant="outline"
-                                    className="h-12 text-[15px] font-semibold"
+                                    className="h-12 justify-start px-4 text-[15px] font-semibold max-lg:h-14 max-lg:rounded-xl"
                                     aria-keyshortcuts={answer === 'ok' ? yesKey : noKey}
                                     onClick={() => onAnswer(current, answer)}
                                 >
                                     {t(`proposals.walk_${answer}`)}
-                                    <kbd className="ml-1 rounded border bg-muted px-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                                    <kbd className="ml-auto rounded border bg-muted px-1.5 text-xs font-semibold text-muted-foreground uppercase pointer-coarse:hidden">
                                         {answer === 'ok' ? yesKey : noKey}
                                     </kbd>
                                 </Button>

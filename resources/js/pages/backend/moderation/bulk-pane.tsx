@@ -84,7 +84,13 @@ export function SelectionBar({ items, options, onClear }: { items: QueueItem[]; 
                     </SelectContent>
                 </Select>
             </div>
-            <Button variant="destructive" size="lg" className="w-full cursor-pointer" disabled={processing || !reason} onClick={reject}>
+            <Button
+                variant="destructive"
+                size="lg"
+                className="w-full cursor-pointer max-lg:h-12 max-lg:rounded-xl"
+                disabled={processing || !reason}
+                onClick={reject}
+            >
                 {t('bulk.reject', { count: items.length })}
             </Button>
         </div>
