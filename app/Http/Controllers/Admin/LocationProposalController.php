@@ -105,6 +105,7 @@ class LocationProposalController extends Controller
             'view' => $closedView ? 'closed' : 'open',
             'onMapCount' => $municipality === null || $closedView ? 0 : $this->queue->onMapCount($municipality),
             'recentlyClosed' => array_map('intval', (array) $request->session()->get('proposal_duplicates_closed', [])),
+            'imagery' => $municipality === null || $selected !== null ? [] : $imagery->forCountry(Municipality::with('country')->find($municipality)?->country?->code),
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
             'selected' => $selected,
             'bayOptions' => [

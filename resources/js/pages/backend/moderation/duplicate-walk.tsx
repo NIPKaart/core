@@ -1,0 +1,193 @@
+import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Camera, Check, ChevronLeft } from 'lucide-react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ExistingLine, toLocationProposal, type ProposalOverlap, type ProposalRow } from './location-proposals';
+
+export type WalkAnswer = 'ok' | 'missing';
+/** Where the moderator is in the group and what they answered so far; nothing is answered in advance. */
+export type Walk = { index: number; answers: Record<number, WalkAnswer> };
+
+/** The point of a proposal with parking within 3 m, and that parking. */
+export function walkTarget(row: ProposalRow): { point: ProposalRow['points'][number]; overlap: ProposalOverlap } | null {
+    const point = row.points.find((candidate) => candidate.overlap);
+
+    return point?.overlap ? { point, overlap: point.overlap } : null;
+}
+
+/**
+ * Going over the signs that already have parking within 3 m, one at a time on the aerial photo: does the map already
+ * hold every bay at this sign? Answers are only collected; the summary closes the confirmed ones in one go.
+ */
+export function DuplicateWalk({
+    rows,
+    walk,
+    reasonLabel,
+    closing,
+    onAnswer,
+    onPrevious,
+    onRestart,
+    onStop,
+    onClose,
+}: {
+    rows: ProposalRow[];
+    walk: Walk;
+    reasonLabel?: string;
+    closing: boolean;
+    onAnswer: (row: ProposalRow, answer: WalkAnswer) => void;
+    onPrevious: () => void;
+    onRestart: () => void;
+    onStop: () => void;
+    onClose: (ids: number[]) => void;
+}) {
+    const { t } = useTranslation('backend/moderation');
+    const current = rows[walk.index] ?? null;
+    const target = current ? walkTarget(current) : null;
+    const confirmed = rows.filter((row) => walk.answers[row.id] === 'ok').map((row) => row.id);
+    const yesKey = t('proposals.walk_ok_key');
+    const noKey = t('proposals.walk_missing_key');
+
+    useEffect(() => {
+        if (!current) return;
+        const listener = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (
+                event.defaultPrevented ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.altKey ||
+                target?.closest('input, textarea, select, [contenteditable]')
+            )
+                return;
+            const key = event.key.toLowerCase();
+            if (key === yesKey) onAnswer(current, 'ok');
+            if (key === noKey) onAnswer(current, 'missing');
+        };
+        window.addEventListener('keydown', listener);
+
+        return () => window.removeEventListener('keydown', listener);
+    }, [current, yesKey, noKey, onAnswer]);
+
+    const street = target ? streetViewUrl(target.point.latitude, target.point.longitude) : null;
+
+    return (
+        <>
+            <nav aria-label={t('proposals.walk_label')} className="flex h-[52px] shrink-0 items-center justify-between gap-2 border-b pr-4 pl-2">
+                <Button variant="ghost" className="h-9 cursor-pointer gap-1 px-2 text-sm font-medium" onClick={onStop}>
+                    <ChevronLeft className="size-[18px]" aria-hidden />
+                    {t('proposals.walk_stop')}
+                </Button>
+                <span className="truncate text-[13px] text-muted-foreground">{t('proposals.group_on_map')}</span>
+            </nav>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+                {current && target ? (
+                    <section aria-labelledby="walk-current" className="flex flex-col gap-2.5 border-b px-4.5 py-4">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[13px] text-muted-foreground">
+                                {t('proposals.walk_position', { index: walk.index + 1, total: rows.length })}
+                            </span>
+                            <h2 id="walk-current" className="text-xl font-bold tracking-tight">
+                                {toLocationProposal(current).street}
+                            </h2>
+                            <span className="text-[13px] text-muted-foreground">
+                                <ExistingLine source={target.overlap.source} distance={target.overlap.distance_metres} />
+                            </span>
+                        </div>
+                        <p className="text-sm font-medium">{t('proposals.walk_question')}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {(['ok', 'missing'] as const).map((answer) => (
+                                <Button
+                                    key={answer}
+                                    type="button"
+                                    variant="outline"
+                                    className="h-12 text-[15px] font-semibold"
+                                    aria-keyshortcuts={answer === 'ok' ? yesKey : noKey}
+                                    onClick={() => onAnswer(current, answer)}
+                                >
+                                    {t(`proposals.walk_${answer}`)}
+                                    <kbd className="ml-1 rounded border bg-muted px-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                                        {answer === 'ok' ? yesKey : noKey}
+                                    </kbd>
+                                </Button>
+                            ))}
+                        </div>
+                        <div className="flex items-center justify-between text-[13px]">
+                            <Button variant="ghost" size="sm" className="h-9 px-2" disabled={walk.index === 0} onClick={onPrevious}>
+                                <ChevronLeft aria-hidden />
+                                {t('proposals.walk_previous')}
+                            </Button>
+                            {street && (
+                                <Button variant="ghost" size="sm" className="h-9 px-2" asChild>
+                                    <a href={street} target="_blank" rel="noreferrer">
+                                        <Camera aria-hidden />
+                                        {t('review.views.street_view')}
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
+                    </section>
+                ) : (
+                    <section aria-labelledby="walk-done" className="flex flex-col gap-1 border-b px-4.5 py-4">
+                        <h2 id="walk-done" className="text-xl font-bold tracking-tight">
+                            {t('proposals.walk_done')}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                            {t('proposals.walk_summary', { closing: confirmed.length, total: rows.length })}
+                        </p>
+                    </section>
+                )}
+                <ol aria-label={t('proposals.walk_progress')} className="flex flex-col py-1.5">
+                    {rows.map((row, index) => {
+                        const answer = walk.answers[row.id];
+                        const isCurrent = index === walk.index && !!current;
+
+                        return (
+                            <li
+                                key={row.id}
+                                aria-current={isCurrent ? 'step' : undefined}
+                                className={cn('flex items-center gap-3 px-4.5 py-2', isCurrent && 'bg-blue-50 dark:bg-blue-950/50')}
+                            >
+                                <span
+                                    aria-hidden
+                                    className={cn(
+                                        'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                                        answer === 'ok' && 'bg-foreground text-background',
+                                        answer === 'missing' && 'border-[1.5px] border-orange-700 bg-orange-50 text-orange-800 dark:bg-orange-950',
+                                        !answer && isCurrent && 'bg-[#1e3a8a] text-white',
+                                        !answer && !isCurrent && 'border-[1.5px] border-stone-400 text-stone-600',
+                                    )}
+                                >
+                                    {answer === 'ok' ? <Check className="size-3.5" /> : answer === 'missing' ? '!' : index + 1}
+                                </span>
+                                <span className="flex min-w-0 flex-1 flex-col gap-px">
+                                    <span className={cn('truncate text-sm', isCurrent ? 'font-semibold' : 'font-medium')}>
+                                        {toLocationProposal(row).street}
+                                    </span>
+                                    {answer && <span className="text-xs text-muted-foreground">{t(`proposals.walk_status_${answer}`)}</span>}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ol>
+            </div>
+            {!current && (
+                <div className="flex shrink-0 flex-col gap-2.5 border-t px-5 py-4">
+                    <div className="flex items-center justify-between gap-3 text-[13px]">
+                        <span className="text-muted-foreground">{t('proposals.reason')}</span>
+                        <span className="font-semibold">{reasonLabel}</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button className="h-11 flex-[2]" disabled={confirmed.length === 0 || closing} onClick={() => onClose(confirmed)}>
+                            {t('proposals.close_selected', { count: confirmed.length })}
+                        </Button>
+                        <Button variant="outline" className="h-11 flex-1" disabled={closing} onClick={onRestart}>
+                            {t('proposals.walk_again')}
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
