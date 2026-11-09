@@ -5965,20 +5965,21 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-26T09:13:25+00:00"
+            "time": "2026-08-26T09:13:25+00:00",
+            "published-time": "2026-08-26T09:16:51+00:00"
         },
         {
             "name": "spatie/laravel-permission",
-            "version": "8.4.1",
+            "version": "8.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-permission.git",
-                "reference": "1c6e0264f3dd3dfbd2add4bf23bee00fed91416f"
+                "reference": "31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/1c6e0264f3dd3dfbd2add4bf23bee00fed91416f",
-                "reference": "1c6e0264f3dd3dfbd2add4bf23bee00fed91416f",
+                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0",
+                "reference": "31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0",
                 "shasum": ""
             },
             "require": {
@@ -6045,7 +6046,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-permission/issues",
-                "source": "https://github.com/spatie/laravel-permission/tree/8.4.1"
+                "source": "https://github.com/spatie/laravel-permission/tree/8.5.0"
             },
             "funding": [
                 {
@@ -6053,7 +6054,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-06T10:52:40+00:00"
+            "time": "2026-11-06T11:43:27+00:00",
+            "published-time": "2026-11-06T11:43:46+00:00"
         },
         {
             "name": "spatie/laravel-signal-aware-command",
@@ -13471,5 +13473,5 @@
         "ext-pdo_pgsql": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
