@@ -2,6 +2,7 @@
 
 return [
     'proposal' => [
+        'standalone_added' => 'Parkeerplaats toegevoegd.',
         'rejected' => 'Locatievoorstel afgewezen.',
         'reopened' => 'Locatievoorstel heropend.',
         'existing_required' => 'Kies een bestaande parkeerplaats op de kaart.',

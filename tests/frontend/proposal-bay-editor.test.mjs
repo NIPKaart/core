@@ -58,6 +58,7 @@ function editor() {
             default: {
                 moderation: {
                     proposals: {
+                        standaloneSpace: { url: (id) => `/moderation/proposals/${id}/standalone-space` },
                         publish: { url: (id) => `/moderation/proposals/${id}/publish` },
                         reject: { url: (id) => `/moderation/proposals/${id}/reject` },
                         reopen: { url: (id) => `/moderation/proposals/${id}/reopen` },
@@ -93,6 +94,7 @@ function editor() {
                 },
                 revision: 0,
                 canReject: true,
+                canAddStandalone: true,
                 community: [
                     { ...point, id: 'existing-space', street: 'Oude Kerkstraat', possible_duplicate: close, distance_metres: close ? 2 : 92 },
                     { ...point, id: 'other-space', longitude: 4.3602, street: 'Oude Kerkstraat', possible_duplicate: false, distance_metres: 92 },
@@ -137,6 +139,43 @@ test('shows nearby parking from both sources before entering duplicate selection
 
     assert.equal(map.nearby.length, 2);
     assert.equal(map.municipal.length, 2);
+});
+
+test('adds a separate space on the same map and resumes the proposal draft after cancel and save', () => {
+    const screen = editor();
+    element(screen.render(), 'Workspace').props.map.onPlace({ latitude: 52.011, longitude: 4.36 });
+    const original = element(screen.render(), 'Workspace').props.map;
+
+    action(screen.render(), 'proposals.standalone.title').props.onClick();
+    const placing = element(screen.render(), 'Workspace').props.map;
+    assert.equal(placing.center, original.center);
+    assert.equal(placing.onPlace, undefined);
+    action(screen.render(), 'proposals.cancel').props.onClick();
+    assert.deepEqual(element(screen.render(), 'Workspace').props.map.bays, original.bays);
+
+    action(screen.render(), 'proposals.standalone.title').props.onClick();
+    const pin = { latitude: 52.01125, longitude: 4.36025 };
+    element(screen.render(), 'Workspace').props.map.onMove(pin);
+    element(screen.render(), 'DetailsStep').props.setData('orientation', 'parallel');
+    element(screen.render(), 'DetailsStep').props.setData('under_sign', 'no');
+    assert.equal(action(screen.render(), 'proposals.standalone.save').props.disabled, true);
+    element(screen.render(), 'Checkbox').props.onCheckedChange(true);
+    element(screen.render(), 'Workspace').props.map.onMove(pin);
+    assert.equal(action(screen.render(), 'proposals.standalone.save').props.disabled, true);
+    element(screen.render(), 'Checkbox').props.onCheckedChange(true);
+    action(screen.render(), 'proposals.standalone.save').props.onClick();
+
+    const [request] = screen.requests;
+    assert.equal(request.url, '/moderation/proposals/23/standalone-space');
+    assert.equal(request.data.street_view_confirmed, true);
+    assert.equal(request.data.latitude, pin.latitude);
+    assert.equal(request.data.longitude, pin.longitude);
+    assert.equal(request.data.bays, undefined);
+    assert.equal(request.options.preserveState, true);
+    request.options.onSuccess();
+    request.options.onFinish();
+    assert.deepEqual(element(screen.render(), 'Workspace').props.map.bays, original.bays);
+    assert.equal(screen.storage.size, 1);
 });
 
 test('publishes the whole pilot batch and keeps draggable drafts until Core confirms publication', () => {

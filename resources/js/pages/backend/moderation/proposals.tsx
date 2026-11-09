@@ -58,6 +58,7 @@ type Props = {
         published: boolean;
         revision: number;
         canReject: boolean;
+        canAddStandalone: boolean;
         publishedBays: PublishedBay[];
         imagery: AerialLayer[];
         community: NearbyPlace[];
@@ -171,6 +172,7 @@ export default function Proposals({
                         publishedBays={selected.publishedBays}
                         revision={selected.revision}
                         canReject={selected.canReject}
+                        canAddStandalone={selected.canAddStandalone}
                         community={selected.community}
                         municipal={selected.municipal}
                         decision={selected.decision}
