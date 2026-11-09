@@ -7,6 +7,7 @@ use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
 use App\Enums\ReportReason;
 use App\Enums\UserRole;
+use App\Events\ModerationQueueChanged;
 use App\Models\Country;
 use App\Models\Municipality;
 use App\Models\ParkingMunicipal;
@@ -17,6 +18,9 @@ use App\Models\ParkingSpaceImprovement;
 use App\Models\Province;
 use App\Models\User;
 use App\Notifications\CommunitySpace\StatusChanged;
+use App\Services\ParkingSpaceImprovements;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -445,6 +449,32 @@ describe('history', function () {
                 ->where('history.data.2.longitude', 4.89)
                 ->where('history.data.3.latitude', 52.0918)
                 ->where('history.data.3.longitude', 5.118));
+    });
+});
+
+describe('live', function () {
+    test('open inboxes hear when an item arrives or is decided, and not when nothing changed', function () {
+        Event::fake([ModerationQueueChanged::class]);
+        $reporter = User::factory()->create();
+        $place = ParkingSpace::factory()->create(['status' => ParkingStatus::APPROVED]);
+        $space = pendingSubmission($this->contributor);
+
+        $this->actingAs($reporter)->post(route('map.places.report', ['source' => 'community', 'id' => $place->id]));
+        app(ParkingSpaceImprovements::class)->submit($place, $reporter, ['orientation' => ParkingOrientation::PERPENDICULAR->value]);
+        Event::assertDispatchedTimes(ModerationQueueChanged::class, 2);
+        Event::assertDispatched(ModerationQueueChanged::class, fn (ModerationQueueChanged $event) => $event->change === 'added');
+
+        $this->actingAs($this->moderator)->post(route('app.moderation.submissions.reject', $space), ['reason' => RejectionReason::SPAM->value]);
+        $this->post(route('app.moderation.bulk.reject'), ['items' => ["submission:{$space->id}"], 'reason' => RejectionReason::SPAM->value]);
+        Event::assertDispatchedTimes(ModerationQueueChanged::class, 3);
+        Event::assertDispatched(ModerationQueueChanged::class, fn (ModerationQueueChanged $event) => $event->change === 'decided');
+    });
+
+    test('only people who may see part of the queue listen live', function () {
+        $listens = Broadcast::getChannels()->get('moderation');
+
+        expect($listens($this->moderator))->toBeTrue()
+            ->and($listens(User::factory()->create()))->toBeFalse();
     });
 });
 

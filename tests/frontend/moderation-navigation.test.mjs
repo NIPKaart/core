@@ -21,6 +21,8 @@ function setup() {
     const state = [];
     let cursor = 0;
     let request;
+    let onLiveChange;
+    const reloads = [];
     const context = {
         exports: {},
         require: (name) => {
@@ -59,6 +61,13 @@ function setup() {
             if (name === './parts') return { useAgo: () => () => '' };
             if (name === './shortcuts') return { useShortcuts: () => {} };
             if (name === './queue-list') return { QueueList: 'QueueList', TYPE_COLORS: { submission: 'blue' } };
+            if (name === '@/hooks/use-moderation-changes')
+                return {
+                    useModerationChanges: (handler) => {
+                        onLiveChange = handler;
+                    },
+                };
+            if (name === '@/lib/live-reload') return { scheduleLiveReload: (only) => reloads.push(only) };
             if (name === './decided') return { DecidedList: 'DecidedList', DecisionPane: 'DecisionPane', decisionColor: (row) => row.decision };
             return tags;
         },
@@ -81,6 +90,9 @@ function setup() {
             return context.exports.default({ ...props, ...changes });
         },
         finish: () => request.onFinish(),
+        request: () => request,
+        live: () => onLiveChange({ change: 'decided' }),
+        reloads,
         item,
     };
 }
@@ -145,4 +157,19 @@ test('selecting an item keeps the map where it is and numbers the selected pin',
     assert.equal(after.queue[0].number, 1);
     assert.equal(before.queue[0].number, undefined);
     assert.ok(find(app.render(), 'QueueList'), 'the list stays in the panel');
+});
+
+test('the queue follows other moderators live, but an open item is never swept away', () => {
+    const app = setup();
+    app.render();
+    app.live();
+    assert.equal(JSON.stringify(app.reloads), JSON.stringify([['items', 'decidedToday', 'locationProposals', 'options']]));
+
+    const review = app.render({ selected: app.item, position: { index: 1 } });
+    app.live();
+    assert.equal(app.reloads.length, 1, 'no reload while an item is open');
+
+    find(app.render({ selected: app.item, position: { index: 1 } }), 'ReviewPane').props.onBack();
+    assert.ok(app.request().only.includes('items'), 'returning to the queue catches up with what changed');
+    assert.ok(review);
 });

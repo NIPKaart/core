@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ImprovementRejectionReason;
 use App\Enums\ParkingStatus;
+use App\Events\ModerationQueueChanged;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
@@ -100,7 +101,7 @@ final class ParkingSpaceImprovements
      */
     public function submit(ParkingSpace $space, User $user, array $changes): ParkingSpaceImprovement
     {
-        return DB::transaction(function () use ($space, $user, $changes) {
+        $improvement = DB::transaction(function () use ($space, $user, $changes) {
             // Locking the space serializes submissions before checking for this user's pending proposal.
             $space = ParkingSpace::whereKey($space->getKey())->lockForUpdate()->firstOrFail();
 
@@ -114,6 +115,9 @@ final class ParkingSpaceImprovements
                 'submitted' => $changes,
             ]);
         });
+        ModerationQueueChanged::dispatch('added');
+
+        return $improvement;
     }
 
     /**

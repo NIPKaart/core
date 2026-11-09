@@ -8,6 +8,7 @@ use App\Enums\ParkingStatus;
 use App\Enums\RejectionReason;
 use App\Enums\RemovalReason;
 use App\Enums\UnderSign;
+use App\Events\ModerationQueueChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParkingSpaceImprovementRequest;
 use App\Models\ParkingMunicipal;
@@ -277,6 +278,9 @@ class ModerationController extends Controller
             $count += $this->improvements->reject($improvements, $request->user(), ImprovementRejectionReason::from($validated['reason']), $note);
         }
 
+        if ($count > 0) {
+            ModerationQueueChanged::dispatch('decided');
+        }
         Inertia::flash('success', trans_choice('parking_spaces.moderation.items_rejected', $count, ['count' => $count]));
 
         return back();
@@ -391,10 +395,13 @@ class ModerationController extends Controller
     }
 
     /**
+     * After a decision: tell the other open inboxes, and continue with the next item.
+     *
      * @param  ?array<string, mixed>  $next
      */
     private function continueWith(Request $request, ?array $next): RedirectResponse
     {
+        ModerationQueueChanged::dispatch('decided');
         $query = $this->carriedQuery($request);
 
         return $next === null

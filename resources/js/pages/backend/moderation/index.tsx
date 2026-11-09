@@ -1,4 +1,6 @@
+import { useModerationChanges } from '@/hooks/use-moderation-changes';
 import AppLayout from '@/layouts/app-layout';
+import { scheduleLiveReload } from '@/lib/live-reload';
 import app from '@/routes/app';
 import type { BreadcrumbItem, PaginatedResponse } from '@/types';
 import { Head, router } from '@inertiajs/react';
@@ -27,6 +29,8 @@ import { Workspace } from './workspace';
 /** Where the overview starts when the queue is empty. */
 const NETHERLANDS = { latitude: 52.2, longitude: 5.3 };
 const COUNTRY_ZOOM = 7;
+/** What another moderator's decision or a new item can change on the open queue. */
+const QUEUE_PROPS = ['items', 'decidedToday', 'locationProposals', 'options'];
 
 type PageProps = {
     status: 'open' | 'decided';
@@ -53,6 +57,8 @@ export default function Index({ status, locationProposals, filters, items, histo
     const [checked, setChecked] = useState<string[]>([]);
     const [helping, setHelping] = useState(false);
     useEffect(() => setChecked((keys) => keys.filter((key) => items?.data.some((item) => item.key === key))), [items?.data]);
+    // The page is kept when switching tabs; an open decision belongs to the decided tab only.
+    useEffect(() => setViewing(null), [status]);
 
     const visit = (next: Partial<Filters & { status: string }>) => {
         const merged = { ...filters, ...next };
@@ -75,9 +81,26 @@ export default function Index({ status, locationProposals, filters, items, histo
             onFinish: () => setLoading(null),
         });
     };
+    /**
+     * The queue follows other moderators live. While an item is open it stays as it is, so a review in progress is
+     * never swept away; the queue catches up when the moderator returns to it.
+     */
+    const [queueChanged, setQueueChanged] = useState(false);
+    useModerationChanges(() => {
+        if (selected) {
+            setQueueChanged(true);
+            return;
+        }
+        scheduleLiveReload(open ? QUEUE_PROPS : ['history', 'decidedToday']);
+    });
     const closeReview = () => {
         setLoading(null);
-        router.visit(app.moderation.index({ query }), { preserveState: true, preserveScroll: true, only: ['selected', 'position', 'imagery'] });
+        setQueueChanged(false);
+        router.visit(app.moderation.index({ query }), {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['selected', 'position', 'imagery', ...(queueChanged ? QUEUE_PROPS : [])],
+        });
     };
 
     const current = selected;
