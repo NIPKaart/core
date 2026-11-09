@@ -195,7 +195,7 @@ it('requires reapproval for changed terms without letting malformed points stop 
 it('counts open proposals once per municipality and continues within the chosen municipality', function () {
     $data = proposalEnvelope([
         proposalPoint(),
-        proposalPoint('GM0363'),
+        proposalPoint('GM0363', longitude: 4.9),
         proposalPoint(longitude: 4.3601),
         proposalPoint(longitude: 4.361),
         proposalPoint(longitude: 4.362),
@@ -217,8 +217,8 @@ it('counts open proposals once per municipality and continues within the chosen 
     $this->get($route())->assertInertia(fn (Assert $page) => $page
         ->where('proposals', null)->where('municipality', null)
         ->where('municipalities', [
-            ['id' => $amsterdamId, 'name' => 'Amsterdam', 'open_count' => 1],
-            ['id' => $delftId, 'name' => 'Delft', 'open_count' => 2],
+            ['id' => $amsterdamId, 'name' => 'Amsterdam', 'open_count' => 1, 'point' => ['latitude' => 52.01, 'longitude' => 4.9]],
+            ['id' => $delftId, 'name' => 'Delft', 'open_count' => 2, 'point' => ['latitude' => 52.01, 'longitude' => 4.36]],
         ]));
     $this->get($route(['municipality' => $delftId]))
         ->assertCookie('proposal_municipality_'.$moderator->id, (string) $delftId)

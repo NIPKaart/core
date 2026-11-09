@@ -117,7 +117,19 @@ const TILES = {
     satellite: { zoom: 19 },
 };
 
-type QueuePin = { key: string; point: MapPoint; color: string; label: string };
+type QueuePin = { key: string; point: MapPoint; color: string; label: string; count?: number };
+
+const municipalityIcon = (count: number, color: string) => {
+    const label = count > 999 ? `${Math.floor(count / 1000)}k+` : String(count);
+    return cachedIcon(`municipality-${color}-${label}`, () =>
+        L.divIcon({
+            html: `<span aria-hidden="true" class="flex size-9 items-center justify-center rounded-full border-2 border-white text-xs font-semibold text-white shadow" style="background:${color}">${label}</span>`,
+            className: '',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+        }),
+    );
+};
 
 /**
  * The map the moderator works on: it fills the screen behind the panel. It shows the item under review with what
@@ -265,7 +277,9 @@ export function ModerationMap({
                         <Marker
                             key={item.key}
                             position={[item.point.latitude, item.point.longitude]}
-                            icon={queueIcon(item.color, item.key === highlighted)}
+                            icon={
+                                item.count === undefined ? queueIcon(item.color, item.key === highlighted) : municipalityIcon(item.count, item.color)
+                            }
                             title={item.label}
                             zIndexOffset={item.key === highlighted ? 1000 : 0}
                             eventHandlers={{ click: () => onPick?.(item.key) }}

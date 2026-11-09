@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MapPoint } from './geo';
 import type { PublishedBay } from './location-proposal-draft';
-import { LocationProposalReview, LocationProposals, toLocationProposal, type ProposalRow } from './location-proposals';
+import { LocationProposalReview, LocationProposals, SOURCE_COLOR, toLocationProposal, type ProposalRow } from './location-proposals';
 import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
@@ -18,7 +18,7 @@ type Point = ProposalRow['points'][number];
 type NearbyPlace = MapPoint & { street: string | null; distance_metres: number };
 type Props = {
     proposals: PaginatedResponse<ProposalRow> | null;
-    municipalities: { id: number; name: string; open_count: number }[];
+    municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
     municipality: number | null;
     municipalityName: string | null;
     hasNext: boolean;
@@ -69,6 +69,19 @@ export default function Proposals({ proposals, municipalities, municipality, mun
               points: selected.points,
           })
         : null;
+    const municipalityPins = municipalities.flatMap((item) =>
+        item.point
+            ? [
+                  {
+                      key: String(item.id),
+                      point: item.point,
+                      color: SOURCE_COLOR,
+                      label: `${item.name} · ${t('proposals.open_count', { count: item.open_count })}`,
+                      count: item.open_count,
+                  },
+              ]
+            : [],
+    );
     const selectedPoint = review?.points.find((point) => point.id === selected?.pointId);
 
     const groups = selected && (
@@ -163,12 +176,19 @@ export default function Proposals({ proposals, municipalities, municipality, mun
                         scope="overview"
                         label={t('proposals.title')}
                         map={{
-                            center: rows[0]?.points[0] ?? { latitude: 52.2, longitude: 5.3 },
+                            center: rows[0]?.points[0] ?? municipalityPins[0]?.point ?? { latitude: 52.2, longitude: 5.3 },
                             zoom: municipality === null ? 7 : 12,
-                            queue: rows.flatMap((item) =>
-                                item.points.map((point) => ({ key: String(point.id), point, color: '#1e3a8a', label: item.street })),
-                            ),
+                            queue:
+                                municipality === null
+                                    ? municipalityPins
+                                    : rows.flatMap((item) =>
+                                          item.points.map((point) => ({ key: String(point.id), point, color: SOURCE_COLOR, label: item.street })),
+                                      ),
                             onPick: (key) => {
+                                if (municipality === null) {
+                                    router.visit(routes.index({ query: { municipality: key } }));
+                                    return;
+                                }
                                 const item = rows.find((row) => row.points.some((point) => String(point.id) === key));
                                 if (item) router.visit(routes.index({ query: { ...query, proposal: item.id, point: key } }));
                             },

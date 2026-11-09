@@ -64,7 +64,7 @@ export type LocationProposalSelection = { proposal: LocationProposal; point: Loc
 /** How close the map comes when the moderator zooms in on one bay. */
 const BAY_ZOOM = 21;
 /** The colour of proposal points, on the map and in the queue. */
-const SOURCE_COLOR = '#1e3a8a';
+export const SOURCE_COLOR = '#1e3a8a';
 
 /**
  * Location proposals as their own group above the queue: one row per proposal point, like any other item. The status
@@ -87,7 +87,7 @@ export function LocationProposals({
         <>
             <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
                 <span>{t('proposals.title')}</span>
-                <span className="tabular-nums">{total ?? points.length}</span>
+                <span className="tabular-nums">{total ?? proposals.length}</span>
             </div>
             <ul className="flex flex-col">
                 {points.map(({ proposal, point, index }) => (

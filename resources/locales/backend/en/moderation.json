@@ -1,5 +1,6 @@
 {
     "proposals": {
+        "tab": "Proposals",
         "municipality_overview": "Municipalities",
         "next_proposal": "Next proposal",
         "no_open": "No open location proposals.",
