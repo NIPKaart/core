@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 const source = readFileSync(new URL('../../resources/js/pages/backend/moderation/moderation-map.tsx', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(
-    `${source.replaceAll('import.meta.env.VITE_MAPBOX_ACCESS_TOKEN', '"test-token"')}\nexport { Focus, QueueLegend };`,
+    `${source.replaceAll('import.meta.env.VITE_MAPBOX_ACCESS_TOKEN', '"test-token"')}\nexport { Focus, queueLegend };`,
     {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
     },
@@ -38,7 +38,7 @@ function setup(reducedMotion = false) {
     const props = { center: { latitude: 52, longitude: 5 }, zoom: 19, bounds: null, inset: 452, focus: 0 };
     return {
         views,
-        legend: (pins) => context.exports.QueueLegend({ pins }),
+        legend: (pins) => context.exports.queueLegend(pins),
         render: (changes = {}) => context.exports.Focus({ ...props, ...changes }),
     };
 }
@@ -84,10 +84,10 @@ test('changing items or explicitly recentering restores the item view directly',
 test('the overview legend lists visible marker types once and distinguishes municipality counts', () => {
     const { legend } = setup();
     const proposal = { legendLabel: 'Location proposal', color: '#1e3a8a' };
-    const { props } = legend([proposal, proposal, { legendLabel: 'Open proposals per municipality', color: '#1e3a8a', count: 3 }, {}]);
-    assert.equal(props.items.length, 2);
-    assert.equal(props.items[0].label, 'Location proposal');
-    assert.equal(props.items[0].icon.type, 'svg');
-    assert.equal(props.items[1].icon.props.children, '#');
-    assert.equal(legend([]).props.items.length, 0);
+    const items = legend([proposal, proposal, { legendLabel: 'Open proposals per municipality', color: '#1e3a8a', count: 3 }, {}]);
+    assert.equal(items.length, 2);
+    assert.equal(items[0].label, 'Location proposal');
+    assert.equal(items[0].icon.type, 'svg');
+    assert.equal(items[1].icon.props.children, '#');
+    assert.equal(legend([]).length, 0);
 });

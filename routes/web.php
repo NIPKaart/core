@@ -113,6 +113,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->whereNumber('proposal')->name('moderation.proposals.publish');
         Route::post('moderation/proposals/{proposal}/reject', [Admin\LocationProposalController::class, 'reject'])
             ->whereNumber('proposal')->name('moderation.proposals.reject');
+        Route::post('moderation/proposals/duplicates', [Admin\LocationProposalController::class, 'closeDuplicates'])
+            ->name('moderation.proposals.duplicates.close');
+        Route::post('moderation/proposals/duplicates/reopen', [Admin\LocationProposalController::class, 'reopenDuplicates'])
+            ->name('moderation.proposals.duplicates.reopen');
         Route::post('moderation/proposals/{proposal}/reopen', [Admin\LocationProposalController::class, 'reopen'])
             ->whereNumber('proposal')->name('moderation.proposals.reopen');
         Route::post('moderation/proposals/{proposal}/group', [Admin\LocationProposalController::class, 'group'])

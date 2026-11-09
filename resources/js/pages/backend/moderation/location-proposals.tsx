@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { RestrictionDay } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { ArrowRight, Camera, Check, MapPinned, MousePointer2, Trash2, ZoomIn } from 'lucide-react';
+import { ArrowRight, Camera, Check, CircleCheck, MapPinned, MousePointer2, RotateCcw, Trash2, ZoomIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -38,7 +38,33 @@ export type NearbyPlace = MapPoint & {
     possible_duplicate: boolean;
 };
 
-type ProposalOverlap = { source: 'municipal' | 'community'; street: string | null; distance_metres: number };
+export type ProposalOverlap = MapPoint & { source: 'municipal' | 'community'; id: string; street: string | null; distance_metres: number };
+
+/** A closed proposal's decision, for its panel: why it was closed and the parking space it duplicates. */
+export type ClosedDecision = {
+    reason: string | null;
+    reasonLabel: string | null;
+    decidedAt: string;
+    moderator: string | null;
+    existing: { source: 'municipal' | 'community'; street: string | null; distance_metres: number | null; url: string | null } | null;
+};
+
+/** The colours of existing parking on the moderation map, in lists too. */
+export const EXISTING_COLOR = { community: '#16a34a', municipal: '#7c3aed' } as const;
+
+/** Which existing parking space is how far away, as one line with the colour it has on the map. */
+export function ExistingLine({ source, distance }: { source: 'municipal' | 'community'; distance: number | null }) {
+    const { t } = useTranslation('backend/moderation');
+
+    return (
+        <span className="flex min-w-0 items-center gap-1.5">
+            <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: EXISTING_COLOR[source] }} aria-hidden />
+            <span className="truncate">
+                {distance === null ? t(`proposals.${source}`) : t('proposals.overlap_at', { place: t(`proposals.${source}`), distance })}
+            </span>
+        </span>
+    );
+}
 
 export type LocationProposal = {
     id: number;
@@ -83,10 +109,14 @@ export function LocationProposals({
     proposals,
     onOpen,
     total,
+    title,
+    action,
 }: {
     proposals: LocationProposal[];
     onOpen: (selection: LocationProposalSelection) => void;
     total?: number;
+    title?: string;
+    action?: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
     const storage = browserStorage();
@@ -94,9 +124,11 @@ export function LocationProposals({
 
     return (
         <>
-            <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
-                <span>{t('proposals.title')}</span>
-                <span className="tabular-nums">{total ?? proposals.length}</span>
+            <div className="flex items-center justify-between gap-3 px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
+                <span>
+                    {title ?? t('proposals.title')} <span className="tabular-nums">{total ?? proposals.length}</span>
+                </span>
+                {action}
             </div>
             <ul className="flex flex-col">
                 {points.map(({ proposal, point, index }) => (
@@ -117,10 +149,7 @@ export function LocationProposals({
                                 <span className="truncate text-[15px] font-medium">{proposal.street}</span>
                                 <span className="truncate text-[13px] text-muted-foreground">
                                     {point.overlap ? (
-                                        <>
-                                            {t(`proposals.${point.overlap.source}`)} · {point.overlap.street ?? t('proposals.unknown_street')} ·{' '}
-                                            {t('proposals.overlap_distance', { count: point.overlap.distance_metres })}
-                                        </>
+                                        <ExistingLine source={point.overlap.source} distance={point.overlap.distance_metres} />
                                     ) : (
                                         <StatusText draft={loadDraft(storage, proposal.id)} proposal={proposal} />
                                     )}
@@ -157,6 +186,7 @@ export function LocationProposalReview({
     canReject,
     community,
     municipal,
+    decision,
     comparison,
     group,
     query,
@@ -178,9 +208,10 @@ export function LocationProposalReview({
     canReject: boolean;
     community: NearbyPlace[];
     municipal: NearbyPlace[];
+    decision?: ClosedDecision | null;
     comparison?: MapPoint;
     group?: React.ReactNode;
-    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue'; overlap?: 'possible' | 'none' };
+    query: { municipality?: string | number; page?: number; point?: number; from?: 'queue' };
     onBack: () => void;
     onPointChange: (id: number) => void;
     nextUrl?: string;
@@ -218,13 +249,11 @@ export function LocationProposalReview({
     const askReason = !published && !rejecting && step === 'check' && partial;
     const pickingDuplicate = rejecting && reason === 'duplicate';
     const duplicatePlaces = [
-        ...community
-            .filter((place) => place.possible_duplicate)
-            .map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: '#15803d' })),
-        ...municipal
-            .filter((place) => place.possible_duplicate)
-            .map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: '#7c3aed' })),
+        ...community.map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: EXISTING_COLOR.community })),
+        ...municipal.map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: EXISTING_COLOR.municipal })),
     ].sort((a, b) => a.distance_metres - b.distance_metres);
+    const onMap = duplicatePlaces.filter((place) => place.possible_duplicate).length;
+    const reopenable = published && canReject && !!decision;
     const duplicatePlace = duplicatePlaces.find((place) => place.key === existing);
     const lastPublishedNumber = Math.max(0, ...publishedBays.map((bay) => bay.number));
 
@@ -285,7 +314,7 @@ export function LocationProposalReview({
         );
     };
 
-    const reject = (outcome: 'same_bay' | 'different_bay' | 'unclear' = 'same_bay') => {
+    const reject = () => {
         if (processing || !reason || (pickingDuplicate && !duplicatePlace)) return;
         setFailure(null);
         setProcessing(true);
@@ -295,24 +324,24 @@ export function LocationProposalReview({
                 revision,
                 reason,
                 note,
-                ...(pickingDuplicate ? { match_outcome: outcome } : {}),
                 existing_parking_space_id: duplicatePlace?.source === 'community' ? duplicatePlace.id : null,
                 existing_parking_municipal_id: duplicatePlace?.source === 'municipal' ? duplicatePlace.id : null,
             },
             {
                 onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
-                onSuccess: () => {
-                    if (outcome === 'same_bay') {
-                        saveDraft(storage, proposal.id, emptyDraft());
-                    } else {
-                        setRejecting(false);
-                        setReason('');
-                        setNote('');
-                        setExisting(null);
-                    }
-                },
+                onSuccess: () => saveDraft(storage, proposal.id, emptyDraft()),
                 onFinish: () => setProcessing(false),
             },
+        );
+    };
+
+    const reopen = () => {
+        if (processing) return;
+        setProcessing(true);
+        router.post(
+            app.moderation.proposals.reopen.url(proposal.id, { query }),
+            { revision },
+            { onError: (errors) => setFailure(Object.values(errors)[0] ?? null), onFinish: () => setProcessing(false) },
         );
     };
 
@@ -330,7 +359,7 @@ export function LocationProposalReview({
                             onChange={() => setReason(option.value)}
                             className="size-4 shrink-0 accent-foreground"
                         />
-                        {option.value === 'duplicate' ? t('proposals.review_match') : option.label}
+                        {option.label}
                     </label>
                 ))}
             {pickingDuplicate && (
@@ -348,22 +377,15 @@ export function LocationProposalReview({
                         <option value="">{t('proposals.choose')}</option>
                         {duplicatePlaces.map((place) => (
                             <option key={place.key} value={place.key}>
-                                {t(`proposals.${place.source}`)} · {place.street || t('proposals.unknown_street')} ·{' '}
-                                {t('proposals.overlap_distance', { count: place.distance_metres })}
+                                {t('proposals.duplicate_option', {
+                                    place: t(`proposals.${place.source}`),
+                                    street: place.street || t('proposals.unknown_street'),
+                                    distance: place.distance_metres,
+                                })}
                             </option>
                         ))}
                     </select>
                 </label>
-            )}
-            {pickingDuplicate && (
-                <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="outline" disabled={!duplicatePlace} onClick={() => reject('different_bay')}>
-                        {t('proposals.match_different')}
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" disabled={!duplicatePlace} onClick={() => reject('unclear')}>
-                        {t('proposals.match_unclear')}
-                    </Button>
-                </div>
             )}
             <label className="space-y-1 text-sm">
                 <span>{t('proposals.decision_note')}</span>
@@ -513,14 +535,19 @@ export function LocationProposalReview({
                     )}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
-                        <span className="text-xs text-stone-600 dark:text-muted-foreground">{t('proposals.source')}</span>
-                        <span className="font-semibold">
-                            {proposal.reported_bays === null
-                                ? t('proposals.unknown_count')
-                                : t('proposals.reported', { count: proposal.reported_bays })}
-                        </span>
-                    </div>
+                    {proposal.reported_bays === null ? (
+                        <div className="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
+                            <span className="text-xs text-stone-600 dark:text-muted-foreground">{t('proposals.on_map')}</span>
+                            <span className="font-semibold">
+                                {onMap > 0 ? t('proposals.on_map_count', { count: onMap }) : t('proposals.on_map_none')}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-0.5 rounded-xl bg-muted p-3">
+                            <span className="text-xs text-stone-600 dark:text-muted-foreground">{t('proposals.source')}</span>
+                            <span className="font-semibold">{t('proposals.reported', { count: proposal.reported_bays })}</span>
+                        </div>
+                    )}
                     <div role="status" className="flex flex-col gap-0.5 rounded-xl border p-3">
                         <span className="text-xs text-muted-foreground">{t('proposals.progress')}</span>
                         <span className="font-semibold">
@@ -532,6 +559,8 @@ export function LocationProposalReview({
                         </span>
                     </div>
                 </div>
+
+                {published && canReject && decision && <ClosedCard decision={decision} source={proposal.source} />}
 
                 {!rejecting && bays.length > 0 && <StepBar step={step} canCheck={canCheck(draft)} onStep={setStep} />}
 
@@ -599,20 +628,6 @@ export function LocationProposalReview({
                         </section>
 
                         {group}
-                        {!published && canReject && duplicatePlaces.length > 0 && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    setReason('duplicate');
-                                    setNote('');
-                                    setFailure(null);
-                                    setRejecting(true);
-                                }}
-                            >
-                                {t('proposals.review_match')}
-                            </Button>
-                        )}
                     </>
                 )}
                 {askReason &&
@@ -628,9 +643,9 @@ export function LocationProposalReview({
                             variant="destructive"
                             className="h-11 flex-[2]"
                             disabled={processing || !reason || (pickingDuplicate && !duplicatePlace)}
-                            onClick={() => reject()}
+                            onClick={reject}
                         >
-                            {t(pickingDuplicate ? 'proposals.match_same' : 'proposals.reject_title')}
+                            {t('proposals.reject_title')}
                         </Button>
                         <Button
                             type="button"
@@ -697,6 +712,12 @@ export function LocationProposalReview({
                     </Button>
                 ) : published ? (
                     <>
+                        {reopenable && (
+                            <Button type="button" variant="outline" className="h-11 flex-1" disabled={processing} onClick={reopen}>
+                                <RotateCcw aria-hidden />
+                                {t('proposals.reopen')}
+                            </Button>
+                        )}
                         {nextUrl && (
                             <Button className="h-11 flex-1" asChild>
                                 <Link href={nextUrl}>
@@ -725,6 +746,52 @@ export function LocationProposalReview({
                 ) : null}
             </div>
         </Workspace>
+    );
+}
+
+/** Why a proposal without bays was closed; for a duplicate, the parking space already on the map. */
+function ClosedCard({ decision, source }: { decision: ClosedDecision; source: string }) {
+    const { t, i18n } = useTranslation('backend/moderation');
+    const date = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(new Date(decision.decidedAt));
+    const duplicate = decision.reason === 'duplicate';
+
+    return (
+        <section aria-labelledby="proposal-closed" className="overflow-hidden rounded-xl border">
+            <div className="flex gap-2.5 bg-muted/60 p-3.5">
+                <CircleCheck className="mt-0.5 size-[18px] shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                <span className="flex flex-col gap-0.5">
+                    <h3 id="proposal-closed" className="text-[15px] font-semibold">
+                        {duplicate ? t('proposals.closed_duplicate') : t('proposals.closed_with', { reason: decision.reasonLabel })}
+                    </h3>
+                    {duplicate && <span className="text-[13px] text-muted-foreground">{t('proposals.closed_stays', { source })}</span>}
+                </span>
+            </div>
+            <dl className="grid grid-cols-[7rem_minmax(0,1fr)] text-sm [&>*]:border-t [&>*]:px-3 [&>*]:py-2.5">
+                {decision.existing && (
+                    <>
+                        <dt className="text-muted-foreground">{t('proposals.existing')}</dt>
+                        <dd className="flex flex-col gap-0.5">
+                            <ExistingLine source={decision.existing.source} distance={null} />
+                            {decision.existing.url ? (
+                                <a href={decision.existing.url} className="font-semibold underline underline-offset-4">
+                                    {decision.existing.street ?? t('proposals.unknown_street')}
+                                </a>
+                            ) : (
+                                <span className="font-semibold">{decision.existing.street ?? t('proposals.unknown_street')}</span>
+                            )}
+                        </dd>
+                        {decision.existing.distance_metres !== null && (
+                            <>
+                                <dt className="text-muted-foreground">{t('proposals.distance')}</dt>
+                                <dd className="tabular-nums">{t('proposals.distance_value', { distance: decision.existing.distance_metres })}</dd>
+                            </>
+                        )}
+                    </>
+                )}
+                <dt className="text-muted-foreground">{t('proposals.closed')}</dt>
+                <dd>{decision.moderator ? t('proposals.closed_by', { moderator: decision.moderator, date }) : date}</dd>
+            </dl>
+        </section>
     );
 }
 

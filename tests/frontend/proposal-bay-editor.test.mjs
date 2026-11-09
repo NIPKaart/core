@@ -60,6 +60,7 @@ function editor(reported_bays = null) {
                     proposals: {
                         publish: { url: (id) => `/moderation/proposals/${id}/publish` },
                         reject: { url: (id) => `/moderation/proposals/${id}/reject` },
+                        reopen: { url: (id) => `/moderation/proposals/${id}/reopen` },
                     },
                 },
             },
@@ -79,7 +80,7 @@ function editor(reported_bays = null) {
     };
     vm.runInNewContext(compiled('location-proposals.tsx'), context);
     return {
-        render({ published = false, publishedBays = [], close = true } = {}) {
+        render({ published = false, publishedBays = [], close = true, decision = null } = {}) {
             hook = 0;
             return context.exports.LocationProposalReview({
                 selection: { proposal: { ...proposal, status: published ? 'added' : 'open' }, point },
@@ -110,6 +111,7 @@ function editor(reported_bays = null) {
                 ],
                 query: {},
                 publishedBays,
+                decision,
                 onBack() {},
             });
         },
@@ -218,9 +220,9 @@ for (const [source, field] of [
         action(screen.render(), 'proposals.reject_title').props.onClick();
         find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
         const view = screen.render();
-        assert.equal(action(view, 'proposals.match_same').props.disabled, true);
+        assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
         element(view, 'Workspace').props.map.onPick(`${source}:existing-space`);
-        action(screen.render(), 'proposals.match_same').props.onClick();
+        action(screen.render(), 'proposals.reject_title').props.onClick();
         assert.equal(screen.requests[0].url, '/moderation/proposals/23/reject');
         assert.equal(screen.requests[0].data[field], 'existing-space');
         const otherField = source === 'municipal' ? 'existing_parking_space_id' : 'existing_parking_municipal_id';
@@ -228,25 +230,37 @@ for (const [source, field] of [
     });
 }
 
-test('compares a candidate and sends an uncertain assessment without a close decision', () => {
-    const screen = editor();
-    action(screen.render(), 'proposals.review_match').props.onClick();
-    const map = element(screen.render(), 'Workspace').props.map;
-    assert.equal(map.queue.length, 2);
-    assert.ok(map.queue.every((place) => place.key.endsWith(':existing-space')));
-    map.onPick('municipal:existing-space');
-    action(screen.render(), 'proposals.match_unclear').props.onClick();
-    assert.equal(screen.requests[0].data.match_outcome, 'unclear');
-    assert.equal(screen.requests[0].data.existing_parking_municipal_id, 'existing-space');
+test('counts parking within 3 m as already on the map, and a sign without it as nothing nearby', () => {
+    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map'));
+    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map_count'));
+    assert.ok(find(editor().render({ close: false }), (node) => node.props.children === 'proposals.on_map_none'));
 });
 
-test('keeps distant parking as map context without offering candidate comparison', () => {
-    const view = editor().render({ close: false });
-    assert.equal(element(view, 'Workspace').props.map.nearby.length, 2);
-    assert.equal(
-        find(view, (node) => node.type === 'Button' && node.props.children === 'proposals.review_match'),
-        undefined,
-    );
+test('a duplicate further than 3 m away can still be chosen when closing the proposal', () => {
+    const screen = editor();
+    action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
+    find(screen.render({ close: false }), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
+    element(screen.render({ close: false }), 'Workspace').props.map.onPick('community:other-space');
+    action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
+    assert.equal(screen.requests[0].data.existing_parking_space_id, 'other-space');
+    assert.equal('match_outcome' in screen.requests[0].data, false);
+});
+
+test('a proposal closed as a duplicate shows the existing space and can be reopened', () => {
+    const screen = editor();
+    const decision = {
+        reason: 'duplicate',
+        reasonLabel: 'Already exists',
+        decidedAt: '2026-11-09T10:00:00+00:00',
+        moderator: 'Moderator',
+        existing: { source: 'municipal', street: 'Markt', distance_metres: 2.5, url: '/map?place=municipal:existing-space' },
+    };
+    const view = screen.render({ published: true, decision });
+    const card = find(view, (node) => node.type?.name === 'ClosedCard');
+    assert.equal(card.props.decision.existing.url, '/map?place=municipal:existing-space');
+    action(view, 'proposals.reopen').props.onClick();
+    assert.equal(screen.requests[0].url, '/moderation/proposals/23/reopen');
+    assert.deepEqual({ ...screen.requests[0].data }, { revision: 0 });
 });
 
 test('a decided proposal links to its bays on the map, or to the existing space it duplicates', () => {

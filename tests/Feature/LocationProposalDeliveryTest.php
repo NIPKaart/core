@@ -148,7 +148,7 @@ it('discovers and approves a national source, then reconciles evidence without p
     $this->assertDatabaseCount('location_proposals', 2);
 });
 
-it('filters possible overlaps across both sources before paging and keeps next within the filter', function () {
+it('lists proposals with parking within 3 m first, across both sources, and keeps next in id order', function () {
     $data = proposalEnvelope([proposalPoint(), proposalPoint(longitude: 4.361), proposalPoint(longitude: 4.362)]);
     $source = app(SourceRegistrar::class)->register('proposals', $data);
     app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
@@ -165,19 +165,20 @@ it('filters possible overlaps across both sources before paging and keeps next w
 
     $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
     $url = fn (array $query) => route('app.moderation.proposals.index', ['municipality' => $municipality->id, ...$query]);
-    $this->actingAs($moderator)->get($url(['overlap' => 'possible']))->assertInertia(fn (Assert $page) => $page
-        ->where('proposals.total', 2)
+    $this->actingAs($moderator)->get($url([]))->assertInertia(fn (Assert $page) => $page
+        ->where('proposals.total', 3)->where('onMapCount', 2)
         ->where('proposals.data.0.id', $first)
-        ->where('proposals.data.0.points.0.overlap', ['source' => 'municipal', 'street' => 'Markt', 'distance_metres' => 1.4])
+        ->where('proposals.data.0.points.0.overlap.source', 'municipal')
+        ->where('proposals.data.0.points.0.overlap.street', 'Markt')
+        ->where('proposals.data.0.points.0.overlap.distance_metres', 1.4)
         ->where('proposals.data.1.id', $third)
-        ->where('proposals.data.1.points.0.overlap.source', 'community'));
-    $this->get($url(['overlap' => 'none']))->assertInertia(fn (Assert $page) => $page
-        ->where('proposals.total', 1)->where('proposals.data.0.id', $second));
-    $this->get($url(['overlap' => 'possible', 'after' => $first]))
-        ->assertRedirect($url(['overlap' => 'possible', 'proposal' => $third]));
+        ->where('proposals.data.1.points.0.overlap.source', 'community')
+        ->where('proposals.data.2.id', $second)
+        ->missing('proposals.data.2.points.0.overlap'));
+    $this->get($url(['after' => $first]))->assertRedirect($url(['proposal' => $second]));
 });
 
-it('keeps a confirmed duplicate closed when the same NDW point is updated, absent and returned', function (string $target) {
+it('keeps a proposal closed as a duplicate when the same NDW point is updated, absent and returned', function (string $target) {
     $point = proposalPoint();
     $otherPoints = array_map(fn () => proposalPoint('GM0363', longitude: 4.9), range(1, 4));
     $data = proposalEnvelope([$point, ...$otherPoints], 4);
@@ -197,15 +198,8 @@ it('keeps a confirmed duplicate closed when the same NDW point is updated, absen
 
     $this->actingAs($moderator)->get(route('app.moderation.proposals.index', ['proposal' => $proposal]))
         ->assertInertia(fn (Assert $page) => $page->where("selected.{$target}.0.possible_duplicate", true));
-    $this->post(route('app.moderation.proposals.reject', $proposal), [
-        'reason' => 'duplicate', 'revision' => 0, $field => $existing->id,
-    ])->assertRedirect();
+    $this->post(route('app.moderation.proposals.duplicates.close'), ['proposals' => [$proposal]])->assertRedirect();
     $this->assertDatabaseHas('location_proposal_decisions', ['location_proposal_id' => $proposal, 'reason' => 'duplicate', $field => $existing->id]);
-
-    $this->assertDatabaseHas('location_proposal_match_reviews', [
-        'location_proposal_point_id' => $proposal, 'parking_source' => $target, 'parking_id' => $existing->id,
-        'outcome' => 'same_bay', 'marker_distance_metres' => 1.37,
-    ]);
 
     $point['source_last_seen_on'] = '2026-11-02';
     $point['geometry']['coordinates'][0] = 4.3601;

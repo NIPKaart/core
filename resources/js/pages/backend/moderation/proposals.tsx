@@ -2,35 +2,47 @@ import type { OrientationOption } from '@/components/contribute/types';
 import type { AerialLayer } from '@/components/map/aerial-imagery';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { PaginatedResponse, RestrictionDay } from '@/types';
 import { Form, Head, Link, router } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CircleCheck, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MapPoint } from './geo';
 import type { PublishedBay } from './location-proposal-draft';
 import {
+    ExistingLine,
     LocationProposalReview,
     LocationProposals,
     SOURCE_COLOR,
     toLocationProposal,
+    type ClosedDecision,
     type NearbyPlace,
+    type ProposalOverlap,
     type ProposalRow,
 } from './location-proposals';
 import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
-type OverlapFilter = 'possible' | 'none';
+type ClosedRow = ProposalRow & {
+    decidedAt: string;
+    moderator: string | null;
+    existing: { source: 'municipal' | 'community'; street: string | null; distance_metres: number | null } | null;
+};
 type Props = {
-    proposals: PaginatedResponse<ProposalRow> | null;
+    proposals: PaginatedResponse<ProposalRow | ClosedRow> | null;
     municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
     municipality: number | null;
     municipalityName: string | null;
     hasNext: boolean;
     fromQueue: boolean;
-    overlap: OverlapFilter | null;
+    view: 'open' | 'closed';
+    /** Open proposals in the municipality with parking already on the map within 3 m, across all pages. */
+    onMapCount: number;
+    /** Proposals just closed as already on the map, so the moderator can undo it. */
+    recentlyClosed: number[];
     bayOptions: {
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
@@ -52,8 +64,22 @@ type Props = {
         imagery: AerialLayer[];
         community: NearbyPlace[];
         municipal: NearbyPlace[];
+        decision: ClosedDecision | null;
     } | null;
 };
+
+/** Unselected signs in a selection stay on the map, quieter, so the moderator still sees what they left out. */
+const LEFT_OUT_COLOR = '#64748b';
+
+/** The parking spaces already on the map near these proposals, split the way the map draws them. */
+function existingOnMap(rows: ProposalRow[]) {
+    const overlaps = rows.flatMap((row) => row.points.flatMap((point) => (point.overlap ? [point.overlap] : [])));
+    const unique = (source: ProposalOverlap['source']) => [
+        ...new Map(overlaps.filter((overlap) => overlap.source === source).map((overlap) => [overlap.id, overlap])).values(),
+    ];
+
+    return { nearby: unique('community'), municipal: unique('municipal') };
+}
 
 export default function Proposals({
     proposals,
@@ -64,22 +90,47 @@ export default function Proposals({
     selected,
     bayOptions,
     fromQueue,
-    overlap,
+    view,
+    onMapCount,
+    recentlyClosed,
 }: Props) {
     const { t } = useTranslation('backend/moderation');
     const routes = app.moderation.proposals;
-    const query = { ...(municipality ? { municipality } : {}), overlap: overlap ?? undefined, page: proposals?.current_page };
+    const query = { ...(municipality ? { municipality } : {}), page: proposals?.current_page };
+    const [selection, setSelection] = useState<Set<number> | null>(null);
+    const [closing, setClosing] = useState(false);
     const [grouping, setGrouping] = useState<{ proposal: number; candidate: string } | null>(null);
     const candidate =
         grouping?.proposal === selected?.id ? selected?.candidates.find((point) => String(point.proposal_id) === grouping?.candidate) : undefined;
 
     const reviewQuery = { ...query, ...(selected ? { point: selected.pointId } : {}), ...(fromQueue ? { from: 'queue' as const } : {}) };
     const rows = proposals?.data.map(toLocationProposal) ?? [];
+    const onMapRows = view === 'open' ? (proposals?.data ?? []).filter((row) => row.points.some((point) => point.overlap)) : [];
+    const todoRows = view === 'open' ? (proposals?.data ?? []).filter((row) => !onMapRows.includes(row)) : [];
+    const closedRows = view === 'closed' ? ((proposals?.data ?? []) as ClosedRow[]) : [];
+    const selecting = selection !== null && onMapRows.length > 0;
+    const existing = existingOnMap(onMapRows);
+    const duplicateLabel = bayOptions.rejectionReasons.find((option) => option.value === 'duplicate')?.label;
+
+    const closeSelection = () => {
+        if (!selection || selection.size === 0 || closing) return;
+        setClosing(true);
+        router.post(
+            routes.duplicates.close.url(),
+            { proposals: [...selection], municipality },
+            { preserveScroll: true, onSuccess: () => setSelection(null), onFinish: () => setClosing(false) },
+        );
+    };
+    const undo = () => router.post(routes.duplicates.reopen.url(), { proposals: recentlyClosed, municipality }, { preserveScroll: true });
+    const toggle = (id: number) =>
+        setSelection((current) => {
+            const next = new Set(current);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
     const overview = routes.index({ query: { overview: 1 } });
-    const next =
-        hasNext && municipality !== null
-            ? routes.index({ query: { municipality, overlap: overlap ?? undefined, after: selected?.id ?? 0 } })
-            : undefined;
+    const next = hasNext && municipality !== null ? routes.index({ query: { municipality, after: selected?.id ?? 0 } }) : undefined;
     const review = selected
         ? toLocationProposal({
               id: selected.id,
@@ -107,29 +158,38 @@ export default function Proposals({
 
     const groups = selected && (
         <>
-            <section className="space-y-1 text-sm">
-                <h3 className="font-semibold">{t('proposals.nearby')}</h3>
-                {[...selected.community, ...selected.municipal].some((place) => place.possible_duplicate) && (
-                    <p className="font-medium">{t('proposals.possible_duplicate')}</p>
-                )}
-                {selected.community.length === 0 && selected.municipal.length === 0 && <p>{t('proposals.none_nearby')}</p>}
-                {(
-                    [
-                        ['community', selected.community, 'bg-[#16a34a]'],
-                        ['municipal', selected.municipal, 'bg-[#7c3aed]'],
-                    ] as const
-                ).map(
-                    ([kind, places, color]) =>
-                        places.length > 0 && (
-                            <p key={kind} className="flex items-center gap-2">
-                                <span className={`size-3 shrink-0 rounded-full ${color}`} aria-hidden />
-                                <span>
-                                    {t(`proposals.${kind}`)} · {places.length} · {places[0].street ?? t('proposals.unknown_street')} ·{' '}
-                                    {places[0].distance_metres} m
-                                </span>
-                            </p>
-                        ),
-                )}
+            <section aria-labelledby="proposal-on-map" className="flex flex-col gap-2">
+                <h3 id="proposal-on-map" className="text-sm font-semibold">
+                    {t('proposals.on_map')}
+                </h3>
+                {(() => {
+                    const close = [
+                        ...selected.community.map((place) => ({ ...place, source: 'community' as const })),
+                        ...selected.municipal.map((place) => ({ ...place, source: 'municipal' as const })),
+                    ]
+                        .filter((place) => place.possible_duplicate)
+                        .sort((a, b) => a.distance_metres - b.distance_metres);
+
+                    return close.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">{t('proposals.on_map_none_hint')}</p>
+                    ) : (
+                        <ul className="divide-y overflow-hidden rounded-xl border bg-muted/40 text-sm">
+                            {close.map((place) => (
+                                <li key={`${place.source}:${place.id}`} className="flex items-center gap-3 px-3 py-2.5">
+                                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                        <span className="font-medium">{place.street ?? t('proposals.unknown_street')}</span>
+                                        <span className="text-[13px] text-muted-foreground">
+                                            <ExistingLine source={place.source} distance={null} />
+                                        </span>
+                                    </span>
+                                    <span className="text-[13px] text-muted-foreground tabular-nums">
+                                        {t('proposals.overlap_distance', { count: place.distance_metres })}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    );
+                })()}
             </section>
             {selected.candidates.length > 0 && (
                 <Form action={routes.group(selected.id, { query: reviewQuery })} className="space-y-2">
@@ -191,12 +251,19 @@ export default function Proposals({
                         canReject={selected.canReject}
                         community={selected.community}
                         municipal={selected.municipal}
+                        decision={selected.decision}
                         comparison={candidate}
                         group={groups}
                         query={reviewQuery}
                         nextUrl={next?.url}
                         onPointChange={(point) => router.visit(routes.index({ query: { ...reviewQuery, proposal: selected.id, point } }))}
-                        onBack={() => router.visit(fromQueue ? app.moderation.index() : routes.index({ query }))}
+                        onBack={() =>
+                            router.visit(
+                                fromQueue
+                                    ? app.moderation.index()
+                                    : routes.index({ query: { ...query, ...(selected.decision ? { view: 'closed' } : {}) } }),
+                            )
+                        }
                     />
                 ) : (
                     <Workspace
@@ -205,19 +272,26 @@ export default function Proposals({
                         map={{
                             center: rows[0]?.points[0] ?? municipalityPins[0]?.point ?? { latitude: 52.2, longitude: 5.3 },
                             zoom: municipality === null ? 7 : 12,
+                            nearby: existing.nearby,
+                            municipal: existing.municipal,
                             queue:
                                 municipality === null
                                     ? municipalityPins
-                                    : rows.flatMap((item) =>
+                                    : (selecting ? onMapRows.map(toLocationProposal) : rows).flatMap((item) =>
                                           item.points.map((point) => ({
                                               key: String(point.id),
                                               point,
-                                              color: SOURCE_COLOR,
+                                              color: selecting && !selection.has(item.id) ? LEFT_OUT_COLOR : SOURCE_COLOR,
                                               label: item.street,
                                               legendLabel: t('map.source_point'),
                                           })),
                                       ),
                             onPick: (key) => {
+                                if (selecting) {
+                                    const item = onMapRows.find((row) => row.points.some((point) => String(point.id) === key));
+                                    if (item) toggle(item.id);
+                                    return;
+                                }
                                 if (municipality === null) {
                                     router.visit(routes.index({ query: { municipality: key } }));
                                     return;
@@ -256,34 +330,187 @@ export default function Proposals({
                                 </>
                             ) : (
                                 <>
-                                    <h2 className="px-5 pt-4 text-lg font-semibold">{municipalityName}</h2>
-                                    <div className="flex flex-wrap gap-2 px-5 py-3" role="group" aria-label={t('proposals.overlap_filter')}>
-                                        {([null, 'none', 'possible'] as const).map((filter) => (
-                                            <Button key={filter ?? 'all'} variant={filter === overlap ? 'default' : 'outline'} size="sm" asChild>
+                                    <div className="flex flex-col gap-3 px-5 pt-4 pb-2">
+                                        <h2 className="text-lg font-semibold">{municipalityName}</h2>
+                                        <nav aria-label={t('proposals.views_label')} className="flex rounded-[10px] bg-muted p-1">
+                                            {(['open', 'closed'] as const).map((option) => (
                                                 <Link
-                                                    href={routes.index({ query: { municipality, overlap: filter ?? undefined } })}
-                                                    aria-current={filter === overlap ? 'page' : undefined}
+                                                    key={option}
+                                                    href={routes.index({
+                                                        query: { municipality, ...(option === 'closed' ? { view: 'closed' } : {}) },
+                                                    })}
+                                                    aria-current={view === option ? 'page' : undefined}
+                                                    className={cn(
+                                                        'flex h-9 flex-1 items-center justify-center rounded-[7px] text-sm focus-visible:outline-2 focus-visible:outline-ring',
+                                                        view === option
+                                                            ? 'bg-background font-semibold shadow-sm'
+                                                            : 'font-medium text-stone-600 hover:text-foreground dark:text-muted-foreground',
+                                                    )}
                                                 >
-                                                    {t(`proposals.overlap_${filter ?? 'all'}`)}
+                                                    {t(`proposals.view_${option}`)}
                                                 </Link>
-                                            </Button>
-                                        ))}
+                                            ))}
+                                        </nav>
                                     </div>
-                                    {rows.length === 0 ? (
+                                    {view === 'open' && recentlyClosed.length > 0 && !selecting && (
+                                        <div role="status" className="mx-5 my-2 flex items-center gap-2.5 rounded-xl bg-muted px-3 py-2 text-sm">
+                                            <CircleCheck className="size-4 shrink-0 text-green-700 dark:text-green-400" aria-hidden />
+                                            <span className="flex-1">{t('proposals.closed_recently', { count: recentlyClosed.length })}</span>
+                                            <Button variant="ghost" size="sm" className="h-9" onClick={undo}>
+                                                <Undo2 aria-hidden />
+                                                {t('proposals.undo')}
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {view === 'closed' ? (
+                                        closedRows.length === 0 ? (
+                                            <p className="px-5 py-3 text-sm text-muted-foreground">{t('proposals.closed_empty')}</p>
+                                        ) : (
+                                            <>
+                                                <p className="px-5 pt-1 pb-2 text-[13px] text-muted-foreground">{t('proposals.closed_list_hint')}</p>
+                                                <ul className="flex flex-col">
+                                                    {closedRows.map((row) => (
+                                                        <li key={row.id} className="border-t border-muted">
+                                                            <Link
+                                                                href={routes.index({ query: { municipality, view: 'closed', proposal: row.id } })}
+                                                                className="flex items-center gap-3 py-2.5 pr-4 pl-[18px] hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+                                                            >
+                                                                <span
+                                                                    className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-muted"
+                                                                    aria-hidden
+                                                                >
+                                                                    <CircleCheck className="size-[18px] text-stone-600 dark:text-muted-foreground" />
+                                                                </span>
+                                                                <span className="flex min-w-0 flex-1 flex-col gap-px">
+                                                                    <span className="truncate text-[15px] font-medium">
+                                                                        {toLocationProposal(row).street}
+                                                                    </span>
+                                                                    <span className="text-[13px] text-muted-foreground">
+                                                                        {row.existing ? (
+                                                                            <ExistingLine
+                                                                                source={row.existing.source}
+                                                                                distance={row.existing.distance_metres}
+                                                                            />
+                                                                        ) : (
+                                                                            duplicateLabel
+                                                                        )}
+                                                                    </span>
+                                                                </span>
+                                                                <span className="shrink-0 text-[13px] text-muted-foreground">
+                                                                    {new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' }).format(
+                                                                        new Date(row.decidedAt),
+                                                                    )}
+                                                                </span>
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </>
+                                        )
+                                    ) : rows.length === 0 ? (
                                         <p className="px-5 py-3 text-sm text-muted-foreground">{t('proposals.no_open')}</p>
+                                    ) : selecting ? (
+                                        <section aria-labelledby="proposal-selection" className="flex flex-col">
+                                            <div className="flex flex-col gap-1 px-5 pt-2 pb-3">
+                                                <div className="flex items-baseline justify-between gap-3">
+                                                    <h3 id="proposal-selection" className="text-lg font-semibold">
+                                                        {t('proposals.selected_count', { count: selection.size })}
+                                                    </h3>
+                                                    <Button variant="ghost" size="sm" className="h-9" onClick={() => setSelection(null)}>
+                                                        {t('proposals.clear_selection')}
+                                                    </Button>
+                                                </div>
+                                                <p className="text-[13px] text-muted-foreground">{t('proposals.selection_hint')}</p>
+                                            </div>
+                                            <ul className="flex flex-col">
+                                                {onMapRows.map((row) => {
+                                                    const overlap = row.points.find((point) => point.overlap)?.overlap;
+                                                    const checked = selection.has(row.id);
+
+                                                    return (
+                                                        <li key={row.id} className="border-t border-muted">
+                                                            <label
+                                                                className={cn(
+                                                                    'flex cursor-pointer items-center gap-3 border-l-[3px] py-2.5 pr-4 pl-[15px]',
+                                                                    checked ? 'border-blue-700 bg-blue-50 dark:bg-blue-950/50' : 'border-transparent',
+                                                                )}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={checked}
+                                                                    onChange={() => toggle(row.id)}
+                                                                    className="size-[18px] shrink-0 accent-foreground"
+                                                                />
+                                                                <span className="flex min-w-0 flex-1 flex-col gap-px">
+                                                                    <span className="truncate text-[15px] font-medium">
+                                                                        {toLocationProposal(row).street}
+                                                                    </span>
+                                                                    <span className="text-[13px] text-muted-foreground">
+                                                                        {checked && overlap ? (
+                                                                            <ExistingLine
+                                                                                source={overlap.source}
+                                                                                distance={overlap.distance_metres}
+                                                                            />
+                                                                        ) : (
+                                                                            t('proposals.left_out')
+                                                                        )}
+                                                                    </span>
+                                                                </span>
+                                                            </label>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </section>
                                     ) : (
-                                        <LocationProposals
-                                            proposals={rows}
-                                            total={proposals.total}
-                                            onOpen={({ proposal, point }) =>
-                                                router.visit(routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }))
-                                            }
-                                        />
+                                        <>
+                                            {onMapRows.length > 0 && (
+                                                <LocationProposals
+                                                    title={t('proposals.group_on_map')}
+                                                    total={onMapCount}
+                                                    proposals={onMapRows.map(toLocationProposal)}
+                                                    action={
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-9"
+                                                            onClick={() => setSelection(new Set(onMapRows.map((row) => row.id)))}
+                                                        >
+                                                            {t('proposals.review_together')}
+                                                        </Button>
+                                                    }
+                                                    onOpen={({ proposal, point }) =>
+                                                        router.visit(routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }))
+                                                    }
+                                                />
+                                            )}
+                                            {todoRows.length > 0 && (
+                                                <LocationProposals
+                                                    title={t('proposals.group_todo')}
+                                                    total={proposals.total - onMapCount}
+                                                    proposals={todoRows.map(toLocationProposal)}
+                                                    onOpen={({ proposal, point }) =>
+                                                        router.visit(routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }))
+                                                    }
+                                                />
+                                            )}
+                                        </>
                                     )}
                                 </>
                             )}
                         </div>
-                        {(next || proposals?.prev_page_url || proposals?.next_page_url) && (
+                        {selecting && (
+                            <div className="flex shrink-0 flex-col gap-2.5 border-t px-5 py-4">
+                                <div className="flex items-center justify-between gap-3 text-[13px]">
+                                    <span className="text-muted-foreground">{t('proposals.reason')}</span>
+                                    <span className="font-semibold">{duplicateLabel}</span>
+                                </div>
+                                <Button className="h-11" disabled={selection.size === 0 || closing} onClick={closeSelection}>
+                                    {t('proposals.close_selected', { count: selection.size })}
+                                </Button>
+                            </div>
+                        )}
+                        {!selecting && (next || proposals?.prev_page_url || proposals?.next_page_url) && (
                             <div className="flex shrink-0 flex-wrap gap-2 border-t px-5 py-4">
                                 {next && (
                                     <Button asChild>
