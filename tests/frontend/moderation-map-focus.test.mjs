@@ -107,18 +107,21 @@ test('the overview legend lists visible marker types once and distinguishes muni
 });
 
 function renderMap(props) {
+    const pans = [];
+    const fits = [];
+    const map = { panInside: (point, options) => pans.push({ point, options }) };
     const context = {
         exports: {},
         window: { matchMedia: () => ({ matches: false }) },
         require: (name) => {
             if (name === '@/lib/pin-svg') return { pinSvg: () => '' };
-            if (name === 'leaflet') return { default: { divIcon: () => ({}), latLngBounds: () => null } };
+            if (name === 'leaflet') return { default: { divIcon: () => ({}), latLngBounds: (points) => fits.push(points) } };
             if (name === 'react')
                 return {
                     useRef: (value) => ({ current: value }),
-                    useEffect: () => {},
+                    useEffect: (effect) => effect(),
                     useMemo: (fn) => fn(),
-                    useState: (value) => [value === null ? {} : value, () => {}],
+                    useState: (value) => [value === null ? map : value, () => {}],
                 };
             if (name === 'react/jsx-runtime')
                 return { Fragment: 'fragment', jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
@@ -138,7 +141,7 @@ function renderMap(props) {
     const flat = (nodes) => [nodes].flat().flatMap((node) => (node?.type === 'fragment' ? flat(node.props.children) : node ? [node] : []));
     const top = corners.find((node) => node.props.className.includes('top-3'));
     const bottom = corners.find((node) => node.props.className.includes('bottom-7'));
-    return { top: flat(top.props.children), bottom };
+    return { top: flat(top.props.children), bottom, pans, fits };
 }
 
 test('the legend sits in the top right between the layer switch and the links, not with the zoom buttons', () => {
@@ -180,4 +183,28 @@ test('the tooltip stops the map click before it removes the selected bay', () =>
     remove.props.onClick({ stopPropagation: () => calls.push('stop') });
 
     assert.deepEqual(calls, ['stop', 'remove']);
+});
+
+test('inspecting an existing parking space pans it into the visible map without setting a zoom', () => {
+    const inspectedPin = { latitude: 52.00001, longitude: 5.00001 };
+    const { pans } = renderMap({ inspectedPin, inset: 452, insetBottom: 0 });
+    assert.deepEqual(JSON.parse(JSON.stringify(pans)), [
+        {
+            point: [inspectedPin.latitude, inspectedPin.longitude],
+            options: { paddingTopLeft: [500, 88], paddingBottomRight: [72, 48], animate: true },
+        },
+    ]);
+    assert.equal(renderMap({}).pans.length, 0);
+});
+
+test('the municipality overview fits both existing parking layers with the proposal pins, while the detail walk stays zoomed', () => {
+    const props = {
+        fitParking: true,
+        nearby: [{ latitude: 52, longitude: 5 }],
+        municipal: [{ latitude: 52.1, longitude: 5.1 }],
+        queue: [{ key: 'proposal', point: { latitude: 52.2, longitude: 5.2 }, color: 'blue' }],
+    };
+
+    assert.equal(JSON.stringify(renderMap(props).fits), '[[[52.2,5.2],[52,5],[52.1,5.1]]]');
+    assert.equal(renderMap({ ...props, fitQueue: false }).fits.length, 0);
 });

@@ -38,6 +38,7 @@ type Props = {
     municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
     municipality: number | null;
     municipalityName: string | null;
+    parking: { community: MapPoint[]; municipal: MapPoint[] } | null;
     hasNext: boolean;
     fromQueue: boolean;
     view: 'open' | 'closed';
@@ -74,21 +75,12 @@ const WALK_COLOR = { ok: '#171717', missing: '#c2410c', open: SOURCE_COLOR } as 
 /** Close enough on the aerial photo to count the bays at one sign, with neighbouring signs still in view. */
 const WALK_ZOOM = 19;
 
-/** The parking spaces already on the map near these proposals, split the way the map draws them. */
-function existingOnMap(rows: ProposalRow[]) {
-    const overlaps = rows.flatMap((row) => row.points.flatMap((point) => (point.overlap ? [point.overlap] : [])));
-    const unique = (source: ProposalOverlap['source']) => [
-        ...new Map(overlaps.filter((overlap) => overlap.source === source).map((overlap) => [overlap.id, overlap])).values(),
-    ];
-
-    return { nearby: unique('community'), municipal: unique('municipal') };
-}
-
 export default function Proposals({
     proposals,
     municipalities,
     municipality,
     municipalityName,
+    parking,
     hasNext,
     selected,
     bayOptions,
@@ -113,7 +105,6 @@ export default function Proposals({
     const walking = walk !== null && bulkRows.length > 0;
     const walkRow = walking ? (bulkRows[walk.index] ?? null) : null;
     const walkPoint = walkRow ? walkTarget(walkRow) : null;
-    const existing = existingOnMap(onMapRows);
     const walkPin = walkRow && walk ? chosenPin(walkRow, walk) : undefined;
     const walkCandidates = candidatePins(walkPoint);
     const walkCenter =
@@ -211,10 +202,15 @@ export default function Proposals({
                         label={t(walking ? 'proposals.walk_label' : 'proposals.title')}
                         streetView={walkPoint?.point}
                         map={{
-                            center: walkCenter ?? rows[0]?.points[0] ?? municipalityPins[0]?.point ?? { latitude: 52.2, longitude: 5.3 },
+                            center: walkCenter ??
+                                rows[0]?.points[0] ??
+                                municipalityPins[0]?.point ??
+                                parking?.community[0] ??
+                                parking?.municipal[0] ?? { latitude: 52.2, longitude: 5.3 },
                             zoom: walkPoint ? walkZoom : municipality === null ? 7 : 12,
-                            nearby: walking ? [] : existing.nearby,
-                            municipal: walking ? [] : existing.municipal,
+                            nearby: walking ? [] : parking?.community,
+                            municipal: walking ? [] : parking?.municipal,
+                            fitParking: parking !== null,
                             fitQueue: !walkPoint,
                             highlighted: walkPin ? pinKey(walkPin) : undefined,
                             queue:

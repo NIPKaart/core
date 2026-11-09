@@ -104,7 +104,7 @@ const queueIcon = (color: string, highlighted: boolean) =>
     cachedIcon(`q${color}${highlighted ? '+' : ''}`, () => {
         const [width, height] = highlighted ? [32, 43] : [22, 29];
         return L.divIcon({
-            html: `<svg viewBox="0 0 36 48" width="${width}" height="${height}" aria-hidden="true" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))"><path d="${PIN}" fill="${color}" stroke="#fff" stroke-width="2.6"/></svg>`,
+            html: `<svg viewBox="0 0 36 48" width="${width}" height="${height}" aria-hidden="true" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))"><path d="${PIN}" fill="${color}" stroke="#fff" stroke-width="${highlighted ? 4 : 2.6}"/></svg>`,
             className: '',
             iconSize: [width, height],
             iconAnchor: [width / 2, height - 1],
@@ -158,7 +158,9 @@ export function ModerationMap({
     proposed,
     queue,
     fitQueue = true,
+    fitParking = false,
     highlighted,
+    inspectedPin,
     onPick,
     onMove,
     movedLabel,
@@ -190,7 +192,11 @@ export function ModerationMap({
     queue?: QueuePin[];
     /** Fit the map around all queue pins; off to keep the centre and zoom on one of them while the others stay in view. */
     fitQueue?: boolean;
+    /** Include existing parking in the municipality overview bounds. */
+    fitParking?: boolean;
     highlighted?: string | null;
+    /** Keep the selected detail pin visible without changing the current zoom. */
+    inspectedPin?: MapPoint;
     onPick?: (key: string) => void;
     /** Makes the main pin movable and reports where it went. */
     onMove?: (point: MapPoint) => void;
@@ -226,7 +232,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = fitQueue ? queue?.map((pin) => pin.point) : undefined;
+    const spread = fitQueue ? [...(queue?.map((pin) => pin.point) ?? []), ...(fitParking ? [...nearby, ...municipal] : [])] : undefined;
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
@@ -234,6 +240,17 @@ export function ModerationMap({
     );
     const pin = proposed ?? center;
     const startZoom = zoom ?? tiles.zoom;
+    const inspectedLatitude = inspectedPin?.latitude;
+    const inspectedLongitude = inspectedPin?.longitude;
+
+    useEffect(() => {
+        if (!map || inspectedLatitude === undefined || inspectedLongitude === undefined) return;
+        map.panInside([inspectedLatitude, inspectedLongitude], {
+            paddingTopLeft: [inset + 48, 88],
+            paddingBottomRight: [72, insetBottom + 48],
+            animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        });
+    }, [map, inspectedLatitude, inspectedLongitude, inset, insetBottom]);
     const legendItems = [
         ...(sourcePoint && bays ? bayLegend(t) : queue ? queueLegend(queue) : []),
         ...(nearby.length > 0 ? [{ key: 'community', icon: legendDot('#16a34a'), label: t('map.legend.community') }] : []),
@@ -257,10 +274,16 @@ export function ModerationMap({
                     <AerialTiles layer={aerial} />
                 )}
                 {nearby.map((point, index) => (
-                    <Marker key={`n${index}`} position={[point.latitude, point.longitude]} icon={nearbyIcon} interactive={false} />
+                    <Marker key={`n${index}`} position={[point.latitude, point.longitude]} icon={nearbyIcon} interactive={false} keyboard={false} />
                 ))}
                 {municipal.map((point, index) => (
-                    <Marker key={`m${index}`} position={[point.latitude, point.longitude]} icon={municipalIcon} interactive={false} />
+                    <Marker
+                        key={`m${index}`}
+                        position={[point.latitude, point.longitude]}
+                        icon={municipalIcon}
+                        interactive={false}
+                        keyboard={false}
+                    />
                 ))}
                 {current && (
                     <>
@@ -315,7 +338,13 @@ export function ModerationMap({
                             title={item.label}
                             zIndexOffset={item.key === highlighted ? 1000 : item.number !== undefined ? 500 : 0}
                             eventHandlers={{ click: () => onPick?.(item.key) }}
-                        />
+                        >
+                            {inspectedPin && item.key === highlighted && (
+                                <Tooltip permanent direction="top" offset={[0, -44]}>
+                                    {item.label}
+                                </Tooltip>
+                            )}
+                        </Marker>
                     ))
                 ) : (
                     <MainPin key={onMove ? 'movable' : 'fixed'} point={pin} onMove={onMove} label={t('map.pin')} />

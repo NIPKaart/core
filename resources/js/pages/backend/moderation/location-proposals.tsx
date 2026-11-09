@@ -5,6 +5,9 @@ import type { AerialLayer } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { RestrictionDay } from '@/types';
@@ -280,6 +283,7 @@ export function LocationProposalReview({
             ? draft.details.under_sign_text || t('proposals.summary.under_sign_yes')
             : t('proposals.summary.under_sign_no');
     const pickingDuplicate = rejecting && reason === 'duplicate';
+    const reviewingLater = rejecting && reason === 'later';
     const duplicatePlaces = [
         ...community.map((place) => ({ ...place, source: 'community' as const, key: `community:${place.id}`, color: EXISTING_COLOR.community })),
         ...municipal.map((place) => ({ ...place, source: 'municipal' as const, key: `municipal:${place.id}`, color: EXISTING_COLOR.municipal })),
@@ -346,7 +350,7 @@ export function LocationProposalReview({
     };
 
     const reject = () => {
-        if (processing || !reason || (pickingDuplicate && !duplicatePlace)) return;
+        if (processing || reviewingLater || !reason || (pickingDuplicate && !duplicatePlace)) return;
         setFailure(null);
         setProcessing(true);
         router.post(
@@ -355,8 +359,8 @@ export function LocationProposalReview({
                 revision,
                 reason,
                 note,
-                existing_parking_space_id: duplicatePlace?.source === 'community' ? duplicatePlace.id : null,
-                existing_parking_municipal_id: duplicatePlace?.source === 'municipal' ? duplicatePlace.id : null,
+                existing_parking_space_id: pickingDuplicate && duplicatePlace?.source === 'community' ? duplicatePlace.id : null,
+                existing_parking_municipal_id: pickingDuplicate && duplicatePlace?.source === 'municipal' ? duplicatePlace.id : null,
             },
             {
                 onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
@@ -376,59 +380,60 @@ export function LocationProposalReview({
         );
     };
 
-    const decisionFields = (legend: string, reasons: EnumOption[]) => (
-        <fieldset className="flex flex-col gap-2 rounded-xl border p-4" disabled={processing}>
-            <legend className="px-1 text-[15px] font-semibold">{legend}</legend>
-            {reasons
-                .filter((option) => option.value !== 'duplicate' || duplicatePlaces.length > 0)
-                .map((option) => (
-                    <label key={option.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 text-sm">
-                        <input
-                            type="radio"
-                            name="proposal-reason"
-                            checked={reason === option.value}
-                            onChange={() => setReason(option.value)}
-                            className="size-4 shrink-0 accent-foreground"
-                        />
-                        {option.label}
-                    </label>
-                ))}
+    const decisionFields = () => (
+        <fieldset className="flex flex-col gap-4" disabled={processing}>
+            <legend id="proposal-reason-label" className="mb-2 text-[15px] font-semibold">
+                {t('proposals.review_question')}
+            </legend>
+            <RadioGroup aria-labelledby="proposal-reason-label" className="grid gap-2" value={reason} onChange={setReason} disabled={processing}>
+                {options.rejectionReasons
+                    .filter((option) => option.value !== 'duplicate' || duplicatePlaces.length > 0)
+                    .map((option) => (
+                        <RadioGroupItem key={option.value} value={option.value}>
+                            {option.label}
+                        </RadioGroupItem>
+                    ))}
+                <RadioGroupItem value="later">{t('proposals.unclear')}</RadioGroupItem>
+            </RadioGroup>
             {pickingDuplicate && (
-                <label className="space-y-1 text-sm">
-                    <span>{t('proposals.pick_duplicate')}</span>
-                    <select
-                        className="w-full rounded-md border bg-background p-2"
-                        value={existing ?? ''}
-                        onChange={(event) => {
-                            const place = duplicatePlaces.find((candidate) => candidate.key === event.target.value);
-                            setExisting(place?.key ?? null);
-                            if (place) setView({ center: place, zoom: BAY_ZOOM });
-                        }}
+                <div className="grid gap-2">
+                    <p id="proposal-duplicate-label" className="text-sm font-medium">
+                        {t('proposals.pick_duplicate')}
+                    </p>
+                    <RadioGroup
+                        aria-labelledby="proposal-duplicate-label"
+                        className="grid gap-2"
+                        value={existing}
+                        onChange={setExisting}
+                        disabled={processing}
                     >
-                        <option value="">{t('proposals.choose')}</option>
                         {duplicatePlaces.map((place) => (
-                            <option key={place.key} value={place.key}>
-                                {t('proposals.duplicate_option', {
-                                    place: t(`proposals.${place.source}`),
-                                    street: place.street || t('proposals.unknown_street'),
-                                    distance: place.distance_metres,
-                                })}
-                            </option>
+                            <RadioGroupItem key={place.key} value={place.key}>
+                                <span className="grid gap-0.5">
+                                    <span className="font-medium">{duplicateLabel(place)}</span>
+                                    <span className="text-muted-foreground">{t(`proposals.${place.source}`)}</span>
+                                </span>
+                            </RadioGroupItem>
                         ))}
-                    </select>
-                </label>
+                    </RadioGroup>
+                </div>
             )}
-            <label className="space-y-1 text-sm">
-                <span>{t('proposals.decision_note')}</span>
-                <textarea
-                    className="w-full rounded-md border bg-background p-2"
-                    value={note}
-                    onChange={(event) => setNote(event.target.value)}
-                    maxLength={500}
-                />
-            </label>
+            {reviewingLater ? (
+                <p className="text-sm text-muted-foreground">{t('proposals.later_hint')}</p>
+            ) : reason ? (
+                <div className="grid gap-2">
+                    <Label htmlFor="proposal-decision-note">{t('proposals.decision_note')}</Label>
+                    <Textarea id="proposal-decision-note" value={note} onChange={(event) => setNote(event.target.value)} maxLength={500} />
+                </div>
+            ) : null}
         </fieldset>
     );
+
+    const duplicateLabel = (place: NearbyPlace) =>
+        t('proposals.duplicate_location', {
+            street: place.street || t('proposals.unknown_street'),
+            distance: place.distance_metres,
+        });
 
     const detailsForm: ContributionForm = { ...draft.details, latitude: null, longitude: null };
     const bayList = (checking: boolean) => (
@@ -535,10 +540,12 @@ export function LocationProposalReview({
                           key: place.key,
                           point: place,
                           color: place.color,
-                          label: place.street ?? t('proposals.unknown_street'),
+                          label: duplicateLabel(place),
                       }))
                     : undefined,
+                fitQueue: false,
                 highlighted: pickingDuplicate ? (existing ?? undefined) : undefined,
+                inspectedPin: pickingDuplicate && duplicatePlace ? duplicatePlace : undefined,
                 onPick: pickingDuplicate ? setExisting : undefined,
                 onPlace: !standalone && !published && !rejecting && step === 'place' && !processing ? place : undefined,
                 onMoveBay: published || rejecting || processing ? undefined : (id, point) => setDraft((current) => moveBay(current, id, point)),
@@ -718,21 +725,33 @@ export function LocationProposalReview({
                         </section>
                     </>
                 )}
-                {rejecting && decisionFields(t('proposals.reject_title'), options.rejectionReasons)}
+                {rejecting && decisionFields()}
                 {rejecting && <InputError message={failure ?? undefined} />}
             </div>
             <div hidden={!!standalone} className={cn('shrink-0 gap-2 border-t px-5 py-4', !standalone && 'flex')}>
                 {rejecting ? (
                     <>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            className="h-11 flex-[2]"
-                            disabled={processing || !reason || (pickingDuplicate && !duplicatePlace)}
-                            onClick={reject}
-                        >
-                            {t('proposals.reject_title')}
-                        </Button>
+                        {reviewingLater ? (
+                            nextUrl ? (
+                                <Button asChild className="h-11 flex-[2]">
+                                    <Link href={nextUrl}>{t('proposals.review_later')}</Link>
+                                </Button>
+                            ) : (
+                                <Button type="button" className="h-11 flex-[2]" onClick={onBack}>
+                                    {t('proposals.review_later')}
+                                </Button>
+                            )
+                        ) : (
+                            <Button
+                                type="button"
+                                variant={pickingDuplicate ? 'default' : 'destructive'}
+                                className="h-11 flex-[2]"
+                                disabled={processing || !reason || (pickingDuplicate && !duplicatePlace)}
+                                onClick={reject}
+                            >
+                                {t(pickingDuplicate ? 'proposals.close_duplicate' : 'proposals.reject_title')}
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             variant="outline"
@@ -814,7 +833,7 @@ export function LocationProposalReview({
                             setRejecting(true);
                         }}
                     >
-                        {t('proposals.nothing_found')}
+                        {t('proposals.review_proposal')}
                     </Button>
                 ) : null}
             </div>
