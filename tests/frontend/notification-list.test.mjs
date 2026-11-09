@@ -20,8 +20,8 @@ const context = {
     exports: {},
     Intl,
     require: (name) => {
-            if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
-        if (name === '@/locale-sync') return { formatLocale: (language) => language === 'en' ? 'en-GB' : language };
+        if (name === '@/utils/translation') return { translateSourceValue: (_, key) => key };
+        if (name === '@/locale-sync') return { formatLocale: (language) => (language === 'en' ? 'en-GB' : language) };
         if (name === '@/components/localized-date-time') {
             const dateContext = { exports: {}, require: context.require };
             const dateSource = ts.transpileModule(
@@ -85,4 +85,18 @@ test('a decision with a reason names that reason below the subject', () => {
     ]);
     assert.match(html, /Breestraat.*reason: reasons\.improvement\.spam/s);
     assert.equal(html.match(/reason: /g).length, 1);
+});
+
+test('marking one read is a button beside the link, not inside it, and only for unread notifications', () => {
+    const read = { ...notification('community.space_restored', { space_label: 'Vredenburg 40' }), id: 'read', read_at: new Date().toISOString() };
+    const html = render([notification('community.space_submitted', { space_label: 'Prinsengracht 263' }), read]);
+    assert.doesNotMatch(html, /<a[^>]*>(?:(?!<\/a>).)*<button/s);
+    assert.equal(html.match(/aria-label="actions\.markRead"/g).length, 1);
+    assert.equal(html.match(/status\.unread/g).length, 1);
+});
+
+test('an empty unread list says everything has been read', () => {
+    const empty = (caughtUp) => renderToStaticMarkup(React.createElement(NotificationsList, { items: [], caughtUp, onMarkOne: () => {} }));
+    assert.match(empty(true), /empty\.caughtUp/);
+    assert.match(empty(false), /empty\.title/);
 });
