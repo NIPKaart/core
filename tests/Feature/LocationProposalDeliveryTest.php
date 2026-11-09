@@ -235,21 +235,59 @@ it('rolls back already written chunks when late evidence is invalid', function (
     expect($source->fresh()->last_proposal_retrieved_at)->toBeNull();
 });
 
-it('bundles signs within 25 m into one proposal and keeps the bundle on later deliveries', function () {
+it('queues nearby NDW signs separately and keeps their proposal IDs across deliveries', function () {
     [$first, $near, $far] = [proposalPoint(), proposalPoint(longitude: 4.3601), proposalPoint(longitude: 4.361)];
     $data = proposalEnvelope([$first, $near, $far], 2);
     $source = app(SourceRegistrar::class)->register('proposals', $data);
     app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
     expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
     $proposalOf = fn (array $point) => DB::table('location_proposal_points')->where('external_id', $point['external_id'])->value('location_proposal_id');
-    $bundle = $proposalOf($first);
-    expect($proposalOf($near))->toBe($bundle)->and($proposalOf($far))->not->toBe($bundle);
+    $ids = array_map($proposalOf, $data['records']);
+    expect(array_unique($ids))->toHaveCount(3);
 
     $this->actingAs(User::factory()->create()->assignRole(UserRole::MODERATOR));
     expect(processProposalObject($this->handler, $source, proposalEnvelope($data['records']))->state)->toBe('validated');
-    expect($proposalOf($near))->toBe($bundle);
-    $this->get(route('app.moderation.proposals.index', ['proposal' => $bundle]))
-        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 2)->has('selected.points', 2));
+    expect(array_map($proposalOf, $data['records']))->toBe($ids);
+    foreach ($data['records'] as $index => $point) {
+        $this->get(route('app.moderation.proposals.index', ['proposal' => $ids[$index]]))
+            ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 3)->has('selected.points', 1)
+                ->where('selected.points.0.external_id', $point['external_id']));
+    }
+});
+
+it('splits unreviewed groups without moving the signs of historical decisions or published bays', function () {
+    $data = proposalEnvelope(array_map(fn (int $index) => proposalPoint(longitude: 4.36 + $index * 0.00001), range(0, 5)), 2);
+    $source = app(SourceRegistrar::class)->register('proposals', $data);
+    app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
+    expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
+    $points = fn () => DB::table('location_proposal_points')->where('dataset_source_id', $source->id)->orderBy('id')->get();
+    [$anchor, $nearby, $missing, $reviewed, $reviewedPoint, $publishedPoint] = $points()->pluck('id')->all();
+
+    DB::table('location_proposal_points')->whereIn('id', [$nearby, $missing])->update(['location_proposal_id' => $anchor]);
+    DB::table('location_proposal_points')->where('id', $missing)->update(['missing_since' => now(), 'municipality_id' => null]);
+    DB::table('location_proposals')->where('id', $missing)->delete();
+    DB::table('location_proposal_points')->whereIn('id', [$reviewedPoint, $publishedPoint])->update(['location_proposal_id' => $reviewed]);
+    DB::table('location_proposals')->where('id', $reviewed)->update(['decision_revision' => 2]);
+    $decision = LocationProposalDecision::factory()->create(['location_proposal_id' => $reviewed]);
+    $bay = ParkingSpace::factory()->create([
+        'location_proposal_id' => $reviewed, 'location_proposal_point_id' => $publishedPoint, 'location_proposal_bay_number' => 1,
+    ]);
+
+    $migration = require database_path('migrations/2026_11_09_171541_split_unreviewed_location_proposal_groups.php');
+    $migration->up();
+    $migration->up();
+
+    expect($points()->pluck('location_proposal_id')->all())->toBe([$anchor, $nearby, $missing, $reviewed, $reviewed, $reviewed]);
+    expect($points()->pluck('external_id')->all())->toBe(array_column($data['records'], 'external_id'));
+    $this->assertDatabaseHas('location_proposal_decisions', ['id' => $decision->id, 'location_proposal_id' => $reviewed]);
+    $this->assertDatabaseHas('parking_spaces', ['id' => $bay->id, 'location_proposal_id' => $reviewed, 'location_proposal_point_id' => $publishedPoint]);
+
+    $this->actingAs(User::factory()->create()->assignRole(UserRole::MODERATOR))
+        ->postJson(route('app.moderation.proposals.reject', ['proposal' => $anchor, 'point' => $nearby]), [
+            'revision' => 0, 'reason' => 'not_a_disabled_bay',
+        ])->assertJsonValidationErrors('decision');
+    expect(processProposalObject($this->handler, $source, proposalEnvelope($data['records']))->state)->toBe('validated');
+    expect($points()->pluck('location_proposal_id')->all())->toBe([$anchor, $nearby, $missing, $reviewed, $reviewed, $reviewed]);
 });
 
 it('leaves a decided proposal alone when a new sign appears next to it', function () {
@@ -300,7 +338,7 @@ it('counts open proposals once per municipality and continues within the chosen 
     $source = app(SourceRegistrar::class)->register('proposals', $data);
     app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
     expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
-    [$first, $amsterdam, $bundled, $closed, $missing, $last] = collect($data['records'])->map(fn (array $point) => DB::table('location_proposal_points')
+    [$first, $amsterdam, $nearby, $closed, $missing, $last] = collect($data['records'])->map(fn (array $point) => DB::table('location_proposal_points')
         ->where('external_id', $point['external_id'])->value('location_proposal_id'))->all();
     $delftId = Municipality::where('code', 'GM0503')->value('id');
     $amsterdamId = Municipality::where('code', 'GM0363')->value('id');
@@ -309,17 +347,17 @@ it('counts open proposals once per municipality and continues within the chosen 
 
     $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
     $route = fn (array $query = []) => route('app.moderation.proposals.index', $query);
-    expect($bundled)->toBe($first);
+    expect($nearby)->not->toBe($first);
     $this->actingAs($moderator);
     $this->get($route())->assertInertia(fn (Assert $page) => $page
         ->where('proposals', null)->where('municipality', null)
         ->where('municipalities', [
             ['id' => $amsterdamId, 'name' => 'Amsterdam', 'open_count' => 1, 'point' => ['latitude' => 52.01, 'longitude' => 4.9]],
-            ['id' => $delftId, 'name' => 'Delft', 'open_count' => 2, 'point' => ['latitude' => 52.01, 'longitude' => 4.36]],
+            ['id' => $delftId, 'name' => 'Delft', 'open_count' => 3, 'point' => ['latitude' => 52.01, 'longitude' => 4.36]],
         ]));
     $this->get($route(['municipality' => $delftId]))
         ->assertCookie('proposal_municipality_'.$moderator->id, (string) $delftId)
-        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 2)->where('municipalityName', 'Delft')->where('hasNext', true));
+        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 3)->where('municipalityName', 'Delft')->where('hasNext', true));
     $this->withCookie('proposal_municipality_'.$moderator->id, (string) $delftId)
         ->get($route())->assertRedirect($route(['municipality' => $delftId]));
     $this->get($route(['overview' => 1]))->assertInertia(fn (Assert $page) => $page->where('municipality', null));
@@ -327,6 +365,8 @@ it('counts open proposals once per municipality and continues within the chosen 
     $this->get($route(['municipality' => $delftId, 'after' => 0]))
         ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $first]));
     $this->get($route(['municipality' => $delftId, 'after' => $first]))
+        ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $nearby]));
+    $this->get($route(['municipality' => $delftId, 'after' => $nearby]))
         ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $last]));
     $this->get($route(['municipality' => $delftId, 'after' => $last]))
         ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $first]));

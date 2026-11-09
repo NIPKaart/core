@@ -10,12 +10,6 @@ use Illuminate\Validation\ValidationException;
 
 class LocationProposalIntake
 {
-    /** Signs this close to each other end up in one proposal. */
-    public const int BUNDLE_RADIUS_METRES = 25;
-
-    /** A cheap latitude band around each sign before the exact distance, a little wider than the radius. */
-    private const float BUNDLE_LATITUDE_DEGREES = 0.0003;
-
     public function __construct(private SourceRegistrar $registrar) {}
 
     /**
@@ -98,8 +92,8 @@ class LocationProposalIntake
     private function assignProposals(DatasetSource $source): void
     {
         $this->syncProposalMunicipalities($source);
-        // Individual proposals start with the ID of their first point. A point that
-        // changes municipality leaves its former group and resumes its own proposal.
+        // Each new sign starts with its own proposal ID. A sign that moves to another
+        // municipality leaves a historical group and resumes its own proposal.
         DB::statement(<<<'SQL'
             INSERT INTO location_proposals (id, municipality_id, created_at)
             SELECT point.id, point.municipality_id, CURRENT_TIMESTAMP FROM location_proposal_points AS point
@@ -121,65 +115,6 @@ class LocationProposalIntake
             SQL, [$source->id]);
 
         $this->syncProposalMunicipalities($source);
-        $this->bundleNearbySigns($source);
-    }
-
-    /**
-     * Signs close together usually mark the same parking spaces, so they become one proposal and the moderator draws
-     * the bays once. Only untouched open proposals take part. A lone sign joins the nearest proposal within reach that
-     * stays where it is: one that already holds several signs, or a lone sign with no earlier sign within reach. A
-     * sign that loses its place in a chain this way is picked up by the next delivery.
-     */
-    private function bundleNearbySigns(DatasetSource $source): void
-    {
-        DB::statement(<<<'SQL'
-            WITH open_point AS (
-                SELECT point.id, point.location_proposal_id AS proposal, point.municipality_id, point.latitude,
-                    ST_SetSRID(ST_MakePoint(point.longitude, point.latitude), 4326)::geography AS place,
-                    (SELECT count(*) FROM location_proposal_points AS other
-                        WHERE other.location_proposal_id = point.location_proposal_id
-                            AND NOT other.personal AND other.missing_since IS NULL) = 1 AS lone
-                FROM location_proposal_points AS point
-                JOIN location_proposals AS proposal ON proposal.id = point.location_proposal_id
-                WHERE point.dataset_source_id = ? AND point.municipality_id IS NOT NULL
-                    AND NOT point.personal AND point.missing_since IS NULL
-                    AND proposal.closed_at IS NULL AND proposal.bays_published_at IS NULL AND proposal.decision_revision = 0
-            ),
-            anchor AS (
-                SELECT * FROM open_point WHERE id = proposal
-            ),
-            root AS (
-                SELECT anchor.* FROM anchor
-                WHERE NOT anchor.lone OR NOT EXISTS (
-                    SELECT 1 FROM anchor AS earlier
-                    WHERE earlier.municipality_id = anchor.municipality_id AND earlier.id < anchor.id
-                        AND abs(earlier.latitude - anchor.latitude) < ? AND ST_DWithin(earlier.place, anchor.place, ?)
-                )
-            ),
-            staying AS (
-                SELECT root.* FROM root
-                WHERE NOT root.lone OR NOT EXISTS (
-                    SELECT 1 FROM root AS bundle
-                    WHERE NOT bundle.lone AND bundle.municipality_id = root.municipality_id
-                        AND abs(bundle.latitude - root.latitude) < ? AND ST_DWithin(bundle.place, root.place, ?)
-                )
-            ),
-            target AS (
-                SELECT DISTINCT ON (sign.id) sign.id, staying.proposal
-                FROM anchor AS sign
-                JOIN staying ON staying.municipality_id = sign.municipality_id AND staying.id <> sign.id
-                    AND abs(staying.latitude - sign.latitude) < ? AND ST_DWithin(staying.place, sign.place, ?)
-                WHERE sign.lone
-                ORDER BY sign.id, ST_Distance(staying.place, sign.place), staying.id
-            )
-            UPDATE location_proposal_points AS point SET location_proposal_id = target.proposal
-            FROM target WHERE point.id = target.id
-            SQL, [
-            $source->id,
-            self::BUNDLE_LATITUDE_DEGREES, self::BUNDLE_RADIUS_METRES,
-            self::BUNDLE_LATITUDE_DEGREES, self::BUNDLE_RADIUS_METRES,
-            self::BUNDLE_LATITUDE_DEGREES, self::BUNDLE_RADIUS_METRES,
-        ]);
     }
 
     private function syncProposalMunicipalities(DatasetSource $source): void
