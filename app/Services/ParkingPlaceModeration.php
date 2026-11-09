@@ -32,15 +32,19 @@ class ParkingPlaceModeration
     /**
      * Every place with open reports, most recently reported first, with the evidence a moderator needs.
      *
+     * @param  ?array<string, list<string>>  $places  Only these places, by source.
      * @return Collection<int, array<string, mixed>>
      */
-    public function queue(): Collection
+    public function queue(?array $places = null): Collection
     {
+        $only = fn (string $source) => fn (Builder $query) => $query->whereKey($places[$source] ?? []);
         $community = $this->withEvidence(ParkingSpace::query(), 'parking_spaces', 'parking_space_id')
+            ->when($places !== null, $only('community'))
             ->with('municipality:id,name')
             ->get();
 
         $municipal = $this->withEvidence(ParkingMunicipal::query(), 'parking_municipal_spaces', 'parking_municipal_id')
+            ->when($places !== null, $only('municipal'))
             ->with('municipality:id,name')
             ->get();
 

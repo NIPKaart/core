@@ -97,7 +97,7 @@ class DashboardController extends Controller
      */
     private function nextItem(ModerationQueue $queue, User $user): ?array
     {
-        $item = $queue->items($user)->first();
+        $item = $queue->page($user, perPage: 1)->first();
 
         return $item === null ? null : [
             'key' => $item['key'],

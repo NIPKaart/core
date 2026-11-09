@@ -206,11 +206,13 @@ final class ParkingSpaceImprovements
     /**
      * Every open proposal, oldest first, with what it changes and what a moderator should notice.
      *
+     * @param  ?list<int>  $ids  Only these proposals.
      * @return Collection<int, array<string, mixed>>
      */
-    public function open(): Collection
+    public function open(?array $ids = null): Collection
     {
         $improvements = ParkingSpaceImprovement::pending()
+            ->when($ids !== null, fn (Builder $query) => $query->whereKey($ids))
             ->whereHas('parkingSpace')
             ->with(['parkingSpace:id,street,latitude,longitude,municipality_id', 'parkingSpace.municipality:id,name'])
             ->with(['user' => fn ($user) => $this->withTrackRecord($user)])
