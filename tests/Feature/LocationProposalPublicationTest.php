@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\DatasetSource;
 use App\Models\LocationProposalDecision;
 use App\Models\Municipality;
+use App\Models\ParkingMunicipal;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceReview;
@@ -51,6 +52,30 @@ beforeEach(function () {
     ];
     $this->url = route('app.moderation.proposals.publish', $this->proposal);
     $this->detail = route('app.moderation.proposals.index', ['proposal' => $this->proposal]);
+});
+
+it('shows multiple nearby municipal and community spaces on opening a proposal', function () {
+    $location = ['municipality_id' => $this->municipality->id, 'latitude' => 52.011];
+    $municipal = ParkingMunicipal::factory()->state([...$location, 'visibility' => true]);
+    $community = ParkingSpace::factory()->state([...$location, 'status' => ParkingStatus::APPROVED]);
+
+    $fartherMunicipal = $municipal->create(['longitude' => 4.3603]);
+    $nearestMunicipal = $municipal->create(['longitude' => 4.3601]);
+    $municipal->create(['longitude' => 4.36, 'visibility' => false]);
+    $municipal->create(['longitude' => 4.37]);
+
+    $fartherCommunity = $community->create(['longitude' => 4.3604]);
+    $nearestCommunity = $community->create(['longitude' => 4.3602]);
+    $community->create(['longitude' => 4.36, 'status' => ParkingStatus::PENDING]);
+    $community->create(['longitude' => 4.37]);
+
+    $this->actingAs($this->moderator)->get($this->detail)->assertInertia(fn (Assert $page) => $page
+        ->has('selected.municipal', 2)
+        ->where('selected.municipal.0.id', $nearestMunicipal->id)
+        ->where('selected.municipal.1.id', $fartherMunicipal->id)
+        ->has('selected.community', 2)
+        ->where('selected.community.0.id', $nearestCommunity->id)
+        ->where('selected.community.1.id', $fartherCommunity->id));
 });
 
 it('publishes all bays with an attributable approval and existence confirmation and safely repeats the request', function () {

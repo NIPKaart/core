@@ -15,7 +15,7 @@ import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
-type NearbyPlace = MapPoint & { street: string | null; distance_metres: number };
+type NearbyPlace = MapPoint & { id: string; street: string | null; distance_metres: number };
 type Props = {
     proposals: PaginatedResponse<ProposalRow> | null;
     municipalities: { id: number; name: string; open_count: number; point: MapPoint | null }[];
@@ -40,11 +40,10 @@ type Props = {
         revision: number;
         reportedBays: number | null;
         canReject: boolean;
-        duplicates: (MapPoint & { id: string; street: string | null })[];
         publishedBays: PublishedBay[];
         imagery: AerialLayer[];
-        community: NearbyPlace | null;
-        municipal: NearbyPlace | null;
+        community: NearbyPlace[];
+        municipal: NearbyPlace[];
     } | null;
 };
 
@@ -87,24 +86,27 @@ export default function Proposals({ proposals, municipalities, municipality, mun
 
     const groups = selected && (
         <>
-            {(selected.community || selected.municipal) && (
-                <section className="space-y-1 text-sm">
-                    <h3 className="font-semibold">{t('proposals.nearby')}</h3>
-                    {(
-                        [
-                            ['community', selected.community],
-                            ['municipal', selected.municipal],
-                        ] as const
-                    ).map(
-                        ([kind, place]) =>
-                            place && (
-                                <p key={kind}>
-                                    {t(`proposals.${kind}`)} · {place.street ?? t('proposals.unknown_street')} · {place.distance_metres} m
-                                </p>
-                            ),
-                    )}
-                </section>
-            )}
+            <section className="space-y-1 text-sm">
+                <h3 className="font-semibold">{t('proposals.nearby')}</h3>
+                {selected.community.length === 0 && selected.municipal.length === 0 && <p>{t('proposals.none_nearby')}</p>}
+                {(
+                    [
+                        ['community', selected.community, 'bg-[#16a34a]'],
+                        ['municipal', selected.municipal, 'bg-[#7c3aed]'],
+                    ] as const
+                ).map(
+                    ([kind, places, color]) =>
+                        places.length > 0 && (
+                            <p key={kind} className="flex items-center gap-2">
+                                <span className={`size-3 shrink-0 rounded-full ${color}`} aria-hidden />
+                                <span>
+                                    {t(`proposals.${kind}`)} · {places.length} · {places[0].street ?? t('proposals.unknown_street')} ·{' '}
+                                    {places[0].distance_metres} m
+                                </span>
+                            </p>
+                        ),
+                )}
+            </section>
             {selected.candidates.length > 0 && (
                 <Form action={routes.group(selected.id, { query: reviewQuery })} className="space-y-2">
                     {({ processing, errors }) => (
@@ -163,9 +165,8 @@ export default function Proposals({ proposals, municipalities, municipality, mun
                         publishedBays={selected.publishedBays}
                         revision={selected.revision}
                         canReject={selected.canReject}
-                        duplicates={selected.duplicates}
-                        nearby={selected.community ?? undefined}
-                        municipal={selected.municipal ?? undefined}
+                        community={selected.community}
+                        municipal={selected.municipal}
                         comparison={candidate}
                         group={groups}
                         query={reviewQuery}
