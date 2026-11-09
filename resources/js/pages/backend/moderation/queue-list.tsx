@@ -58,8 +58,8 @@ function useItemPreview() {
 }
 
 /**
- * The open queue in the panel beside the map: the open items with the oldest first and reports on top. Pointing at an item highlights it on the map. While items are selected the panel's top and bottom
- * belong to the selection.
+ * The open queue in the panel beside the map: the open items with the oldest first and reports on top. Pointing at an
+ * item highlights it on the map. Selecting items keeps the list where it is; the decision on them sits at the bottom.
  */
 export function QueueList({
     status,
@@ -73,7 +73,6 @@ export function QueueList({
     onOpen,
     onFilter,
     onHover,
-    selection,
     footer,
 }: {
     status: 'open' | 'decided';
@@ -87,8 +86,6 @@ export function QueueList({
     onOpen: (item: QueueItem) => void;
     onFilter: (next: Partial<Filters>) => void;
     onHover?: (key: string | null) => void;
-    /** Replaces the heading and filters while items are selected. */
-    selection?: React.ReactNode;
     /** Replaces the shortcut hints, for example with the selection's decision. */
     footer?: React.ReactNode;
 }) {
@@ -109,22 +106,20 @@ export function QueueList({
 
     return (
         <>
-            {selection || (
-                <QueueHeader
-                    status={status}
-                    total={items?.total ?? 0}
-                    decidedToday={decidedToday}
-                    filters={filters}
-                    options={options}
-                    onFilter={onFilter}
-                />
-            )}
+            <QueueHeader
+                status={status}
+                total={items?.total ?? 0}
+                decidedToday={decidedToday}
+                filters={filters}
+                options={options}
+                onFilter={onFilter}
+            />
 
             <div
                 className="flex min-h-0 flex-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent flex-col overflow-y-auto pb-2 hover:scrollbar-thumb-muted-foreground/50"
                 onMouseLeave={() => onHover?.(null)}
             >
-                {!selecting && !filtered && locationProposals.length > 0 && (
+                {!filtered && locationProposals.length > 0 && (
                     <LocationProposals
                         proposals={locationProposals.map(toLocationProposal)}
                         onOpen={({ proposal, point }) =>
@@ -161,7 +156,6 @@ export function QueueList({
                                                 'flex w-full cursor-pointer items-center gap-3 border-l-[3px] border-transparent py-2.5 pr-4 pl-[15px] text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
                                                 isChecked &&
                                                     'border-blue-700 bg-blue-50 hover:bg-blue-50 dark:bg-blue-950/50 dark:hover:bg-blue-950/50',
-                                                selecting && 'pl-11',
                                             )}
                                         >
                                             <TypeTile type={item.type} />
@@ -175,7 +169,7 @@ export function QueueList({
                                             <span
                                                 className={cn(
                                                     'shrink-0 text-[13px] text-muted-foreground tabular-nums',
-                                                    !selecting && selectable(item) && 'group-hover/row:invisible',
+                                                    selectable(item) && (selecting ? 'invisible' : 'group-hover/row:invisible'),
                                                 )}
                                             >
                                                 {age(item.waiting_since)}
@@ -187,8 +181,8 @@ export function QueueList({
                                                 onCheckedChange={(on) => toggle(item.key, !!on)}
                                                 aria-label={t('select_item', { place: item.street ?? t('no_address') })}
                                                 className={cn(
-                                                    'absolute top-1/2 -translate-y-1/2 cursor-pointer bg-background',
-                                                    selecting ? 'left-4' : 'right-4 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
+                                                    'absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer bg-background',
+                                                    !selecting && 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
                                                 )}
                                             />
                                         )}

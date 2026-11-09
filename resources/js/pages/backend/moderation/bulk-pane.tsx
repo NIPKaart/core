@@ -18,15 +18,15 @@ function signal(item: QueueItem, t: (key: string, values?: Record<string, unknow
 }
 
 /**
- * The top of the panel while items are selected: how many, what they are, and how to stop selecting. Selected
+ * The bottom of the panel while items are selected: how many and what they are, what still deserves a look, the
+ * reason, and the decision. The queue above stays as it was, so selecting never moves the list or the map. Selected
  * items can be rejected together, for example as spam; approving always happens one item at a time.
  */
-export function SelectionHeader({ items, onClear }: { items: QueueItem[]; onClear: () => void }) {
+export function SelectionBar({ items, options, onClear }: { items: QueueItem[]; options: Options; onClear: () => void }) {
     const { t } = useTranslation('backend/moderation');
     const types = [...new Set(items.map((item) => item.type))];
     const municipalities = [...new Set(items.map((item) => item.municipality).filter(Boolean))];
     useShortcuts({ Escape: onClear });
-
     const title =
         types.length === 1
             ? t(`bulk.title.${types[0] as 'submission' | 'improvement'}${municipalities.length === 1 ? '_in' : ''}`, {
@@ -34,24 +34,6 @@ export function SelectionHeader({ items, onClear }: { items: QueueItem[]; onClea
                   count: items.length,
               })
             : t('bulk.title.mixed', { count: items.length });
-
-    return (
-        <div className="flex shrink-0 flex-col gap-2 px-4.5 pt-4.5 pb-3">
-            <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('bulk.selected_count', { count: items.length })}</h2>
-                <Button variant="ghost" size="sm" className="cursor-pointer text-muted-foreground" onClick={onClear}>
-                    {t('bulk.clear')}
-                    <Kbd aria-hidden>Esc</Kbd>
-                </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-        </div>
-    );
-}
-
-/** The bottom of the panel while items are selected: what still deserves a look, the reason, and the decision. */
-export function SelectionBar({ items, options, onClear }: { items: QueueItem[]; options: Options; onClear: () => void }) {
-    const { t } = useTranslation('backend/moderation');
     const [reason, setReason] = useState(options.bulkReasons.find((option) => option.value === 'spam')?.value ?? options.bulkReasons[0]?.value ?? '');
     const [processing, setProcessing] = useState(false);
     const flagged = items.map((item) => ({ item, signal: signal(item, t) })).filter((entry) => entry.signal !== null);
@@ -64,7 +46,17 @@ export function SelectionBar({ items, options, onClear }: { items: QueueItem[]; 
         );
 
     return (
-        <div className="flex shrink-0 flex-col gap-3 border-t px-4.5 pt-3.5 pb-4.5">
+        <div className="flex shrink-0 flex-col gap-3 border-t px-4.5 pt-3 pb-4.5">
+            <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <h3 className="text-[15px] font-semibold">{t('bulk.selected_count', { count: items.length })}</h3>
+                    <p className="truncate text-[13px] text-muted-foreground">{title}</p>
+                </div>
+                <Button variant="ghost" size="sm" className="shrink-0 cursor-pointer text-muted-foreground" onClick={onClear}>
+                    {t('bulk.clear')}
+                    <Kbd aria-hidden>Esc</Kbd>
+                </Button>
+            </div>
             {flagged.length > 0 && (
                 <ul className="flex flex-col gap-1.5 rounded-xl bg-orange-50 px-3 py-2.5 text-[13px] text-orange-800 dark:bg-orange-950 dark:text-orange-200">
                     {flagged.map(({ item, signal: text }) => (

@@ -4,7 +4,7 @@ import type { BreadcrumbItem, PaginatedResponse } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SelectionBar, SelectionHeader } from './bulk-pane';
+import { SelectionBar } from './bulk-pane';
 import { DecidedList, DecisionPane, decisionColor } from './decided';
 import { panelMode } from './geo';
 import { SOURCE_COLOR, type ProposalRow } from './location-proposals';
@@ -182,43 +182,37 @@ export default function Index({ status, locationProposals, filters, items, histo
                 ) : (
                     <Workspace
                         scope="overview"
-                        label={mode === 'selection' ? t('bulk.label') : t('queue.label')}
-                        map={
-                            mode === 'selection'
-                                ? {
-                                      center: { latitude: checkedItems[0].latitude, longitude: checkedItems[0].longitude },
-                                      numbered: checkedItems.map((item) => ({ latitude: item.latitude, longitude: item.longitude })),
-                                  }
-                                : {
-                                      center: overviewCenter,
-                                      zoom: first ? undefined : COUNTRY_ZOOM,
-                                      queue: [
-                                          ...(items?.data ?? []).map((item) => ({
-                                              key: item.key,
-                                              point: { latitude: item.latitude, longitude: item.longitude },
-                                              color: TYPE_COLORS[item.type],
-                                              legendLabel: t(`types.${item.type}`),
-                                              label: item.street ?? t('no_address'),
-                                          })),
-                                          ...proposalPins,
-                                      ],
-                                      highlighted: hovered,
-                                      onPick: (key) => {
-                                          const item = items?.data.find((candidate) => candidate.key === key);
-                                          if (item) {
-                                              openItem(item);
-                                              return;
-                                          }
-                                          const proposal = proposalPins.find((candidate) => candidate.key === key)?.point;
-                                          if (proposal)
-                                              router.visit(
-                                                  app.moderation.proposals.index({
-                                                      query: { proposal: proposal.proposal_id, point: proposal.id, from: 'queue' },
-                                                  }),
-                                              );
-                                      },
-                                  }
-                        }
+                        label={t('queue.label')}
+                        map={{
+                            center: overviewCenter,
+                            zoom: first ? undefined : COUNTRY_ZOOM,
+                            queue: [
+                                ...(items?.data ?? []).map((item) => ({
+                                    key: item.key,
+                                    point: { latitude: item.latitude, longitude: item.longitude },
+                                    color: TYPE_COLORS[item.type],
+                                    legendLabel: t(`types.${item.type}`),
+                                    label: item.street ?? t('no_address'),
+                                    number: checked.includes(item.key) ? checkedItems.indexOf(item) + 1 : undefined,
+                                })),
+                                ...proposalPins,
+                            ],
+                            highlighted: hovered,
+                            onPick: (key) => {
+                                const item = items?.data.find((candidate) => candidate.key === key);
+                                if (item) {
+                                    openItem(item);
+                                    return;
+                                }
+                                const proposal = proposalPins.find((candidate) => candidate.key === key)?.point;
+                                if (proposal)
+                                    router.visit(
+                                        app.moderation.proposals.index({
+                                            query: { proposal: proposal.proposal_id, point: proposal.id, from: 'queue' },
+                                        }),
+                                    );
+                            },
+                        }}
                     >
                         <QueueList
                             status={status}
@@ -232,7 +226,6 @@ export default function Index({ status, locationProposals, filters, items, histo
                             onOpen={openItem}
                             onFilter={visit}
                             onHover={setHovered}
-                            selection={mode === 'selection' ? <SelectionHeader items={checkedItems} onClear={() => setChecked([])} /> : undefined}
                             footer={
                                 mode === 'selection' ? (
                                     <SelectionBar items={checkedItems} options={options} onClear={() => setChecked([])} />
