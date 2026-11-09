@@ -2,6 +2,10 @@
 
 return [
     'proposal' => [
+        'rejected' => 'Location proposal rejected.',
+        'reopened' => 'Location proposal reopened.',
+        'reason_required' => 'Choose why you are adding fewer bays than reported.',
+        'existing_required' => 'Select a published community parking space on the map.',
         'duplicate' => 'Place each bay at a different position.',
         'changed' => 'The proposal changed. Open it again and check the source points.',
         'invalid_point' => 'This bay must be near an active source point from this proposal.',

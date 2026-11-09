@@ -12,8 +12,9 @@ class LocationProposalQueue
     {
         return DB::table('location_proposals as proposal')
             ->join('municipalities as municipality', 'municipality.id', '=', 'proposal.municipality_id')
+            ->whereNull('proposal.closed_at')
             ->whereExists($this->activePoints()->whereColumn('point.location_proposal_id', 'proposal.id'))
-            ->select('proposal.id', 'proposal.bays_published_at', 'municipality.name as municipality')
+            ->select('proposal.id', 'proposal.reported_bays', 'municipality.name as municipality')
             ->orderBy('proposal.id');
     }
 
@@ -36,8 +37,8 @@ class LocationProposalQueue
             'id' => $proposal->id,
             'municipality' => $proposal->municipality,
             'points' => $points->get($proposal->id, collect())->map($this->pointData(...))->values(),
-            'status' => $proposal->bays_published_at === null ? 'open' : 'added',
-            'bayCount' => null,
+            'status' => 'open',
+            'bayCount' => $proposal->reported_bays,
         ]);
     }
 

@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
 use App\Enums\ReportResolution;
+use App\Enums\UnderSign;
+use App\Models\LocationProposalDecision;
 use App\Models\ParkingPlaceRemoval;
 use App\Models\ParkingPlaceReport;
+use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceImprovement;
 use App\Models\ParkingSpaceReview;
 use App\Models\User;
@@ -28,19 +32,30 @@ final class ModerationHistory
 
     private const string REMOVAL = 'removal';
 
-    public function __construct(private ModerationQueue $queue, private ParkingSpaceImprovements $improvements) {}
+    public function __construct(private ModerationQueue $queue, private ParkingSpaceImprovements $improvements, private LocationProposalQueue $proposals) {}
+
+    public function typesFor(User $user): array
+    {
+        $types = $this->queue->typesFor($user);
+
+        return in_array(ModerationQueue::SUBMISSION, $types, true) && $user->can('bulkUpdate', ParkingSpace::class)
+            ? [...$types, LocationProposalDecisions::TYPE]
+            : $types;
+    }
 
     /**
      * @param  array{types?: list<string>}  $filters
      */
     public function page(User $user, array $filters = [], int $perPage = 25): LengthAwarePaginator
     {
-        $types = $this->queue->typesFor($user);
+        $types = $this->typesFor($user);
         if (($filters['types'] ?? []) !== []) {
             $types = array_values(array_intersect($types, $filters['types']));
         }
 
         $decisions = collect([
+            in_array(LocationProposalDecisions::TYPE, $types, true) ? DB::table('location_proposal_decisions')
+                ->selectRaw("'proposal' as kind, id::text as ref, decided_at, 0 as reports") : null,
             in_array(ModerationQueue::SUBMISSION, $types, true) ? $this->submissionDecisions() : null,
             in_array(ModerationQueue::IMPROVEMENT, $types, true) ? $this->improvementDecisions() : null,
             in_array(ModerationQueue::REPORT, $types, true) ? $this->removals() : null,
@@ -71,7 +86,7 @@ final class ModerationHistory
      */
     public function countsBy(User $user, CarbonInterface $since): array
     {
-        $types = $this->queue->typesFor($user);
+        $types = $this->typesFor($user);
         $handles = fn (string $type) => in_array($type, $types, true);
         $submissions = $handles(ModerationQueue::SUBMISSION)
             ? DB::table('parking_space_reviews')->where('from_status', ParkingStatus::PENDING->value)
@@ -91,8 +106,12 @@ final class ModerationHistory
                     ->groupByRaw('coalesce(parking_space_id::text, parking_municipal_id), resolved_at'), 'kept')->count()
             : 0;
         $sum = fn (string $outcome) => (int) ($submissions[$outcome] ?? 0) + (int) ($improvements[$outcome] ?? 0);
-        $approved = $sum(ParkingStatus::APPROVED->value);
-        $rejected = $sum(ParkingStatus::REJECTED->value);
+        $proposals = $handles(LocationProposalDecisions::TYPE)
+            ? DB::table('location_proposal_decisions')->where('moderator_id', $user->id)->where('decided_at', '>=', $since)
+                ->selectRaw('outcome, count(*) as total')->groupBy('outcome')->pluck('total', 'outcome')
+            : collect();
+        $approved = $sum(ParkingStatus::APPROVED->value) + (int) ($proposals['completed'] ?? 0);
+        $rejected = $sum(ParkingStatus::REJECTED->value) + (int) ($proposals['rejected'] ?? 0);
 
         return ['total' => $approved + $rejected + $reports, 'approved' => $approved, 'rejected' => $rejected, 'reports' => $reports];
     }
@@ -142,6 +161,7 @@ final class ModerationHistory
             ->concat($this->improvementRows($refs(ModerationQueue::IMPROVEMENT)))
             ->concat($this->removalRows($refs(self::REMOVAL)))
             ->concat($this->keptRows($refs(self::KEPT)))
+            ->concat($this->proposalRows($refs(LocationProposalDecisions::TYPE)))
             ->keyBy('key');
 
         return $decisions
@@ -150,6 +170,66 @@ final class ModerationHistory
                 : [...$row, 'reports' => (int) $decision->reports ?: null])
             ->filter()
             ->values();
+    }
+
+    /** @param list<int> $ids */
+    private function proposalRows(array $ids): Collection
+    {
+        $decisions = LocationProposalDecision::whereKey($ids)->with('moderator:id,name')->get();
+        $spaceIds = $decisions->flatMap(fn (LocationProposalDecision $decision) => [
+            ...array_column($decision->evidence['bays'], 'id'), $decision->existing_parking_space_id,
+        ])->filter()->unique();
+        $spaces = ParkingSpace::whereKey($spaceIds->all())->where('status', ParkingStatus::APPROVED)
+            ->get(['id', 'street', 'latitude', 'longitude'])->keyBy('id');
+        $activeProposals = $this->proposals->activePoints()
+            ->whereIn('point.location_proposal_id', $decisions->pluck('location_proposal_id'))
+            ->distinct()->pluck('point.location_proposal_id')->flip();
+        $current = DB::table('location_proposal_decisions')->whereIn('location_proposal_id', $decisions->pluck('location_proposal_id'))
+            ->groupBy('location_proposal_id')->selectRaw('location_proposal_id, max(id) as id')->pluck('id', 'location_proposal_id');
+        $closed = DB::table('location_proposals')->whereIn('id', $decisions->pluck('location_proposal_id'))
+            ->whereNotNull('closed_at')->pluck('decision_revision', 'id');
+
+        return $decisions->map(function (LocationProposalDecision $decision) use ($spaces, $activeProposals, $current, $closed): array {
+            $evidence = $decision->evidence;
+            $proposal = $decision->location_proposal_id;
+            $map = function (?string $id) use ($spaces): ?string {
+                $space = $spaces->get($id);
+
+                return $space === null ? null : route('location-map', [
+                    'place' => "community:{$space->id}", 'at' => "{$space->latitude},{$space->longitude}",
+                ]);
+            };
+
+            return [
+                'key' => LocationProposalDecisions::TYPE.":{$decision->id}",
+                'type' => LocationProposalDecisions::TYPE,
+                'decision' => $decision->outcome,
+                'street' => $evidence['street'] ?? null,
+                'municipality' => $evidence['municipality'] ?? null,
+                'contributor' => null,
+                'reason' => $decision->reason?->label(),
+                'note' => $decision->note,
+                'reviewer' => $decision->moderator?->name,
+                'decided_at' => $decision->decided_at,
+                'proposal' => [
+                    'id' => $proposal,
+                    'reopen_revision' => $activeProposals->has($proposal) && $current->get($proposal) === $decision->id ? $closed->get($proposal) : null,
+                    'source' => $evidence['source'] ?? null,
+                    'last_seen_on' => $evidence['last_seen_on'] ?? null,
+                    'reported_bays' => $evidence['reported_bays'] ?? null,
+                    'total_bays' => $evidence['total_bays'] ?? count($evidence['bays']),
+                    'orientation' => ParkingOrientation::tryFrom($evidence['orientation'] ?? '')?->label(),
+                    'under_sign' => UnderSign::tryFrom($evidence['under_sign'] ?? '')?->label(),
+                    'restriction' => $evidence['restriction'] ?? null,
+                    'parking_time' => $evidence['parking_time'] ?? null,
+                    'restriction_days' => $evidence['restriction_days'] ?? null,
+                    'restriction_starts_at' => $evidence['restriction_starts_at'] ?? null,
+                    'restriction_ends_at' => $evidence['restriction_ends_at'] ?? null,
+                    'bays' => array_map(fn (array $bay): array => [...$bay, 'url' => $map($bay['id'])], $evidence['bays']),
+                    'existing_url' => $map($decision->existing_parking_space_id),
+                ],
+            ];
+        });
     }
 
     /**

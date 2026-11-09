@@ -2,6 +2,10 @@
 
 return [
     'proposal' => [
+        'rejected' => 'Locatievoorstel afgewezen.',
+        'reopened' => 'Locatievoorstel heropend.',
+        'reason_required' => 'Kies waarom je minder vakken toevoegt dan gemeld.',
+        'existing_required' => 'Kies een gepubliceerde community-parkeerplaats op de kaart.',
         'duplicate' => 'Plaats elk parkeervak op een eigen positie.',
         'changed' => 'Het voorstel is gewijzigd. Open het opnieuw en controleer de bronpunten.',
         'invalid_point' => 'Dit parkeervak moet bij een actief bronpunt van dit voorstel liggen.',
