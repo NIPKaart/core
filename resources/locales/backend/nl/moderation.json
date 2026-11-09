@@ -1,5 +1,10 @@
 {
     "proposals": {
+        "municipality_overview": "Gemeenten",
+        "next_proposal": "Volgend voorstel",
+        "no_open": "Geen open locatievoorstellen.",
+        "open_count_one": "{{count}} open voorstel",
+        "open_count_other": "{{count}} open voorstellen",
         "reject_title": "Voorstel afwijzen",
         "pick_duplicate": "Kies de bestaande community-parkeerplaats op de kaart of in de lijst",
         "decision_note": "Opmerking bij het besluit (optioneel)",

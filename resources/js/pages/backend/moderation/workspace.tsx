@@ -184,12 +184,14 @@ export function PanelNav({
     position,
     loading = false,
     onNavigate,
+    action,
 }: {
     back: string;
     onBack: () => void;
     position?: Position | null;
     loading?: boolean;
     onNavigate?: (link: ItemLink) => void;
+    action?: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
     const previous = position?.previous ?? null;
@@ -204,6 +206,7 @@ export function PanelNav({
             <span className="flex-1 text-center text-[13px] text-muted-foreground tabular-nums">
                 {position ? t('review.position', { index: position.index, total: position.total }) : null}
             </span>
+            {action}
             {onNavigate && (
                 <>
                     <Button

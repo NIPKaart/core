@@ -18,6 +18,21 @@ class LocationProposalQueue
             ->orderBy('proposal.id');
     }
 
+    public function municipalityTotals(): Collection
+    {
+        return $this->proposals()->reorder()
+            ->select('municipality.id', 'municipality.name')->selectRaw('count(*) as open_count')
+            ->groupBy('municipality.id', 'municipality.name')->orderBy('municipality.name')->orderBy('municipality.id')->get();
+    }
+
+    public function nextInMunicipality(int $municipality, int $after): ?int
+    {
+        $open = $this->proposals()->select('proposal.id')->where('proposal.municipality_id', $municipality);
+
+        return (clone $open)->where('proposal.id', '>', $after)->value('proposal.id')
+            ?? $open->where('proposal.id', '<', $after)->value('proposal.id');
+    }
+
     public function activePoints(): Builder
     {
         return DB::table('location_proposal_points as point')

@@ -1,5 +1,10 @@
 {
     "proposals": {
+        "municipality_overview": "Municipalities",
+        "next_proposal": "Next proposal",
+        "no_open": "No open location proposals.",
+        "open_count_one": "{{count}} open proposal",
+        "open_count_other": "{{count}} open proposals",
         "reject_title": "Reject proposal",
         "pick_duplicate": "Select the existing community parking space on the map or in the list",
         "decision_note": "Decision note (optional)",
