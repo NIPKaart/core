@@ -28,6 +28,13 @@
       "automerge": false
     },
     {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["i18next", "react-i18next"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "i18next major updates",
+      "automerge": false
+    },
+    {
       "matchManagers": ["github-actions"],
       "addLabels": ["github_actions"],
       "rangeStrategy": "pin"
