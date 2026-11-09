@@ -144,12 +144,39 @@ test('the select button only shows without a mouse, where rows cannot be pointed
     assert.equal(selectButton(undefined), undefined);
 });
 
-test('the sheet stops at three heights and lets go at the nearest one', () => {
-    const { sheetTops, nearestSnap } = mount('workspace.tsx').exports;
-    assert.equal(JSON.stringify(sheetTops(800)), '{"peek":544,"half":360,"full":48}');
-    assert.equal(nearestSnap(520, 800), 'peek');
-    assert.equal(nearestSnap(400, 800), 'half');
-    assert.equal(nearestSnap(120, 800), 'full');
-    // On a short screen the lowered sheet still leaves the map strip at the top.
-    assert.equal(sheetTops(200).peek, 48);
+test('the drawer shows three heights and keeps a strip of map above it when fully open', () => {
+    const { sheetHeights, sheetSnapPoints } = mount('workspace.tsx').exports;
+    assert.equal(JSON.stringify(sheetHeights(800)), '{"peek":256,"half":440,"full":752}');
+    // The drawer is as tall as fully open and slides down, so each snap point adds the strip of map above it.
+    assert.equal(JSON.stringify(sheetSnapPoints(800)), '{"peek":"304px","half":"488px","full":"800px"}');
+    // On a short screen the lowered drawer is never taller than fully open.
+    assert.equal(sheetHeights(200).peek, 152);
+});
+
+test('the panel is a drawer that stays open beside the map, and only lays out the part that shows', () => {
+    const app = mount('workspace.tsx');
+    const chosen = [];
+    const tree = app.render(app.exports.MobileSheet, {
+        container: {},
+        height: 800,
+        snaps: ['peek', 'half', 'full'],
+        snap: 'half',
+        onSnap: (snap) => chosen.push(snap),
+        label: 'Wachtrij',
+        children: 'panel',
+    });
+    const all = nodes(tree);
+    const drawer = all.find((node) => node.type === 'Drawer');
+    const content = all.find((node) => node.type === 'DrawerContent');
+
+    assert.equal(drawer.props.modal, false);
+    assert.equal(drawer.props.dismissible, false);
+    assert.equal(drawer.props.activeSnapPoint, '488px');
+    drawer.props.setActiveSnapPoint('304px');
+    assert.deepEqual(chosen, ['peek']);
+    // A region keeps the map and the moderation shortcuts in use, unlike a dialog.
+    assert.equal(content.props.role, 'region');
+    assert.equal(content.props.handle, false);
+    assert.equal(content.props.style.height, 752);
+    assert.equal(all.find((node) => node.props?.style?.height === 440)?.type, 'div');
 });
