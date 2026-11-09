@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Enums\ParkingOrientation;
 use App\Enums\ParkingStatus;
+use App\Events\ModerationQueueChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreLocationRequest;
 use App\Models\ParkingSpace;
@@ -77,6 +78,7 @@ class ParkingContributionController extends Controller
             ...$request->parkingSpaceDetails(),
             'status' => ParkingStatus::PENDING,
         ]));
+        ModerationQueueChanged::dispatch('added');
 
         Notification::send(
             User::role(['admin', 'moderator'])->get(),

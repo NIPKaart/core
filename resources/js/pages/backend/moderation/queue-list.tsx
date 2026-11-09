@@ -226,7 +226,8 @@ export function QueueList({
 
 /**
  * The top of the queue panel: the status tabs, search and filters. Open items can be searched and filtered by
- * municipality; decided items only by type.
+ * municipality; decided items only by type. Switching between open and decided keeps the page, so the map stays and
+ * only its pins and the list change; every tab is prefetched.
  */
 export function QueueHeader({
     status,
@@ -290,6 +291,9 @@ export function QueueHeader({
                         <Link
                             key={tab}
                             href={app.moderation.index({ query: tabQuery[tab] })}
+                            preserveState
+                            preserveScroll
+                            prefetch
                             aria-current={status === tab ? 'page' : undefined}
                             className={cn(
                                 'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm',
@@ -305,6 +309,7 @@ export function QueueHeader({
                     {options.types.includes('submission') && options.can.submission && (
                         <Link
                             href={app.moderation.proposals.index()}
+                            prefetch
                             className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground"
                         >
                             {t('proposals.tab')}

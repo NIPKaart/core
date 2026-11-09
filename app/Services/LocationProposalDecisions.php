@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\LocationProposalDecisionReason;
+use App\Events\ModerationQueueChanged;
 use App\Models\LocationProposalDecision;
 use App\Models\ParkingSpace;
 use App\Models\User;
@@ -60,6 +61,7 @@ final class LocationProposalDecisions
             ],
         ]);
 
+        ModerationQueueChanged::dispatch('decided');
         DB::table('location_proposals')->where('id', $proposal->id)->update([
             'closed_at' => $decidedAt,
             'decision_revision' => $proposal->decision_revision + 1,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Enums\ReportReason;
+use App\Events\ModerationQueueChanged;
 use App\Http\Controllers\Controller;
 use App\Services\ParkingPlaces;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +44,7 @@ class ParkingReportController extends Controller
                 'note' => filled($validated['note'] ?? null) ? trim($validated['note']) : null,
             ]);
         });
+        ModerationQueueChanged::dispatch('added');
 
         Inertia::flash('success', __('parking_spaces.report.recorded'));
 
