@@ -1,5 +1,11 @@
 {
     "proposals": {
+        "tab": "Voorstellen",
+        "municipality_overview": "Gemeenten",
+        "next_proposal": "Volgend voorstel",
+        "no_open": "Geen open locatievoorstellen.",
+        "open_count_one": "{{count}} open voorstel",
+        "open_count_other": "{{count}} open voorstellen",
         "reject_title": "Voorstel afwijzen",
         "pick_duplicate": "Kies de bestaande community-parkeerplaats op de kaart of in de lijst",
         "decision_note": "Opmerking bij het besluit (optioneel)",
@@ -521,6 +527,7 @@
         "fit_all": "Alles in beeld",
         "source_point": "Bronpunt",
         "legend": {
+            "municipality_count": "Open voorstellen per gemeente",
             "label": "Legenda",
             "selected": "Geselecteerd",
             "placed": "Geplaatst, niet ingediend",

@@ -191,3 +191,50 @@ it('requires reapproval for changed terms without letting malformed points stop 
     app(SourceRegistrar::class)->approve($source, $admin, null);
     expect($source->fresh()->description['terms_url'])->toBe($changed['terms_url']);
 });
+
+it('counts open proposals once per municipality and continues within the chosen municipality', function () {
+    $data = proposalEnvelope([
+        proposalPoint(),
+        proposalPoint('GM0363', longitude: 4.9),
+        proposalPoint(longitude: 4.3601),
+        proposalPoint(longitude: 4.361),
+        proposalPoint(longitude: 4.362),
+        proposalPoint(longitude: 4.363),
+    ]);
+    $source = app(SourceRegistrar::class)->register('proposals', $data);
+    app(SourceRegistrar::class)->approve($source, User::factory()->create()->assignRole(UserRole::ADMIN), null);
+    expect(processProposalObject($this->handler, $source, $data)->state)->toBe('validated');
+    [$first, $amsterdam, $grouped, $closed, $missing, $last] = collect($data['records'])->map(fn (array $point) => DB::table('location_proposal_points')
+        ->where('external_id', $point['external_id'])->value('location_proposal_id'))->all();
+    $delftId = Municipality::where('code', 'GM0503')->value('id');
+    $amsterdamId = Municipality::where('code', 'GM0363')->value('id');
+    DB::table('location_proposal_points')->where('location_proposal_id', $missing)->update(['missing_since' => now()]);
+    DB::table('location_proposals')->where('id', $closed)->update(['closed_at' => now()]);
+
+    $moderator = User::factory()->create()->assignRole(UserRole::MODERATOR);
+    $route = fn (array $query = []) => route('app.moderation.proposals.index', $query);
+    $this->actingAs($moderator)->post(route('app.moderation.proposals.group', $first), ['with' => $grouped])->assertRedirect();
+    $this->get($route())->assertInertia(fn (Assert $page) => $page
+        ->where('proposals', null)->where('municipality', null)
+        ->where('municipalities', [
+            ['id' => $amsterdamId, 'name' => 'Amsterdam', 'open_count' => 1, 'point' => ['latitude' => 52.01, 'longitude' => 4.9]],
+            ['id' => $delftId, 'name' => 'Delft', 'open_count' => 2, 'point' => ['latitude' => 52.01, 'longitude' => 4.36]],
+        ]));
+    $this->get($route(['municipality' => $delftId]))
+        ->assertCookie('proposal_municipality_'.$moderator->id, (string) $delftId)
+        ->assertInertia(fn (Assert $page) => $page->where('proposals.total', 2)->where('municipalityName', 'Delft')->where('hasNext', true));
+    $this->withCookie('proposal_municipality_'.$moderator->id, (string) $delftId)
+        ->get($route())->assertRedirect($route(['municipality' => $delftId]));
+    $this->get($route(['overview' => 1]))->assertInertia(fn (Assert $page) => $page->where('municipality', null));
+
+    $this->get($route(['municipality' => $delftId, 'after' => 0]))
+        ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $first]));
+    $this->get($route(['municipality' => $delftId, 'after' => $first]))
+        ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $last]));
+    $this->get($route(['municipality' => $delftId, 'after' => $last]))
+        ->assertRedirect($route(['municipality' => $delftId, 'proposal' => $first]));
+    $this->get($route(['municipality' => $amsterdamId, 'after' => $amsterdam]))
+        ->assertRedirect($route(['municipality' => $amsterdamId]));
+    $this->get($route(['proposal' => $amsterdam]))->assertInertia(fn (Assert $page) => $page
+        ->where('municipality', $amsterdamId)->where('hasNext', false));
+});

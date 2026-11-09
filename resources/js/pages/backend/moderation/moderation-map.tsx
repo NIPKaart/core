@@ -117,7 +117,19 @@ const TILES = {
     satellite: { zoom: 19 },
 };
 
-type QueuePin = { key: string; point: MapPoint; color: string; label: string };
+type QueuePin = { key: string; point: MapPoint; color: string; label: string; count?: number; legendLabel?: string };
+
+const municipalityIcon = (count: number, color: string) => {
+    const label = count > 999 ? `${Math.floor(count / 1000)}k+` : String(count);
+    return cachedIcon(`municipality-${color}-${label}`, () =>
+        L.divIcon({
+            html: `<span aria-hidden="true" class="flex size-9 items-center justify-center rounded-full border-2 border-white text-xs font-semibold text-white shadow" style="background:${color}">${label}</span>`,
+            className: '',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+        }),
+    );
+};
 
 /**
  * The map the moderator works on: it fills the screen behind the panel. It shows the item under review with what
@@ -265,7 +277,9 @@ export function ModerationMap({
                         <Marker
                             key={item.key}
                             position={[item.point.latitude, item.point.longitude]}
-                            icon={queueIcon(item.color, item.key === highlighted)}
+                            icon={
+                                item.count === undefined ? queueIcon(item.color, item.key === highlighted) : municipalityIcon(item.count, item.color)
+                            }
                             title={item.label}
                             zIndexOffset={item.key === highlighted ? 1000 : 0}
                             eventHandlers={{ click: () => onPick?.(item.key) }}
@@ -311,30 +325,68 @@ export function ModerationMap({
                     </div>
                 </div>
             )}
-            {sourcePoint && bays && <BayLegend />}
+            {sourcePoint && bays ? <BayLegend /> : queue && <QueueLegend pins={queue} />}
             {children}
         </div>
     );
 }
 
-/** What the source point and the three pin states mean, beside the zoom buttons. Left out on small screens, where the map is small. */
-function BayLegend() {
-    const { t } = useTranslation('backend/moderation');
-    const pin = (fill: string, stroke: string, width = 2.4) => (
+function legendPin(fill: string, stroke = '#fff', width = 2.4) {
+    return (
         <svg viewBox="0 0 36 48" width="14" height="19" aria-hidden>
             <path d={PIN} fill={fill} stroke={stroke} strokeWidth={width} />
         </svg>
     );
+}
+
+function QueueLegend({ pins }: { pins: QueuePin[] }) {
+    const entries = new Map<string, QueuePin>();
+    for (const pin of pins) {
+        if (pin.legendLabel && !entries.has(pin.legendLabel)) entries.set(pin.legendLabel, pin);
+    }
+
+    return (
+        <MapLegend
+            items={Array.from(entries, ([label, pin]) => ({
+                key: label,
+                label,
+                icon:
+                    pin.count === undefined ? (
+                        legendPin(pin.color)
+                    ) : (
+                        <span
+                            className="flex size-4 items-center justify-center rounded-full border border-white text-[9px] font-semibold text-white"
+                            style={{ backgroundColor: pin.color }}
+                            aria-hidden
+                        >
+                            #
+                        </span>
+                    ),
+            }))}
+        />
+    );
+}
+
+/** What the source point and the three pin states mean, beside the zoom buttons. */
+function BayLegend() {
+    const { t } = useTranslation('backend/moderation');
     const items = [
         {
             key: 'source',
             icon: <span className="size-4 rounded-[3px] border-2 border-white bg-[#1e3a8a] shadow-[0_0_0_1px_#1e3a8a]" aria-hidden />,
             label: t('map.source_point'),
         },
-        { key: 'selected', icon: pin('#1d4ed8', '#fff'), label: t('map.legend.selected') },
-        { key: 'placed', icon: pin('#fff', '#1d4ed8', 3.5), label: t('map.legend.placed') },
-        { key: 'submitted', icon: pin('#171717', '#fff'), label: t('map.legend.submitted') },
+        { key: 'selected', icon: legendPin('#1d4ed8', '#fff'), label: t('map.legend.selected') },
+        { key: 'placed', icon: legendPin('#fff', '#1d4ed8', 3.5), label: t('map.legend.placed') },
+        { key: 'submitted', icon: legendPin('#171717', '#fff'), label: t('map.legend.submitted') },
     ];
+
+    return <MapLegend items={items} />;
+}
+
+function MapLegend({ items }: { items: { key: string; icon: React.ReactNode; label: string }[] }) {
+    const { t } = useTranslation('backend/moderation');
+    if (items.length === 0) return null;
 
     return (
         <ul

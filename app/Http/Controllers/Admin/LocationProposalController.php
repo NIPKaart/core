@@ -24,6 +24,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -39,30 +40,56 @@ class LocationProposalController extends Controller
 
     public function __construct(private LocationProposalQueue $queue, private LocationProposalDecisions $decisions) {}
 
-    public function index(Request $request, AerialImagery $imagery, ModerationEvidence $evidence): Response
+    public function index(Request $request, AerialImagery $imagery, ModerationEvidence $evidence): Response|RedirectResponse
     {
         $this->authorizeModeration();
         $filters = $request->validate([
-            'municipality' => ['nullable', 'integer', 'min:1'],
+            'municipality' => ['nullable', 'integer', 'min:1', 'exists:municipalities,id'],
+            'overview' => ['nullable', 'boolean'],
+            'after' => ['nullable', 'integer', 'min:0', 'prohibits:proposal,point'],
             'proposal' => ['nullable', 'integer', 'min:1'],
             'point' => ['nullable', 'integer', 'min:1'],
             'from' => ['nullable', 'in:queue'],
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
-        $municipality = $filters['municipality'] ?? null;
+        $preference = 'proposal_municipality_'.$request->user()->id;
+        $municipality = isset($filters['municipality']) ? (int) $filters['municipality'] : null;
+
+        if ($municipality !== null && ! isset($filters['proposal']) && ! isset($filters['after'])) {
+            Cookie::queue($preference, (string) $municipality, 60 * 24 * 365);
+        }
+
+        if ($municipality === null && ! isset($filters['proposal']) && ! $request->boolean('overview')) {
+            $remembered = (int) $request->cookie($preference);
+            if ($remembered > 0 && Municipality::whereKey($remembered)->exists()) {
+                return to_route('app.moderation.proposals.index', ['municipality' => $remembered]);
+            }
+        }
+
+        if (isset($filters['after']) && $municipality !== null) {
+            $next = $this->queue->nextInMunicipality($municipality, (int) $filters['after']);
+
+            return to_route('app.moderation.proposals.index', [
+                'municipality' => $municipality,
+                ...($next === null ? [] : ['proposal' => $next]),
+            ]);
+        }
+
         $selected = isset($filters['proposal'])
             ? $this->detail((int) $filters['proposal'], isset($filters['point']) ? (int) $filters['point'] : null, $evidence, $imagery)
             : null;
-        $page = $this->queue->proposals()
-            ->when($municipality !== null, fn (Builder $query) => $query->where('proposal.municipality_id', $municipality))
-            ->paginate(50)->withQueryString();
+        $municipality = $selected['municipalityId'] ?? $municipality;
+        $page = $municipality === null ? null : $this->queue->proposals()
+            ->where('proposal.municipality_id', $municipality)->paginate(50)->withQueryString();
 
         return Inertia::render('backend/moderation/proposals', [
-            'proposals' => $page->setCollection($this->queue->rows($page->getCollection())),
-            'municipalities' => Municipality::query()
-                ->whereIn('id', $this->queue->activePoints()->select('point.municipality_id')->distinct())
-                ->orderBy('name')->get(['id', 'name']),
+            'proposals' => $page?->setCollection($this->queue->rows($page->getCollection())),
+            'municipalities' => $municipality === null ? $this->queue->municipalityTotals() : [],
             'municipality' => $municipality,
+            'municipalityName' => $municipality === null ? null : ($selected['municipality'] ?? Municipality::whereKey($municipality)->value('name')),
+            'hasNext' => $municipality !== null && ($selected === null
+                ? $page->total() > 0
+                : $this->queue->nextInMunicipality($municipality, $selected['id']) !== null),
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
             'selected' => $selected,
             'bayOptions' => [
@@ -197,7 +224,7 @@ class LocationProposalController extends Controller
 
         Inertia::flash('success', __('parking_spaces.proposal.rejected'));
 
-        return $request->query('from') === 'queue'
+        return $request->query('from') === 'queue' && ! $request->filled('municipality')
             ? to_route('app.moderation.index')
             : to_route('app.moderation.proposals.index', $request->only(['municipality', 'page']));
     }
@@ -322,7 +349,8 @@ class LocationProposalController extends Controller
         return [
             'id' => $id,
             'pointId' => $anchor->id,
-            'municipality' => Municipality::whereKey($anchor->municipality_id)->value('name'),
+            'municipality' => $anchor->municipality,
+            'municipalityId' => $anchor->municipality_id,
             'points' => $points->map(fn (object $point): array => $this->queue->pointData($point)),
             'candidates' => $candidates,
             'published' => $closed,

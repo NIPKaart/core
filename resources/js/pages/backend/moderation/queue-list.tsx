@@ -168,7 +168,7 @@ export function QueueList({
                                     href={app.moderation.proposals.index()}
                                     className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground"
                                 >
-                                    {t('proposals.title')}
+                                    {t('proposals.tab')}
                                 </Link>
                             )}
                         </nav>

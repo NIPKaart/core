@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { RestrictionDay } from '@/types';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ArrowRight, Camera, Check, MapPinned, MousePointer2, Trash2, ZoomIn } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -64,7 +64,7 @@ export type LocationProposalSelection = { proposal: LocationProposal; point: Loc
 /** How close the map comes when the moderator zooms in on one bay. */
 const BAY_ZOOM = 21;
 /** The colour of proposal points, on the map and in the queue. */
-const SOURCE_COLOR = '#1e3a8a';
+export const SOURCE_COLOR = '#1e3a8a';
 
 /**
  * Location proposals as their own group above the queue: one row per proposal point, like any other item. The status
@@ -87,7 +87,7 @@ export function LocationProposals({
         <>
             <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
                 <span>{t('proposals.title')}</span>
-                <span className="tabular-nums">{total ?? points.length}</span>
+                <span className="tabular-nums">{total ?? proposals.length}</span>
             </div>
             <ul className="flex flex-col">
                 {points.map(({ proposal, point, index }) => (
@@ -146,6 +146,7 @@ export function LocationProposalReview({
     group,
     query,
     onBack,
+    nextUrl,
 }: {
     selection: LocationProposalSelection;
     imagery: AerialLayer[];
@@ -166,6 +167,7 @@ export function LocationProposalReview({
     group?: React.ReactNode;
     query: { municipality?: string | number; page?: number; point?: number; from?: 'queue' };
     onBack: () => void;
+    nextUrl?: string;
 }) {
     const { t, i18n } = useTranslation('backend/moderation');
     const { proposal, point: initialPoint } = selection;
@@ -423,7 +425,19 @@ export function LocationProposalReview({
                 onSelectBay: setSelected,
             }}
         >
-            <PanelNav back={t('queue.label')} onBack={onBack} />
+            <PanelNav
+                back={t('queue.label')}
+                onBack={onBack}
+                action={
+                    nextUrl && !published && !processing ? (
+                        <Button variant="ghost" size="sm" asChild>
+                            <Link href={nextUrl}>
+                                {t('proposals.next_proposal')} <ArrowRight aria-hidden />
+                            </Link>
+                        </Button>
+                    ) : undefined
+                }
+            />
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
                 <div className="flex flex-col gap-1">
                     <span className="text-[13px] font-semibold text-blue-700 dark:text-blue-300">
@@ -622,9 +636,18 @@ export function LocationProposalReview({
                         <ArrowRight aria-hidden />
                     </Button>
                 ) : published ? (
-                    <Button type="button" className="h-11 flex-1" onClick={onBack}>
-                        {t('proposals.back_to_queue')}
-                    </Button>
+                    <>
+                        {nextUrl && (
+                            <Button className="h-11 flex-1" asChild>
+                                <Link href={nextUrl}>
+                                    {t('proposals.next_proposal')} <ArrowRight aria-hidden />
+                                </Link>
+                            </Button>
+                        )}
+                        <Button type="button" variant={nextUrl ? 'outline' : 'default'} className="h-11 flex-1" onClick={onBack}>
+                            {t('proposals.back_to_queue')}
+                        </Button>
+                    </>
                 ) : canReject ? (
                     <Button
                         type="button"

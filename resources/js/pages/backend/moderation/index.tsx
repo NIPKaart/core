@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SelectionBar, SelectionHeader } from './bulk-pane';
 import { panelMode } from './geo';
-import type { ProposalRow } from './location-proposals';
+import { SOURCE_COLOR, type ProposalRow } from './location-proposals';
 import { useAgo } from './parts';
 import { QueueList, TYPE_COLORS } from './queue-list';
 import { ReviewPane } from './review-pane';
@@ -98,7 +98,16 @@ export default function Index({ status, locationProposals, filters, items, histo
     const first = items?.data[0];
     const mode = panelMode(current !== null, checkedItems.length);
     const [hovered, setHovered] = useState<string | null>(null);
-    const overviewCenter = first ? { latitude: first.latitude, longitude: first.longitude } : NETHERLANDS;
+    const proposalPins = (Object.keys(query).length === 0 ? (locationProposals ?? []) : []).flatMap((proposal) =>
+        proposal.points.map((point) => ({
+            key: `proposal-point:${point.id}`,
+            point,
+            color: SOURCE_COLOR,
+            legendLabel: t('types.proposal'),
+            label: `${t('types.proposal')} · ${proposal.municipality} #${proposal.id}`,
+        })),
+    );
+    const overviewCenter = first ? { latitude: first.latitude, longitude: first.longitude } : (proposalPins[0]?.point ?? NETHERLANDS);
     useShortcuts({
         j: !current && !checkedItems.length && first && (() => openItem(first)),
         Enter: !current && !checkedItems.length && first && (() => openItem(first)),
@@ -140,16 +149,30 @@ export default function Index({ status, locationProposals, filters, items, histo
                                     : {
                                           center: overviewCenter,
                                           zoom: first ? undefined : COUNTRY_ZOOM,
-                                          queue: (items?.data ?? []).map((item) => ({
-                                              key: item.key,
-                                              point: { latitude: item.latitude, longitude: item.longitude },
-                                              color: TYPE_COLORS[item.type],
-                                              label: item.street ?? t('no_address'),
-                                          })),
+                                          queue: [
+                                              ...(items?.data ?? []).map((item) => ({
+                                                  key: item.key,
+                                                  point: { latitude: item.latitude, longitude: item.longitude },
+                                                  color: TYPE_COLORS[item.type],
+                                                  legendLabel: t(`types.${item.type}`),
+                                                  label: item.street ?? t('no_address'),
+                                              })),
+                                              ...proposalPins,
+                                          ],
                                           highlighted: hovered,
                                           onPick: (key) => {
                                               const item = items?.data.find((candidate) => candidate.key === key);
-                                              if (item) openItem(item);
+                                              if (item) {
+                                                  openItem(item);
+                                                  return;
+                                              }
+                                              const proposal = proposalPins.find((candidate) => candidate.key === key)?.point;
+                                              if (proposal)
+                                                  router.visit(
+                                                      app.moderation.proposals.index({
+                                                          query: { proposal: proposal.proposal_id, point: proposal.id, from: 'queue' },
+                                                      }),
+                                                  );
                                           },
                                       }
                             }

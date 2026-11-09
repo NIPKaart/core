@@ -18,6 +18,34 @@ class LocationProposalQueue
             ->orderBy('proposal.id');
     }
 
+    public function municipalityTotals(): Collection
+    {
+        $totals = $this->proposals()->reorder()
+            ->select('municipality.id', 'municipality.name')->selectRaw('count(*) as open_count, min(proposal.id) as first_proposal')
+            ->groupBy('municipality.id', 'municipality.name')->orderBy('municipality.name')->orderBy('municipality.id')->get();
+        $points = $this->activePoints()->whereIn('point.location_proposal_id', $totals->pluck('first_proposal'))
+            ->selectRaw('DISTINCT ON (point.location_proposal_id) point.location_proposal_id, point.latitude, point.longitude')
+            ->orderBy('point.location_proposal_id')->orderBy('point.id')->get()->keyBy('location_proposal_id');
+
+        return $totals->map(fn (object $total): array => [
+            'id' => $total->id,
+            'name' => $total->name,
+            'open_count' => $total->open_count,
+            'point' => isset($points[$total->first_proposal]) ? [
+                'latitude' => $points[$total->first_proposal]->latitude,
+                'longitude' => $points[$total->first_proposal]->longitude,
+            ] : null,
+        ]);
+    }
+
+    public function nextInMunicipality(int $municipality, int $after): ?int
+    {
+        $open = $this->proposals()->select('proposal.id')->where('proposal.municipality_id', $municipality);
+
+        return (clone $open)->where('proposal.id', '>', $after)->value('proposal.id')
+            ?? $open->where('proposal.id', '<', $after)->value('proposal.id');
+    }
+
     public function activePoints(): Builder
     {
         return DB::table('location_proposal_points as point')
