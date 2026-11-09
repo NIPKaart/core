@@ -55,7 +55,7 @@ final class ModerationHistory
 
         $decisions = collect([
             in_array(LocationProposalDecisions::TYPE, $types, true) ? DB::table('location_proposal_decisions')
-                ->selectRaw("'proposal' as kind, id::text as ref, decided_at, 0 as reports") : null,
+                ->selectRaw("'proposal' as kind, id::text as ref, decided_at AT TIME ZONE 'UTC' as decided_at, 0 as reports") : null,
             in_array(ModerationQueue::SUBMISSION, $types, true) ? $this->submissionDecisions() : null,
             in_array(ModerationQueue::IMPROVEMENT, $types, true) ? $this->improvementDecisions() : null,
             in_array(ModerationQueue::REPORT, $types, true) ? $this->removals() : null,

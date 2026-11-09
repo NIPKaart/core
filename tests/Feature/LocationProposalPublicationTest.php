@@ -5,12 +5,14 @@ use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Models\Country;
 use App\Models\DatasetSource;
+use App\Models\LocationProposalDecision;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
 use App\Models\ParkingSpaceReview;
 use App\Models\Province;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -187,3 +189,51 @@ it('rejects a proposal with an attributable decision and requires a public space
         ->where('history.data.0.decision', 'rejected')
         ->where('history.data.0.proposal.existing_url', $existing === null ? null : fn (string $url) => str_contains($url, $existing)));
 })->with(['not_a_disabled_bay', 'duplicate']);
+
+it('backfills an existing publication with its original moderator, timestamp and under-sign details', function () {
+    $migration = require database_path('migrations/2026_11_09_004927_create_location_proposal_decisions_table.php');
+    $migration->down();
+
+    $publishedAt = Carbon::parse('2026-11-08T19:15:00+01:00');
+    DB::table('location_proposals')->where('id', $this->proposal)->update([
+        'bays_published_at' => $publishedAt->toIso8601String(),
+    ]);
+    $bay = ParkingSpace::factory()->create([
+        'orientation' => 'parallel',
+        'under_sign' => 'yes',
+        'under_sign_text' => 'Max. 90 min',
+        'parking_time' => 90,
+        'restriction_days' => ['mon'],
+        'restriction_starts_at' => '09:00',
+        'restriction_ends_at' => '18:00',
+        'status' => ParkingStatus::APPROVED,
+    ]);
+    $bay->forceFill([
+        'location_proposal_id' => $this->proposal,
+        'location_proposal_point_id' => $this->proposal,
+        'location_proposal_bay_number' => 1,
+    ])->save();
+    $bay->reviews()->create([
+        'reviewed_by' => $this->moderator->id,
+        'from_status' => null,
+        'to_status' => ParkingStatus::APPROVED,
+        'reviewed_at' => $publishedAt->copy()->utc(),
+    ]);
+
+    $migration->up();
+
+    $decision = LocationProposalDecision::sole();
+    expect($decision)->moderator_id->toBe($this->moderator->id)
+        ->outcome->toBe('completed')
+        ->decided_at->toEqual($publishedAt);
+    expect($decision->evidence)->toMatchArray([
+        'under_sign' => 'yes',
+        'restriction' => 'Max. 90 min',
+        'parking_time' => 90,
+        'restriction_days' => ['mon'],
+        'restriction_starts_at' => '09:00:00',
+        'restriction_ends_at' => '18:00:00',
+        'bays' => [['id' => $bay->id, 'number' => 1]],
+    ]);
+    expect(Carbon::parse(DB::table('location_proposals')->find($this->proposal)->closed_at))->toEqual($publishedAt);
+});
