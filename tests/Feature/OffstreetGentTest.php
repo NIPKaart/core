@@ -397,6 +397,7 @@ it('discovers, approves, reviews and publishes the real complete Gent catalog wi
     $handler->append(new Result(['CommonPrefixes' => [['Prefix' => 'offstreet/be-gent-parking/']], 'IsTruncated' => false]));
     $handler->append(new Result(['Contents' => [['Key' => $key, 'ETag' => '"gent"', 'LastModified' => $catalog['retrieved_at']]], 'IsTruncated' => false]));
     $handler->append(gentObject($json));
+    $handler->append(new Result(['IsTruncated' => false]));
 
     app(DatasetDeliveryService::class)->discover();
 

@@ -1,0 +1,342 @@
+GM0014,Groningen,NL-GR
+GM0034,Almere,NL-FL
+GM0037,Stadskanaal,NL-GR
+GM0047,Veendam,NL-GR
+GM0050,Zeewolde,NL-FL
+GM0059,Achtkarspelen,NL-FR
+GM0060,Ameland,NL-FR
+GM0072,Harlingen,NL-FR
+GM0074,Heerenveen,NL-FR
+GM0080,Leeuwarden,NL-FR
+GM0085,Ooststellingwerf,NL-FR
+GM0086,Opsterland,NL-FR
+GM0088,Schiermonnikoog,NL-FR
+GM0090,Smallingerland,NL-FR
+GM0093,Terschelling,NL-FR
+GM0096,Vlieland,NL-FR
+GM0098,Weststellingwerf,NL-FR
+GM0106,Assen,NL-DR
+GM0109,Coevorden,NL-DR
+GM0114,Emmen,NL-DR
+GM0118,Hoogeveen,NL-DR
+GM0119,Meppel,NL-DR
+GM0141,Almelo,NL-OV
+GM0147,Borne,NL-OV
+GM0148,Dalfsen,NL-OV
+GM0150,Deventer,NL-OV
+GM0153,Enschede,NL-OV
+GM0158,Haaksbergen,NL-OV
+GM0160,Hardenberg,NL-OV
+GM0163,Hellendoorn,NL-OV
+GM0164,Hengelo (O.),NL-OV
+GM0166,Kampen,NL-OV
+GM0168,Losser,NL-OV
+GM0171,Noordoostpolder,NL-FL
+GM0173,Oldenzaal,NL-OV
+GM0175,Ommen,NL-OV
+GM0177,Raalte,NL-OV
+GM0180,Staphorst,NL-OV
+GM0183,Tubbergen,NL-OV
+GM0184,Urk,NL-FL
+GM0189,Wierden,NL-OV
+GM0193,Zwolle,NL-OV
+GM0197,Aalten,NL-GE
+GM0200,Apeldoorn,NL-GE
+GM0202,Arnhem,NL-GE
+GM0203,Barneveld,NL-GE
+GM0209,Beuningen,NL-GE
+GM0213,Brummen,NL-GE
+GM0214,Buren,NL-GE
+GM0216,Culemborg,NL-GE
+GM0221,Doesburg,NL-GE
+GM0222,Doetinchem,NL-GE
+GM0225,Druten,NL-GE
+GM0226,Duiven,NL-GE
+GM0228,Ede,NL-GE
+GM0230,Elburg,NL-GE
+GM0232,Epe,NL-GE
+GM0233,Ermelo,NL-GE
+GM0243,Harderwijk,NL-GE
+GM0244,Hattem,NL-GE
+GM0246,Heerde,NL-GE
+GM0252,Heumen,NL-GE
+GM0262,Lochem,NL-GE
+GM0263,Maasdriel,NL-GE
+GM0267,Nijkerk,NL-GE
+GM0268,Nijmegen,NL-GE
+GM0269,Oldebroek,NL-GE
+GM0273,Putten,NL-GE
+GM0274,Renkum,NL-GE
+GM0275,Rheden,NL-GE
+GM0277,Rozendaal,NL-GE
+GM0279,Scherpenzeel,NL-GE
+GM0281,Tiel,NL-GE
+GM0285,Voorst,NL-GE
+GM0289,Wageningen,NL-GE
+GM0293,Westervoort,NL-GE
+GM0294,Winterswijk,NL-GE
+GM0296,Wijchen,NL-GE
+GM0297,Zaltbommel,NL-GE
+GM0299,Zevenaar,NL-GE
+GM0301,Zutphen,NL-GE
+GM0302,Nunspeet,NL-GE
+GM0303,Dronten,NL-FL
+GM0307,Amersfoort,NL-UT
+GM0308,Baarn,NL-UT
+GM0310,De Bilt,NL-UT
+GM0312,Bunnik,NL-UT
+GM0313,Bunschoten,NL-UT
+GM0317,Eemnes,NL-UT
+GM0321,Houten,NL-UT
+GM0327,Leusden,NL-UT
+GM0331,Lopik,NL-UT
+GM0335,Montfoort,NL-UT
+GM0339,Renswoude,NL-UT
+GM0340,Rhenen,NL-UT
+GM0342,Soest,NL-UT
+GM0344,Utrecht,NL-UT
+GM0345,Veenendaal,NL-UT
+GM0351,Woudenberg,NL-UT
+GM0352,Wijk bij Duurstede,NL-UT
+GM0353,IJsselstein,NL-UT
+GM0355,Zeist,NL-UT
+GM0356,Nieuwegein,NL-UT
+GM0358,Aalsmeer,NL-NH
+GM0361,Alkmaar,NL-NH
+GM0362,Amstelveen,NL-NH
+GM0363,Amsterdam,NL-NH
+GM0373,Bergen (NH.),NL-NH
+GM0375,Beverwijk,NL-NH
+GM0376,Blaricum,NL-NH
+GM0377,Bloemendaal,NL-NH
+GM0383,Castricum,NL-NH
+GM0384,Diemen,NL-NH
+GM0385,Edam-Volendam,NL-NH
+GM0388,Enkhuizen,NL-NH
+GM0392,Haarlem,NL-NH
+GM0394,Haarlemmermeer,NL-NH
+GM0396,Heemskerk,NL-NH
+GM0397,Heemstede,NL-NH
+GM0399,Heiloo,NL-NH
+GM0400,Den Helder,NL-NH
+GM0402,Hilversum,NL-NH
+GM0405,Hoorn,NL-NH
+GM0406,Huizen,NL-NH
+GM0415,Landsmeer,NL-NH
+GM0417,Laren (NH.),NL-NH
+GM0420,Medemblik,NL-NH
+GM0431,Oostzaan,NL-NH
+GM0432,Opmeer,NL-NH
+GM0437,Ouder-Amstel,NL-NH
+GM0439,Purmerend,NL-NH
+GM0441,Schagen,NL-NH
+GM0448,Texel,NL-NH
+GM0450,Uitgeest,NL-NH
+GM0451,Uithoorn,NL-NH
+GM0453,Velsen,NL-NH
+GM0473,Zandvoort,NL-NH
+GM0479,Zaanstad,NL-NH
+GM0482,Alblasserdam,NL-ZH
+GM0484,Alphen aan den Rijn,NL-ZH
+GM0489,Barendrecht,NL-ZH
+GM0498,Drechterland,NL-NH
+GM0502,Capelle aan den IJssel,NL-ZH
+GM0503,Delft,NL-ZH
+GM0505,Dordrecht,NL-ZH
+GM0512,Gorinchem,NL-ZH
+GM0513,Gouda,NL-ZH
+GM0518,'s-Gravenhage,NL-ZH
+GM0523,Hardinxveld-Giessendam,NL-ZH
+GM0531,Hendrik-Ido-Ambacht,NL-ZH
+GM0532,Stede Broec,NL-NH
+GM0534,Hillegom,NL-ZH
+GM0537,Katwijk,NL-ZH
+GM0542,Krimpen aan den IJssel,NL-ZH
+GM0546,Leiden,NL-ZH
+GM0547,Leiderdorp,NL-ZH
+GM0553,Lisse,NL-ZH
+GM0556,Maassluis,NL-ZH
+GM0569,Nieuwkoop,NL-ZH
+GM0575,Noordwijk,NL-ZH
+GM0579,Oegstgeest,NL-ZH
+GM0589,Oudewater,NL-UT
+GM0590,Papendrecht,NL-ZH
+GM0597,Ridderkerk,NL-ZH
+GM0599,Rotterdam,NL-ZH
+GM0603,Rijswijk (ZH.),NL-ZH
+GM0606,Schiedam,NL-ZH
+GM0610,Sliedrecht,NL-ZH
+GM0613,Albrandswaard,NL-ZH
+GM0622,Vlaardingen,NL-ZH
+GM0626,Voorschoten,NL-ZH
+GM0627,Waddinxveen,NL-ZH
+GM0629,Wassenaar,NL-ZH
+GM0632,Woerden,NL-UT
+GM0637,Zoetermeer,NL-ZH
+GM0638,Zoeterwoude,NL-ZH
+GM0642,Zwijndrecht,NL-ZH
+GM0654,Borsele,NL-ZE
+GM0664,Goes,NL-ZE
+GM0668,West Maas en Waal,NL-GE
+GM0677,Hulst,NL-ZE
+GM0678,Kapelle,NL-ZE
+GM0687,Middelburg (Z.),NL-ZE
+GM0703,Reimerswaal,NL-ZE
+GM0715,Terneuzen,NL-ZE
+GM0716,Tholen,NL-ZE
+GM0717,Veere,NL-ZE
+GM0718,Vlissingen,NL-ZE
+GM0736,De Ronde Venen,NL-UT
+GM0737,Tytsjerksteradiel,NL-FR
+GM0743,Asten,NL-NB
+GM0744,Baarle-Nassau,NL-NB
+GM0748,Bergen op Zoom,NL-NB
+GM0753,Best,NL-NB
+GM0755,Boekel,NL-NB
+GM0757,Boxtel,NL-NB
+GM0758,Breda,NL-NB
+GM0762,Deurne,NL-NB
+GM0765,Pekela,NL-GR
+GM0766,Dongen,NL-NB
+GM0770,Eersel,NL-NB
+GM0772,Eindhoven,NL-NB
+GM0777,Etten-Leur,NL-NB
+GM0779,Geertruidenberg,NL-NB
+GM0784,Gilze en Rijen,NL-NB
+GM0785,Goirle,NL-NB
+GM0794,Helmond,NL-NB
+GM0796,'s-Hertogenbosch,NL-NB
+GM0797,Heusden,NL-NB
+GM0798,Hilvarenbeek,NL-NB
+GM0809,Loon op Zand,NL-NB
+GM0820,"Nuenen, Gerwen en Nederwetten",NL-NB
+GM0823,Oirschot,NL-NB
+GM0824,Oisterwijk,NL-NB
+GM0826,Oosterhout,NL-NB
+GM0828,Oss,NL-NB
+GM0840,Rucphen,NL-NB
+GM0845,Sint-Michielsgestel,NL-NB
+GM0847,Someren,NL-NB
+GM0848,Son en Breugel,NL-NB
+GM0851,Steenbergen,NL-NB
+GM0852,Waterland,NL-NH
+GM0855,Tilburg,NL-NB
+GM0858,Valkenswaard,NL-NB
+GM0861,Veldhoven,NL-NB
+GM0865,Vught,NL-NB
+GM0866,Waalre,NL-NB
+GM0867,Waalwijk,NL-NB
+GM0873,Woensdrecht,NL-NB
+GM0879,Zundert,NL-NB
+GM0880,Wormerland,NL-NH
+GM0882,Landgraaf,NL-LI
+GM0888,Beek (L.),NL-LI
+GM0889,Beesel,NL-LI
+GM0893,Bergen (L.),NL-LI
+GM0899,Brunssum,NL-LI
+GM0907,Gennep,NL-LI
+GM0917,Heerlen,NL-LI
+GM0928,Kerkrade,NL-LI
+GM0935,Maastricht,NL-LI
+GM0938,Meerssen,NL-LI
+GM0944,Mook en Middelaar,NL-LI
+GM0946,Nederweert,NL-LI
+GM0957,Roermond,NL-LI
+GM0965,Simpelveld,NL-LI
+GM0971,Stein (L.),NL-LI
+GM0981,Vaals,NL-LI
+GM0983,Venlo,NL-LI
+GM0984,Venray,NL-LI
+GM0986,Voerendaal,NL-LI
+GM0988,Weert,NL-LI
+GM0994,Valkenburg aan de Geul,NL-LI
+GM0995,Lelystad,NL-FL
+GM1507,Horst aan de Maas,NL-LI
+GM1509,Oude IJsselstreek,NL-GE
+GM1525,Teylingen,NL-ZH
+GM1581,Utrechtse Heuvelrug,NL-UT
+GM1586,Oost Gelre,NL-GE
+GM1598,Koggenland,NL-NH
+GM1621,Lansingerland,NL-ZH
+GM1640,Leudal,NL-LI
+GM1641,Maasgouw,NL-LI
+GM1652,Gemert-Bakel,NL-NB
+GM1655,Halderberge,NL-NB
+GM1658,Heeze-Leende,NL-NB
+GM1659,Laarbeek,NL-NB
+GM1667,Reusel-De Mierden,NL-NB
+GM1669,Roerdalen,NL-LI
+GM1674,Roosendaal,NL-NB
+GM1676,Schouwen-Duiveland,NL-ZE
+GM1680,Aa en Hunze,NL-DR
+GM1681,Borger-Odoorn,NL-DR
+GM1690,De Wolden,NL-DR
+GM1695,Noord-Beveland,NL-ZE
+GM1696,Wijdemeren,NL-NH
+GM1699,Noordenveld,NL-DR
+GM1700,Twenterand,NL-OV
+GM1701,Westerveld,NL-DR
+GM1705,Lingewaard,NL-GE
+GM1706,Cranendonck,NL-NB
+GM1708,Steenwijkerland,NL-OV
+GM1709,Moerdijk,NL-NB
+GM1711,Echt-Susteren,NL-LI
+GM1714,Sluis,NL-ZE
+GM1719,Drimmelen,NL-NB
+GM1721,Bernheze,NL-NB
+GM1723,Alphen-Chaam,NL-NB
+GM1724,Bergeijk,NL-NB
+GM1728,Bladel,NL-NB
+GM1729,Gulpen-Wittem,NL-LI
+GM1730,Tynaarlo,NL-DR
+GM1731,Midden-Drenthe,NL-DR
+GM1734,Overbetuwe,NL-GE
+GM1735,Hof van Twente,NL-OV
+GM1740,Neder-Betuwe,NL-GE
+GM1742,Rijssen-Holten,NL-OV
+GM1771,Geldrop-Mierlo,NL-NB
+GM1773,Olst-Wijhe,NL-OV
+GM1774,Dinkelland,NL-OV
+GM1783,Westland,NL-ZH
+GM1842,Midden-Delfland,NL-ZH
+GM1859,Berkelland,NL-GE
+GM1876,Bronckhorst,NL-GE
+GM1883,Sittard-Geleen,NL-LI
+GM1884,Kaag en Braassem,NL-ZH
+GM1891,Dantumadiel,NL-FR
+GM1892,Zuidplas,NL-ZH
+GM1894,Peel en Maas,NL-LI
+GM1895,Oldambt,NL-GR
+GM1896,Zwartewaterland,NL-OV
+GM1900,Súdwest-Fryslân,NL-FR
+GM1901,Bodegraven-Reeuwijk,NL-ZH
+GM1903,Eijsden-Margraten,NL-LI
+GM1904,Stichtse Vecht,NL-UT
+GM1911,Hollands Kroon,NL-NH
+GM1916,Leidschendam-Voorburg,NL-ZH
+GM1924,Goeree-Overflakkee,NL-ZH
+GM1926,Pijnacker-Nootdorp,NL-ZH
+GM1930,Nissewaard,NL-ZH
+GM1931,Krimpenerwaard,NL-ZH
+GM1940,De Fryske Marren,NL-FR
+GM1942,Gooise Meren,NL-NH
+GM1945,Berg en Dal,NL-GE
+GM1948,Meierijstad,NL-NB
+GM1949,Waadhoeke,NL-FR
+GM1950,Westerwolde,NL-GR
+GM1952,Midden-Groningen,NL-GR
+GM1954,Beekdaelen,NL-LI
+GM1955,Montferland,NL-GE
+GM1959,Altena,NL-NB
+GM1960,West Betuwe,NL-GE
+GM1961,Vijfheerenlanden,NL-UT
+GM1963,Hoeksche Waard,NL-ZH
+GM1966,Het Hogeland,NL-GR
+GM1969,Westerkwartier,NL-GR
+GM1970,Noardeast-Fryslân,NL-FR
+GM1978,Molenlanden,NL-ZH
+GM1979,Eemsdelta,NL-GR
+GM1980,Dijk en Waard,NL-NH
+GM1982,Land van Cuijk,NL-NB
+GM1991,Maashorst,NL-NB
+GM1992,Voorne aan Zee,NL-ZH

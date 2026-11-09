@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\LocationProposalSnapshot;
 use App\Support\MunicipalSnapshot;
 use Aws\Exception\AwsException;
 use Aws\S3\Exception\S3Exception;
@@ -25,7 +26,7 @@ class DatasetDeliveryStorage
     }
 
     /** Bucket folder per target type; collectors deliver snapshots under these prefixes. */
-    public const array PREFIXES = ['municipal' => 'municipal/', 'offstreet' => 'offstreet/'];
+    public const array PREFIXES = ['municipal' => 'municipal/', 'offstreet' => 'offstreet/', 'proposals' => 'proposals/'];
 
     /** Dataset codes are lowercase folder names, such as `nl-amsterdam-garages`. */
     public const string DATASET_PATTERN = '/^[a-z0-9][a-z0-9-]{1,62}$/D';
@@ -171,6 +172,7 @@ class DatasetDeliveryStorage
 
     public function read(string $key, string $etag): string
     {
+        $limit = str_starts_with($key, self::PREFIXES['proposals']) ? LocationProposalSnapshot::MAX_BYTES : MunicipalSnapshot::MAX_BYTES;
         $result = $this->client->getObject([
             'Bucket' => $this->bucket(), 'Key' => $key, 'IfMatch' => $etag,
             '@http' => ['stream' => true],
@@ -178,12 +180,12 @@ class DatasetDeliveryStorage
         $stream = $result['Body'];
         try {
             $length = $result['ContentLength'] ?? 0;
-            if ($length < 1 || $length > MunicipalSnapshot::MAX_BYTES) {
+            if ($length < 1 || $length > $limit) {
                 throw ValidationException::withMessages(['file' => 'Delivery size is outside the allowed limit.']);
             }
             $json = '';
-            while (! $stream->eof() && strlen($json) <= MunicipalSnapshot::MAX_BYTES) {
-                $chunk = $stream->read(min(65536, MunicipalSnapshot::MAX_BYTES + 1 - strlen($json)));
+            while (! $stream->eof() && strlen($json) <= $limit) {
+                $chunk = $stream->read(min(65536, $limit + 1 - strlen($json)));
                 if ($chunk === '' && ! $stream->eof()) {
                     throw new \RuntimeException('Delivery stream stalled.');
                 }

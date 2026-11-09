@@ -14,7 +14,7 @@ class MunicipalProvenance
         if ($hours === null) {
             return 'unknown';
         }
-        $latest = $source->latestImport?->retrieved_at;
+        $latest = $source->last_proposal_retrieved_at ?? $source->latestImport?->retrieved_at;
         $expectedSince = $latest ?? $source->created_at;
         if ($expectedSince?->lt(now()->subHours($hours))) {
             return 'overdue';

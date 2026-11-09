@@ -40,7 +40,9 @@ export default function SourceSheet({ source, onClose }: Props) {
     }
 
     const awaitingApproval = source.approval_state !== 'approved';
-    const hasDeliveries = source.latest_import !== null || source.last_published_retrieved_at !== null;
+    const proposalSource = source.target_type === 'proposals';
+    const lastRetrieved = source.last_proposal_retrieved_at ?? source.latest_import?.retrieved_at;
+    const hasDeliveries = lastRetrieved != null || source.last_published_retrieved_at !== null;
     const alerts = (
         <>
             {source.status === 'intake_problem' && (
@@ -78,8 +80,10 @@ export default function SourceSheet({ source, onClose }: Props) {
             {(
                 [
                     [
-                        t('on_map'),
-                        source.last_published_retrieved_at ? (
+                        proposalSource ? t('sources_table.source_points') : t('on_map'),
+                        proposalSource ? (
+                            (source.last_proposal_source_count?.toLocaleString(i18n.language) ?? '—')
+                        ) : source.last_published_retrieved_at ? (
                             <span className="text-2xl font-semibold tabular-nums">
                                 {source.visible_locations_count.toLocaleString(i18n.language)}
                             </span>
@@ -87,10 +91,7 @@ export default function SourceSheet({ source, onClose }: Props) {
                             t('sources_table.not_published')
                         ),
                     ],
-                    [
-                        t('last_retrieved'),
-                        source.latest_import ? <MunicipalDateTime value={source.latest_import.retrieved_at} /> : t('sources_table.none'),
-                    ],
+                    [t('last_retrieved'), lastRetrieved ? <MunicipalDateTime value={lastRetrieved} /> : t('sources_table.none')],
                     [t('approval.fields.interval'), t('approval.hours', { count: description.expected_interval_hours })],
                 ] as const
             ).map(([label, value]) => (
@@ -112,17 +113,23 @@ export default function SourceSheet({ source, onClose }: Props) {
                     description.licence ?? t('approval.no_licence'),
                     description.licence ? undefined : 'text-destructive',
                 )}
-                {row(
-                    t('sources_table.municipality'),
-                    <>
-                        {source.municipality_name} <span className="text-muted-foreground">({source.municipality_code})</span>
-                    </>,
-                )}
-                {row(t('sources_table.area'), `${source.subdivision_name ?? source.subdivision}, ${source.country}`)}
-                {row(
-                    t('published_source_date'),
-                    source.last_published_retrieved_at ? <MunicipalDateTime value={source.last_published_retrieved_at} /> : t('sources_table.none'),
-                )}
+                {!proposalSource &&
+                    row(
+                        t('sources_table.municipality'),
+                        <>
+                            {source.municipality_name} <span className="text-muted-foreground">({source.municipality_code})</span>
+                        </>,
+                    )}
+                {row(t('sources_table.area'), [source.subdivision_name ?? source.subdivision, source.country].filter(Boolean).join(', '))}
+                {!proposalSource &&
+                    row(
+                        t('published_source_date'),
+                        source.last_published_retrieved_at ? (
+                            <MunicipalDateTime value={source.last_published_retrieved_at} />
+                        ) : (
+                            t('sources_table.none')
+                        ),
+                    )}
                 {row(t('approval.fields.attribution'), description.attribution, 'text-muted-foreground')}
             </dl>
             <div className="flex flex-wrap gap-x-5 gap-y-2 pt-1 text-sm">

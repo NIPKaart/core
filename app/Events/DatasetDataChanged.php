@@ -18,7 +18,7 @@ class DatasetDataChanged implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     /**
      * @param  'sources'|'deliveries'|'imports'|'observations'  $scope
-     * @param  'municipal'|'offstreet'|null  $targetType
+     * @param  'municipal'|'offstreet'|'proposals'|null  $targetType
      */
     public function __construct(public string $scope, public ?string $targetType = null) {}
 

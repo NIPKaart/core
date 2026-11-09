@@ -20,7 +20,7 @@ import { SOURCE_STATUSES, SourceStatus, SourceType, type SourceRow, type SourceS
 export type SourceFilters = {
     search: string;
     status: 'all' | 'attention' | SourceStatusKey;
-    type: 'all' | 'municipal' | 'offstreet';
+    type: 'all' | 'municipal' | 'offstreet' | 'proposals';
     country: string | null;
     /** Opens this source's detail sheet, for links from notifications. */
     source?: number | null;
@@ -84,7 +84,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                         <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{source.municipality_code}</span>
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                        {source.subdivision_name ?? source.subdivision}, {source.country}
+                        {[source.subdivision_name ?? source.subdivision, source.country].filter(Boolean).join(', ')}
                     </span>
                 </div>
             ),
@@ -98,7 +98,12 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
             id: 'locations',
             header: t('sources_table.locations'),
             cell: ({ row: { original: source } }) =>
-                source.last_published_retrieved_at ? (
+                source.target_type === 'proposals' ? (
+                    <span className="tabular-nums">
+                        {source.last_proposal_source_count?.toLocaleString(i18n.language) ?? '—'}{' '}
+                        <span className="text-muted-foreground">{t('sources_table.source_points')}</span>
+                    </span>
+                ) : source.last_published_retrieved_at ? (
                     <span className="tabular-nums">{source.visible_locations_count.toLocaleString(i18n.language)}</span>
                 ) : (
                     <span className="flex">
@@ -211,6 +216,7 @@ export default function SourceTable({ sources, summary, countries, filters }: Pr
                                     <SelectItem value="all">{t('sources_table.all_types')}</SelectItem>
                                     <SelectItem value="municipal">{t('sources_table.types.municipal')}</SelectItem>
                                     <SelectItem value="offstreet">{t('sources_table.types.offstreet')}</SelectItem>
+                                    <SelectItem value="proposals">{t('sources_table.types.proposals')}</SelectItem>
                                 </SelectContent>
                             </Select>
                             {countries.length > 1 && (

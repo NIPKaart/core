@@ -185,6 +185,7 @@
     },
     "unknown_name": "Voorziening zonder naam",
     "approval": {
+        "proposal_hint": "Keur deze bron goed om de leveringen te verwerken tot locatievoorstellen voor moderatoren.",
         "states": {
             "pending": "Wacht op goedkeuring",
             "rejected": "Bron afgewezen",
@@ -222,6 +223,7 @@
         "processing": "Leveringen worden verwerkt. Deze pagina werkt zichzelf bij."
     },
     "sources_table": {
+        "source_points": "Bronpunten",
         "source": "Bron",
         "area": "Gebied",
         "municipality": "Gemeente",
@@ -243,6 +245,7 @@
         "no_matches": "Geen bronnen gevonden met deze filters",
         "no_matches_hint": "Pas je zoekopdracht aan of wis de filters.",
         "types": {
+            "proposals": "Locatievoorstellen",
             "municipal": "Gemeentelijk",
             "offstreet": "Garage en P+R"
         },
@@ -254,6 +257,7 @@
             "live_stale": "Live gegevens gestopt"
         },
         "statuses": {
+            "processed": "Verwerkt",
             "awaiting_approval": "Wacht op goedkeuring",
             "reapproval": "Gewijzigd, opnieuw goedkeuren",
             "intake_problem": "Probleem bij intake",

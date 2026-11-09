@@ -8,6 +8,7 @@ use App\Models\DatasetDelivery;
 use App\Models\DatasetImport;
 use App\Models\DatasetSource;
 use App\Models\User;
+use App\Support\LocationProposalSnapshot;
 use App\Support\SourceDescription;
 use Aws\Exception\AwsException;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +24,7 @@ class DatasetDeliveryService
         private SourceRegistrar $registrar,
         private MunicipalProvenance $provenance,
         private DatasetDeliveryNotifications $notifications,
+        private LocationProposalIntake $proposals,
     ) {}
 
     public function upload(string $json, User $actor): DatasetImport
@@ -153,6 +155,9 @@ class DatasetDeliveryService
         DB::transaction(function () use ($id) {
             $delivery = DatasetDelivery::whereKey($id)->lockForUpdate()->firstOrFail();
             $source = DatasetSource::findOrFail($delivery->dataset_source_id);
+            if ($source->target_type === 'proposals') {
+                $source = DatasetSource::whereKey($source->id)->lockForUpdate()->firstOrFail();
+            }
             if ($delivery->state !== 'pending' || ! $source->isApproved()) {
                 return;
             }
@@ -164,24 +169,37 @@ class DatasetDeliveryService
             }
             try {
                 $json = $this->storage->read($delivery->object_key, $delivery->etag);
-                $importer = $this->imports->forSource($source);
-                $data = $importer->decodeDelivery($json);
-                if (SourceDescription::approvalFingerprint($data['source']) !== SourceDescription::approvalFingerprint($source->description)) {
+                $proposal = $source->target_type === 'proposals';
+                $snapshot = $proposal ? LocationProposalSnapshot::envelope($json) : null;
+                $importer = $proposal ? null : $this->imports->forSource($source);
+                $data = $snapshot['data'] ?? $importer->decodeDelivery($json);
+                if ($proposal && ($data['dataset'] !== $source->code || $data['delivery_id'] !== $deliveryId || $data['selection'] !== $source->selection)) {
+                    throw ValidationException::withMessages(['file' => 'Location proposal delivery does not match the registered source or object key.']);
+                }
+                $staleProposal = $proposal && $source->last_proposal_retrieved_at?->gte($data['retrieved_at']);
+                if (! $staleProposal && SourceDescription::approvalFingerprint($data['source']) !== SourceDescription::approvalFingerprint($source->description)) {
+                    if ($proposal) {
+                        $this->validateProposalPoints($json, $snapshot);
+                    }
                     // The delivery waits until an administrator approves the changed description.
                     $this->registrar->holdForReapproval($source, $data['source']);
 
                     return;
                 }
-                if ($data['source']['expected_interval_hours'] !== $source->expected_interval_hours) {
+                if ($proposal) {
+                    $this->proposals->apply($source, $json, $snapshot);
+                }
+                if (! $staleProposal && $data['source']['expected_interval_hours'] !== $source->expected_interval_hours) {
                     $source->forceFill(['expected_interval_hours' => $data['source']['expected_interval_hours'], 'description' => $data['source']])->save();
                 }
                 $delivery->received_at = now();
-                $import = $importer->intakeFromStorage($json, $source->code, $deliveryId);
+                $import = $importer?->intakeFromStorage($json, $source->code, $deliveryId);
+                $retrievedAt = $import?->retrieved_at ?? $data['retrieved_at'];
                 $lateAfter = $this->provenance->lateAfterHours($source);
                 $delivery->forceFill([
-                    'dataset_import_id' => $import->id, 'state' => 'validated',
+                    'dataset_import_id' => $import?->id, 'proposal_retrieved_at' => $proposal ? $retrievedAt : null, 'state' => 'validated',
                     'validated_at' => now(), 'error_code' => null,
-                    'late_on_receipt' => $lateAfter !== null && $import->retrieved_at->lt(now()->subHours($lateAfter)),
+                    'late_on_receipt' => $lateAfter !== null && $retrievedAt->lt(now()->subHours($lateAfter)),
                 ])->save();
             } catch (ValidationException) {
                 $delivery->forceFill(['state' => 'rejected', 'error_code' => 'invalid_delivery'])->save();
@@ -217,17 +235,32 @@ class DatasetDeliveryService
         }
         usort($objects, fn (array $a, array $b) => strcmp($b['modified'], $a['modified']));
         try {
-            $data = $this->imports->forTarget($type)->decodeDelivery($this->storage->read($objects[0]['key'], $objects[0]['etag']));
+            $json = $this->storage->read($objects[0]['key'], $objects[0]['etag']);
+            if ($type === 'proposals') {
+                $snapshot = LocationProposalSnapshot::envelope($json);
+                $data = $snapshot['data'];
+                $this->validateProposalPoints($json, $snapshot);
+            } else {
+                $data = $this->imports->forTarget($type)->decodeDelivery($json);
+            }
         } catch (ValidationException|AwsException $exception) {
             Log::warning('Dataset source could not be registered from its newest delivery.', ['key' => $objects[0]['key'], 'exception' => $exception::class]);
 
             return null;
         }
         $folder = $this->storage->prefix($type, $data['dataset']);
-        if ($folder === null || ! str_starts_with($objects[0]['key'], $folder)) {
+        if ($folder === null || ! str_starts_with($objects[0]['key'], $folder)
+            || ($type === 'proposals' && $this->storage->deliveryId($objects[0]['key'], $type, $data['dataset']) !== $data['delivery_id'])) {
             return null;
         }
 
         return $this->registrar->register($type, $data);
+    }
+
+    private function validateProposalPoints(string $json, array $snapshot): void
+    {
+        foreach (LocationProposalSnapshot::points($json, $snapshot['recordsOffset'], $snapshot['data']) as $_point) {
+            // Exhaust validation without retaining the point records.
+        }
     }
 }

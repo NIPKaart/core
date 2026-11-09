@@ -38,14 +38,15 @@ function bucketClient(): array
     return [$handler, $client];
 }
 
-/** Discovery first lists the dataset folders per type: municipal, then offstreet. */
+/** Discovery first lists the dataset folders per type: municipal, then offstreet and proposals. */
 function bucketFolders(MockHandler $handler, string ...$codes): void
 {
     $handler->append(new Result(['CommonPrefixes' => array_map(fn (string $code) => ['Prefix' => "municipal/$code/"], $codes), 'IsTruncated' => false]));
 }
 
-function bucketNoOffstreetFolders(MockHandler $handler): void
+function bucketNoOtherFolders(MockHandler $handler): void
 {
+    $handler->append(new Result(['IsTruncated' => false]));
     $handler->append(new Result(['IsTruncated' => false]));
 }
 
@@ -97,7 +98,7 @@ it('discovers every listing page and resumes registered but undispatched work', 
             ['Key' => $key, 'ETag' => '"next"'],
         ], 'IsTruncated' => false]);
     });
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     DB::enableQueryLog();
     try {
         $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
@@ -142,7 +143,7 @@ it('checks notified objects between full scans and reconciles missed or modified
 
     bucketFolders($handler, $source->code);
     $handler->append(new Result(['Contents' => [['Key' => $existing->object_key, 'ETag' => $existing->etag]], 'IsTruncated' => false]));
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
     Http::assertNothingSent();
 
@@ -162,7 +163,7 @@ it('checks notified objects between full scans and reconciles missed or modified
         ['Key' => $existing->object_key, 'ETag' => '"changed"'],
         ['Key' => $late, 'ETag' => '"late"'],
     ], 'IsTruncated' => false]));
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     $this->artisan('nipkaart:discover-deliveries')->assertSuccessful();
     Http::assertSentCount(2);
     expect($existing->fresh())->state->toBe('rejected')->error_code->toBe('object_changed')
@@ -176,7 +177,7 @@ it('leaves notifications unacknowledged when the object metadata cannot be read'
     $source = DatasetSource::factory()->create();
     $key = 'municipal/'.$source->code.'/'.Str::uuid().'.json';
     bucketFolders($handler);
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     $this->artisan('nipkaart:discover-deliveries --full')->assertSuccessful();
     Http::preventStrayRequests();
     Http::fake(['https://api.cloudflare.com/client/v4/accounts/account/queues/queue/messages/pull' => Http::response([
@@ -266,7 +267,7 @@ it('stops redispatching a missing object after the queued attempts are exhausted
     expect($delivery->fresh())->state->toBe('rejected')->error_code->toBe('object_missing')->dataset_import_id->toBeNull();
     $this->assertDatabaseCount('dataset_imports', 0);
     bucketFolders($handler);
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     app(DatasetDeliveryService::class)->discover();
     Queue::assertNothingPushed();
 });
@@ -316,7 +317,7 @@ it('resumes persisted discovery after a dispatch failure without inserting dupli
     $page = ['Contents' => [['Key' => $key, 'ETag' => '"etag"']], 'IsTruncated' => false];
     bucketFolders($handler, $source->code);
     $handler->append(new Result($page));
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     Queue::shouldReceive('connection')->andThrow(new RuntimeException('Queue unavailable'));
     expect(fn () => app(DatasetDeliveryService::class)->discover())->toThrow(RuntimeException::class);
     expect(DatasetDelivery::sole())->state->toBe('pending');
@@ -324,7 +325,7 @@ it('resumes persisted discovery after a dispatch failure without inserting dupli
     Queue::fake([ProcessDatasetDelivery::class]);
     bucketFolders($handler, $source->code);
     $handler->append(new Result($page));
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     app(DatasetDeliveryService::class)->discover();
     expect(DatasetDelivery::count())->toBe(1);
     Queue::assertPushed(ProcessDatasetDelivery::class, 1);
@@ -359,7 +360,7 @@ it('flags a changed immutable object rather than silently accepting new bytes', 
     $delivery = DatasetDelivery::factory()->create();
     bucketFolders($handler, 'nl-amsterdam');
     $handler->append(new Result(['Contents' => [['Key' => $delivery->object_key, 'ETag' => '"changed"']], 'IsTruncated' => false]));
-    bucketNoOffstreetFolders($handler);
+    bucketNoOtherFolders($handler);
     app(DatasetDeliveryService::class)->discover();
     expect($delivery->fresh())->state->toBe('rejected')->error_code->toBe('object_changed');
     Queue::assertNothingPushed();

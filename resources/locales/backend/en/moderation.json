@@ -1,4 +1,23 @@
 {
+    "proposals": {
+        "title": "Location proposals",
+        "description": "Review the source points that suggest accessible parking.",
+        "open": "Open",
+        "count_one": "{{count}} proposal",
+        "count_other": "{{count}} proposals",
+        "points_one": "{{count}} source point",
+        "points_other": "{{count}} source points",
+        "previous": "Previous",
+        "next": "Next",
+        "nearby": "Existing parking nearby",
+        "community": "Community parking space",
+        "municipal": "Municipal parking space",
+        "unknown_street": "Unknown street",
+        "none_nearby": "No existing parking nearby.",
+        "group": "Group proposals",
+        "group_help": "Use the imagery to confirm that both proposals refer to the same parking location.",
+        "choose": "Choose a nearby proposal"
+    },
     "title": "Moderation",
     "search": "Search by street, municipality or contributor",
     "tabs": {

@@ -36,7 +36,7 @@ class DatasetImportController extends Controller
             'q' => ['nullable', 'string', 'max:200'], 'state' => ['nullable', 'in:all,pending,published,rejected,superseded'],
             'dataset' => ['nullable', 'integer', 'exists:dataset_sources,id'], 'tab' => ['nullable', 'in:sources,deliveries'],
             'search' => ['nullable', 'string', 'max:200'], 'status' => ['nullable', Rule::in(['all', 'attention', ...SourceOverview::STATUSES])],
-            'type' => ['nullable', 'in:all,municipal,offstreet'], 'country' => ['nullable', 'string', 'size:2'],
+            'type' => ['nullable', 'in:all,municipal,offstreet,proposals'], 'country' => ['nullable', 'string', 'size:2'],
             'page' => ['nullable', 'integer', 'min:1'], 'source' => ['nullable', 'integer'],
         ]);
         $query = trim($request->string('q')->toString());
