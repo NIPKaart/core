@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { PaginatedResponse } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ListChecks, Search, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LocationProposals, SOURCE_COLOR, toLocationProposal, type ProposalRow } from './location-proposals';
@@ -100,8 +100,11 @@ export function QueueList({
         { key: 'normal', label: t('queue.oldest_first'), rows: rows.filter((item) => item.priority === 'normal') },
     ].filter((group) => group.rows.length > 0);
     const selectable = (item: QueueItem) => item.type !== 'report' && options.can[item.type];
-    const selecting = checked.length > 0;
+    /** On a touch screen there is no pointing at a row, so selecting starts with a button and a tap selects a row. */
+    const [selectMode, setSelectMode] = useState(false);
+    const selecting = checked.length > 0 || selectMode;
     const toggle = (key: string, on: boolean) => onCheck(on ? [...checked, key] : checked.filter((item) => item !== key));
+    const canSelect = rows.some(selectable);
     const filtered = Object.keys(query).length > 0;
 
     return (
@@ -113,6 +116,11 @@ export function QueueList({
                 filters={filters}
                 options={options}
                 onFilter={onFilter}
+                selectMode={canSelect ? selectMode : undefined}
+                onSelectMode={(on) => {
+                    setSelectMode(on);
+                    if (!on) onCheck([]);
+                }}
             />
 
             <div
@@ -139,21 +147,42 @@ export function QueueList({
                 )}
                 {groups.map((group) => (
                     <Fragment key={group.key}>
-                        <div className="flex justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
+                        <div className="flex min-h-8 items-center justify-between px-4.5 pt-3 pb-1.5 text-xs font-semibold text-muted-foreground">
                             <span>{group.label}</span>
-                            <span className="tabular-nums">{group.rows.length}</span>
+                            {selectMode && group.rows.some(selectable) ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const keys = group.rows.filter(selectable).map((item) => item.key);
+                                        const all = keys.every((key) => checked.includes(key));
+                                        onCheck(all ? checked.filter((key) => !keys.includes(key)) : [...new Set([...checked, ...keys])]);
+                                    }}
+                                    className="-my-2 h-10 cursor-pointer px-1 text-sm font-semibold text-blue-700 dark:text-blue-400"
+                                >
+                                    {group.rows.filter(selectable).every((item) => checked.includes(item.key))
+                                        ? t('queue.select_none')
+                                        : t('queue.select_all', { count: group.rows.filter(selectable).length })}
+                                </button>
+                            ) : (
+                                <span className="tabular-nums">{group.rows.length}</span>
+                            )}
                         </div>
                         <ul className="flex flex-col">
                             {group.rows.map((item) => {
                                 const isChecked = checked.includes(item.key);
+                                const inert = selectMode && !selectable(item);
                                 return (
                                     <li key={item.key} className="group/row relative border-t border-muted" onMouseEnter={() => onHover?.(item.key)}>
                                         <button
                                             type="button"
-                                            onClick={() => onOpen(item)}
+                                            onClick={() => (selectMode ? selectable(item) && toggle(item.key, !isChecked) : onOpen(item))}
                                             onFocus={() => onHover?.(item.key)}
+                                            aria-disabled={inert || undefined}
+                                            aria-pressed={selectMode && selectable(item) ? isChecked : undefined}
                                             className={cn(
-                                                'flex w-full cursor-pointer items-center gap-3 border-l-[3px] border-transparent py-2.5 pr-4 pl-[15px] text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                                                'flex w-full cursor-pointer items-center gap-3 border-l-[3px] border-transparent py-2.5 pr-4 pl-[15px] text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring max-lg:min-h-16',
+                                                selectMode && 'pr-14',
+                                                inert && 'cursor-default opacity-50 hover:bg-transparent',
                                                 isChecked &&
                                                     'border-blue-700 bg-blue-50 hover:bg-blue-50 dark:bg-blue-950/50 dark:hover:bg-blue-950/50',
                                             )}
@@ -181,8 +210,9 @@ export function QueueList({
                                                 onCheckedChange={(on) => toggle(item.key, !!on)}
                                                 aria-label={t('select_item', { place: item.street ?? t('no_address') })}
                                                 className={cn(
-                                                    'absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer bg-background',
-                                                    !selecting && 'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100',
+                                                    'absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer bg-background after:absolute after:-inset-3 pointer-coarse:size-6 pointer-coarse:rounded-md',
+                                                    !selecting &&
+                                                        'opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 pointer-coarse:hidden',
                                                 )}
                                             />
                                         )}
@@ -204,7 +234,7 @@ export function QueueList({
             </div>
 
             {footer || (
-                <div className="flex h-10 shrink-0 items-center gap-3.5 overflow-hidden border-t px-4.5 text-xs whitespace-nowrap text-muted-foreground">
+                <div className="flex h-10 shrink-0 items-center gap-3.5 overflow-hidden border-t px-4.5 text-xs whitespace-nowrap text-muted-foreground pointer-coarse:hidden">
                     <span className="flex items-center gap-1">
                         <Kbd>J</Kbd>
                         <Kbd>K</Kbd> {t('shortcuts.short.next')}
@@ -236,6 +266,8 @@ export function QueueHeader({
     filters,
     options,
     onFilter,
+    selectMode,
+    onSelectMode,
 }: {
     status: 'open' | 'decided';
     total: number;
@@ -243,6 +275,9 @@ export function QueueHeader({
     filters: Filters;
     options: Options;
     onFilter: (next: Partial<Filters>) => void;
+    /** Whether rows are being selected on a touch screen; left out when nothing in the list can be selected. */
+    selectMode?: boolean;
+    onSelectMode?: (on: boolean) => void;
 }) {
     const { t } = useTranslation('backend/moderation');
     const open = status === 'open';
@@ -281,9 +316,23 @@ export function QueueHeader({
 
     return (
         <div className="flex shrink-0 flex-col gap-3 px-4.5 pt-4.5 pb-3">
-            <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
-                <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+            <div className="flex items-center gap-3">
+                {/* On a touch screen the select button takes the right, so today's count moves below the title. */}
+                <div className="flex min-w-0 flex-1 items-baseline justify-between gap-3 pointer-coarse:flex-col pointer-coarse:gap-0.5">
+                    <h2 className="text-2xl font-bold tracking-[-0.02em]">{t('queue.label')}</h2>
+                    <span className="text-[13px] text-muted-foreground">{t('queue.decided_today', { count: decidedToday })}</span>
+                </div>
+                {open && selectMode !== undefined && (
+                    <Button
+                        variant={selectMode ? 'default' : 'secondary'}
+                        aria-pressed={selectMode}
+                        onClick={() => onSelectMode?.(!selectMode)}
+                        className="h-11 shrink-0 cursor-pointer rounded-[10px] pointer-fine:hidden"
+                    >
+                        {selectMode ? <Check aria-hidden /> : <ListChecks aria-hidden />}
+                        {t(selectMode ? 'queue.select_done' : 'queue.select')}
+                    </Button>
+                )}
             </div>
             <div className="flex gap-2">
                 <nav aria-label={t('tabs.label')} className="flex flex-1 rounded-[10px] bg-muted p-1">
@@ -296,7 +345,7 @@ export function QueueHeader({
                             prefetch
                             aria-current={status === tab ? 'page' : undefined}
                             className={cn(
-                                'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm',
+                                'flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-[7px] text-sm max-lg:h-10',
                                 status === tab
                                     ? 'bg-background font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.08)]'
                                     : 'font-medium text-muted-foreground hover:text-foreground',
@@ -310,7 +359,7 @@ export function QueueHeader({
                         <Link
                             href={app.moderation.proposals.index()}
                             prefetch
-                            className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                            className="flex h-[34px] flex-1 items-center justify-center rounded-[7px] px-1 text-sm font-medium text-muted-foreground hover:text-foreground max-lg:h-10"
                         >
                             {t('proposals.tab')}
                         </Link>
@@ -320,7 +369,7 @@ export function QueueHeader({
                     <Button
                         variant="outline"
                         size="icon"
-                        className="size-[42px] cursor-pointer rounded-[10px]"
+                        className="size-[42px] cursor-pointer rounded-[10px] max-lg:size-12"
                         aria-label={t('search')}
                         aria-pressed={searching}
                         onClick={() => {
@@ -411,12 +460,12 @@ export function PageLink({ href, label, icon: Icon }: { href: string | null; lab
             preserveScroll
             preserveState
             aria-label={label}
-            className="flex size-7 items-center justify-center rounded-md border hover:bg-muted"
+            className="flex size-7 items-center justify-center rounded-md border hover:bg-muted max-lg:size-10"
         >
             <Icon className="size-4" />
         </Link>
     ) : (
-        <span aria-hidden className="flex size-7 items-center justify-center rounded-md border opacity-40">
+        <span aria-hidden className="flex size-7 items-center justify-center rounded-md border opacity-40 max-lg:size-10">
             <Icon className="size-4" />
         </span>
     );
@@ -441,7 +490,7 @@ function FilterMenu({
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className="flex h-7 max-w-40 cursor-pointer items-center gap-1 rounded-[7px] border px-2.5 pr-2 text-[13px] font-medium whitespace-nowrap hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                    className="flex h-7 max-w-40 cursor-pointer items-center gap-1 rounded-[7px] border px-2.5 pr-2 text-[13px] font-medium whitespace-nowrap hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring max-lg:h-10 max-lg:max-w-48 max-lg:rounded-full max-lg:px-3.5 max-lg:text-sm"
                 >
                     <span className="truncate">{label}</span>
                     <ChevronDown className="size-[13px] shrink-0 text-neutral-400" aria-hidden />

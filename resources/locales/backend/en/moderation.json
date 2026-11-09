@@ -98,13 +98,13 @@
         "walk_stop": "Stop",
         "walk_position": "Sign {{index}} of {{total}}",
         "walk_question": "Are all bays at this sign already on the map?",
-        "walk_ok": "All on the map",
-        "walk_missing": "Bays are missing",
+        "walk_ok": "Yes, all on the map",
+        "walk_missing": "No, bays are missing",
         "walk_ok_key": "y",
         "walk_missing_key": "n",
         "walk_previous": "Previous sign",
         "walk_progress": "Progress",
-        "walk_status_ok": "All on the map",
+        "walk_status_ok": "All on the map, will close",
         "walk_status_missing": "Bays are missing, stays open",
         "walk_done": "Done going over",
         "walk_summary": "{{closing}} of {{total}} can be closed. The rest stays open to draw in.",
@@ -406,7 +406,12 @@
         "decided_today_other": "{{count}} decided today",
         "page": "{{from}}–{{to}} of {{total}}",
         "previous_page": "Previous page",
-        "next_page": "Next page"
+        "next_page": "Next page",
+        "select": "Select",
+        "select_done": "Done",
+        "select_none": "Select none",
+        "select_all_one": "Select",
+        "select_all_other": "Select all {{count}}"
     },
     "select_item": "Select {{place}}",
     "shortcuts": {
@@ -548,7 +553,8 @@
             "street_view": "Street View here",
             "new_tab": "opens in a new tab",
             "remove": "Remove"
-        }
+        },
+        "layers": "Map layers and legend"
     },
     "edit": {
         "title": "Edit details",

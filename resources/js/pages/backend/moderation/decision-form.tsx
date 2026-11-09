@@ -76,7 +76,7 @@ export function DecisionForm({
                         <label
                             key={option.value}
                             className={cn(
-                                'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-[10px] px-3 text-sm hover:bg-muted',
+                                'flex min-h-10 cursor-pointer items-center gap-2.5 rounded-[10px] px-3 text-sm hover:bg-muted max-lg:min-h-12 max-lg:text-[15px]',
                                 reason === option.value && 'bg-muted',
                             )}
                         >
@@ -111,12 +111,18 @@ export function DecisionForm({
                     <InputError message={errors.note} />
                 </div>
             </div>
-            <div className="flex shrink-0 gap-2 border-t px-5 py-4">
-                <Button type="button" variant="outline" size="lg" className="cursor-pointer" onClick={onCancel}>
+            <div className="flex shrink-0 gap-2 border-t px-5 py-4 max-lg:px-4 max-lg:py-3">
+                <Button type="button" variant="outline" size="lg" className="cursor-pointer max-lg:h-12 max-lg:rounded-xl" onClick={onCancel}>
                     {t('decide.cancel')}
                     <Kbd aria-hidden>Esc</Kbd>
                 </Button>
-                <Button type="submit" variant="destructive" size="lg" className="flex-1 cursor-pointer" disabled={!reason || processing}>
+                <Button
+                    type="submit"
+                    variant="destructive"
+                    size="lg"
+                    className="flex-1 cursor-pointer max-lg:h-12 max-lg:rounded-xl"
+                    disabled={!reason || processing}
+                >
                     {t(`decide.${kind}.confirm`)}
                     <Kbd inverted aria-hidden>
                         ↵

@@ -98,13 +98,13 @@
         "walk_stop": "Stoppen",
         "walk_position": "Bord {{index}} van {{total}}",
         "walk_question": "Staan alle vakken bij dit bord al op de kaart?",
-        "walk_ok": "Alles staat erop",
-        "walk_missing": "Er missen vakken",
+        "walk_ok": "Ja, alles staat erop",
+        "walk_missing": "Nee, er missen vakken",
         "walk_ok_key": "j",
         "walk_missing_key": "n",
         "walk_previous": "Vorig bord",
         "walk_progress": "Voortgang",
-        "walk_status_ok": "Alles staat erop",
+        "walk_status_ok": "Alles staat erop, gaat dicht",
         "walk_status_missing": "Er missen vakken, blijft open",
         "walk_done": "Klaar met nalopen",
         "walk_summary": "{{closing}} van {{total}} kunnen dicht. De rest blijft open om in te tekenen.",
@@ -406,7 +406,12 @@
         "decided_today_other": "Vandaag {{count}} afgehandeld",
         "page": "{{from}}–{{to}} van {{total}}",
         "previous_page": "Vorige pagina",
-        "next_page": "Volgende pagina"
+        "next_page": "Volgende pagina",
+        "select": "Selecteren",
+        "select_done": "Klaar",
+        "select_none": "Niets selecteren",
+        "select_all_one": "Selecteren",
+        "select_all_other": "Alle {{count}} selecteren"
     },
     "select_item": "{{place}} selecteren",
     "shortcuts": {
@@ -548,7 +553,8 @@
             "street_view": "Street View hier",
             "new_tab": "opent in een nieuw tabblad",
             "remove": "Verwijderen"
-        }
+        },
+        "layers": "Kaartlagen en legenda"
     },
     "edit": {
         "title": "Gegevens bewerken",

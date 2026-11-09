@@ -17,7 +17,7 @@ function setup(reducedMotion = false) {
     const previous = { current: null };
     const map = {
         getZoom: () => 20,
-        project: ([lat, lng]) => ({ subtract: ([x]) => ({ lat, lng: lng - x }) }),
+        project: ([lat, lng]) => ({ subtract: ([x, y]) => ({ lat: lat - y, lng: lng - x }) }),
         unproject: (point) => point,
         setView: (point, zoom, options) => views.push({ point, zoom, ...options }),
     };
@@ -59,6 +59,17 @@ test('opening and closing the editor pans smoothly and preserves the map zoom', 
     assert.equal(views[2].point.lng, 5 - 452 / 2);
 });
 
+test('on a small screen the item sits in the middle of the map above the sheet, and lowering the sheet pans to it', () => {
+    const { views, render } = setup();
+    render({ inset: 0, insetBottom: 380 });
+    render({ inset: 0, insetBottom: 256 });
+
+    assert.equal(views[0].point.lat, 52 + 380 / 2);
+    assert.equal(views[0].animate, false);
+    assert.equal(views[1].point.lat, 52 + 256 / 2);
+    assert.equal(views[1].animate, true);
+});
+
 test('reduced motion opens the editor without an animated map pan', () => {
     const { views, render } = setup(true);
     render();
@@ -92,7 +103,7 @@ test('the overview legend lists visible marker types once and distinguishes muni
     assert.equal(legend([]).length, 0);
 });
 
-test('the legend sits in the top right between the layer switch and the links, not with the zoom buttons', () => {
+function renderMap(props) {
     const context = {
         exports: {},
         window: { matchMedia: () => ({ matches: false }) },
@@ -106,7 +117,8 @@ test('the legend sits in the top right between the layer switch and the links, n
                     useMemo: (fn) => fn(),
                     useState: (value) => [value === null ? {} : value, () => {}],
                 };
-            if (name === 'react/jsx-runtime') return { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+            if (name === 'react/jsx-runtime')
+                return { Fragment: 'fragment', jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             return {};
@@ -117,15 +129,37 @@ test('the legend sits in the top right between the layer switch and the links, n
         center: { latitude: 52, longitude: 5 },
         layer: 'streets',
         nearby: [{ latitude: 52, longitude: 5 }],
-        controls: 'layer switch',
-        links: 'street view',
+        ...props,
     });
     const corners = [tree.props.children].flat().filter((node) => node?.props?.className?.includes('absolute'));
+    const flat = (nodes) => [nodes].flat().flatMap((node) => (node?.type === 'fragment' ? flat(node.props.children) : node ? [node] : []));
     const top = corners.find((node) => node.props.className.includes('top-3'));
     const bottom = corners.find((node) => node.props.className.includes('bottom-7'));
-    const children = [top.props.children].flat();
-    assert.equal(children[0], 'layer switch');
-    assert.equal(children[1].type.name, 'MapLegend');
-    assert.equal(children[2], 'street view');
+    return { top: flat(top.props.children), bottom };
+}
+
+test('the legend sits in the top right between the layer switch and the links, not with the zoom buttons', () => {
+    const { top, bottom } = renderMap({ controls: 'layer switch', links: 'street view' });
+    assert.equal(top[0], 'layer switch');
+    assert.equal(top[1].type.name, 'MapLegend');
+    assert.equal(top[2], 'street view');
     assert.ok(![bottom.props.children].flat().some((node) => node?.type?.name === 'MapLegend'));
+});
+
+test('on a small screen one menu takes the legend, so there is no separate legend button', () => {
+    let received;
+    const { top } = renderMap({
+        controls: (legend) => {
+            received = legend;
+            return 'layers menu';
+        },
+        links: 'street view',
+    });
+    assert.deepEqual([...top], ['layers menu', 'street view']);
+    assert.equal(JSON.stringify(received.map((item) => item.key)), '["community"]');
+});
+
+test('the map buttons stay above the sheet that covers the bottom of the map', () => {
+    assert.equal(renderMap({ insetBottom: 380 }).bottom.props.style.bottom, 392);
+    assert.equal(renderMap({}).bottom.props.style, undefined);
 });
