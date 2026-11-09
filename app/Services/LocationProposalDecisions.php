@@ -57,7 +57,6 @@ final class LocationProposalDecisions
                 'municipality' => $point->municipality,
                 'source' => $point->source,
                 'last_seen_on' => $point->source_last_seen_on,
-                'reported_bays' => $proposal->reported_bays,
                 'total_bays' => $total,
                 'orientation' => $first?->orientation?->value,
                 'under_sign' => $first?->under_sign?->value,

@@ -4,14 +4,12 @@ return [
     'proposal' => [
         'rejected' => 'Locatievoorstel afgewezen.',
         'reopened' => 'Locatievoorstel heropend.',
-        'reason_required' => 'Kies waarom je minder vakken toevoegt dan gemeld.',
         'existing_required' => 'Kies een bestaande parkeerplaats op de kaart.',
         'duplicates_closed' => '{0} Niets gesloten; deze voorstellen waren al afgehandeld of hebben geen parkeerplaats binnen 3 meter.|{1} :count voorstel gesloten.|[2,*] :count voorstellen gesloten.',
         'duplicates_reopened' => '{0} Niets heropend.|{1} :count voorstel heropend.|[2,*] :count voorstellen heropend.',
         'duplicate' => 'Plaats elk parkeervak op een eigen positie.',
         'changed' => 'Het voorstel is gewijzigd. Open het opnieuw en controleer de bronpunten.',
         'invalid_point' => 'Dit parkeervak moet bij een actief bronpunt van dit voorstel liggen.',
-        'already_added' => 'Aan een van deze voorstellen zijn al parkeervakken toegevoegd.',
     ],
     'validation' => [
         'orientation_required' => 'Kies een oriëntatie voor de parkeerplaats.',

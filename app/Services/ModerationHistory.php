@@ -229,7 +229,6 @@ final class ModerationHistory
                     'reopen_revision' => $activeProposals->has($proposal) && $current->get($proposal) === $decision->id ? $closed->get($proposal) : null,
                     'source' => $evidence['source'] ?? null,
                     'last_seen_on' => $evidence['last_seen_on'] ?? null,
-                    'reported_bays' => $evidence['reported_bays'] ?? null,
                     'total_bays' => $evidence['total_bays'] ?? count($evidence['bays']),
                     'orientation' => ParkingOrientation::tryFrom($evidence['orientation'] ?? '')?->label(),
                     'under_sign' => UnderSign::tryFrom($evidence['under_sign'] ?? '')?->label(),

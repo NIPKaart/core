@@ -139,9 +139,7 @@ function useDecisionText() {
     return (row: HistoryRow): string => {
         const proposal = row.proposal;
         if (proposal && row.decision === 'completed') {
-            return proposal.reported_bays !== null && proposal.total_bays < proposal.reported_bays
-                ? t('history.proposal_partial', { count: proposal.total_bays, reported: proposal.reported_bays })
-                : t('history.proposal_added', { count: proposal.total_bays });
+            return t('history.proposal_added', { count: proposal.total_bays });
         }
 
         return row.decision === 'approved' && row.corrected ? t('decisions.approved_corrected') : t(`decisions.${row.decision}`);
@@ -183,9 +181,7 @@ export function DecisionPane({ row, options, onBack }: { row: HistoryRow; option
                     {[
                         row.municipality,
                         row.proposal?.source
-                            ? row.proposal.reported_bays === null
-                                ? t('history.proposal_source', { source: row.proposal.source })
-                                : t('history.proposal_source_reported', { source: row.proposal.source, count: row.proposal.reported_bays })
+                            ? t('history.proposal_source', { source: row.proposal.source })
                             : (row.contributor ?? (row.reports ? t('history.reports', { count: row.reports }) : null)),
                     ]
                         .filter(Boolean)

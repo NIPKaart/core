@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import app from '@/routes/app';
 import type { PaginatedResponse, RestrictionDay } from '@/types';
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ArrowRight, CircleCheck, Undo2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -48,7 +48,6 @@ type Props = {
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
         maxBays: number;
-        completionReasons: EnumOption[];
         rejectionReasons: EnumOption[];
     };
     selected: {
@@ -56,10 +55,8 @@ type Props = {
         pointId: number;
         municipality: string;
         points: Point[];
-        candidates: Point[];
         published: boolean;
         revision: number;
-        reportedBays: number | null;
         canReject: boolean;
         publishedBays: PublishedBay[];
         imagery: AerialLayer[];
@@ -102,9 +99,6 @@ export default function Proposals({
     const query = { ...(municipality ? { municipality } : {}), page: proposals?.current_page };
     const [walk, setWalk] = useState<Walk | null>(null);
     const [closing, setClosing] = useState(false);
-    const [grouping, setGrouping] = useState<{ proposal: number; candidate: string } | null>(null);
-    const candidate =
-        grouping?.proposal === selected?.id ? selected?.candidates.find((point) => String(point.proposal_id) === grouping?.candidate) : undefined;
 
     const reviewQuery = { ...query, ...(selected ? { point: selected.pointId } : {}), ...(fromQueue ? { from: 'queue' as const } : {}) };
     const rows = proposals?.data.map(toLocationProposal) ?? [];
@@ -140,7 +134,6 @@ export default function Proposals({
               id: selected.id,
               municipality: selected.municipality,
               status: selected.published ? 'added' : 'open',
-              bayCount: selected.reportedBays,
               points: selected.points,
           })
         : null;
@@ -160,85 +153,10 @@ export default function Proposals({
     );
     const selectedPoint = review?.points.find((point) => point.id === selected?.pointId);
 
-    const groups = selected && (
-        <>
-            <section aria-labelledby="proposal-on-map" className="flex flex-col gap-2">
-                <h3 id="proposal-on-map" className="text-sm font-semibold">
-                    {t('proposals.on_map')}
-                </h3>
-                {(() => {
-                    const close = [
-                        ...selected.community.map((place) => ({ ...place, source: 'community' as const })),
-                        ...selected.municipal.map((place) => ({ ...place, source: 'municipal' as const })),
-                    ]
-                        .filter((place) => place.possible_duplicate)
-                        .sort((a, b) => a.distance_metres - b.distance_metres);
-
-                    return close.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">{t('proposals.on_map_none_hint')}</p>
-                    ) : (
-                        <ul className="divide-y overflow-hidden rounded-xl border bg-muted/40 text-sm">
-                            {close.map((place) => (
-                                <li key={`${place.source}:${place.id}`} className="flex items-center gap-3 px-3 py-2.5">
-                                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                                        <span className="font-medium">{place.street ?? t('proposals.unknown_street')}</span>
-                                        <span className="text-[13px] text-muted-foreground">
-                                            <ExistingLine source={place.source} distance={null} />
-                                        </span>
-                                    </span>
-                                    <span className="text-[13px] text-muted-foreground tabular-nums">
-                                        {t('proposals.overlap_distance', { count: place.distance_metres })}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    );
-                })()}
-            </section>
-            {selected.candidates.length > 0 && (
-                <Form action={routes.group(selected.id, { query: reviewQuery })} className="space-y-2">
-                    {({ processing, errors }) => (
-                        <>
-                            <label className="block text-sm font-semibold" htmlFor="group-with">
-                                {t('proposals.group')}
-                            </label>
-                            <p className="text-sm text-muted-foreground">{t('proposals.group_help')}</p>
-                            <select
-                                id="group-with"
-                                name="with"
-                                required
-                                value={candidate?.proposal_id ?? ''}
-                                onChange={(event) => setGrouping({ proposal: selected.id, candidate: event.target.value })}
-                                className="w-full rounded-md border bg-background p-2 text-sm"
-                            >
-                                <option value="" disabled>
-                                    {t('proposals.choose')}
-                                </option>
-                                {selected.candidates.map((point) => (
-                                    <option key={point.id} value={point.proposal_id}>
-                                        #{point.proposal_id} · {point.latitude.toFixed(5)}, {point.longitude.toFixed(5)}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.with && (
-                                <p role="alert" className="text-sm text-destructive">
-                                    {errors.with}
-                                </p>
-                            )}
-                            <Button type="submit" variant="outline" disabled={processing}>
-                                {t('proposals.group')}
-                            </Button>
-                        </>
-                    )}
-                </Form>
-            )}
-        </>
-    );
-
     return (
         <AppLayout
             breadcrumbs={[
-                { title: t('queue.label'), href: app.moderation.index.url() },
+                { title: t('title'), href: app.moderation.index.url() },
                 { title: t('proposals.title'), href: overview.url },
             ]}
         >
@@ -256,8 +174,6 @@ export default function Proposals({
                         community={selected.community}
                         municipal={selected.municipal}
                         decision={selected.decision}
-                        comparison={candidate}
-                        group={groups}
                         query={reviewQuery}
                         nextUrl={next?.url}
                         onPointChange={(point) => router.visit(routes.index({ query: { ...reviewQuery, proposal: selected.id, point } }))}
@@ -460,8 +376,7 @@ export default function Proposals({
                                                             action={
                                                                 <Button
                                                                     variant="outline"
-                                                                    size="sm"
-                                                                    className="h-9"
+                                                                    className="h-10 w-full"
                                                                     onClick={() => setWalk({ index: 0, answers: {} })}
                                                                 >
                                                                     {t('proposals.walk_start')}

@@ -155,14 +155,10 @@ it('rolls back already written bays and approvals if a confirmation fails', func
     Notification::assertNothingSent();
 });
 
-it('stores partial decisions and records a new decision when more bays are added after reopening', function () {
+it('stores the decision and records a new decision when more bays are added after reopening', function () {
     fakeReverseGeocoding($this->municipality);
-    DB::table('location_proposals')->where('id', $this->proposal)->update(['reported_bays' => 4]);
     DB::table('location_proposal_points')->where('id', $this->proposal)->update(['source_last_seen_on' => '2026-10-01']);
-    $this->actingAs($this->moderator)->postJson($this->url, $this->payload)->assertJsonValidationErrors('reason');
-    $this->assertDatabaseCount('parking_spaces', 0);
-    $this->post($this->url, [...$this->payload, 'revision' => 0, 'reason' => 'not_visible', 'note' => 'Tree obscures the bay'])
-        ->assertRedirect($this->detail);
+    $this->actingAs($this->moderator)->post($this->url, [...$this->payload, 'revision' => 0])->assertRedirect($this->detail);
     ParkingSpaceReview::factory()->create([
         'reviewed_by' => $this->moderator->id,
         'reviewed_at' => now()->subMinute(),
@@ -172,8 +168,8 @@ it('stores partial decisions and records a new decision when more bays are added
     $history = route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']);
     $this->get($history)->assertInertia(fn (Assert $page) => $page
         ->where('history.data.0.type', 'proposal')->where('history.data.0.decision', 'completed')
-        ->where('history.data.0.note', 'Tree obscures the bay')->where('history.data.0.reviewer', $this->moderator->name)
-        ->where('history.data.0.proposal.reported_bays', 4)->where('history.data.0.proposal.last_seen_on', '2026-10-01')
+        ->where('history.data.0.reason', null)->where('history.data.0.reviewer', $this->moderator->name)
+        ->where('history.data.0.proposal.last_seen_on', '2026-10-01')
         ->has('history.data.0.proposal.bays', 3)->where('history.data.0.proposal.reopen_revision', 1)
         ->where('history.data.0.latitude', 52.011)->where('history.data.0.longitude', 4.36001));
 
@@ -329,6 +325,7 @@ it('rejects a proposal with an attributable decision and requires a public space
 })->with(['not_a_disabled_bay', 'duplicate']);
 
 it('backfills an existing publication with its original moderator, timestamp and under-sign details', function () {
+    (require database_path('migrations/2026_11_09_140619_drop_reported_bays_from_location_proposals_table.php'))->down();
     $migration = require database_path('migrations/2026_11_09_004927_create_location_proposal_decisions_table.php');
     $migration->down();
 

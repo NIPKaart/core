@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
-import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, MousePointer2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ModerationMap, type MapLayer, type MapPoint } from './moderation-map';
@@ -56,10 +56,13 @@ export function Workspace({
     label,
     aside,
     asideLabel,
+    mapHint,
     children,
 }: {
     scope: 'item' | 'overview';
     map: MapProps;
+    /** What a click on the map does now, as a label over the map. */
+    mapHint?: string;
     /** Where Street View should open, for an item. */
     streetView?: MapPoint | null;
     imageryLayers?: AerialLayer[];
@@ -115,6 +118,18 @@ export function Workspace({
                         </Button>
                     )}
                 </div>
+                {mapHint && (
+                    <p
+                        role="status"
+                        className={cn(
+                            'pointer-events-none absolute bottom-3 left-1/2 z-500 flex h-8 -translate-x-1/2 items-center gap-2 rounded-full bg-neutral-900 px-3 text-[13px] font-medium whitespace-nowrap text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] lg:bottom-8',
+                            aside ? 'lg:left-[calc(50%_+_424px)]' : 'lg:left-[calc(50%_+_226px)]',
+                        )}
+                    >
+                        <MousePointer2 className="size-[15px]" aria-hidden />
+                        {mapHint}
+                    </p>
+                )}
             </ModerationMap>
             <section
                 aria-label={label}

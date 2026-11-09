@@ -16,12 +16,12 @@ function find(node, predicate) {
     return predicate(node) ? node : find(node.props.children, predicate);
 }
 
-function editor(reported_bays = null) {
+function editor() {
     const states = [];
     const requests = [];
     const storage = new Map();
     const point = { id: 15, latitude: 52.011, longitude: 4.36, last_seen: null };
-    const proposal = { id: 23, points: [point], status: 'open', source: 'NDW', street: 'Delft', reported_bays };
+    const proposal = { id: 23, points: [point], status: 'open', source: 'NDW', street: 'Delft · #23', municipality: 'Delft' };
     let hook = 0;
     let uuid = 0;
     const jsx = (type, props) => ({ type, props });
@@ -52,7 +52,7 @@ function editor(reported_bays = null) {
                 ];
             },
         },
-        '@inertiajs/react': { router: { post: (url, data, options) => requests.push({ url, data, options }) } },
+        '@inertiajs/react': { Link: 'Link', router: { post: (url, data, options) => requests.push({ url, data, options }) } },
         'react-i18next': { useTranslation: () => ({ t: (key) => key, i18n: { language: 'en' } }) },
         '@/routes/app': {
             default: {
@@ -80,7 +80,7 @@ function editor(reported_bays = null) {
     };
     vm.runInNewContext(compiled('location-proposals.tsx'), context);
     return {
-        render({ published = false, publishedBays = [], close = true, decision = null } = {}) {
+        render({ published = false, publishedBays = [], close = true, decision = null, nextUrl } = {}) {
             hook = 0;
             return context.exports.LocationProposalReview({
                 selection: { proposal: { ...proposal, status: published ? 'added' : 'open' }, point },
@@ -89,7 +89,6 @@ function editor(reported_bays = null) {
                     orientations: [],
                     restrictionDays: [],
                     maxBays: 20,
-                    completionReasons: [{ value: 'not_visible', label: 'Not visible' }],
                     rejectionReasons: [{ value: 'duplicate', label: 'Already exists' }],
                 },
                 revision: 0,
@@ -112,6 +111,7 @@ function editor(reported_bays = null) {
                 query: {},
                 publishedBays,
                 decision,
+                nextUrl,
                 onBack() {},
             });
         },
@@ -197,27 +197,13 @@ test('publishes the whole pilot batch and keeps draggable drafts until Core conf
     action(view, 'proposals.back_to_queue');
 });
 
-test('a partial completion sends a reason without saving it in the local draft', () => {
-    const screen = editor(2);
-    element(screen.render(), 'Workspace').props.map.onPlace({ latitude: 52.011, longitude: 4.36 });
-    action(screen.render(), 'proposals.to_details').props.onClick();
-    element(screen.render(), 'DetailsStep').props.setData('orientation', 'parallel');
-    element(screen.render(), 'DetailsStep').props.setData('under_sign', 'no');
-    action(screen.render(), 'proposals.check').props.onClick();
-    assert.equal(action(screen.render(), 'proposals.complete_with').props.disabled, true);
-    find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
-    action(screen.render(), 'proposals.complete_with').props.onClick();
-    assert.equal(screen.requests[0].data.reason, 'not_visible');
-    assert.ok(![...screen.storage.values()][0].includes('not_visible'));
-});
-
 for (const [source, field] of [
     ['community', 'existing_parking_space_id'],
     ['municipal', 'existing_parking_municipal_id'],
 ]) {
     test(`duplicate rejection can select a ${source} space on the map`, () => {
         const screen = editor();
-        action(screen.render(), 'proposals.reject_title').props.onClick();
+        action(screen.render(), 'proposals.nothing_found').props.onClick();
         find(screen.render(), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
         const view = screen.render();
         assert.equal(action(view, 'proposals.reject_title').props.disabled, true);
@@ -230,15 +216,52 @@ for (const [source, field] of [
     });
 }
 
-test('counts parking within 3 m as already on the map, and a sign without it as nothing nearby', () => {
-    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map'));
-    assert.ok(find(editor().render(), (node) => node.props.children === 'proposals.on_map_count'));
-    assert.ok(find(editor().render({ close: false }), (node) => node.props.children === 'proposals.on_map_none'));
+test('arrives with the municipality as title and a hint on the map', () => {
+    const view = editor().render();
+    assert.ok(find(view, (node) => node.type === 'h2' && node.props.children === 'Delft'));
+    assert.equal(element(view, 'Workspace').props.mapHint, 'proposals.map_hint');
+    assert.equal(
+        find(view, (node) => node.props.children === 'proposals.next_proposal'),
+        undefined,
+    );
+});
+
+test('removes a bay while placing, but only checks bays in the last step', () => {
+    const screen = editor();
+    element(screen.render(), 'Workspace').props.map.onPlace({ latitude: 52.011, longitude: 4.36 });
+    let view = screen.render();
+    assert.equal(element(view, 'Workspace').props.mapHint, undefined);
+    assert.equal(typeof element(view, 'Workspace').props.map.onRemoveBay, 'function');
+    assert.ok(find(view, (node) => node.props?.['aria-label'] === 'proposals.remove'));
+
+    action(view, 'proposals.to_details').props.onClick();
+    element(screen.render(), 'DetailsStep').props.setData('orientation', 'parallel');
+    element(screen.render(), 'DetailsStep').props.setData('under_sign', 'no');
+    action(screen.render(), 'proposals.check').props.onClick();
+    view = screen.render();
+    assert.equal(
+        find(view, (node) => node.props?.['aria-label'] === 'proposals.remove'),
+        undefined,
+    );
+    assert.ok(find(view, (node) => node.props?.['aria-label'] === 'proposals.street_view'));
+});
+
+test('after publishing, the footer leads on to the next proposal, or back to the queue when none is left', () => {
+    const screen = editor();
+    const publishedBays = [{ latitude: 52.011, longitude: 4.36, number: 1 }];
+    const withNext = screen.render({ published: true, publishedBays, nextUrl: '/moderation/proposals?after=23' });
+    assert.ok(find(withNext, (node) => node.type === 'Link' && node.props.href === '/moderation/proposals?after=23'));
+    assert.equal(
+        find(withNext, (node) => node.type === 'Button' && node.props.children === 'proposals.back_to_queue'),
+        undefined,
+    );
+
+    action(screen.render({ published: true, publishedBays }), 'proposals.back_to_queue');
 });
 
 test('a duplicate further than 3 m away can still be chosen when closing the proposal', () => {
     const screen = editor();
-    action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
+    action(screen.render({ close: false }), 'proposals.nothing_found').props.onClick();
     find(screen.render({ close: false }), (node) => node.type === 'input' && node.props.name === 'proposal-reason').props.onChange();
     element(screen.render({ close: false }), 'Workspace').props.map.onPick('community:other-space');
     action(screen.render({ close: false }), 'proposals.reject_title').props.onClick();
@@ -285,12 +308,12 @@ test('a decided proposal links to its bays on the map, or to the existing space 
         reason: 'Not visible',
         latitude: 52.011,
         longitude: 4.36,
-        proposal: { source: 'NDW', total_bays: 1, reported_bays: 2, bays: [{ id: 'bay', number: 1, url: '/map?place=community:bay' }] },
+        proposal: { source: 'NDW', total_bays: 1, bays: [{ id: 'bay', number: 1, url: '/map?place=community:bay' }] },
     };
     const { DecisionPane, DecisionLabel } = context.exports;
 
     const label = DecisionLabel({ row });
-    assert.ok(find(label, (node) => node.props.children === 'history.proposal_partial'));
+    assert.ok(find(label, (node) => node.props.children === 'history.proposal_added'));
     assert.match(find(label, (node) => node.props.children === row.reason).props.className, /\bblock\b/);
 
     assert.equal(element(DecisionPane({ row, options: {} }), 'a').props.href, '/map?place=community:bay');

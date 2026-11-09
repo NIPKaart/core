@@ -20,7 +20,7 @@ use App\Services\LocationProposalQueue;
 use App\Services\ModerationEvidence;
 use App\Services\ParkingLocationResolver;
 use App\Support\GeoPoint;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -34,8 +34,6 @@ use Inertia\Response;
 
 class LocationProposalController extends Controller
 {
-    private const int GROUP_RADIUS_METRES = 150;
-
     private const int BAY_RADIUS_METRES = 150;
 
     private const int NEARBY_PLACES_LIMIT = 30;
@@ -112,7 +110,6 @@ class LocationProposalController extends Controller
                 'orientations' => ParkingOrientation::mapped(),
                 'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
                 'maxBays' => PublishLocationProposalRequest::MAX_BAYS,
-                'completionReasons' => $this->reasonOptions(Reason::completion()),
                 'rejectionReasons' => $this->reasonOptions(Reason::rejection()),
             ],
         ]);
@@ -162,11 +159,6 @@ class LocationProposalController extends Controller
             $prior = ParkingSpace::withTrashed()->where('location_proposal_id', $proposal)->get();
             $total = $prior->whereNull('deleted_at')->where('status', ParkingStatus::APPROVED)->count() + count($bays);
             $number = (int) $prior->max('location_proposal_bay_number');
-            $reason = Reason::tryFrom($request->validated('reason') ?? '');
-            $partial = $locked->reported_bays !== null && $total < $locked->reported_bays;
-            if ($partial && $reason === null) {
-                throw ValidationException::withMessages(['reason' => __('parking_spaces.proposal.reason_required')]);
-            }
             $publishedAt = now();
             $moderator = $request->user();
             $details = $request->parkingSpaceDetails();
@@ -204,8 +196,7 @@ class LocationProposalController extends Controller
                 $created[] = $space;
             }
 
-            $this->decisions->record($locked, $point, $moderator, $publishedAt, $partial ? $reason : null,
-                $partial ? $request->validated('note') : null, $created, $total);
+            $this->decisions->record($locked, $point, $moderator, $publishedAt, null, null, $created, $total);
         });
 
         return to_route('app.moderation.proposals.index', $return);
@@ -371,14 +362,14 @@ class LocationProposalController extends Controller
         return array_map(fn (Reason $reason): array => ['value' => $reason->value, 'label' => $reason->label()], $reasons);
     }
 
-    private function nearbyCommunity(object $point): \Illuminate\Database\Eloquent\Builder
+    private function nearbyCommunity(object $point): Builder
     {
         $location = new GeoPoint($point->latitude, $point->longitude);
 
         return ParkingSpace::query()->select('id', 'street', 'latitude', 'longitude')->where('status', ParkingStatus::APPROVED)->withinRadius($location, 250)->nearestTo($location);
     }
 
-    private function nearbyMunicipal(object $point): \Illuminate\Database\Eloquent\Builder
+    private function nearbyMunicipal(object $point): Builder
     {
         $location = new GeoPoint($point->latitude, $point->longitude);
 
@@ -425,33 +416,6 @@ class LocationProposalController extends Controller
         DatasetSource::whereIn('id', $sources)->orderBy('id')->lockForUpdate()->get(['id']);
     }
 
-    public function group(Request $request, int $proposal): RedirectResponse
-    {
-        $this->authorizeModeration();
-        $data = $request->validate(['with' => ['required', 'integer', 'min:1', 'not_in:'.$proposal]]);
-        $other = (int) $data['with'];
-
-        DB::transaction(function () use ($proposal, $other): void {
-            $this->lockSources([$proposal, $other]);
-            if (DB::table('location_proposals')->whereIn('id', [$proposal, $other])->where(fn (Builder $query) => $query->whereNotNull('bays_published_at')->orWhere('decision_revision', '>', 0))->exists()) {
-                throw ValidationException::withMessages(['with' => __('parking_spaces.proposal.already_added')]);
-            }
-            // The source lock serializes grouping with snapshot reconciliation.
-            $points = $this->proposalPoints($proposal);
-            $anchor = $points->first();
-            abort_if($anchor === null, 404);
-            if (! $this->groupCandidates($anchor)->where('point.location_proposal_id', $other)->exists()) {
-                throw ValidationException::withMessages(['with' => __('The other proposal is no longer available for grouping.')]);
-            }
-
-            DB::table('location_proposal_points')->where('location_proposal_id', $other)
-                ->where('municipality_id', $anchor->municipality_id)
-                ->update(['location_proposal_id' => $proposal]);
-        });
-
-        return to_route('app.moderation.proposals.index', ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])]);
-    }
-
     private function detail(int $id, ?int $pointId, AerialImagery $imagery): array
     {
         $points = $this->proposalPoints($id);
@@ -471,9 +435,6 @@ class LocationProposalController extends Controller
         $closed = $record->closed_at !== null;
         $publishedBays = $record->bays_published_at !== null ? ParkingSpace::query()->where('location_proposal_id', $id)
             ->where('status', ParkingStatus::APPROVED)->orderBy('location_proposal_bay_number')->get(['id', 'latitude', 'longitude', 'location_proposal_bay_number as number']) : [];
-        $candidates = $closed || $record->decision_revision > 0 ? [] : $this->groupCandidates($anchor)
-            ->orderBy('point.id')->limit(20)->get(['point.*', 'source.name as source'])
-            ->unique('location_proposal_id')->map(fn (object $point): array => $this->queue->pointData($point))->values();
 
         return [
             'id' => $id,
@@ -481,10 +442,8 @@ class LocationProposalController extends Controller
             'municipality' => $anchor->municipality,
             'municipalityId' => $anchor->municipality_id,
             'points' => $points->map(fn (object $point): array => $this->queue->pointData($point)),
-            'candidates' => $candidates,
             'published' => $closed,
             'revision' => $record->decision_revision,
-            'reportedBays' => $record->reported_bays,
             'canReject' => $record->bays_published_at === null,
             'publishedBays' => $publishedBays,
             'community' => $community->map($nearbyPlace)->all(),
@@ -533,16 +492,6 @@ class LocationProposalController extends Controller
             ->join('municipalities as municipality', 'municipality.id', '=', 'point.municipality_id')
             ->select('point.*', 'source.name as source', 'municipality.name as municipality')
             ->selectRaw("source.description->'area'->>'country' AS country")->get();
-    }
-
-    private function groupCandidates(object $anchor): Builder
-    {
-        return $this->queue->activePoints()->where('point.municipality_id', $anchor->municipality_id)
-            ->where('point.location_proposal_id', '<>', $anchor->location_proposal_id)
-            ->whereIn('point.location_proposal_id', DB::table('location_proposals')->where('decision_revision', 0)->select('id'))
-            ->where('point.dataset_source_id', $anchor->dataset_source_id)
-            ->whereRaw('ST_DWithin(ST_SetSRID(ST_MakePoint(point.longitude, point.latitude), 4326)::geography, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)',
-                [$anchor->longitude, $anchor->latitude, self::GROUP_RADIUS_METRES]);
     }
 
     private function authorizeModeration(): void

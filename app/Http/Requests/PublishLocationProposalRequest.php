@@ -2,11 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\LocationProposalDecisionReason;
 use App\Models\ParkingSpace;
 use App\Traits\ValidatesParkingSpaceDetails;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class PublishLocationProposalRequest extends FormRequest
@@ -30,8 +28,6 @@ class PublishLocationProposalRequest extends FormRequest
             'bays.*.longitude' => ['required', 'numeric', 'between:-180,180'],
             'bays.*.source_point_id' => ['required', 'integer', 'min:1'],
             'revision' => ['sometimes', 'integer', 'min:0'],
-            'reason' => ['nullable', Rule::enum(LocationProposalDecisionReason::class)->only(LocationProposalDecisionReason::completion())],
-            'note' => ['nullable', 'string', 'max:500'],
             ...$this->parkingSpaceDetailRules(),
         ];
     }
