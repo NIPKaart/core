@@ -3,6 +3,7 @@ import { DataTablePagination } from '@/components/tables/data-paginate';
 import { DataTable } from '@/components/tables/data-table';
 import { DataTableFacetFilter } from '@/components/tables/data-table-facet-filter';
 import type { DataTableFeatures } from '@/components/tables/features';
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -25,8 +26,8 @@ import {
     itemUrl,
     type Filters,
     type HistoryRow,
+    type HistoryType,
     type ItemLink,
-    type ItemType,
     type Options,
     type Position,
     type QueueItem,
@@ -59,6 +60,7 @@ type PageProps = {
 export default function Index({ status, locationProposals, filters, items, history, selected, position, decidedToday, options }: PageProps) {
     const { t } = useTranslation('backend/moderation');
     const open = status === 'open';
+    const historyTypes = options.historyTypes;
     const query = filterQuery(filters);
     const [viewing, setViewing] = useState<HistoryRow | null>(null);
     const [checked, setChecked] = useState<string[]>([]);
@@ -183,7 +185,10 @@ export default function Index({ status, locationProposals, filters, items, histo
                                 <Link
                                     key={tab}
                                     href={app.moderation.index({
-                                        query: tab === 'decided' ? { ...(query.type ? { type: query.type } : {}), status: 'decided' } : query,
+                                        query:
+                                            tab === 'decided'
+                                                ? { ...(query.type ? { type: query.type } : {}), status: 'decided' }
+                                                : filterQuery({ ...filters, types: filters.types.filter((type) => type !== 'proposal') }),
                                     })}
                                     aria-current={status === tab ? 'page' : undefined}
                                     className={cn(
@@ -195,12 +200,12 @@ export default function Index({ status, locationProposals, filters, items, histo
                                 </Link>
                             ))}
                         </nav>
-                        {options.types.length > 1 && (
+                        {historyTypes.length > 1 && (
                             <DataTableFacetFilter
                                 title={t('filters.type')}
                                 selected={filters.types}
-                                options={options.types.map((type) => ({ value: type, label: t(`types.${type}`) }))}
-                                onChange={(next) => visit({ types: next as ItemType[] })}
+                                options={historyTypes.map((type) => ({ value: type, label: t(`types.${type}`) }))}
+                                onChange={(next) => visit({ types: next as HistoryType[] })}
                                 onClear={() => visit({ types: [] })}
                             />
                         )}
@@ -214,7 +219,7 @@ export default function Index({ status, locationProposals, filters, items, histo
     );
 }
 
-function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; onView: (row: HistoryRow) => void }) {
+export function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; onView: (row: HistoryRow) => void }) {
     const { t } = useTranslation('backend/moderation');
     const ago = useAgo();
 
@@ -225,8 +230,8 @@ function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; 
             header: t('columns.place'),
             cell: ({ row }) => (
                 <span>
-                    <span className="font-medium">{row.original.street || t('no_address')}</span>
-                    {row.original.municipality && <span className="text-muted-foreground"> · {row.original.municipality}</span>}
+                    <span className="block font-medium">{row.original.street || t('no_address')}</span>
+                    {row.original.municipality && <span className="block text-muted-foreground">{row.original.municipality}</span>}
                 </span>
             ),
         },
@@ -236,8 +241,9 @@ function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; 
             header: t('columns.reviewer'),
             meta: { align: 'right' },
             cell: ({ row }) => (
-                <span className="text-muted-foreground">
-                    {row.original.reviewer ?? t('unknown_user')} · {ago(row.original.decided_at)}
+                <span>
+                    <span className="block">{row.original.reviewer ?? t('unknown_user')}</span>
+                    <span className="block text-muted-foreground">{ago(row.original.decided_at)}</span>
                 </span>
             ),
         },
@@ -260,21 +266,35 @@ function History({ history, onView }: { history: PaginatedResponse<HistoryRow>; 
 
 function DecisionLabel({ row }: { row: HistoryRow }) {
     const { t } = useTranslation('backend/moderation');
-    const positive = row.decision === 'approved' || row.decision === 'kept';
-    const label = row.decision === 'approved' && row.corrected ? t('decisions.approved_corrected') : t(`decisions.${row.decision}`);
+    const positive = row.decision === 'approved' || row.decision === 'kept' || row.decision === 'completed';
+    const proposal = row.proposal;
+    const label =
+        proposal && row.decision === 'completed'
+            ? proposal.reported_bays !== null && proposal.total_bays < proposal.reported_bays
+                ? t('history.proposal_partial', { count: proposal.total_bays, reported: proposal.reported_bays })
+                : t('history.proposal_added', { count: proposal.total_bays })
+            : row.decision === 'approved' && row.corrected
+              ? t('decisions.approved_corrected')
+              : t(`decisions.${row.decision}`);
 
     return (
-        <span className="inline-flex items-center gap-2">
-            <span className={cn('size-2 rounded-full', positive ? 'bg-green-600' : 'bg-red-600')} aria-hidden />
-            {row.reason ? `${label} · ${row.reason}` : label}
+        <span className="flex items-baseline gap-2">
+            <span className={cn('size-2 shrink-0 rounded-full', positive ? 'bg-green-600' : 'bg-red-600')} aria-hidden />
+            <span>
+                <span className="block">{label}</span>
+                {row.reason && <span className="block text-muted-foreground">{row.reason}</span>}
+            </span>
         </span>
     );
 }
 
 /** A decided item: the decision, its reason and note, and for an improvement what was submitted and applied. */
-function DecisionSheet({ row, options, onClose }: { row: HistoryRow | null; options: Options; onClose: () => void }) {
-    const { t } = useTranslation('backend/moderation');
+export function DecisionSheet({ row, options, onClose }: { row: HistoryRow | null; options: Options; onClose: () => void }) {
+    const { t, i18n } = useTranslation('backend/moderation');
     const format = useValueFormatter(options);
+    const [reopening, setReopening] = useState(false);
+    const [failure, setFailure] = useState<string | null>(null);
+    useEffect(() => setFailure(null), [row?.key]);
     const ago = useAgo();
 
     return (
@@ -288,12 +308,82 @@ function DecisionSheet({ row, options, onClose }: { row: HistoryRow | null; opti
                             </div>
                             <SheetTitle>{[row.street, row.municipality].filter(Boolean).join(', ') || t('no_address')}</SheetTitle>
                             <SheetDescription>
-                                {row.contributor ?? (row.reports ? t('history.reports', { count: row.reports }) : null)}
+                                {row.proposal?.source
+                                    ? row.proposal.reported_bays === null
+                                        ? t('history.proposal_source', { source: row.proposal.source })
+                                        : t('history.proposal_source_reported', { source: row.proposal.source, count: row.proposal.reported_bays })
+                                    : (row.contributor ?? (row.reports ? t('history.reports', { count: row.reports }) : null))}
                             </SheetDescription>
                         </SheetHeader>
                         <div className="flex flex-col gap-5 overflow-y-auto px-4 pb-6 text-sm">
                             <DecisionLabel row={row} />
                             {row.note && <p className="rounded-md bg-muted px-3 py-2">“{row.note}”</p>}
+                            {row.proposal && (
+                                <>
+                                    {row.proposal.bays.length > 0 && (
+                                        <section className="space-y-2">
+                                            <h3 className="text-xs text-muted-foreground">{t('history.proposal_bays')}</h3>
+                                            <ul className="divide-y rounded-lg border">
+                                                {row.proposal.bays.map((bay) => (
+                                                    <li key={bay.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                                                        <span>{t('proposals.bay', { number: bay.number })}</span>
+                                                        {bay.url && (
+                                                            <a className="underline" href={bay.url}>
+                                                                {t('review.on_map')}
+                                                            </a>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </section>
+                                    )}
+                                    {row.proposal.existing_url && (
+                                        <a className="underline" href={row.proposal.existing_url}>
+                                            {t('history.proposal_duplicate')}
+                                        </a>
+                                    )}
+                                    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                                        {row.proposal.orientation && (
+                                            <>
+                                                <dt className="text-muted-foreground">{t('proposals.summary.orientation')}</dt>
+                                                <dd>{row.proposal.orientation}</dd>
+                                            </>
+                                        )}
+                                        {row.proposal.under_sign && (
+                                            <>
+                                                <dt className="text-muted-foreground">{t('proposals.summary.under_sign')}</dt>
+                                                <dd>
+                                                    {row.proposal.restriction || row.proposal.under_sign}
+                                                    {row.proposal.parking_time !== null && (
+                                                        <span className="block">
+                                                            {t('history.proposal_minutes', { count: row.proposal.parking_time })}
+                                                        </span>
+                                                    )}
+                                                    {row.proposal.restriction_starts_at && row.proposal.restriction_ends_at && (
+                                                        <span className="block">
+                                                            {row.proposal.restriction_days?.join(', ')}{' '}
+                                                            {row.proposal.restriction_starts_at.slice(0, 5)}–
+                                                            {row.proposal.restriction_ends_at.slice(0, 5)}
+                                                        </span>
+                                                    )}
+                                                </dd>
+                                            </>
+                                        )}
+                                        {row.proposal.last_seen_on && (
+                                            <>
+                                                <dt className="text-muted-foreground">{t('map.source_point')}</dt>
+                                                <dd>
+                                                    {t('proposals.seen', {
+                                                        date: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long', timeZone: 'UTC' }).format(
+                                                            new Date(row.proposal.last_seen_on),
+                                                        ),
+                                                    })}
+                                                </dd>
+                                            </>
+                                        )}
+                                    </dl>
+                                </>
+                            )}
                             {row.type === 'improvement' && row.changes && (
                                 <dl className="flex flex-col gap-4">
                                     {row.changes.map((group) => {
@@ -321,6 +411,33 @@ function DecisionSheet({ row, options, onClose }: { row: HistoryRow | null; opti
                             <p className="text-xs text-muted-foreground">
                                 {t('history.decided', { reviewer: row.reviewer ?? t('unknown_user'), ago: ago(row.decided_at) })}
                             </p>
+                            {row.proposal?.reopen_revision != null && (
+                                <Button
+                                    variant="outline"
+                                    className="self-start"
+                                    disabled={reopening}
+                                    onClick={() => {
+                                        if (!row.proposal) return;
+                                        setReopening(true);
+                                        setFailure(null);
+                                        router.post(
+                                            app.moderation.proposals.reopen.url(row.proposal.id),
+                                            { revision: row.proposal.reopen_revision },
+                                            {
+                                                onError: (errors) => setFailure(Object.values(errors)[0] ?? null),
+                                                onFinish: () => setReopening(false),
+                                            },
+                                        );
+                                    }}
+                                >
+                                    {t('history.proposal_reopen')}
+                                </Button>
+                            )}
+                            {failure && (
+                                <p role="alert" className="text-destructive">
+                                    {failure}
+                                </p>
+                            )}
                         </div>
                     </>
                 )}

@@ -5,11 +5,14 @@ use App\Enums\ParkingStatus;
 use App\Enums\UserRole;
 use App\Models\Country;
 use App\Models\DatasetSource;
+use App\Models\LocationProposalDecision;
 use App\Models\Municipality;
 use App\Models\ParkingSpace;
 use App\Models\ParkingSpaceConfirmation;
+use App\Models\ParkingSpaceReview;
 use App\Models\Province;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -58,10 +61,12 @@ it('publishes all bays with an attributable approval and existence confirmation 
         ->where('locationProposals.0.id', $this->proposal)->where('locationProposals.0.status', 'open'));
     $this->post($this->url, $this->payload)->assertRedirect($this->detail);
     $this->post($this->url, $this->payload)->assertRedirect($this->detail);
+    $this->postJson($this->url, [...$this->payload, 'bays' => array_slice($this->payload['bays'], 0, 1)])
+        ->assertJsonValidationErrors('decision');
     $this->get($this->detail)->assertInertia(fn (Assert $page) => $page
-        ->where('proposals.data.0.status', 'added')->where('selected.published', true)->has('selected.publishedBays', 3)
+        ->has('proposals.data', 0)->where('selected.published', true)->has('selected.publishedBays', 3)
         ->where('selected.publishedBays.0.number', 1)->where('selected.publishedBays.2.number', 3));
-    $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('items.total', 0));
+    $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('items.total', 0)->has('locationProposals', 0));
 
     $spaces = ParkingSpace::with(['reviews', 'confirmations'])->get();
     expect($spaces)->toHaveCount(3);
@@ -123,4 +128,112 @@ it('rolls back already written bays and approvals if a confirmation fails', func
     $this->assertDatabaseCount('parking_space_confirmations', 0);
     $this->assertDatabaseHas('location_proposals', ['id' => $this->proposal, 'bays_published_at' => null]);
     Notification::assertNothingSent();
+});
+
+it('stores partial decisions and records a new decision when more bays are added after reopening', function () {
+    fakeReverseGeocoding($this->municipality);
+    DB::table('location_proposals')->where('id', $this->proposal)->update(['reported_bays' => 4]);
+    DB::table('location_proposal_points')->where('id', $this->proposal)->update(['source_last_seen_on' => '2026-10-01']);
+    $this->actingAs($this->moderator)->postJson($this->url, $this->payload)->assertJsonValidationErrors('reason');
+    $this->assertDatabaseCount('parking_spaces', 0);
+    $this->post($this->url, [...$this->payload, 'revision' => 0, 'reason' => 'not_visible', 'note' => 'Tree obscures the bay'])
+        ->assertRedirect($this->detail);
+    ParkingSpaceReview::factory()->create([
+        'reviewed_by' => $this->moderator->id,
+        'reviewed_at' => now()->subMinute(),
+    ]);
+    $this->get(route('app.moderation.index', ['status' => 'decided']))->assertInertia(fn (Assert $page) => $page
+        ->has('history.data', 2)->where('history.data.0.type', 'proposal')->where('history.data.1.type', 'submission'));
+    $history = route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']);
+    $this->get($history)->assertInertia(fn (Assert $page) => $page
+        ->where('history.data.0.type', 'proposal')->where('history.data.0.decision', 'completed')
+        ->where('history.data.0.note', 'Tree obscures the bay')->where('history.data.0.reviewer', $this->moderator->name)
+        ->where('history.data.0.proposal.reported_bays', 4)->where('history.data.0.proposal.last_seen_on', '2026-10-01')
+        ->has('history.data.0.proposal.bays', 3)->where('history.data.0.proposal.reopen_revision', 1));
+
+    $this->post(route('app.moderation.proposals.reopen', $this->proposal), ['revision' => 1])->assertRedirect($this->detail);
+    $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->where('locationProposals.0.id', $this->proposal));
+    $this->postJson($this->url, [...$this->payload, 'revision' => 0])->assertJsonValidationErrors('decision');
+    $this->travel(1)->seconds();
+    $this->post($this->url, [...$this->payload, 'revision' => 2, 'bays' => [
+        ['latitude' => 52.01103, 'longitude' => 4.36004, 'source_point_id' => $this->proposal],
+    ]])->assertRedirect($this->detail);
+    expect(ParkingSpace::where('location_proposal_id', $this->proposal)->count())->toBe(4);
+    $this->get($history)->assertInertia(fn (Assert $page) => $page
+        ->has('history.data', 2)->where('history.data.0.proposal.total_bays', 4)
+        ->has('history.data.0.proposal.bays', 1)->where('history.data.0.proposal.bays.0.number', 4)
+        ->where('history.data.1.proposal.total_bays', 3)->where('history.data.1.proposal.reopen_revision', null));
+});
+
+it('rejects a proposal with an attributable decision and requires a public space for duplicates', function (string $reason) {
+    $url = route('app.moderation.proposals.reject', $this->proposal);
+    $payload = ['revision' => 0, 'reason' => $reason, 'note' => 'Reviewed on the map'];
+    $existing = null;
+    $this->actingAs($this->moderator);
+    if ($reason === 'duplicate') {
+        $this->postJson($url, $payload)->assertJsonValidationErrors('existing_parking_space_id');
+        $space = ParkingSpace::factory()->create(['latitude' => 52.011, 'longitude' => 4.36001, 'status' => ParkingStatus::PENDING]);
+        $payload['existing_parking_space_id'] = $space->id;
+        $this->postJson($url, $payload)->assertJsonValidationErrors('existing_parking_space_id');
+        $space->update(['status' => ParkingStatus::APPROVED]);
+        $existing = $space->id;
+    }
+    $this->post($url, $payload)->assertRedirect(route('app.moderation.proposals.index'));
+    $this->postJson($url, $payload)->assertJsonValidationErrors('decision');
+    $this->assertDatabaseHas('location_proposal_decisions', [
+        'location_proposal_id' => $this->proposal, 'outcome' => 'rejected', 'reason' => $reason,
+        'moderator_id' => $this->moderator->id, 'existing_parking_space_id' => $existing,
+    ]);
+    $this->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page->has('locationProposals', 0));
+    $this->get(route('app.moderation.index', ['status' => 'decided', 'type' => 'proposal']))->assertInertia(fn (Assert $page) => $page
+        ->where('history.data.0.decision', 'rejected')
+        ->where('history.data.0.proposal.existing_url', $existing === null ? null : fn (string $url) => str_contains($url, $existing)));
+})->with(['not_a_disabled_bay', 'duplicate']);
+
+it('backfills an existing publication with its original moderator, timestamp and under-sign details', function () {
+    $migration = require database_path('migrations/2026_11_09_004927_create_location_proposal_decisions_table.php');
+    $migration->down();
+
+    $publishedAt = Carbon::parse('2026-11-08T19:15:00+01:00');
+    DB::table('location_proposals')->where('id', $this->proposal)->update([
+        'bays_published_at' => $publishedAt->toIso8601String(),
+    ]);
+    $bay = ParkingSpace::factory()->create([
+        'orientation' => 'parallel',
+        'under_sign' => 'yes',
+        'under_sign_text' => 'Max. 90 min',
+        'parking_time' => 90,
+        'restriction_days' => ['mon'],
+        'restriction_starts_at' => '09:00',
+        'restriction_ends_at' => '18:00',
+        'status' => ParkingStatus::APPROVED,
+    ]);
+    $bay->forceFill([
+        'location_proposal_id' => $this->proposal,
+        'location_proposal_point_id' => $this->proposal,
+        'location_proposal_bay_number' => 1,
+    ])->save();
+    $bay->reviews()->create([
+        'reviewed_by' => $this->moderator->id,
+        'from_status' => null,
+        'to_status' => ParkingStatus::APPROVED,
+        'reviewed_at' => $publishedAt->copy()->utc(),
+    ]);
+
+    $migration->up();
+
+    $decision = LocationProposalDecision::sole();
+    expect($decision)->moderator_id->toBe($this->moderator->id)
+        ->outcome->toBe('completed')
+        ->decided_at->toEqual($publishedAt);
+    expect($decision->evidence)->toMatchArray([
+        'under_sign' => 'yes',
+        'restriction' => 'Max. 90 min',
+        'parking_time' => 90,
+        'restriction_days' => ['mon'],
+        'restriction_starts_at' => '09:00:00',
+        'restriction_ends_at' => '18:00:00',
+        'bays' => [['id' => $bay->id, 'number' => 1]],
+    ]);
+    expect(Carbon::parse(DB::table('location_proposals')->find($this->proposal)->closed_at))->toEqual($publishedAt);
 });

@@ -4,6 +4,7 @@ import type { CommunityPointsProfile, Contributor } from './parts';
 import type { ChangeGroup, EnumOption, ImprovementValues } from './values';
 
 export type ItemType = 'submission' | 'improvement' | 'report';
+export type HistoryType = ItemType | 'proposal';
 
 type RouteParams = { parking_space: string } | { improvement: number } | { source: 'community' | 'municipal'; id: string };
 
@@ -104,8 +105,8 @@ export type Position = { index: number; total: number; previous: ItemLink | null
 /** One decided item, as ModerationHistory lists it. */
 export type HistoryRow = {
     key: string;
-    type: ItemType;
-    decision: 'approved' | 'rejected' | 'kept' | 'removed';
+    type: HistoryType;
+    decision: 'approved' | 'rejected' | 'kept' | 'removed' | 'completed';
     street: string | null;
     municipality: string | null;
     contributor: string | null;
@@ -120,12 +121,30 @@ export type HistoryRow = {
     previous?: Partial<ImprovementValues>;
     submitted?: Partial<ImprovementValues>;
     applied?: Partial<ImprovementValues>;
+    proposal?: {
+        id: number;
+        reopen_revision: number | null;
+        source: string | null;
+        last_seen_on: string | null;
+        reported_bays: number | null;
+        total_bays: number;
+        orientation: string | null;
+        under_sign: string | null;
+        restriction: string | null;
+        parking_time: number | null;
+        restriction_days: RestrictionDay[] | null;
+        restriction_starts_at: string | null;
+        restriction_ends_at: string | null;
+        bays: { id: string; number: number; url: string | null }[];
+        existing_url: string | null;
+    };
 };
 
-export type Filters = { types: ItemType[]; municipality_ids: string[]; search: string | null };
+export type Filters = { types: HistoryType[]; municipality_ids: string[]; search: string | null };
 
 export type Options = {
     types: ItemType[];
+    historyTypes: HistoryType[];
     municipalities: { id: number; name: string }[];
     /** With the description the add flow shows on its choice cards. */
     orientations: (EnumOption & { description: string })[];

@@ -1,5 +1,13 @@
 {
     "proposals": {
+        "reject_title": "Reject proposal",
+        "pick_duplicate": "Select the existing community parking space on the map or in the list",
+        "decision_note": "Decision note (optional)",
+        "partial_reason_one": "Missing bay? Choose a reason",
+        "partial_reason_other": "Missing bays? Choose a reason",
+        "complete_with_one": "Complete with {{count}} bay",
+        "complete_with_other": "Complete with {{count}} bays",
+        "resume_later": "Resume later",
         "added": "Added",
         "added_count_one": "{{count}} bay added and published.",
         "added_count_other": "{{count}} bays added and published.",
@@ -109,6 +117,7 @@
         "municipality": "Municipality"
     },
     "types": {
+        "proposal": "Location proposal",
         "submission": "New",
         "improvement": "Improvement",
         "report": "Gone"
@@ -148,6 +157,7 @@
         "reporters_other": "{{count}} reporters"
     },
     "decisions": {
+        "completed": "Completed",
         "approved": "Approved",
         "approved_corrected": "Approved, adjusted",
         "rejected": "Rejected",
@@ -186,6 +196,17 @@
         "label": "Selection"
     },
     "history": {
+        "proposal_added_one": "{{count}} bay added",
+        "proposal_added_other": "{{count}} bays added",
+        "proposal_partial": "{{count}} of {{reported}} bays added",
+        "proposal_source": "From {{source}}",
+        "proposal_source_reported_one": "From {{source}}, {{count}} bay reported by the local source",
+        "proposal_source_reported_other": "From {{source}}, {{count}} bays reported by the local source",
+        "proposal_bays": "Added, approved and verified",
+        "proposal_duplicate": "Existing community parking space on the map",
+        "proposal_reopen": "Reopen proposal",
+        "proposal_minutes_one": "{{count}} minute",
+        "proposal_minutes_other": "{{count}} minutes",
         "submitted_was": "Submitted was {{value}}",
         "decided": "Decided by {{reviewer}} {{ago}}.",
         "reports_one": "After {{count}} report.",

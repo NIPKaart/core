@@ -10,21 +10,11 @@ export type DraftBay = MapPoint & { id: string; source_point_id: number };
 /** A bay read back from Core after publication. */
 export type PublishedBay = MapPoint & { number: number };
 
-export const FINISH_REASONS = ['not_visible', 'gone', 'other'] as const;
-export type FinishReason = (typeof FINISH_REASONS)[number];
-
-/**
- * One moderator's work on one proposal point. It lives in the browser until proposal decisions are stored in the
- * database (#1488).
- */
+/** Pins and their shared details can be resumed on this browser. */
 export type ProposalDraft = {
     bays: DraftBay[];
     details: BayDetails;
-    /** The reason is empty when every reported bay was found. */
-    finished: { reason: FinishReason } | null;
 };
-
-export type ProposalStatus = 'new' | 'draft' | 'finished';
 
 export const emptyDetails = (): BayDetails => ({
     orientation: '',
@@ -38,7 +28,7 @@ export const emptyDetails = (): BayDetails => ({
     description: '',
 });
 
-export const emptyDraft = (): ProposalDraft => ({ bays: [], details: emptyDetails(), finished: null });
+export const emptyDraft = (): ProposalDraft => ({ bays: [], details: emptyDetails() });
 
 /** The number a draft bay shows: submitted bays keep theirs, new ones follow on. */
 export function bayNumber(draft: ProposalDraft, id: string): number {
@@ -49,7 +39,6 @@ export function addBay(draft: ProposalDraft, point: MapPoint, id: string, source
     return {
         ...draft,
         bays: [...draft.bays, { id, latitude: point.latitude, longitude: point.longitude, source_point_id: sourcePointId }],
-        finished: null,
     };
 }
 
@@ -77,16 +66,6 @@ export function publicationPayload(draft: ProposalDraft) {
     };
 }
 
-export function finish(draft: ProposalDraft, reason: FinishReason): ProposalDraft {
-    return { ...draft, bays: [], finished: { reason } };
-}
-
-export function statusOf(draft: ProposalDraft | null): ProposalStatus {
-    if (!draft) return 'new';
-    if (draft.finished) return 'finished';
-    return draft.bays.length > 0 ? 'draft' : 'new';
-}
-
 const storageKey = (proposalId: number) => `moderation.location-proposal.batch.${proposalId}`;
 
 /** The saved work for a proposal point, or null when there is none or storage is unavailable. */
@@ -96,7 +75,7 @@ export function loadDraft(storage: Pick<Storage, 'getItem'> | undefined, proposa
         if (!stored) return null;
         const parsed = JSON.parse(stored) as Partial<ProposalDraft>;
 
-        return { ...emptyDraft(), ...parsed, details: { ...emptyDetails(), ...parsed.details } };
+        return { bays: Array.isArray(parsed.bays) ? parsed.bays : [], details: { ...emptyDetails(), ...parsed.details } };
     } catch {
         return null;
     }
@@ -104,7 +83,7 @@ export function loadDraft(storage: Pick<Storage, 'getItem'> | undefined, proposa
 
 export function saveDraft(storage: Pick<Storage, 'setItem' | 'removeItem'> | undefined, proposalId: number, draft: ProposalDraft): void {
     try {
-        if (statusOf(draft) === 'new' && JSON.stringify(draft.details) === JSON.stringify(emptyDetails())) {
+        if (draft.bays.length === 0 && JSON.stringify(draft.details) === JSON.stringify(emptyDetails())) {
             storage?.removeItem(storageKey(proposalId));
             return;
         }

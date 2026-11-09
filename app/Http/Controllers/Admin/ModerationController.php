@@ -326,8 +326,8 @@ class ModerationController extends Controller
         $types = $this->queue->typesFor($user);
         abort_if($types === [], 403);
 
-        $filters = $this->filters($request);
         $open = $request->input('status') !== 'decided';
+        $filters = $this->filters($request, $open ? ModerationQueue::TYPES : $this->history->typesFor($user));
 
         $built = [];
         $items = function (array $filters = []) use ($user, &$built): Collection {
@@ -346,6 +346,7 @@ class ModerationController extends Controller
             'locationProposals' => fn () => $open && $selectedKey === null
                 && in_array(ModerationQueue::SUBMISSION, $types, true)
                 && $user->can('bulkUpdate', ParkingSpace::class)
+                && ($filters['types'] ?? []) === []
                 ? $this->locationProposals->rows($this->locationProposals->proposals()->limit(4)->get())
                 : [],
             'selected' => fn () => $selectedKey === null ? null : [
@@ -362,6 +363,7 @@ class ModerationController extends Controller
             'decidedToday' => fn () => $this->history->countsBy($user, now(self::LOCAL_TIMEZONE)->startOfDay()->utc())['total'],
             'options' => fn () => [
                 'types' => $types,
+                'historyTypes' => $this->history->typesFor($user),
                 'municipalities' => Municipality::whereIn('id', $items()->pluck('municipality_id')->filter()->unique())
                     ->orderBy('name')->get(['id', 'name']),
                 'orientations' => ParkingOrientation::mapped(),
@@ -426,13 +428,13 @@ class ModerationController extends Controller
      *
      * @return array{types?: list<string>, municipality_ids?: list<int>, search?: ?string}
      */
-    private function filters(Request $request): array
+    private function filters(Request $request, array $types = ModerationQueue::TYPES): array
     {
         $text = fn (string $key) => is_string($request->query($key)) ? trim($request->query($key)) : '';
         $list = fn (string $key) => array_values(array_filter(explode(',', $text($key))));
 
         return array_filter([
-            'types' => array_values(array_intersect($list('type'), ModerationQueue::TYPES)),
+            'types' => array_values(array_intersect($list('type'), $types)),
             'municipality_ids' => array_map('intval', array_filter($list('municipality_id'), 'ctype_digit')),
             'search' => $text('search') ?: null,
         ], fn (mixed $value) => $value !== [] && $value !== null);

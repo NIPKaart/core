@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import type { MapPoint } from './geo';
 import type { PublishedBay } from './location-proposal-draft';
 import { LocationProposalReview, LocationProposals, toLocationProposal, type ProposalRow } from './location-proposals';
+import type { EnumOption } from './values';
 import { PanelNav, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
@@ -20,7 +21,13 @@ type Props = {
     municipalities: { id: number; name: string }[];
     municipality: string | number | null;
     fromQueue: boolean;
-    bayOptions: { orientations: OrientationOption[]; restrictionDays: RestrictionDay[]; maxBays: number };
+    bayOptions: {
+        orientations: OrientationOption[];
+        restrictionDays: RestrictionDay[];
+        maxBays: number;
+        completionReasons: EnumOption[];
+        rejectionReasons: EnumOption[];
+    };
     selected: {
         id: number;
         pointId: number;
@@ -28,6 +35,10 @@ type Props = {
         points: Point[];
         candidates: Point[];
         published: boolean;
+        revision: number;
+        reportedBays: number | null;
+        canReject: boolean;
+        duplicates: (MapPoint & { id: string; street: string | null })[];
         publishedBays: PublishedBay[];
         imagery: AerialLayer[];
         community: NearbyPlace | null;
@@ -50,7 +61,7 @@ export default function Proposals({ proposals, municipalities, municipality, sel
               id: selected.id,
               municipality: selected.municipality,
               status: selected.published ? 'added' : 'open',
-              bayCount: null,
+              bayCount: selected.reportedBays,
               points: selected.points,
           })
         : null;
@@ -127,11 +138,14 @@ export default function Proposals({ proposals, municipalities, municipality, sel
             <div className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
                 {selected && review && selectedPoint ? (
                     <LocationProposalReview
-                        key={selected.id}
+                        key={`${selected.id}:${selected.revision}`}
                         selection={{ proposal: review, point: selectedPoint }}
                         imagery={selected.imagery}
                         options={bayOptions}
                         publishedBays={selected.publishedBays}
+                        revision={selected.revision}
+                        canReject={selected.canReject}
+                        duplicates={selected.duplicates}
                         nearby={selected.community ?? undefined}
                         municipal={selected.municipal ?? undefined}
                         comparison={candidate}
