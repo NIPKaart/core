@@ -599,7 +599,11 @@ function BayPin({
                         <span className="h-[22px] w-px bg-border" aria-hidden />
                         <button
                             type="button"
-                            onClick={onRemove}
+                            onClick={(event) => {
+                                // Removing the bay detaches the tooltip before Leaflet can inspect the click target.
+                                event.stopPropagation();
+                                onRemove();
+                            }}
                             className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 font-medium text-red-700 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring dark:text-red-400"
                         >
                             <Trash2 className="size-3.5" aria-hidden />

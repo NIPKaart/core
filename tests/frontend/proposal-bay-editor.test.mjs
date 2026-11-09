@@ -285,6 +285,28 @@ test('removes a bay while placing, but only checks bays in the last step', () =>
     assert.ok(find(view, (node) => node.props?.['aria-label'] === 'proposals.street_view'));
 });
 
+test('removing a selected concept bay from the map only persists the remaining bay', () => {
+    const screen = editor();
+    const map = () => element(screen.render(), 'Workspace').props.map;
+    map().onPlace({ latitude: 52.011, longitude: 4.36 });
+    map().onPlace({ latitude: 52.012, longitude: 4.36 });
+    const [first, second] = map().bays;
+    assert.equal(second.state, 'selected');
+
+    map().onRemoveBay(second.key);
+
+    assert.deepEqual(
+        Array.from(map().bays, (bay) => bay.key),
+        [first.key],
+    );
+    const [saved] = screen.storage.values();
+    assert.deepEqual(
+        JSON.parse(saved).bays.map((bay) => bay.id),
+        [first.key],
+    );
+    assert.ok(find(screen.render(), (node) => node.props?.['aria-label'] === 'proposals.remove'));
+});
+
 test('after publishing, the footer leads on to the next proposal, or back to the queue when none is left', () => {
     const screen = editor();
     const publishedBays = [{ latitude: 52.011, longitude: 4.36, number: 1 }];

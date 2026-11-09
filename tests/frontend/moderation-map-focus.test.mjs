@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 const source = readFileSync(new URL('../../resources/js/pages/backend/moderation/moderation-map.tsx', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(
-    `${source.replaceAll('import.meta.env.VITE_MAPBOX_ACCESS_TOKEN', '"test-token"')}\nexport { Focus, queueLegend };`,
+    `${source.replaceAll('import.meta.env.VITE_MAPBOX_ACCESS_TOKEN', '"test-token"')}\nexport { BayPin, Focus, queueLegend };`,
     {
         compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
     },
@@ -21,14 +21,16 @@ function setup(reducedMotion = false) {
         unproject: (point) => point,
         setView: (point, zoom, options) => views.push({ point, zoom, ...options }),
     };
+    const jsx = (type, props) => ({ type, props });
     const context = {
         exports: {},
         window: { matchMedia: () => ({ matches: reducedMotion }) },
         require: (name) => {
+            if (name === '@/components/map/parking-detail/navigation-handoff') return { streetViewUrl: () => null };
             if (name === '@/lib/pin-svg') return { pinSvg: () => '' };
             if (name === 'leaflet') return { default: { divIcon: () => ({}) } };
-            if (name === 'react') return { useRef: () => previous, useEffect: (effect) => effect() };
-            if (name === 'react/jsx-runtime') return { jsx: (type, props) => ({ type, props }) };
+            if (name === 'react') return { useRef: (value) => (value === null ? previous : { current: value }), useEffect: (effect) => effect() };
+            if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === 'react-leaflet') return { useMap: () => map };
             return {};
@@ -38,6 +40,7 @@ function setup(reducedMotion = false) {
     const props = { center: { latitude: 52, longitude: 5 }, zoom: 19, bounds: null, inset: 452, focus: 0 };
     return {
         views,
+        renderBay: (props) => context.exports.BayPin(props),
         legend: (pins) => context.exports.queueLegend(pins),
         render: (changes = {}) => context.exports.Focus({ ...props, ...changes }),
     };
@@ -162,4 +165,19 @@ test('on a small screen one menu takes the legend, so there is no separate legen
 test('the map buttons stay above the sheet that covers the bottom of the map', () => {
     assert.equal(renderMap({ insetBottom: 380 }).bottom.props.style.bottom, 392);
     assert.equal(renderMap({}).bottom.props.style, undefined);
+});
+
+test('the tooltip stops the map click before it removes the selected bay', () => {
+    const { renderBay } = setup();
+    const calls = [];
+    const marker = renderBay({
+        bay: { point: { latitude: 52, longitude: 5 }, number: 2, state: 'selected', label: 'Bay 2' },
+        onRemove: () => calls.push('remove'),
+    });
+    const toolbar = marker.props.children.props.children;
+    const remove = toolbar.props.children.find((child) => child?.type === 'button');
+
+    remove.props.onClick({ stopPropagation: () => calls.push('stop') });
+
+    assert.deepEqual(calls, ['stop', 'remove']);
 });
