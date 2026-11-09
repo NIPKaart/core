@@ -109,6 +109,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         Route::get('moderation/proposals', [Admin\LocationProposalController::class, 'index'])->name('moderation.proposals.index');
+        Route::post('moderation/proposals/{proposal}/publish', [Admin\LocationProposalController::class, 'publish'])
+            ->whereNumber('proposal')->name('moderation.proposals.publish');
         Route::post('moderation/proposals/{proposal}/group', [Admin\LocationProposalController::class, 'group'])
             ->whereNumber('proposal')->name('moderation.proposals.group');
 

@@ -1,3 +1,4 @@
+import type { OrientationOption } from '@/components/contribute/types';
 import Heading from '@/components/heading';
 import type { AerialLayer } from '@/components/map/aerial-imagery';
 import StreetViewCard from '@/components/map/card-location-streetview';
@@ -5,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import app from '@/routes/app';
-import type { PaginatedResponse } from '@/types';
+import type { PaginatedResponse, RestrictionDay } from '@/types';
 import { Form, Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ModerationMap } from './moderation-map';
+import type { MapPoint } from './geo';
+import { ProposalBayEditor } from './proposal-bay-editor';
 
 type Point = {
     id: number;
@@ -24,20 +26,23 @@ type Point = {
 
 type NearbyPlace = { street: string | null; distance_metres: number; latitude: number; longitude: number };
 type Props = {
-    proposals: PaginatedResponse<{ id: number; municipality: string; points: Point[]; status: 'open'; bayCount: number | null }>;
+    proposals: PaginatedResponse<{ id: number; municipality: string; points: Point[]; status: 'open' | 'added'; bayCount: number | null }>;
     municipalities: { id: number; name: string }[];
     municipality: string | number | null;
+    bayOptions: { orientations: OrientationOption[]; restrictionDays: RestrictionDay[]; maxBays: number };
     selected: {
         id: number;
         points: Point[];
         candidates: Point[];
+        published: boolean;
+        publishedBays: MapPoint[];
         imagery: AerialLayer[];
         community: NearbyPlace | null;
         municipal: NearbyPlace | null;
     } | null;
 };
 
-export default function LocationProposals({ proposals, municipalities, municipality, selected }: Props) {
+export default function LocationProposals({ proposals, municipalities, municipality, selected, bayOptions }: Props) {
     const { t } = useTranslation('backend/moderation');
     const routes = app.moderation.proposals;
     const query = municipality ? { municipality } : {};
@@ -90,7 +95,8 @@ export default function LocationProposals({ proposals, municipalities, municipal
                                             {item.municipality} · #{item.id}
                                         </span>
                                         <span className="text-sm text-muted-foreground">
-                                            {item.points[0]?.source} · {t('proposals.open')} · {t('proposals.points', { count: item.points.length })}
+                                            {item.points[0]?.source} · {t(`proposals.${item.status}`)} ·{' '}
+                                            {t('proposals.points', { count: item.points.length })}
                                         </span>
                                     </Link>
                                 </li>
@@ -114,17 +120,19 @@ export default function LocationProposals({ proposals, municipalities, municipal
                             <h2 className="text-lg font-semibold">
                                 {t('proposals.title')} · #{selected.id}
                             </h2>
-                            <div className="relative h-80 overflow-hidden rounded-xl border">
-                                <ModerationMap
-                                    key={selected.id}
-                                    center={anchor}
-                                    layer="satellite"
-                                    aerial={selected.imagery[0]}
-                                    numbered={candidate ? [...selected.points, candidate] : selected.points}
-                                    nearby={selected.community ? [selected.community] : []}
-                                    municipal={selected.municipal ? [selected.municipal] : []}
-                                />
-                            </div>
+                            <ProposalBayEditor
+                                key={selected.id}
+                                proposal={selected.id}
+                                points={selected.points}
+                                comparison={candidate}
+                                community={selected.community ?? undefined}
+                                municipal={selected.municipal ?? undefined}
+                                aerial={selected.imagery[0]}
+                                published={selected.published}
+                                publishedBays={selected.publishedBays}
+                                query={{ ...query, page: proposals.current_page }}
+                                {...bayOptions}
+                            />
                             <ul className="space-y-2 text-sm">
                                 {selected.points.map((point) => (
                                     <li key={point.id}>

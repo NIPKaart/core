@@ -101,6 +101,9 @@ export function ModerationMap({
     current,
     proposed,
     numbered,
+    fitNumbered = true,
+    sourcePoints = [],
+    publishedBays = [],
     queue,
     highlighted,
     onPick,
@@ -123,6 +126,9 @@ export function ModerationMap({
     proposed?: MapPoint | null;
     /** Several selected items, numbered in list order; replaces the main pin. */
     numbered?: MapPoint[];
+    fitNumbered?: boolean;
+    sourcePoints?: MapPoint[];
+    publishedBays?: MapPoint[];
     /** The open items of the queue; replaces the main pin. */
     queue?: QueuePin[];
     highlighted?: string | null;
@@ -142,7 +148,7 @@ export function ModerationMap({
     const tiles = TILES[layer];
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
-    const spread = numbered ?? queue?.map((pin) => pin.point);
+    const spread = (fitNumbered ? numbered : undefined) ?? queue?.map((pin) => pin.point);
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
         () => (points.includes(';') ? L.latLngBounds(points.split(';').map((point) => point.split(',').map(Number) as [number, number])) : null),
@@ -172,6 +178,17 @@ export function ModerationMap({
                 ))}
                 {municipal.map((point, index) => (
                     <Marker key={`m${index}`} position={[point.latitude, point.longitude]} icon={municipalIcon} interactive={false} />
+                ))}
+                {sourcePoints.map((point, index) => (
+                    <Marker key={`source${index}`} position={[point.latitude, point.longitude]} icon={ghostIcon} interactive={false} />
+                ))}
+                {publishedBays.map((point, index) => (
+                    <Marker
+                        key={`published${index}`}
+                        position={[point.latitude, point.longitude]}
+                        icon={queueIcon('#15803d', false)}
+                        interactive={false}
+                    />
                 ))}
                 {current && (
                     <>

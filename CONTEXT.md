@@ -41,7 +41,7 @@ _Avoid_: karma, contributor reputation, reliability percentage
 
 **DatasetSource**: A dataset selected for connection to NIPKaart, with an identified publisher, scope and provenance. It is not a research lead or a contact-management record.
 
-**Location proposal** (Dutch: locatievoorstel): A possible accessible parking location supported by one or more points from a proposal source. A moderator works out which physical bays the evidence supports. Each bay drawn and submitted becomes an approved community ParkingSpace, verified by the moderator's existence confirmation at submission. The evidence points are kept separately and linked to the resulting bays.
+**Location proposal** (Dutch: locatievoorstel): A possible accessible parking location supported by one or more points from a proposal source. A moderator works out which physical bays the evidence supports. Each bay drawn and submitted becomes an approved community ParkingSpace, verified by the moderator's existence confirmation at submission after checking aerial imagery and Street View. Publishing from a location proposal earns no community points. The evidence points are kept separately and linked to the resulting bays.
 
 **Location proposal decision**: A moderator's attributable completion or rejection of a location proposal. Completion records the bays added and, when fewer were added than reported, the reason. Rejection records why the proposal was declined and identifies the existing community space when that is the reason. Reopening preserves earlier decisions.
 

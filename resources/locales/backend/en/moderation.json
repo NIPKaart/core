@@ -1,5 +1,30 @@
 {
     "proposals": {
+        "added": "Added",
+        "added_count_one": "{{count}} bay added and published.",
+        "added_count_other": "{{count}} bays added and published.",
+        "steps": {
+            "bays": "Draw bays",
+            "details": "Shared details",
+            "check": "Check bays"
+        },
+        "draw_help": "Click the aerial map to draw each bay. The numbered pins show the bays you will publish.",
+        "move_help": "Click the map to move the selected bay, or use the arrow buttons.",
+        "source_point": "Source point for the next bay",
+        "source_point_number": "Source point {{number}}",
+        "add_at_source": "Place bay at the source point",
+        "bay_number": "Bay {{number}}",
+        "move_bay": "Move",
+        "remove_bay": "Remove",
+        "verify_help": "Check every bay on aerial imagery and in Street View. Publishing records your existence confirmation for each bay.",
+        "publish_one": "Publish {{count}} bay",
+        "publish_other": "Publish {{count}} bays",
+        "direction": {
+            "north": "Move north",
+            "south": "Move south",
+            "west": "Move west",
+            "east": "Move east"
+        },
         "title": "Location proposals",
         "description": "Review the source points that suggest accessible parking.",
         "open": "Open",

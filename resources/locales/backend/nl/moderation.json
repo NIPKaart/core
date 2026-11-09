@@ -1,5 +1,30 @@
 {
     "proposals": {
+        "added": "Toegevoegd",
+        "added_count_one": "{{count}} parkeervak toegevoegd en gepubliceerd.",
+        "added_count_other": "{{count}} parkeervakken toegevoegd en gepubliceerd.",
+        "steps": {
+            "bays": "Vakken intekenen",
+            "details": "Gedeelde details",
+            "check": "Vakken controleren"
+        },
+        "draw_help": "Klik op de luchtfoto om elk parkeervak in te tekenen. De genummerde pins tonen welke vakken je publiceert.",
+        "move_help": "Klik op de kaart om het gekozen vak te verplaatsen of gebruik de pijltjestoetsen hieronder.",
+        "source_point": "Bronpunt voor het volgende parkeervak",
+        "source_point_number": "Bronpunt {{number}}",
+        "add_at_source": "Plaats een vak op het bronpunt",
+        "bay_number": "Parkeervak {{number}}",
+        "move_bay": "Verplaatsen",
+        "remove_bay": "Verwijderen",
+        "verify_help": "Controleer elk parkeervak op de luchtfoto en in Street View. Bij publicatie leg je voor elk vak een bestaansbevestiging vast.",
+        "publish_one": "Publiceer {{count}} parkeervak",
+        "publish_other": "Publiceer {{count}} parkeervakken",
+        "direction": {
+            "north": "Verplaats naar het noorden",
+            "south": "Verplaats naar het zuiden",
+            "west": "Verplaats naar het westen",
+            "east": "Verplaats naar het oosten"
+        },
         "title": "Locatievoorstellen",
         "description": "Bekijk bronpunten die een gehandicaptenparkeerplaats suggereren.",
         "open": "Open",
