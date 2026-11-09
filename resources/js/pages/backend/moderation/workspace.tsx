@@ -15,7 +15,7 @@ const PANEL_INSET = 452;
 /** With the editor open beside the panel: both panels and their margins. */
 const EDITOR_INSET = PANEL_INSET + 380 + 16;
 
-type MapProps = Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'inset' | 'className' | 'children'>;
+type MapProps = Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'inset' | 'className' | 'controls' | 'links' | 'children'>;
 
 /** The layer the moderator chose last, separately for weighing one item and for looking over the queue. */
 function useLayer(scope: 'item' | 'overview'): [MapLayer, (layer: MapLayer) => void] {
@@ -87,8 +87,7 @@ export function Workspace({
                 aerial={imagery.layer}
                 inset={wide ? (aside ? EDITOR_INSET : PANEL_INSET) : 0}
                 className="h-[38svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto"
-            >
-                <div className="absolute top-3 right-3 z-500 flex gap-2 lg:top-4 lg:right-4">
+                controls={
                     <div className="flex gap-1 rounded-xl bg-background p-1 shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
                         <ToggleGroup
                             type="single"
@@ -109,15 +108,18 @@ export function Workspace({
                         </ToggleGroup>
                         {layer === 'satellite' && <AerialPicker layers={imagery.layers} layer={imagery.layer} onChoose={imagery.choose} />}
                     </div>
-                    {street && (
+                }
+                links={
+                    street && (
                         <Button variant="outline" asChild className="h-11 rounded-xl border-0 bg-background shadow-[0_2px_10px_rgba(0,0,0,0.14)]">
                             <a href={street} target="_blank" rel="noreferrer">
                                 <Camera aria-hidden />
                                 <span className="max-sm:sr-only">{t('review.views.street_view')}</span>
                             </a>
                         </Button>
-                    )}
-                </div>
+                    )
+                }
+            >
                 {mapHint && (
                     <p
                         role="status"

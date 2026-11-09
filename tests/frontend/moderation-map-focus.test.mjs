@@ -91,3 +91,41 @@ test('the overview legend lists visible marker types once and distinguishes muni
     assert.equal(items[1].icon.props.children, '#');
     assert.equal(legend([]).length, 0);
 });
+
+test('the legend sits in the top right between the layer switch and the links, not with the zoom buttons', () => {
+    const context = {
+        exports: {},
+        window: { matchMedia: () => ({ matches: false }) },
+        require: (name) => {
+            if (name === '@/lib/pin-svg') return { pinSvg: () => '' };
+            if (name === 'leaflet') return { default: { divIcon: () => ({}), latLngBounds: () => null } };
+            if (name === 'react')
+                return {
+                    useRef: (value) => ({ current: value }),
+                    useEffect: () => {},
+                    useMemo: (fn) => fn(),
+                    useState: (value) => [value === null ? {} : value, () => {}],
+                };
+            if (name === 'react/jsx-runtime') return { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
+            if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+            if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
+            return {};
+        },
+    };
+    vm.runInNewContext(compiled, context);
+    const tree = context.exports.ModerationMap({
+        center: { latitude: 52, longitude: 5 },
+        layer: 'streets',
+        nearby: [{ latitude: 52, longitude: 5 }],
+        controls: 'layer switch',
+        links: 'street view',
+    });
+    const corners = [tree.props.children].flat().filter((node) => node?.props?.className?.includes('absolute'));
+    const top = corners.find((node) => node.props.className.includes('top-3'));
+    const bottom = corners.find((node) => node.props.className.includes('bottom-7'));
+    const children = [top.props.children].flat();
+    assert.equal(children[0], 'layer switch');
+    assert.equal(children[1].type.name, 'MapLegend');
+    assert.equal(children[2], 'street view');
+    assert.ok(![bottom.props.children].flat().some((node) => node?.type?.name === 'MapLegend'));
+});

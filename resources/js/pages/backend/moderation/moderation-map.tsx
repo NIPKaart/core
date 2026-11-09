@@ -171,6 +171,8 @@ export function ModerationMap({
     zoom,
     inset = 0,
     className,
+    controls,
+    links,
     children,
 }: {
     center: MapPoint;
@@ -208,6 +210,10 @@ export function ModerationMap({
     /** Pixels on the left covered by the panel, kept out of the way when centring. */
     inset?: number;
     className?: string;
+    /** View controls for the top right, such as the layer switch; the legend joins them there, as on the public map. */
+    controls?: React.ReactNode;
+    /** Links that leave the map, such as Street View, after the legend. */
+    links?: React.ReactNode;
     children?: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
@@ -313,7 +319,6 @@ export function ModerationMap({
             </MapContainer>
             {map && (
                 <div className="absolute right-3 bottom-7 z-500 flex flex-col gap-2.5 lg:right-4 lg:bottom-6">
-                    <MapLegend items={legendItems} />
                     <button
                         type="button"
                         aria-label={t(spread ? 'map.fit_all' : 'map.recenter')}
@@ -342,6 +347,11 @@ export function ModerationMap({
                     </div>
                 </div>
             )}
+            <div className="absolute top-3 right-3 z-500 flex gap-2 lg:top-4 lg:right-4">
+                {controls}
+                <MapLegend items={legendItems} />
+                {links}
+            </div>
             {children}
         </div>
     );
@@ -405,7 +415,7 @@ function bayLegend(t: (key: string) => string): LegendItem[] {
     ];
 }
 
-/** The legend behind an info button above the map controls, as on the public map, so it never covers the map. */
+/** The legend behind an info button beside the layer switch, as on the public map, so it never covers the map. */
 function MapLegend({ items }: { items: LegendItem[] }) {
     const { t } = useTranslation('backend/moderation');
     const [open, setOpen] = useState(false);
@@ -418,12 +428,12 @@ function MapLegend({ items }: { items: LegendItem[] }) {
                     type="button"
                     aria-label={t('map.legend.label')}
                     title={t('map.legend.label')}
-                    className="flex size-11 cursor-pointer items-center justify-center rounded-xl bg-background text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.14)] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted lg:size-12"
+                    className="flex size-11 cursor-pointer items-center justify-center rounded-xl bg-background text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.14)] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted"
                 >
                     <Info className="size-5" aria-hidden />
                 </button>
             </PopoverTrigger>
-            <PopoverContent side="left" align="end" sideOffset={8} className="w-72 rounded-xl p-3" aria-label={t('map.legend.label')}>
+            <PopoverContent align="end" sideOffset={8} className="w-72 rounded-xl p-3" aria-label={t('map.legend.label')}>
                 <div className="mb-1 flex items-center justify-between pl-1">
                     <h2 className="text-sm font-semibold">{t('map.legend.label')}</h2>
                     <Button variant="ghost" size="icon" className="size-11" aria-label={t('map.legend.close')} onClick={() => setOpen(false)}>
