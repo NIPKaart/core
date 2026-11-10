@@ -277,7 +277,14 @@ export default function ParkingMap() {
                 )}
                 <div className="relative min-h-0 flex-1">
                     <section aria-label={t('results.map')} className="parking-discovery-map absolute inset-0">
-                        <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                        <MapContainer
+                            center={position}
+                            zoom={initialZoom}
+                            zoomSnap={0}
+                            scrollWheelZoom
+                            zoomControl={false}
+                            className="z-0 h-full w-full"
+                        >
                             <HashSync />
                             <MapFocus destination={destination} areaBounds={areaBounds} />
                             {destination && (
