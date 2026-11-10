@@ -187,8 +187,12 @@ function renderMap(props) {
     const container = flat(tree.props.children).find((node) => node.props?.className?.includes('z-0 size-full'));
     const mapChildren = flat(container.props.children);
     const focus = mapChildren.find((node) => node.type?.name === 'Focus');
-    return { top: flat(top.props.children), bottom, pans, fits, focus, mapChildren };
+    return { top: flat(top.props.children), bottom, pans, fits, focus, mapChildren, container };
 }
+
+test('wheel and pinch zoom can stop between whole zoom levels on the moderation map', () => {
+    assert.equal(renderMap({}).container.props.zoomSnap, 0);
+});
 
 test('the map passes the proposal identity to its camera', () => {
     assert.equal(renderMap({ reviewKey: '12' }).focus.props.reviewKey, '12');
