@@ -128,7 +128,13 @@ test('a sidebar focus request recentres the proposal at the current zoom, even o
     render({ reviewKey: '12' });
     render({ reviewKey: '12', focusRequest: 1 });
     render({ reviewKey: '12', focusRequest: 2 });
-    assert.deepEqual(views.slice(1).map(({ zoom, point }) => [zoom, point.lat]), [[20, 52], [20, 52]]);
+    assert.deepEqual(
+        views.slice(1).map(({ zoom, point }) => [zoom, point.lat]),
+        [
+            [20, 52],
+            [20, 52],
+        ],
+    );
 });
 
 test('a sidebar focus request zooms in when the map is at overview scale', () => {
@@ -158,7 +164,7 @@ function renderMap(props) {
         window: { matchMedia: () => ({ matches: false }) },
         require: (name) => {
             if (name === '@/lib/pin-svg') return { pinSvg: () => '' };
-            if (name === 'leaflet') return { default: { divIcon: () => ({}), latLngBounds: (points) => fits.push(points) } };
+            if (name === 'leaflet') return { default: { divIcon: () => ({}), canvas: () => ({}), latLngBounds: (points) => fits.push(points) } };
             if (name === 'react')
                 return {
                     useRef: (value) => ({ current: value }),
@@ -169,6 +175,7 @@ function renderMap(props) {
             if (name === 'react/jsx-runtime')
                 return { Fragment: 'fragment', jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
+            if (name === 'react-leaflet') return { CircleMarker: 'CircleMarker', Marker: 'Marker' };
             if (name === '@/lib/utils') return { cn: (...classes) => classes.filter(Boolean).join(' ') };
             return {};
         },
@@ -181,7 +188,7 @@ function renderMap(props) {
         ...props,
     });
     const corners = [tree.props.children].flat().filter((node) => node?.props?.className?.includes('absolute'));
-    const flat = (nodes) => [nodes].flat().flatMap((node) => (node?.type === 'fragment' ? flat(node.props.children) : node ? [node] : []));
+    const flat = (nodes) => [nodes].flat(Infinity).flatMap((node) => (node?.type === 'fragment' ? flat(node.props.children) : node ? [node] : []));
     const top = corners.find((node) => node.props.className.includes('top-3'));
     const bottom = corners.find((node) => node.props.className.includes('bottom-7'));
     const container = flat(tree.props.children).find((node) => node.props?.className?.includes('z-0 size-full'));
@@ -192,6 +199,17 @@ function renderMap(props) {
 
 test('wheel and pinch zoom can stop between whole zoom levels on the moderation map', () => {
     assert.equal(renderMap({}).container.props.zoomSnap, 0);
+});
+
+test('parking context shares a canvas while proposal markers stay individually selectable', () => {
+    const { mapChildren } = renderMap({
+        municipal: [{ latitude: 52.1, longitude: 5.1 }],
+        queue: [{ key: 'proposal', point: { latitude: 52.2, longitude: 5.2 }, color: 'blue' }],
+    });
+    const dots = mapChildren.filter((node) => node.type === 'CircleMarker');
+    assert.equal(dots.length, 2);
+    assert.ok(dots.every((dot) => dot.props.renderer && dot.props.renderer === dots[0].props.renderer && !dot.props.interactive));
+    assert.ok(mapChildren.some((node) => node.type === 'Marker' && typeof node.props.eventHandlers.click === 'function'));
 });
 
 test('the map passes the proposal identity to its camera', () => {

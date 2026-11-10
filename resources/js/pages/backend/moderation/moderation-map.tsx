@@ -9,7 +9,7 @@ import L from 'leaflet';
 import { Camera, ExternalLink, Info, LocateFixed, Minus, Move, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import { NUDGE_FAR_METRES, NUDGE_METRES, nudge, type Direction, type MapPoint } from './geo';
 
 export type { MapPoint } from './geo';
@@ -34,15 +34,9 @@ const ghostIcon = L.divIcon({
     iconAnchor: [15, 38],
 });
 
-const dot = (color: string) =>
-    L.divIcon({
-        html: `<span style="display:block;width:14px;height:14px;border-radius:999px;background:${color};border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span>`,
-        className: '',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-    });
-const nearbyIcon = dot('#16a34a');
-const municipalIcon = dot('#7c3aed');
+const CONTEXT_MARKER_STYLE = { color: '#fff', weight: 3, fillOpacity: 1 };
+const COMMUNITY_MARKER_STYLE = { ...CONTEXT_MARKER_STYLE, fillColor: '#16a34a' };
+const MUNICIPAL_MARKER_STYLE = { ...CONTEXT_MARKER_STYLE, fillColor: '#7c3aed' };
 
 /**
  * Icons are built once per look and reused: a new icon object makes Leaflet replace the marker's element, which
@@ -241,6 +235,7 @@ export function ModerationMap({
     const keepStreetLayer = overviewKey !== undefined || reviewKey !== undefined;
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
+    const contextRenderer = useMemo(() => L.canvas(), []);
     const spread = fitQueue ? [...(queue?.map((pin) => pin.point) ?? []), ...(fitParking ? [...nearby, ...municipal] : [])] : undefined;
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
@@ -301,15 +296,23 @@ export function ModerationMap({
                 )}
                 {layer === 'satellite' && <AerialTiles layer={aerial} />}
                 {nearby.map((point, index) => (
-                    <Marker key={`n${index}`} position={[point.latitude, point.longitude]} icon={nearbyIcon} interactive={false} keyboard={false} />
+                    <CircleMarker
+                        key={`n${index}`}
+                        center={[point.latitude, point.longitude]}
+                        radius={5.5}
+                        pathOptions={COMMUNITY_MARKER_STYLE}
+                        renderer={contextRenderer}
+                        interactive={false}
+                    />
                 ))}
                 {municipal.map((point, index) => (
-                    <Marker
+                    <CircleMarker
                         key={`m${index}`}
-                        position={[point.latitude, point.longitude]}
-                        icon={municipalIcon}
+                        center={[point.latitude, point.longitude]}
+                        radius={5.5}
+                        pathOptions={MUNICIPAL_MARKER_STYLE}
+                        renderer={contextRenderer}
                         interactive={false}
-                        keyboard={false}
                     />
                 ))}
                 {current && (
