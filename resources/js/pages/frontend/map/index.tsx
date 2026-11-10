@@ -281,6 +281,7 @@ export default function ParkingMap() {
                             center={position}
                             zoom={initialZoom}
                             zoomSnap={0}
+                            wheelPxPerZoomLevel={160}
                             scrollWheelZoom
                             zoomControl={false}
                             className="z-0 h-full w-full"

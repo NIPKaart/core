@@ -273,6 +273,7 @@ export function ModerationMap({
                 center={[center.latitude, center.longitude]}
                 zoom={startZoom}
                 zoomSnap={0}
+                wheelPxPerZoomLevel={160}
                 zoomControl={false}
                 attributionControl={false}
                 className="absolute inset-0 z-0 size-full"
