@@ -113,6 +113,16 @@ test('opening from the queue focuses the proposal and returning keeps the viewpo
     assert.equal(views.length, 3);
 });
 
+test('changing the visible proposals within a municipality keeps the viewport', () => {
+    const { views, render } = setup();
+    render({ overviewKey: '1' });
+    render({ overviewKey: '1', center: { latitude: 53, longitude: 6 } });
+    assert.equal(views.length, 1);
+
+    render({ overviewKey: '2', center: { latitude: 54, longitude: 6 } });
+    assert.equal(views[1].point.lat, 54);
+});
+
 test('a sidebar focus request recentres the proposal at the current zoom, even on repeated clicks', () => {
     const { views, render } = setup();
     render({ reviewKey: '12' });

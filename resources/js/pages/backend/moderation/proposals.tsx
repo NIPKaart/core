@@ -252,7 +252,7 @@ export default function Proposals({
                             municipal: walking ? [] : parking?.municipal,
                             fitParking: parking !== null,
                             fitQueue: !walkPoint,
-                            overviewKey: walking || municipality === null ? undefined : `${municipality}:${view}:${query.page ?? 1}`,
+                            overviewKey: walking || municipality === null ? undefined : String(municipality),
                             highlighted: walkPin ? pinKey(walkPin) : undefined,
                             queue:
                                 municipality === null
@@ -366,6 +366,8 @@ export default function Proposals({
                                                             href={routes.index({
                                                                 query: { municipality, ...(option === 'closed' ? { view: 'closed' } : {}) },
                                                             })}
+                                                            preserveState
+                                                            preserveScroll
                                                             aria-current={view === option ? 'page' : undefined}
                                                             className={cn(
                                                                 'flex h-9 flex-1 items-center justify-center rounded-[7px] text-sm focus-visible:outline-2 focus-visible:outline-ring',

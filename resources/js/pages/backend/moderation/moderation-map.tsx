@@ -714,6 +714,9 @@ function Focus({
     useEffect(() => {
         const last = previous.current;
         previous.current = { key, inset, insetBottom, focus, focusRequest, overviewKey, reviewKey };
+        // Updating the visible proposals in one municipality should not move the map.
+        if (overviewKey && last?.overviewKey === overviewKey && last.focus === focus) return;
+
         const openingFromQueue = Boolean(last?.overviewKey && reviewKey);
         // Keep the viewport when switching between details or returning to the queue.
         if (last && last.reviewKey !== reviewKey && !openingFromQueue && (reviewKey || (last.reviewKey && overviewKey))) return;
