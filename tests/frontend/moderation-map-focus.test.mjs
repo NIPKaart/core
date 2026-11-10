@@ -12,11 +12,12 @@ const compiled = ts.transpileModule(
     },
 ).outputText;
 
-function setup(reducedMotion = false) {
+function setup(reducedMotion = false, currentZoom = 20) {
     const views = [];
-    const previous = { current: null };
+    const refs = [];
+    let refIndex = 0;
     const map = {
-        getZoom: () => 20,
+        getZoom: () => currentZoom,
         project: ([lat, lng]) => ({ subtract: ([x, y]) => ({ lat: lat - y, lng: lng - x }) }),
         unproject: (point) => point,
         setView: (point, zoom, options) => views.push({ point, zoom, ...options }),
@@ -29,7 +30,7 @@ function setup(reducedMotion = false) {
             if (name === '@/components/map/parking-detail/navigation-handoff') return { streetViewUrl: () => null };
             if (name === '@/lib/pin-svg') return { pinSvg: () => '' };
             if (name === 'leaflet') return { default: { divIcon: () => ({}) } };
-            if (name === 'react') return { useRef: (value) => (value === null ? previous : { current: value }), useEffect: (effect) => effect() };
+            if (name === 'react') return { useRef: (value) => (refs[refIndex++] ??= { current: value }), useEffect: (effect) => effect() };
             if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
             if (name === 'react-i18next') return { useTranslation: () => ({ t: (key) => key }) };
             if (name === 'react-leaflet') return { useMap: () => map };
@@ -42,7 +43,10 @@ function setup(reducedMotion = false) {
         views,
         renderBay: (props) => context.exports.BayPin(props),
         legend: (pins) => context.exports.queueLegend(pins),
-        render: (changes = {}) => context.exports.Focus({ ...props, ...changes }),
+        render: (changes = {}) => {
+            refIndex = 0;
+            return context.exports.Focus({ ...props, ...changes });
+        },
     };
 }
 
@@ -95,6 +99,35 @@ test('changing items or explicitly recentering restores the item view directly',
     assert.equal(views[2].zoom, 19);
 });
 
+test('opening from the queue focuses the proposal and returning keeps the viewport', () => {
+    const { views, render } = setup(false, 13);
+    render({ overviewKey: '1:open:1' });
+    render({ reviewKey: '12', center: { latitude: 53, longitude: 6 } });
+    assert.equal(views[1].zoom, 19);
+    assert.equal(views[1].point.lat, 53);
+    render({ reviewKey: '13', center: { latitude: 54, longitude: 6 } });
+    render({ overviewKey: '1:open:1' });
+    assert.equal(views.length, 2);
+
+    render({ overviewKey: '1:open:1', focus: 1 });
+    assert.equal(views.length, 3);
+});
+
+test('a sidebar focus request recentres the proposal at the current zoom, even on repeated clicks', () => {
+    const { views, render } = setup();
+    render({ reviewKey: '12' });
+    render({ reviewKey: '12', focusRequest: 1 });
+    render({ reviewKey: '12', focusRequest: 2 });
+    assert.deepEqual(views.slice(1).map(({ zoom, point }) => [zoom, point.lat]), [[20, 52], [20, 52]]);
+});
+
+test('a sidebar focus request zooms in when the map is at overview scale', () => {
+    const { views, render } = setup(false, 13);
+    render({ reviewKey: '12' });
+    render({ reviewKey: '12', focusRequest: 1 });
+    assert.equal(views[1].zoom, 19);
+});
+
 test('the overview legend lists visible marker types once and distinguishes municipality counts', () => {
     const { legend } = setup();
     const proposal = { legendLabel: 'Location proposal', color: '#1e3a8a' };
@@ -141,8 +174,28 @@ function renderMap(props) {
     const flat = (nodes) => [nodes].flat().flatMap((node) => (node?.type === 'fragment' ? flat(node.props.children) : node ? [node] : []));
     const top = corners.find((node) => node.props.className.includes('top-3'));
     const bottom = corners.find((node) => node.props.className.includes('bottom-7'));
-    return { top: flat(top.props.children), bottom, pans, fits };
+    const container = flat(tree.props.children).find((node) => node.props?.className?.includes('z-0 size-full'));
+    const mapChildren = flat(container.props.children);
+    const focus = mapChildren.find((node) => node.type?.name === 'Focus');
+    return { top: flat(top.props.children), bottom, pans, fits, focus, mapChildren };
 }
+
+test('the map passes the proposal identity to its camera', () => {
+    assert.equal(renderMap({ reviewKey: '12' }).focus.props.reviewKey, '12');
+});
+
+test('proposal aerial imagery keeps the street tiles underneath while aerial tiles load', () => {
+    const tiles = (props) => renderMap(props).mapChildren.filter((node) => node.props && ('url' in node.props || 'layer' in node.props));
+    const street = tiles({ overviewKey: '1:open:1', layer: 'streets' });
+    const aerialReview = tiles({ reviewKey: '12', layer: 'satellite' });
+    const otherAerialMap = tiles({ layer: 'satellite' });
+
+    assert.equal(street.length, 1);
+    assert.equal(aerialReview.length, 2);
+    assert.equal(aerialReview[0].props.url, street[0].props.url);
+    assert.equal(aerialReview[0].props.maxZoom, street[0].props.maxZoom);
+    assert.equal(otherAerialMap.length, 1);
+});
 
 test('the legend sits in the top right between the layer switch and the links, not with the zoom buttons', () => {
     const { top, bottom } = renderMap({ controls: 'layer switch', links: 'street view' });

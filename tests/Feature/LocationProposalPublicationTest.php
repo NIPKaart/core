@@ -99,7 +99,11 @@ it('loads published parking across the municipality independently of proposal ma
         ->where('parking.municipal', [['latitude' => 52.02, 'longitude' => 4.39]])
         ->where('parking.community', [['latitude' => 52.02, 'longitude' => 4.4]]));
 
-    $this->get($this->detail)->assertInertia(fn (Assert $page) => $page->where('parking', null));
+    $this->get($this->detail)->assertInertia(fn (Assert $page) => $page
+        ->where('parking.municipal', [['latitude' => 52.02, 'longitude' => 4.39]])
+        ->where('parking.community', [['latitude' => 52.02, 'longitude' => 4.4]])
+        ->has('selected.municipal', 0)
+        ->has('selected.community', 0));
     $this->get(route('app.moderation.proposals.index', ['overview' => 1]))->assertInertia(fn (Assert $page) => $page->where('parking', null));
 });
 
@@ -109,8 +113,14 @@ it('publishes all bays with an attributable approval and existence confirmation 
 
     $this->actingAs($this->moderator)->get(route('app.moderation.index'))->assertInertia(fn (Assert $page) => $page
         ->where('locationProposals.0.id', $this->proposal)->where('locationProposals.0.status', 'open'));
-    $this->post($this->url, $this->payload)->assertRedirect($this->detail);
-    $this->post($this->url, $this->payload)->assertRedirect($this->detail);
+    $queue = ['municipality' => $this->municipality->id, 'page' => 2];
+    $publish = route('app.moderation.proposals.publish', [$this->proposal, ...$queue, 'point' => $this->proposal]);
+    $this->post($publish, $this->payload)->assertRedirect(route('app.moderation.proposals.index', $queue));
+    $this->post($publish, $this->payload)->assertRedirect(route('app.moderation.proposals.index', $queue));
+    $this->post(route('app.moderation.proposals.publish', [$this->proposal, ...$queue, 'from' => 'queue']), $this->payload)
+        ->assertRedirect(route('app.moderation.index'));
+    $this->get(route('app.moderation.proposals.index', $queue))->assertInertia(fn (Assert $page) => $page
+        ->where('selected', null)->has('proposals.data', 0));
     $this->postJson($this->url, [...$this->payload, 'bays' => array_slice($this->payload['bays'], 0, 1)])
         ->assertJsonValidationErrors('decision');
     $this->get($this->detail)->assertInertia(fn (Assert $page) => $page
@@ -218,7 +228,7 @@ it('rolls back already written bays and approvals if a confirmation fails', func
 it('stores the decision and records a new decision when more bays are added after reopening', function () {
     fakeReverseGeocoding($this->municipality);
     DB::table('location_proposal_points')->where('id', $this->proposal)->update(['source_last_seen_on' => '2026-10-01']);
-    $this->actingAs($this->moderator)->post($this->url, [...$this->payload, 'revision' => 0])->assertRedirect($this->detail);
+    $this->actingAs($this->moderator)->post($this->url, [...$this->payload, 'revision' => 0])->assertRedirect(route('app.moderation.proposals.index'));
     ParkingSpaceReview::factory()->create([
         'reviewed_by' => $this->moderator->id,
         'reviewed_at' => now()->subMinute(),
@@ -239,7 +249,7 @@ it('stores the decision and records a new decision when more bays are added afte
     $this->travel(1)->seconds();
     $this->post($this->url, [...$this->payload, 'revision' => 2, 'bays' => [
         ['latitude' => 52.01103, 'longitude' => 4.36004, 'source_point_id' => $this->proposal],
-    ]])->assertRedirect($this->detail);
+    ]])->assertRedirect(route('app.moderation.proposals.index'));
     expect(ParkingSpace::where('location_proposal_id', $this->proposal)->count())->toBe(4);
     $this->get($history)->assertInertia(fn (Assert $page) => $page
         ->has('history.data', 2)->where('history.data.0.proposal.total_bays', 4)
