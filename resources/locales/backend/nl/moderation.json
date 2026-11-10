@@ -549,6 +549,7 @@
     },
     "map": {
         "pin": "Pin van de parkeerplaats; verschuif met de pijltjestoetsen",
+        "focus_proposal": "Toon op kaart",
         "recenter": "Terug naar de parkeerplaats",
         "zoom_in": "Inzoomen",
         "zoom_out": "Uitzoomen",

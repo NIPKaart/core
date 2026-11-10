@@ -6,6 +6,7 @@ import MapDisplayControls, { type MapStyle } from '@/components/map/map-display-
 import NearbyDiscovery from '@/components/map/nearby-discovery';
 import ParkingMapLayer from '@/components/map/parking-map-layer';
 import { type DiscoveryStatus } from '@/components/map/parking-results';
+import { SmoothWheelZoom } from '@/components/map/smooth-wheel-zoom';
 import ZoomControl from '@/components/map/zoom-control';
 import { useSearchOpen } from '@/components/search/search-store';
 import { Button } from '@/components/ui/button';
@@ -277,7 +278,15 @@ export default function ParkingMap() {
                 )}
                 <div className="relative min-h-0 flex-1">
                     <section aria-label={t('results.map')} className="parking-discovery-map absolute inset-0">
-                        <MapContainer center={position} zoom={initialZoom} scrollWheelZoom zoomControl={false} className="z-0 h-full w-full">
+                        <MapContainer
+                            center={position}
+                            zoom={initialZoom}
+                            zoomSnap={0}
+                            scrollWheelZoom={false}
+                            zoomControl={false}
+                            className="z-0 h-full w-full"
+                        >
+                            <SmoothWheelZoom />
                             <HashSync />
                             <MapFocus destination={destination} areaBounds={areaBounds} />
                             {destination && (

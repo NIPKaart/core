@@ -7,7 +7,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 import { Camera, ChevronLeft, ChevronRight, Layers, MousePointer2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LegendList, ModerationMap, type LegendItem, type MapLayer, type MapPoint } from './moderation-map';
 import type { ItemLink, Position } from './types';
@@ -20,22 +20,33 @@ const EDITOR_INSET = PANEL_INSET + 380 + 16;
 type MapProps = Omit<React.ComponentProps<typeof ModerationMap>, 'layer' | 'inset' | 'insetBottom' | 'className' | 'controls' | 'links' | 'children'>;
 
 /** The layer the moderator chose last, separately for weighing one item and for looking over the queue. */
-function useLayer(scope: 'item' | 'overview'): [MapLayer, (layer: MapLayer) => void] {
+function useLayer(
+    scope: 'item' | 'overview',
+    initial?: MapLayer,
+    viewKey?: string,
+    keepOverviewLayer = false,
+): [MapLayer, (layer: MapLayer) => void] {
     const key = `moderation.layer.${scope}`;
-    const fallback: MapLayer = scope === 'item' ? 'satellite' : 'streets';
-    const [layer, setLayer] = useState<MapLayer>(() => {
+    const readLayer = (): MapLayer => {
+        if (initial) return initial;
         try {
             const stored = window.localStorage.getItem(key);
-            return stored === 'streets' || stored === 'satellite' ? stored : fallback;
+            if (stored === 'streets' || stored === 'satellite') return stored;
         } catch {
-            return fallback;
+            // Use the scope's default without local storage.
         }
-    });
+        return scope === 'item' ? 'satellite' : 'streets';
+    };
+    const [selection, setSelection] = useState(() => ({ scope, viewKey, layer: readLayer() }));
+    const changed = selection.scope !== scope || selection.viewKey !== viewKey;
+    const returningToOverview = scope === 'overview' && keepOverviewLayer && selection.viewKey !== undefined;
+    const layer = changed && !returningToOverview ? readLayer() : selection.layer;
+    if (changed) setSelection({ scope, viewKey, layer });
 
     return [
         layer,
         (next) => {
-            setLayer(next);
+            setSelection({ scope, viewKey, layer: next });
             try {
                 window.localStorage.setItem(key, next);
             } catch {
@@ -74,11 +85,13 @@ export function sheetSnapPoints(height: number): Record<Snap, string> {
  * switches between the queue, one item, a decision and a selection; the map follows what the panel shows. On a small
  * screen the panel is a drawer over the map with three heights, and the map keeps what it shows above the drawer.
  */
-export function Workspace({
+function WorkspaceLayout({
     scope,
     map,
     streetView,
     imageryLayers,
+    initialLayer,
+    viewKey,
     label,
     aside,
     asideLabel,
@@ -93,6 +106,8 @@ export function Workspace({
     /** Where Street View should open, for an item. */
     streetView?: MapPoint | null;
     imageryLayers?: AerialLayer[];
+    initialLayer?: MapLayer;
+    viewKey?: string;
     label: string;
     /** A second panel beside the first, such as the details editor; a drawer over the item on small screens. */
     aside?: React.ReactNode;
@@ -102,7 +117,7 @@ export function Workspace({
     children: React.ReactNode;
 }) {
     const { t } = useTranslation('backend/moderation');
-    const [layer, setLayer] = useLayer(scope);
+    const [layer, setLayer] = useLayer(scope, initialLayer, viewKey, map.overviewKey !== undefined);
     const imagery = useAerialImagery(imageryLayers);
     const wide = useMediaQuery('(min-width: 1024px)');
     const street = streetView ? streetViewUrl(streetView.latitude, streetView.longitude) : null;
@@ -113,6 +128,8 @@ export function Workspace({
     const heights = sheetHeights(height);
     /** What the drawer covers of the map; fully open keeps the half-open view, so the map does not move. */
     const covered = wide || height === 0 ? 0 : current === 'peek' ? heights.peek : heights.half;
+
+    const panel = <Fragment key={viewKey}>{children}</Fragment>;
 
     const views = (
         <ToggleGroup
@@ -140,6 +157,7 @@ export function Workspace({
             <ModerationMap
                 {...map}
                 layer={layer}
+                reviewKey={viewKey}
                 aerial={imagery.layer}
                 inset={wide ? (aside ? EDITOR_INSET : PANEL_INSET) : 0}
                 insetBottom={covered}
@@ -189,7 +207,7 @@ export function Workspace({
                             'motion-reduce:starting:translate-x-0',
                         )}
                     >
-                        {children}
+                        {panel}
                     </section>
                     {aside && (
                         <section
@@ -205,7 +223,7 @@ export function Workspace({
                 height > 0 && (
                     <>
                         <MobileSheet container={root} height={height} snaps={['peek', 'half', 'full']} snap={current} onSnap={setSnap} label={label}>
-                            {children}
+                            {panel}
                         </MobileSheet>
                         {aside && <EditorSheet container={root} height={height} label={asideLabel ?? label} content={aside} />}
                     </>
@@ -213,6 +231,32 @@ export function Workspace({
             )}
         </div>
     );
+}
+
+type WorkspaceProps = React.ComponentProps<typeof WorkspaceLayout>;
+const WorkspaceSlot = createContext<((props: WorkspaceProps) => void) | null>(null);
+
+/** Lets the queue and a keyed review swap panels without replacing the Leaflet workspace. */
+export function SharedWorkspace({ children, className }: { children: React.ReactNode; className: string }) {
+    const [workspace, setWorkspace] = useState<WorkspaceProps | null>(null);
+
+    return (
+        <WorkspaceSlot.Provider value={setWorkspace}>
+            <div className={className}>
+                {children}
+                {workspace && <WorkspaceLayout {...workspace} />}
+            </div>
+        </WorkspaceSlot.Provider>
+    );
+}
+
+export function Workspace(props: WorkspaceProps) {
+    const setWorkspace = useContext(WorkspaceSlot);
+    useLayoutEffect(() => {
+        setWorkspace?.(props);
+    }, [props, setWorkspace]);
+
+    return setWorkspace ? null : <WorkspaceLayout {...props} />;
 }
 
 /** The height of an element, followed as the screen turns or the browser bars come and go; 0 without an element. */

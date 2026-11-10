@@ -108,7 +108,7 @@ class LocationProposalController extends Controller
             'imagery' => $municipality === null || $selected !== null ? [] : $imagery->forCountry(Municipality::with('country')->find($municipality)?->country?->code),
             'fromQueue' => ($filters['from'] ?? null) === 'queue',
             'selected' => $selected,
-            'parking' => $municipality !== null && $selected === null && ! $closedView ? $this->municipalityParking($municipality) : null,
+            'parking' => $municipality !== null && ! $closedView ? $this->municipalityParking($municipality) : null,
             'bayOptions' => [
                 'orientations' => ParkingOrientation::mapped(),
                 'restrictionDays' => ParkingSpace::RESTRICTION_DAYS,
@@ -122,14 +122,13 @@ class LocationProposalController extends Controller
     {
         $record = DB::table('location_proposals')->find($proposal);
         abort_if($record === null, 404);
-        $return = ['proposal' => $proposal, ...$request->only(['municipality', 'page', 'point', 'from'])];
 
         $bays = $request->validated('bays');
         $revision = (int) $request->validated('revision', 0);
         if ($record->closed_at !== null) {
             $this->validatePublicationReplay($record, $bays, $revision);
 
-            return to_route('app.moderation.proposals.index', $return);
+            return $this->returnToProposalQueue($request);
         }
 
         $this->decisions->checkRevision($record, $revision);
@@ -202,7 +201,7 @@ class LocationProposalController extends Controller
             $this->decisions->record($locked, $point, $moderator, $publishedAt, null, null, $created, $total);
         });
 
-        return to_route('app.moderation.proposals.index', $return);
+        return $this->returnToProposalQueue($request);
     }
 
     public function storeStandaloneSpace(StoreStandaloneParkingSpaceRequest $request, int $proposal, ParkingLocationResolver $resolver): RedirectResponse
@@ -290,7 +289,12 @@ class LocationProposalController extends Controller
 
         Inertia::flash('success', __('parking_spaces.proposal.rejected'));
 
-        return $request->query('from') === 'queue' && ! $request->filled('municipality')
+        return $this->returnToProposalQueue($request);
+    }
+
+    private function returnToProposalQueue(Request $request): RedirectResponse
+    {
+        return $request->query('from') === 'queue'
             ? to_route('app.moderation.index')
             : to_route('app.moderation.proposals.index', $request->only(['municipality', 'page']));
     }

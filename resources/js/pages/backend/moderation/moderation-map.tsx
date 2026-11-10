@@ -1,5 +1,6 @@
 import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
+import { SmoothWheelZoom } from '@/components/map/smooth-wheel-zoom';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { pinSvg } from '@/lib/pin-svg';
@@ -8,7 +9,7 @@ import L from 'leaflet';
 import { Camera, ExternalLink, Info, LocateFixed, Minus, Move, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import { NUDGE_FAR_METRES, NUDGE_METRES, nudge, type Direction, type MapPoint } from './geo';
 
 export type { MapPoint } from './geo';
@@ -33,15 +34,9 @@ const ghostIcon = L.divIcon({
     iconAnchor: [15, 38],
 });
 
-const dot = (color: string) =>
-    L.divIcon({
-        html: `<span style="display:block;width:14px;height:14px;border-radius:999px;background:${color};border:3px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)"></span>`,
-        className: '',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
-    });
-const nearbyIcon = dot('#16a34a');
-const municipalIcon = dot('#7c3aed');
+const CONTEXT_MARKER_STYLE = { color: '#fff', weight: 3, fillOpacity: 1 };
+const COMMUNITY_MARKER_STYLE = { ...CONTEXT_MARKER_STYLE, fillColor: '#16a34a' };
+const MUNICIPAL_MARKER_STYLE = { ...CONTEXT_MARKER_STYLE, fillColor: '#7c3aed' };
 
 /**
  * Icons are built once per look and reused: a new icon object makes Leaflet replace the marker's element, which
@@ -120,7 +115,7 @@ const TILES = {
     satellite: { zoom: 19 },
 };
 
-type QueuePin = {
+export type QueuePin = {
     key: string;
     point: MapPoint;
     color: string;
@@ -159,6 +154,9 @@ export function ModerationMap({
     queue,
     fitQueue = true,
     fitParking = false,
+    overviewKey,
+    reviewKey,
+    focusRequest = 0,
     highlighted,
     inspectedPin,
     onPick,
@@ -194,6 +192,10 @@ export function ModerationMap({
     fitQueue?: boolean;
     /** Include existing parking in the municipality overview bounds. */
     fitParking?: boolean;
+    /** The overview whose view should be restored after returning from a review. */
+    overviewKey?: string;
+    reviewKey?: string;
+    focusRequest?: number;
     highlighted?: string | null;
     /** Keep the selected detail pin visible without changing the current zoom. */
     inspectedPin?: MapPoint;
@@ -230,8 +232,10 @@ export function ModerationMap({
 }) {
     const { t } = useTranslation('backend/moderation');
     const tiles = TILES[layer];
+    const keepStreetLayer = overviewKey !== undefined || reviewKey !== undefined;
     const [map, setMap] = useState<L.Map | null>(null);
     const [focus, setFocus] = useState(0);
+    const contextRenderer = useMemo(() => L.canvas(), []);
     const spread = fitQueue ? [...(queue?.map((pin) => pin.point) ?? []), ...(fitParking ? [...nearby, ...municipal] : [])] : undefined;
     const points = spread?.map((point) => `${point.latitude},${point.longitude}`).join(';') ?? '';
     const bounds = useMemo(
@@ -252,7 +256,8 @@ export function ModerationMap({
         });
     }, [map, inspectedLatitude, inspectedLongitude, inset, insetBottom]);
     const legendItems = [
-        ...(sourcePoint && bays ? bayLegend(t) : queue ? queueLegend(queue) : []),
+        ...(sourcePoint && bays ? bayLegend(t) : []),
+        ...(queue ? queueLegend(queue) : []),
         ...(nearby.length > 0 ? [{ key: 'community', icon: legendDot('#16a34a'), label: t('map.legend.community') }] : []),
         ...(municipal.length > 0 ? [{ key: 'municipal', icon: legendDot('#7c3aed'), label: t('map.legend.municipal') }] : []),
     ];
@@ -263,26 +268,51 @@ export function ModerationMap({
                 ref={setMap}
                 center={[center.latitude, center.longitude]}
                 zoom={startZoom}
+                zoomSnap={0}
+                scrollWheelZoom={false}
                 zoomControl={false}
                 attributionControl={false}
                 className="absolute inset-0 z-0 size-full"
             >
-                <Focus center={center} zoom={startZoom} bounds={bounds} inset={inset} insetBottom={insetBottom} focus={focus} />
-                {layer === 'streets' ? (
-                    <TileLayer key={layer} url={TILES.streets.url} attribution={TILES.streets.attribution} maxZoom={21} />
-                ) : (
-                    <AerialTiles layer={aerial} />
+                <SmoothWheelZoom />
+                <Focus
+                    center={center}
+                    zoom={startZoom}
+                    bounds={bounds}
+                    inset={inset}
+                    insetBottom={insetBottom}
+                    focus={focus}
+                    overviewKey={overviewKey}
+                    reviewKey={reviewKey}
+                    focusRequest={focusRequest}
+                />
+                {(layer === 'streets' || keepStreetLayer) && (
+                    <TileLayer
+                        url={TILES.streets.url}
+                        attribution={TILES.streets.attribution}
+                        maxNativeZoom={21}
+                        maxZoom={keepStreetLayer ? 22 : 21}
+                    />
                 )}
+                {layer === 'satellite' && <AerialTiles layer={aerial} />}
                 {nearby.map((point, index) => (
-                    <Marker key={`n${index}`} position={[point.latitude, point.longitude]} icon={nearbyIcon} interactive={false} keyboard={false} />
+                    <CircleMarker
+                        key={`n${index}`}
+                        center={[point.latitude, point.longitude]}
+                        radius={5.5}
+                        pathOptions={COMMUNITY_MARKER_STYLE}
+                        renderer={contextRenderer}
+                        interactive={false}
+                    />
                 ))}
                 {municipal.map((point, index) => (
-                    <Marker
+                    <CircleMarker
                         key={`m${index}`}
-                        position={[point.latitude, point.longitude]}
-                        icon={municipalIcon}
+                        center={[point.latitude, point.longitude]}
+                        radius={5.5}
+                        pathOptions={MUNICIPAL_MARKER_STYLE}
+                        renderer={contextRenderer}
                         interactive={false}
-                        keyboard={false}
                     />
                 ))}
                 {current && (
@@ -313,42 +343,39 @@ export function ModerationMap({
                         zIndexOffset={-500}
                     />
                 )}
-                {bays ? (
-                    bays.map((bay) => (
-                        <BayPin
-                            key={bay.key}
-                            bay={bay}
-                            onMove={bay.state === 'submitted' || !onMoveBay ? undefined : (point) => onMoveBay(bay.key, point)}
-                            onSelect={bay.state === 'submitted' ? undefined : () => onSelectBay?.(bay.key)}
-                            onRemove={bay.state === 'selected' && onRemoveBay ? () => onRemoveBay(bay.key) : undefined}
-                        />
-                    ))
-                ) : queue ? (
-                    queue.map((item) => (
-                        <Marker
-                            key={item.key}
-                            position={[item.point.latitude, item.point.longitude]}
-                            icon={
-                                item.number !== undefined
-                                    ? numberedIcon(item.number)
-                                    : item.count === undefined
-                                      ? queueIcon(item.color, item.key === highlighted)
-                                      : municipalityIcon(item.count, item.color)
-                            }
-                            title={item.label}
-                            zIndexOffset={item.key === highlighted ? 1000 : item.number !== undefined ? 500 : 0}
-                            eventHandlers={{ click: () => onPick?.(item.key) }}
-                        >
-                            {inspectedPin && item.key === highlighted && (
-                                <Tooltip permanent direction="top" offset={[0, -44]}>
-                                    {item.label}
-                                </Tooltip>
-                            )}
-                        </Marker>
-                    ))
-                ) : (
-                    <MainPin key={onMove ? 'movable' : 'fixed'} point={pin} onMove={onMove} label={t('map.pin')} />
-                )}
+                {bays?.map((bay) => (
+                    <BayPin
+                        key={bay.key}
+                        bay={bay}
+                        onMove={bay.state === 'submitted' || !onMoveBay ? undefined : (point) => onMoveBay(bay.key, point)}
+                        onSelect={bay.state === 'submitted' ? undefined : () => onSelectBay?.(bay.key)}
+                        onRemove={bay.state === 'selected' && onRemoveBay ? () => onRemoveBay(bay.key) : undefined}
+                    />
+                ))}
+                {queue?.map((item) => (
+                    <Marker
+                        key={item.key}
+                        position={[item.point.latitude, item.point.longitude]}
+                        icon={
+                            item.number !== undefined
+                                ? numberedIcon(item.number)
+                                : item.count === undefined
+                                  ? queueIcon(item.color, item.key === highlighted)
+                                  : municipalityIcon(item.count, item.color)
+                        }
+                        title={item.label}
+                        zIndexOffset={item.key === highlighted ? 1000 : item.number !== undefined ? 500 : 0}
+                        bubblingMouseEvents={false}
+                        eventHandlers={{ click: () => onPick?.(item.key) }}
+                    >
+                        {inspectedPin && item.key === highlighted && (
+                            <Tooltip permanent direction="top" offset={[0, -44]}>
+                                {item.label}
+                            </Tooltip>
+                        )}
+                    </Marker>
+                ))}
+                {!bays && (!queue || onMove) && <MainPin key={onMove ? 'movable' : 'fixed'} point={pin} onMove={onMove} label={t('map.pin')} />}
                 {onMove && !bays && <PlaceOnClick onMove={onMove} />}
                 {onPlace && <PlaceOnClick onMove={onPlace} />}
             </MapContainer>
@@ -666,6 +693,9 @@ function Focus({
     inset,
     insetBottom = 0,
     focus,
+    overviewKey,
+    reviewKey,
+    focusRequest = 0,
 }: {
     center: MapPoint;
     zoom: number;
@@ -673,21 +703,40 @@ function Focus({
     inset: number;
     insetBottom?: number;
     focus: number;
+    overviewKey?: string;
+    reviewKey?: string;
+    focusRequest?: number;
 }) {
     const map = useMap();
     const key = `${center.latitude},${center.longitude}`;
-    const previous = useRef<{ key: string; inset: number; insetBottom: number; focus: number } | null>(null);
-
+    const previous = useRef<{
+        key: string;
+        inset: number;
+        insetBottom: number;
+        focus: number;
+        focusRequest: number;
+        overviewKey?: string;
+        reviewKey?: string;
+    } | null>(null);
     useEffect(() => {
         const last = previous.current;
-        previous.current = { key, inset, insetBottom, focus };
+        previous.current = { key, inset, insetBottom, focus, focusRequest, overviewKey, reviewKey };
+        // Updating the visible proposals in one municipality should not move the map.
+        if (overviewKey && last?.overviewKey === overviewKey && last.focus === focus) return;
+
+        const openingFromQueue = Boolean(last?.overviewKey && reviewKey);
+        // Keep the viewport when switching between details or returning to the queue.
+        if (last && last.reviewKey !== reviewKey && !openingFromQueue && (reviewKey || (last.reviewKey && overviewKey))) return;
+
         const panelChanged = last !== null && last.key === key && last.focus === focus && (last.inset !== inset || last.insetBottom !== insetBottom);
-        const animate = panelChanged && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const requested = openingFromQueue || (last !== null && last.focusRequest !== focusRequest);
+        const animate = (panelChanged || requested) && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (bounds) {
             map.fitBounds(bounds, { paddingTopLeft: [inset + 48, 64], paddingBottomRight: [72, insetBottom + 48], maxZoom: 17, animate: false });
             return;
         }
-        const targetZoom = panelChanged ? map.getZoom() : zoom;
+        let targetZoom = panelChanged ? map.getZoom() : zoom;
+        if (requested) targetZoom = Math.max(zoom, map.getZoom());
         const target = map.unproject(
             map.project([center.latitude, center.longitude], targetZoom).subtract([inset / 2, -insetBottom / 2]),
             targetZoom,
@@ -695,7 +744,7 @@ function Focus({
         map.setView(target, targetZoom, { animate, duration: 0.3 });
         // The centre is compared by value, so a new object for the same place does not move the map.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [map, key, bounds, inset, insetBottom, focus]);
+    }, [map, key, bounds, inset, insetBottom, focus, overviewKey, reviewKey, focusRequest]);
 
     return null;
 }

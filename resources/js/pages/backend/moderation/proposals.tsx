@@ -7,7 +7,7 @@ import app from '@/routes/app';
 import type { PaginatedResponse, RestrictionDay } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowRight, CircleCheck, Undo2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { candidatePins, chosenPin, DuplicateWalk, pinKey, walkTarget, type ConfirmedMatch, type Walk, type WalkAnswer } from './duplicate-walk';
 import type { MapPoint } from './geo';
@@ -25,7 +25,7 @@ import {
     type ProposalRow,
 } from './location-proposals';
 import type { EnumOption } from './values';
-import { PanelNav, Workspace } from './workspace';
+import { PanelNav, SharedWorkspace, Workspace } from './workspace';
 
 type Point = ProposalRow['points'][number];
 type ClosedRow = ProposalRow & {
@@ -61,7 +61,6 @@ type Props = {
         published: boolean;
         revision: number;
         canReject: boolean;
-        canAddStandalone: boolean;
         publishedBays: PublishedBay[];
         imagery: AerialLayer[];
         community: NearbyPlace[];
@@ -95,6 +94,7 @@ export default function Proposals({
     const query = { ...(municipality ? { municipality } : {}), page: proposals?.current_page };
     const [walk, setWalk] = useState<Walk | null>(null);
     const [closing, setClosing] = useState(false);
+    const loadedQueue = useRef<typeof proposals>(null);
 
     const reviewQuery = { ...query, ...(selected ? { point: selected.pointId } : {}), ...(fromQueue ? { from: 'queue' as const } : {}) };
     const rows = proposals?.data.map(toLocationProposal) ?? [];
@@ -161,6 +161,43 @@ export default function Proposals({
               ]
             : [],
     );
+    const proposalPins = rows.flatMap((item) =>
+        item.points.map((point) => ({
+            key: String(point.id),
+            point,
+            color: SOURCE_COLOR,
+            label: item.street,
+            legendLabel: t('map.source_point'),
+        })),
+    );
+    const pickProposal = (key: string) => {
+        const item = rows.find((row) => row.points.some((point) => String(point.id) === key));
+        if (item) {
+            if (!selected) loadedQueue.current = view === 'open' ? proposals : null;
+            router.visit(routes.index({ query: { ...query, proposal: item.id, point: key } }), {
+                preserveState: true,
+                preserveScroll: true,
+                only: view === 'open' ? ['selected'] : undefined,
+                showProgress: false,
+            });
+        }
+    };
+    const backToQueue = () => {
+        const destination = fromQueue
+            ? app.moderation.index()
+            : routes.index({ query: { ...query, ...(selected?.decision ? { view: 'closed' } : {}) } });
+        if (!fromQueue && !selected?.decision && proposals && loadedQueue.current === proposals) {
+            router.push({
+                url: destination.url,
+                props: (props) => ({ ...props, selected: null }),
+                preserveState: true,
+                preserveScroll: true,
+            });
+            return;
+        }
+
+        router.visit(destination, { preserveState: !fromQueue, preserveScroll: true, showProgress: fromQueue });
+    };
     const selectedPoint = review?.points.find((point) => point.id === selected?.pointId);
 
     return (
@@ -171,7 +208,7 @@ export default function Proposals({
             ]}
         >
             <Head title={t('proposals.title')} />
-            <div className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
+            <SharedWorkspace className="flex h-[calc(100svh-4rem)] min-h-0 md:h-[calc(100svh-5rem)] md:group-has-data-[collapsible=icon]/sidebar-wrapper:h-[calc(100svh-4rem)]">
                 {selected && review && selectedPoint ? (
                     <LocationProposalReview
                         key={`${selected.id}:${selected.pointId}:${selected.revision}`}
@@ -181,20 +218,23 @@ export default function Proposals({
                         publishedBays={selected.publishedBays}
                         revision={selected.revision}
                         canReject={selected.canReject}
-                        canAddStandalone={selected.canAddStandalone}
                         community={selected.community}
                         municipal={selected.municipal}
                         decision={selected.decision}
                         query={reviewQuery}
                         nextUrl={next?.url}
-                        onPointChange={(point) => router.visit(routes.index({ query: { ...reviewQuery, proposal: selected.id, point } }))}
-                        onBack={() =>
-                            router.visit(
-                                fromQueue
-                                    ? app.moderation.index()
-                                    : routes.index({ query: { ...query, ...(selected.decision ? { view: 'closed' } : {}) } }),
-                            )
+                        proposalPins={fromQueue || selected.decision ? undefined : proposalPins.filter((pin) => pin.key !== String(selected.pointId))}
+                        onPickProposal={pickProposal}
+                        parking={parking}
+                        onPointChange={(point) =>
+                            router.visit(routes.index({ query: { ...reviewQuery, proposal: selected.id, point } }), {
+                                preserveState: true,
+                                preserveScroll: true,
+                                only: ['selected'],
+                                showProgress: false,
+                            })
                         }
+                        onBack={backToQueue}
                     />
                 ) : (
                     <Workspace
@@ -212,6 +252,7 @@ export default function Proposals({
                             municipal: walking ? [] : parking?.municipal,
                             fitParking: parking !== null,
                             fitQueue: !walkPoint,
+                            overviewKey: walking || municipality === null ? undefined : String(municipality),
                             highlighted: walkPin ? pinKey(walkPin) : undefined,
                             queue:
                                 municipality === null
@@ -236,15 +277,7 @@ export default function Proposals({
                                                 legendLabel: t(`proposals.${pin.source}`),
                                             })),
                                         ]
-                                      : rows.flatMap((item) =>
-                                            item.points.map((point) => ({
-                                                key: String(point.id),
-                                                point,
-                                                color: SOURCE_COLOR,
-                                                label: item.street,
-                                                legendLabel: t('map.source_point'),
-                                            })),
-                                        ),
+                                      : proposalPins,
                             onPick: (key) => {
                                 if (walking) {
                                     if (closing) return;
@@ -261,8 +294,7 @@ export default function Proposals({
                                     router.visit(routes.index({ query: { municipality: key } }));
                                     return;
                                 }
-                                const item = rows.find((row) => row.points.some((point) => String(point.id) === key));
-                                if (item) router.visit(routes.index({ query: { ...query, proposal: item.id, point: key } }));
+                                pickProposal(key);
                             },
                         }}
                     >
@@ -334,6 +366,8 @@ export default function Proposals({
                                                             href={routes.index({
                                                                 query: { municipality, ...(option === 'closed' ? { view: 'closed' } : {}) },
                                                             })}
+                                                            preserveState
+                                                            preserveScroll
                                                             aria-current={view === option ? 'page' : undefined}
                                                             className={cn(
                                                                 'flex h-9 flex-1 items-center justify-center rounded-[7px] text-sm focus-visible:outline-2 focus-visible:outline-ring',
@@ -380,6 +414,8 @@ export default function Proposals({
                                                                         href={routes.index({
                                                                             query: { municipality, view: 'closed', proposal: row.id },
                                                                         })}
+                                                                        preserveState
+                                                                        preserveScroll
                                                                         className="flex items-center gap-3 py-2.5 pr-4 pl-[18px] hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                                                                     >
                                                                         <span
@@ -435,11 +471,7 @@ export default function Proposals({
                                                                     </Button>
                                                                 )
                                                             }
-                                                            onOpen={({ proposal, point }) =>
-                                                                router.visit(
-                                                                    routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }),
-                                                                )
-                                                            }
+                                                            onOpen={({ point }) => pickProposal(String(point.id))}
                                                         />
                                                     )}
                                                     {todoRows.length > 0 && (
@@ -447,11 +479,7 @@ export default function Proposals({
                                                             title={t('proposals.group_todo')}
                                                             total={proposals.total - onMapCount}
                                                             proposals={todoRows.map(toLocationProposal)}
-                                                            onOpen={({ proposal, point }) =>
-                                                                router.visit(
-                                                                    routes.index({ query: { ...query, proposal: proposal.id, point: point.id } }),
-                                                                )
-                                                            }
+                                                            onOpen={({ point }) => pickProposal(String(point.id))}
                                                         />
                                                     )}
                                                 </>
@@ -463,7 +491,7 @@ export default function Proposals({
                                     <div className="flex shrink-0 flex-wrap gap-2 border-t px-5 py-4">
                                         {next && (
                                             <Button asChild>
-                                                <Link href={next}>
+                                                <Link href={next} preserveState preserveScroll>
                                                     {t('proposals.next_proposal')} <ArrowRight aria-hidden />
                                                 </Link>
                                             </Button>
@@ -484,7 +512,7 @@ export default function Proposals({
                         )}
                     </Workspace>
                 )}
-            </div>
+            </SharedWorkspace>
         </AppLayout>
     );
 }

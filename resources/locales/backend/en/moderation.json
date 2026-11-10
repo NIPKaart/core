@@ -549,6 +549,7 @@
     },
     "map": {
         "pin": "Pin of the parking space; move it with the arrow keys",
+        "focus_proposal": "Show on map",
         "recenter": "Back to the parking space",
         "zoom_in": "Zoom in",
         "zoom_out": "Zoom out",

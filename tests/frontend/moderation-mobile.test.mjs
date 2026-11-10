@@ -18,6 +18,7 @@ function mount(file, modules = {}) {
                 return { Fragment: 'fragment', jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) };
             if (name === 'react')
                 return {
+                    createContext: (initial) => ({ initial }),
                     useState: (initial) => {
                         const index = cursor++;
                         if (!(index in state)) state[index] = typeof initial === 'function' ? initial() : initial;
