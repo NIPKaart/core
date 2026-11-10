@@ -1,5 +1,46 @@
 {
     "proposals": {
+        "validation": {
+            "title": "Parking Vision",
+            "start": "Validate location",
+            "retry": "Try again",
+            "unknown": "Unknown",
+            "state": {
+                "loading": "Checking validation status…",
+                "idle": "Check this sign location against imagery and available sources.",
+                "queued": "Validation is queued.",
+                "running": "Parking Vision is reviewing imagery and sources…",
+                "failed": "Validation failed.",
+                "unavailable": "Parking Vision is temporarily unavailable."
+            },
+            "board": {
+                "label": "Sign",
+                "supported_one": "E6 supported by {{count}} view",
+                "supported_other": "E6 supported by {{count}} views",
+                "not_observed": "No E6 seen in the reviewed images",
+                "inconclusive": "Inconclusive"
+            },
+            "count": {
+                "label": "Count",
+                "designated_one": "{{count}} designated parking space",
+                "designated_other": "{{count}} designated parking spaces"
+            },
+            "geometry": {
+                "label": "Bay location",
+                "indicative_one": "Indicative outline for {{count}} bay",
+                "indicative_other": "Indicative outlines for {{count}} bays"
+            },
+            "subsign": {
+                "label": "Supplementary sign",
+                "plate": "Licence plate",
+                "time": "Time window",
+                "present": "Visible, type inconclusive",
+                "conflict": "Conflicting evidence",
+                "unknown": "Inconclusive"
+            },
+            "coverage": "{{analyzed}} of {{selected}} selected Mapillary images reviewed.",
+            "partial": "Image retrieval or review was incomplete."
+        },
         "standalone": {
             "title": "Add a separate parking space",
             "place": "Click the missing parking bay or move the pin.",
