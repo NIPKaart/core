@@ -1,5 +1,6 @@
 import { AerialTiles, type AerialLayer } from '@/components/map/aerial-imagery';
 import { streetViewUrl } from '@/components/map/parking-detail/navigation-handoff';
+import { SmoothWheelZoom } from '@/components/map/smooth-wheel-zoom';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { pinSvg } from '@/lib/pin-svg';
@@ -273,11 +274,12 @@ export function ModerationMap({
                 center={[center.latitude, center.longitude]}
                 zoom={startZoom}
                 zoomSnap={0}
-                wheelPxPerZoomLevel={160}
+                scrollWheelZoom={false}
                 zoomControl={false}
                 attributionControl={false}
                 className="absolute inset-0 z-0 size-full"
             >
+                <SmoothWheelZoom />
                 <Focus
                     center={center}
                     zoom={startZoom}
