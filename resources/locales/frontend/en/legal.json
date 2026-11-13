@@ -1,0 +1,66 @@
+{
+    "navigation": "Legal information",
+    "revision": "Last revised",
+    "draft": "Draft for review. The formal controller and details on processing and retention will be confirmed before publication.",
+    "contactLink": "Contact NIPKaart",
+    "terms": {
+        "title": "Terms of use",
+        "intro": "These terms explain how to use the map, your account and the contribution tools.",
+        "sections": {
+            "map": {
+                "title": "Using the map",
+                "body": "NIPKaart helps you find accessible parking spaces and parking facilities. Check the signs, markings and parking rules on site. Occupancy figures for garages and park and ride facilities cover the entire facility."
+            },
+            "account": {
+                "title": "Your account",
+                "body": "You can use the public map without an account. You need an account to contribute and use certain personal features. Keep your sign-in details private and let us know if you suspect that someone else is using your account."
+            },
+            "contributions": {
+                "title": "Contributions and moderation",
+                "body": "Add information you have observed yourself or are allowed to share. Leave licence plates, names and other personal details out of free text. Moderators can review, correct or remove contributions. Use the reporting tool or the contact form if something on the map is wrong."
+            },
+            "licences": {
+                "title": "Software and data",
+                "body": "The NIPKaart software licence accompanies the source code. Data from municipalities and other providers is subject to the terms of its source. Check the attribution for the data before reusing it."
+            }
+        }
+    },
+    "privacy": {
+        "title": "Privacy policy",
+        "intro": "This policy explains which information NIPKaart uses when you view the map, use an account or contribute.",
+        "sections": {
+            "controller": {
+                "title": "Who is responsible?",
+                "body": "The formal name and contact details of the data controller will be confirmed before publication. You can use the NIPKaart contact form for questions about this draft."
+            },
+            "account": {
+                "title": "Accounts and personal features",
+                "body": "For your account, we use your name, email address and a protected representation of your password. We use this information to sign you in, verify your email address and restore access to your account. Saved destinations, favourites and settings are linked to your account."
+            },
+            "contributions": {
+                "title": "Contributions and moderation",
+                "body": "When you submit a new parking space, we store your account, IP address, the location of the space and the details you enter. We use this information to review and manage contributions and handle reports. When published, the location and public parking details appear on the map."
+            },
+            "contact": {
+                "title": "Contacting us",
+                "body": "We use the name, email address, topic and message you submit through the contact form to respond. You can include a location when reporting a map error. The form sends these details to NIPKaart by email."
+            },
+            "map": {
+                "title": "Map and search",
+                "body": "When you search for a destination, NIPKaart may pass the search text or coordinates to a geocoding service. Depending on the map layer, your browser requests imagery from a map provider. If you open an external navigation or street imagery link, that service receives the coordinates in the link."
+            },
+            "storage": {
+                "title": "Cookies and browser storage",
+                "body": "NIPKaart uses session cookies to remember your session and protect forms. Your browser may also store your display preference and recent searches."
+            },
+            "retention": {
+                "title": "Legal bases, recipients and retention",
+                "body": "The legal basis for each purpose, production recipients, any transfers outside the EEA and retention periods for data such as contributions, contact email, logs and backups will be confirmed before publication."
+            },
+            "rights": {
+                "title": "Your privacy rights",
+                "body": "You can ask to access, correct or erase your data. Depending on the processing, you may also ask to restrict or transfer it, or object. Use the contact form to make a request. You can also lodge a complaint with the Dutch Data Protection Authority."
+            }
+        }
+    }
+}

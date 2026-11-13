@@ -1,4 +1,4 @@
-import { about, contact, garages, locationMap } from '@/routes';
+import { about, contact, garages, locationMap, privacy, terms } from '@/routes';
 import { index as areas } from '@/routes/areas';
 import { add } from '@/routes/location-map';
 import { Link } from '@inertiajs/react';
@@ -10,6 +10,7 @@ const link = 'flex min-h-11 items-center text-[15px] text-stone-700 hover:text-s
 
 export default function Footer() {
     const { t } = useTranslation('frontend/footer');
+    const { t: legal } = useTranslation('frontend/legal');
 
     return (
         <footer className="border-t border-stone-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
@@ -43,6 +44,12 @@ export default function Footer() {
                             </Link>
                             <Link href={contact()} className={link}>
                                 {t('contact')}
+                            </Link>
+                            <Link href={terms()} className={link}>
+                                {legal('terms.title')}
+                            </Link>
+                            <Link href={privacy()} className={link}>
+                                {legal('privacy.title')}
                             </Link>
                             <a href={GITHUB_URL} className={link} target="_blank" rel="noopener noreferrer">
                                 {t('github')}
