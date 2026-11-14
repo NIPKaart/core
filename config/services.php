@@ -53,6 +53,11 @@ return [
         'providers' => array_values(array_filter(array_map('trim', explode(',', (string) env('IMAGERY_PROVIDERS', 'pdok,google'))))),
     ],
 
+    'parking_vision' => [
+        'url' => env('PARKING_VISION_URL'),
+        'key' => env('PARKING_VISION_API_KEY'),
+    ],
+
     'nominatim' => [
         'enabled' => env('NOMINATIM_PUBLIC_ENABLED', true),
         'user_agent' => env('NOMINATIM_USER_AGENT', 'NIPKaart/1.0 (+https://nipkaart.nl)'),

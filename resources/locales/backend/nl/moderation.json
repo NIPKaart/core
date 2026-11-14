@@ -1,5 +1,46 @@
 {
     "proposals": {
+        "validation": {
+            "title": "Parking Vision",
+            "start": "Valideer locatie",
+            "retry": "Opnieuw proberen",
+            "unknown": "Onbekend",
+            "state": {
+                "loading": "Validatiestatus ophalen…",
+                "idle": "Controleer deze bordlocatie met beeldmateriaal en beschikbare bronnen.",
+                "queued": "Validatie staat in de wachtrij.",
+                "running": "Parking Vision beoordeelt de beelden en bronnen…",
+                "failed": "De validatie is mislukt.",
+                "unavailable": "Parking Vision is tijdelijk niet beschikbaar."
+            },
+            "board": {
+                "label": "Bord",
+                "supported_one": "E6 ondersteund door {{count}} kijkhoek",
+                "supported_other": "E6 ondersteund door {{count}} kijkhoeken",
+                "not_observed": "Geen E6 gezien in de beoordeelde beelden",
+                "inconclusive": "Onbeslist"
+            },
+            "count": {
+                "label": "Aantal",
+                "designated_one": "{{count}} aangewezen parkeerplaats",
+                "designated_other": "{{count}} aangewezen parkeerplaatsen"
+            },
+            "geometry": {
+                "label": "Vakligging",
+                "indicative_one": "Indicatieve contour voor {{count}} parkeervak",
+                "indicative_other": "Indicatieve contouren voor {{count}} parkeervakken"
+            },
+            "subsign": {
+                "label": "Onderbord",
+                "plate": "Kenteken",
+                "time": "Tijdvenster",
+                "present": "Zichtbaar, type onbeslist",
+                "conflict": "Tegenstrijdige aanwijzingen",
+                "unknown": "Onbeslist"
+            },
+            "coverage": "{{analyzed}} van {{selected}} geselecteerde Mapillary-beelden beoordeeld.",
+            "partial": "Het ophalen of beoordelen van beelden was onvolledig."
+        },
         "standalone": {
             "title": "Losse parkeerplaats toevoegen",
             "place": "Klik op het ontbrekende parkeervak of verplaats de pin.",
