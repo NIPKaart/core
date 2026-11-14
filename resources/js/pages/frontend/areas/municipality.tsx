@@ -161,7 +161,6 @@ function Rules({ area, className }: { area: MunicipalityArea; className: string 
     const { t } = useTranslation('frontend/areas');
 
     const hasLocalRules = area.rules.some((rule) => rule.scope === 'municipality');
-    const hasLinks = area.rules.length > 0 || Boolean(area.gpkwijs_url);
 
     return (
         <section aria-labelledby="rules" className={cn('flex min-w-0 flex-col gap-4 lg:gap-5', className)}>
@@ -169,7 +168,7 @@ function Rules({ area, className }: { area: MunicipalityArea; className: string 
                 <span className="block wrap-anywhere hyphens-auto">{t('rules.permit_title')}</span>
             </SectionTitle>
             {!hasLocalRules && <p className={muted}>{t('rules.local_unknown')}</p>}
-            {hasLinks && (
+            {area.rules.length > 0 && (
                 <ul className={cn(card, 'overflow-hidden')}>
                     {area.rules.map((rule) => (
                         <RuleRow
@@ -179,9 +178,6 @@ function Rules({ area, className }: { area: MunicipalityArea; className: string 
                             scope={t(rule.scope === 'municipality' ? 'rules.municipality_scope' : 'rules.national_scope', { host: rule.host })}
                         />
                     ))}
-                    {area.gpkwijs_url && (
-                        <RuleRow rule={{ url: area.gpkwijs_url }} title={t('rules.gpkwijs')} scope={t('rules.gpkwijs_scope', { name: area.name })} />
-                    )}
                 </ul>
             )}
             <RulesDisclaimer />
