@@ -63,7 +63,7 @@
         "laravel-echo": "^2.2.0",
         "laravel-vite-plugin": "^3.0.0",
         "leaflet": "^1.9.4",
-        "leaflet.locatecontrol": "^0.90.0",
+        "leaflet.locatecontrol": "^0.91.0",
         "lucide-react": "^1.0.0",
         "pusher-js": "^8.4.0",
         "react": "^19.0.0",
