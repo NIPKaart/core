@@ -18,7 +18,7 @@
                 "supported_one": "E6 ondersteund door {{count}} kijkhoek",
                 "supported_other": "E6 ondersteund door {{count}} kijkhoeken",
                 "not_observed": "Geen E6 gezien in de beoordeelde beelden",
-                "inconclusive": "Onbeslist"
+                "inconclusive": "Onzeker"
             },
             "count": {
                 "label": "Aantal",
@@ -34,9 +34,17 @@
                 "label": "Onderbord",
                 "plate": "Kenteken",
                 "time": "Tijdvenster",
-                "present": "Zichtbaar, type onbeslist",
+                "present": "Zichtbaar, type onbekend",
                 "conflict": "Tegenstrijdige aanwijzingen",
-                "unknown": "Onbeslist"
+                "unknown": "Onbekend"
+            },
+            "views": "Mapillary-kijkhoeken",
+            "view": "Kijkhoek {{number}} ↗",
+            "match": {
+                "ambiguous": "E6 zichtbaar, koppeling aan dit NDW-punt onzeker",
+                "other": "E6 zichtbaar, een ander NDW-punt ligt dichterbij",
+                "target": "Dit NDW-punt ligt op {{distance}} m van het bord.",
+                "alternative": "Het andere NDW-punt ligt op {{distance}} m."
             },
             "coverage": "{{analyzed}} van {{selected}} geselecteerde Mapillary-beelden beoordeeld.",
             "partial": "Het ophalen of beoordelen van beelden was onvolledig."

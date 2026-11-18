@@ -69,12 +69,15 @@ it('returns independent evidence for the selected NDW point without changing the
     $this->postJson($start)->assertOk()->assertExactJson(['status' => 'queued']);
     Http::assertSent(fn (Request $request) => $request->url() === $url
         && $request->hasHeader('Authorization', 'Bearer parking-vision-test-key')
-        && $request->data() === ['locationId' => $locationId, 'ndwProposalId' => $externalId, 'lat' => $lat, 'lon' => $lon]);
+        && $request->data() === [
+            'locationId' => $locationId, 'ndwProposalId' => $externalId, 'lat' => $lat, 'lon' => $lon,
+            'proposalRevision' => $request['proposalRevision'],
+        ] && preg_match('/^[a-f0-9]{64}$/D', $request['proposalRevision']));
     $this->postJson($start)->assertOk()->assertExactJson(['status' => 'running']);
 
     $expected = [
         'status' => 'completed', 'board' => $expectedBoard, 'linkedViews' => count($images),
-        'bayCount' => null, 'mappedBays' => 0, 'subsign' => $subsign,
+        'bayCount' => null, 'mappedBays' => 0, 'subsign' => $subsign, 'ndwMatch' => null, 'views' => $images,
         'coverage' => ['analyzed' => $analyzed, 'selected' => $selected, 'partial' => $analyzed < $selected],
     ];
     $this->getJson($status)->assertOk()->assertExactJson($expected);
@@ -113,4 +116,63 @@ it('lets moderators retry after the provider rejects a submission', function () 
     $start = route('app.moderation.proposals.validation.start', $params);
     $this->actingAs($this->moderator)->postJson($start)->assertExactJson(['status' => 'unavailable']);
     $this->postJson($start)->assertExactJson(['status' => 'queued']);
+});
+
+it('shows the uncertain Arcadeltstraat association and aerial bay evidence independently', function () {
+    $external = 'a9c24148-3131-456f-8754-5053fdba76e8';
+    $params = parkingVisionProposal($this->municipality->id, $this->source->id, $external, 51.421007869189, 5.4593446041143);
+    $id = (string) Str::uuid();
+    $base = 'https://vision.test/api/v1/validations';
+    Http::preventStrayRequests();
+    Http::fake([
+        $base => Http::response(['id' => $id], 202),
+        "$base/$id" => Http::response([
+            'locationId' => "nipkaart:{$params['proposal']}:{$params['point']}", 'status' => 'completed',
+            'result' => [
+                'ndwProposalId' => $external,
+                'board' => [
+                    'status' => 'supported', 'linkedImageIds' => [],
+                    'ndwMatch' => [
+                        'status' => 'ambiguous', 'imageIds' => ['1588529463015544', '2608878639574127', 'unsafe-url'],
+                        'candidates' => [
+                            ['id' => $external, 'distanceMeters' => 2.1973],
+                            ['id' => 'a3204f67-1ac0-45f5-b1ad-409af9ebe67a', 'distanceMeters' => 3.9674],
+                        ],
+                    ],
+                ],
+                'aerialBays' => ['status' => 'indicative', 'geojson' => ['features' => [['geometry' => []], ['geometry' => []]]]],
+                'subsign' => ['status' => 'plate'],
+                'sources' => ['mapillary' => ['analyzed' => 6, 'selected' => 6]],
+            ],
+        ]),
+    ]);
+    $this->actingAs($this->moderator)->postJson(route('app.moderation.proposals.validation.start', $params))->assertOk();
+    $this->getJson(route('app.moderation.proposals.validation.show', $params))
+        ->assertOk()->assertJsonPath('board', 'inconclusive')
+        ->assertJsonPath('ndwMatch', ['status' => 'ambiguous', 'targetDistance' => 2.2, 'alternativeDistance' => 4])
+        ->assertJsonPath('views', ['1588529463015544', '2608878639574127'])
+        ->assertJsonPath('mappedBays', 2)->assertJsonPath('bayCount', null)->assertJsonPath('subsign', 'plate');
+    $this->assertDatabaseHas('location_proposals', ['id' => $params['proposal'], 'closed_at' => null, 'bays_published_at' => null]);
+});
+
+it('resubmits an expired job and changes the revision when source evidence changes', function () {
+    $params = parkingVisionProposal($this->municipality->id, $this->source->id, (string) Str::uuid(), 52.01, 4.37);
+    $first = (string) Str::uuid();
+    $second = (string) Str::uuid();
+    $url = 'https://vision.test/api/v1/validations';
+    Http::preventStrayRequests();
+    Http::fake([
+        $url => Http::sequence()->push(['id' => $first], 202)->push(['id' => $second], 202)->push(['id' => (string) Str::uuid()], 202),
+        "$url/$first" => Http::response(['error' => 'not_found'], 404),
+    ]);
+    $start = route('app.moderation.proposals.validation.start', $params);
+    $this->actingAs($this->moderator)->postJson($start)->assertJsonPath('status', 'queued');
+    $this->getJson(route('app.moderation.proposals.validation.show', $params))->assertJsonPath('status', 'idle');
+    $this->postJson($start)->assertJsonPath('status', 'queued');
+    DB::table('location_proposal_points')->where('id', $params['point'])->update(['under_sign_types' => '["TIJD"]']);
+    $this->postJson($start)->assertJsonPath('status', 'queued');
+    $submitted = Http::recorded(fn (Request $request) => $request->method() === 'POST')->values();
+    expect($submitted)->toHaveCount(3)
+        ->and($submitted[0][0]['proposalRevision'])->toBe($submitted[1][0]['proposalRevision'])
+        ->and($submitted[2][0]['proposalRevision'])->not->toBe($submitted[1][0]['proposalRevision']);
 });

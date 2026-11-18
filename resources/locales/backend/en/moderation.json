@@ -38,6 +38,14 @@
                 "conflict": "Conflicting evidence",
                 "unknown": "Inconclusive"
             },
+            "views": "Mapillary views",
+            "view": "View {{number}} ↗",
+            "match": {
+                "ambiguous": "E6 visible, association with this NDW point uncertain",
+                "other": "E6 visible, another NDW point is closer",
+                "target": "This NDW point is {{distance}} m from the sign.",
+                "alternative": "The other NDW point is {{distance}} m away."
+            },
             "coverage": "{{analyzed}} of {{selected}} selected Mapillary images reviewed.",
             "partial": "Image retrieval or review was incomplete."
         },

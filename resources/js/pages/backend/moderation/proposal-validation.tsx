@@ -12,6 +12,8 @@ type Validation =
           linkedViews: number;
           bayCount: number | null;
           mappedBays: number;
+          ndwMatch: { status: 'ambiguous' | 'other'; targetDistance: number | null; alternativeDistance: number | null } | null;
+          views: string[];
           subsign: 'plate' | 'time' | 'present' | 'conflict' | 'unknown';
           coverage: { analyzed: number; selected: number; partial: boolean };
       };
@@ -66,7 +68,11 @@ export default function ProposalValidation({ proposal, point }: { proposal: numb
                     <>
                         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
                             <dt className="text-muted-foreground">{t('board.label')}</dt>
-                            <dd>{t(`board.${validation.board}`, { count: validation.linkedViews })}</dd>
+                            <dd>
+                                {t(validation.ndwMatch ? `match.${validation.ndwMatch.status}` : `board.${validation.board}`, {
+                                    count: validation.linkedViews,
+                                })}
+                            </dd>
                             <dt className="text-muted-foreground">{t('count.label')}</dt>
                             <dd>{validation.bayCount === null ? t('unknown') : t('count.designated', { count: validation.bayCount })}</dd>
                             <dt className="text-muted-foreground">{t('geometry.label')}</dt>
@@ -74,6 +80,28 @@ export default function ProposalValidation({ proposal, point }: { proposal: numb
                             <dt className="text-muted-foreground">{t('subsign.label')}</dt>
                             <dd>{t(`subsign.${validation.subsign}`)}</dd>
                         </dl>
+                        {validation.ndwMatch && (
+                            <p className="mt-2 text-sm">
+                                {validation.ndwMatch.targetDistance !== null && t('match.target', { distance: validation.ndwMatch.targetDistance })}{' '}
+                                {validation.ndwMatch.alternativeDistance !== null &&
+                                    t('match.alternative', { distance: validation.ndwMatch.alternativeDistance })}
+                            </p>
+                        )}
+                        {validation.views.length > 0 && (
+                            <nav aria-label={t('views')} className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                                {validation.views.map((id, index) => (
+                                    <a
+                                        key={id}
+                                        href={`https://www.mapillary.com/app/?pKey=${id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm underline underline-offset-4"
+                                    >
+                                        {t('view', { number: index + 1 })}
+                                    </a>
+                                ))}
+                            </nav>
+                        )}
                         <p className="mt-2 text-xs text-muted-foreground">
                             {t('coverage', validation.coverage)} {validation.coverage.partial && t('partial')}
                         </p>
