@@ -39,6 +39,11 @@ An administrator checks the source description, rights, selection, area and boun
 
 [ADR 0015](../adr/0015-ingest-location-proposal-sources.md) covers `proposals/<dataset>/<delivery_id>.json` and `nipkaart-location-proposals-1`. NDW delivers one national E6 snapshot. Core uses the existing source approval and R2 receipts, then reconciles source points in the moderation database. These deliveries create neither dataset imports nor public map records. Full reconciliation scans also cover the proposal prefix when no R2 notification is received.
 
+The optional Parking Vision evidence panel uses the same HTTPS host as its scan dashboard. Configure `PARKING_VISION_URL` without `/api` and set `PARKING_VISION_API_KEY` to the same server-side secret as Parking Vision. Refresh Laravel configuration after deployment. The key stays on the server. NIPKaart submits the selected source point and a hash of its source evidence as `proposalRevision`, then polls the returned job ID. Parking Vision stores that job in PostgreSQL and its scanworkers execute it.
+
+The panel distinguishes board support, NDW association, official bay count, indicative aerial contours and the supplementary sign. An uncertain association stays uncertain even when an E6 is visible. Image links point to Mapillary. Evidence does not publish or close a proposal. A changed source revision starts a new validation context; a missing remote job clears the cached ID so a moderator can retry.
+
+
 The bundled [CBS 2026 municipality reference](../../resources/data/cbs-municipalities-2026.csv) contains only the official code, name and subdivision from [CBS StatLine 86247NED](https://www.cbs.nl/nl-nl/cijfers/detail/86247NED). Core uses existing municipality identities first. A code outside Core and the reference remains unresolved until reference data is available.
 
 ## Registrations, candidates and acceptance

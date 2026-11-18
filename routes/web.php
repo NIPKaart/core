@@ -109,6 +109,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         Route::get('moderation/proposals', [Admin\LocationProposalController::class, 'index'])->name('moderation.proposals.index');
+        Route::post('moderation/proposals/{proposal}/points/{point}/validation', [Admin\LocationProposalController::class, 'startValidation'])
+            ->whereNumber(['proposal', 'point'])->middleware('throttle:8,1')->name('moderation.proposals.validation.start');
+        Route::get('moderation/proposals/{proposal}/points/{point}/validation', [Admin\LocationProposalController::class, 'validationStatus'])
+            ->whereNumber(['proposal', 'point'])->name('moderation.proposals.validation.show');
         Route::post('moderation/proposals/{proposal}/publish', [Admin\LocationProposalController::class, 'publish'])
             ->whereNumber('proposal')->name('moderation.proposals.publish');
         Route::post('moderation/proposals/{proposal}/standalone-space', [Admin\LocationProposalController::class, 'storeStandaloneSpace'])
