@@ -63,6 +63,8 @@ Route::prefix('destinations')->as('destinations.')->middleware('throttle:60,1,de
 Route::get('bio', [Frontend\BioController::class, 'index'])->name('bio');
 Route::get('garages', [Frontend\GarageController::class, 'index'])->name('garages');
 Route::get('about', [Frontend\AboutController::class, 'index'])->name('about');
+Route::inertia('terms', 'frontend/legal', ['document' => 'terms'])->name('terms');
+Route::inertia('privacy', 'frontend/legal', ['document' => 'privacy'])->name('privacy');
 
 // Public parking per country, region and municipality (#1307)
 Route::prefix('areas')->as('areas.')->controller(Frontend\AreaController::class)->group(function () {

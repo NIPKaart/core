@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
-import { login } from '@/routes';
+import { login, privacy, terms } from '@/routes';
 
 export default function Register() {
     const { t } = useTranslation('backend/auth');
+    const { t: legal } = useTranslation('frontend/legal');
 
     return (
         <AuthLayout title={t('register.title')}>
@@ -90,6 +91,15 @@ export default function Register() {
                     </>
                 )}
             </Form>
+
+            <nav aria-label={legal('navigation')} className="mt-5 flex flex-wrap justify-center gap-x-4 text-sm">
+                <TextLink href={terms()} className="inline-flex min-h-11 items-center">
+                    {legal('terms.title')}
+                </TextLink>
+                <TextLink href={privacy()} className="inline-flex min-h-11 items-center">
+                    {legal('privacy.title')}
+                </TextLink>
+            </nav>
         </AuthLayout>
     );
 }

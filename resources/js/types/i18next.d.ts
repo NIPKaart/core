@@ -31,6 +31,7 @@ declare module 'i18next' {
             'frontend/garages': typeof import('../../locales/frontend/en/garages.json');
             'frontend/global': typeof import('../../locales/frontend/en/global.json');
             'frontend/home': typeof import('../../locales/frontend/en/home.json');
+            'frontend/legal': typeof import('../../locales/frontend/en/legal.json');
             'frontend/map/contribute': typeof import('../../locales/frontend/en/map/contribute.json');
             'frontend/map/destinations': typeof import('../../locales/frontend/en/map/destinations.json');
             'frontend/map/favorites': typeof import('../../locales/frontend/en/map/favorites.json');
