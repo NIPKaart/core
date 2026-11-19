@@ -19,6 +19,8 @@ type Props = {
     children?: React.ReactNode;
     /** Size of the map; defaults to the full-page detail size. */
     className?: string;
+    /** Classes for the element around the map, for example to let it fill a positioned parent. */
+    wrapperClassName?: string;
 };
 
 const { BaseLayer, Overlay } = LayersControl;
@@ -100,6 +102,7 @@ export default function LocationMarkerCard({
     children,
     scrollWheelZoom = true,
     className = 'h-80 md:h-[500px]',
+    wrapperClassName,
 }: Props) {
     const isDraggable = draggable ?? typeof onChange === 'function';
     const { t } = useTranslation('frontend/map/main');
@@ -125,7 +128,7 @@ export default function LocationMarkerCard({
     }, [selectedMarker, t]);
 
     return (
-        <div className="relative z-0">
+        <div className={cn('relative z-0', wrapperClassName)}>
             <MapContainer
                 center={[latitude, longitude]}
                 zoom={19}

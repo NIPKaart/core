@@ -58,6 +58,7 @@ export type RegionArea = AreaPage & {
 };
 
 export type MunicipalityArea = AreaPage & {
+    check_area: { country: string; municipality: string };
     country: AreaLink;
     region: AreaLink | null;
     gpkwijs_url: string | null;

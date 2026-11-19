@@ -165,5 +165,68 @@
     "empty": {
         "title": "NIPKaart currently has no parking here",
         "text": "View the map or add a parking space."
+    },
+    "check": {
+        "start": "Help check {{name}}",
+        "invite": {
+            "title_one": "{{formatted}} parking space in {{name}} has not been verified yet",
+            "title_other": "{{formatted}} parking spaces in {{name}} have not been verified yet",
+            "all": "All parking spaces in {{name}} have been verified",
+            "text": "Passing by? Let us know whether they are still there."
+        },
+        "title": "Help check {{name}}",
+        "intro": "You see one parking space at a time. Tell us whether it is still there, or skip it.",
+        "back": "Back to {{name}}",
+        "stop": "Stop checking",
+        "map": "Map around the parking space",
+        "no_street": "Street name unknown",
+        "kind": {
+            "community": "Community parking space",
+            "municipal": "Municipal parking space"
+        },
+        "streetview": "Street View",
+        "question": "Is this parking space still there?",
+        "confirm": "Yes, the parking space is still there",
+        "report": "Report that the parking space is gone",
+        "unsure": "I don’t know",
+        "skipped": "Previous parking space skipped.",
+        "next": "Next parking space",
+        "loading": "Loading the next parking space…",
+        "details": {
+            "orientation": "Bay",
+            "under_sign": "Additional sign",
+            "source": "Source",
+            "confirmed": "Confirmed",
+            "unknown": "Unknown",
+            "never": "Not confirmed yet",
+            "community": "Added by a visitor",
+            "municipal": "Municipality of {{name}}"
+        },
+        "disclaimer": "Always check the signs on site; no rights can be derived from this information.",
+        "sign_in": {
+            "title": "Sign in to start",
+            "text": "After signing in you will see the first parking space straight away.",
+            "login": "Sign in",
+            "register": "Create account"
+        },
+        "ineligible": {
+            "title": "Verify your email address first",
+            "text": "Then you can help check parking spaces."
+        },
+        "confirmed": "Thanks for confirming",
+        "reported": {
+            "title": "Your report is being reviewed",
+            "text": "A moderator will look at it. Until then the parking space stays on the map."
+        },
+        "withdrawn": "This parking space is no longer on the map",
+        "error": {
+            "title": "The next parking space could not be loaded",
+            "text": "Check your internet connection and try again.",
+            "retry": "Try again"
+        },
+        "empty": {
+            "title": "You have seen all available parking spaces for this round",
+            "text": "Thanks for your help."
+        }
     }
 }
