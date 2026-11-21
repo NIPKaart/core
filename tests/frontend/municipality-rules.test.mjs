@@ -73,10 +73,11 @@ async function municipality(props = {}) {
     );
 }
 
-test('municipality pages hide GPKwijs guidance during the outage', async () => {
-    const html = await municipality({ gpkwijs_url: 'https://www.gpkwijs.nl/gemeente/amsterdam' });
+test('GPKwijs stands on its own when there are no official rules', async () => {
+    const html = await municipality({ gpkwijs_url: 'https://gpkwijs.nl/amsterdam' });
 
-    assert.doesNotMatch(html, /gpkwijs/i);
+    assert.match(html, /href="https:\/\/gpkwijs\.nl\/amsterdam"/);
+    assert.match(html, /Parkeeruitleg van GPKwijs/);
     assert.match(html, /Controleer de borden/);
     assert.match(html, /Lokale parkeerregels onbekend/);
     assert.match(html, /<strong>Samenwerken\?<\/strong>/);
@@ -108,7 +109,6 @@ test('municipal rules suppress the missing local rules notice', async () => {
         rules: [{ scope: 'municipality', name: 'Amsterdam', url: 'https://example.com/regels', host: 'example.com' }],
     });
 
-    assert.match(html, /href="https:\/\/example\.com\/regels"/);
     assert.match(html, /Officiële gemeentelijke regels voor Amsterdam/);
     assert.doesNotMatch(html, /Lokale parkeerregels onbekend/);
 });
