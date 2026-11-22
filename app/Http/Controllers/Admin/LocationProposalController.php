@@ -20,8 +20,10 @@ use App\Services\LocationProposalDecisions;
 use App\Services\LocationProposalQueue;
 use App\Services\ModerationEvidence;
 use App\Services\ParkingLocationResolver;
+use App\Services\ParkingVision;
 use App\Support\GeoPoint;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -484,6 +486,29 @@ class LocationProposalController extends Controller
         DatasetSource::whereIn('id', $sources)->orderBy('id')->lockForUpdate()->get(['id']);
     }
 
+    public function startValidation(int $proposal, int $point, ParkingVision $vision): JsonResponse
+    {
+        return response()->json($vision->start($this->validationPoint($proposal, $point, $vision)));
+    }
+
+    public function validationStatus(int $proposal, int $point, ParkingVision $vision): JsonResponse
+    {
+        return response()->json($vision->status($this->validationPoint($proposal, $point, $vision)));
+    }
+
+    private function validationPoint(int $proposal, int $point, ParkingVision $vision): object
+    {
+        $this->authorizeModeration();
+        abort_unless($vision->enabled(), 404);
+        $record = $this->queue->activePoints()
+            ->where('source.code', ParkingVision::SOURCE)
+            ->where('point.location_proposal_id', $proposal)
+            ->where('point.id', $point)->first(['point.*']);
+        abort_if($record === null, 404);
+
+        return $record;
+    }
+
     private function detail(int $id, ?int $pointId, AerialImagery $imagery): array
     {
         $points = $this->proposalPoints($id);
@@ -507,6 +532,7 @@ class LocationProposalController extends Controller
         return [
             'id' => $id,
             'pointId' => $anchor->id,
+            'parkingVisionEnabled' => $anchor->source_code === ParkingVision::SOURCE && app(ParkingVision::class)->enabled(),
             'municipality' => $anchor->municipality,
             'municipalityId' => $anchor->municipality_id,
             'points' => $points->map(fn (object $point): array => $this->queue->pointData($point)),
@@ -559,7 +585,7 @@ class LocationProposalController extends Controller
     {
         return $this->queue->activePoints()->where('point.location_proposal_id', $id)->orderBy('point.id')
             ->join('municipalities as municipality', 'municipality.id', '=', 'point.municipality_id')
-            ->select('point.*', 'source.name as source', 'municipality.name as municipality')
+            ->select('point.*', 'source.name as source', 'source.code as source_code', 'municipality.name as municipality')
             ->selectRaw("source.description->'area'->>'country' AS country")->get();
     }
 

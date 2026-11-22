@@ -41,6 +41,8 @@ export type NearbyPlace = MapPoint & {
     possible_duplicate: boolean;
 };
 
+import ProposalValidation from './proposal-validation';
+
 export type ProposalOverlap = MapPoint & { source: 'municipal' | 'community'; id: string; street: string | null; distance_metres: number };
 
 /** A closed proposal's decision, for its panel: why it was closed and the parking space it duplicates. */
@@ -190,6 +192,7 @@ function StatusText({ draft, proposal }: { draft: ProposalDraft | null; proposal
 export function LocationProposalReview({
     selection,
     imagery,
+    parkingVisionEnabled,
     options,
     publishedBays,
     revision,
@@ -207,6 +210,7 @@ export function LocationProposalReview({
 }: {
     selection: LocationProposalSelection;
     imagery: AerialLayer[];
+    parkingVisionEnabled?: boolean;
     options: {
         orientations: OrientationOption[];
         restrictionDays: RestrictionDay[];
@@ -568,6 +572,8 @@ export function LocationProposalReview({
                               : t('proposals.progress_none')}
                     </span>
                 </div>
+
+                {parkingVisionEnabled && !rejecting && <ProposalValidation proposal={proposal.id} point={point.id} />}
 
                 {published && canReject && decision && <ClosedCard decision={decision} source={proposal.source} />}
 

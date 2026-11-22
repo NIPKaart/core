@@ -56,6 +56,7 @@ type Props = {
     selected: {
         id: number;
         pointId: number;
+        parkingVisionEnabled: boolean;
         municipality: string;
         points: Point[];
         published: boolean;
@@ -214,6 +215,7 @@ export default function Proposals({
                         key={`${selected.id}:${selected.pointId}:${selected.revision}`}
                         selection={{ proposal: review, point: selectedPoint }}
                         imagery={selected.imagery}
+                        parkingVisionEnabled={selected.parkingVisionEnabled}
                         options={bayOptions}
                         publishedBays={selected.publishedBays}
                         revision={selected.revision}
