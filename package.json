@@ -79,7 +79,7 @@
         "typescript": "^5.7.2",
         "vaul": "^1.1.2",
         "vite": "^8.0.0",
-        "leaflet.markercluster": "^1.5.3"
+        "leaflet.markercluster": "^2.0.0"
     },
     "optionalDependencies": {
         "@rollup/rollup-darwin-arm64": "4.68.8",
