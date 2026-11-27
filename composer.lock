@@ -6056,16 +6056,16 @@
         },
         {
             "name": "spatie/laravel-permission",
-            "version": "8.5.0",
+            "version": "8.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-permission.git",
-                "reference": "31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0"
+                "reference": "088c3c643c11f0fc1f711e0e05ee9682560bd562"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0",
-                "reference": "31c6a4f649c6bc4703ae5546cebb7ce1a20a15e0",
+                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/088c3c643c11f0fc1f711e0e05ee9682560bd562",
+                "reference": "088c3c643c11f0fc1f711e0e05ee9682560bd562",
                 "shasum": ""
             },
             "require": {
@@ -6132,7 +6132,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-permission/issues",
-                "source": "https://github.com/spatie/laravel-permission/tree/8.5.0"
+                "source": "https://github.com/spatie/laravel-permission/tree/8.5.1"
             },
             "funding": [
                 {
@@ -6140,8 +6140,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-06T11:43:27+00:00",
-            "published-time": "2026-11-06T11:43:46+00:00"
+            "time": "2026-11-26T14:02:58+00:00",
+            "published-time": "2026-11-26T14:03:16+00:00"
         },
         {
             "name": "spatie/laravel-signal-aware-command",
